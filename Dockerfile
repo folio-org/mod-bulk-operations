@@ -1,4 +1,4 @@
-FROM folioci/alpine-jre-openjdk17:latest
+FROM folioci/alpine-jre-openjdk11:latest
 
 USER root
 
