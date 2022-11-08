@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# mod-bulk-operations
-=======
 # mod-bulk-operations
 
 Copyright (C) 2022 The Open Library Foundation
@@ -900,5 +897,3 @@ Here are the links to some production backend modules based on the folio-spring-
 - Spring Data JPA https://spring.io/projects/spring-data-jpa
 - Spring for Apache Kafka https://spring.io/projects/spring-kafka
 - Spring Batch https://spring.io/projects/spring-batch
-
->>>>>>> cbc0b6a (MODBULKOPS-1)
