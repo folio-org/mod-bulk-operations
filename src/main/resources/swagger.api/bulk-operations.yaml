@@ -1,0 +1,29 @@
+openapi: 3.0.0
+info:
+  title: Bulk edit API
+  version: v1
+
+servers:
+  - url: /to-be-changed/
+
+paths:
+  /to-be-changed:
+    get:
+      operationId: example endpoint to generate api doc
+      description: example endpoint to generate api doc
+      responses:
+        '200':
+          description: 'example endpoint result to generate api doc'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/searchResult'
+
+components:
+  schemas:
+    searchResult:
+      type: object
+      properties:
+        record:
+          type: object
+          description: Example response
