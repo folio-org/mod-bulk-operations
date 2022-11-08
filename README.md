@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-# mod-bulk-operations
-=======
 # mod-bulk-operations
 
 Copyright (C) 2022 The Open Library Foundation
