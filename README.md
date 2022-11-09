@@ -17,8 +17,6 @@ Institutional users should be granted the following permissions in order to use 
 ### Configuration
 
 ### Issue tracker
-See project [EDGCSOFT](https://issues.folio.org/browse/EDGCSOFT)
-at the [FOLIO issue tracker](https://dev.folio.org/guidelines/issue-tracker).
 
 ### Other documentation
 Other [modules](https://dev.folio.org/source-code/#server-side) are described,
