@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS bulk_operation_execution (
     references bulk_operation(id)
 );
 
-CREATE TYPE State as ENUM ('PROCESSED', 'FAILED');
+CREATE TYPE StateType as ENUM ('PROCESSED', 'FAILED');
 
 CREATE TABLE IF NOT EXISTS bulk_operation_execution_chunk (
   id UUID PRIMARY KEY,
@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS bulk_operation_execution_chunk (
   last_record_index INT,
   start_time TIMESTAMP default now(),
   end_time TIMESTAMP default now(),
-  state State,
+  state StateType,
   error_message TEXT,
   constraint fk_execution_chunk_to_execution foreign key (bulk_operation_execution_id)
     references bulk_operation_execution(id),
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS bulk_operation_execution_content (
   custom_identifier TEXT,
   bulk_operation_execution_chunk_id UUID,
   bulk_operation_id UUID,
-  state State,
+  state StateType,
   error_message TEXT,
   constraint fk_content_to_execution_chunk foreign key (bulk_operation_execution_chunk_id)
     references bulk_operation_execution_chunk(id),
