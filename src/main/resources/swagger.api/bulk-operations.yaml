@@ -9,7 +9,7 @@ servers:
 paths:
   /to-be-changed:
     get:
-      operationId: example endpoint to generate api doc
+      operationId: getExample
       description: example endpoint to generate api doc
       responses:
         '200':
