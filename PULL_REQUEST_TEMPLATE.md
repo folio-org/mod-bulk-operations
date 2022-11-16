@@ -1,6 +1,6 @@
 <!--
    If you have a relevant JIRA issue number, please put it in the issue title.
-   Example: MODQM-3 - Implement GET records-editor/marc-records/{id} endpoint
+   Example: MODBULKOPS-1 - Setup mod-bulk-operations module
    TL;DR
      - https://www.youtube.com/watch?v=5aHmO_S8FQ4
      - http://www.olitreadwell.com/2016/05/22/how-to-write-great-pull-requests/
