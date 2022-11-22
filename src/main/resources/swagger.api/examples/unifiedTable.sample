@@ -1,0 +1,28 @@
+{
+   "header":[
+      {
+         "value":"Barcode",
+         "dataType":"STRING",
+         "alignment":"CENTER"
+      },
+      {
+         "value":"Username",
+         "dataType":"STRING",
+         "alignment":"CENTER"
+      }
+   ],
+   "rows":[
+      {
+         "row":[
+            "148573765",
+            "Rick Psych"
+         ]
+      },
+      {
+         "row":[
+            "958305968",
+            "Morty Panic"
+         ]
+      }
+   ]
+}

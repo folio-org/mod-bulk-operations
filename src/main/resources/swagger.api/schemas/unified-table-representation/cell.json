@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Data cell representation",
+  "type": "object",
+  "properties": {
+    "value": {
+      "description": "Cell value",
+      "type": "string"
+    },
+    "dataType": {
+      "description": "Data type",
+      "$ref": "type.json#/DataType"
+    },
+    "alignment": {
+      "description": "Text alignment",
+      "$ref": "alignment.json#/Alignment"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "value",
+    "dataType",
+    "alignment"
+  ]
+}
