@@ -3,12 +3,12 @@
       {
          "value":"Barcode",
          "dataType":"STRING",
-         "alignment":"CENTER"
+         "visible":false
       },
       {
          "value":"Username",
          "dataType":"STRING",
-         "alignment":"CENTER"
+         "visible":true
       }
    ],
    "rows":[

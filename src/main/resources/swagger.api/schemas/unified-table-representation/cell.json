@@ -11,15 +11,15 @@
       "description": "Data type",
       "$ref": "type.json#/DataType"
     },
-    "alignment": {
-      "description": "Text alignment",
-      "$ref": "alignment.json#/Alignment"
+    "visible": {
+      "description": "Column visibility",
+      "type": "boolean",
+      "default": "true"
     }
   },
   "additionalProperties": false,
   "required": [
     "value",
-    "dataType",
-    "alignment"
+    "dataType"
   ]
 }
