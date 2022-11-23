@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Row representation",
+  "type": "object",
+  "properties": {
+    "row": {
+      "description": "Row value",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required" : [
+    "row"
+  ]
+}
