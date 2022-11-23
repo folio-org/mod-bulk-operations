@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "BulkOperationExecutionContent": {
+    "description": "Bulk operation execution content DTO",
+    "type": "object",
+    "properties": {
+      "id": {
+        "description": "Bulk operation execution content ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "customIdentifier": {
+        "description": "Custom identifier",
+        "type": "string"
+      },
+      "bulkOperationExecutionChunkId": {
+        "description": "Bulk operation execution chunk ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "bulkOperationId": {
+        "description": "Bulk operation ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "state": {
+        "description": "Bulk operation execution content state",
+        "$ref": "state_type.json#/StateType"
+      },
+      "errorMessage": {
+        "description": "Error message",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  }
+}

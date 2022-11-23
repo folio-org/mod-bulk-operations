@@ -336,8 +336,8 @@
               <inputSpec>${bulk-operations.yaml.file}</inputSpec>
               <output>${project.build.directory}/generated-sources</output>
               <generatorName>spring</generatorName>
-              <modelPackage>${project.groupId}.bulkoperations.domain.dto</modelPackage>
-              <apiPackage>${project.groupId}.bulkoperations.rest.resource</apiPackage>
+              <modelPackage>${project.groupId}.bo.domain.dto</modelPackage>
+              <apiPackage>${project.groupId}.bo.rest.resource</apiPackage>
               <generateApis>true</generateApis>
               <generateApiTests>true</generateApiTests>
               <generateApiDocumentation>true</generateApiDocumentation>

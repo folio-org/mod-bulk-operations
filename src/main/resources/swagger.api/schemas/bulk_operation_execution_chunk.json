@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "BulkOperationExecution": {
+    "description": "Bulk operation execution DTO",
+    "type": "object",
+    "properties": {
+      "id": {
+        "description": "Bulk operation execution ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "bulkOperationId": {
+        "description": "Bulk operation ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "userId": {
+        "description": "User ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "startTime": {
+        "description": "Start time of operation execution",
+        "type": "string",
+        "format": "date-time"
+      },
+      "endTime": {
+        "description": "End time of operation execution",
+        "type": "string",
+        "format": "date-time"
+      },
+      "processedRecords": {
+        "description": "Number of processed records",
+        "type": "integer"
+      },
+      "status": {
+        "description": "Bulk operation execution status",
+        "$ref": "status_type.json#/StatusType"
+      }
+    },
+    "additionalProperties": false
+  }
+}

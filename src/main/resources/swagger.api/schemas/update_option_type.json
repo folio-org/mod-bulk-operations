@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "UpdateOptionType": {
+    "description": "Update option type",
+    "type": "string",
+    "enum": [
+      "PATRON_GROUP",
+      "EXPIRATION_DATE",
+      "EMAIL_ADDRESS",
+      "PERMANENT_LOCATION",
+      "TEMPORARY_LOCATION",
+      "PERMANENT_LOAN_TYPE",
+      "TEMPORARY_LOAN_TYPE",
+      "STATUS"
+    ]
+  }
+}

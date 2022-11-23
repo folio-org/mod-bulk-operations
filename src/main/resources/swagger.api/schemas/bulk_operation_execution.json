@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "BulkOperation": {
+    "description": "Bulk operation DTO",
+    "type": "object",
+    "properties": {
+      "id": {
+        "description": "Bulk operation ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "userId": {
+        "description": "User ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "operationType": {
+        "description": "Bulk operation type",
+        "$ref": "operation_type.json#/OperationType"
+      },
+      "entityType": {
+        "description": "Entity type",
+        "$ref": "entity_type.json#/EntityType"
+      },
+      "entityCustomIdentifierType": {
+        "description": "Entity identifier type",
+        "$ref": "entity_custom_identifier_type.json#/EntityCustomIdentifierType"
+      },
+      "operationStatusType": {
+        "description": "Operation status type",
+        "$ref": "operation_status_type.json#/OperationStatusType"
+      },
+      "dataExportJobId": {
+        "description": "Data export job ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "linkToOriginFile": {
+        "description": "Link to origin file",
+        "type": "string"
+      },
+      "linkToModifiedFile": {
+        "description": "Link to modified file",
+        "type": "string"
+      },
+      "linkToResultFile": {
+        "description": "Link to result file",
+        "type": "string"
+      },
+      "totalNumOfRecords": {
+        "description": "Total number of records",
+        "type": "integer"
+      },
+      "processedNumOfRecords": {
+        "description": "Number of processed records",
+        "type": "integer"
+      },
+      "executionChunkSize": {
+        "description": "Chunk size",
+        "type": "integer"
+      },
+      "startTime": {
+        "description": "Start time of operation",
+        "type": "string",
+        "format": "date-time"
+      },
+      "endTime": {
+        "description": "End time of operation",
+        "type": "string",
+        "format": "date-time"
+      },
+      "errorMessage": {
+        "description": "Error message",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  }
+}

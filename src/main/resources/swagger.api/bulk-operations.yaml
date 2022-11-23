@@ -22,9 +22,26 @@ paths:
 
 components:
   schemas:
+    operationType:
+      $ref: 'schemas/operation_type.json#/OperationType'
+    entityType:
+      $ref: 'schemas/entity_type.json#/EntityType'
+    entityCustomIdentifierType:
+      $ref: 'schemas/entity_custom_identifier_type.json#/EntityCustomIdentifierType'
+    operationStatusType:
+      $ref: 'schemas/operation_status_type.json#/OperationStatusType'
+    statusType:
+      $ref: 'schemas/status_type.json#/StatusType'
+    stateType:
+      $ref: 'schemas/state_type.json#/StateType'
+    updateOptionType:
+      $ref: 'schemas/update_option_type.json#/UpdateOptionType'
+    updateActionType:
+      $ref: 'schemas/update_action_type.json#/UpdateActionType'
     searchResult:
       type: object
       properties:
         record:
           type: object
           description: Example response
+

@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "BulkOperationRule": {
+    "description": "Bulk operation rule DTO",
+    "type": "object",
+    "properties": {
+      "id": {
+        "description": "Bulk operation rule ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "bulkOperationId": {
+        "description": "Bulk operation ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "userId": {
+        "description": "User ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "updateOption": {
+        "description": "Bulk operation rule update option",
+        "$ref": "update_option_type.json#/UpdateOptionType"
+      }
+    },
+    "additionalProperties": false
+  }
+}

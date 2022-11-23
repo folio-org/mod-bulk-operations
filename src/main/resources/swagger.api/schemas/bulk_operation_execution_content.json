@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "BulkOperationExecutionChunk": {
+    "description": "Bulk operation execution chunk DTO",
+    "type": "object",
+    "properties": {
+      "id": {
+        "description": "Bulk operation execution chunk ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "bulkOperationExecutionId": {
+        "description": "Bulk operation execution ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "bulkOperationId": {
+        "description": "Bulk operation ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "firstRecordIndex": {
+        "description": "Index of first record",
+        "type": "integer"
+      },
+      "lastRecordIndex": {
+        "description": "Index of last record",
+        "type": "integer"
+      },
+      "startTime": {
+        "description": "Start time of operation execution chunk",
+        "type": "string",
+        "format": "date-time"
+      },
+      "endTime": {
+        "description": "End time of operation execution chunk",
+        "type": "string",
+        "format": "date-time"
+      },
+      "state": {
+        "description": "Bulk operation execution chunk state",
+        "$ref": "state_type.json#/StateType"
+      },
+      "errorMessage": {
+        "description": "Error message",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  }
+}

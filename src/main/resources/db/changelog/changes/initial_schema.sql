@@ -1,7 +1,11 @@
 CREATE TYPE OperationType as ENUM ('UPDATE', 'DELETE');
+CREATE CAST (character varying as OperationType) WITH INOUT AS IMPLICIT;
 CREATE TYPE EntityType as ENUM ('USER', 'ITEM', 'HOLDING');
+CREATE CAST (character varying as EntityType) WITH INOUT AS IMPLICIT;
 CREATE TYPE EntityCustomIdentifierType as ENUM ('UUID', 'BARCODE', 'EXTERNAL_ID', 'IDENTITY_NAME');
+CREATE CAST (character varying as EntityCustomIdentifierType) WITH INOUT AS IMPLICIT;
 CREATE TYPE OperationStatusType as ENUM ('NEW', 'RETRIEVING_RECORDS', 'SAVING_RECORDS_LOCALLY', 'DATA_MODIFICATION', 'REVIEW_CHANGES', 'APPLY_CHANGES', 'SUSPENDED', 'COMPLETED', 'COMPLETED_WITH_ERRORS', 'CANCELLED', 'SCHEDULED', 'FAILED');
+CREATE CAST (character varying as OperationStatusType) WITH INOUT AS IMPLICIT;
 
 CREATE TABLE IF NOT EXISTS bulk_operation (
   id UUID PRIMARY KEY,
@@ -23,6 +27,7 @@ CREATE TABLE IF NOT EXISTS bulk_operation (
 );
 
 CREATE TYPE StatusType as ENUM ('ACTIVE', 'COMPLETED', 'FAILED');
+CREATE CAST (character varying as StatusType) WITH INOUT AS IMPLICIT;
 
 CREATE TABLE IF NOT EXISTS bulk_operation_execution (
   id UUID PRIMARY KEY,
@@ -37,6 +42,7 @@ CREATE TABLE IF NOT EXISTS bulk_operation_execution (
 );
 
 CREATE TYPE StateType as ENUM ('PROCESSED', 'FAILED');
+CREATE CAST (character varying as StateType) WITH INOUT AS IMPLICIT;
 
 CREATE TABLE IF NOT EXISTS bulk_operation_execution_chunk (
   id UUID PRIMARY KEY,
@@ -63,11 +69,12 @@ CREATE TABLE IF NOT EXISTS bulk_operation_execution_content (
   error_message TEXT,
   constraint fk_content_to_execution_chunk foreign key (bulk_operation_execution_chunk_id)
     references bulk_operation_execution_chunk(id),
-  constraint fk_content_to_operation foreign key (bulk_operation_execution_chunk_id)
+  constraint fk_content_to_operation foreign key (bulk_operation_id)
     references bulk_operation(id)
 );
 
 CREATE TYPE UpdateOptionType AS ENUM ('PATRON_GROUP', 'EXPIRATION_DATE', 'EMAIL_ADDRESS', 'PERMANENT_LOCATION', 'TEMPORARY_LOCATION', 'PERMANENT_LOAN_TYPE', 'TEMPORARY_LOAN_TYPE', 'STATUS');
+CREATE CAST (character varying as UpdateOptionType) WITH INOUT AS IMPLICIT;
 
 CREATE TABLE IF NOT EXISTS bulk_operation_rule (
   id UUID PRIMARY KEY,
@@ -79,6 +86,7 @@ CREATE TABLE IF NOT EXISTS bulk_operation_rule (
 );
 
 CREATE TYPE UpdateActionType AS ENUM ('ADD_TO_EXISTING', 'CLEAR_FIELD', 'FIND', 'FIND_AND_REMOVE_THESE', 'REPLACE_WITH');
+CREATE CAST (character varying as UpdateActionType) WITH INOUT AS IMPLICIT;
 
 CREATE TABLE IF NOT EXISTS bulk_operation_rule_details (
   id UUID PRIMARY KEY,

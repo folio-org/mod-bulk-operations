@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "StateType": {
+    "description": "State type",
+    "type": "string",
+    "enum": [
+      "PROCESSED",
+      "FAILED"
+    ]
+  }
+}
