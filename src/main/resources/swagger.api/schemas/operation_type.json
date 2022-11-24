@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Operation type",
   "OperationType": {
-    "description": "Operation type",
     "type": "string",
     "enum": [
       "UPDATE",

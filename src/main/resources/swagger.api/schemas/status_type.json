@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Status type",
   "StatusType": {
-    "description": "Status type",
     "type": "string",
     "enum": [
       "ACTIVE",
