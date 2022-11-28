@@ -1,29 +1,19 @@
 openapi: 3.0.0
 info:
-  title: Bulk edit API
+  title: Bulk Operations Configurations
   version: v1
 
 servers:
-  - url: /to-be-changed/
+  - url: /bulk-operations/
 
 paths:
-  /to-be-changed:
+  /stub:
     get:
-      operationId: getExample
-      description: example endpoint to generate api doc
       responses:
-        '200':
-          description: 'example endpoint result to generate api doc'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/searchResult'
+        "200":
+          description: stub
 
 components:
   schemas:
-    searchResult:
-      type: object
-      properties:
-        record:
-          type: object
-          description: Example response
+    job:
+      $ref: '../../../../folio-export-common/schemas/job.json#/Job'
