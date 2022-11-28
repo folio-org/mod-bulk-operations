@@ -1,14 +1,14 @@
-package org.folio.bo.domain.entity;
+package org.folio.bulkops.domain.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import org.folio.bo.domain.dto.EntityCustomIdentifierType;
-import org.folio.bo.domain.dto.EntityType;
-import org.folio.bo.domain.dto.OperationStatusType;
-import org.folio.bo.domain.dto.OperationType;
+import org.folio.bulkops.domain.dto.EntityCustomIdentifierType;
+import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.OperationStatusType;
+import org.folio.bulkops.domain.dto.OperationType;
 
 import javax.persistence.Entity;
 import javax.persistence.EnumType;

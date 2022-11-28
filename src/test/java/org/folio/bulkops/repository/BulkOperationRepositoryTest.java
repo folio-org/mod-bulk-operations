@@ -1,15 +1,15 @@
-package org.folio.bo.repository;
+package org.folio.bulkops.repository;
 
-import static org.folio.bo.domain.dto.EntityCustomIdentifierType.BARCODE;
-import static org.folio.bo.domain.dto.EntityType.USER;
-import static org.folio.bo.domain.dto.OperationStatusType.NEW;
-import static org.folio.bo.domain.dto.OperationType.UPDATE;
+import static org.folio.bulkops.domain.dto.EntityCustomIdentifierType.BARCODE;
+import static org.folio.bulkops.domain.dto.EntityType.USER;
+import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
+import static org.folio.bulkops.domain.dto.OperationType.UPDATE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.folio.bo.BaseTest;
-import org.folio.bo.domain.entity.BulkOperation;
+import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.entity.BulkOperation;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 

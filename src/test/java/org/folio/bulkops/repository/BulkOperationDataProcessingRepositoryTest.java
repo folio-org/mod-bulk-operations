@@ -1,26 +1,26 @@
-package org.folio.bo.repository;
+package org.folio.bulkops.repository;
 
-import static org.folio.bo.domain.dto.EntityCustomIdentifierType.BARCODE;
-import static org.folio.bo.domain.dto.EntityType.USER;
-import static org.folio.bo.domain.dto.OperationStatusType.NEW;
-import static org.folio.bo.domain.dto.OperationType.UPDATE;
-import static org.folio.bo.domain.dto.StatusType.ACTIVE;
+import static org.folio.bulkops.domain.dto.EntityCustomIdentifierType.BARCODE;
+import static org.folio.bulkops.domain.dto.EntityType.USER;
+import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
+import static org.folio.bulkops.domain.dto.OperationType.UPDATE;
+import static org.folio.bulkops.domain.dto.StatusType.ACTIVE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.folio.bo.BaseTest;
-import org.folio.bo.domain.entity.BulkOperation;
-import org.folio.bo.domain.entity.BulkOperationExecution;
+import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-class BulkOperationExecutionRepositoryTest extends BaseTest {
+class BulkOperationDataProcessingRepositoryTest extends BaseTest {
   @Autowired
-  private BulkOperationExecutionRepository repository;
+  private BulkOperationDataProcessingRepository repository;
 
   @Autowired
   private BulkOperationRepository bulkOperationRepository;
@@ -53,7 +53,7 @@ class BulkOperationExecutionRepositoryTest extends BaseTest {
     assertTrue(repository.findById(created.getId()).isEmpty());
   }
 
-  private BulkOperationExecution createEntity() {
+  private BulkOperationDataProcessing createEntity() {
     var bulkOperation = bulkOperationRepository.save(BulkOperation.builder()
       .userId(UUID.randomUUID())
       .operationType(UPDATE)
@@ -67,12 +67,12 @@ class BulkOperationExecutionRepositoryTest extends BaseTest {
       .startTime(LocalDateTime.now())
       .build());
 
-    return BulkOperationExecution.builder()
+    return BulkOperationDataProcessing.builder()
       .bulkOperationId(bulkOperation.getId())
-      .userId(UUID.randomUUID())
-      .startTime(LocalDateTime.now())
-      .processedRecords(5)
       .status(ACTIVE)
+      .startTime(LocalDateTime.now())
+      .totalNumOfRecords(10)
+      .processedNumOfRecords(5)
       .build();
   }
 }

@@ -1,6 +1,6 @@
-package org.folio.bo.repository;
+package org.folio.bulkops.repository;
 
-import org.folio.bo.domain.entity.BulkOperation;
+import org.folio.bulkops.domain.entity.BulkOperation;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,32 +1,26 @@
-package org.folio.bo.repository;
+package org.folio.bulkops.repository;
 
-import static org.folio.bo.domain.dto.EntityCustomIdentifierType.BARCODE;
-import static org.folio.bo.domain.dto.EntityType.USER;
-import static org.folio.bo.domain.dto.OperationStatusType.NEW;
-import static org.folio.bo.domain.dto.OperationType.UPDATE;
-import static org.folio.bo.domain.dto.UpdateActionType.CLEAR_FIELD;
-import static org.folio.bo.domain.dto.UpdateActionType.REPLACE_WITH;
-import static org.folio.bo.domain.dto.UpdateOptionType.STATUS;
+import static org.folio.bulkops.domain.dto.EntityCustomIdentifierType.BARCODE;
+import static org.folio.bulkops.domain.dto.EntityType.USER;
+import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
+import static org.folio.bulkops.domain.dto.OperationType.UPDATE;
+import static org.folio.bulkops.domain.dto.StatusType.ACTIVE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.folio.bo.BaseTest;
-import org.folio.bo.domain.entity.BulkOperation;
-import org.folio.bo.domain.entity.BulkOperationRule;
-import org.folio.bo.domain.entity.BulkOperationRuleDetails;
+import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-class BulkOperationRuleDetailsRepositoryTest extends BaseTest {
+class BulkOperationExecutionRepositoryTest extends BaseTest {
   @Autowired
-  private BulkOperationRuleDetailsRepository repository;
-
-  @Autowired
-  private BulkOperationRuleRepository bulkOperationRuleRepository;
+  private BulkOperationExecutionRepository repository;
 
   @Autowired
   private BulkOperationRepository bulkOperationRepository;
@@ -47,8 +41,9 @@ class BulkOperationRuleDetailsRepositoryTest extends BaseTest {
   @Test
   void shouldUpdateEntity() {
     var created = repository.save(createEntity());
-    var updated = repository.save(created.withUpdateAction(CLEAR_FIELD));
-    assertTrue(created.getId().equals(updated.getId()) && CLEAR_FIELD.equals(updated.getUpdateAction()));
+    var endTime = LocalDateTime.now();
+    var updated = repository.save(created.withEndTime(endTime));
+    assertTrue(created.getId().equals(updated.getId()) && endTime.isEqual(updated.getEndTime()));
   }
 
   @Test
@@ -58,7 +53,7 @@ class BulkOperationRuleDetailsRepositoryTest extends BaseTest {
     assertTrue(repository.findById(created.getId()).isEmpty());
   }
 
-  private BulkOperationRuleDetails createEntity() {
+  private BulkOperationExecution createEntity() {
     var bulkOperation = bulkOperationRepository.save(BulkOperation.builder()
       .userId(UUID.randomUUID())
       .operationType(UPDATE)
@@ -72,16 +67,12 @@ class BulkOperationRuleDetailsRepositoryTest extends BaseTest {
       .startTime(LocalDateTime.now())
       .build());
 
-    var bulkOperationRule = bulkOperationRuleRepository.save(BulkOperationRule.builder()
+    return BulkOperationExecution.builder()
       .bulkOperationId(bulkOperation.getId())
       .userId(UUID.randomUUID())
-      .updateOption(STATUS)
-      .build());
-
-    return BulkOperationRuleDetails.builder()
-      .ruleId(bulkOperationRule.getId())
-      .updateAction(REPLACE_WITH)
-      .updateValue("new value")
+      .startTime(LocalDateTime.now())
+      .processedRecords(5)
+      .status(ACTIVE)
       .build();
   }
 }

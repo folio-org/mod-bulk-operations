@@ -1,4 +1,4 @@
-package org.folio.bo;
+package org.folio.bulkops;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;

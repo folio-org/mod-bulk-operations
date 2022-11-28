@@ -1,4 +1,4 @@
-package org.folio.bo;
+package org.folio.bulkops;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

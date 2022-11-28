@@ -27,8 +27,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <sonar.exclusions>
-      **/src/main/java/org/folio/bo/ModBulkOperationsApplication.java,
-      **/src/main/java/org/folio/bo/domain/**
+      **/src/main/java/org/folio/bulkops/ModBulkOperationsApplication.java,
+      **/src/main/java/org/folio/bulkops/domain/**
     </sonar.exclusions>
     <argLine/>
     <bulk-operations.yaml.file>${project.basedir}/src/main/resources/swagger.api/bulk-operations.yaml</bulk-operations.yaml.file>
@@ -340,8 +340,8 @@
               <inputSpec>${bulk-operations.yaml.file}</inputSpec>
               <output>${project.build.directory}/generated-sources</output>
               <generatorName>spring</generatorName>
-              <modelPackage>${project.groupId}.bo.domain.dto</modelPackage>
-              <apiPackage>${project.groupId}.bo.rest.resource</apiPackage>
+              <modelPackage>${project.groupId}.bulkops.domain.dto</modelPackage>
+              <apiPackage>${project.groupId}.bulkops.rest.resource</apiPackage>
               <generateApis>true</generateApis>
               <generateApiTests>true</generateApiTests>
               <generateApiDocumentation>true</generateApiDocumentation>

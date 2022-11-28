@@ -1,11 +1,11 @@
-package org.folio.bo.domain.entity;
+package org.folio.bulkops.domain.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import org.folio.bo.domain.dto.StateType;
+import org.folio.bulkops.domain.dto.UpdateActionType;
 
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -22,18 +22,18 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "bulk_operation_execution_content")
-public class BulkOperationExecutionContent {
+@Table(name = "bulk_operation_rule_details")
+public class BulkOperationRuleDetails {
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
-  private String customIdentifier;
-  private UUID bulkOperationExecutionChunkId;
-  private UUID bulkOperationId;
+  private UUID ruleId;
 
   @Enumerated(EnumType.STRING)
-  private StateType state;
+  private UpdateActionType updateAction;
 
-  private String errorMessage;
+  private String updateValue;
+
+
 }

@@ -1,11 +1,11 @@
-package org.folio.bo.domain.entity;
+package org.folio.bulkops.domain.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import org.folio.bo.domain.dto.StatusType;
+import org.folio.bulkops.domain.dto.StateType;
 
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -20,21 +20,24 @@ import java.util.UUID;
 @Data
 @Builder
 @With
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Entity
-@Table(name = "bulk_operation_execution")
-public class BulkOperationExecution {
+@Table(name = "bulk_operation_execution_chunk")
+public class BulkOperationExecutionChunk {
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
+  private UUID bulkOperationExecutionId;
   private UUID bulkOperationId;
-  private UUID userId;
+  private Integer firstRecordIndex;
+  private Integer lastRecordIndex;
   private LocalDateTime startTime;
   private LocalDateTime endTime;
-  private Integer processedRecords;
 
   @Enumerated(EnumType.STRING)
-  private StatusType status;
+  private StateType state;
+
+  private String errorMessage;
 }
