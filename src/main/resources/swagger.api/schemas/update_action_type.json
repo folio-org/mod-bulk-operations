@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Update action type",
+  "UpdateActionType": {
+    "type": "string",
+    "enum": [
+      "ADD_TO_EXISTING",
+      "CLEAR_FIELD",
+      "FIND",
+      "FIND_AND_REMOVE_THESE",
+      "REPLACE_WITH"
+    ]
+  }
+}
