@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Entity custom identifier type",
+  "EntityCustomIdentifierType": {
+    "type": "string",
+    "enum": [
+      "UUID",
+      "BARCODE",
+      "EXTERNAL_ID",
+      "IDENTITY_NAME"
+    ]
+  }
+}

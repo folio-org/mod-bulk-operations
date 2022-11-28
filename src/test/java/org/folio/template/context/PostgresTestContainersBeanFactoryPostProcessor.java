@@ -16,7 +16,8 @@ public class PostgresTestContainersBeanFactoryPostProcessor implements BeanFacto
   public static PostgreSQLContainer<?> postgreDBContainer = new PostgreSQLContainer<>("postgres:11-alpine");
 
   @Override
-  public void postProcessBeanFactory(ConfigurableListableBeanFactory configurableListableBeanFactory) throws BeansException {
+  public void postProcessBeanFactory(ConfigurableListableBeanFactory configurableListableBeanFactory)
+    throws BeansException {
     postgreDBContainer.start();
 
     System.setProperty("DB_URL", postgreDBContainer.getJdbcUrl());
