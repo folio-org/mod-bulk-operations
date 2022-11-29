@@ -1,21 +1,19 @@
-package org.folio.bulkops.domain.entity;
+package org.folio.bulkops.domain.pojo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-public enum JobStatus {
+public enum EntityType {
 
-  SCHEDULED("SCHEDULED"),
+  USER("USER"),
 
-  IN_PROGRESS("IN_PROGRESS"),
+  ITEM("ITEM"),
 
-  SUCCESSFUL("SUCCESSFUL"),
-
-  FAILED("FAILED");
+  HOLDING("HOLDING");
 
   private String value;
 
-  JobStatus(String value) {
+  EntityType(String value) {
     this.value = value;
   }
 
@@ -30,12 +28,13 @@ public enum JobStatus {
   }
 
   @JsonCreator
-  public static JobStatus fromValue(String value) {
-    for (JobStatus jobStatus : JobStatus.values()) {
-      if (jobStatus.value.equals(value)) {
-        return jobStatus;
+  public static EntityType fromValue(String value) {
+    for (EntityType entityType : EntityType.values()) {
+      if (entityType.value.equals(value)) {
+        return entityType;
       }
     }
     throw new IllegalArgumentException("Unexpected value '" + value + "'");
   }
 }
+

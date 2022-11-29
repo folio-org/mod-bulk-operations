@@ -1,4 +1,4 @@
-package org.folio.bulkops.domain.entity;
+package org.folio.bulkops.domain.pojo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;

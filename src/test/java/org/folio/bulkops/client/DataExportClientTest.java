@@ -3,9 +3,8 @@ package org.folio.bulkops.client;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.folio.bulkops.client.DataExportClient;
-import org.folio.bulkops.domain.entity.Job;
-import org.folio.bulkops.domain.entity.JobStatus;
+import org.folio.bulkops.domain.pojo.Job;
+import org.folio.bulkops.domain.pojo.JobStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -29,7 +28,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class DataExportClientTest {
+class DataExportClientTest {
 
   @Mock
   private DataExportClient dataExportClient;

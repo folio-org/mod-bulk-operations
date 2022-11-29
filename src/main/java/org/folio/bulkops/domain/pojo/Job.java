@@ -1,4 +1,4 @@
-package org.folio.bulkops.domain.entity;
+package org.folio.bulkops.domain.pojo;
 
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import java.util.Date;
@@ -15,7 +15,6 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
-@Entity
 @TypeDef(name = "jsonb", typeClass = JsonBinaryType.class)
 @Data
 public class Job {
