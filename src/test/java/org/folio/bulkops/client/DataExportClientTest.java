@@ -20,8 +20,7 @@ import java.util.Date;
 import java.util.UUID;
 
 import static java.util.Objects.isNull;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
@@ -97,6 +96,12 @@ class DataExportClientTest {
     var expectedStatus = JobStatus.SCHEDULED;
     assertEquals(expectedStatus, actualStatus);
     assertNotNull(newJob.getStartTime());
+  }
+
+  // Change when method is implemented.
+  @Test
+  void shouldDeleteFile() {
+    assertNull(dataExportClient.deleteFile(UUID.randomUUID()));
   }
 
   private MultipartFile readFile(String fileName) throws IOException {
