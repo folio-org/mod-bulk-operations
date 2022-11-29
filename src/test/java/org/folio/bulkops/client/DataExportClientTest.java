@@ -98,12 +98,6 @@ class DataExportClientTest {
     assertNotNull(newJob.getStartTime());
   }
 
-  // Change when method is implemented.
-  @Test
-  void shouldDeleteFile() {
-    assertNull(dataExportClient.deleteFile(UUID.randomUUID()));
-  }
-
   private MultipartFile readFile(String fileName) throws IOException {
     byte [] content = Files.readAllBytes(Paths.get(fileName));
     return new MockMultipartFile(FilenameUtils.getBaseName(fileName), content);
