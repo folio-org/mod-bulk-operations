@@ -10,8 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
-import static java.util.Objects.nonNull;
-
 @FeignClient
 public interface DataExportClient {
 
@@ -26,13 +24,4 @@ public interface DataExportClient {
 
   @PostMapping(value = "bulk-edit/{jobId}/start")
   String startJob(@PathVariable UUID jobId);
-
-  // Uncomment and update when mechanism of file deletion is created.
-//  default String deleteFile(UUID jobId) {
-//    var job = getJob(jobId);
-//    if (nonNull(job)) {
-//      var files = job.getFiles();
-//    }
-//    return null;
-//  }
 }
