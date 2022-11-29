@@ -1,24 +1,27 @@
 openapi: 3.0.0
 info:
   title: Bulk operations API
-
   version: v1
   description: Bulk operations API
 
 servers:
-  - url: /bulk-operations/
+  - url: /to-be-changed/
 
 paths:
-  /stub:
+  /to-be-changed:
     get:
+      operationId: getExample
+      description: example endpoint to generate api doc
       responses:
-        "200":
-          description: stub
+        '200':
+          description: 'example endpoint result to generate api doc'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/searchResult'
 
 components:
   schemas:
-    job:
-      $ref: '../../../../folio-export-common/schemas/job.json#/Job'
     operationType:
       $ref: 'schemas/operation_type.json#/OperationType'
     entityType:
@@ -41,3 +44,4 @@ components:
         record:
           type: object
           description: Example response
+

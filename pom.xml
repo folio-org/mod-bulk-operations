@@ -43,11 +43,6 @@
     <apache-commons-collections.version>4.4</apache-commons-collections.version>
     <lombok.version>1.18.24</lombok.version>
     <lombok.mapstruct-binding.version>0.2.0</lombok.mapstruct-binding.version>
-
-    <!-- runtime dependencies -->
-    <folio-spring-base.version>4.1.0</folio-spring-base.version>
-    <openapi-generator.version>4.3.1</openapi-generator.version>
-    <mapstruct.version>1.5.2.Final</mapstruct.version>
     <hibernate-types-52.version>2.10.3</hibernate-types-52.version>
 
     <!-- Test dependencies versions -->
@@ -269,49 +264,37 @@
         <version>${maven-resources-plugin.version}</version>
         <executions>
           <execution>
-            <id>repackage</id>
+            <id>filter-descriptor-inputs</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
             <configuration>
-              <classifier>exec</classifier>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/descriptors</directory>
+                  <include>*Descriptor*-template.json</include>
+                  <filtering>true</filtering>
+                </resource>
+              </resources>
             </configuration>
           </execution>
         </executions>
       </plugin>
 
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>versions-maven-plugin</artifactId>
-        <configuration>
-          <generateBackupPoms>false</generateBackupPoms>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.0.0</version>
-
         <groupId>com.coderplus.maven.plugins</groupId>
         <artifactId>copy-rename-maven-plugin</artifactId>
         <version>${maven-copy-rename-plugin.version}</version>
-
         <executions>
-
           <execution>
-            <id>git submodule update</id>
-            <phase>initialize</phase>
+            <id>rename-descriptor-outputs</id>
+            <phase>generate-resources</phase>
             <goals>
-              <goal>exec</goal>
+              <goal>rename</goal>
             </goals>
             <configuration>
-
-              <executable>git</executable>
-              <arguments>
-                <argument>submodule</argument>
-                <argument>update</argument>
-                <argument>--init</argument>
-                <argument>--recursive</argument>
-              </arguments>
-
               <fileSets>
                 <fileSet>
                   <sourceFile>${project.build.directory}/ModuleDescriptor-template.json</sourceFile>
@@ -326,7 +309,6 @@
                   <destinationFile>${project.build.directory}/apidocs/mod-bulk-operations.html</destinationFile>
                 </fileSet>
               </fileSets>
-
             </configuration>
           </execution>
         </executions>
@@ -336,7 +318,6 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
         <version>${maven-build-helper-plugin.version}</version>
-
         <executions>
           <execution>
             <phase>generate-sources</phase>
@@ -372,10 +353,10 @@
               <generateApiTests>true</generateApiTests>
               <generateApiDocumentation>true</generateApiDocumentation>
               <generateModels>true</generateModels>
+
               <generateModelTests>false</generateModelTests>
               <generateSupportingFiles>true</generateSupportingFiles>
               <supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
-
               <generateModelDocumentation>true</generateModelDocumentation>
               <configOptions>
                 <java8>true</java8>
@@ -398,54 +379,6 @@
       </plugin>
 
       <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>filter-descriptor-inputs</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>${basedir}/descriptors</directory>
-                  <include>*Descriptor*-template.json</include>
-                  <filtering>true</filtering>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>com.coderplus.maven.plugins</groupId>
-        <artifactId>copy-rename-maven-plugin</artifactId>
-        <version>1.0.1</version>
-        <executions>
-          <execution>
-            <id>rename-descriptor-outputs</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>rename</goal>
-            </goals>
-            <configuration>
-              <fileSets>
-                <fileSet>
-                  <sourceFile>${project.build.directory}/ModuleDescriptor-template.json</sourceFile>
-                  <destinationFile>${project.build.directory}/ModuleDescriptor.json</destinationFile>
-                </fileSet>
-                <fileSet>
-                  <sourceFile>${project.build.directory}/DeploymentDescriptor-template.json</sourceFile>
-                  <destinationFile>${project.build.directory}/DeploymentDescriptor.json</destinationFile>
-                </fileSet>
-              </fileSets>
-            </configuration>
-          </execution>
-        </executions>
-
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>${maven-compiler-plugin.version}</version>

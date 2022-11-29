@@ -1,10 +1,11 @@
-package org.folio.bo.client;
+package org.folio.bulkops.client;
 
 import lombok.SneakyThrows;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.folio.bo.domain.dto.Job;
-import org.folio.bo.domain.dto.JobStatus;
+import org.folio.bulkops.client.DataExportClient;
+import org.folio.bulkops.domain.entity.Job;
+import org.folio.bulkops.domain.entity.JobStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
