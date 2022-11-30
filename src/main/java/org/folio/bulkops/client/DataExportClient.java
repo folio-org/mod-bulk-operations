@@ -24,13 +24,11 @@ public interface DataExportClient {
   @PostMapping(value = "bulk-edit/{jobId}/upload")
   String uploadFile(@PathVariable UUID jobId, @RequestBody MultipartFile file);
 
-  //NOSONAR
   default String deleteFile(UUID jobId) {
     var job = getJob(jobId);
     if (nonNull(job)) {
-      var files = job.getFiles();
-      // TODO
+      var files = job.getFiles(); //NOSONAR
     }
-    return null;
+    return null; //NOSONAR
   }
 }
