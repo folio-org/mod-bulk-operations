@@ -24,6 +24,7 @@ public interface DataExportClient {
   @PostMapping(value = "bulk-edit/{jobId}/upload")
   String uploadFile(@PathVariable UUID jobId, @RequestBody MultipartFile file);
 
+  // TODO //NOSONAR
   default String deleteFile(UUID jobId) {
     var job = getJob(jobId);
     if (nonNull(job)) {
