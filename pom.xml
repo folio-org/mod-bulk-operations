@@ -29,6 +29,7 @@
     <sonar.exclusions>
       **/src/main/java/org/folio/bulkops/ModBulkOperationsApplication.java,
       **/src/main/java/org/folio/bulkops/domain/**
+      **/src/main/java/org/folio/bulkops/client/**
     </sonar.exclusions>
     <argLine/>
     <bulk-operations.yaml.file>${project.basedir}/src/main/resources/swagger.api/bulk-operations.yaml</bulk-operations.yaml.file>

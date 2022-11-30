@@ -61,14 +61,6 @@ class DataExportClientTest {
     assertEquals(expectedNumOfLines, actualNumOfLines);
   }
 
-  // TODO //NOSONAR
-  @Test
-  void shouldDeleteFile() {
-    when(dataExportClient.deleteFile(any(UUID.class)))
-      .thenReturn(null);
-    assertNull(dataExportClient.deleteFile(UUID.randomUUID()));
-  }
-
   private MultipartFile readFile(String fileName) throws IOException {
     byte [] content = Files.readAllBytes(Paths.get(fileName));
     return new MockMultipartFile(FilenameUtils.getBaseName(fileName), content);
