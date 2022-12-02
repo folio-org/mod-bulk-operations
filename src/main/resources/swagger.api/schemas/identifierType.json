@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Identifier type",
+  "IdentifierType": {
+    "type": "string",
+    "enum": [
+      "ID",
+      "BARCODE",
+      "HRID",
+      "FORMER_IDS",
+      "ACCESSION_NUMBER",
+      "HOLDINGS_RECORD_ID",
+      "USER_NAME",
+      "EXTERNAL_SYSTEM_ID",
+      "INSTANCE_HRID",
+      "ITEM_BARCODE"
+    ]
+  }
+}

@@ -38,6 +38,8 @@ components:
       $ref: 'schemas/update_option_type.json#/UpdateOptionType'
     updateActionType:
       $ref: 'schemas/update_action_type.json#/UpdateActionType'
+    job:
+      $ref: 'schemas/job.json#/Job'
     searchResult:
       type: object
       properties:

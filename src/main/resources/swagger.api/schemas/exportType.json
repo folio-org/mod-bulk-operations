@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Type of export",
+  "ExportType": {
+    "type": "string",
+    "enum": [
+      "BULK_EDIT_IDENTIFIERS",
+      "BULK_EDIT_QUERY",
+      "BULK_EDIT_UPDATE"
+    ],
+    "default": "BULK_EDIT_IDENTIFIERS"
+  }
+}
