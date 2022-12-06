@@ -3,10 +3,8 @@ package org.folio.bulkops.config.properties;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 @Data
-@Component
 @Builder
 @ConfigurationProperties("application.minio-remote")
 public class RemoteFileSystemProperties {
