@@ -31,10 +31,6 @@
       **/src/main/java/org/folio/bulkops/domain/**
     </sonar.exclusions>
     <sonar.coverage.exclusions>**/src/main/java/org/folio/bulkops/client/**</sonar.coverage.exclusions>
-    <sonar.sources>.</sonar.sources>
-    <sonar.test.inclusions>
-      src/main/**
-    </sonar.test.inclusions>
     <argLine/>
     <bulk-operations.yaml.file>${project.basedir}/src/main/resources/swagger.api/bulk-operations.yaml</bulk-operations.yaml.file>
 
