@@ -1,30 +1,16 @@
 package org.folio.bulkops.repository;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.bulkops.config.properties.RemoteFileSystemProperties;
 import org.folio.s3.client.FolioS3Client;
-import org.folio.s3.client.S3ClientFactory;
-import org.folio.s3.client.S3ClientProperties;
+import org.springframework.stereotype.Repository;
 
 @Log4j2
+@Repository
+@RequiredArgsConstructor
 public class RemoteFileSystemRepository {
 
-  private final FolioS3Client folioS3Client;
-
-  public RemoteFileSystemRepository(RemoteFileSystemProperties properties) {
-    folioS3Client = buildClient(properties);
-  }
-
-  private FolioS3Client buildClient(RemoteFileSystemProperties properties) {
-    return S3ClientFactory.getS3Client(S3ClientProperties.builder()
-      .endpoint(properties.getEndpoint())
-      .secretKey(properties.getSecretKey())
-      .accessKey(properties.getAccessKey())
-      .bucket(properties.getBucket())
-      .awsSdk(properties.isComposeWithAwsSdk())
-      .region(properties.getRegion())
-      .build());
-  }
+  public final FolioS3Client folioS3Client;
 
   public String put(String pathToNewFile, String fileNameToBeUpdated) {
     return folioS3Client.upload(pathToNewFile, fileNameToBeUpdated);
