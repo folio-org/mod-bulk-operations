@@ -32,14 +32,14 @@
     </sonar.exclusions>
     <sonar.coverage.exclusions>**/src/main/java/org/folio/bulkops/client/**</sonar.coverage.exclusions>
     <sonar.sources>
-      src/test
-      src/main/java
+      **/src/test/**,
+      **/src/main/java/**
     </sonar.sources>
     <sonar.tests>
-      src/test
+      **/src/test/**
     </sonar.tests>
     <sonar.test.inclusions>
-      src/test/java
+      **/src/test/java/**
     </sonar.test.inclusions>
     <argLine/>
     <bulk-operations.yaml.file>${project.basedir}/src/main/resources/swagger.api/bulk-operations.yaml</bulk-operations.yaml.file>
