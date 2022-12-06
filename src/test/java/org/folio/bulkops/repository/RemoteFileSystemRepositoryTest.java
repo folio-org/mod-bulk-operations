@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SpringBootTest(classes = RemoteFileSystemRepository.class)
 @ContextConfiguration(classes = {RepositoryConfig.class})
-class RemoteFileSystemRepositoryTest {
+public class RemoteFileSystemRepositoryTest {
 
   private static final String S3_ACCESS_KEY = "minio-access-key";
   private static final String S3_SECRET_KEY = "minio-secret-key";
