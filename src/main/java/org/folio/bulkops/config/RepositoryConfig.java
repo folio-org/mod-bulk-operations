@@ -32,7 +32,7 @@ public class RepositoryConfig {
   }
 
   private FolioS3Client buildFolioS3Client() {
-    log.debug("remote-files-storage: endpoint {}, region {}, bucket {}, accessKey {}, secretKey {}, awsSdk {}",
+    log.info("remote-files-storage: endpoint {}, region {}, bucket {}, accessKey {}, secretKey {}, awsSdk {}",
       endpoint, region, bucket, accessKey, secretKey, awsSdk);
     return S3ClientFactory.getS3Client(S3ClientProperties.builder()
       .endpoint(endpoint)

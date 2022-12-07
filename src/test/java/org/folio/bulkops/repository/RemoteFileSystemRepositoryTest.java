@@ -5,6 +5,7 @@ import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
 import lombok.SneakyThrows;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.IOUtils;
 import org.folio.bulkops.config.RepositoryConfig;
 import org.junit.jupiter.api.BeforeAll;
@@ -22,6 +23,7 @@ import java.time.Duration;
 import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.*;
 
+@Log4j2
 @SpringBootTest(classes = RemoteFileSystemRepository.class)
 @ContextConfiguration(classes = {RepositoryConfig.class})
 class RemoteFileSystemRepositoryTest {
@@ -61,10 +63,11 @@ class RemoteFileSystemRepositoryTest {
         new HostConfig().withPortBindings(new PortBinding(Ports.Binding.bindPort(S3_PORT), new ExposedPort(S3_PORT)))))
       .waitingFor(new HttpWaitStrategy().forPath("/minio/health/ready")
         .forPort(S3_PORT)
-        .withStartupTimeout(Duration.ofSeconds(10))
+        .withStartupTimeout(Duration.ofSeconds(20))
       );
     s3.start();
     minio_endpoint = format("http://%s:%s", s3.getHost(), s3.getFirstMappedPort());
+    log.info("minio container {} on {}", s3.isRunning() ? "is running" : "is not running", minio_endpoint);
   }
 
   @SneakyThrows
