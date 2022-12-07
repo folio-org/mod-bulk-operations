@@ -57,3 +57,11 @@ management:
     readinessstate:
       enabled: true
 debug: false
+application:
+  remote-files-storage:
+    endpoint: ${AWS_URL:http://localhost:9000/}
+    region: ${AWS_REGION:}
+    bucket: ${AWS_BUCKET:}
+    accessKey: ${AWS_ACCESS_KEY_ID:}
+    secretKey: ${AWS_SECRET_ACCESS_KEY:}
+    awsSdk: ${LOCAL_FS_WITH_AWS_SDK:false}

@@ -9,6 +9,7 @@ spring:
     password: ${DB_PASSWORD}
   liquibase:
     enabled: true
+    change-log: classpath:db/changelog/changelog-master.xml
   jpa:
     show-sql: true
 folio:
@@ -21,3 +22,11 @@ management:
 logging:
   level:
     org.springframework.web: debug
+application:
+  remote-files-storage:
+    endpoint: ${AWS_URL:http://localhost:9000/}
+    region: ${AWS_REGION:us-west-2}
+    bucket: ${AWS_BUCKET:test-bucket}
+    accessKey: ${AWS_ACCESS_KEY_ID:minio-access-key}
+    secretKey: ${AWS_SECRET_ACCESS_KEY:minio-secret-key}
+    awsSdk: ${LOCAL_FS_WITH_AWS_SDK:false}

@@ -1,9 +1,5 @@
 package org.folio.bulkops;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,6 +33,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ContextConfiguration(initializers = BaseTest.DockerPostgreDataSourceInitializer.class)
@@ -45,7 +45,6 @@ import java.util.UUID;
 public abstract class BaseTest {
   public static PostgreSQLContainer<?> postgresDBContainer = new PostgreSQLContainer<>("postgres:13");
   public static WireMockServer wireMockServer;
-  public static final int WIRE_MOCK_PORT = SocketUtils.findAvailableTcpPort();
   public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
@@ -75,7 +74,7 @@ public abstract class BaseTest {
 
   @BeforeAll
   static void beforeAll(@Autowired MockMvc mockMvc) {
-    wireMockServer = new WireMockServer(WIRE_MOCK_PORT);
+    wireMockServer = new WireMockServer(SocketUtils.findAvailableTcpPort());
     wireMockServer.start();
 
     setUpTenant(mockMvc);
@@ -99,7 +98,8 @@ public abstract class BaseTest {
 
   @SneakyThrows
   protected static void setUpTenant(MockMvc mockMvc) {
-    mockMvc.perform(post("/_/tenant").content(asJsonString(new TenantAttributes().moduleTo("mod-data-export-worker")))
+    mockMvc.perform(post("/_/tenant")
+      .content(asJsonString(new TenantAttributes().moduleTo("mod-bulk-operations")))
       .headers(defaultHeaders())
       .contentType(APPLICATION_JSON)).andExpect(status().isNoContent());
   }
