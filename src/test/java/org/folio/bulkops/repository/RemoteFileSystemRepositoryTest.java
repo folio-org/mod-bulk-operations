@@ -8,6 +8,9 @@ import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.IOUtils;
 import org.folio.bulkops.config.RepositoryConfig;
+import org.folio.s3.client.FolioS3Client;
+import org.folio.s3.client.S3ClientFactory;
+import org.folio.s3.client.S3ClientProperties;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +34,8 @@ class RemoteFileSystemRepositoryTest {
   private static final String S3_ACCESS_KEY = "minio-access-key";
   private static final String S3_SECRET_KEY = "minio-secret-key";
   private static final int S3_PORT = 9000;
+  private static final String BUCKET = "test-bucket";
+  private static final String REGION = "us-west-2";
   private static String minio_endpoint;
 
   private static final String INITIAL_FILE = "initial.txt";
@@ -38,20 +43,12 @@ class RemoteFileSystemRepositoryTest {
   private static final String INITIAL_FILE_PATH = "src/test/resources/repository/" + INITIAL_FILE;
   private static final String UPDATED_FILE_PATH = "src/test/resources/repository/updated.txt";
 
-  @Autowired
-  private RemoteFileSystemRepository remoteFileSystemRepository;
-
-  @Autowired
-  private RepositoryConfig repositoryConfig;
+  private static RemoteFileSystemRepository remoteFileSystemRepository;
 
   @BeforeAll
   static void setUp() {
     setUpMinio();
-  }
-
-  @BeforeEach
-  void setMinioEndpoint() {
-    repositoryConfig.setEndpoint(minio_endpoint);
+    setUpRepository();
   }
 
   private static void setUpMinio() {
@@ -63,11 +60,23 @@ class RemoteFileSystemRepositoryTest {
         new HostConfig().withPortBindings(new PortBinding(Ports.Binding.bindPort(S3_PORT), new ExposedPort(S3_PORT)))))
       .waitingFor(new HttpWaitStrategy().forPath("/minio/health/ready")
         .forPort(S3_PORT)
-        .withStartupTimeout(Duration.ofSeconds(20))
+        .withStartupTimeout(Duration.ofSeconds(10))
       );
     s3.start();
     minio_endpoint = format("http://%s:%s", s3.getHost(), s3.getFirstMappedPort());
     log.info("minio container {} on {}", s3.isRunning() ? "is running" : "is not running", minio_endpoint);
+  }
+
+  private static void setUpRepository() {
+    FolioS3Client folioS3Client = S3ClientFactory.getS3Client(S3ClientProperties.builder()
+      .endpoint(minio_endpoint)
+      .secretKey(S3_SECRET_KEY)
+      .accessKey(S3_ACCESS_KEY)
+      .bucket(BUCKET)
+      .awsSdk(false)
+      .region(REGION)
+      .build());
+    remoteFileSystemRepository = new RemoteFileSystemRepository(folioS3Client);
   }
 
   @SneakyThrows
