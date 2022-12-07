@@ -17,8 +17,7 @@ import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import java.time.Duration;
 
 import static java.lang.String.format;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(classes = RemoteFileSystemRepository.class)
 @ContextConfiguration(classes = {RepositoryConfig.class})
@@ -67,18 +66,21 @@ class RemoteFileSystemRepositoryTest {
 
   @Test
   void shouldRetrieveInitialContentAfterGetAndUpdateAfterPut() {
-    remoteFileSystemRepository.put(INITIAL_FILE_PATH, INITIAL_FILE);
-    var content = remoteFileSystemRepository.get(INITIAL_FILE);
-    assertEquals("initial content", content.trim());
-    var uploaded = remoteFileSystemRepository.put(UPDATED_FILE_PATH, INITIAL_FILE);
-    assertEquals(INITIAL_FILE, uploaded);
-    content = remoteFileSystemRepository.get(INITIAL_FILE);
-    assertEquals("updated content", content.trim());
+    try {
+      remoteFileSystemRepository.put(INITIAL_FILE_PATH, INITIAL_FILE);
+      var content = remoteFileSystemRepository.get(INITIAL_FILE);
+      assertEquals("initial content", content.trim());
+      var uploaded = remoteFileSystemRepository.put(UPDATED_FILE_PATH, INITIAL_FILE);
+      assertEquals(INITIAL_FILE, uploaded);
+      content = remoteFileSystemRepository.get(INITIAL_FILE);
+      assertEquals("updated content", content.trim());
+    } catch (Exception exc) {
+      fail(exc);
+    }
   }
 
   @Test
   void shouldNotRetrieveContentIfFileNameNotFound() {
-    var content = remoteFileSystemRepository.get(WRONG_FILE);
-    assertNull(content);
+    assertThrows(Exception.class, () -> remoteFileSystemRepository.get(WRONG_FILE));
   }
 }
