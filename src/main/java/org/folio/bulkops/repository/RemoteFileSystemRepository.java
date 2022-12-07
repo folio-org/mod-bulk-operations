@@ -2,11 +2,13 @@ package org.folio.bulkops.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.folio.s3.client.FolioS3Client;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
 import java.io.InputStream;
 
+@Lazy
 @Repository
 @RequiredArgsConstructor
 public class RemoteFileSystemRepository {

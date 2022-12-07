@@ -9,7 +9,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
+@Lazy
 @Configuration
 @Log4j2
 @ConfigurationProperties("application.remote-files-storage")
