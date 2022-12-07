@@ -45,7 +45,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public abstract class BaseTest {
   public static PostgreSQLContainer<?> postgresDBContainer = new PostgreSQLContainer<>("postgres:13");
   public static WireMockServer wireMockServer;
-  public static final int WIRE_MOCK_PORT = SocketUtils.findAvailableTcpPort();
   public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
@@ -75,7 +74,7 @@ public abstract class BaseTest {
 
   @BeforeAll
   static void beforeAll(@Autowired MockMvc mockMvc) {
-    wireMockServer = new WireMockServer(WIRE_MOCK_PORT);
+    wireMockServer = new WireMockServer(SocketUtils.findAvailableTcpPort());
     wireMockServer.start();
 
     setUpTenant(mockMvc);
