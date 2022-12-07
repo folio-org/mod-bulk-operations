@@ -26,6 +26,7 @@ import static java.lang.String.format;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Log4j2
 @SpringBootTest(classes = RemoteFileSystemRepository.class)
@@ -111,5 +112,8 @@ class RemoteFileSystemRepositoryTest {
     assertEquals(REGION, repositoryConfig.getRegion());
     assertEquals(S3_ACCESS_KEY, repositoryConfig.getAccessKey());
     assertEquals(S3_SECRET_KEY, repositoryConfig.getSecretKey());
+
+    // Check only port cause host could be different depending on environment.
+    assertTrue(repositoryConfig.getEndpoint().contains(String.valueOf(S3_PORT)));
   }
 }
