@@ -12,7 +12,6 @@ import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.S3ClientFactory;
 import org.folio.s3.client.S3ClientProperties;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,7 +23,9 @@ import java.io.FileInputStream;
 import java.time.Duration;
 
 import static java.lang.String.format;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Log4j2
 @SpringBootTest(classes = RemoteFileSystemRepository.class)
@@ -43,7 +44,13 @@ class RemoteFileSystemRepositoryTest {
   private static final String INITIAL_FILE_PATH = "src/test/resources/repository/" + INITIAL_FILE;
   private static final String UPDATED_FILE_PATH = "src/test/resources/repository/updated.txt";
 
-  private static RemoteFileSystemRepository remoteFileSystemRepository;
+  private static RemoteFileSystemRepository repository;
+
+  @Autowired
+  private RemoteFileSystemRepository remoteFileSystemRepository;
+
+  @Autowired
+  private RepositoryConfig repositoryConfig;
 
   @BeforeAll
   static void setUp() {
@@ -76,23 +83,33 @@ class RemoteFileSystemRepositoryTest {
       .awsSdk(false)
       .region(REGION)
       .build());
-    remoteFileSystemRepository = new RemoteFileSystemRepository(folioS3Client);
+    repository = new RemoteFileSystemRepository(folioS3Client);
   }
 
   @SneakyThrows
   @Test
   void shouldRetrieveInitialContentAfterGetAndUpdateAfterPut() {
-    remoteFileSystemRepository.put(new FileInputStream(INITIAL_FILE_PATH), INITIAL_FILE);
-    var content = remoteFileSystemRepository.get(INITIAL_FILE);
+    repository.put(new FileInputStream(INITIAL_FILE_PATH), INITIAL_FILE);
+    var content = repository.get(INITIAL_FILE);
     assertEquals("initial content", IOUtils.toString(content, "UTF-8").trim());
-    var uploaded = remoteFileSystemRepository.put(new FileInputStream(UPDATED_FILE_PATH), INITIAL_FILE);
+    var uploaded = repository.put(new FileInputStream(UPDATED_FILE_PATH), INITIAL_FILE);
     assertEquals(INITIAL_FILE, uploaded);
-    content = remoteFileSystemRepository.get(INITIAL_FILE);
+    content = repository.get(INITIAL_FILE);
     assertEquals("updated content", IOUtils.toString(content, "UTF-8").trim());
   }
 
   @Test
-  void shouldNotRetrieveContentIfFileNameNotFound() {
-    assertThrows(Exception.class, () -> remoteFileSystemRepository.get(WRONG_FILE));
+  void shouldThrowExceptionIfFileNameNotFound() {
+    assertThrows(Exception.class, () -> repository.get(WRONG_FILE));
+  }
+
+  @Test
+  void shouldInitializeFolioS3Client() {
+    assertNotNull(remoteFileSystemRepository);
+    assertNotNull(repositoryConfig);
+    assertEquals(BUCKET, repositoryConfig.getBucket());
+    assertEquals(REGION, repositoryConfig.getRegion());
+    assertEquals(S3_ACCESS_KEY, repositoryConfig.getAccessKey());
+    assertEquals(S3_SECRET_KEY, repositoryConfig.getSecretKey());
   }
 }

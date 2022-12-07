@@ -5,7 +5,6 @@ import org.folio.s3.client.FolioS3Client;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Repository;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 @Lazy
@@ -19,7 +18,7 @@ public class RemoteFileSystemRepository {
     return folioS3Client.write(fileNameToBeUpdated, newFile);
   }
 
-  public InputStream get(String fileName) throws IOException {
+  public InputStream get(String fileName) {
     return folioS3Client.read(fileName);
   }
 }
