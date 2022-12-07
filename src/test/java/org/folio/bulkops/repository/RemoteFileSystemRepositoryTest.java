@@ -4,6 +4,8 @@ import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
+import lombok.SneakyThrows;
+import org.apache.commons.io.IOUtils;
 import org.folio.bulkops.config.RepositoryConfig;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +16,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 
+import java.io.FileInputStream;
 import java.time.Duration;
 
 import static java.lang.String.format;
@@ -64,19 +67,16 @@ class RemoteFileSystemRepositoryTest {
     minio_endpoint = format("http://%s:%s", s3.getHost(), s3.getFirstMappedPort());
   }
 
+  @SneakyThrows
   @Test
   void shouldRetrieveInitialContentAfterGetAndUpdateAfterPut() {
-    try {
-      remoteFileSystemRepository.put(INITIAL_FILE_PATH, INITIAL_FILE);
-      var content = remoteFileSystemRepository.get(INITIAL_FILE);
-      assertEquals("initial content", content.trim());
-      var uploaded = remoteFileSystemRepository.put(UPDATED_FILE_PATH, INITIAL_FILE);
-      assertEquals(INITIAL_FILE, uploaded);
-      content = remoteFileSystemRepository.get(INITIAL_FILE);
-      assertEquals("updated content", content.trim());
-    } catch (Exception exc) {
-      fail(exc);
-    }
+    remoteFileSystemRepository.put(new FileInputStream(INITIAL_FILE_PATH), INITIAL_FILE);
+    var content = remoteFileSystemRepository.get(INITIAL_FILE);
+    assertEquals("initial content", IOUtils.toString(content, "UTF-8").trim());
+    var uploaded = remoteFileSystemRepository.put(new FileInputStream(UPDATED_FILE_PATH), INITIAL_FILE);
+    assertEquals(INITIAL_FILE, uploaded);
+    content = remoteFileSystemRepository.get(INITIAL_FILE);
+    assertEquals("updated content", IOUtils.toString(content, "UTF-8").trim());
   }
 
   @Test

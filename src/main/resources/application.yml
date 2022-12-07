@@ -58,10 +58,10 @@ management:
       enabled: true
 debug: false
 application:
-  minio-remote:
+  remote-files-storage:
     endpoint: ${AWS_URL:http://127.0.0.1:9000/}
     region: ${AWS_REGION:}
     bucket: ${AWS_BUCKET:}
     accessKey: ${AWS_ACCESS_KEY_ID:}
     secretKey: ${AWS_SECRET_ACCESS_KEY:}
-    composeWithAwsSdk: ${LOCAL_FS_COMPOSE_WITH_AWS_SDK:false}
+    awsSdk: ${LOCAL_FS_WITH_AWS_SDK:false}

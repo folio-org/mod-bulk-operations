@@ -4,17 +4,20 @@ import lombok.RequiredArgsConstructor;
 import org.folio.s3.client.FolioS3Client;
 import org.springframework.stereotype.Repository;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 @Repository
 @RequiredArgsConstructor
 public class RemoteFileSystemRepository {
 
   public final FolioS3Client folioS3Client;
 
-  public String put(String pathToNewFile, String fileNameToBeUpdated) {
-    return folioS3Client.upload(pathToNewFile, fileNameToBeUpdated);
+  public String put(InputStream newFile, String fileNameToBeUpdated) {
+    return folioS3Client.write(fileNameToBeUpdated, newFile);
   }
 
-  public String get(String fileName) throws Exception {
-    return new String(folioS3Client.read(fileName).readAllBytes());
+  public InputStream get(String fileName) throws IOException {
+    return folioS3Client.read(fileName);
   }
 }

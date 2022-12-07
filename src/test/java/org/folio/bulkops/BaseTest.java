@@ -99,7 +99,8 @@ public abstract class BaseTest {
 
   @SneakyThrows
   protected static void setUpTenant(MockMvc mockMvc) {
-    mockMvc.perform(post("/_/tenant").content(asJsonString(new TenantAttributes().moduleTo("mod-data-export-worker")))
+    mockMvc.perform(post("/_/tenant")
+      .content(asJsonString(new TenantAttributes().moduleTo("mod-bulk-operations")))
       .headers(defaultHeaders())
       .contentType(APPLICATION_JSON)).andExpect(status().isNoContent());
   }
