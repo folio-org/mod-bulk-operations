@@ -59,7 +59,7 @@ management:
 debug: false
 application:
   remote-files-storage:
-    endpoint: ${AWS_URL:http://127.0.0.1:9000/}
+    endpoint: ${AWS_URL:http://localhost:9000/}
     region: ${AWS_REGION:}
     bucket: ${AWS_BUCKET:}
     accessKey: ${AWS_ACCESS_KEY_ID:}

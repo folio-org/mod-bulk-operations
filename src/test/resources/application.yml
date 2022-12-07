@@ -24,7 +24,7 @@ logging:
     org.springframework.web: debug
 application:
   remote-files-storage:
-    endpoint: ${AWS_URL:http://127.0.0.1:9000/}
+    endpoint: ${AWS_URL:http://localhost:9000/}
     region: ${AWS_REGION:us-west-2}
     bucket: ${AWS_BUCKET:test-bucket}
     accessKey: ${AWS_ACCESS_KEY_ID:minio-access-key}
