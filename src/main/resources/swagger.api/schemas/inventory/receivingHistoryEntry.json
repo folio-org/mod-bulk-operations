@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Entry of receiving history",
+  "ReceivingHistoryEntry": {
+    "type": "object",
+    "properties": {
+      "publicDisplay": {
+        "type": "boolean",
+        "description": "Defines if the receivingHistory should be visible to the public."
+      },
+      "enumeration": {
+        "type": "string",
+        "description": "This is the volume/issue number (e.g. v.71:no.6-2)"
+      },
+      "chronology": {
+        "type": "string",
+        "description": "Repeated element from Receiving history - Enumeration AND Receiving history - Chronology"
+      }
+    }
+  }
+}

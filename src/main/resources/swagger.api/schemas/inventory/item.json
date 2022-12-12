@@ -1,0 +1,232 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "An item record",
+  "Item": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "description": "Item id",
+        "type": "string"
+      },
+      "_version": {
+        "type": "integer",
+        "description": "Record version for optimistic locking"
+      },
+      "hrid": {
+        "type": "string",
+        "description": "The human readable ID, also called eye readable ID. A system-assigned sequential alternate ID"
+      },
+      "holdingsRecordId": {
+        "description": "ID of the holdings record the item is a member of",
+        "type": "string"
+      },
+      "formerIds": {
+        "type": "array",
+        "description": "Previous identifiers assigned to the item",
+        "items": {
+          "type": "string"
+        }
+      },
+      "discoverySuppress": {
+        "type": "boolean",
+        "description": "Records the fact that the record should not be displayed in a discovery system"
+      },
+      "title": {
+        "type": "string",
+        "description": "Resource title (read only, inherited from associated instance record)"
+      },
+      "contributorNames": {
+        "description": "A list of contributor names",
+        "type": "array",
+        "items": {
+          "$ref": "contributorName.json#/ContributorName"
+        }
+      },
+      "callNumber": {
+        "type": "string",
+        "description": "Call number is an identifier assigned to an item, usually printed on a label attached to the item, and used to determine its physical position in a shelving sequence (e.g. K1 .M44, read only, inherited from associated holdings record)"
+      },
+      "barcode": {
+        "description": "Text, with input likely validated by the barcode scanner",
+        "type": "string"
+      },
+      "effectiveShelvingOrder": {
+        "type": "string",
+        "description": "A system generated normalization of the call number that allows for call number sorting in reports and search results"
+      },
+      "accessionNumber": {
+        "type": "string",
+        "description": "Accession number is also called inventar number. Accession number is a unique number assigned to an item in the order in which it is added to a library collection. Most libraries assign accession numbers in continous numerical sequece, but some use a code system to indicate type of material and/or year of accession in addition to order of accession"
+      },
+      "itemLevelCallNumber": {
+        "description": "Call number is an identifier assigned to an item, usually printed on a label attached to the item, and used to determine its physical position in a shelving sequence (e.g. K1 .M44, read only, inherited from associated holdings record). The item level call number, is the call number on item level",
+        "type": "string"
+      },
+      "itemLevelCallNumberPrefix": {
+        "description": "Prefix of the call number on the item level",
+        "type": "string"
+      },
+      "itemLevelCallNumberSuffix": {
+        "description": "Suffix of the call number on the item level",
+        "type": "string"
+      },
+      "itemLevelCallNumberTypeId": {
+        "description": "Call number type, refers to a call-number-type reference record",
+        "type": "string"
+      },
+      "effectiveCallNumberComponents": {
+        "$ref": "effectiveCallNumberComponents.json#/EffectiveCallNumberComponents"
+      },
+      "volume": {
+        "description": "Volume is intended for monographs when a multipart monograph (e.g. a biography of Gerorge Bernard Shaw in three volumes)",
+        "type": "string"
+      },
+      "enumeration": {
+        "description": "Enumeration is the descriptive information for the numbering scheme of a serial, usually identified by level and a descriptive caption, e.g., level 0 = v. and level 1 = no. This means that each issue of the serial has a volume and an issue number that would appear (e.g. v.71:no.6-2)",
+        "type": "string"
+      },
+      "chronology": {
+        "description": "Chronology is the descriptive information for the dating scheme of a serial, usually identified by level, e.g., level 0 = year level 1 = month. This means that each issue of the serial has a month and a year on each issue (e.g. 1985:July-Dec.)",
+        "type": "string"
+      },
+      "yearCaption": {
+        "description": "In multipart monographs, a caption is characters used to label a level of chronology (e.g. 'year 1985')",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "itemIdentifier": {
+        "description": "Item identifier number, e.g. imported from the union catalogue (read only)",
+        "type": "string"
+      },
+      "copyNumber": {
+        "description": "Copy number is the piece identifier. The copy number reflects if the library has a copy of a single-volume monograph; a copy of a multi-volume, (e.g. Copy 1, or C.7.)",
+        "type": "string"
+      },
+      "numberOfPieces": {
+        "description": "Number of pieces. Used when an item is checked out or returned to verify that all parts are present (e.g. 7 CDs in a set)",
+        "type": "string"
+      },
+      "descriptionOfPieces": {
+        "description": "Text which descripe the pieces",
+        "type": "string"
+      },
+      "numberOfMissingPieces": {
+        "description": "Number of missing pieces",
+        "type": "string"
+      },
+      "missingPieces": {
+        "description": "Text which descripes the missing pieces",
+        "type": "string"
+      },
+      "missingPiecesDate": {
+        "description": "Date when the piece(s) went missing",
+        "type": "string"
+      },
+      "itemDamagedStatusId": {
+        "description": "Item Damage status Id, refers to an Item damage Status ID reference record",
+        "type": "string"
+      },
+      "itemDamagedStatusDate": {
+        "description": "Date when damage status was last changed",
+        "type": "string"
+      },
+      "administrativeNotes":{
+        "type": "array",
+        "description": "Administrative notes",
+        "items": {
+          "type": "string"
+        }
+      },
+      "notes": {
+        "description": "notes",
+        "type": "array",
+        "items": {
+          "$ref": "itemNote.json#/ItemNote"
+        }
+      },
+      "circulationNotes": {
+        "type": "array",
+        "description": "Notes to be displayed in circulation processes",
+        "items": {
+          "$ref": "circulationNote.json#/CirculationNote"
+        }
+      },
+      "status": {
+        "$ref": "inventoryItemStatus.json#/InventoryItemStatus"
+      },
+      "materialType": {
+        "$ref": "materialType.json#/MaterialType"
+      },
+      "isBoundWith": {
+        "description": "Indicates if this Item is a bound-with",
+        "type": "boolean"
+      },
+      "boundWithTitles": {
+        "description": "List of titles that are bound together within this Item",
+        "type": "array",
+        "items": {
+          "$ref": "title.json#/Title"
+        }
+      },
+      "permanentLoanType": {
+        "description": "Permanent loan type, is the default loan type for a given item. Loan types are tenant-defined in a reference table in Settings, Inventory, Item, Loan type (e.g. Can circulate, Course reserves, Reading room, Selected)",
+        "$ref": "loanType.json#/LoanType"
+      },
+      "temporaryLoanType": {
+        "description": "Temporary loan type, is the temporary loan type for a given item. Loan types are tenant-defined in a reference table in Settings, Inventory, Item, Loan type (e.g. Can circulate, Course reserves, Reading room, Selected)",
+        "$ref": "loanType.json#/LoanType"
+      },
+      "permanentLocation": {
+        "description": "Permanent item location is the default location, shelving location, or holding which is a physical place where items are stored, or an Online location. The location is defined by Institutions, Campuses, libraries, and locations. Permanent location can be assigned at the holding level, and be overridden at the item level if needed",
+        "$ref": "location.json#/ItemLocation"
+      },
+      "temporaryLocation": {
+        "description": "Temporary item location is the temporarily location, shelving location, or holding which is a physical place where items are stored, or an Online location. The location is defined by Institutions, Campuses, libraries, and locations. Permanent location can be assigned at the holding level, and be overridden at the item level if needed",
+        "$ref": "location.json#/ItemLocation"
+      },
+      "effectiveLocation": {
+        "description": "The effective location is used by FOLIO and other integrated systems to know the current home location for the item (read only, derived from locations on HoldingsRecord and Item)",
+        "$ref": "location.json#/ItemLocation"
+      },
+      "electronicAccess": {
+        "description": "Whether an item is available electronically",
+        "type": "array",
+        "items": {
+          "$ref": "electronicAccess.json#/ElectronicAccess"
+        }
+      },
+      "inTransitDestinationServicePointId": {
+        "description": "Service point an item is intended to be transited to (should only be present when in transit)",
+        "type": "string"
+      },
+      "statisticalCodeIds": {
+        "type": "array",
+        "description": "Statistical code Id, refers to a Statistical code reference record",
+        "items": {
+          "type": "string"
+        }
+      },
+      "purchaseOrderLineIdentifier": {
+        "type": "string",
+        "description": "ID referencing a remote purchase order object related to this item"
+      },
+      "metadata": {
+        "description": "Metadata about creation and changes, provided by the server (client should not provide)",
+        "type": "object",
+        "$ref": "../metadata.json#/Metadata"
+      },
+      "tags": {
+        "description": "arbitrary tags associated with this item",
+        "id": "tags",
+        "type": "object",
+        "$ref": "../tags.json#/Tags"
+      },
+      "lastCheckIn": {
+        "description": "Information about when an item was last checked in",
+        "$ref": "lastCheckIn.json#/LastCheckIn"
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Effective call number components",
+  "EffectiveCallNumberComponents": {
+    "type": "object",
+    "description": "Elements of a full call number generated from the item or holding",
+    "properties": {
+      "callNumber": {
+        "type": "string",
+        "description": "Effective Call Number is an identifier assigned to an item or its holding and associated with the item."
+      },
+      "prefix": {
+        "type": "string",
+        "description": "Effective Call Number Prefix is the prefix of the identifier assigned to an item or its holding and associated with the item."
+      },
+      "suffix": {
+        "type": "string",
+        "description": "Effective Call Number Suffix is the suffix of the identifier assigned to an item or its holding and associated with the item."
+      },
+      "typeId": {
+        "type": "string",
+        "description": "Effective Call Number Type Id is the call number type id assigned to the item or associated holding."
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Material type define what type of thing the item is",
+  "MaterialType": {
+    "description": "Material type define what type of thing the item is",
+    "type": "object",
+    "properties": {
+      "id": {
+        "description": "Material type Id, refers to a material type reference record",
+        "type": "string"
+      },
+      "name": {
+        "description": "Material type name (e.g. Audio book, Audio disc, Computer file, Pamphelet) ",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "id"
+    ]
+  }
+}

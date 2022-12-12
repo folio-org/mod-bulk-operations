@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Whether an item is available electronically",
+  "ElectronicAccess": {
+    "type": "object",
+    "properties": {
+      "uri": {
+        "type": "string",
+        "description": "Uniform Resource Identifier (URI) is a string of characters designed for unambiguous identification of resources"
+      },
+      "linkText": {
+        "type": "string",
+        "description": "Link text is used for display in place of the URL"
+      },
+      "materialsSpecification": {
+        "type": "string",
+        "description": "Materials specified is used to specify to what portion or aspect of the resource the electronic location and access information applies (e.g. a portion or subset of the item is electronic, or a related electronic resource is being linked to the record)"
+      },
+      "publicNote": {
+        "type": "string",
+        "description": "URL public note to be displayed in the discovery"
+      },
+      "relationshipId": {
+        "type": "string",
+        "description": "Relationship Id, refers to a Relationship type reference record. Relationship between the electronic resource at the location identified and the item described in the record as a whole. (E.g. values from MARC 21, tag field 856 2nd indicator, where the values are: No information provided, Resource, Version of resource, Related resource, No display constant generate"
+      }
+    },
+    "additionalProperties": false
+  }
+}
