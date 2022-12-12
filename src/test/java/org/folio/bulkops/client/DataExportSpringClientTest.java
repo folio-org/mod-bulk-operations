@@ -20,10 +20,10 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class DataExportClientTest {
+class DataExportSpringClientTest {
 
   @Mock
-  private DataExportClient dataExportClient;
+  private BulkEditClient bulkEditClient;
 
   private static final String HOLDINGS_HRIDS = "src/test/resources/dataExportClient/holdings_hrids.csv";
   private static final String ITEMS_BARCODES = "src/test/resources/dataExportClient/items_barcodes.csv";
@@ -32,9 +32,9 @@ class DataExportClientTest {
   @SneakyThrows
   @Test
   void shouldUploadFileWithHoldingsHRIDs() {
-    when(dataExportClient.uploadFile(any(UUID.class), argThat(file -> file.getName().equals("holdings_hrids"))))
+    when(bulkEditClient.uploadFile(any(UUID.class), argThat(file -> file.getName().equals("holdings_hrids"))))
       .thenReturn("3");
-    var actualNumOfLines = dataExportClient.uploadFile(UUID.randomUUID(), readFile(HOLDINGS_HRIDS));
+    var actualNumOfLines = bulkEditClient.uploadFile(UUID.randomUUID(), readFile(HOLDINGS_HRIDS));
     var expectedNumOfLines = "3";
     assertEquals(expectedNumOfLines, actualNumOfLines);
   }
@@ -42,9 +42,9 @@ class DataExportClientTest {
   @SneakyThrows
   @Test
   void shouldUploadFileWithItemsBarcodes() {
-    when(dataExportClient.uploadFile(any(UUID.class), argThat(file -> file.getName().equals("items_barcodes"))))
+    when(bulkEditClient.uploadFile(any(UUID.class), argThat(file -> file.getName().equals("items_barcodes"))))
       .thenReturn("7");
-    var actualNumOfLines = dataExportClient.uploadFile(UUID.randomUUID(), readFile(ITEMS_BARCODES));
+    var actualNumOfLines = bulkEditClient.uploadFile(UUID.randomUUID(), readFile(ITEMS_BARCODES));
     var expectedNumOfLines = "7";
     assertEquals(expectedNumOfLines, actualNumOfLines);
   }
@@ -52,9 +52,9 @@ class DataExportClientTest {
   @SneakyThrows
   @Test
   void shouldUploadFileWithUsersUUIDs() {
-    when(dataExportClient.uploadFile(any(UUID.class), argThat(file -> file.getName().equals("users_uuids"))))
+    when(bulkEditClient.uploadFile(any(UUID.class), argThat(file -> file.getName().equals("users_uuids"))))
       .thenReturn("5");
-    var actualNumOfLines = dataExportClient.uploadFile(UUID.randomUUID(), readFile(USERS_UUIDS));
+    var actualNumOfLines = bulkEditClient.uploadFile(UUID.randomUUID(), readFile(USERS_UUIDS));
     var expectedNumOfLines = "5";
     assertEquals(expectedNumOfLines, actualNumOfLines);
   }

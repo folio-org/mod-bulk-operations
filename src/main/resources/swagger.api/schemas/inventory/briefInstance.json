@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Information about an Instance / title that is bound with other title within this Item",
+  "BriefInstance": {
+    "type": "object",
+    "description": "Information about an Instance / title that is bound with other title within this Item",
+    "properties": {
+      "id": {
+        "description": "The UUID of the Instance",
+        "type": "string"
+      },
+      "hrid": {
+        "description": "The human-readable ID of the Instance",
+        "type": "string"
+      },
+      "title": {
+        "description": "The title of the Instance",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  }
+}

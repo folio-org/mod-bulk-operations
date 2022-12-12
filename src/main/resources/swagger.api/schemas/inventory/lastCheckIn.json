@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Information about when an item was last checked in",
+  "LastCheckIn": {
+    "type": "object",
+    "properties": {
+      "dateTime": {
+        "type": "string",
+        "description": "Date and time of the last check in of the item."
+      },
+      "servicePointId": {
+        "type": "string",
+        "description": "Service point ID being used by a staff member when item was scanned in Check in app."
+      },
+      "staffMemberId": {
+        "type": "string",
+        "description": "ID a staff member who scanned the item"
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Note for holdings record",
+  "HoldingsNote": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "holdingsNoteTypeId": {
+        "type": "string",
+        "description": "ID of the type of note"
+      },
+      "holdingsNoteType": {
+        "description": "expanded note-type object corresponding to holdingsNoteTypeId",
+        "$ref": "holdingsNoteType.json#/HoldingsNoteType"
+      },
+      "note": {
+        "type": "string",
+        "description": "Text content of the note"
+      },
+      "staffOnly": {
+        "type": "boolean",
+        "description": "If true, determines that the note should not be visible for others than staff"
+      }
+    }
+  }
+}

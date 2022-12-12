@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Information about a holdings record that links a title to the bound-with Item",
+  "BriefHoldingsRecord": {
+    "type": "object",
+    "description": "Information about a holdings record that links a title to the bound-with Item",
+    "properties": {
+      "id": {
+        "description": "The UUID of the holdingsRecord",
+        "type": "string"
+      },
+      "hrid": {
+        "description": "The human-readable ID of the holdingsRecord",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  }
+}

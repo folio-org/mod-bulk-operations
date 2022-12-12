@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Receiving history of holdings record",
+  "ReceivingHistoryEntries": {
+    "type": "object",
+    "properties": {
+      "displayType": {
+        "type": "string",
+        "description": "Display hint. 1: Display fields separately. 2: Display fields concatenated"
+      },
+      "entries": {
+        "type": "array",
+        "description": "Entries of receiving history",
+        "items": {
+          "$ref": "receivingHistoryEntry.json#/ReceivingHistoryEntry"
+        }
+      }
+    }
+  }
+}

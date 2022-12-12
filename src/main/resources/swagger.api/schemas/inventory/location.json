@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Location data",
+  "ItemLocation": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "description": "Location id",
+        "type": "string"
+      },
+      "name": {
+        "description": "location name",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  }
+}
