@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Loan type",
+  "LoanType": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "description": "Loan type Id, refers to a loan type reference record",
+        "type": "string"
+      },
+      "name": {
+        "description": "Loan type name",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  }
+}
