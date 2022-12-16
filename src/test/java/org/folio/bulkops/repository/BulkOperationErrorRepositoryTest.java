@@ -8,7 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.Parameter;
+import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationError;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,6 +21,21 @@ import java.util.UUID;
 class BulkOperationErrorRepositoryTest extends BaseTest {
   @Autowired
   private BulkOperationErrorRepository repository;
+
+  @Autowired
+  private BulkOperationRepository bulkOperationRepository;
+
+  private UUID bulkOperationId;
+
+  @BeforeEach
+  void saveBulkOperation() {
+    bulkOperationId = bulkOperationRepository.save(new BulkOperation()).getId();
+  }
+
+  @AfterEach
+  void clearTestData() {
+    bulkOperationRepository.deleteById(bulkOperationId);
+  }
 
   @Test
   void shouldSaveEntity() {
@@ -39,7 +57,7 @@ class BulkOperationErrorRepositoryTest extends BaseTest {
         .message("New message")
         .type("type")
         .code("code")
-        .parameters(Collections.singletonList(new Parameter().key("barcode").value("123")));
+        .parameters(Collections.singletonList(new Parameter().key(IDENTIFIER.getValue()).value("123")));
     var updated = repository.save(created.withError(newError));
     assertTrue(created.getId().equals(updated.getId()) && newError.equals(updated.getError()));
   }
@@ -53,7 +71,7 @@ class BulkOperationErrorRepositoryTest extends BaseTest {
 
   private BulkOperationError createEntity() {
     return BulkOperationError.builder()
-        .bulkOperationId(UUID.randomUUID())
+        .bulkOperationId(bulkOperationId)
         .error(new Error()
           .message("Message")
           .type("type")

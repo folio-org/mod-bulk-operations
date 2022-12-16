@@ -30,6 +30,7 @@ public class ErrorService {
   private final BulkOperationRepository operationRepository;
   private final BulkOperationErrorRepository errorRepository;
   private final RemoteFileSystemRepository remoteFileSystemRepository;
+
   public void saveError(UUID bulkOperationId, Error error) {
     errorRepository.save(BulkOperationError.builder().bulkOperationId(bulkOperationId).error(error).build());
   }
