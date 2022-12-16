@@ -46,6 +46,10 @@ components:
       $ref: 'schemas/inventory/item.json#/Item'
     holdingsRecord:
       $ref: 'schemas/inventory/holdingsRecord.json#/HoldingsRecord'
+    error:
+      $ref: 'schemas/error.json'
+    errorParameterName:
+      $ref: 'schemas/error_parameter_name.json#/ErrorParameterName'
     searchResult:
       type: object
       properties:

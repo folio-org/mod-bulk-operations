@@ -1,3 +1,5 @@
+-- noinspection SqlNoDataSourceInspectionForFile
+
 CREATE TYPE OperationType as ENUM ('UPDATE', 'DELETE');
 CREATE CAST (character varying as OperationType) WITH INOUT AS IMPLICIT;
 CREATE TYPE EntityType as ENUM ('USER', 'ITEM', 'HOLDING');
@@ -109,3 +111,11 @@ CREATE TABLE IF NOT EXISTS bulk_operation_data_processing (
     references bulk_operation(id)
 );
 
+CREATE CAST (character varying as jsonb) WITH INOUT AS IMPLICIT;
+CREATE TABLE IF NOT EXISTS bulk_operation_errors (
+   id UUID PRIMARY KEY,
+   bulk_operation_id UUID,
+   error_json jsonb,
+   constraint fk_error_to_operation foreign key (bulk_operation_id)
+     references bulk_operation(id) on delete cascade
+);
