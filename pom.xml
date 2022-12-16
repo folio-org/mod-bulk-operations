@@ -29,6 +29,7 @@
     <sonar.exclusions>
       **/src/main/java/org/folio/bulkops/ModBulkOperationsApplication.java,
       **/src/main/java/org/folio/bulkops/domain/**
+      **/src/main/java/org/folio/bulkops/util/ErrorConverter.java
     </sonar.exclusions>
     <sonar.coverage.exclusions>**/src/main/java/org/folio/bulkops/client/**</sonar.coverage.exclusions>
     <argLine/>
