@@ -1,6 +1,6 @@
 # mod-bulk-operations self evaluation criteria
 
-- [] Upon acceptance, code author(s) agree to have source code canonically in folio-org github
+- [ ] Upon acceptance, code author(s) agree to have source code canonically in folio-org github
 - [] Copyright assigned to OLF
 - [] Uses Apache 2.0 license
 - [] Third party dependencies use an Apache 2.0 compatible license
