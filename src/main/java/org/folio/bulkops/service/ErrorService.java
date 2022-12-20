@@ -2,52 +2,53 @@ package org.folio.bulkops.service;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static org.apache.commons.lang3.StringUtils.LF;
-import static org.folio.bulkops.domain.dto.ErrorParameterName.IDENTIFIER;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
+import org.folio.bulkops.domain.dto.StateType;
 import org.folio.bulkops.domain.entity.BulkOperation;
-import org.folio.bulkops.domain.entity.BulkOperationError;
-import org.folio.bulkops.repository.BulkOperationErrorRepository;
+import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.repository.RemoteFileSystemRepository;
-import org.springframework.data.domain.PageRequest;
+import org.folio.spring.cql.JpaCqlRepository;
+import org.folio.spring.data.OffsetRequest;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
-import org.folio.bulkops.domain.dto.Error;
-import org.folio.bulkops.domain.dto.Parameter;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ErrorService {
+  private static final String POSTFIX_ERROR_MESSAGE_NON_NULL = " AND errorMessage<>null";
   private final BulkOperationRepository operationRepository;
-  private final BulkOperationErrorRepository errorRepository;
   private final RemoteFileSystemRepository remoteFileSystemRepository;
+  private final BulkOperationExecutionContentRepository executionContentRepository;
+  private final JpaCqlRepository<BulkOperationExecutionContent, UUID> executionContentCqlRepository;
 
-  public void saveError(UUID bulkOperationId, Error error) {
-    errorRepository.save(BulkOperationError.builder().bulkOperationId(bulkOperationId).error(error).build());
+  public void saveError(UUID bulkOperationId, String identifier, String errorMessage) {
+    executionContentRepository.save(BulkOperationExecutionContent.builder()
+        .identifier(identifier)
+        .bulkOperationId(bulkOperationId)
+        .state(StateType.FAILED)
+        .errorMessage(errorMessage)
+      .build());
   }
 
-  public List<Error> getErrors(UUID bulkOperationId, int limit) {
-    return errorRepository.findAllByBulkOperationId(bulkOperationId, PageRequest.of(0, limit))
-      .map(BulkOperationError::getError)
-      .toList();
+  public Page<BulkOperationExecutionContent> getErrorsByCql(String cql, int offset, int limit) {
+    return executionContentCqlRepository.findByCQL(cql.contains("errorMessage") ? cql : cql + POSTFIX_ERROR_MESSAGE_NON_NULL, OffsetRequest.of(offset, limit));
   }
 
   public String uploadErrorsToStorage(UUID bulkOperationId) {
-    var errors = errorRepository.findAllByBulkOperationId(bulkOperationId, PageRequest.of(0, Integer.MAX_VALUE));
-    if (!errors.isEmpty()) {
-      var errorsString = errors.stream()
-        .map(BulkOperationError::getError)
-        .filter(Objects::nonNull)
-        .map(this::errorToCsvLine)
+    var contents = executionContentCqlRepository.findByCQL("bulkOperationId==" + bulkOperationId + POSTFIX_ERROR_MESSAGE_NON_NULL, OffsetRequest.of(0, Integer.MAX_VALUE));
+    if (!contents.isEmpty()) {
+      var errorsString = contents.stream()
+        .map(content -> String.join(",", content.getIdentifier(), content.getErrorMessage()))
         .collect(Collectors.joining(LF));
       var errorsFileName = LocalDate.now().format(ISO_LOCAL_DATE) + operationRepository.findById(bulkOperationId)
         .map(BulkOperation::getLinkToOriginFile)
@@ -57,13 +58,5 @@ public class ErrorService {
       return remoteFileSystemRepository.put(new ByteArrayInputStream(errorsString.getBytes()), bulkOperationId + "/" + errorsFileName);
     }
     return EMPTY;
-  }
-
-  private String errorToCsvLine(Error error) {
-    return error.getParameters().stream()
-      .filter(parameter -> IDENTIFIER.getValue().equals(parameter.getKey()))
-      .findFirst()
-      .map(Parameter::getValue)
-      .orElse("n/a") + "," + error.getMessage();
   }
 }
