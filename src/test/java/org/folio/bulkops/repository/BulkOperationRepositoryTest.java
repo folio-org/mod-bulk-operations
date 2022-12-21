@@ -1,6 +1,6 @@
 package org.folio.bulkops.repository;
 
-import static org.folio.bulkops.domain.dto.EntityCustomIdentifierType.BARCODE;
+import static org.folio.bulkops.domain.dto.IdentifierType.BARCODE;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationType.UPDATE;
@@ -53,7 +53,7 @@ class BulkOperationRepositoryTest extends BaseTest {
       .userId(UUID.randomUUID())
       .operationType(UPDATE)
       .entityType(USER)
-      .entityCustomIdentifierType(BARCODE)
+      .identifierType(BARCODE)
       .status(NEW)
       .dataExportJobId(UUID.randomUUID())
       .totalNumOfRecords(10)

@@ -1,9 +1,11 @@
+-- noinspection SqlNoDataSourceInspectionForFile
+
 CREATE TYPE OperationType as ENUM ('UPDATE', 'DELETE');
 CREATE CAST (character varying as OperationType) WITH INOUT AS IMPLICIT;
 CREATE TYPE EntityType as ENUM ('USER', 'ITEM', 'HOLDING');
 CREATE CAST (character varying as EntityType) WITH INOUT AS IMPLICIT;
-CREATE TYPE EntityCustomIdentifierType as ENUM ('UUID', 'BARCODE', 'EXTERNAL_ID', 'IDENTITY_NAME');
-CREATE CAST (character varying as EntityCustomIdentifierType) WITH INOUT AS IMPLICIT;
+CREATE TYPE IdentifierType as ENUM ('ID', 'BARCODE', 'HRID', 'FORMER_IDS', 'ACCESSION_NUMBER', 'HOLDINGS_RECORD_ID', 'USER_NAME', 'EXTERNAL_SYSTEM_ID', 'INSTANCE_HRID', 'ITEM_BARCODE');
+CREATE CAST (character varying as IdentifierType) WITH INOUT AS IMPLICIT;
 CREATE TYPE OperationStatusType as ENUM ('NEW', 'RETRIEVING_RECORDS', 'SAVING_RECORDS_LOCALLY', 'DATA_MODIFICATION', 'REVIEW_CHANGES', 'APPLY_CHANGES', 'SUSPENDED', 'COMPLETED', 'COMPLETED_WITH_ERRORS', 'CANCELLED', 'SCHEDULED', 'FAILED');
 CREATE CAST (character varying as OperationStatusType) WITH INOUT AS IMPLICIT;
 
@@ -12,7 +14,7 @@ CREATE TABLE IF NOT EXISTS bulk_operation (
   user_id UUID,
   operation_type OperationType,
   entity_type EntityType,
-  entity_custom_identifier_type EntityCustomIdentifierType,
+  identifier_type IdentifierType,
   status OperationStatusType,
   data_export_job_id UUID,
   link_to_origin_file TEXT,
@@ -38,7 +40,7 @@ CREATE TABLE IF NOT EXISTS bulk_operation_execution (
   processed_records INT,
   status StatusType,
   constraint fk_execution_to_operation foreign key (bulk_operation_id)
-    references bulk_operation(id)
+    references bulk_operation(id) ON DELETE CASCADE
 );
 
 CREATE TYPE StateType as ENUM ('PROCESSED', 'FAILED');
@@ -57,12 +59,12 @@ CREATE TABLE IF NOT EXISTS bulk_operation_execution_chunk (
   constraint fk_execution_chunk_to_execution foreign key (bulk_operation_execution_id)
     references bulk_operation_execution(id),
   constraint fk_execution_chunk_to_operation foreign key (bulk_operation_id)
-    references bulk_operation(id)
+    references bulk_operation(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS bulk_operation_execution_content (
   id UUID PRIMARY KEY,
-  custom_identifier TEXT,
+  identifier TEXT,
   bulk_operation_execution_chunk_id UUID,
   bulk_operation_id UUID,
   state StateType,
@@ -70,7 +72,7 @@ CREATE TABLE IF NOT EXISTS bulk_operation_execution_content (
   constraint fk_content_to_execution_chunk foreign key (bulk_operation_execution_chunk_id)
     references bulk_operation_execution_chunk(id),
   constraint fk_content_to_operation foreign key (bulk_operation_id)
-    references bulk_operation(id)
+    references bulk_operation(id) ON DELETE CASCADE
 );
 
 CREATE TYPE UpdateOptionType AS ENUM ('PATRON_GROUP', 'EXPIRATION_DATE', 'EMAIL_ADDRESS', 'PERMANENT_LOCATION', 'TEMPORARY_LOCATION', 'PERMANENT_LOAN_TYPE', 'TEMPORARY_LOAN_TYPE', 'STATUS');
@@ -82,7 +84,7 @@ CREATE TABLE IF NOT EXISTS bulk_operation_rule (
   user_id UUID,
   update_option UpdateOptionType,
   constraint fk_rule_to_operation foreign key (bulk_operation_id)
-    references bulk_operation(id)
+    references bulk_operation(id) ON DELETE CASCADE
 );
 
 CREATE TYPE UpdateActionType AS ENUM ('ADD_TO_EXISTING', 'CLEAR_FIELD', 'FIND', 'FIND_AND_REMOVE_THESE', 'REPLACE_WITH');
@@ -94,7 +96,7 @@ CREATE TABLE IF NOT EXISTS bulk_operation_rule_details (
   update_action UpdateActionType,
   update_value TEXT,
   constraint fk_rule_details_to_rule foreign key (rule_id)
-    references bulk_operation_rule(id)
+    references bulk_operation_rule(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS bulk_operation_data_processing (
@@ -106,6 +108,5 @@ CREATE TABLE IF NOT EXISTS bulk_operation_data_processing (
   total_num_of_records INT,
   processed_num_of_records INT,
   constraint fk_data_processing_to_operation foreign key (bulk_operation_id)
-    references bulk_operation(id)
+    references bulk_operation(id) ON DELETE CASCADE
 );
-

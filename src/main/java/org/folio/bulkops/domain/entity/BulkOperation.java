@@ -5,8 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import org.folio.bulkops.domain.dto.EntityCustomIdentifierType;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.OperationType;
 
@@ -41,7 +41,7 @@ public class BulkOperation {
   private EntityType entityType;
 
   @Enumerated(EnumType.STRING)
-  private EntityCustomIdentifierType entityCustomIdentifierType;
+  private IdentifierType identifierType;
 
   @Enumerated(EnumType.STRING)
   private OperationStatusType status;
