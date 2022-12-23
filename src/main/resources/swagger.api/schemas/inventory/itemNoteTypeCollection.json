@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of item note types",
+  "NoteTypeCollection": {
+    "type": "object",
+    "properties": {
+      "itemNoteTypes": {
+        "description": "List of item note types",
+        "type": "array",
+        "items": {
+          "$ref": "itemNoteType.json#/NoteType"
+        }
+      },
+      "totalRecords": {
+        "type": "integer"
+      },
+      "resultInfo": {
+        "$ref": "../common/resultInfo.json#/ResultInfo"
+      }
+    }
+  }
+}

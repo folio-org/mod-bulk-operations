@@ -7,7 +7,7 @@ import com.github.dockerjava.api.model.Ports;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.IOUtils;
-import org.folio.bulkops.config.RepositoryConfig;
+import org.folio.bulkops.configs.RepositoryConfig;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.S3ClientFactory;
 import org.folio.s3.client.S3ClientProperties;

@@ -164,11 +164,11 @@
         "description": "arbitrary tags associated with this holding",
         "id": "tags",
         "type": "object",
-        "$ref": "../tags.json#/Tags"
+        "$ref": "../common/tags.json#/Tags"
       },
       "metadata": {
         "type": "object",
-        "$ref": "../metadata.json#/Metadata"
+        "$ref": "../common/metadata.json#/Metadata"
       },
       "sourceId": {
         "description": "(A reference to) the source of a holdings record",

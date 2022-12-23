@@ -1,4 +1,4 @@
-package org.folio.bulkops.config;
+package org.folio.bulkops.configs;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;

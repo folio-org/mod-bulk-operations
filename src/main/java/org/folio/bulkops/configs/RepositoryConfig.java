@@ -1,4 +1,4 @@
-package org.folio.bulkops.config;
+package org.folio.bulkops.configs;
 
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;

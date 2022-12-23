@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Select Field Options Schema",
+  "SelectFieldOptions": {
+    "type": "object",
+    "properties": {
+      "values": {
+        "type": "array",
+        "description": "Defines the possible values for the custom field",
+        "items": {
+          "$ref": "selectFieldOption.json#/SelectFieldOption"
+        }
+      },
+      "sortingOrder": {
+        "type": "string",
+        "enum": [
+          "ASC",
+          "DESC",
+          "CUSTOM"
+        ],
+        "description": "Defines sorting order for the custom field"
+      }
+    },
+    "additionalProperties": false
+  }
+}
