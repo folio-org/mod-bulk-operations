@@ -108,5 +108,5 @@ CREATE TABLE IF NOT EXISTS bulk_operation_data_processing (
   total_num_of_records INT,
   processed_num_of_records INT,
   constraint fk_data_processing_to_operation foreign key (bulk_operation_id)
-    references bulk_operation(id) ON DELETE CASCADE
+   references bulk_operation(id) ON DELETE CASCADE
 );

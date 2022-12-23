@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Name of the item state (e.g. Available, Checked out, In transit, Awaiting pickup, On order). Default value is set to: Available",
+  "Status": {
+    "description": "The status of the item",
+    "type": "object",
+    "properties": {
+      "name": {
+        "description": "Name of the item state (e.g. Available, Checked out, In transit, Awaiting pickup, On order). Default value is set to: Available",
+        "type": "string",
+        "enum": [
+          "Aged to lost",
+          "Available",
+          "Awaiting delivery",
+          "Awaiting pickup",
+          "Checked out",
+          "Claimed returned",
+          "Declared lost",
+          "Lost and paid",
+          "Long missing",
+          "Missing",
+          "In process",
+          "In process (non-requestable)",
+          "In transit",
+          "Intellectual item",
+          "On order",
+          "Order closed",
+          "Paged",
+          "Restricted",
+          "Unavailable",
+          "Unknown",
+          "Withdrawn"
+        ]
+      },
+      "date": {
+        "description": "Date of the current item state. E.g. date set when item state was changed by the Check out app",
+        "type": "string",
+        "format": "date-time"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "name"
+    ]
+  }
+  }

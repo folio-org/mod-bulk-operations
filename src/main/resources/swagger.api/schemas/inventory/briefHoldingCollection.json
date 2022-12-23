@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of brief holdings records",
+  "BriefHoldingsRecordCollection": {
+    "type": "object",
+    "properties": {
+      "holdingsRecords": {
+        "description": "List of brief holdings records",
+        "type": "array",
+        "items": {
+          "$ref": "briefHolding.json#/BriefHoldingsRecord"
+        }
+      },
+      "totalRecords": {
+        "type": "integer"
+      },
+      "resultInfo": {
+        "$ref": "../common/resultInfo.json#/ResultInfo"
+      }
+    }
+  }
+}

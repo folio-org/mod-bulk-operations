@@ -22,6 +22,10 @@ paths:
 
 components:
   schemas:
+    servicePoints:
+      $ref: 'schemas/common/servicepoints.json#/ServicePoints'
+    configurationCollection:
+      $ref: 'schemas/configuration/configurationCollection.json#/ConfigurationCollection'
     operationType:
       $ref: 'schemas/operation_type.json#/OperationType'
     entityType:
@@ -40,12 +44,56 @@ components:
       $ref: 'schemas/update_action_type.json#/UpdateActionType'
     job:
       $ref: 'schemas/job.json#/Job'
-    user:
-      $ref: 'schemas/user/user.json#/User'
-    item:
-      $ref: 'schemas/inventory/item.json#/Item'
-    holdingsRecord:
-      $ref: 'schemas/inventory/holdingsRecord.json#/HoldingsRecord'
+    unifiedTable:
+      $ref: 'schemas/unified-table-representation/unifiedTable.json'
+    userCollection:
+      $ref: 'schemas/user/userCollection.json#/UserCollection'
+    userGroupCollection:
+      $ref: 'schemas/user/userGroupCollection.json#/UserGroupCollection'
+    departmentCollection:
+      $ref: 'schemas/user/departmentCollection.json#/DepartmentCollection'
+    addressTypeCollection:
+      $ref: 'schemas/user/addressTypeCollection.json#/AddressTypeCollection'
+    proxyForCollection:
+      $ref: 'schemas/user/proxyForCollection.json#/ProxyForCollection'
+    customFieldCollection:
+      $ref: 'schemas/user/customFieldCollection.json#/CustomFieldCollection'
+    itemCollection:
+      $ref: 'schemas/inventory/itemCollection.json#/ItemCollection'
+    callNumberTypes:
+      $ref: 'schemas/inventory/callNumberTypeCollection.json#/CallNumberTypeCollection'
+    holdingsRecordCollection:
+      $ref: 'schemas/inventory/holdingsRecordCollection.json#/HoldingsRecordCollection'
+    briefHoldings:
+      $ref: 'schemas/inventory/briefHoldingCollection.json#/BriefHoldingsRecordCollection'
+    damagedStatuses:
+      $ref: 'schemas/inventory/damagedStatusCollection.json#/DamagedStatusCollection'
+    statisticalCodes:
+      $ref: 'schemas/inventory/statisticalCodeCollection.json#/StatisticalCodeCollection'
+    noteTypes:
+      $ref: 'schemas/inventory/itemNoteTypeCollection.json#/NoteTypeCollection'
+    materialTypes:
+      $ref: 'schemas/inventory/materialTypeCollection.json#/MaterialTypeCollection'
+    loanTypes:
+      $ref: 'schemas/inventory/loanTypeCollection.json#/LoanTypeCollection'
+    itemLocationCollection:
+      $ref: 'schemas/inventory/locationCollection.json#/ItemLocationCollection'
+    electronicAccessRelationshipCollection:
+      $ref: 'schemas/inventory/electronicAccessRelationshipCollection.json#/ElectronicAccessRelationshipCollection'
+    holdingsRecordsSourceCollection:
+      $ref: 'schemas/inventory/holdingsRecordsSourceCollection.json#/HoldingsRecordsSourceCollection'
+    holdingsTypeCollection:
+      $ref: 'schemas/inventory/holdingsTypeCollection.json#/HoldingsTypeCollection'
+    holdingsNoteTypeCollection:
+      $ref: 'schemas/inventory/holdingsNoteTypeCollection.json#/HoldingsNoteTypeCollection'
+    illPolicyCollection:
+      $ref: 'schemas/inventory/illPolicyCollection.json#/IllPolicyCollection'
+    briefInstances:
+      $ref: 'schemas/inventory/briefInstanceCollection.json#/BriefInstanceCollection'
+    error:
+      $ref: 'schemas/error.json'
+    errorParameterName:
+      $ref: 'schemas/error_parameter_name.json#/ErrorParameterName'
     searchResult:
       type: object
       properties:

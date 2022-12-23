@@ -1,4 +1,4 @@
-package org.folio.bulkops.config;
+package org.folio.bulkops.configs;
 
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;

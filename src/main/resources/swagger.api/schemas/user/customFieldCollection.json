@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of custom fields",
+  "CustomFieldCollection": {
+    "type": "object",
+    "properties": {
+      "customFields": {
+        "type": "array",
+        "description": "An array of custom fields",
+        "items": {
+          "type": "object",
+          "$ref": "customField.json#/CustomField"
+        }
+      },
+      "totalRecords": {
+        "description": "Total number of records available, that match search conditions",
+        "type": "integer"
+      }
+    },
+    "additionalProperties": false
+  }
+}

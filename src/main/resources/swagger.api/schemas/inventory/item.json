@@ -215,13 +215,13 @@
       "metadata": {
         "description": "Metadata about creation and changes, provided by the server (client should not provide)",
         "type": "object",
-        "$ref": "../metadata.json#/Metadata"
+        "$ref": "../common/metadata.json#/Metadata"
       },
       "tags": {
         "description": "arbitrary tags associated with this item",
         "id": "tags",
         "type": "object",
-        "$ref": "../tags.json#/Tags"
+        "$ref": "../common/tags.json#/Tags"
       },
       "lastCheckIn": {
         "description": "Information about when an item was last checked in",

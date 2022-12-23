@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of item statistical codes",
+  "StatisticalCodeCollection": {
+    "type": "object",
+    "properties": {
+      "statisticalCodes": {
+        "description": "List of item statistical codes",
+        "type": "array",
+        "items": {
+          "$ref": "statisticalCode.json#/StatisticalCode"
+        }
+      },
+      "totalRecords": {
+        "type": "integer"
+      },
+      "resultInfo": {
+        "$ref": "../common/resultInfo.json#/ResultInfo"
+      }
+    }
+  }
+}
