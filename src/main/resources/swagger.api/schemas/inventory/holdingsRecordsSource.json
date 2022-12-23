@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A holdings records source",
+  "HoldingsRecordsSource": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "The unique ID of the holdings records source; UUID"
+      },
+      "name": {
+        "type": "string",
+        "description": "Name of the holdings records source"
+      },
+      "source": {
+        "type": "string",
+        "enum": [
+          "folio",
+          "local"
+        ],
+        "description": "The holdings records source"
+      },
+      "metadata": {
+        "type": "object",
+        "$ref": "../common/metadata.json#/Metadata",
+        "readonly": true
+      }
+    },
+    "required": [
+      "name"
+    ]
+  }
+}

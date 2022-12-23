@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of item damaged statuses",
+  "DamagedStatusCollection": {
+    "type": "object",
+    "properties": {
+      "itemDamageStatuses": {
+        "description": "List of item damaged statuses",
+        "type": "array",
+        "items": {
+          "$ref": "damagedStatus.json#/DamagedStatus"
+        }
+      },
+      "totalRecords": {
+        "type": "integer"
+      },
+      "resultInfo": {
+        "$ref": "../common/resultInfo.json#/ResultInfo"
+      }
+    }
+  }
+}

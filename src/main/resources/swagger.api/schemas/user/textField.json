@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Textbox Field Schema",
+  "TextField": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "fieldFormat": {
+        "$ref": "format.json#/Format",
+        "description": "Defines custom field format option"
+      }
+    },
+    "required": [
+      "fieldFormat"
+    ]
+  }
+}

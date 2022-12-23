@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of brief instances",
+  "BriefInstanceCollection": {
+    "type": "object",
+    "properties": {
+      "instances": {
+        "description": "List of brief instances",
+        "type": "array",
+        "items": {
+          "$ref": "briefInstance.json#/BriefInstance"
+        }
+      },
+      "totalRecords": {
+        "type": "integer"
+      },
+      "resultInfo": {
+        "$ref": "../common/resultInfo.json#/ResultInfo"
+      }
+    }
+  }
+}

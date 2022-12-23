@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Checkbox Field Schema",
+  "CheckBoxField": {
+    "type": "object",
+    "properties": {
+      "default": {
+        "type": "boolean",
+        "description": "Defines if the custom field is default"
+      }
+    },
+    "additionalProperties": false
+  }
+}

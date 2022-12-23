@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of item locations",
+  "ItemLocationCollection": {
+    "type": "object",
+    "properties": {
+      "locations": {
+        "description": "List of item locations",
+        "type": "array",
+        "items": {
+          "$ref": "location.json#/ItemLocation"
+        }
+      },
+      "totalRecords": {
+        "type": "integer"
+      },
+      "resultInfo": {
+        "$ref": "../common/resultInfo.json#/ResultInfo"
+      }
+    }
+  }
+}

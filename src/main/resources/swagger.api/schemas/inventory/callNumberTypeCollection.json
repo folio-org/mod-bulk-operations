@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of item level call number types",
+  "CallNumberTypeCollection": {
+    "type": "object",
+    "properties": {
+      "callNumberTypes": {
+        "description": "List of item level call number types",
+        "type": "array",
+        "items": {
+          "$ref": "callNumberType.json#/CallNumberType"
+        }
+      },
+      "totalRecords": {
+        "type": "integer"
+      },
+      "resultInfo": {
+        "$ref": "../common/resultInfo.json#/ResultInfo"
+      }
+    }
+  }
+}
