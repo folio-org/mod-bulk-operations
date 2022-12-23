@@ -2,8 +2,9 @@ package org.folio.bulkops.processor;
 
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.client.HoldingsClient;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.springframework.stereotype.Component;
-import org.folio.bulkops.domain.dto.HoldingsRecord;
+
 
 @Component
 @RequiredArgsConstructor

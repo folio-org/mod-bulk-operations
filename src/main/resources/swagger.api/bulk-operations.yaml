@@ -22,6 +22,8 @@ paths:
 
 components:
   schemas:
+    bulkOperationRuleCollection:
+      $ref: 'schemas/bulk_operation_rule_collection.json#/BulkOperationRuleCollection'
     operationType:
       $ref: 'schemas/operation_type.json#/OperationType'
     entityType:
@@ -40,12 +42,6 @@ components:
       $ref: 'schemas/update_action_type.json#/UpdateActionType'
     job:
       $ref: 'schemas/job.json#/Job'
-    user:
-      $ref: 'schemas/user/user.json#/User'
-    item:
-      $ref: 'schemas/inventory/item.json#/Item'
-    holdingsRecord:
-      $ref: 'schemas/inventory/holdingsRecord.json#/HoldingsRecord'
     searchResult:
       type: object
       properties:

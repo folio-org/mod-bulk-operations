@@ -1,6 +1,6 @@
 package org.folio.bulkops.client;
 
-import org.folio.bulkops.domain.dto.User;
+import org.folio.bulkops.domain.bean.User;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;

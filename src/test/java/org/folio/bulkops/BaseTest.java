@@ -10,7 +10,15 @@ import com.github.dockerjava.api.model.Ports;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.client.ConfigurationClient;
+import org.folio.bulkops.client.GroupClient;
+import org.folio.bulkops.client.HoldingsClient;
+import org.folio.bulkops.client.HoldingsSourceClient;
+import org.folio.bulkops.client.ItemClient;
+import org.folio.bulkops.client.LoanTypeClient;
+import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.client.UserClient;
 import org.folio.s3.client.S3ClientFactory;
 import org.folio.s3.client.S3ClientProperties;
 import org.folio.spring.DefaultFolioExecutionContext;
@@ -25,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpHeaders;
@@ -58,7 +67,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Log4j2
 public abstract class BaseTest {
   public static PostgreSQLContainer<?> postgresDBContainer = new PostgreSQLContainer<>("postgres:13");
-  public static WireMockServer wireMockServer;
 
   public static RemoteFileSystemClient client;
   public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
@@ -76,6 +84,24 @@ public abstract class BaseTest {
   public static String minio_endpoint;
 
   private static GenericContainer s3;
+
+  @MockBean
+  public HoldingsClient holdingsClient;
+  @MockBean
+  public ItemClient itemClient;
+  @MockBean
+  public UserClient userClient;
+  @MockBean
+  public LoanTypeClient loanTypeClient;
+  @MockBean
+  public ConfigurationClient configurationClient;
+  @MockBean
+  public GroupClient groupClient;
+  @MockBean
+  public LocationClient locationClient;
+  @MockBean
+  public HoldingsSourceClient holdingsSourceClient;
+
 
   @Autowired
   protected MockMvc mockMvc;
@@ -99,8 +125,6 @@ public abstract class BaseTest {
 
   @BeforeAll
   static void beforeAll(@Autowired MockMvc mockMvc) {
-    wireMockServer = new WireMockServer(SocketUtils.findAvailableTcpPort());
-    wireMockServer.start();
     if (isNull(s3)) {
       setUpMinio();
     }
@@ -115,7 +139,7 @@ public abstract class BaseTest {
     Map<String, Collection<String>> okapiHeaders = new LinkedHashMap<>();
     okapiHeaders.put(XOkapiHeaders.TENANT, List.of(TENANT));
     okapiHeaders.put(XOkapiHeaders.TOKEN, List.of(TOKEN));
-    okapiHeaders.put(XOkapiHeaders.URL, List.of(wireMockServer.baseUrl()));
+//    okapiHeaders.put(XOkapiHeaders.URL, List.of(wireMockServer.baseUrl()));
     okapiHeaders.put(XOkapiHeaders.USER_ID, List.of(UUID.randomUUID().toString()));
     var defaultFolioExecutionContext = new DefaultFolioExecutionContext(folioModuleMetadata, okapiHeaders);
     FolioExecutionScopeExecutionContextManager.beginFolioExecutionContext(defaultFolioExecutionContext);
@@ -139,7 +163,7 @@ public abstract class BaseTest {
 
     httpHeaders.setContentType(APPLICATION_JSON);
     httpHeaders.put(XOkapiHeaders.TENANT, List.of(TENANT));
-    httpHeaders.add(XOkapiHeaders.URL, wireMockServer.baseUrl());
+//    httpHeaders.add(XOkapiHeaders.URL, wireMockServer.baseUrl());
     httpHeaders.add(XOkapiHeaders.TOKEN, TOKEN);
     httpHeaders.add(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 

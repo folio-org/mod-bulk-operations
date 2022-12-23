@@ -1,43 +1,35 @@
 package org.folio.bulkops.processor;
 
-import static org.mockito.Mockito.verify;
-
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.UserClient;
-import org.folio.bulkops.domain.dto.ItemLocation;
-import org.folio.bulkops.domain.dto.HoldingsRecord;
-import org.folio.bulkops.domain.dto.Item;
-import org.folio.bulkops.domain.dto.User;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.UUID;
 
+import static org.mockito.Mockito.verify;
+
 class UpdateProcessorTest extends BaseTest {
   @Autowired
   private HoldingsUpdateProcessor holdingsUpdateProcessor;
-  @MockBean
-  private HoldingsClient holdingsClient;
-
   @Autowired
   private ItemUpdateProcessor itemUpdateProcessor;
-  @MockBean
-  private ItemClient itemClient;
-
   @Autowired
   private UserUpdateProcessor userUpdateProcessor;
-  @MockBean
-  private UserClient userClient;
 
   @Test
   void shouldUpdateHoldingsRecord() {
     var holdingsRecord = new HoldingsRecord()
-        .id(UUID.randomUUID().toString())
-        .instanceId(UUID.randomUUID().toString())
-        .permanentLocation(new ItemLocation().id(UUID.randomUUID().toString()));
+        .withId(UUID.randomUUID().toString())
+        .withInstanceId(UUID.randomUUID().toString())
+        .withPermanentLocation(new ItemLocation().withId(UUID.randomUUID().toString()));
 
     holdingsUpdateProcessor.updateRecord(holdingsRecord);
 
@@ -47,8 +39,8 @@ class UpdateProcessorTest extends BaseTest {
   @Test
   void shouldUpdateItem() {
     var item = new Item()
-      .id(UUID.randomUUID().toString())
-      .holdingsRecordId(UUID.randomUUID().toString());
+      .withId(UUID.randomUUID().toString())
+      .withHoldingsRecordId(UUID.randomUUID().toString());
 
     itemUpdateProcessor.updateRecord(item);
 
@@ -58,9 +50,9 @@ class UpdateProcessorTest extends BaseTest {
   @Test
   void shouldUpdateUser() {
     var user = new User()
-        .id(UUID.randomUUID().toString())
-        .patronGroup(UUID.randomUUID().toString())
-        .username("sample_user");
+        .withId(UUID.randomUUID().toString())
+        .withPatronGroup(UUID.randomUUID().toString())
+        .withUsername("sample_user");
 
     userUpdateProcessor.updateRecord(user);
 

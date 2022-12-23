@@ -8,7 +8,8 @@
       "CLEAR_FIELD",
       "FIND",
       "FIND_AND_REMOVE_THESE",
-      "REPLACE_WITH"
+      "REPLACE_WITH",
+      "FIND_AND_REPLACE"
     ]
   }
 }

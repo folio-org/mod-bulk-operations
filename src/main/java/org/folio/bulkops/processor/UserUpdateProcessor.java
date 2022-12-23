@@ -2,7 +2,7 @@ package org.folio.bulkops.processor;
 
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.client.UserClient;
-import org.folio.bulkops.domain.dto.User;
+import org.folio.bulkops.domain.bean.User;
 import org.springframework.stereotype.Component;
 
 @Component
