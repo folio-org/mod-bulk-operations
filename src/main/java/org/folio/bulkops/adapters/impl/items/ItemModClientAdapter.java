@@ -12,13 +12,13 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.adapters.ElectronicAccessStringMapper;
 import org.folio.bulkops.adapters.ModClient;
 import org.folio.bulkops.client.ItemClient;
-import org.folio.bulkops.domain.dto.CirculationNote;
-import org.folio.bulkops.domain.dto.ContributorName;
-import org.folio.bulkops.domain.dto.EffectiveCallNumberComponents;
+import org.folio.bulkops.domain.bean.CirculationNote;
+import org.folio.bulkops.domain.bean.ContributorName;
+import org.folio.bulkops.domain.bean.EffectiveCallNumberComponents;
 import org.folio.bulkops.domain.dto.IdentifierType;
-import org.folio.bulkops.domain.dto.Item;
+import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.Row;
-import org.folio.bulkops.domain.dto.Title;
+import org.folio.bulkops.domain.bean.Title;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.springframework.stereotype.Component;
 
@@ -52,7 +52,7 @@ public class ItemModClientAdapter implements ModClient<Item> {
           .map(i -> convertToUnifiedTableRow(i, null, null))
           .collect(Collectors.toList()));
   }
-  
+
   private Row convertToUnifiedTableRow(Item item, UUID bulkOperationId, String identifier) {
     return new Row()
       .addRowItem(item.getId())

@@ -22,7 +22,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("user")
-public class User {
+public class User extends BulkOperationsEntity {
 
   @JsonProperty("username")
   private String username;
@@ -76,7 +76,7 @@ public class User {
   private Date updatedDate;
 
   @JsonProperty("metadata")
-  private Object metadata;
+  private Metadata metadata;
 
   @JsonProperty("tags")
   private Tags tags;

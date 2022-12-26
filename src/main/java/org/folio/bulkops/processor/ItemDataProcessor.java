@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.ConfigurationClient;
 import org.folio.bulkops.client.LoanTypeClient;
@@ -12,8 +11,8 @@ import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.domain.bean.InventoryItemStatus;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.Action;
-import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.ConfigurationException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.RuleValidationException;
@@ -24,10 +23,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
@@ -53,29 +51,30 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
     return (option, action) -> {
       if (CLEAR_FIELD == action.getType() && STATUS == option) {
         throw new RuleValidationException("Status field can not be cleared");
-      } else if(CLEAR_FIELD == action.getType() && PERMANENT_LOAN_TYPE == option) {
+      } else if (CLEAR_FIELD == action.getType() && PERMANENT_LOAN_TYPE == option) {
         throw new RuleValidationException("Permanent loan type cannot be cleared");
-      } else if(REPLACE_WITH == action.getType() && PERMANENT_LOAN_TYPE == option && action.getUpdated() == null) {
-        throw new RuleValidationException("Permanent loan type value cannot be empty");
-      } else if(REPLACE_WITH == action.getType() && option == STATUS
+      } else if (REPLACE_WITH == action.getType() && isEmpty(action.getUpdated())) {
+        throw new RuleValidationException("Loan type value cannot be empty for REPLACE_WITH option");
+      } else if (REPLACE_WITH == action.getType() && option == STATUS
         && !item.getStatus().getName().getValue().equals(action.getUpdated())
         && !getAllowedStatuses(item.getStatus().getName().getValue()).contains(action.getUpdated())) {
-        throw new RuleValidationException("New status value \\\"%s\\\" is not allowed");
+        throw new RuleValidationException(format("Actual status value \"%s\" cannot be changed to \"%s\"", item.getStatus(), action.getUpdated()));
       }
     };
   }
 
   private List<String> getAllowedStatuses(String statusName) {
-    var configurations = configurationClient.getConfigurations(String.format(BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE, MODULE_NAME, STATUSES_CONFIG_NAME));
+    var configurations = configurationClient.getConfigurations(format(BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE, MODULE_NAME, STATUSES_CONFIG_NAME));
     if (configurations.getConfigs().isEmpty()) {
       throw new NotFoundException("Statuses configuration was not found");
     }
     try {
       var statuses = objectMapper
-        .readValue(configurations.getConfigs().get(0).getValue(), new TypeReference<HashMap<String, List<String>>>() {});
+        .readValue(configurations.getConfigs().get(0).getValue(), new TypeReference<HashMap<String, List<String>>>() {
+        });
       return statuses.getOrDefault(statusName, Collections.emptyList());
     } catch (JsonProcessingException e) {
-      throw new ConfigurationException(String.format("Error reading configuration, reason: %s", e.getMessage()));
+      throw new ConfigurationException(format("Error reading configuration, reason: %s", e.getMessage()));
     }
   }
 
@@ -84,9 +83,9 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
     if (REPLACE_WITH == action.getType()) {
       switch (option) {
         case PERMANENT_LOAN_TYPE:
-          return item -> item.withPermanentLoanType(loanTypeClient.getLoanTypeById(action.getUpdated()));
+          return item -> item.setPermanentLoanType(loanTypeClient.getLoanTypeById(action.getUpdated()));
         case TEMPORARY_LOAN_TYPE:
-          return item -> item.withTemporaryLoanType(loanTypeClient.getLoanTypeById(action.getUpdated()));
+          return item -> item.setTemporaryLoanType(loanTypeClient.getLoanTypeById(action.getUpdated()));
         case PERMANENT_LOCATION:
           return item -> item.setPermanentLocation(locationClient.getLocationById(action.getUpdated()));
         case TEMPORARY_LOCATION:
@@ -96,7 +95,9 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
             .withDate(new Date())
             .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated())));
         default:
-          return item -> {};
+          return item -> {
+            throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
+          };
       }
     } else if (CLEAR_FIELD == action.getType()) {
       switch (option) {
@@ -107,10 +108,13 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         case TEMPORARY_LOAN_TYPE:
           return item -> item.setTemporaryLoanType(null);
         default:
-          return item -> {};
+          return item -> {
+          };
       }
     }
-    return item -> {};
+    return item -> {
+      throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
+    };
 
   }
 
@@ -122,5 +126,10 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
   @Override
   public boolean compare(Item first, Item second) {
     return Objects.equals(first, second);
+  }
+
+  @Override
+  public Class<Item> getProcessedType() {
+    return Item.class;
   }
 }

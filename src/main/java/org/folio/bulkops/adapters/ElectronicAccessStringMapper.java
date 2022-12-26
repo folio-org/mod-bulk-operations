@@ -1,11 +1,13 @@
 package org.folio.bulkops.adapters;
 
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.adapters.Constants.ARRAY_DELIMITER;
-import static org.folio.bulkops.adapters.Constants.ELECTRONIC_RELATIONSHIP_NAME_ID_DELIMITER;
-import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.client.ElectronicAccessRelationshipClient;
+import org.folio.bulkops.domain.bean.ElectronicAccess;
+import org.folio.bulkops.error.NotFoundException;
+import org.folio.bulkops.service.ErrorService;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.List;
@@ -14,15 +16,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.folio.bulkops.client.ElectronicAccessRelationshipClient;
-import org.folio.bulkops.domain.dto.ElectronicAccess;
-import org.folio.bulkops.error.NotFoundException;
-import org.folio.bulkops.service.ErrorService;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Component;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.folio.bulkops.adapters.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.adapters.Constants.ELECTRONIC_RELATIONSHIP_NAME_ID_DELIMITER;
+import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER;
 
 @Component
 @RequiredArgsConstructor

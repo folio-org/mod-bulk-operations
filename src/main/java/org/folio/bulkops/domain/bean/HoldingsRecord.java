@@ -17,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("holdingsRecord")
-public class HoldingsRecord  {
+public class HoldingsRecord extends BulkOperationsEntity {
 
   @JsonProperty("id")
   private String id;
@@ -130,7 +130,7 @@ public class HoldingsRecord  {
   private Tags tags;
 
   @JsonProperty("metadata")
-  private Object metadata;
+  private Metadata metadata;
 
   @JsonProperty("sourceId")
   private String sourceId;

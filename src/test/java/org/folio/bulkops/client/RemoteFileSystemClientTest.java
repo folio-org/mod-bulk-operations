@@ -4,14 +4,11 @@ import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.IOUtils;
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.config.RepositoryConfig;
+import org.folio.bulkops.configs.RepositoryConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.ByteArrayInputStream;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

@@ -5,35 +5,43 @@ import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.service.ErrorService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
 
 @Log4j2
+@Component
 public abstract class AbstractDataProcessor<T> implements DataProcessor<T> {
+  @Autowired
+  private ErrorService errorService;
 
   @Override
-  public T process(T entity, BulkOperationRuleCollection rules) {
-    var original = clone(entity);
+  public T process(String identifier, T entity, BulkOperationRuleCollection rules) {
+    var hasProcessingError = false;
+    var updated = clone(entity);
     for (BulkOperationRule rule : rules.getBulkOperationRules()) {
       var details = rule.getRuleDetails();
       var option = details.getOption();
       for (Action action : details.getActions()) {
         try {
-          validator(entity).validate(option, action);
-          updater(option, action).apply(entity);
+          validator(updated).validate(option, action);
+          updater(option, action).apply(updated);
         } catch (Exception e) {
-          log.error(String.format("%s id=%s, error: %s", entity.getClass().getSimpleName(), "id", e.getMessage()));
-          //TODO
-          return null;
+          hasProcessingError = true;
+          log.error(String.format("%s id=%s, error: %s", updated.getClass().getSimpleName(), "id", e.getMessage()));
+          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
         }
       }
     }
-    if (compare(original, entity)) {
-//      log.error(String.format("User id=%s, error: No changes needed", entity.getId()));
-      //TODO
+    if (compare(updated, entity)) {
+      if (!hasProcessingError) {
+        errorService.saveError(rules.getBulkOperationRules().get(0).getBulkOperationId(), identifier, "No change in value required");
+      }
       return null;
     }
-    return entity;
+    return updated;
   }
 
   /**

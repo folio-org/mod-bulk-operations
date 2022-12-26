@@ -22,10 +22,6 @@ paths:
 
 components:
   schemas:
-    servicePoints:
-      $ref: 'schemas/common/servicepoints.json#/ServicePoints'
-    configurationCollection:
-      $ref: 'schemas/configuration/configurationCollection.json#/ConfigurationCollection'
     bulkOperationRuleCollection:
       $ref: 'schemas/bulk_operation_rule_collection.json#/BulkOperationRuleCollection'
     operationType:
@@ -47,7 +43,7 @@ components:
     job:
       $ref: 'schemas/job.json#/Job'
     unifiedTable:
-      $ref: 'schemas/unified-table-representation/unifiedTable.json'
+      $ref: 'schemas/unified_table.json'
     searchResult:
       type: object
       properties:

@@ -13,12 +13,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.adapters.ModClient;
 import org.folio.bulkops.client.UserClient;
-import org.folio.bulkops.domain.dto.Address;
+import org.folio.bulkops.domain.bean.Address;
 import org.folio.bulkops.domain.dto.IdentifierType;
-import org.folio.bulkops.domain.dto.CustomField;
+import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.UnifiedTable;
-import org.folio.bulkops.domain.dto.User;
+import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.error.BulkOperationException;
 import org.springframework.stereotype.Component;
 
@@ -57,7 +57,7 @@ public class UserModClientAdapter implements ModClient<User> {
           .map(u -> convertToUnifiedTableRow(u, null, null))
           .collect(Collectors.toList()));
   }
-  
+
   private Row convertToUnifiedTableRow(User user, UUID bulkOperationId, String identifier) {
     return new Row()
       .addRowItem(user.getUsername())
@@ -160,7 +160,7 @@ public class UserModClientAdapter implements ModClient<User> {
     var dateFormat = new SimpleDateFormat(DATE_TIME_PATTERN);
     return nonNull(date) ? dateFormat.format(date) : EMPTY;
   }
-  
+
   private String fetchIdentifier(User user, IdentifierType identifierType) {
     switch (identifierType) {
     case BARCODE:

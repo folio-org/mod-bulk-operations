@@ -8,12 +8,12 @@ import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.ServicePointClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.client.UserClient;
-import org.folio.bulkops.domain.dto.CallNumberType;
-import org.folio.bulkops.domain.dto.DamagedStatus;
-import org.folio.bulkops.domain.dto.NoteType;
-import org.folio.bulkops.domain.dto.ServicePoint;
-import org.folio.bulkops.domain.dto.StatisticalCode;
-import org.folio.bulkops.domain.dto.User;
+import org.folio.bulkops.domain.bean.CallNumberType;
+import org.folio.bulkops.domain.bean.DamagedStatus;
+import org.folio.bulkops.domain.bean.NoteType;
+import org.folio.bulkops.domain.bean.ServicePoint;
+import org.folio.bulkops.domain.bean.StatisticalCode;
+import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.error.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,7 +50,7 @@ class ItemReferenceResolverTest {
 
   @Test
   void getCallNumberTypeNameByIdTest() {
-    when(callNumberTypeClient.getById("id")).thenReturn(new CallNumberType().name("name"));
+    when(callNumberTypeClient.getById("id")).thenReturn(new CallNumberType().withName("name"));
     var actual = itemReferenceResolver.getCallNumberTypeNameById("id", null, null);
     verify(callNumberTypeClient).getById("id");
     assertEquals("name", actual);
@@ -65,7 +65,7 @@ class ItemReferenceResolverTest {
 
   @Test
   void getDamagedStatusNameByIdTest() {
-    when(damagedStatusClient.getById("id")).thenReturn(new DamagedStatus().name("name"));
+    when(damagedStatusClient.getById("id")).thenReturn(new DamagedStatus().withName("name"));
     var actual = itemReferenceResolver.getDamagedStatusNameById("id", null, null);
     verify(damagedStatusClient).getById("id");
     assertEquals("name", actual);
@@ -80,7 +80,7 @@ class ItemReferenceResolverTest {
 
   @Test
   void getNoteTypeNameByIdTest() {
-    when(itemNoteTypeClient.getById("id")).thenReturn(new NoteType().name("name"));
+    when(itemNoteTypeClient.getById("id")).thenReturn(new NoteType().withName("name"));
     var actual = itemReferenceResolver.getNoteTypeNameById("id", null, null);
     verify(itemNoteTypeClient).getById("id");
     assertEquals("name", actual);
@@ -95,7 +95,7 @@ class ItemReferenceResolverTest {
 
   @Test
   void getServicePointNameByIdTest() {
-    when(servicePointClient.getById("id")).thenReturn(new ServicePoint().name("name"));
+    when(servicePointClient.getById("id")).thenReturn(new ServicePoint().withName("name"));
     var actual = itemReferenceResolver.getServicePointNameById("id", null, null);
     verify(servicePointClient).getById("id");
     assertEquals("name", actual);
@@ -110,7 +110,7 @@ class ItemReferenceResolverTest {
 
   @Test
   void getStatisticalCodeByIdTest() {
-    when(statisticalCodeClient.getById("id")).thenReturn(new StatisticalCode().code("code"));
+    when(statisticalCodeClient.getById("id")).thenReturn(new StatisticalCode().withCode("code"));
     var actual = itemReferenceResolver.getStatisticalCodeById("id", null, null);
     verify(statisticalCodeClient).getById("id");
     assertEquals("code", actual);
@@ -125,7 +125,7 @@ class ItemReferenceResolverTest {
 
   @Test
   void getUserNameById() {
-    when(userClient.getUserById("id")).thenReturn(new User().username("name"));
+    when(userClient.getUserById("id")).thenReturn(new User().withUsername("name"));
     var actual = itemReferenceResolver.getUserNameById("id", null, null);
     verify(userClient).getUserById("id");
     assertEquals("name", actual);

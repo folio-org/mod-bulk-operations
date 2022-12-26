@@ -26,6 +26,6 @@ public class UserGroup   {
   private Integer expirationOffsetInDays;
 
   @JsonProperty("metadata")
-  private Object metadata;
+  private Metadata metadata;
 }
 

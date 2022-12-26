@@ -1,8 +1,8 @@
 package org.folio.bulkops.client;
 
 import org.folio.bulkops.configs.FeignClientConfiguration;
-import org.folio.bulkops.domain.dto.AddressType;
-import org.folio.bulkops.domain.dto.AddressTypeCollection;
+import org.folio.bulkops.domain.bean.AddressType;
+import org.folio.bulkops.domain.bean.AddressTypeCollection;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;

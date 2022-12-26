@@ -19,6 +19,14 @@ import org.folio.bulkops.client.LoanTypeClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.UserClient;
+import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.BulkOperationRule;
+import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
+import org.folio.bulkops.domain.dto.UpdateActionType;
+import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.processor.DataProcessorFactory;
+import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.s3.client.S3ClientFactory;
 import org.folio.s3.client.S3ClientProperties;
 import org.folio.spring.DefaultFolioExecutionContext;
@@ -47,11 +55,14 @@ import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
@@ -102,10 +113,8 @@ public abstract class BaseTest {
   @MockBean
   public HoldingsSourceClient holdingsSourceClient;
 
-
   @Autowired
   protected MockMvc mockMvc;
-
   @Autowired
   private FolioModuleMetadata folioModuleMetadata;
 
@@ -200,5 +209,27 @@ public abstract class BaseTest {
       .awsSdk(false)
       .region(REGION)
       .build()));
+  }
+
+  public static BulkOperationRuleCollection rules(BulkOperationRule... rules) {
+    var uuid = UUID.randomUUID();
+
+    return new BulkOperationRuleCollection()
+      .bulkOperationRules(Arrays.stream(rules).map(rule -> rule.bulkOperationId(uuid)).collect(Collectors.toList()))
+      .totalRecords(rules.length);
+  }
+
+  public static BulkOperationRule rule(UpdateOptionType option, UpdateActionType action, String initial, String updated) {
+    return new BulkOperationRule()
+      .ruleDetails(new BulkOperationRuleRuleDetails()
+        .option(option)
+        .actions(Collections.singletonList(new Action()
+          .type(action)
+            .initial(initial)
+          .updated(updated))));
+  }
+
+  public static BulkOperationRule rule(UpdateOptionType option, UpdateActionType action, String updated) {
+    return rule(option, action, null, updated);
   }
 }

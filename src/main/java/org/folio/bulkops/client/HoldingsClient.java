@@ -1,9 +1,8 @@
 package org.folio.bulkops.client;
 
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import org.folio.bulkops.configs.FeignEncoderConfiguration;
-import org.folio.bulkops.domain.dto.HoldingsRecord;
-import org.folio.bulkops.domain.dto.HoldingsRecordCollection;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.HoldingsRecordCollection;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;

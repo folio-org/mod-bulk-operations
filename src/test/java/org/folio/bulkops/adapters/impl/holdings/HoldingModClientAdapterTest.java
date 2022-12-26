@@ -2,13 +2,13 @@ package org.folio.bulkops.adapters.impl.holdings;
 
 import org.folio.bulkops.adapters.ElectronicAccessStringMapper;
 import org.folio.bulkops.client.HoldingsClient;
-import org.folio.bulkops.domain.dto.HoldingsNote;
-import org.folio.bulkops.domain.dto.HoldingsRecord;
-import org.folio.bulkops.domain.dto.HoldingsRecordCollection;
-import org.folio.bulkops.domain.dto.HoldingsStatement;
-import org.folio.bulkops.domain.dto.ItemLocation;
-import org.folio.bulkops.domain.dto.ReceivingHistoryEntries;
-import org.folio.bulkops.domain.dto.ReceivingHistoryEntry;
+import org.folio.bulkops.domain.bean.HoldingsNote;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.HoldingsRecordCollection;
+import org.folio.bulkops.domain.bean.HoldingsStatement;
+import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.ReceivingHistoryEntries;
+import org.folio.bulkops.domain.bean.ReceivingHistoryEntry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -46,17 +46,17 @@ class HoldingModClientAdapterTest {
 
   @Test
   void convertEntityToUnifiedTableTest() {
-    var permanentLocation = new ItemLocation().id("permanentLocationId").name("permanentLocation");
-    var holdingsRecord = new HoldingsRecord().id("id")
-      .callNumber("callNumber").instanceId("instanceId")
-      .notes(List.of(new HoldingsNote().note("note").staffOnly(true)
-        .holdingsNoteTypeId("noteTypeId")))
-      .permanentLocation(permanentLocation)
-      .permanentLocationId("permanentLocationId")
-      .holdingsStatements(List.of(new HoldingsStatement().note("statementNote")))
-      .receivingHistory(new ReceivingHistoryEntries().displayType("type")
-        .entries(List.of(new ReceivingHistoryEntry().publicDisplay(true).chronology("chronology").enumeration("enumeration"))))
-      .statisticalCodeIds(List.of("statisticalCodeId"));
+    var permanentLocation = new ItemLocation().withId("permanentLocationId").withName("permanentLocation");
+    var holdingsRecord = new HoldingsRecord().withId("id")
+      .withCallNumber("callNumber").withInstanceId("instanceId")
+      .withNotes(List.of(new HoldingsNote().withNote("note").withStaffOnly(true)
+        .withHoldingsNoteTypeId("noteTypeId")))
+      .withPermanentLocation(permanentLocation)
+      .withPermanentLocationId("permanentLocationId")
+      .withHoldingsStatements(List.of(new HoldingsStatement().withNote("statementNote")))
+      .withReceivingHistory(new ReceivingHistoryEntries().withDisplayType("type")
+        .withEntries(List.of(new ReceivingHistoryEntry().withPublicDisplay(true).withChronology("chronology").withEnumeration("enumeration"))))
+      .withStatisticalCodeIds(List.of("statisticalCodeId"));
 
     when(holdingsReferenceResolver.getLocationNameById("permanentLocationId")).thenReturn("permanentLocation");
     when(holdingsReferenceResolver.getNoteTypeNameById(eq("noteTypeId"), isNull(), isNull())).thenReturn("noteType");
@@ -83,8 +83,8 @@ class HoldingModClientAdapterTest {
 
   @Test
   void getUnifiedRepresentationByQueryTest() {
-    var holdingsRecord1 = new HoldingsRecord().id("id1").callNumber("callNumber1");
-    var holdingsRecord2 = new HoldingsRecord().id("id2").callNumber("callNumber2");
+    var holdingsRecord1 = new HoldingsRecord().withId("id1").withCallNumber("callNumber1");
+    var holdingsRecord2 = new HoldingsRecord().withId("id2").withCallNumber("callNumber2");
     var holdingsCollection = new HoldingsRecordCollection();
     holdingsCollection.setHoldingsRecords(List.of(holdingsRecord1, holdingsRecord2));
 

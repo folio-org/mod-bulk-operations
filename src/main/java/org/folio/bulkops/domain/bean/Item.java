@@ -17,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("item")
-public class Item {
+public class Item extends BulkOperationsEntity {
   @JsonProperty("id")
   private String id;
 
@@ -166,7 +166,7 @@ public class Item {
   private String purchaseOrderLineIdentifier;
 
   @JsonProperty("metadata")
-  private Object metadata;
+  private Metadata metadata;
 
   @JsonProperty("tags")
   private Tags tags;

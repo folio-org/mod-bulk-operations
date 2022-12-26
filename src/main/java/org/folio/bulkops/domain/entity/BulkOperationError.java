@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import org.folio.bulkops.domain.dto.Error;
+import org.folio.bulkops.domain.bean.Error;
 import org.folio.bulkops.util.ErrorConverter;
 
 import javax.persistence.Column;

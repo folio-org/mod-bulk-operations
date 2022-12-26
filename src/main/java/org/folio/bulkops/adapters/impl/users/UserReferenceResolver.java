@@ -11,7 +11,7 @@ import org.folio.bulkops.client.CustomFieldsClient;
 import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.client.GroupClient;
 import org.folio.bulkops.client.OkapiClient;
-import org.folio.bulkops.domain.dto.CustomField;
+import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.error.BulkOperationException;
 import org.folio.bulkops.error.NotFoundException;
 import org.folio.bulkops.service.ErrorService;
