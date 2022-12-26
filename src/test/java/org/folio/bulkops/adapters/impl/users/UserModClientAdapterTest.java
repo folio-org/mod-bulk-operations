@@ -12,7 +12,6 @@ import org.folio.bulkops.domain.bean.SelectFieldOptions;
 import org.folio.bulkops.domain.bean.Tags;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserCollection;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -51,7 +50,6 @@ class UserModClientAdapterTest {
   private UserModClientAdapter userModClientAdapter;
 
   @Test
-  @Disabled
   void convertEntityToUnifiedTableTest() {
     var user = new User()
       .withActive(true)
@@ -67,7 +65,7 @@ class UserModClientAdapterTest {
     var customField2 = new CustomField();
     customField2.setRefId("refId2");
     customField2.setName("field2");
-    customField2.withSelectField(new SelectField()
+    customField2.setSelectField(new SelectField()
       .withOptions(new SelectFieldOptions().withValues(List.of(new SelectFieldOption().withId("one").withValue("one"), new SelectFieldOption().withId("two").withValue("two")))));
     customField2.setType(CustomFieldTypes.MULTI_SELECT_DROPDOWN);
     var customField3 = new CustomField();
