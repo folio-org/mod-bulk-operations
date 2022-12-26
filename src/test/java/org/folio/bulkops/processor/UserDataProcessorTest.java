@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
-public class UserDataProcessorTest extends BaseTest {
+class UserDataProcessorTest extends BaseTest {
 
   @Autowired
   DataProcessorFactory<User> factory;
@@ -38,7 +38,7 @@ public class UserDataProcessorTest extends BaseTest {
   public static final String IDENTIFIER = "345";
 
   @Test
-  public void testUpdateUserWithInvalidData() {
+  void testUpdateUserWithInvalidData() {
     var processor = factory.getProcessorFromFactory(User.class);
 
     assertNull(processor.process(IDENTIFIER, new User(), rules(rule(EXPIRATION_DATE, FIND, null),
@@ -61,7 +61,7 @@ public class UserDataProcessorTest extends BaseTest {
   }
 
   @Test
-  public void testUpdateUserWithValidData() throws ParseException {
+  void testUpdateUserWithValidData() throws ParseException {
     var date = "2023-12-08T23:59:59.000+00:00";
 
     var patronGroupName = "existed-patron-group";
@@ -78,6 +78,6 @@ public class UserDataProcessorTest extends BaseTest {
     assertNotNull(result);
     assertEquals(new SimpleDateFormat(DATE_TIME_FORMAT).parse(date), result.getExpirationDate());
     assertEquals(patronGroupName, result.getPatronGroup());
-    assertEquals(result.getPersonal().getEmail(), "test@mail.com");
+    assertEquals("test@mail.com", result.getPersonal().getEmail());
   }
 }

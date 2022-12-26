@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
-public class HoldingsDataProcessorTest extends BaseTest {
+class HoldingsDataProcessorTest extends BaseTest {
 
   public static final String FOLIO_SOURCE_ID = "cc38e41b-58ec-4302-b740-21d821020c92";
   public static final String MARC_SOURCE_ID = "58145b85-ef82-4063-8ba0-eb0b892d059e";
@@ -35,7 +35,7 @@ public class HoldingsDataProcessorTest extends BaseTest {
   private BulkOperationExecutionContentRepository bulkOperationExecutionContentRepository;
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     when(holdingsSourceClient.getById(FOLIO_SOURCE_ID)).thenReturn(
       new HoldingsRecordsSource()
         .withName("FOLIO")
@@ -47,7 +47,7 @@ public class HoldingsDataProcessorTest extends BaseTest {
   }
 
   @Test
-  public void testReplaceTemporaryLocation() {
+  void testReplaceTemporaryLocation() {
     var permanentLocationId = "2508a0cb-e43a-404d-bd78-2e847dfca229";
     var temporaryLocationId = "c8d27cb7-a86b-45f7-b6f4-1604fb467660";
     var updatedLocationId = "dc3868f6-6169-47b2-88a7-71c2e9e4e924";
@@ -87,7 +87,7 @@ public class HoldingsDataProcessorTest extends BaseTest {
   }
 
   @Test
-  public void testUpdateMarcEntity() {
+  void testUpdateMarcEntity() {
     when(holdingsSourceClient.getById(MARC_SOURCE_ID)).thenReturn(new HoldingsRecordsSource()
       .withName("MARC")
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
@@ -96,7 +96,7 @@ public class HoldingsDataProcessorTest extends BaseTest {
   }
 
   @Test
-  public void testClearTemporaryLocation() {
+  void testClearTemporaryLocation() {
     var permanentLocationId = "2508a0cb-e43a-404d-bd78-2e847dfca229";
     var temporaryLocationId = "c8d27cb7-a86b-45f7-b6f4-1604fb467660";
 
@@ -123,7 +123,7 @@ public class HoldingsDataProcessorTest extends BaseTest {
   }
 
   @Test
-  public void testClearPermanentLocation() {
+  void testClearPermanentLocation() {
     when(holdingsSourceClient.getById(FOLIO_SOURCE_ID)).thenReturn(new HoldingsRecordsSource()
       .withName("FOLIO")
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
@@ -132,7 +132,7 @@ public class HoldingsDataProcessorTest extends BaseTest {
   }
 
   @Test
-  public void testReplacePermanentLocationWithEmptyValue() {
+  void testReplacePermanentLocationWithEmptyValue() {
     when(holdingsSourceClient.getById(FOLIO_SOURCE_ID)).thenReturn(new HoldingsRecordsSource()
       .withName("FOLIO")
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
@@ -141,7 +141,7 @@ public class HoldingsDataProcessorTest extends BaseTest {
   }
 
   @Test
-  public void testReplacePermanentLocationWithNonExistedValue() {
+  void testReplacePermanentLocationWithNonExistedValue() {
     var nonExistedLocationId = "62b9c19c-59d0-481d-8957-eb95a96bb144";
     when(holdingsSourceClient.getById(FOLIO_SOURCE_ID)).thenReturn(new HoldingsRecordsSource()
       .withName("FOLIO")
@@ -155,7 +155,7 @@ public class HoldingsDataProcessorTest extends BaseTest {
   }
 
   @Test
-  public void testReplacePermanentLocationWithInvalidValue() {
+  void testReplacePermanentLocationWithInvalidValue() {
     var invalidLocationId = "62b9c19c-59d0";
 
     when(holdingsSourceClient.getById(FOLIO_SOURCE_ID)).thenReturn(new HoldingsRecordsSource()
@@ -167,7 +167,7 @@ public class HoldingsDataProcessorTest extends BaseTest {
   }
 
   @Test
-  public void testNonSupportedOptionAndAction() {
+  void testNonSupportedOptionAndAction() {
 
     var updatedLocationId = "dc3868f6-6169-47b2-88a7-71c2e9e4e924";
     var updatedLocation = new ItemLocation()

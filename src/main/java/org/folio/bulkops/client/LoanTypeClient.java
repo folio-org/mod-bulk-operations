@@ -1,6 +1,5 @@
 package org.folio.bulkops.client;
 
-import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.LoanTypeCollection;
 import org.springframework.cloud.openfeign.FeignClient;

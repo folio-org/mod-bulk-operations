@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
-public class ItemDataProcessorTest extends BaseTest {
+class ItemDataProcessorTest extends BaseTest {
 
   @Autowired
   DataProcessorFactory<Item> factory;
@@ -43,7 +43,7 @@ public class ItemDataProcessorTest extends BaseTest {
   public static final String IDENTIFIER = "123";
 
   @BeforeEach
-  public void setUp() {
+  void setUp() {
     when(configurationClient.getConfigurations(String.format(BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE, MODULE_NAME, STATUSES_CONFIG_NAME)))
       .thenReturn(
         new ConfigurationCollection()
@@ -60,13 +60,13 @@ public class ItemDataProcessorTest extends BaseTest {
   }
 
   @Test
-  public void testClearItemStatus() {
+  void testClearItemStatus() {
     var processor = factory.getProcessorFromFactory(Item.class);
     assertNull(processor.process(IDENTIFIER, new Item(), rules(rule(STATUS, CLEAR_FIELD, null))));
   }
 
   @Test
-  public void testClearItemLocationAndLoanType() {
+  void testClearItemLocationAndLoanType() {
 
     var item = new Item()
       .withPermanentLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Permanent location"))
@@ -84,7 +84,7 @@ public class ItemDataProcessorTest extends BaseTest {
   }
 
   @Test
-  public void testUpdateItemAndLoanTypeLocation() {
+  void testUpdateItemAndLoanTypeLocation() {
 
     var updatedLocationId = "dc3868f6-6169-47b2-88a7-71c2e9e4e924";
     var updatedLocation = new ItemLocation()
@@ -119,19 +119,19 @@ public class ItemDataProcessorTest extends BaseTest {
   }
 
   @Test
-  public void testClearPermanentLoanType() {
+  void testClearPermanentLoanType() {
     var processor = factory.getProcessorFromFactory(Item.class);
     assertNull(processor.process(IDENTIFIER, new Item(), rules(rule(PERMANENT_LOAN_TYPE, CLEAR_FIELD, null))));
   }
 
   @Test
-  public void testReplaceLoanTypeWithEmptyValue() {
+  void testReplaceLoanTypeWithEmptyValue() {
     var processor = factory.getProcessorFromFactory(Item.class);
     assertNull(processor.process(IDENTIFIER, new Item(), rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, null))));
   }
 
   @Test
-  public void testUpdateAllowedItemStatus() {
+  void testUpdateAllowedItemStatus() {
 
     var item = new Item()
       .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AVAILABLE));
@@ -146,7 +146,7 @@ public class ItemDataProcessorTest extends BaseTest {
   }
 
   @Test
-  public void testUpdateRestrictedItemStatus() {
+  void testUpdateRestrictedItemStatus() {
 
     var processor = factory.getProcessorFromFactory(Item.class);
 
@@ -155,7 +155,5 @@ public class ItemDataProcessorTest extends BaseTest {
 
     assertNull(processor.process(IDENTIFIER, new Item()
       .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AVAILABLE)), rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.IN_TRANSIT.getValue()))));
-
-
   }
 }
