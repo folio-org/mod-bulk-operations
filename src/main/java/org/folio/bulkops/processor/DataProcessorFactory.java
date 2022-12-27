@@ -34,7 +34,7 @@ public class DataProcessorFactory {
     }
   }
 
-  public <T> DataProcessor<T> getProcessorFromFactory(Class<T> clazz) {
+  public <T extends BulkOperationsEntity> DataProcessor<T> getProcessorFromFactory(Class<? extends BulkOperationsEntity> clazz) {
     return (DataProcessor<T>) pool.get(clazz);
   }
 }

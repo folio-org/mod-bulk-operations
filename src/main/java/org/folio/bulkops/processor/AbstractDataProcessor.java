@@ -2,6 +2,7 @@ package org.folio.bulkops.processor;
 
 import java.util.function.Consumer;
 
+import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -14,7 +15,7 @@ import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @Component
-public abstract class AbstractDataProcessor<T> implements DataProcessor<T> {
+public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> implements DataProcessor<T> {
   @Autowired
   private ErrorService errorService;
 
