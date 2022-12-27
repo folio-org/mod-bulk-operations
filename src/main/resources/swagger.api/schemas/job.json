@@ -33,11 +33,11 @@
       },
       "type": {
         "description": "Export type",
-        "$ref": "exportType.json#/ExportType"
+        "$ref": "export_type.json#/ExportType"
       },
       "status": {
         "description": "Job status",
-        "$ref": "jobStatus.json#/JobStatus"
+        "$ref": "job_status.json#/JobStatus"
       },
       "files": {
         "description": "Export files URLs",
@@ -78,11 +78,11 @@
       },
       "identifierType": {
         "description": "Identifier type",
-        "$ref": "identifierType.json#/IdentifierType"
+        "$ref": "identifier_type.json#/IdentifierType"
       },
       "entityType": {
         "description": "Entity type",
-        "$ref": "entityType.json#/EntityType"
+        "$ref": "entity_type.json#/EntityType"
       },
       "progress": {
         "description": "Progress for records being processed",

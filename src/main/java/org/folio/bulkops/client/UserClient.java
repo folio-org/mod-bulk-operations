@@ -1,8 +1,8 @@
 package org.folio.bulkops.client;
 
 import org.folio.bulkops.configs.FeignClientConfiguration;
-import org.folio.bulkops.domain.dto.User;
-import org.folio.bulkops.domain.dto.UserCollection;
+import org.folio.bulkops.domain.bean.User;
+import org.folio.bulkops.domain.bean.UserCollection;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,9 +23,6 @@ public interface UserClient {
 
   @GetMapping(value = "/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
   User getUserById(@PathVariable String userId);
-
-  @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  UserCollection getUserByQuery(@RequestParam String query);
 
   @PutMapping(value = "/{userId}", consumes = MediaType.APPLICATION_JSON_VALUE)
 

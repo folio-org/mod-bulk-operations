@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Rule action",
+  "Action": {
+    "description": "Rule action",
+    "type": "object",
+    "properties": {
+      "type": {
+        "$ref": "update_action_type.json#/UpdateActionType"
+      },
+      "initial" : {
+        "description": "Initial value",
+        "type": "string"
+      },
+      "updated": {
+        "description": "Updated value",
+        "type": "string"
+      }
+    },
+    "required": [
+      "type"
+    ],
+    "additionalProperties": false
+  }
+}

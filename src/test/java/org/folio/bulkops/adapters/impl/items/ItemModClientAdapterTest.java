@@ -1,29 +1,5 @@
 package org.folio.bulkops.adapters.impl.items;
 
-import org.folio.bulkops.adapters.ElectronicAccessStringMapper;
-import org.folio.bulkops.client.ItemClient;
-import org.folio.bulkops.domain.dto.CirculationNote;
-import org.folio.bulkops.domain.dto.ContributorName;
-import org.folio.bulkops.domain.dto.IdentifierType;
-import org.folio.bulkops.domain.dto.InventoryItemStatus;
-import org.folio.bulkops.domain.dto.Item;
-import org.folio.bulkops.domain.dto.ItemCollection;
-import org.folio.bulkops.domain.dto.ItemNote;
-import org.folio.bulkops.domain.dto.LastCheckIn;
-import org.folio.bulkops.domain.dto.MaterialType;
-import org.folio.bulkops.domain.dto.Personal;
-import org.folio.bulkops.domain.dto.Source;
-import org.folio.bulkops.domain.dto.Tags;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 import static org.folio.bulkops.adapters.BulkEditAdapterHelper.getValueFromTable;
 import static org.folio.bulkops.adapters.Constants.ITEM_BARCODE;
 import static org.folio.bulkops.adapters.Constants.ITEM_CIRCULATION_NOTES;
@@ -37,6 +13,30 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import org.folio.bulkops.adapters.ElectronicAccessStringMapper;
+import org.folio.bulkops.client.ItemClient;
+import org.folio.bulkops.domain.bean.CirculationNote;
+import org.folio.bulkops.domain.bean.ContributorName;
+import org.folio.bulkops.domain.bean.InventoryItemStatus;
+import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.bean.ItemCollection;
+import org.folio.bulkops.domain.bean.ItemNote;
+import org.folio.bulkops.domain.bean.LastCheckIn;
+import org.folio.bulkops.domain.bean.MaterialType;
+import org.folio.bulkops.domain.bean.Personal;
+import org.folio.bulkops.domain.bean.Source;
+import org.folio.bulkops.domain.bean.Tags;
+import org.folio.bulkops.domain.dto.IdentifierType;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -54,22 +54,22 @@ class ItemModClientAdapterTest {
 
   @Test
   void convertEntityToUnifiedTableTest() {
-    var item = new Item().id("id").barcode("barcode")
-      .status(new InventoryItemStatus().name(InventoryItemStatus.NameEnum.AGED_TO_LOST))
-      .materialType(new MaterialType().id("id").name("materialTypeName"))
-      .itemLevelCallNumberTypeId("callNumberTypeId")
-      .contributorNames(List.of(new ContributorName().name("contributor1"), new ContributorName().name("contributor2")))
-      .notes(List.of(new ItemNote().note("note1"), new ItemNote().note("note2")))
-      .circulationNotes(new ArrayList<>(List.of(
-        new CirculationNote().source(new Source().id("id1").personal(new Personal().lastName("last")
-          .firstName("first"))).staffOnly(true).noteType(CirculationNote.NoteTypeEnum.IN).note("circNote1"),
-        new CirculationNote().source(new Source().id("id2").personal(new Personal().lastName("last")
-          .firstName("first"))).staffOnly(false).noteType(CirculationNote.NoteTypeEnum.IN).note("circNote2"))))
-      .statisticalCodeIds(List.of("statisticalCodeId"))
-      .lastCheckIn(new LastCheckIn().servicePointId("servicePointId").staffMemberId("staffMemberId"))
-      .inTransitDestinationServicePointId("servicePointId")
-      .isBoundWith(true)
-      .tags(new Tags());
+    var item = new Item().withId("id").withBarcode("barcode")
+      .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AGED_TO_LOST))
+      .withMaterialType(new MaterialType().withId("id").withName("materialTypeName"))
+      .withItemLevelCallNumberTypeId("callNumberTypeId")
+      .withContributorNames(List.of(new ContributorName().withName("contributor1"), new ContributorName().withName("contributor2")))
+      .withNotes(List.of(new ItemNote().withNote("note1"), new ItemNote().withNote("note2")))
+      .withCirculationNotes(new ArrayList<>(List.of(
+        new CirculationNote().withSource(new Source().withId("id1").withPersonal(new Personal().withLastName("last")
+          .withFirstName("first"))).withStaffOnly(true).withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("circNote1"),
+        new CirculationNote().withSource(new Source().withId("id2").withPersonal(new Personal().withLastName("last")
+          .withFirstName("first"))).withStaffOnly(false).withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("circNote2"))))
+      .withStatisticalCodeIds(List.of("statisticalCodeId"))
+      .withLastCheckIn(new LastCheckIn().withServicePointId("servicePointId").withStaffMemberId("staffMemberId"))
+      .withInTransitDestinationServicePointId("servicePointId")
+      .withIsBoundWith(true)
+      .withTags(new Tags());
 
     when(itemReferenceResolver.getCallNumberTypeNameById(isA(String.class), isA(UUID.class), eq("id"))).thenReturn("callNumberType");
     when(itemReferenceResolver.getStatisticalCodeById(eq("statisticalCodeId"), isA(UUID.class), eq("id"))).thenReturn("statisticalCode");
@@ -97,16 +97,16 @@ class ItemModClientAdapterTest {
 
   @Test
   void getUnifiedRepresentationByQueryTest() {
-    var item1 = new Item().id("id1").barcode("barcode1")
-      .status(new InventoryItemStatus().name(InventoryItemStatus.NameEnum.AGED_TO_LOST))
-      .materialType(new MaterialType().name("materialTypeName"))
-      .isBoundWith(true)
-      .tags(new Tags());
-   var item2 = new Item().id("id2").barcode("barcode2")
-      .status(new InventoryItemStatus().name(InventoryItemStatus.NameEnum.AGED_TO_LOST))
-      .materialType(new MaterialType().name("materialTypeName"))
-      .isBoundWith(true)
-      .tags(new Tags());
+    var item1 = new Item().withId("id1").withBarcode("barcode1")
+      .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AGED_TO_LOST))
+      .withMaterialType(new MaterialType().withName("materialTypeName"))
+      .withIsBoundWith(true)
+      .withTags(new Tags());
+   var item2 = new Item().withId("id2").withBarcode("barcode2")
+      .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AGED_TO_LOST))
+      .withMaterialType(new MaterialType().withName("materialTypeName"))
+      .withIsBoundWith(true)
+      .withTags(new Tags());
     var itemCollection = new ItemCollection();
     itemCollection.setItems(List.of(item1, item2));
     when(itemClient.getItemByQuery("query", 1, 2)).thenReturn(itemCollection);

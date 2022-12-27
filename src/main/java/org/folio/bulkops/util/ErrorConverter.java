@@ -6,9 +6,9 @@ import javax.persistence.AttributeConverter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.bulkops.domain.dto.Error;
 
 @Log4j2
 @RequiredArgsConstructor

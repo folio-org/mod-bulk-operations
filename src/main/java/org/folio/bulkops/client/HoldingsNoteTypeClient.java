@@ -1,8 +1,8 @@
 package org.folio.bulkops.client;
 
 import org.folio.bulkops.configs.FeignClientConfiguration;
-import org.folio.bulkops.domain.dto.HoldingsNoteType;
-import org.folio.bulkops.domain.dto.HoldingsNoteTypeCollection;
+import org.folio.bulkops.domain.bean.HoldingsNoteType;
+import org.folio.bulkops.domain.bean.HoldingsNoteTypeCollection;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;

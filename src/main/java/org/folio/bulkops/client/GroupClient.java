@@ -1,8 +1,8 @@
 package org.folio.bulkops.client;
 
 import org.folio.bulkops.configs.FeignClientConfiguration;
-import org.folio.bulkops.domain.dto.UserGroup;
-import org.folio.bulkops.domain.dto.UserGroupCollection;
+import org.folio.bulkops.domain.bean.UserGroup;
+import org.folio.bulkops.domain.bean.UserGroupCollection;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;

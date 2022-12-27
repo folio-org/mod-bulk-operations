@@ -1,8 +1,8 @@
 package org.folio.bulkops.client;
 
 import org.folio.bulkops.configs.FeignClientConfiguration;
-import org.folio.bulkops.domain.dto.IllPolicy;
-import org.folio.bulkops.domain.dto.IllPolicyCollection;
+import org.folio.bulkops.domain.bean.IllPolicy;
+import org.folio.bulkops.domain.bean.IllPolicyCollection;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;

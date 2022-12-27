@@ -1,8 +1,8 @@
 package org.folio.bulkops.client;
 
 import org.folio.bulkops.configs.FeignClientConfiguration;
-import org.folio.bulkops.domain.dto.CallNumberType;
-import org.folio.bulkops.domain.dto.CallNumberTypeCollection;
+import org.folio.bulkops.domain.bean.CallNumberType;
+import org.folio.bulkops.domain.bean.CallNumberTypeCollection;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
