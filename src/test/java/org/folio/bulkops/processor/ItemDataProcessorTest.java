@@ -1,5 +1,6 @@
 package org.folio.bulkops.processor;
 
+import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
@@ -35,7 +36,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 class ItemDataProcessorTest extends BaseTest {
 
   @Autowired
-  DataProcessorFactory<Item> factory;
+  DataProcessorFactory factory;
+
+  private DataProcessor<Item> processor;
 
   @MockBean
   private BulkOperationExecutionContentRepository bulkOperationExecutionContentRepository;
@@ -44,6 +47,9 @@ class ItemDataProcessorTest extends BaseTest {
 
   @BeforeEach
   void setUp() {
+    if (isNull(processor)) {
+      processor = factory.getProcessorFromFactory(Item.class);
+    }
     when(configurationClient.getConfigurations(String.format(BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE, MODULE_NAME, STATUSES_CONFIG_NAME)))
       .thenReturn(
         new ConfigurationCollection()
@@ -61,13 +67,11 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Test
   void testClearItemStatus() {
-    var processor = factory.getProcessorFromFactory(Item.class);
     assertNull(processor.process(IDENTIFIER, new Item(), rules(rule(STATUS, CLEAR_FIELD, null))));
   }
 
   @Test
   void testClearItemLocationAndLoanType() {
-
     var item = new Item()
       .withPermanentLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Permanent location"))
       .withTemporaryLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Temporary location"))
@@ -75,7 +79,7 @@ class ItemDataProcessorTest extends BaseTest {
 
     var rules = rules(rule(PERMANENT_LOCATION, CLEAR_FIELD, null),
       rule(TEMPORARY_LOCATION, CLEAR_FIELD, null), rule(TEMPORARY_LOAN_TYPE, CLEAR_FIELD, null));
-    var processor = factory.getProcessorFromFactory(Item.class);
+
     var result = processor.process(IDENTIFIER, item, rules);
     assertNotNull(result);
     assertNull(result.getPermanentLocation());
@@ -85,7 +89,6 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Test
   void testUpdateItemAndLoanTypeLocation() {
-
     var updatedLocationId = "dc3868f6-6169-47b2-88a7-71c2e9e4e924";
     var updatedLocation = new ItemLocation()
       .withId(updatedLocationId)
@@ -108,7 +111,7 @@ class ItemDataProcessorTest extends BaseTest {
     var rules = rules(rule(PERMANENT_LOCATION, REPLACE_WITH, updatedLocationId),
       rule(TEMPORARY_LOCATION, REPLACE_WITH, updatedLocationId), rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, updatedLoanTypeId),
       rule(TEMPORARY_LOAN_TYPE, REPLACE_WITH, updatedLoanTypeId));
-    var processor = factory.getProcessorFromFactory(Item.class);
+
     var result = processor.process(IDENTIFIER, item, rules);
 
     assertNotNull(result);
@@ -120,24 +123,20 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Test
   void testClearPermanentLoanType() {
-    var processor = factory.getProcessorFromFactory(Item.class);
     assertNull(processor.process(IDENTIFIER, new Item(), rules(rule(PERMANENT_LOAN_TYPE, CLEAR_FIELD, null))));
   }
 
   @Test
   void testReplaceLoanTypeWithEmptyValue() {
-    var processor = factory.getProcessorFromFactory(Item.class);
     assertNull(processor.process(IDENTIFIER, new Item(), rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, null))));
   }
 
   @Test
   void testUpdateAllowedItemStatus() {
-
     var item = new Item()
       .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AVAILABLE));
 
     var rules = rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.MISSING.getValue()));
-    var processor = factory.getProcessorFromFactory(Item.class);
     var result = processor.process(IDENTIFIER, item, rules);
 
     assertNotNull(result);
@@ -147,9 +146,6 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Test
   void testUpdateRestrictedItemStatus() {
-
-    var processor = factory.getProcessorFromFactory(Item.class);
-
     assertNull(processor.process(IDENTIFIER, new Item()
       .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AGED_TO_LOST)), rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.MISSING.getValue()))));
 

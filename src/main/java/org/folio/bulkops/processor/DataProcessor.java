@@ -1,6 +1,7 @@
 package org.folio.bulkops.processor;
 
 
+import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 
 public interface DataProcessor<T> {

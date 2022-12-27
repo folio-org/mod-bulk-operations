@@ -1,5 +1,6 @@
 package org.folio.bulkops.processor;
 
+import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
@@ -23,6 +24,7 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.bean.UserGroupCollection;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -30,17 +32,24 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 class UserDataProcessorTest extends BaseTest {
 
   @Autowired
-  DataProcessorFactory<User> factory;
+  DataProcessorFactory factory;
+
+  private DataProcessor<User> processor;
 
   @MockBean
   private BulkOperationExecutionContentRepository bulkOperationExecutionContentRepository;
 
   public static final String IDENTIFIER = "345";
 
+  @BeforeEach
+  void setUp() {
+    if (isNull(processor)) {
+      processor = factory.getProcessorFromFactory(User.class);
+    }
+  }
+
   @Test
   void testUpdateUserWithInvalidData() {
-    var processor = factory.getProcessorFromFactory(User.class);
-
     assertNull(processor.process(IDENTIFIER, new User(), rules(rule(EXPIRATION_DATE, FIND, null),
       rule(EXPIRATION_DATE, REPLACE_WITH, null),
       rule(EXPIRATION_DATE, REPLACE_WITH, "1234-43")
@@ -69,7 +78,6 @@ class UserDataProcessorTest extends BaseTest {
 
     var user = new User().withPersonal(new Personal().withEmail("test@test.com"));
 
-    var processor = factory.getProcessorFromFactory(User.class);
     var result = processor.process(IDENTIFIER, user, rules(rule(EXPIRATION_DATE, REPLACE_WITH, date),
       rule(PATRON_GROUP, REPLACE_WITH, patronGroupName),
       rule(EMAIL_ADDRESS, FIND_AND_REPLACE, "@test", "@mail")

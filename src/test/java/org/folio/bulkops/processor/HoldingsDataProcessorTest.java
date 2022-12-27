@@ -1,5 +1,6 @@
 package org.folio.bulkops.processor;
 
+import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
@@ -27,16 +28,20 @@ class HoldingsDataProcessorTest extends BaseTest {
 
   public static final String FOLIO_SOURCE_ID = "cc38e41b-58ec-4302-b740-21d821020c92";
   public static final String MARC_SOURCE_ID = "58145b85-ef82-4063-8ba0-eb0b892d059e";
-
   public static final String IDENTIFIER = "678";
   @Autowired
-  DataProcessorFactory<HoldingsRecord> factory;
+  DataProcessorFactory factory;
+
+  private DataProcessor<HoldingsRecord> processor;
 
   @MockBean
   private BulkOperationExecutionContentRepository bulkOperationExecutionContentRepository;
 
   @BeforeEach
   void setUp() {
+    if (isNull(processor)) {
+      processor = factory.getProcessorFromFactory(HoldingsRecord.class);
+    }
     when(holdingsSourceClient.getById(FOLIO_SOURCE_ID)).thenReturn(
       new HoldingsRecordsSource()
         .withName("FOLIO")
@@ -72,7 +77,6 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     when(locationClient.getLocationById(updatedLocationId)).thenReturn(updatedLocation);
 
-    var processor = factory.getProcessorFromFactory(HoldingsRecord.class);
     var temporaryLocationUpdatingResult = processor.process(IDENTIFIER, holding, rules(rule(TEMPORARY_LOCATION, REPLACE_WITH, updatedLocationId)));
 
     assertNotNull(temporaryLocationUpdatingResult);
@@ -92,7 +96,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     when(holdingsSourceClient.getById(MARC_SOURCE_ID)).thenReturn(new HoldingsRecordsSource()
       .withName("MARC")
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
-    var processor = factory.getProcessorFromFactory(HoldingsRecord.class);
+
     assertNull(processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(MARC_SOURCE_ID), rules(rule(PERMANENT_LOCATION, CLEAR_FIELD, null))));
   }
 
@@ -115,7 +119,6 @@ class HoldingsDataProcessorTest extends BaseTest {
         .withName("FOLIO")
         .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
-    var processor = factory.getProcessorFromFactory(HoldingsRecord.class);
     var result = processor.process(IDENTIFIER, holding, rules(rule(TEMPORARY_LOCATION, CLEAR_FIELD, null)));
 
     assertNotNull(result);
@@ -128,7 +131,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     when(holdingsSourceClient.getById(FOLIO_SOURCE_ID)).thenReturn(new HoldingsRecordsSource()
       .withName("FOLIO")
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
-    var processor = factory.getProcessorFromFactory(HoldingsRecord.class);
+
     assertNull(processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, CLEAR_FIELD, null))));
   }
 
@@ -137,7 +140,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     when(holdingsSourceClient.getById(FOLIO_SOURCE_ID)).thenReturn(new HoldingsRecordsSource()
       .withName("FOLIO")
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
-    var processor = factory.getProcessorFromFactory(HoldingsRecord.class);
+
     assertNull(processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, null))));
   }
 
@@ -151,7 +154,6 @@ class HoldingsDataProcessorTest extends BaseTest {
     when(locationClient.getLocationById(nonExistedLocationId))
       .thenThrow(FeignException.FeignClientException.class);
 
-    var processor = factory.getProcessorFromFactory(HoldingsRecord.class);
     assertNull(processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, nonExistedLocationId))));
   }
 
@@ -163,13 +165,11 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withName("FOLIO")
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
-    var processor = factory.getProcessorFromFactory(HoldingsRecord.class);
     assertNull(processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, invalidLocationId))));
   }
 
   @Test
   void testNonSupportedOptionAndAction() {
-
     var updatedLocationId = "dc3868f6-6169-47b2-88a7-71c2e9e4e924";
     var updatedLocation = new ItemLocation()
       .withId(updatedLocationId)
@@ -181,7 +181,6 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     when(locationClient.getLocationById(updatedLocationId)).thenReturn(updatedLocation);
 
-    var processor = factory.getProcessorFromFactory(HoldingsRecord.class);
     assertNull(processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(EMAIL_ADDRESS, REPLACE_WITH, updatedLocationId),
       rule(PERMANENT_LOCATION, ADD_TO_EXISTING, updatedLocationId))));
   }
