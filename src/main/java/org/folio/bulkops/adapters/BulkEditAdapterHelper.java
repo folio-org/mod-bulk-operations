@@ -11,10 +11,10 @@ import java.util.OptionalInt;
 import java.util.TimeZone;
 import java.util.stream.IntStream;
 
-
-import lombok.experimental.UtilityClass;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.error.BulkOperationException;
+
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class BulkEditAdapterHelper {
@@ -29,12 +29,18 @@ public class BulkEditAdapterHelper {
     return nonNull(date) ? dateFormat.format(date) : EMPTY;
   }
 
-  public static String getValueFromTable(String field, UnifiedTable table){
-    OptionalInt index = IntStream.range(0, table.getHeader().size())
-      .filter(i -> field.equals(table.getHeader().get(i).getValue()))
+  public static String getValueFromTable(String field, UnifiedTable table) {
+    OptionalInt index = IntStream.range(0, table.getHeader()
+      .size())
+      .filter(i -> field.equals(table.getHeader()
+        .get(i)
+        .getValue()))
       .findFirst();
     if (index.isPresent()) {
-      return table.getRows().get(0).getRow().get(index.getAsInt());
+      return table.getRows()
+        .get(0)
+        .getRow()
+        .get(index.getAsInt());
     }
     throw new BulkOperationException("Position error for field " + field);
   }

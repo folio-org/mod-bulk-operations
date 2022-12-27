@@ -1,13 +1,14 @@
 package org.folio.bulkops.util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import static java.util.Objects.isNull;
 
 import javax.persistence.AttributeConverter;
 
-import static java.util.Objects.isNull;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @RequiredArgsConstructor

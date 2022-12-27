@@ -9,7 +9,12 @@ import static wiremock.org.hamcrest.MatcherAssert.assertThat;
 import static wiremock.org.hamcrest.Matchers.equalTo;
 import static wiremock.org.hamcrest.Matchers.hasSize;
 
-import lombok.SneakyThrows;
+import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
+import java.util.stream.IntStream;
+
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -25,12 +30,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-
-import java.io.InputStream;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
-import java.util.stream.IntStream;
+import lombok.SneakyThrows;
 
 class ErrorServiceTest extends BaseTest {
   @Autowired

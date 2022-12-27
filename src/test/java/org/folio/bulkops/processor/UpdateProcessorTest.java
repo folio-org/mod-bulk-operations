@@ -1,20 +1,16 @@
 package org.folio.bulkops.processor;
 
+import static org.mockito.Mockito.verify;
+
+import java.util.UUID;
+
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.client.HoldingsClient;
-import org.folio.bulkops.client.ItemClient;
-import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-
-import java.util.UUID;
-
-import static org.mockito.Mockito.verify;
 
 class UpdateProcessorTest extends BaseTest {
   @Autowired

@@ -1,12 +1,12 @@
 package org.folio.bulkops.configs;
 
-import feign.Response;
-import feign.codec.ErrorDecoder;
+import static feign.FeignException.errorStatus;
 
 import org.folio.bulkops.error.NotFoundException;
 import org.springframework.http.HttpStatus;
 
-import static feign.FeignException.errorStatus;
+import feign.Response;
+import feign.codec.ErrorDecoder;
 
 public class CustomFeignErrorDecoder implements ErrorDecoder {
 
@@ -18,5 +18,4 @@ public class CustomFeignErrorDecoder implements ErrorDecoder {
     }
     return errorStatus(methodKey, response);
   }
-
 }

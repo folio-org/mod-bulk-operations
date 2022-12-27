@@ -1,6 +1,14 @@
 package org.folio.bulkops.service;
 
-import lombok.RequiredArgsConstructor;
+import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.LF;
+
+import java.io.ByteArrayInputStream;
+import java.time.LocalDate;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.apache.commons.io.FilenameUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.dto.StateType;
@@ -13,14 +21,7 @@ import org.folio.spring.data.OffsetRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
-import java.time.LocalDate;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.LF;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

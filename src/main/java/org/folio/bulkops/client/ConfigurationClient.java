@@ -15,7 +15,4 @@ public interface ConfigurationClient {
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   ConfigurationCollection getConfigurations(@RequestParam("query") String query);
-
-  @PostMapping
-  ModelConfiguration postConfiguration(@RequestBody ModelConfiguration config);
 }

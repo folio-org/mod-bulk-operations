@@ -1,11 +1,12 @@
 package org.folio.bulkops.client;
 
-import lombok.RequiredArgsConstructor;
+import java.io.InputStream;
+
 import org.folio.s3.client.FolioS3Client;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import java.io.InputStream;
+import lombok.RequiredArgsConstructor;
 
 @Lazy
 @Component

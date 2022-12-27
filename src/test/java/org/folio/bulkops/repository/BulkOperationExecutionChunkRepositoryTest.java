@@ -1,7 +1,7 @@
 package org.folio.bulkops.repository;
 
-import static org.folio.bulkops.domain.dto.IdentifierType.BARCODE;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
+import static org.folio.bulkops.domain.dto.IdentifierType.BARCODE;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationType.UPDATE;
 import static org.folio.bulkops.domain.dto.StateType.PROCESSED;
@@ -10,15 +10,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionChunk;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 class BulkOperationExecutionChunkRepositoryTest extends BaseTest {
   @Autowired

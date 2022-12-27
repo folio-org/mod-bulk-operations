@@ -2,13 +2,14 @@ package org.folio.bulkops.adapters.impl.items;
 
 import static org.folio.bulkops.domain.dto.DataType.STRING;
 
-import lombok.AllArgsConstructor;
-import org.folio.bulkops.domain.dto.Cell;
-import org.folio.bulkops.domain.dto.DataType;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.folio.bulkops.domain.dto.Cell;
+import org.folio.bulkops.domain.dto.DataType;
+
+import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public enum ItemHeaderBuilder {
@@ -60,11 +61,11 @@ public enum ItemHeaderBuilder {
   TAGS("Tags", STRING, false),
   LAST_CHECK_IN("Last CheckIn", STRING, false),
   ELECTRONIC_ACCESS("Electronic Access", STRING, false);
-  
+
   private String value;
   private DataType dataType;
   private boolean visible;
-  
+
   public static List<Cell> getHeaders() {
     return Arrays.stream(values())
       .map(v -> new Cell().value(v.value).dataType(v.dataType).visible(v.visible))

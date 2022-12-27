@@ -1,7 +1,5 @@
 package org.folio.bulkops.configs;
 
-import lombok.Data;
-import lombok.extern.log4j.Log4j2;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.S3ClientFactory;
 import org.folio.s3.client.S3ClientProperties;
@@ -10,6 +8,9 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+
+import lombok.Data;
+import lombok.extern.log4j.Log4j2;
 
 @Lazy
 @Configuration

@@ -1,12 +1,12 @@
 package org.folio.bulkops.client;
 
+import java.util.UUID;
+
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.UUID;
 
 @FeignClient(name = "bulk-edit")
 public interface BulkEditClient {

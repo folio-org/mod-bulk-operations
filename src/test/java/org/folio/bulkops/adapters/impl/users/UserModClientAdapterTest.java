@@ -1,30 +1,5 @@
 package org.folio.bulkops.adapters.impl.users;
 
-import org.folio.bulkops.client.UserClient;
-import org.folio.bulkops.domain.bean.Address;
-import org.folio.bulkops.domain.bean.CustomField;
-import org.folio.bulkops.domain.bean.CustomFieldTypes;
-import org.folio.bulkops.domain.dto.IdentifierType;
-import org.folio.bulkops.domain.bean.Personal;
-import org.folio.bulkops.domain.bean.SelectField;
-import org.folio.bulkops.domain.bean.SelectFieldOption;
-import org.folio.bulkops.domain.bean.SelectFieldOptions;
-import org.folio.bulkops.domain.bean.Tags;
-import org.folio.bulkops.domain.bean.User;
-import org.folio.bulkops.domain.bean.UserCollection;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-
 import static org.folio.bulkops.adapters.BulkEditAdapterHelper.getValueFromTable;
 import static org.folio.bulkops.adapters.Constants.USER_ACTIVE;
 import static org.folio.bulkops.adapters.Constants.USER_ADDRESSES;
@@ -37,6 +12,31 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import org.folio.bulkops.client.UserClient;
+import org.folio.bulkops.domain.bean.Address;
+import org.folio.bulkops.domain.bean.CustomField;
+import org.folio.bulkops.domain.bean.CustomFieldTypes;
+import org.folio.bulkops.domain.bean.Personal;
+import org.folio.bulkops.domain.bean.SelectField;
+import org.folio.bulkops.domain.bean.SelectFieldOption;
+import org.folio.bulkops.domain.bean.SelectFieldOptions;
+import org.folio.bulkops.domain.bean.Tags;
+import org.folio.bulkops.domain.bean.User;
+import org.folio.bulkops.domain.bean.UserCollection;
+import org.folio.bulkops.domain.dto.IdentifierType;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class UserModClientAdapterTest {

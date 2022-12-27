@@ -1,6 +1,7 @@
 package org.folio.bulkops.processor;
 
-import lombok.extern.log4j.Log4j2;
+import java.util.function.Consumer;
+
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -9,7 +10,7 @@ import org.folio.bulkops.service.ErrorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.function.Consumer;
+import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @Component

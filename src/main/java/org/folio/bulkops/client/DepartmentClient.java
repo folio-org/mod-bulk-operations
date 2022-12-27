@@ -14,7 +14,4 @@ public interface DepartmentClient {
 
   @GetMapping(value = "/{deptId}", produces = MediaType.APPLICATION_JSON_VALUE)
   Department getDepartmentById(@PathVariable String deptId);
-
-  @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  DepartmentCollection getDepartmentByQuery(@RequestParam String query);
 }

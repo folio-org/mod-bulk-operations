@@ -1,5 +1,23 @@
 package org.folio.bulkops.adapters.impl.items;
 
+import static org.folio.bulkops.adapters.BulkEditAdapterHelper.getValueFromTable;
+import static org.folio.bulkops.adapters.Constants.ITEM_BARCODE;
+import static org.folio.bulkops.adapters.Constants.ITEM_CIRCULATION_NOTES;
+import static org.folio.bulkops.adapters.Constants.ITEM_CONTRIBUTORS_NAMES;
+import static org.folio.bulkops.adapters.Constants.ITEM_ID;
+import static org.folio.bulkops.adapters.Constants.ITEM_LEVEL_CALL_NUMBER_TYPE;
+import static org.folio.bulkops.adapters.Constants.ITEM_MATERIAL_TYPE;
+import static org.folio.bulkops.adapters.Constants.ITEM_NOTES;
+import static org.folio.bulkops.adapters.Constants.ITEM_STATUS;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import org.folio.bulkops.adapters.ElectronicAccessStringMapper;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.CirculationNote;
@@ -19,24 +37,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import static org.folio.bulkops.adapters.BulkEditAdapterHelper.getValueFromTable;
-import static org.folio.bulkops.adapters.Constants.ITEM_BARCODE;
-import static org.folio.bulkops.adapters.Constants.ITEM_CIRCULATION_NOTES;
-import static org.folio.bulkops.adapters.Constants.ITEM_CONTRIBUTORS_NAMES;
-import static org.folio.bulkops.adapters.Constants.ITEM_ID;
-import static org.folio.bulkops.adapters.Constants.ITEM_LEVEL_CALL_NUMBER_TYPE;
-import static org.folio.bulkops.adapters.Constants.ITEM_MATERIAL_TYPE;
-import static org.folio.bulkops.adapters.Constants.ITEM_NOTES;
-import static org.folio.bulkops.adapters.Constants.ITEM_STATUS;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.when;
 
 
 @ExtendWith(MockitoExtension.class)

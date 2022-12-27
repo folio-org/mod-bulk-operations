@@ -2,14 +2,14 @@ package org.folio.bulkops.adapters.impl.holdings;
 
 import static org.folio.bulkops.domain.dto.DataType.STRING;
 
-import lombok.AllArgsConstructor;
-import org.folio.bulkops.domain.dto.Cell;
-import org.folio.bulkops.domain.dto.DataType;
-
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.folio.bulkops.domain.dto.Cell;
+import org.folio.bulkops.domain.dto.DataType;
+
+import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public enum HoldingsHeaderBuilder {
@@ -46,11 +46,11 @@ public enum HoldingsHeaderBuilder {
   STATISTICAL_CODES("Statistical codes", STRING, false),
   TAGS("Tags", STRING, false),
   SOURCE("Source", STRING, false);
-  
+
   private String value;
   private DataType dataType;
   private boolean visible;
-  
+
   public static List<Cell> getHeaders() {
     return Arrays.stream(values())
       .map(v -> new Cell().value(v.value).dataType(v.dataType).visible(v.visible))

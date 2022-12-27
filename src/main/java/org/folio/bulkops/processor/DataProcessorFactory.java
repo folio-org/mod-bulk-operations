@@ -1,7 +1,10 @@
 package org.folio.bulkops.processor;
 
+import java.util.List;
+import java.util.Map;
 
-import lombok.AllArgsConstructor;
+import javax.annotation.PostConstruct;
+
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
@@ -9,9 +12,7 @@ import org.folio.bulkops.domain.bean.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.PostConstruct;
-import java.util.List;
-import java.util.Map;
+import lombok.AllArgsConstructor;
 
 @Service
 @AllArgsConstructor

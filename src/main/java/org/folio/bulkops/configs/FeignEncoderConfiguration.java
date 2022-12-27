@@ -1,10 +1,12 @@
 package org.folio.bulkops.configs;
 
+import org.springframework.context.annotation.Bean;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import feign.codec.Encoder;
 import feign.jackson.JacksonEncoder;
-import org.springframework.context.annotation.Bean;
 
 public class FeignEncoderConfiguration {
   @Bean

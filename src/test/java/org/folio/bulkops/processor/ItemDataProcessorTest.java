@@ -1,22 +1,5 @@
 package org.folio.bulkops.processor;
 
-import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.domain.bean.ConfigurationCollection;
-import org.folio.bulkops.domain.bean.InventoryItemStatus;
-import org.folio.bulkops.domain.bean.Item;
-import org.folio.bulkops.domain.bean.ItemLocation;
-import org.folio.bulkops.domain.bean.LoanType;
-import org.folio.bulkops.domain.bean.ModelConfiguration;
-import org.folio.bulkops.domain.bean.ResultInfo;
-import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-
-import java.util.List;
-import java.util.UUID;
-
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
@@ -31,6 +14,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.UUID;
+
+import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.bean.ConfigurationCollection;
+import org.folio.bulkops.domain.bean.InventoryItemStatus;
+import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.LoanType;
+import org.folio.bulkops.domain.bean.ModelConfiguration;
+import org.folio.bulkops.domain.bean.ResultInfo;
+import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 class ItemDataProcessorTest extends BaseTest {
 

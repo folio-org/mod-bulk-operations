@@ -1,5 +1,22 @@
 package org.folio.bulkops.adapters.impl.holdings;
 
+import static org.folio.bulkops.adapters.BulkEditAdapterHelper.getValueFromTable;
+import static org.folio.bulkops.adapters.Constants.HOLDING_CALL_NUMBER;
+import static org.folio.bulkops.adapters.Constants.HOLDING_ID;
+import static org.folio.bulkops.adapters.Constants.HOLDING_INSTANCE;
+import static org.folio.bulkops.adapters.Constants.HOLDING_NOTES;
+import static org.folio.bulkops.adapters.Constants.HOLDING_PERMANENT_LOCATION;
+import static org.folio.bulkops.adapters.Constants.HOLDING_RECEIVING_HISTORY;
+import static org.folio.bulkops.adapters.Constants.HOLDING_STATEMENTS;
+import static org.folio.bulkops.adapters.Constants.HOLDING_STATISTICAL_CODES;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.folio.bulkops.adapters.ElectronicAccessStringMapper;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.domain.bean.HoldingsNote;
@@ -14,23 +31,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.folio.bulkops.adapters.BulkEditAdapterHelper.getValueFromTable;
-import static org.folio.bulkops.adapters.Constants.HOLDING_CALL_NUMBER;
-import static org.folio.bulkops.adapters.Constants.HOLDING_ID;
-import static org.folio.bulkops.adapters.Constants.HOLDING_INSTANCE;
-import static org.folio.bulkops.adapters.Constants.HOLDING_NOTES;
-import static org.folio.bulkops.adapters.Constants.HOLDING_PERMANENT_LOCATION;
-import static org.folio.bulkops.adapters.Constants.HOLDING_RECEIVING_HISTORY;
-import static org.folio.bulkops.adapters.Constants.HOLDING_STATEMENTS;
-import static org.folio.bulkops.adapters.Constants.HOLDING_STATISTICAL_CODES;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class HoldingModClientAdapterTest {
