@@ -1,9 +1,7 @@
 package org.folio.bulkops.client;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import org.folio.bulkops.configs.FeignEncoderConfiguration;
-import org.folio.bulkops.domain.dto.HoldingsRecord;
-import org.folio.bulkops.domain.dto.HoldingsRecordCollection;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.HoldingsRecordCollection;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,7 +9,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "holdings-storage/holdings", configuration = FeignEncoderConfiguration.class)
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+
+@FeignClient(name = "holdings-storage/holdings")
 public interface HoldingsClient {
   @PutMapping(value = "/{holdingsId}")
   void updateHoldingsRecord(@RequestBody HoldingsRecord holdingsRecord, @PathVariable String holdingsId);

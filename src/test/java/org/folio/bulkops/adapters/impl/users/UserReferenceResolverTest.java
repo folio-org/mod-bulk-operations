@@ -1,33 +1,31 @@
 package org.folio.bulkops.adapters.impl.users;
 
-import org.folio.bulkops.client.AddressTypeClient;
-import org.folio.bulkops.client.CustomFieldsClient;
-import org.folio.bulkops.client.DepartmentClient;
-import org.folio.bulkops.client.GroupClient;
-import org.folio.bulkops.domain.dto.AddressType;
-import org.folio.bulkops.domain.dto.CustomField;
-import org.folio.bulkops.domain.dto.CustomFieldCollection;
-import org.folio.bulkops.domain.dto.Department;
-import org.folio.bulkops.domain.dto.UserGroup;
-import org.folio.bulkops.error.BulkOperationException;
-import org.folio.bulkops.error.NotFoundException;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Spy;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.List;
+
+import org.folio.bulkops.client.AddressTypeClient;
+import org.folio.bulkops.client.CustomFieldsClient;
+import org.folio.bulkops.client.DepartmentClient;
+import org.folio.bulkops.client.GroupClient;
+import org.folio.bulkops.domain.bean.AddressType;
+import org.folio.bulkops.domain.bean.CustomField;
+import org.folio.bulkops.domain.bean.CustomFieldCollection;
+import org.folio.bulkops.domain.bean.Department;
+import org.folio.bulkops.domain.bean.UserGroup;
+import org.folio.bulkops.exception.NotFoundException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class UserReferenceResolverTest {
@@ -46,7 +44,7 @@ class UserReferenceResolverTest {
 
   @Test
   void getAddressTypeDescByIdTest() {
-    when(addressTypeClient.getAddressTypeById("id")).thenReturn(new AddressType().desc("type"));
+    when(addressTypeClient.getAddressTypeById("id")).thenReturn(new AddressType().withDesc("type"));
     var actual = userReferenceResolver.getAddressTypeDescById("id", null, null);
     verify(addressTypeClient).getAddressTypeById("id");
     assertEquals("type", actual);
@@ -64,7 +62,7 @@ class UserReferenceResolverTest {
 
   @Test
   void getDepartmentNameByIdTest() {
-    when(departmentClient.getDepartmentById("id")).thenReturn(new Department().name("departmentName"));
+    when(departmentClient.getDepartmentById("id")).thenReturn(new Department().withName("departmentName"));
     var actual = userReferenceResolver.getDepartmentNameById("id", null, null);
     verify(departmentClient).getDepartmentById("id");
     assertEquals("departmentName", actual);
@@ -83,7 +81,7 @@ class UserReferenceResolverTest {
 
   @Test
   void getPatronGroupNameByIdTest() {
-    when(groupClient.getGroupById("id")).thenReturn(new UserGroup().group("userGroup"));
+    when(groupClient.getGroupById("id")).thenReturn(new UserGroup().withGroup("userGroup"));
     var actual = userReferenceResolver.getPatronGroupNameById("id", null, null);
     verify(groupClient).getGroupById("id");
     assertEquals("userGroup", actual);
@@ -102,18 +100,16 @@ class UserReferenceResolverTest {
 
   @Test
   void getCustomFieldByRefIdTest() {
-    var customField = new CustomField().refId("refId").name("name");
+    var customField = new CustomField().withRefId("refId").withName("name");
     when(customFieldsClient.getCustomFieldsByQuery(isA(String.class), eq("refId==\"refId\"")))
-      .thenReturn(new CustomFieldCollection().customFields(List.of(customField)));
+      .thenReturn(new CustomFieldCollection().withCustomFields(List.of(customField)));
     when(customFieldsClient.getCustomFieldsByQuery(isA(String.class), eq("refId==\"refId2\"")))
-      .thenReturn(new CustomFieldCollection().customFields(List.of()));
+      .thenReturn(new CustomFieldCollection().withCustomFields(List.of()));
     doReturn("module").when(userReferenceResolver).getModuleId(isA(String.class));
 
     var actual = userReferenceResolver.getCustomFieldByRefId("refId");
     assertEquals(customField, actual);
 
-    assertThrows(BulkOperationException.class, () -> {
-      userReferenceResolver.getCustomFieldByRefId("refId2");
-    });
+    assertEquals(new CustomField().withName("refId2"), userReferenceResolver.getCustomFieldByRefId("refId2"));
   }
 }

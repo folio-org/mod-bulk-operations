@@ -34,6 +34,8 @@ spring:
       accept-single-value-as-array: true
   mustache:
     check-template-location: false
+  kafka:
+    bootstrap-servers: ${KAFKA_HOST:localhost}:${KAFKA_PORT:9092}
 folio:
   tenant:
     validation:
@@ -65,3 +67,13 @@ application:
     accessKey: ${AWS_ACCESS_KEY_ID:}
     secretKey: ${AWS_SECRET_ACCESS_KEY:}
     awsSdk: ${LOCAL_FS_WITH_AWS_SDK:false}
+  local-files-storage:
+    endpoint: ${AWS_URL:http://localhost:9000/}
+    region: ${AWS_REGION:}
+    bucket: ${AWS_BUCKET:}
+    accessKey: ${AWS_ACCESS_KEY_ID:}
+    secretKey: ${AWS_SECRET_ACCESS_KEY:}
+    awsSdk: ${LOCAL_FS_WITH_AWS_SDK:false}
+  kafka:
+    topic-pattern: ${ENV:folio}.(.*\.)?data-export.job.update
+    group-id: ${ENV:folio}-mod-data-export-spring-events-group

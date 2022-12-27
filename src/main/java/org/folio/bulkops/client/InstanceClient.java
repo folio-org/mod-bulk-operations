@@ -1,7 +1,7 @@
 package org.folio.bulkops.client;
 
-import org.folio.bulkops.domain.dto.BriefInstance;
-import org.folio.bulkops.domain.dto.BriefInstanceCollection;
+import org.folio.bulkops.domain.bean.BriefInstance;
+import org.folio.bulkops.domain.bean.BriefInstanceCollection;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;

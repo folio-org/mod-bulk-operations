@@ -1,9 +1,10 @@
 package org.folio.bulkops.processor;
 
-import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.client.ItemClient;
-import org.folio.bulkops.domain.dto.Item;
+import org.folio.bulkops.domain.bean.Item;
 import org.springframework.stereotype.Component;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor

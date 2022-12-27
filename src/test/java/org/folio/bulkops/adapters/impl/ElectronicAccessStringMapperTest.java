@@ -13,9 +13,9 @@ import java.util.UUID;
 
 import org.folio.bulkops.adapters.ElectronicAccessStringMapper;
 import org.folio.bulkops.client.ElectronicAccessRelationshipClient;
-import org.folio.bulkops.domain.dto.ElectronicAccess;
-import org.folio.bulkops.domain.dto.ElectronicAccessRelationship;
-import org.folio.bulkops.error.NotFoundException;
+import org.folio.bulkops.domain.bean.ElectronicAccess;
+import org.folio.bulkops.domain.bean.ElectronicAccessRelationship;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.service.ErrorService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

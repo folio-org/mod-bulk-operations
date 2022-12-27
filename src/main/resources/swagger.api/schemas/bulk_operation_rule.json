@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Bulk Operation Rule",
+  "BulkOperationRule": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "description": "Bulk operation rule ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "bulkOperationId": {
+        "description": "Bulk operation ID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "rule_details" : {
+        "description": "Rule details",
+        "type": "object",
+        "properties": {
+          "option": {
+            "description": "Option to change",
+            "$ref": "update_option_type.json#/UpdateOptionType"
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "action.json#/Action"
+            },
+            "minItems": 1
+          }
+        }
+      }
+    },
+    "required": [
+      "newValue",
+      "action"
+    ],
+    "additionalProperties": false
+  }
+}

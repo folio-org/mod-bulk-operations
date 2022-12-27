@@ -9,13 +9,18 @@ import static wiremock.org.hamcrest.MatcherAssert.assertThat;
 import static wiremock.org.hamcrest.Matchers.equalTo;
 import static wiremock.org.hamcrest.Matchers.hasSize;
 
-import lombok.SneakyThrows;
+import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.UUID;
+import java.util.stream.IntStream;
+
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.folio.bulkops.repository.RemoteFileSystemRepository;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
 import org.junit.jupiter.api.AfterEach;
@@ -25,12 +30,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
-
-import java.io.InputStream;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.UUID;
-import java.util.stream.IntStream;
+import lombok.SneakyThrows;
 
 class ErrorServiceTest extends BaseTest {
   @Autowired
@@ -46,7 +46,7 @@ class ErrorServiceTest extends BaseTest {
   private JpaCqlRepository<BulkOperationExecutionContent, UUID> executionContentCqlRepository;
 
   @MockBean
-  private RemoteFileSystemRepository remoteFileSystemRepository;
+  private RemoteFileSystemClient remoteFileSystemClient;
 
   private UUID bulkOperationId;
 
@@ -91,13 +91,13 @@ class ErrorServiceTest extends BaseTest {
     errorService.saveError(bulkOperationId, "456", "Error message 456");
 
     var expectedFileName = bulkOperationId + "/" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + "-Errors-records.csv";
-    when(remoteFileSystemRepository.put(any(), eq(expectedFileName))).thenReturn(expectedFileName);
+    when(remoteFileSystemClient.put(any(), eq(expectedFileName))).thenReturn(expectedFileName);
 
     var result = errorService.uploadErrorsToStorage(bulkOperationId);
     assertThat(result, equalTo(expectedFileName));
 
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
-    verify(remoteFileSystemRepository).put(streamCaptor.capture(), eq(expectedFileName));
+    verify(remoteFileSystemClient).put(streamCaptor.capture(), eq(expectedFileName));
     assertThat("123,Error message 123\n456,Error message 456", equalTo(new String(streamCaptor.getValue().readAllBytes())));
   }
 }

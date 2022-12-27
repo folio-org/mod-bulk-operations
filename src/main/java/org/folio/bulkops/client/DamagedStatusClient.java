@@ -1,8 +1,8 @@
 package org.folio.bulkops.client;
 
 import org.folio.bulkops.configs.FeignClientConfiguration;
-import org.folio.bulkops.domain.dto.DamagedStatus;
-import org.folio.bulkops.domain.dto.DamagedStatusCollection;
+import org.folio.bulkops.domain.bean.DamagedStatus;
+import org.folio.bulkops.domain.bean.DamagedStatusCollection;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;

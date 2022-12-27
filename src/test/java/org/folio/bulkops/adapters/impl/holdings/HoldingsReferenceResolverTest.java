@@ -1,5 +1,10 @@
 package org.folio.bulkops.adapters.impl.holdings;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.CallNumberTypeClient;
 import org.folio.bulkops.client.HoldingsNoteTypeClient;
@@ -7,26 +12,18 @@ import org.folio.bulkops.client.HoldingsTypeClient;
 import org.folio.bulkops.client.IllPolicyClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.LocationClient;
-import org.folio.bulkops.domain.dto.BriefInstance;
-import org.folio.bulkops.domain.dto.CallNumberType;
-import org.folio.bulkops.domain.dto.HoldingsNoteType;
-import org.folio.bulkops.domain.dto.HoldingsType;
-import org.folio.bulkops.domain.dto.IllPolicy;
-import org.folio.bulkops.domain.dto.ItemLocation;
-import org.folio.bulkops.error.BulkOperationException;
-import org.folio.bulkops.error.NotFoundException;
+import org.folio.bulkops.domain.bean.BriefInstance;
+import org.folio.bulkops.domain.bean.CallNumberType;
+import org.folio.bulkops.domain.bean.HoldingsNoteType;
+import org.folio.bulkops.domain.bean.HoldingsType;
+import org.folio.bulkops.domain.bean.IllPolicy;
+import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class HoldingsReferenceResolverTest {
@@ -48,21 +45,21 @@ class HoldingsReferenceResolverTest {
 
   @Test
   void getInstanceTitleByIdTest() {
-    when(instanceClient.getById("id")).thenReturn(new BriefInstance().title("title"));
-    var actual = holdingsReferenceResolver.getInstanceTitleById("id");
+    when(instanceClient.getById("id")).thenReturn(new BriefInstance().withTitle("title"));
+    var actual = holdingsReferenceResolver.getInstanceTitleById("id", null, null);
     verify(instanceClient).getById("id");
     assertEquals("title", actual);
 
-    actual = holdingsReferenceResolver.getInstanceTitleById("");
+    actual = holdingsReferenceResolver.getInstanceTitleById("", null, null);
     assertTrue(StringUtils.isEmpty(actual));
 
     when(instanceClient.getById("id")).thenThrow(NotFoundException.class);
-    assertThrows(BulkOperationException.class, () -> holdingsReferenceResolver.getInstanceTitleById("id"));
+    assertEquals("id", holdingsReferenceResolver.getInstanceTitleById("id", null, null));
   }
 
   @Test
   void getHoldingsTypeNameByIdTest() {
-    when(holdingsTypeClient.getById("id")).thenReturn(new HoldingsType().name("name"));
+    when(holdingsTypeClient.getById("id")).thenReturn(new HoldingsType().withName("name"));
     var actual = holdingsReferenceResolver.getHoldingsTypeNameById("id", null, null);
     verify(holdingsTypeClient).getById("id");
     assertEquals("name", actual);
@@ -77,21 +74,21 @@ class HoldingsReferenceResolverTest {
 
   @Test
   void getLocationNameByIdTest() {
-    when(locationClient.getLocationById("id")).thenReturn(new ItemLocation().name("name"));
-    var actual = holdingsReferenceResolver.getLocationNameById("id");
+    when(locationClient.getLocationById("id")).thenReturn(new ItemLocation().withName("name"));
+    var actual = holdingsReferenceResolver.getLocationNameById("id", null, null);
     verify(locationClient).getLocationById("id");
     assertEquals("name", actual);
 
-    actual = holdingsReferenceResolver.getLocationNameById("");
+    actual = holdingsReferenceResolver.getLocationNameById("", null, null);
     assertTrue(StringUtils.isEmpty(actual));
 
     when(locationClient.getLocationById("id")).thenThrow(NotFoundException.class);
-    assertThrows(BulkOperationException.class, () -> holdingsReferenceResolver.getLocationNameById("id"));
+    assertEquals("id", holdingsReferenceResolver.getLocationNameById("id", null, null));
   }
 
   @Test
   void getCallNumberTypeNameByIdTest() {
-    when(callNumberTypeClient.getById("id")).thenReturn(new CallNumberType().name("name"));
+    when(callNumberTypeClient.getById("id")).thenReturn(new CallNumberType().withName("name"));
     var actual = holdingsReferenceResolver.getCallNumberTypeNameById("id", null, null);
     verify(callNumberTypeClient).getById("id");
     assertEquals("name", actual);
@@ -106,7 +103,7 @@ class HoldingsReferenceResolverTest {
 
   @Test
   void getNoteTypeNameByIdTest() {
-    when(holdingsNoteTypeClient.getById("id")).thenReturn(new HoldingsNoteType().name("name"));
+    when(holdingsNoteTypeClient.getById("id")).thenReturn(new HoldingsNoteType().withName("name"));
     var actual = holdingsReferenceResolver.getNoteTypeNameById("id", null, null);
     verify(holdingsNoteTypeClient).getById("id");
     assertEquals("name", actual);
@@ -121,7 +118,7 @@ class HoldingsReferenceResolverTest {
 
   @Test
   void getIllPolicyNameByIdTest() {
-    when(illPolicyClient.getById("id")).thenReturn(new IllPolicy().name("name"));
+    when(illPolicyClient.getById("id")).thenReturn(new IllPolicy().withName("name"));
     var actual = holdingsReferenceResolver.getIllPolicyNameById("id", null, null);
     verify(illPolicyClient).getById("id");
     assertEquals("name", actual);

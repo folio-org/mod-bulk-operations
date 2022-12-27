@@ -1,0 +1,4 @@
+User name,User id,External system id,Barcode,Active,Type,Patron group,Departments,Proxy for,Last name,First name,Middle name,Preferred first name,Email,Phone,Mobile phone,Date of birth,Addresses,Preferred contact type id,Enrollment date,Expiration date,Created date,Updated date,Tags,Custom fields
+rick,2205005b-ca51-4a04-87fd-938eefa8f6de,,123,true,,staff,,,rick,psych,,,rick@example.com,,,,,002,2020-10-07 04:00:00.000Z,,2023-01-03 01:53:27.011Z,2023-01-03 01:53:27.011Z,,
+morty,bec20636-fb68-41fd-84ea-2cf910673599,,456,true,,staff,,,morty,panic,,,morty@example.com,,,,,002,2020-10-07 04:00:00.000Z,,2023-01-03 01:53:27.046Z,2023-01-03 01:53:27.046Z,,
+sheldon,b4cee18d-f862-4ef1-95a5-879fdd619603,,789,true,,staff,,,sheldon,bazinga,,,sheldon@example.com,,,,,002,,,2023-01-03 01:53:26.347Z,2023-01-03 01:53:26.347Z,,

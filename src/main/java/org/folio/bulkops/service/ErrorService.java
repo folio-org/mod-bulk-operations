@@ -1,33 +1,34 @@
 package org.folio.bulkops.service;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
-import static org.apache.commons.lang3.StringUtils.LF;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-
-import lombok.RequiredArgsConstructor;
-import org.apache.commons.io.FilenameUtils;
-import org.folio.bulkops.domain.dto.StateType;
-import org.folio.bulkops.domain.entity.BulkOperation;
-import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
-import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
-import org.folio.bulkops.repository.BulkOperationRepository;
-import org.folio.bulkops.repository.RemoteFileSystemRepository;
-import org.folio.spring.cql.JpaCqlRepository;
-import org.folio.spring.data.OffsetRequest;
-import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Service;
+import static org.apache.commons.lang3.StringUtils.LF;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.FilenameUtils;
+import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.dto.StateType;
+import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
+import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.spring.cql.JpaCqlRepository;
+import org.folio.spring.data.OffsetRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+
 @Service
 @RequiredArgsConstructor
 public class ErrorService {
   private static final String POSTFIX_ERROR_MESSAGE_NON_NULL = " AND errorMessage<>null";
   private final BulkOperationRepository operationRepository;
-  private final RemoteFileSystemRepository remoteFileSystemRepository;
+  private final RemoteFileSystemClient remoteFileSystemClient;
   private final BulkOperationExecutionContentRepository executionContentRepository;
   private final JpaCqlRepository<BulkOperationExecutionContent, UUID> executionContentCqlRepository;
 
@@ -55,7 +56,7 @@ public class ErrorService {
         .map(FilenameUtils::getName)
         .map(fileName -> "-Errors-" + fileName)
         .orElse("-Errors.csv");
-      return remoteFileSystemRepository.put(new ByteArrayInputStream(errorsString.getBytes()), bulkOperationId + "/" + errorsFileName);
+      return remoteFileSystemClient.put(new ByteArrayInputStream(errorsString.getBytes()), bulkOperationId + "/" + errorsFileName);
     }
     return EMPTY;
   }
