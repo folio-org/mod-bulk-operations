@@ -1,24 +1,39 @@
 package org.folio.bulkops.adapters;
 
-import org.folio.bulkops.adapters.impl.holdings.HoldingModClientAdapter;
-import org.folio.bulkops.adapters.impl.items.ItemModClientAdapter;
-import org.folio.bulkops.adapters.impl.users.UserModClientAdapter;
-import org.folio.bulkops.domain.dto.EntityType;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.PostConstruct;
+
+import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.bean.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Component
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class ModClientAdapterFactory {
 
-  private final UserModClientAdapter userModClientAdapter;
-  private final ItemModClientAdapter itemModClientAdapter;
-  private final HoldingModClientAdapter holdingModClientAdapter;
+  private ModClient<User> userModClientAdapter;
+  private ModClient<Item> itemModClientAdapter;
+  private ModClient<HoldingsRecord> holdingsModClientAdapter;
 
-  public ModClient<?> getModClientAdapter(EntityType type) {
-    if (type == EntityType.ITEM) return itemModClientAdapter;
-    if (type == EntityType.HOLDING) return holdingModClientAdapter;
-    return userModClientAdapter;
+  @Autowired
+  private List<ModClient<? extends BulkOperationsEntity>> services;
+  private Map<Class<? extends BulkOperationsEntity>, ModClient<? extends BulkOperationsEntity>> pool;
+
+  @PostConstruct
+  private void initPostConstruct() {
+    for (ModClient<? extends BulkOperationsEntity> service : services) {
+      pool.put(service.getProcessedType(), service);
+    }
+  }
+
+  public <T extends BulkOperationsEntity> ModClient<T> getModClientAdapter(Class<? extends BulkOperationsEntity> clazz) {
+    return (ModClient<T>) pool.get(clazz);
   }
 }

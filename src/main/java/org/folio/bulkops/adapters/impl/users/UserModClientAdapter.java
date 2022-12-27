@@ -59,6 +59,11 @@ public class UserModClientAdapter implements ModClient<User> {
             .collect(Collectors.toList()));
   }
 
+  @Override
+  public Class<User> getProcessedType() {
+    return User.class;
+  }
+
   private Row convertToUnifiedTableRow(User user, UUID bulkOperationId, String identifier) {
     return new Row().addRowItem(user.getUsername())
       .addRowItem(user.getId())

@@ -55,6 +55,11 @@ public class HoldingModClientAdapter implements ModClient<HoldingsRecord> {
             .collect(Collectors.toList()));
   }
 
+  @Override
+  public Class<HoldingsRecord> getProcessedType() {
+    return HoldingsRecord.class;
+  }
+
   private Row convertToUnifiedTableRow(HoldingsRecord holdingsRecord, UUID bulkOperationId, String identifier) {
     return new Row().addRowItem(holdingsRecord.getId())
       .addRowItem(isEmpty(holdingsRecord.getVersion()) ? EMPTY : Integer.toString(holdingsRecord.getVersion()))

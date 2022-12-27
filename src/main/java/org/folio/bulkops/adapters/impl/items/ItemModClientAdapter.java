@@ -54,6 +54,11 @@ public class ItemModClientAdapter implements ModClient<Item> {
             .collect(Collectors.toList()));
   }
 
+  @Override
+  public Class<Item> getProcessedType() {
+    return Item.class;
+  }
+
   private Row convertToUnifiedTableRow(Item item, UUID bulkOperationId, String identifier) {
     return new Row().addRowItem(item.getId())
       .addRowItem(isEmpty(item.getVersion()) ? EMPTY : Integer.toString(item.getVersion()))

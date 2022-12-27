@@ -1,36 +1,29 @@
 package org.folio.bulkops.adapters.impl;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.adapters.ModClientAdapterFactory;
 import org.folio.bulkops.adapters.impl.holdings.HoldingModClientAdapter;
 import org.folio.bulkops.adapters.impl.items.ItemModClientAdapter;
 import org.folio.bulkops.adapters.impl.users.UserModClientAdapter;
-import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.bean.User;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
 
-@ExtendWith(MockitoExtension.class)
-class ModClientAdapterFactoryTest {
-  @Mock
-  private UserModClientAdapter userModClientAdapter;
-  @Mock
-  private ItemModClientAdapter itemModClientAdapter;
-  @Mock
-  private HoldingModClientAdapter holdingModClientAdapter;
-  @InjectMocks
+class ModClientAdapterFactoryTest extends BaseTest {
+  @Autowired
   private ModClientAdapterFactory modClientAdapterFactory;
-
   @Test
   void getModClientAdapterTest() {
-    var adapter = modClientAdapterFactory.getModClientAdapter(EntityType.USER);
-    assertTrue(adapter instanceof UserModClientAdapter);
-    adapter = modClientAdapterFactory.getModClientAdapter(EntityType.HOLDING);
-    assertTrue(adapter instanceof HoldingModClientAdapter);
-    adapter = modClientAdapterFactory.getModClientAdapter(EntityType.ITEM);
-    assertTrue(adapter instanceof ItemModClientAdapter);
+    assertEquals(UserModClientAdapter.class, modClientAdapterFactory.getModClientAdapter(User.class)
+      .getClass());
+    assertEquals(HoldingModClientAdapter.class, modClientAdapterFactory.getModClientAdapter(HoldingsRecord.class)
+      .getClass());
+    assertEquals(ItemModClientAdapter.class, modClientAdapterFactory.getModClientAdapter(Item.class)
+      .getClass());
+
   }
 }
