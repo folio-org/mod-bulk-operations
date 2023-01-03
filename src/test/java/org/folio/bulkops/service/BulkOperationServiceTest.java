@@ -71,8 +71,8 @@ class BulkOperationServiceTest extends BaseTest {
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
-    assertEquals(operationCaptor.getAllValues().get(0).getStatus(), OperationStatusType.NEW);
-    assertEquals(operationCaptor.getAllValues().get(1).getStatus(), OperationStatusType.RETRIEVING_RECORDS);
+    assertEquals(OperationStatusType.NEW, operationCaptor.getAllValues().get(0).getStatus());
+    assertEquals(OperationStatusType.RETRIEVING_RECORDS, operationCaptor.getAllValues().get(1).getStatus());
   }
 
   @Test
@@ -102,8 +102,8 @@ class BulkOperationServiceTest extends BaseTest {
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
-    assertEquals(operationCaptor.getAllValues().get(0).getStatus(), OperationStatusType.NEW);
-    assertEquals(operationCaptor.getAllValues().get(1).getStatus(), OperationStatusType.RETRIEVING_RECORDS);
+    assertEquals(OperationStatusType.NEW, operationCaptor.getAllValues().get(0).getStatus());
+    assertEquals(OperationStatusType.RETRIEVING_RECORDS, operationCaptor.getAllValues().get(1).getStatus());
   }
 
   @ParameterizedTest
@@ -126,6 +126,6 @@ class BulkOperationServiceTest extends BaseTest {
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
-    assertEquals(operationCaptor.getAllValues().get(1).getStatus(), OperationStatusType.FAILED);
+    assertEquals(OperationStatusType.FAILED, operationCaptor.getAllValues().get(1).getStatus());
   }
 }
