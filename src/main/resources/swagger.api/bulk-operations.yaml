@@ -4,46 +4,359 @@ info:
   version: v1
   description: Bulk operations API
 
-servers:
-  - url: /to-be-changed/
-
 paths:
-  /to-be-changed:
-    get:
-      operationId: getExample
-      description: example endpoint to generate api doc
+  /bulk-operations/{operationId}/upload:
+    post:
+      description: Upload csv file with identifiers list (barcodes, UUIDs, HRIDs, etc.)
+      operationId: uploadCsvFile
+      parameters:
+        - name: operationId
+          in: path
+          required: true
+          description: UUID of the BulkOperation
+          schema:
+            $ref: "#/components/schemas/UUID"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
       responses:
-        '200':
-          description: 'example endpoint result to generate api doc'
+        "201":
+          description: File uploaded
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/searchResult'
-
+                type: string
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+        "500":
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+  /bulk-operations/{operationId}/content-update:
+    post:
+      description: Upload content updates
+      operationId: postContentUpdates
+      parameters:
+        - name: operationId
+          in: path
+          required: true
+          description: UUID of the Bulk Operation
+          schema:
+            $ref: "#/components/schemas/UUID"
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+          description: The numbers of records to return
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bulkOperationRuleCollection"
+      responses:
+        "200":
+          description: Collection of items for preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unifiedTable"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+        "500":
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+  /bulk-operations/{operationId}/preview:
+    get:
+      description: Get preview
+      operationId: getPreviewByOperationId
+      parameters:
+        - name: operationId
+          in: path
+          required: true
+          description: UUID of the Bulk Operation
+          schema:
+            $ref: "#/components/schemas/UUID"
+        - in: query
+          name: limit
+          required: true
+          schema:
+            type: integer
+          description: The numbers of records to return
+      responses:
+        '200':
+          description: Collection of records for preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/unifiedTable"
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+        '404':
+          description: Not found
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+        '500':
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+  /bulk-operations/{operationId}/preview/download:
+    get:
+      description: Download updated entities preview as csv-file
+      operationId: downloadPreviewByOperationId
+      parameters:
+        - name: operationId
+          in: path
+          required: true
+          description: UUID of the Bulk Operation
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        '200':
+          description: Preview of updated items to download
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+        "500":
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+  /bulk-operations/{operationId}/start:
+    post:
+      description: Start Bulk Operation
+      operationId: startBulkOperation
+      parameters:
+        - name: operationId
+          in: path
+          required: true
+          description: UUID of the Bulk Operation
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        "200":
+          description: Bulk Operation is started
+          content:
+            application/json:
+              schema:
+                type: string
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+        "404":
+          description: Bad Request
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Bulk Operation not found
+        "500":
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+  /bulk-operations/{operationId}/errors:
+    get:
+      description: Get a list of errors for preview
+      operationId: getErrorsPreviewByOperationId
+      parameters:
+        - name: operationId
+          in: path
+          required: true
+          description: UUID of the Bulk Operation
+          schema:
+            $ref: "#/components/schemas/UUID"
+        - in: query
+          name: limit
+          required: true
+          schema:
+            type: integer
+          description: The numbers of errors to return
+      responses:
+        '200':
+          description: Collection of errors for preview
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+        '404':
+          description: No found
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Bulk Operation not found
+        '500':
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Internal server error
+  /bulk-operations/{operationId}/errors/download:
+    get:
+      description: Download errors as csv-file
+      operationId: downloadErrorsByOperationId
+      parameters:
+        - name: operationId
+          in: path
+          required: true
+          description: UUID of the Bulk Operation
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        '200':
+          description: Preview of updated items to download
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+        "500":
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+  /bulk-operations:
+    get:
+      description: Get a list of operations
+      operationId: getBulkOperationCollection
+      parameters:
+        - in: query
+          name: query
+          required: true
+          schema:
+            type: string
+          description: The numbers of operations to return
+      responses:
+        '200':
+          description: Collection of operations for preview
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/bulkOperationCollection"
+        '500':
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Internal server error
 components:
   schemas:
+    bulkOperationCollection:
+      $ref: 'schemas/bulk_operation_collection.json#/BulkOperationCollection'
     bulkOperationRuleCollection:
       $ref: 'schemas/bulk_operation_rule_collection.json#/BulkOperationRuleCollection'
-    operationType:
-      $ref: 'schemas/operation_type.json#/OperationType'
-    entityType:
-      $ref: 'schemas/entity_type.json#/EntityType'
-    entityCustomIdentifierType:
-      $ref: 'schemas/entity_custom_identifier_type.json#/EntityCustomIdentifierType'
-    operationStatusType:
-      $ref: 'schemas/operation_status_type.json#/OperationStatusType'
-    statusType:
-      $ref: 'schemas/status_type.json#/StatusType'
-    stateType:
-      $ref: 'schemas/state_type.json#/StateType'
-    updateOptionType:
-      $ref: 'schemas/update_option_type.json#/UpdateOptionType'
-    updateActionType:
-      $ref: 'schemas/update_action_type.json#/UpdateActionType'
-    job:
-      $ref: 'schemas/job.json#/Job'
     unifiedTable:
       $ref: 'schemas/unified_table.json'
+    UUID:
+      type: string
+      format: uuid
+    errors:
+      $ref: 'schemas/errors.json'
     searchResult:
       type: object
       properties:

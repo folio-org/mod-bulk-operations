@@ -19,7 +19,7 @@ import org.folio.bulkops.domain.bean.ContributorName;
 import org.folio.bulkops.domain.bean.EffectiveCallNumberComponents;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.Title;
-import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.bean.IdentifierType;
 import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.springframework.stereotype.Component;
