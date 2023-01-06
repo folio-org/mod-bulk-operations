@@ -2,7 +2,7 @@ package org.folio.bulkops.adapters;
 
 import java.util.UUID;
 
-import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.bean.IdentifierType;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 
 public interface ModClient<T> {

@@ -19,7 +19,7 @@ import org.folio.bulkops.domain.bean.HoldingsStatement;
 import org.folio.bulkops.domain.bean.ReceivingHistoryEntries;
 import org.folio.bulkops.domain.bean.ReceivingHistoryEntry;
 import org.folio.bulkops.domain.bean.Tags;
-import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.bean.IdentifierType;
 import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.springframework.stereotype.Component;
