@@ -4,18 +4,18 @@
 - [x] Copyright assigned to OLF
 - [x] Uses Apache 2.0 license
 - [x] Third party dependencies use an Apache 2.0 compatible license
-- [ ] Module’s repository includes a compliant Module Descriptor
-- [ ] Modules must declare all consumed interfaces in the Module Descriptor “requires” and “optional” sections
+- [x] Module’s repository includes a compliant Module Descriptor
+- [x] Modules must declare all consumed interfaces in the Module Descriptor “requires” and “optional” sections
 - [x] Environment vars are documented in the ModuleDescriptor
-- [ ] Back-end modules must define endpoints consumable by other modules in the Module Descriptor “provides” section
-- [ ] All API endpoints are documented in RAML or **OpenAPI**
-- [ ] All API endpoints protected with appropriate permissions
-- [ ] No excessive permissions granted to the module
+- [x] Back-end modules must define endpoints consumable by other modules in the Module Descriptor “provides” section
+- [x] All API endpoints are documented in RAML or **OpenAPI**
+- [x] All API endpoints protected with appropriate permissions
+- [x] No excessive permissions granted to the module
 - [x] Code of Conduct statement in repository
-- [ ] Installation documentation included
+- [x] Installation documentation included
 - [x] Contribution guide is included in repo
 - [ ] Module provides ~~reference~~ and/or **sample data** **Note**: we don't plan to support sample or reference data
-- [ ] Personal data form is completed, accurate, and provided as PERSONAL_DATA_DISCLOSURE.md file
+- [x] Personal data form is completed, accurate, and provided as PERSONAL_DATA_DISCLOSURE.md file
 - [x] Sensitive information is not checked into git repository
 - [x] Module is written in a language and framework that FOLIO development teams are familiar with
       (Spring Way)
@@ -28,7 +28,7 @@
 - [x] Back-end modules don’t access data in DB schemas other than their own and public
 - [x] Tenant data is segregated at the transit layer
 - [x] Back-end modules respond with a tenant’s content based on x-okapi-tenant header
-- [ ] Standard GET /admin/health endpoint returning a 200 response -_note: read more at
+- [x] Standard GET /admin/health endpoint returning a 200 response -_note: read more at
       [https://wiki.folio.org/display/DD/Back+End+Module+Health+Check+Protocol](https://wiki.folio.org/display/DD/Back+End+Module+Health+Check+Protocol)_
 - [x] HA compliant
 - [x] Module only uses FOLIO interfaces already provided by previously accepted modules _e.g. a UI
