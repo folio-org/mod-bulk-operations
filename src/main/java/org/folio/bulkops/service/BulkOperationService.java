@@ -10,10 +10,10 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.domain.dto.EntityType;
-import org.folio.bulkops.domain.dto.ExportType;
-import org.folio.bulkops.domain.dto.IdentifierType;
-import org.folio.bulkops.domain.dto.Job;
-import org.folio.bulkops.domain.dto.JobStatus;
+import org.folio.bulkops.domain.bean.ExportType;
+import org.folio.bulkops.domain.bean.IdentifierType;
+import org.folio.bulkops.domain.bean.Job;
+import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.springframework.stereotype.Service;
@@ -39,10 +39,10 @@ public class BulkOperationService {
 
     String errorMessage = null;
     try {
-      var job = dataExportSpringClient.upsertJob(new Job()
-        .type(ExportType.IDENTIFIERS)
+      var job = dataExportSpringClient.upsertJob(Job.builder()
+        .type(ExportType.BULK_EDIT_IDENTIFIERS)
         .entityType(entityType)
-        .identifierType(identifierType));
+        .identifierType(identifierType).build());
       bulkOperation.setDataExportJobId(job.getId());
       if (JobStatus.SCHEDULED.equals(job.getStatus())) {
         bulkEditClient.uploadFile(job.getId(), multipartFile);

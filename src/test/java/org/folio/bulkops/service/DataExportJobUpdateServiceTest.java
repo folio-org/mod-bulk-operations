@@ -9,10 +9,10 @@ import static org.mockito.Mockito.when;
 
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.domain.dto.BatchStatus;
-import org.folio.bulkops.domain.dto.Job;
+import org.folio.bulkops.domain.bean.BatchStatus;
+import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.dto.OperationStatusType;
-import org.folio.bulkops.domain.dto.Progress;
+import org.folio.bulkops.domain.bean.Progress;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.s3.client.FolioS3Client;
@@ -58,14 +58,14 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     var totalRecords = 10;
     var processedRecords = 10;
 
-    var jobUpdate = new Job()
+    var jobUpdate = Job.builder()
       .id(jobId)
       .batchStatus(BatchStatus.COMPLETED)
       .endTime(new Date())
-      .progress(new Progress()
+      .progress(Progress.builder()
         .total(totalRecords)
-        .processed(processedRecords))
-      .files(List.of("", "", "file:src/test/resources/files/users.csv"));
+        .processed(processedRecords).build())
+      .files(List.of("", "", "file:src/test/resources/files/users.csv")).build();
 
     dataExportJobUpdateService.receiveJobExecutionUpdate(jobUpdate);
 
@@ -87,12 +87,12 @@ class DataExportJobUpdateServiceTest extends BaseTest {
 
     var totalRecords = 10;
     var processedRecords = 5;
-    dataExportJobUpdateService.receiveJobExecutionUpdate(new Job()
+    dataExportJobUpdateService.receiveJobExecutionUpdate(Job.builder()
       .id(jobId)
         .batchStatus(batchStatus)
-      .progress(new Progress()
+      .progress(Progress.builder()
         .total(totalRecords)
-        .processed(processedRecords)));
+        .processed(processedRecords).build()).build());
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository).save(operationCaptor.capture());
@@ -114,13 +114,13 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     var endTime = new Date();
     var expectedEndTime = LocalDateTime.ofInstant(endTime.toInstant(), ZoneId.of("UTC"));
 
-    dataExportJobUpdateService.receiveJobExecutionUpdate(new Job()
+    dataExportJobUpdateService.receiveJobExecutionUpdate(Job.builder()
       .id(jobId)
       .batchStatus(batchStatus)
       .endTime(endTime)
-      .progress(new Progress()
+      .progress(Progress.builder()
         .total(totalRecords)
-        .processed(processedRecords)));
+        .processed(processedRecords).build()).build());
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository).save(operationCaptor.capture());
@@ -135,7 +135,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     when(bulkOperationRepository.findByDataExportJobId(any(UUID.class)))
       .thenReturn(Optional.empty());
 
-    dataExportJobUpdateService.receiveJobExecutionUpdate(new Job().id(UUID.randomUUID()));
+    dataExportJobUpdateService.receiveJobExecutionUpdate(Job.builder().id(UUID.randomUUID()).build());
 
     verify(bulkOperationRepository, times(0)).save(any(BulkOperation.class));
   }

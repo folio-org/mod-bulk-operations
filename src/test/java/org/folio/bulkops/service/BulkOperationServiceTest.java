@@ -12,9 +12,9 @@ import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.domain.dto.EntityType;
-import org.folio.bulkops.domain.dto.IdentifierType;
-import org.folio.bulkops.domain.dto.Job;
-import org.folio.bulkops.domain.dto.JobStatus;
+import org.folio.bulkops.domain.bean.IdentifierType;
+import org.folio.bulkops.domain.bean.Job;
+import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -54,10 +54,10 @@ class BulkOperationServiceTest extends BaseTest {
 
     var jobId = UUID.randomUUID();
     when(dataExportSpringClient.upsertJob(any(Job.class)))
-      .thenReturn(new Job().id(jobId).status(JobStatus.SCHEDULED));
+      .thenReturn(Job.builder().id(jobId).status(JobStatus.SCHEDULED).build());
 
     when(dataExportSpringClient.getJob(jobId))
-      .thenReturn(new Job().id(jobId).status(JobStatus.IN_PROGRESS));
+      .thenReturn(Job.builder().id(jobId).status(JobStatus.IN_PROGRESS).build());
 
     when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
       .thenReturn("3");
@@ -85,10 +85,10 @@ class BulkOperationServiceTest extends BaseTest {
 
     var jobId = UUID.randomUUID();
     when(dataExportSpringClient.upsertJob(any(Job.class)))
-      .thenReturn(new Job().id(jobId).status(JobStatus.SCHEDULED));
+      .thenReturn(Job.builder().id(jobId).status(JobStatus.SCHEDULED).build());
 
     when(dataExportSpringClient.getJob(jobId))
-      .thenReturn(new Job().id(jobId).status(JobStatus.SCHEDULED));
+      .thenReturn(Job.builder().id(jobId).status(JobStatus.SCHEDULED).build());
 
     when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
       .thenReturn("3");
@@ -117,10 +117,10 @@ class BulkOperationServiceTest extends BaseTest {
 
     var jobId = UUID.randomUUID();
     when(dataExportSpringClient.upsertJob(any(Job.class)))
-      .thenReturn(new Job().id(jobId).status(jobStatus));
+      .thenReturn(Job.builder().id(jobId).status(jobStatus).build());
 
     when(dataExportSpringClient.getJob(jobId))
-      .thenReturn(new Job().id(jobId).status(JobStatus.FAILED));
+      .thenReturn(Job.builder().id(jobId).status(JobStatus.FAILED).build());
 
     bulkOperationService.uploadIdentifiers(EntityType.USER, IdentifierType.BARCODE, file);
 
