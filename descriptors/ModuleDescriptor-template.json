@@ -3,9 +3,66 @@
   "name": "Bulk operations API.",
   "provides": [
     {
-      "id": "spring-template",
+      "id": "bulk-operations",
       "version": "1.0",
-      "handlers": []
+      "handlers": [
+        {
+          "methods": [ "POST" ],
+          "pathPattern": "/bulk-operations/{operationId}/upload",
+          "permissionsRequired": [ "bulk-operations.item.upload.post" ],
+          "modulePermissions": [
+          ]
+        },
+        {
+          "methods": [ "POST" ],
+          "pathPattern": "/bulk-operations/{operationId}/content-update",
+          "permissionsRequired": [ "bulk-operations.content-update.collection.post" ],
+          "modulePermissions": [
+          ]
+        },
+        {
+          "methods": [ "GET" ],
+          "pathPattern": "/bulk-operations/{operationId}/preview",
+          "permissionsRequired": [ "bulk-operations.preview.collection.get" ],
+          "modulePermissions": [
+          ]
+        },
+        {
+          "methods": [ "GET" ],
+          "pathPattern": "/bulk-operations/{operationId}/preview/download",
+          "permissionsRequired": [ "bulk-operations.preview.collection.download.get" ],
+          "modulePermissions": [
+          ]
+        },
+        {
+          "methods": [ "POST" ],
+          "pathPattern": "/bulk-operations/{operationId}/start",
+          "permissionsRequired": [ "bulk-operations.start.item.post" ],
+          "modulePermissions": [
+          ]
+        },
+        {
+          "methods": [ "GET" ],
+          "pathPattern": "/bulk-operations/{operationId}/errors",
+          "permissionsRequired": [ "bulk-operations.errors.collection.get" ],
+          "modulePermissions": [
+          ]
+        },
+        {
+          "methods": [ "GET" ],
+          "pathPattern": "/bulk-operations/{operationId}/errors/download",
+          "permissionsRequired": [ "bulk-operations.errors.download.collection.get" ],
+          "modulePermissions": [
+          ]
+        },
+        {
+          "methods": [ "GET" ],
+          "pathPattern": "/bulk-operations",
+          "permissionsRequired": [ "bulk-operations.collection.get" ],
+          "modulePermissions": [
+          ]
+        }
+      ]
     },
     {
       "id": "_tenant",
@@ -22,7 +79,63 @@
       ]
     }
   ],
-  "permissionSets" : [],
+  "permissionSets": [
+    {
+      "permissionName" : "bulk-operations.item.upload.post",
+      "displayName" : "upload identifiers list",
+      "description" : "Upload list of identifiers"
+    },
+    {
+      "permissionName" : "bulk-operations.content-update.collection.post",
+      "displayName" : "upload content update collection",
+      "description" : "Upload collection of  content updates"
+    },
+    {
+      "permissionName" : "bulk-operations.preview.collection.get",
+      "displayName" : "get Bulk Operation preview collection",
+      "description" : "Get Bulk Operation preview collection"
+    },
+    {
+      "permissionName" : "bulk-operations.preview.collection.download.get",
+      "displayName" : "download Bulk Operation preview",
+      "description" : "Download Bulk Operation preview"
+    },
+    {
+      "permissionName" : "bulk-operations.start.item.post",
+      "displayName" : "start Bulk Operation",
+      "description" : "Start Bulk Operation"
+    },
+    {
+      "permissionName" : "bulk-operations.errors.collection.get",
+      "displayName" : "get errors collection for preview",
+      "description" : "Get errors collection for preview"
+    },
+    {
+      "permissionName": "bulk-operations.errors.download.collection.get",
+      "displayName": "download errors",
+      "description": "Download errors"
+    },
+    {
+      "permissionName" : "bulk-operations.collection.get",
+      "displayName" : "get list of Bulk Operations",
+      "description" : "Get list of Bulk Operations"
+    },
+    {
+      "permissionName" : "bulk-operations.all",
+      "displayName" : "bulk-operations all",
+      "description" : "All permissions for bulk-operations module",
+      "subPermissions" : [
+        "bulk-operations.item.upload.post",
+        "bulk-operations.content-update.collection.post",
+        "bulk-operations.preview.collection.get",
+        "bulk-operations.preview.collection.download.get",
+        "bulk-operations.start.item.post",
+        "bulk-operations.errors.collection.get",
+        "bulk-operations.errors.download.collection.get",
+        "bulk-operations.collection.get"
+      ]
+    }
+  ],
   "requires": [
     {
       "id": "login",

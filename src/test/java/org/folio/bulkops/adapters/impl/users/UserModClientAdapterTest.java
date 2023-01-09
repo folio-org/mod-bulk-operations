@@ -31,7 +31,7 @@ import org.folio.bulkops.domain.bean.SelectFieldOptions;
 import org.folio.bulkops.domain.bean.Tags;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserCollection;
-import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.bean.IdentifierType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

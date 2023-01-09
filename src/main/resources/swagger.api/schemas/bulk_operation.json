@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Bulk Operation",
+  "BulkOperation": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "description": "Bulk Operation UUID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "userId": {
+        "description": "User UUID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "operationType": {
+        "description": "Bulk Operation type",
+        "$ref": "operation_type.json#/OperationType"
+      },
+      "entityType": {
+        "description": "Entity type",
+        "$ref": "entity_type.json#/EntityType"
+      },
+      "entityCustomIdentifierType": {
+        "description": "Entity custom identifier type",
+        "$ref": "entity_custom_identifier_type.json#/EntityCustomIdentifierType"
+      },
+      "status": {
+        "description": "Bulk Operation status",
+        "$ref": "operation_status_type.json#/OperationStatusType"
+      },
+      "dataExportJobId": {
+        "description": "Data export Job UUID",
+        "type": "string",
+        "format": "uuid"
+      },
+      "linkToOriginFile": {
+        "description": "Path to the origin file",
+        "type": "string"
+      },
+      "linkToModifiedFile": {
+        "description": "Path to the modified file",
+        "type": "string"
+      },
+      "linkToResultFile": {
+        "description": "Path to the result file",
+        "type": "string"
+      },
+      "totalNumOfRecords": {
+        "description": "Total number of records",
+        "type": "integer",
+        "format": "int64",
+        "default": 0
+      },
+      "processedNumOfRecords": {
+        "description": "Number of processed records",
+        "type": "integer",
+        "format": "int64",
+        "default": 0
+      },
+      "executionChunkSize": {
+        "description": "Size of chunk",
+        "type": "integer",
+        "format": "int64",
+        "default": 0
+      },
+      "startTime": {
+        "description": "Bulk Operation start time",
+        "type": "string",
+        "format": "date-time"
+      },
+      "endTime": {
+        "description": "Bulk Operation end time",
+        "type": "string",
+        "format": "date-time"
+      },
+      "errorMessage": {
+        "description": "Error message",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "required": [
+      "type"
+    ]
+  }
+}

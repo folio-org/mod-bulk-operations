@@ -24,7 +24,7 @@ import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.Address;
 import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.bean.User;
-import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.bean.IdentifierType;
 import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.springframework.stereotype.Component;

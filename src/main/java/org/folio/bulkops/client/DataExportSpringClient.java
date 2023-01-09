@@ -5,7 +5,7 @@ import static java.util.Objects.nonNull;
 import java.util.UUID;
 
 import org.folio.bulkops.configs.FeignClientConfiguration;
-import org.folio.bulkops.domain.dto.Job;
+import org.folio.bulkops.domain.bean.Job;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
