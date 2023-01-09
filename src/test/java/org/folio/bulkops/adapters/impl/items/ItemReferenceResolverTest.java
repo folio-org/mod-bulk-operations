@@ -19,7 +19,7 @@ import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.bean.ServicePoint;
 import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.bulkops.domain.bean.User;
-import org.folio.bulkops.error.NotFoundException;
+import org.folio.bulkops.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

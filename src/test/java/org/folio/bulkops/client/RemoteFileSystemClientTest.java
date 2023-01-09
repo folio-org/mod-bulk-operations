@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.configs.RepositoryConfig;
+import org.folio.bulkops.configs.RemoteRepositoryConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -26,7 +26,7 @@ class RemoteFileSystemClientTest extends BaseTest {
   private RemoteFileSystemClient remoteFileSystemClient;
 
   @Autowired
-  private RepositoryConfig repositoryConfig;
+  private RemoteRepositoryConfig remoteRepositoryConfig;
 
   @SneakyThrows
   @Test
@@ -48,13 +48,13 @@ class RemoteFileSystemClientTest extends BaseTest {
   @Test
   void shouldInitializeFolioS3Client() {
     assertNotNull(remoteFileSystemClient);
-    assertNotNull(repositoryConfig);
-    assertEquals(BUCKET, repositoryConfig.getBucket());
-    assertEquals(REGION, repositoryConfig.getRegion());
-    assertEquals(S3_ACCESS_KEY, repositoryConfig.getAccessKey());
-    assertEquals(S3_SECRET_KEY, repositoryConfig.getSecretKey());
+    assertNotNull(remoteRepositoryConfig);
+    assertEquals(BUCKET, remoteRepositoryConfig.getBucket());
+    assertEquals(REGION, remoteRepositoryConfig.getRegion());
+    assertEquals(S3_ACCESS_KEY, remoteRepositoryConfig.getAccessKey());
+    assertEquals(S3_SECRET_KEY, remoteRepositoryConfig.getSecretKey());
 
     // Check only port cause host could be different depending on environment.
-    assertTrue(repositoryConfig.getEndpoint().contains(String.valueOf(S3_PORT)));
+    assertTrue(remoteRepositoryConfig.getEndpoint().contains(String.valueOf(S3_PORT)));
   }
 }

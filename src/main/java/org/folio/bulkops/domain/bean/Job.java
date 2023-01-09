@@ -39,7 +39,7 @@ public class Job {
   private String tenant;
 
   @JsonProperty("type")
-  private ExportType type = ExportType.BURSAR_FEES_FINES;
+  private ExportType type;
 
   @JsonProperty("exportTypeSpecificParameters")
   private ExportTypeSpecificParameters exportTypeSpecificParameters;
@@ -71,6 +71,10 @@ public class Job {
 
   @JsonProperty("errorDetails")
   private String errorDetails;
+
+  @JsonProperty("batchStatus")
+  private BatchStatus batchStatus;
+
 
   @JsonProperty("identifierType")
   private IdentifierType identifierType;
