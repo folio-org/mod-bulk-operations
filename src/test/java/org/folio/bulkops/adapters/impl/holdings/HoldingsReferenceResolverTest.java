@@ -1,7 +1,6 @@
 package org.folio.bulkops.adapters.impl.holdings;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -19,8 +18,7 @@ import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.HoldingsType;
 import org.folio.bulkops.domain.bean.IllPolicy;
 import org.folio.bulkops.domain.bean.ItemLocation;
-import org.folio.bulkops.error.BulkOperationException;
-import org.folio.bulkops.error.NotFoundException;
+import org.folio.bulkops.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -48,15 +46,15 @@ class HoldingsReferenceResolverTest {
   @Test
   void getInstanceTitleByIdTest() {
     when(instanceClient.getById("id")).thenReturn(new BriefInstance().withTitle("title"));
-    var actual = holdingsReferenceResolver.getInstanceTitleById("id");
+    var actual = holdingsReferenceResolver.getInstanceTitleById("id", null, null);
     verify(instanceClient).getById("id");
     assertEquals("title", actual);
 
-    actual = holdingsReferenceResolver.getInstanceTitleById("");
+    actual = holdingsReferenceResolver.getInstanceTitleById("", null, null);
     assertTrue(StringUtils.isEmpty(actual));
 
     when(instanceClient.getById("id")).thenThrow(NotFoundException.class);
-    assertThrows(BulkOperationException.class, () -> holdingsReferenceResolver.getInstanceTitleById("id"));
+    assertEquals("id", holdingsReferenceResolver.getInstanceTitleById("id", null, null));
   }
 
   @Test
@@ -77,15 +75,15 @@ class HoldingsReferenceResolverTest {
   @Test
   void getLocationNameByIdTest() {
     when(locationClient.getLocationById("id")).thenReturn(new ItemLocation().withName("name"));
-    var actual = holdingsReferenceResolver.getLocationNameById("id");
+    var actual = holdingsReferenceResolver.getLocationNameById("id", null, null);
     verify(locationClient).getLocationById("id");
     assertEquals("name", actual);
 
-    actual = holdingsReferenceResolver.getLocationNameById("");
+    actual = holdingsReferenceResolver.getLocationNameById("", null, null);
     assertTrue(StringUtils.isEmpty(actual));
 
     when(locationClient.getLocationById("id")).thenThrow(NotFoundException.class);
-    assertThrows(BulkOperationException.class, () -> holdingsReferenceResolver.getLocationNameById("id"));
+    assertEquals("id", holdingsReferenceResolver.getLocationNameById("id", null, null));
   }
 
   @Test

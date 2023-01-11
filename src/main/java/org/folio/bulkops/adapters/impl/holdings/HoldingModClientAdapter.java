@@ -68,11 +68,11 @@ public class HoldingModClientAdapter implements ModClient<HoldingsRecord> {
           holdingsReferenceResolver.getHoldingsTypeNameById(holdingsRecord.getHoldingsTypeId(), bulkOperationId, identifier))
       .addRowItem(isEmpty(holdingsRecord.getFormerIds()) ? EMPTY : String.join(ARRAY_DELIMITER, holdingsRecord.getFormerIds()))
       .addRowItem(isEmpty(holdingsRecord.getInstanceId()) ? EMPTY
-          : String.join(ARRAY_DELIMITER, holdingsReferenceResolver.getInstanceTitleById(holdingsRecord.getInstanceId()),
+          : String.join(ARRAY_DELIMITER, holdingsReferenceResolver.getInstanceTitleById(holdingsRecord.getInstanceId(), bulkOperationId, identifier),
               holdingsRecord.getInstanceId()))
-      .addRowItem(holdingsReferenceResolver.getLocationNameById(holdingsRecord.getPermanentLocationId()))
-      .addRowItem(holdingsReferenceResolver.getLocationNameById(holdingsRecord.getTemporaryLocationId()))
-      .addRowItem(holdingsReferenceResolver.getLocationNameById(holdingsRecord.getEffectiveLocationId()))
+      .addRowItem(holdingsReferenceResolver.getLocationNameById(holdingsRecord.getPermanentLocationId(), bulkOperationId, identifier))
+      .addRowItem(holdingsReferenceResolver.getLocationNameById(holdingsRecord.getTemporaryLocationId(), bulkOperationId, identifier))
+      .addRowItem(holdingsReferenceResolver.getLocationNameById(holdingsRecord.getEffectiveLocationId(), bulkOperationId, identifier))
       .addRowItem(electronicAccessStringMapper.getElectronicAccessesToString(holdingsRecord.getElectronicAccess(), bulkOperationId,
           identifier))
       .addRowItem(

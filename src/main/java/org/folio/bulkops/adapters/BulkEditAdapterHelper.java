@@ -12,7 +12,6 @@ import java.util.TimeZone;
 import java.util.stream.IntStream;
 
 import org.folio.bulkops.domain.dto.UnifiedTable;
-import org.folio.bulkops.error.BulkOperationException;
 
 import lombok.experimental.UtilityClass;
 
@@ -42,6 +41,6 @@ public class BulkEditAdapterHelper {
         .getRow()
         .get(index.getAsInt());
     }
-    throw new BulkOperationException("Position error for field " + field);
+    return "Position error for field " + field;
   }
 }
