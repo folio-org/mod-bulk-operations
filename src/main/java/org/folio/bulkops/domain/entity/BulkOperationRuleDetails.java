@@ -35,7 +35,6 @@ public class BulkOperationRuleDetails {
   @Enumerated(EnumType.STRING)
   private UpdateActionType updateAction;
 
-  private String updateValue;
-
-
+  private String initialValue;
+  private String updatedValue;
 }

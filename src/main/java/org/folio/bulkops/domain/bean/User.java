@@ -87,4 +87,18 @@ public class User extends BulkOperationsEntity {
   @JsonProperty("customFields")
   @Valid
   private Map<String, Object> customFields = null;
+
+  @Override
+  public String getIdentifier(IdentifierType identifierType) {
+    switch (identifierType) {
+    case BARCODE:
+      return barcode;
+    case EXTERNAL_SYSTEM_ID:
+      return externalSystemId;
+    case USER_NAME:
+      return username;
+    default:
+      return id;
+    }
+  }
 }

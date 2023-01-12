@@ -48,6 +48,11 @@ public class UserModClientAdapter implements ModClient<User> {
   }
 
   @Override
+  public Row convertEntityToUnifiedTableRow(User entity) {
+    return convertToUnifiedTableRow(entity, null, null);
+  }
+
+  @Override
   public UnifiedTable getUnifiedRepresentationByQuery(String query, long offset, long limit) {
     var users = userClient.getUserByQuery(query, offset, limit)
       .getUsers();
@@ -56,6 +61,11 @@ public class UserModClientAdapter implements ModClient<User> {
           : users.stream()
             .map(u -> convertToUnifiedTableRow(u, null, null))
             .collect(Collectors.toList()));
+  }
+
+  @Override
+  public UnifiedTable getEmptyTableWithHeaders() {
+    return new UnifiedTable().header(UserHeaderBuilder.getHeaders());
   }
 
   @Override
