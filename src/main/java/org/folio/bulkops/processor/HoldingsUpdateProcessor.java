@@ -15,4 +15,9 @@ public class HoldingsUpdateProcessor implements UpdateProcessor<HoldingsRecord> 
   public void updateRecord(HoldingsRecord holdingsRecord) {
     holdingsClient.updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
   }
+
+  @Override
+  public Class<HoldingsRecord> getUpdatedType() {
+    return HoldingsRecord.class;
+  }
 }

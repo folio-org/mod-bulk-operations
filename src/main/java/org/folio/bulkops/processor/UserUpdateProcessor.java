@@ -15,4 +15,9 @@ public class UserUpdateProcessor implements UpdateProcessor<User> {
   public void updateRecord(User user) {
     userClient.updateUser(user, user.getId());
   }
+
+  @Override
+  public Class<User> getUpdatedType() {
+    return User.class;
+  }
 }

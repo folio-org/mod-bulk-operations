@@ -5,11 +5,8 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.adapters.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.adapters.ElectronicAccessStringMapper;
 import org.folio.bulkops.adapters.ModClient;
 import org.folio.bulkops.client.HoldingsClient;
@@ -24,8 +21,10 @@ import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.springframework.stereotype.Component;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @Log4j2
@@ -45,6 +44,11 @@ public class HoldingModClientAdapter implements ModClient<HoldingsRecord> {
   }
 
   @Override
+  public Row convertEntityToUnifiedTableRow(HoldingsRecord entity) {
+    return convertToUnifiedTableRow(entity, null, null);
+  }
+
+  @Override
   public UnifiedTable getUnifiedRepresentationByQuery(String query, long offset, long limit) {
     var holdings = holdingClient.getHoldingsByQuery(query, offset, limit)
       .getHoldingsRecords();
@@ -53,6 +57,11 @@ public class HoldingModClientAdapter implements ModClient<HoldingsRecord> {
           : holdings.stream()
             .map(h -> convertToUnifiedTableRow(h, null, null))
             .collect(Collectors.toList()));
+  }
+
+  @Override
+  public UnifiedTable getEmptyTableWithHeaders() {
+    return new UnifiedTable().header(HoldingsHeaderBuilder.getHeaders());
   }
 
   @Override

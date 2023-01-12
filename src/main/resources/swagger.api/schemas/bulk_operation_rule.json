@@ -33,8 +33,8 @@
       }
     },
     "required": [
-      "newValue",
-      "action"
+      "bulkOperationId",
+      "rule_details"
     ],
     "additionalProperties": false
   }

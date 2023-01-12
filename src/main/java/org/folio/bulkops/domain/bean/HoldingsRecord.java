@@ -136,4 +136,9 @@ public class HoldingsRecord extends BulkOperationsEntity {
 
   @JsonProperty("sourceId")
   private String sourceId;
+
+  @Override
+  public String getIdentifier(IdentifierType identifierType) {
+    return hrid;
+  }
 }

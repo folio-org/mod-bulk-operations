@@ -1,11 +1,15 @@
 package org.folio.bulkops.domain.bean;
 
+import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import java.util.List;
 
 import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import org.folio.bulkops.domain.bean.IdentifierType;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -175,4 +179,22 @@ public class Item extends BulkOperationsEntity {
 
   @JsonProperty("lastCheckIn")
   private LastCheckIn lastCheckIn;
+
+  @Override
+  public String getIdentifier(IdentifierType identifierType) {
+    switch (identifierType) {
+    case BARCODE:
+      return barcode;
+    case HOLDINGS_RECORD_ID:
+      return holdingsRecordId;
+    case HRID:
+      return hrid;
+    case FORMER_IDS:
+      return isNull(formerIds) ? EMPTY : String.join(",", formerIds);
+    case ACCESSION_NUMBER:
+      return accessionNumber;
+    default:
+      return id;
+    }
+  }
 }

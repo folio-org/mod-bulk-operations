@@ -7,6 +7,8 @@ import static org.folio.bulkops.domain.dto.OperationType.UPDATE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOAN_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -14,8 +16,10 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationRule;
+import org.folio.bulkops.domain.entity.BulkOperationRuleDetails;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -25,6 +29,9 @@ class BulkOperationRuleRepositoryTest extends BaseTest {
 
   @Autowired
   private BulkOperationRepository bulkOperationRepository;
+
+  @Autowired
+  private BulkOperationRuleDetailsRepository ruleDetailsRepository;
 
   @Test
   void shouldSaveEntity() {
@@ -51,6 +58,26 @@ class BulkOperationRuleRepositoryTest extends BaseTest {
     var created = repository.save(createEntity());
     repository.deleteById(created.getId());
     assertTrue(repository.findById(created.getId()).isEmpty());
+  }
+
+  @Test
+  void shouldFetchRuleDetails() {
+    var created = repository.save(createEntity());
+    var details = BulkOperationRuleDetails.builder()
+      .ruleId(created.getId())
+      .updateAction(UpdateActionType.FIND_AND_REPLACE)
+      .initialValue("abc")
+      .updatedValue("def")
+      .build();
+
+    ruleDetailsRepository.save(details);
+
+    var fetchedRule = repository.findById(created.getId());
+
+    assertTrue(fetchedRule.isPresent());
+    assertThat(fetchedRule.get().getRuleDetails(), hasSize(1));
+    var fetchedDetails = fetchedRule.get().getRuleDetails().get(0);
+    assertThat(details, equalTo(fetchedDetails));
   }
 
   private BulkOperationRule createEntity() {
