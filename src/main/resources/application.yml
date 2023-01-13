@@ -69,4 +69,4 @@ application:
     awsSdk: ${LOCAL_FS_WITH_AWS_SDK:false}
   kafka:
     topic-pattern: ${ENV:folio}.(.*\.)?data-export.job.update
-    group-id: ${ENV:folio}-mod-data-export-spring-events-group
+    group-id: ${ENV:folio}-mod-bulk-operations-events-group
