@@ -16,14 +16,14 @@ import static org.mockito.Mockito.when;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.List;
+import java.util.UUID;
 
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.Personal;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
-import org.folio.bulkops.domain.bean.UserGroupCollection;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
+import org.folio.spring.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,12 +55,12 @@ class UserDataProcessorTest extends BaseTest {
       rule(EXPIRATION_DATE, REPLACE_WITH, "1234-43")
     )));
 
-    var patronGroupName = "non-existed-patron-group";
-    when(groupClient.getGroupByQuery(String.format("group==\"%s\"", patronGroupName))).thenReturn(new UserGroupCollection());
+    var patronGroup = UUID.randomUUID().toString();
+    when(groupClient.getGroupById(patronGroup)).thenThrow(new NotFoundException("Not found"));
     assertNull(processor.process(IDENTIFIER, new User(), rules(
       rule(PATRON_GROUP, FIND, null),
       rule(PATRON_GROUP, REPLACE_WITH, null),
-      rule(PATRON_GROUP, REPLACE_WITH, patronGroupName))));
+      rule(PATRON_GROUP, REPLACE_WITH, patronGroup))));
 
     assertNull(processor.process(IDENTIFIER, new User(), rules(rule(EMAIL_ADDRESS, FIND, null),
       rule(EMAIL_ADDRESS, FIND_AND_REPLACE, "@mail", null),
@@ -73,19 +73,19 @@ class UserDataProcessorTest extends BaseTest {
   void testUpdateUserWithValidData() throws ParseException {
     var date = "2023-12-08T23:59:59.000+00:00";
 
-    var patronGroupName = "existed-patron-group";
-    when(groupClient.getGroupByQuery(String.format("group==\"%s\"", patronGroupName))).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup().withGroup(patronGroupName))));
+    var newPatronGroupId = UUID.randomUUID().toString();
+    when(groupClient.getGroupById(newPatronGroupId)).thenReturn(new UserGroup().withId(newPatronGroupId));
 
     var user = new User().withPersonal(new Personal().withEmail("test@test.com"));
 
     var result = processor.process(IDENTIFIER, user, rules(rule(EXPIRATION_DATE, REPLACE_WITH, date),
-      rule(PATRON_GROUP, REPLACE_WITH, patronGroupName),
+      rule(PATRON_GROUP, REPLACE_WITH, newPatronGroupId),
       rule(EMAIL_ADDRESS, FIND_AND_REPLACE, "@test", "@mail")
     ));
 
     assertNotNull(result);
     assertEquals(new SimpleDateFormat(DATE_TIME_FORMAT).parse(date), result.getExpirationDate());
-    assertEquals(patronGroupName, result.getPatronGroup());
+    assertEquals(newPatronGroupId, result.getPatronGroup());
     assertEquals("test@mail.com", result.getPersonal().getEmail());
   }
 }

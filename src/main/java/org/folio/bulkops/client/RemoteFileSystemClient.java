@@ -19,6 +19,10 @@ public class RemoteFileSystemClient {
     return remoteFolioS3Client.write(fileNameToBeUpdated, newFile);
   }
 
+  public String append(InputStream content, String fileNameToAppend) {
+    return remoteFolioS3Client.append(fileNameToAppend, content);
+  }
+
   public InputStream get(String fileName) {
     return remoteFolioS3Client.read(fileName);
   }

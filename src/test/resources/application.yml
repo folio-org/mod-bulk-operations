@@ -30,13 +30,6 @@ application:
     accessKey: ${AWS_ACCESS_KEY_ID:minio-access-key}
     secretKey: ${AWS_SECRET_ACCESS_KEY:minio-secret-key}
     awsSdk: ${LOCAL_FS_WITH_AWS_SDK:false}
-  local-files-storage:
-    endpoint: ${AWS_URL:http://localhost:9000/}
-    region: ${AWS_REGION:us-west-2}
-    bucket: ${AWS_BUCKET:test-bucket}
-    accessKey: ${AWS_ACCESS_KEY_ID:minio-access-key}
-    secretKey: ${AWS_SECRET_ACCESS_KEY:minio-secret-key}
-    awsSdk: ${LOCAL_FS_WITH_AWS_SDK:false}
   kafka:
     topic-pattern: ${ENV:folio}.(.*\.)?data-export.job.update
     group-id: ${ENV:folio}-mod-bulk-operations-events-group

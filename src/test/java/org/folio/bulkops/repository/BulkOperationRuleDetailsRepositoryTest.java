@@ -81,7 +81,7 @@ class BulkOperationRuleDetailsRepositoryTest extends BaseTest {
     return BulkOperationRuleDetails.builder()
       .ruleId(bulkOperationRule.getId())
       .updateAction(REPLACE_WITH)
-      .updateValue("new value")
+      .updatedValue("new value")
       .build();
   }
 }
