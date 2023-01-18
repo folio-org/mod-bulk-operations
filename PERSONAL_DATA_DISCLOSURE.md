@@ -10,18 +10,18 @@ For the purposes of this form, "store" includes the following:
 * Sending to an external piece of infrastructure such as a queue (e.g. Kafka), search engine (e.g. Elasticsearch), distributed table, etc.
 
 ## Personal Data Stored by This Module
-- [x] This module does not store any personal data.
-- [ ] This module provides [custom fields](https://github.com/folio-org/folio-custom-fields).
-- [ ] This module stores fields with free-form text (tags, notes, descriptions, etc.)
+- [ ] This module does not store any personal data.
+- [x] This module provides [custom fields](https://github.com/folio-org/folio-custom-fields).
+- [x] This module stores fields with free-form text (tags, notes, descriptions, etc.)
 - [ ] This module caches personal data
 ---
-- [ ] First name
-- [ ] Last name
-- [ ] Middle name
-- [ ] Pseudonym / Alias / Nickname / Username / User ID
-- [ ] Gender
-- [ ] Date of birth
-- [ ] Place of birth
+- [x] First name
+- [x] Last name
+- [x] Middle name
+- [x] Pseudonym / Alias / Nickname / Username / User ID
+- [x] Gender
+- [x] Date of birth
+- [x] Place of birth
 - [ ] Racial or ethnic origin
 - [ ] Address
 - [ ] Location information
@@ -29,7 +29,7 @@ For the purposes of this form, "store" includes the following:
 - [ ] Passport number / National identification numbers
 - [ ] Driver’s license number
 - [ ] Social security number
-- [ ] Email address
+- [x] Email address
 - [ ] Web cookies
 - [ ] IP address
 - [ ] Geolocation data

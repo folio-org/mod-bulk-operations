@@ -14,8 +14,7 @@ import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.client.GroupClient;
 import org.folio.bulkops.client.OkapiClient;
 import org.folio.bulkops.domain.bean.CustomField;
-import org.folio.bulkops.error.BulkOperationException;
-import org.folio.bulkops.error.NotFoundException;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.cache.annotation.Cacheable;
@@ -88,16 +87,13 @@ public class UserReferenceResolver {
 
   @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByRefId(String refId) {
-
     var customFields = customFieldsClient.getCustomFieldsByQuery(getModuleId(MOD_USERS), String.format("refId==\"%s\"", refId));
-    if (customFields.getCustomFields()
-      .isEmpty()) {
+    if (customFields.getCustomFields().isEmpty()) {
       var msg = format("Custom field with refId=%s not found", refId);
       log.error(msg);
-      throw new BulkOperationException(msg);
+      return new CustomField().withName(refId);
     }
-    return customFields.getCustomFields()
-      .get(0);
+    return customFields.getCustomFields().get(0);
   }
 
   @Cacheable(cacheNames = "moduleIds")

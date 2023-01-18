@@ -87,14 +87,15 @@ CREATE TABLE IF NOT EXISTS bulk_operation_rule (
     references bulk_operation(id) ON DELETE CASCADE
 );
 
-CREATE TYPE UpdateActionType AS ENUM ('ADD_TO_EXISTING', 'CLEAR_FIELD', 'FIND', 'FIND_AND_REMOVE_THESE', 'REPLACE_WITH');
+CREATE TYPE UpdateActionType AS ENUM ('ADD_TO_EXISTING', 'CLEAR_FIELD', 'FIND', 'FIND_AND_REMOVE_THESE', 'REPLACE_WITH', 'FIND_AND_REPLACE');
 CREATE CAST (character varying as UpdateActionType) WITH INOUT AS IMPLICIT;
 
 CREATE TABLE IF NOT EXISTS bulk_operation_rule_details (
   id UUID PRIMARY KEY,
   rule_id UUID,
   update_action UpdateActionType,
-  update_value TEXT,
+  initial_value TEXT,
+  updated_value TEXT,
   constraint fk_rule_details_to_rule foreign key (rule_id)
     references bulk_operation_rule(id) ON DELETE CASCADE
 );

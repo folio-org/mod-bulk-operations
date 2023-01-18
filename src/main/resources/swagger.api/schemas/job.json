@@ -76,6 +76,14 @@
         "description": "Job error details",
         "type": "string"
       },
+      "batchStatus": {
+        "description": "Batch job status",
+        "$ref": "batch_status.json#/BatchStatus"
+      },
+      "exitStatus": {
+        "description": "Batch job exit status",
+        "type": "string"
+      },
       "identifierType": {
         "description": "Identifier type",
         "$ref": "identifier_type.json#/IdentifierType"

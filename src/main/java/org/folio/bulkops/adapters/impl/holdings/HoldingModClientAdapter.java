@@ -5,11 +5,8 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.adapters.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.adapters.ElectronicAccessStringMapper;
 import org.folio.bulkops.adapters.ModClient;
 import org.folio.bulkops.client.HoldingsClient;
@@ -19,13 +16,15 @@ import org.folio.bulkops.domain.bean.HoldingsStatement;
 import org.folio.bulkops.domain.bean.ReceivingHistoryEntries;
 import org.folio.bulkops.domain.bean.ReceivingHistoryEntry;
 import org.folio.bulkops.domain.bean.Tags;
-import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.bean.IdentifierType;
 import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.springframework.stereotype.Component;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @Log4j2
@@ -45,6 +44,11 @@ public class HoldingModClientAdapter implements ModClient<HoldingsRecord> {
   }
 
   @Override
+  public Row convertEntityToUnifiedTableRow(HoldingsRecord entity) {
+    return convertToUnifiedTableRow(entity, null, null);
+  }
+
+  @Override
   public UnifiedTable getUnifiedRepresentationByQuery(String query, long offset, long limit) {
     var holdings = holdingClient.getHoldingsByQuery(query, offset, limit)
       .getHoldingsRecords();
@@ -53,6 +57,11 @@ public class HoldingModClientAdapter implements ModClient<HoldingsRecord> {
           : holdings.stream()
             .map(h -> convertToUnifiedTableRow(h, null, null))
             .collect(Collectors.toList()));
+  }
+
+  @Override
+  public UnifiedTable getEmptyTableWithHeaders() {
+    return new UnifiedTable().header(HoldingsHeaderBuilder.getHeaders());
   }
 
   @Override
@@ -68,11 +77,11 @@ public class HoldingModClientAdapter implements ModClient<HoldingsRecord> {
           holdingsReferenceResolver.getHoldingsTypeNameById(holdingsRecord.getHoldingsTypeId(), bulkOperationId, identifier))
       .addRowItem(isEmpty(holdingsRecord.getFormerIds()) ? EMPTY : String.join(ARRAY_DELIMITER, holdingsRecord.getFormerIds()))
       .addRowItem(isEmpty(holdingsRecord.getInstanceId()) ? EMPTY
-          : String.join(ARRAY_DELIMITER, holdingsReferenceResolver.getInstanceTitleById(holdingsRecord.getInstanceId()),
+          : String.join(ARRAY_DELIMITER, holdingsReferenceResolver.getInstanceTitleById(holdingsRecord.getInstanceId(), bulkOperationId, identifier),
               holdingsRecord.getInstanceId()))
-      .addRowItem(holdingsReferenceResolver.getLocationNameById(holdingsRecord.getPermanentLocationId()))
-      .addRowItem(holdingsReferenceResolver.getLocationNameById(holdingsRecord.getTemporaryLocationId()))
-      .addRowItem(holdingsReferenceResolver.getLocationNameById(holdingsRecord.getEffectiveLocationId()))
+      .addRowItem(holdingsReferenceResolver.getLocationNameById(holdingsRecord.getPermanentLocationId(), bulkOperationId, identifier))
+      .addRowItem(holdingsReferenceResolver.getLocationNameById(holdingsRecord.getTemporaryLocationId(), bulkOperationId, identifier))
+      .addRowItem(holdingsReferenceResolver.getLocationNameById(holdingsRecord.getEffectiveLocationId(), bulkOperationId, identifier))
       .addRowItem(electronicAccessStringMapper.getElectronicAccessesToString(holdingsRecord.getElectronicAccess(), bulkOperationId,
           identifier))
       .addRowItem(

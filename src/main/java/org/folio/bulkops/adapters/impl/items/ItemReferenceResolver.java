@@ -12,7 +12,7 @@ import org.folio.bulkops.client.ItemNoteTypeClient;
 import org.folio.bulkops.client.ServicePointClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.client.UserClient;
-import org.folio.bulkops.error.NotFoundException;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.service.ErrorService;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;

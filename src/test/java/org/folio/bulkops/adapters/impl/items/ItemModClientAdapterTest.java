@@ -31,7 +31,7 @@ import org.folio.bulkops.domain.bean.MaterialType;
 import org.folio.bulkops.domain.bean.Personal;
 import org.folio.bulkops.domain.bean.Source;
 import org.folio.bulkops.domain.bean.Tags;
-import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.bean.IdentifierType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

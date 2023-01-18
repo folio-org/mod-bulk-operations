@@ -1,7 +1,6 @@
 package org.folio.bulkops.adapters.impl.users;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.doReturn;
@@ -20,8 +19,7 @@ import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.bean.CustomFieldCollection;
 import org.folio.bulkops.domain.bean.Department;
 import org.folio.bulkops.domain.bean.UserGroup;
-import org.folio.bulkops.error.BulkOperationException;
-import org.folio.bulkops.error.NotFoundException;
+import org.folio.bulkops.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -112,8 +110,6 @@ class UserReferenceResolverTest {
     var actual = userReferenceResolver.getCustomFieldByRefId("refId");
     assertEquals(customField, actual);
 
-    assertThrows(BulkOperationException.class, () -> {
-      userReferenceResolver.getCustomFieldByRefId("refId2");
-    });
+    assertEquals(new CustomField().withName("refId2"), userReferenceResolver.getCustomFieldByRefId("refId2"));
   }
 }
