@@ -14,8 +14,7 @@ import org.folio.bulkops.client.IllPolicyClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
-import org.folio.bulkops.error.BulkOperationException;
-import org.folio.bulkops.error.NotFoundException;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.service.ErrorService;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -39,7 +38,7 @@ public class HoldingsReferenceResolver {
 
   private final ErrorService errorService;
 
-  public String getInstanceTitleById(String instanceId) {
+  public String getInstanceTitleById(String instanceId, UUID bulkOperationId, String identifier) {
     try {
       return isEmpty(instanceId) ? EMPTY
           : instanceClient.getById(instanceId)
@@ -47,7 +46,10 @@ public class HoldingsReferenceResolver {
     } catch (NotFoundException e) {
       var msg = "Instance not found by id=" + instanceId;
       log.error(msg);
-      throw new BulkOperationException(msg);
+      if (nonNull(bulkOperationId)) {
+        errorService.saveError(bulkOperationId, identifier, msg);
+      }
+      return instanceId;
     }
   }
 
@@ -71,7 +73,7 @@ public class HoldingsReferenceResolver {
   }
 
   @Cacheable(cacheNames = "holdingsLocationsNames")
-  public String getLocationNameById(String id) {
+  public String getLocationNameById(String id, UUID bulkOperationId, String identifier) {
     try {
       return isEmpty(id) ? EMPTY
           : locationClient.getLocationById(id)
@@ -79,7 +81,10 @@ public class HoldingsReferenceResolver {
     } catch (NotFoundException e) {
       var msg = "Location not found by id=" + id;
       log.error(msg);
-      throw new BulkOperationException(msg);
+      if (nonNull(bulkOperationId)) {
+        errorService.saveError(bulkOperationId, identifier, msg);
+      }
+      return id;
     }
   }
 

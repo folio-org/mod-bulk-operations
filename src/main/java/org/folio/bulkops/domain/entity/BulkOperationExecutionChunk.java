@@ -11,7 +11,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.folio.bulkops.domain.dto.StateType;
+import org.folio.bulkops.domain.bean.StateType;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

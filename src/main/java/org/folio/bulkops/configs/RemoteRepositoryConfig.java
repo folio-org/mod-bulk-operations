@@ -18,7 +18,7 @@ import lombok.extern.log4j.Log4j2;
 @ConfigurationProperties("application.remote-files-storage")
 @Data
 @ConfigurationPropertiesScan
-public class RepositoryConfig {
+public class RemoteRepositoryConfig {
 
   private String endpoint;
   private String region;
@@ -28,11 +28,7 @@ public class RepositoryConfig {
   private boolean awsSdk;
 
   @Bean
-  public FolioS3Client folioS3Client() {
-    return buildFolioS3Client();
-  }
-
-  private FolioS3Client buildFolioS3Client() {
+  public FolioS3Client remoteFolioS3Client() {
     log.debug("remote-files-storage: endpoint {}, region {}, bucket {}, accessKey {}, secretKey {}, awsSdk {}",
       endpoint, region, bucket, accessKey, secretKey, awsSdk);
     return S3ClientFactory.getS3Client(S3ClientProperties.builder()

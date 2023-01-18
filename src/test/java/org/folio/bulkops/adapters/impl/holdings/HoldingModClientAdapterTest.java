@@ -58,7 +58,7 @@ class HoldingModClientAdapterTest {
         .withEntries(List.of(new ReceivingHistoryEntry().withPublicDisplay(true).withChronology("chronology").withEnumeration("enumeration"))))
       .withStatisticalCodeIds(List.of("statisticalCodeId"));
 
-    when(holdingsReferenceResolver.getLocationNameById("permanentLocationId")).thenReturn("permanentLocation");
+    when(holdingsReferenceResolver.getLocationNameById(eq("permanentLocationId"), isNull(), isNull())).thenReturn("permanentLocation");
     when(holdingsReferenceResolver.getNoteTypeNameById(eq("noteTypeId"), isNull(), isNull())).thenReturn("noteType");
     when(holdingsReferenceResolver.getStatisticalCodeNameById(eq("statisticalCodeId"), isNull(), isNull())).thenReturn("statisticalCode");
 

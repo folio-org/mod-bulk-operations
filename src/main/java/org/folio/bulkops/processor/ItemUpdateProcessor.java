@@ -15,4 +15,9 @@ public class ItemUpdateProcessor implements UpdateProcessor<Item> {
   public void updateRecord(Item item) {
     itemClient.updateItem(item, item.getId());
   }
+
+  @Override
+  public Class<Item> getUpdatedType() {
+    return Item.class;
+  }
 }

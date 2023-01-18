@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.domain.dto.StateType;
+import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;

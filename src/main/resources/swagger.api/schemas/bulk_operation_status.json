@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Bulk Operation status",
+  "BulkOperationStatus": {
+    "type": "string",
+    "enum": [
+      "ACTIVE",
+      "COMPLETED",
+      "FAILED"
+    ]
+  }
+}

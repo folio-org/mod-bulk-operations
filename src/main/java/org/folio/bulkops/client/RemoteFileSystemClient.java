@@ -13,13 +13,17 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class RemoteFileSystemClient {
 
-  public final FolioS3Client folioS3Client;
+  public final FolioS3Client remoteFolioS3Client;
 
   public String put(InputStream newFile, String fileNameToBeUpdated) {
-    return folioS3Client.write(fileNameToBeUpdated, newFile);
+    return remoteFolioS3Client.write(fileNameToBeUpdated, newFile);
+  }
+
+  public String append(InputStream content, String fileNameToAppend) {
+    return remoteFolioS3Client.append(fileNameToAppend, content);
   }
 
   public InputStream get(String fileName) {
-    return folioS3Client.read(fileName);
+    return remoteFolioS3Client.read(fileName);
   }
 }

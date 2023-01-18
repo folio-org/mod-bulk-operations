@@ -24,10 +24,9 @@ import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.Address;
 import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.bean.User;
-import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.bean.IdentifierType;
 import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.UnifiedTable;
-import org.folio.bulkops.error.BulkOperationException;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -49,6 +48,11 @@ public class UserModClientAdapter implements ModClient<User> {
   }
 
   @Override
+  public Row convertEntityToUnifiedTableRow(User entity) {
+    return convertToUnifiedTableRow(entity, null, null);
+  }
+
+  @Override
   public UnifiedTable getUnifiedRepresentationByQuery(String query, long offset, long limit) {
     var users = userClient.getUserByQuery(query, offset, limit)
       .getUsers();
@@ -57,6 +61,11 @@ public class UserModClientAdapter implements ModClient<User> {
           : users.stream()
             .map(u -> convertToUnifiedTableRow(u, null, null))
             .collect(Collectors.toList()));
+  }
+
+  @Override
+  public UnifiedTable getEmptyTableWithHeaders() {
+    return new UnifiedTable().header(UserHeaderBuilder.getHeaders());
   }
 
   @Override
@@ -151,14 +160,6 @@ public class UserModClientAdapter implements ModClient<User> {
   private String customFieldToString(Map.Entry<String, Object> entry) {
     var customField = userReferenceResolver.getCustomFieldByRefId(entry.getKey());
     switch (customField.getType()) {
-    case TEXTBOX_LONG:
-    case TEXTBOX_SHORT:
-    case SINGLE_CHECKBOX:
-      if (entry.getValue() instanceof String) {
-        return customField.getName() + KEY_VALUE_DELIMITER + (String) entry.getValue();
-      } else {
-        return customField.getName() + KEY_VALUE_DELIMITER + entry.getValue();
-      }
     case SINGLE_SELECT_DROPDOWN:
     case RADIO_BUTTON:
       return customField.getName() + KEY_VALUE_DELIMITER + extractValueById(customField, entry.getValue()
@@ -169,7 +170,7 @@ public class UserModClientAdapter implements ModClient<User> {
         .map(v -> extractValueById(customField, v.toString()))
         .collect(Collectors.joining(ARRAY_DELIMITER));
     default:
-      throw new BulkOperationException("Invalid custom field: " + entry);
+      return customField.getName() + KEY_VALUE_DELIMITER + entry.getValue();
     }
   }
 

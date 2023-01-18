@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 import org.folio.bulkops.client.ElectronicAccessRelationshipClient;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
-import org.folio.bulkops.error.NotFoundException;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.service.ErrorService;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;

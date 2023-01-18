@@ -1,11 +1,11 @@
 package org.folio.bulkops.repository;
 
 import static org.folio.bulkops.domain.dto.EntityType.USER;
-import static org.folio.bulkops.domain.dto.IdentifierType.BARCODE;
+import static org.folio.bulkops.domain.bean.IdentifierType.BARCODE;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationType.UPDATE;
-import static org.folio.bulkops.domain.dto.StateType.PROCESSED;
-import static org.folio.bulkops.domain.dto.StatusType.ACTIVE;
+import static org.folio.bulkops.domain.bean.StateType.PROCESSED;
+import static org.folio.bulkops.domain.bean.StatusType.ACTIVE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;

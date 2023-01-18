@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Job status",
+  "BatchStatus": {
+    "type": "string",
+    "enum": [
+      "COMPLETED",
+      "STARTING",
+      "STARTED",
+      "STOPPING",
+      "STOPPED",
+      "FAILED",
+      "ABANDONED",
+      "UNKNOWN"
+    ]
+  }
+}
