@@ -1,5 +1,7 @@
 package org.folio.bulkops.service;
 
+import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,6 +27,8 @@ import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.dto.Cell;
+import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.bean.BriefInstance;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.ItemLocation;
@@ -33,7 +37,7 @@ import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.dto.EntityType;
-import org.folio.bulkops.domain.bean.IdentifierType;
+import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.dto.Action;
@@ -47,11 +51,14 @@ import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.domain.entity.BulkOperationProcessingContent;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.BulkOperationException;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
+import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -63,14 +70,20 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import wiremock.org.hamcrest.MatcherAssert;
+import wiremock.org.hamcrest.Matchers;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 class BulkOperationServiceTest extends BaseTest {
   @Autowired
@@ -102,6 +115,9 @@ class BulkOperationServiceTest extends BaseTest {
 
   @MockBean
   private InstanceClient instanceClient;
+
+  @MockBean
+  private BulkOperationProcessingContentRepository processingContentRepository;
 
   @Test
   @SneakyThrows
@@ -226,6 +242,10 @@ class BulkOperationServiceTest extends BaseTest {
 
     bulkOperationService.confirmChanges(bulkOperationId);
 
+    var processingCaptor = ArgumentCaptor.forClass(BulkOperationProcessingContent.class);
+    verify(processingContentRepository).save(processingCaptor.capture());
+    assertThat(processingCaptor.getValue().getState(), equalTo(StateType.PROCESSED));
+
     var expectedPathToModifiedFile = bulkOperationId + "/modified-origin.json";
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
@@ -299,7 +319,8 @@ class BulkOperationServiceTest extends BaseTest {
   @Test
   void shouldNotConfirmChangesIfBulkOperationWasNotFound() {
     when(bulkOperationRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
-    assertThrows(BulkOperationException.class, () -> bulkOperationService.confirmChanges(UUID.randomUUID()));
+    var operationId = UUID.randomUUID();
+    assertThrows(NotFoundException.class, () -> bulkOperationService.confirmChanges(operationId));
   }
 
   @Test
@@ -325,6 +346,15 @@ class BulkOperationServiceTest extends BaseTest {
         .linkToOriginFile(pathToOrigin)
         .linkToModifiedFile(pathToModified)
         .build()));
+
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(BulkOperation.builder()
+        .id(bulkOperationId)
+        .entityType(EntityType.USER)
+        .identifierType(IdentifierType.BARCODE)
+        .linkToOriginFile(pathToOrigin)
+        .linkToModifiedFile(pathToModified)
+        .build());
 
     when(executionRepository.save(any(BulkOperationExecution.class)))
       .thenReturn(BulkOperationExecution.builder()
@@ -389,6 +419,15 @@ class BulkOperationServiceTest extends BaseTest {
         .linkToModifiedFile(pathToModified)
         .build()));
 
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(BulkOperation.builder()
+        .id(bulkOperationId)
+        .entityType(EntityType.USER)
+        .identifierType(IdentifierType.BARCODE)
+        .linkToOriginFile(pathToOrigin)
+        .linkToModifiedFile(pathToModified)
+        .build());
+
     when(executionRepository.save(any(BulkOperationExecution.class)))
       .thenReturn(BulkOperationExecution.builder()
         .processedRecords(0)
@@ -435,6 +474,15 @@ class BulkOperationServiceTest extends BaseTest {
         .linkToOriginFile(pathToOrigin)
         .linkToModifiedFile(pathToModified)
         .build()));
+
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(BulkOperation.builder()
+        .id(bulkOperationId)
+        .entityType(EntityType.USER)
+        .identifierType(IdentifierType.BARCODE)
+        .linkToOriginFile(pathToOrigin)
+        .linkToModifiedFile(pathToModified)
+        .build());
 
     when(executionRepository.save(any(BulkOperationExecution.class)))
       .thenReturn(BulkOperationExecution.builder()
@@ -483,6 +531,15 @@ class BulkOperationServiceTest extends BaseTest {
         .linkToModifiedFile(pathToModified)
         .build()));
 
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(BulkOperation.builder()
+        .id(bulkOperationId)
+        .entityType(EntityType.USER)
+        .identifierType(IdentifierType.BARCODE)
+        .linkToOriginFile(pathToOrigin)
+        .linkToModifiedFile(pathToModified)
+        .build());
+
     when(executionRepository.save(any(BulkOperationExecution.class)))
       .thenReturn(BulkOperationExecution.builder()
         .processedRecords(0)
@@ -511,7 +568,8 @@ class BulkOperationServiceTest extends BaseTest {
   @Test
   void shouldNotCommitChangesIfBulkOperationWasNotFound() {
     when(bulkOperationRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
-    assertThrows(BulkOperationException.class, () -> bulkOperationService.commitChanges(UUID.randomUUID()));
+    var operationId = UUID.randomUUID();
+    assertThrows(NotFoundException.class, () -> bulkOperationService.commitChanges(operationId));
   }
 
   @ParameterizedTest
@@ -574,7 +632,100 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkOperationRepository.findById(operationId))
       .thenReturn(Optional.of(BulkOperation.builder().entityType(EntityType.USER).status(status).build()));
 
-    assertThrows(BulkOperationException.class, () -> bulkOperationService.getPreview(operationId, 10));
+    assertThrows(NotFoundException.class, () -> bulkOperationService.getPreview(operationId, 10));
+  }
+
+  @ParameterizedTest
+  @CsvSource(value = { "users_for_preview.json,USER,DATA_MODIFICATION",
+    "users_for_preview.json,USER,REVIEW_CHANGES",
+    "users_for_preview.json,USER,COMPLETED",
+    "items_for_preview.json,ITEM,DATA_MODIFICATION",
+    "items_for_preview.json,ITEM,REVIEW_CHANGES",
+    "items_for_preview.json,ITEM,COMPLETED",
+    "holdings_for_preview.json,HOLDING,DATA_MODIFICATION",
+    "holdings_for_preview.json,HOLDING,REVIEW_CHANGES",
+    "holdings_for_preview.json,HOLDING,COMPLETED" }, delimiter = ',')
+  @SneakyThrows
+  void shouldReturnCsvPreviewIfAvailable(String fileName, EntityType entityType, OperationStatusType status) {
+    var path = "src/test/resources/files/" + fileName;
+    var operationId = UUID.randomUUID();
+
+    var bulkOperation = buildBulkOperation(fileName, entityType, status).withId(operationId);
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(bulkOperation));
+
+    when(remoteFileSystemClient.get(anyString()))
+      .thenReturn(new FileInputStream(path));
+
+    when(groupClient.getGroupById(anyString())).thenReturn(new UserGroup().withGroup("Group"));
+    when(instanceClient.getById(anyString())).thenReturn(new BriefInstance().withTitle("Title"));
+    when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
+    when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
+
+    var csvString = bulkOperationService.getCsvPreviewByBulkOperationId(operationId);
+
+    // 6 lines expected: 1 line for headers and 5 lines for data
+    MatcherAssert.assertThat(new BufferedReader(new StringReader(csvString)).lines().count(), Matchers.equalTo(6L));
+
+    if (EntityType.USER.equals(entityType)) {
+      assertThat(new Scanner(csvString).nextLine(), equalTo(UserHeaderBuilder.getHeaders().stream()
+        .map(Cell::getValue)
+        .collect(Collectors.joining(","))));
+    } else if (EntityType.ITEM.equals(entityType)) {
+      assertThat(new Scanner(csvString).nextLine(), equalTo(ItemHeaderBuilder.getHeaders().stream()
+        .map(Cell::getValue)
+        .collect(Collectors.joining(","))));
+    } else if (EntityType.HOLDING.equals(entityType)) {
+      assertThat(new Scanner(csvString).nextLine(), equalTo(HoldingsHeaderBuilder.getHeaders().stream()
+        .map(Cell::getValue)
+        .collect(Collectors.joining(","))));
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
+  @SneakyThrows
+  void shouldExitExceptionallyIfCsvPreviewIsNotAvailable(OperationStatusType status) {
+    var operationId = UUID.randomUUID();
+
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(BulkOperation.builder().entityType(EntityType.USER).status(status).build()));
+
+    assertThrows(NotFoundException.class, () -> bulkOperationService.getCsvPreviewByBulkOperationId(operationId));
+  }
+
+  @ParameterizedTest
+  @EnumSource(OperationStatusType.class)
+  void shouldReturnBulkOperationById(OperationStatusType statusType) {
+    var operationId = UUID.randomUUID();
+
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(BulkOperation.builder()
+        .id(operationId)
+        .status(statusType)
+        .totalNumOfRecords(10)
+        .processedNumOfRecords(0)
+        .build()));
+
+    when(dataProcessingRepository.findByBulkOperationId(operationId))
+      .thenReturn(Optional.of(BulkOperationDataProcessing.builder()
+        .status(StatusType.ACTIVE)
+        .processedNumOfRecords(5)
+        .build()));
+
+    when(executionRepository.findByBulkOperationId(operationId))
+      .thenReturn(Optional.of(BulkOperationExecution.builder()
+        .status(StatusType.ACTIVE)
+        .processedRecords(5)
+        .build()));
+
+    var operation = bulkOperationService.getOperationById(operationId);
+
+    if (DATA_MODIFICATION.equals(operation.getStatus()) || APPLY_CHANGES.equals(operation.getStatus())) {
+      assertThat(operation.getProcessedNumOfRecords(), equalTo(5));
+    } else {
+      assertThat(operation.getProcessedNumOfRecords(), equalTo(0));
+    }
   }
 
   private BulkOperation buildBulkOperation(String fileName, EntityType entityType, OperationStatusType status) {

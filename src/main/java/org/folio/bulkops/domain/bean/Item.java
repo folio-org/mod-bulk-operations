@@ -9,7 +9,7 @@ import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import org.folio.bulkops.domain.bean.IdentifierType;
+import org.folio.bulkops.domain.dto.IdentifierType;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

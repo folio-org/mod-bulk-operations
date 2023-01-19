@@ -5,6 +5,7 @@ import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationRuleDetailsRepository;
 import org.folio.bulkops.repository.BulkOperationRuleRepository;
 import org.springframework.stereotype.Service;
@@ -27,13 +28,13 @@ public class RuleService {
       .forEach(ruleRepository::deleteAllByBulkOperationId);
 
     ruleCollection.getBulkOperationRules().forEach(bulkOperationRule -> {
-      var ruleId = ruleRepository.save(org.folio.bulkops.domain.entity.BulkOperationRule.builder()
+      var rule = ruleRepository.save(org.folio.bulkops.domain.entity.BulkOperationRule.builder()
         .bulkOperationId(bulkOperationRule.getBulkOperationId())
         .updateOption(bulkOperationRule.getRuleDetails().getOption())
-        .build()).getId();
+        .build());
       bulkOperationRule.getRuleDetails().getActions()
         .forEach(action -> ruleDetailsRepository.save(org.folio.bulkops.domain.entity.BulkOperationRuleDetails.builder()
-          .ruleId(ruleId)
+          .ruleId(rule.getId())
           .updateAction(action.getType())
           .initialValue(action.getInitial())
           .updatedValue(action.getUpdated())
@@ -45,6 +46,9 @@ public class RuleService {
     var rules = ruleRepository.findAllByBulkOperationId(bulkOperationId).stream()
       .map(this::mapBulkOperationRuleToDto)
       .collect(Collectors.toList());
+    if (rules.isEmpty()) {
+      throw new NotFoundException("Bulk operation rules were not found by bulk operation id=" + bulkOperationId);
+    }
     return new BulkOperationRuleCollection().bulkOperationRules(rules).totalRecords(rules.size());
   }
 

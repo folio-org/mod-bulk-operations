@@ -1,6 +1,6 @@
 package org.folio.bulkops.repository;
 
-import static org.folio.bulkops.domain.bean.IdentifierType.BARCODE;
+import static org.folio.bulkops.domain.dto.IdentifierType.BARCODE;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationType.UPDATE;

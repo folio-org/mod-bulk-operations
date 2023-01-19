@@ -5,17 +5,23 @@ info:
   description: Bulk operations API
 
 paths:
-  /bulk-operations/{operationId}/upload:
+  /bulk-operations/upload:
     post:
       description: Upload csv file with identifiers list (barcodes, UUIDs, HRIDs, etc.)
       operationId: uploadCsvFile
       parameters:
-        - name: operationId
-          in: path
+        - name: entityType
+          in: query
           required: true
-          description: UUID of the BulkOperation
+          description: Entity type (USER, ITEM, HOLDING)
           schema:
-            $ref: "#/components/schemas/UUID"
+            $ref: "#/components/schemas/entityType"
+        - name: identifierType
+          in: query
+          required: true
+          description: Identifier type (ID, BARCODE, etc.)
+          schema:
+            $ref: "#/components/schemas/identifierType"
       requestBody:
         content:
           multipart/form-data:
@@ -31,21 +37,17 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: "#/components/schemas/bulkOperationDto"
         "400":
           description: Bad Request
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
         "500":
           description: Internal server errors, e.g. due to misconfiguration
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
   /bulk-operations/{operationId}/content-update:
@@ -59,12 +61,6 @@ paths:
           description: UUID of the Bulk Operation
           schema:
             $ref: "#/components/schemas/UUID"
-        - in: query
-          name: limit
-          required: false
-          schema:
-            type: integer
-          description: The numbers of records to return
       requestBody:
         required: true
         content:
@@ -73,33 +69,23 @@ paths:
               $ref: "#/components/schemas/bulkOperationRuleCollection"
       responses:
         "200":
-          description: Collection of items for preview
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/unifiedTable"
+          description: Rules are saved
         "400":
           description: Bad request
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
         "404":
           description: Not found
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
         "500":
           description: Internal server errors, e.g. due to misconfiguration
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
   /bulk-operations/{operationId}/preview:
@@ -130,24 +116,18 @@ paths:
           description: Bad Request
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
         '404':
           description: Not found
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
         '500':
           description: Internal server errors, e.g. due to misconfiguration
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
   /bulk-operations/{operationId}/preview/download:
@@ -173,24 +153,18 @@ paths:
           description: Bad request
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
         "404":
           description: Not found
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
         "500":
           description: Internal server errors, e.g. due to misconfiguration
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
   /bulk-operations/{operationId}/start:
@@ -210,13 +184,11 @@ paths:
           content:
             application/json:
               schema:
-                type: string
+                $ref: "#/components/schemas/bulkOperationDto"
         "400":
           description: Bad Request
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
         "404":
@@ -230,8 +202,6 @@ paths:
           description: Internal server errors, e.g. due to misconfiguration
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
   /bulk-operations/{operationId}/errors:
@@ -256,8 +226,6 @@ paths:
           description: Collection of errors for preview
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
         '404':
@@ -297,24 +265,18 @@ paths:
           description: Bad request
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
         "404":
           description: Not found
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
         "500":
           description: Internal server errors, e.g. due to misconfiguration
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
   /bulk-operations:
@@ -333,10 +295,39 @@ paths:
           description: Collection of operations for preview
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/bulkOperationCollection"
+        '500':
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Internal server error
+  /bulk-operations/{operationId}:
+    get:
+      description: Get bulk operation by id
+      operationId: getBulkOperationById
+      parameters:
+        - name: operationId
+          in: path
+          required: true
+          description: UUID of the Bulk Operation
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        '200':
+          description: Bulk operation DTO
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bulkOperationDto"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/errors"
         '500':
           description: Internal server errors, e.g. due to misconfiguration
           content:
@@ -348,10 +339,16 @@ components:
   schemas:
     bulkOperationCollection:
       $ref: 'schemas/bulk_operation_collection.json#/BulkOperationCollection'
+    bulkOperationDto:
+      $ref: 'schemas/bulk_operation_dto.json#/BulkOperationDto'
     bulkOperationRuleCollection:
       $ref: 'schemas/bulk_operation_rule_collection.json#/BulkOperationRuleCollection'
     unifiedTable:
       $ref: 'schemas/unified_table.json'
+    entityType:
+      $ref: 'schemas/entity_type.json#/EntityType'
+    identifierType:
+      $ref: 'schemas/identifier_type.json#/IdentifierType'
     UUID:
       type: string
       format: uuid
