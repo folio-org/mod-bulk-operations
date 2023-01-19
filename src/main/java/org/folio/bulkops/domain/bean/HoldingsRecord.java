@@ -1,6 +1,7 @@
 package org.folio.bulkops.domain.bean;
 
 import java.util.List;
+import org.folio.bulkops.domain.dto.IdentifierType;
 
 import javax.validation.Valid;
 
