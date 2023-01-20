@@ -198,10 +198,6 @@
       "version": "5.0 6.0 7.0"
     },
     {
-      "id": "okapi-proxy",
-      "version": "1.9"
-    },
-    {
       "id": "holdings-storage",
       "version": "6.0"
     },
