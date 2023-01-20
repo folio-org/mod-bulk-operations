@@ -25,7 +25,7 @@
         {
           "methods": [ "GET" ],
           "pathPattern": "/bulk-operations/{operationId}/preview",
-          "permissionsRequired": [ "bulk-operations.preview.collection.get" ],
+          "permissionsRequired": [ "bulk-operations.preview.get" ],
           "modulePermissions": [
             "addresstypes.item.get",
             "departments.item.get",
@@ -50,7 +50,7 @@
         {
           "methods": [ "GET" ],
           "pathPattern": "/bulk-operations/{operationId}/preview/download",
-          "permissionsRequired": [ "bulk-operations.preview.collection.download.get" ],
+          "permissionsRequired": [ "bulk-operations.preview.download.get" ],
           "modulePermissions": [
             "addresstypes.item.get",
             "departments.item.get",
@@ -93,7 +93,7 @@
         {
           "methods": [ "GET" ],
           "pathPattern": "/bulk-operations/{operationId}/errors/download",
-          "permissionsRequired": [ "bulk-operations.errors.download.collection.get" ],
+          "permissionsRequired": [ "bulk-operations.errors.download.get" ],
           "modulePermissions": [
             "bulk-edit.errors.collection.get"
           ]
@@ -141,12 +141,12 @@
       "description" : "Upload collection of  content updates"
     },
     {
-      "permissionName" : "bulk-operations.preview.collection.get",
+      "permissionName" : "bulk-operations.preview.get",
       "displayName" : "get Bulk Operation preview collection",
       "description" : "Get Bulk Operation preview collection"
     },
     {
-      "permissionName" : "bulk-operations.preview.collection.download.get",
+      "permissionName" : "bulk-operations.preview.download.get",
       "displayName" : "download Bulk Operation preview",
       "description" : "Download Bulk Operation preview"
     },
@@ -161,7 +161,7 @@
       "description" : "Get errors collection for preview"
     },
     {
-      "permissionName": "bulk-operations.errors.download.collection.get",
+      "permissionName": "bulk-operations.errors.download.get",
       "displayName": "download errors",
       "description": "Download errors"
     },
@@ -182,11 +182,11 @@
       "subPermissions" : [
         "bulk-operations.item.upload.post",
         "bulk-operations.content-update.collection.post",
-        "bulk-operations.preview.collection.get",
-        "bulk-operations.preview.collection.download.get",
+        "bulk-operations.preview.get",
+        "bulk-operations.preview.download.get",
         "bulk-operations.start.item.post",
         "bulk-operations.errors.collection.get",
-        "bulk-operations.errors.download.collection.get",
+        "bulk-operations.errors.download.get",
         "bulk-operations.collection.get",
         "bulk-operations.item.get"
       ]
@@ -226,7 +226,7 @@
       {"name": "S3_BUCKET", "value": "test-bucket2"},
       {"name": "S3_ACCESS_KEY_ID", "value": "AKIAIOSFODNN7EXAMPLE"},
       {"name": "S3_SECRET_ACCESS_KEY", "value": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"},
-      {"name": "S3_WITH_AWS_SDK", "value": false},
+      {"name": "S3_IS_AWS", "value": false},
       {"name": "ENV", "value": "folio"}
     ]
   }

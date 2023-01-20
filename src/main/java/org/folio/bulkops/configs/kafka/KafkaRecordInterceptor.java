@@ -39,7 +39,8 @@ public class KafkaRecordInterceptor<V> implements RecordInterceptor<String, V> {
   }
 
   @Override
-  public void afterRecord(ConsumerRecord<String, V> record, Consumer<String, V> consumer) {
+  public void afterRecord(ConsumerRecord<String, V> consumerRecord, Consumer<String, V> consumerEntity) {
+    // No need after-processing - methods body is empty
   }
 
   private Map<String, Collection<String>> headersToMap(Headers header) {

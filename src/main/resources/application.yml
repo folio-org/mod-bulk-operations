@@ -66,7 +66,7 @@ application:
     bucket: ${S3_BUCKET:}
     accessKey: ${S3_ACCESS_KEY_ID:}
     secretKey: ${S3_SECRET_ACCESS_KEY:}
-    awsSdk: ${S3_WITH_AWS_SDK:false}
+    awsSdk: ${S3_IS_AWS:false}
   kafka:
     topic-pattern: ${ENV:folio}.(.*\.)?data-export.job.update
     group-id: ${ENV:folio}-mod-bulk-operations-events-group
