@@ -1,10 +1,15 @@
 package org.folio.bulkops.service;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.LF;
+import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
+import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -22,23 +27,30 @@ import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
+import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.bean.ExportType;
-import org.folio.bulkops.domain.bean.IdentifierType;
+import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.domain.entity.BulkOperationProcessingContent;
+
 import org.folio.bulkops.exception.BulkOperationException;
+import org.folio.bulkops.exception.IllegalOperationStateException;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.processor.DataProcessorFactory;
 import org.folio.bulkops.processor.UpdateProcessorFactory;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
+import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -71,6 +83,7 @@ public class BulkOperationService {
   private final DataProcessorFactory dataProcessorFactory;
   private final UpdateProcessorFactory updateProcessorFactory;
   private final ModClientAdapterFactory modClientAdapterFactory;
+  private final BulkOperationProcessingContentRepository processingContentRepository;
 
   public BulkOperation uploadIdentifiers(EntityType entityType, IdentifierType identifierType, MultipartFile multipartFile) {
     var bulkOperation = bulkOperationRepository.save(BulkOperation.builder()
@@ -117,7 +130,7 @@ public class BulkOperationService {
   }
 
   public void confirmChanges(UUID bulkOperationId) throws BulkOperationException {
-    var bulkOperation = getBulkOperationById(bulkOperationId);
+    var bulkOperation = getBulkOperationOrThrow(bulkOperationId);
 
     if (StringUtils.isEmpty(bulkOperation.getLinkToOriginFile())) {
       throw new BulkOperationException("Missing link to origin file");
@@ -138,12 +151,10 @@ public class BulkOperationService {
       .processedNumOfRecords(0)
       .build());
     try (var scanner = new Scanner(remoteFileSystemClient.get(bulkOperation.getLinkToOriginFile()))) {
-      var processor = dataProcessorFactory.getProcessorFromFactory(entityClass);
       var modifiedFileName = bulkOperation.getId() + "/modified-" + FilenameUtils.getName(bulkOperation.getLinkToOriginFile());
       while (scanner.hasNext()) {
-        var entity = objectMapper.readValue(scanner.nextLine(), entityClass);
-        var updatedEntity = processor.process(entity.getIdentifier(bulkOperation.getIdentifierType()), entity, ruleCollection);
-        remoteFileSystemClient.append(new ByteArrayInputStream(objectMapper.writeValueAsString(updatedEntity).concat(scanner.hasNext() ? JSON_STRINGS_DELIMITER : EMPTY).getBytes()), modifiedFileName);
+        var modifiedString = processUpdate(scanner.nextLine(), bulkOperation, ruleCollection, entityClass);
+        remoteFileSystemClient.append(new ByteArrayInputStream(modifiedString.concat(scanner.hasNext() ? JSON_STRINGS_DELIMITER : EMPTY).getBytes()), modifiedFileName);
         dataProcessingRepository.save(dataProcessing
           .withProcessedNumOfRecords(dataProcessing.getProcessedNumOfRecords() + 1)
           .withStatus(scanner.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
@@ -163,8 +174,28 @@ public class BulkOperationService {
     }
   }
 
-  public void commitChanges(UUID bulkOperationId) throws BulkOperationException {
-    var bulkOperation = getBulkOperationById(bulkOperationId);
+  private String processUpdate(String entityString, BulkOperation bulkOperation, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> entityClass) {
+    var processor = dataProcessorFactory.getProcessorFromFactory(entityClass);
+    var processingContent = BulkOperationProcessingContent.builder()
+      .bulkOperationId(bulkOperation.getId())
+      .build();
+    try {
+      var entity = objectMapper.readValue(entityString, entityClass);
+      processingContent.setIdentifier(entity.getIdentifier(bulkOperation.getIdentifierType()));
+      entity = processor.process(entity.getIdentifier(bulkOperation.getIdentifierType()), entity, rules);
+      entityString = objectMapper.writeValueAsString(entity);
+      processingContent.setState(StateType.PROCESSED);
+    } catch (Exception e) {
+      processingContent = processingContent
+        .withState(StateType.FAILED)
+        .withErrorMessage("Failed to modify entity, reason:" + e.getMessage());
+    }
+    processingContentRepository.save(processingContent);
+    return entityString;
+  }
+
+  public BulkOperation commitChanges(UUID bulkOperationId) throws BulkOperationException {
+    var bulkOperation = getBulkOperationOrThrow(bulkOperationId);
 
     if (StringUtils.isEmpty(bulkOperation.getLinkToOriginFile())) {
       throw new BulkOperationException("Missing link to origin file");
@@ -174,12 +205,13 @@ public class BulkOperationService {
 
     var entityClass = resolveEntityClass(bulkOperation.getEntityType());
 
-    performCommitChanges(bulkOperation, entityClass);
+    bulkOperation = bulkOperationRepository.save(bulkOperation.withStatus(OperationStatusType.APPLY_CHANGES));
+    startCommitChanges(bulkOperation, entityClass);
+    return bulkOperation;
   }
 
   @Async
-  public void performCommitChanges(BulkOperation bulkOperation, Class<? extends BulkOperationsEntity> entityClass) {
-    bulkOperationRepository.save(bulkOperation.withStatus(OperationStatusType.APPLY_CHANGES));
+  public void startCommitChanges(BulkOperation bulkOperation, Class<? extends BulkOperationsEntity> entityClass) {
     var execution = executionRepository.save(BulkOperationExecution.builder()
       .bulkOperationId(bulkOperation.getId())
       .startTime(LocalDateTime.now())
@@ -235,18 +267,23 @@ public class BulkOperationService {
     return originalString;
   }
 
-  public UnifiedTable getPreview(UUID bulkOperationId, int limit) throws BulkOperationException {
-    var bulkOperation = getBulkOperationById(bulkOperationId);
-    var entityClass = resolveEntityClass(bulkOperation.getEntityType());
-    switch (bulkOperation.getStatus()) {
-    case DATA_MODIFICATION:
-      return buildPreview(bulkOperation.getLinkToOriginFile(), entityClass, limit);
-    case REVIEW_CHANGES:
-      return buildPreview(bulkOperation.getLinkToModifiedFile(), entityClass, limit);
-    case COMPLETED:
-      return buildPreview(bulkOperation.getLinkToResultFile(), entityClass, limit);
-    default:
-      throw new BulkOperationException("Preview is not available");
+  public UnifiedTable getPreview(UUID bulkOperationId, int limit) {
+    try {
+      var bulkOperation = getBulkOperationOrThrow(bulkOperationId);
+      var entityClass = resolveEntityClass(bulkOperation.getEntityType());
+      switch (bulkOperation.getStatus()) {
+      case DATA_MODIFICATION:
+        return buildPreview(bulkOperation.getLinkToOriginFile(), entityClass, limit);
+      case REVIEW_CHANGES:
+        return buildPreview(bulkOperation.getLinkToModifiedFile(), entityClass, limit);
+      case COMPLETED:
+        return buildPreview(bulkOperation.getLinkToResultFile(), entityClass, limit);
+      default:
+        throw new BulkOperationException("Preview is not available");
+      }
+    } catch (BulkOperationException e) {
+      log.error(e.getMessage());
+      throw new NotFoundException(e.getMessage());
     }
   }
 
@@ -264,6 +301,50 @@ public class BulkOperationService {
       log.error(msg);
       throw new BulkOperationException(msg);
     }
+  }
+
+  public String getCsvPreviewByBulkOperationId(UUID bulkOperationId) {
+    var table = getPreview(bulkOperationId, Integer.MAX_VALUE);
+    return table.getHeader()
+      .stream()
+      .map(Cell::getValue)
+      .collect(Collectors.joining(",")) + LF + table.getRows()
+      .stream()
+      .map(this::rowToCsvLine)
+      .collect(Collectors.joining(LF));
+  }
+
+  public BulkOperation startBulkOperation(UUID bulkOperationId) {
+    var bulkOperation = bulkOperationRepository.findById(bulkOperationId)
+      .orElseThrow(() -> new NotFoundException("Bulk operation was not found bu id=" + bulkOperationId));
+    try {
+      if (DATA_MODIFICATION.equals(bulkOperation.getStatus())) {
+        confirmChanges(bulkOperationId);
+        return bulkOperation;
+      } else if (REVIEW_CHANGES.equals(bulkOperation.getStatus())) {
+        return commitChanges(bulkOperationId);
+      } else {
+        throw new IllegalOperationStateException("Bulk operation cannot be started, reason: invalid state: " + bulkOperation.getStatus());
+      }
+    } catch (BulkOperationException e) {
+      throw new IllegalOperationStateException("Bulk operation cannot be started, reason: " + e.getMessage());
+    }
+  }
+
+  public BulkOperation getOperationById(UUID bulkOperationId) {
+    var operation = getBulkOperationOrThrow(bulkOperationId);
+    if (DATA_MODIFICATION.equals(operation.getStatus())) {
+      var processing = dataProcessingRepository.findByBulkOperationId(bulkOperationId);
+      if (processing.isPresent() && StatusType.ACTIVE.equals(processing.get().getStatus())) {
+        return operation.withProcessedNumOfRecords(processing.get().getProcessedNumOfRecords());
+      }
+    } else if (APPLY_CHANGES.equals(operation.getStatus())) {
+      var execution = executionRepository.findByBulkOperationId(bulkOperationId);
+      if (execution.isPresent() && StatusType.ACTIVE.equals(execution.get().getStatus())) {
+        return operation.withProcessedNumOfRecords(execution.get().getProcessedRecords());
+      }
+    }
+    return operation;
   }
 
   private <T> T stringToPojoOrNull(String string, Class<T> clazz) {
@@ -288,8 +369,34 @@ public class BulkOperationService {
     }
   }
 
-  public BulkOperation getBulkOperationById(UUID bulkOperationId) throws BulkOperationException {
+  public BulkOperation getBulkOperationOrThrow(UUID bulkOperationId) {
     return bulkOperationRepository.findById(bulkOperationId)
-      .orElseThrow(() -> new BulkOperationException("BulkOperation was not found by id=" + bulkOperationId));
+      .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
+  }
+
+  private String rowToCsvLine(Row row) {
+    return row.getRow().stream()
+      .map(this::prepareForCsv)
+      .collect(Collectors.joining(","));
+  }
+
+  private String prepareForCsv(String s) {
+    if (isNull(s)) {
+      return "";
+    }
+
+    if (s.contains("\"")) {
+      s = s.replace("\"", "\"\"");
+    }
+
+    if (s.contains(LF)) {
+      s = s.replace(LF, "\\n");
+    }
+
+    if (s.contains(",")) {
+      s = "\"" + s + "\"";
+    }
+
+    return s;
   }
 }
