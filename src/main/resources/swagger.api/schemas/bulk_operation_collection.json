@@ -8,7 +8,7 @@
         "description": "List of bulk operations",
         "type": "array",
         "items": {
-          "$ref": "bulk_operation.json#/BulkOperation"
+          "$ref": "bulk_operation_dto.json#/BulkOperationDto"
         },
         "minItems": 1
       },

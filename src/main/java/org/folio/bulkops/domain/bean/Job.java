@@ -3,6 +3,8 @@ package org.folio.bulkops.domain.bean;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.IdentifierType;
 
 import javax.validation.Valid;
 
@@ -42,7 +44,7 @@ public class Job {
   private ExportType type;
 
   @JsonProperty("exportTypeSpecificParameters")
-  private ExportTypeSpecificParameters exportTypeSpecificParameters;
+  private ExportTypeSpecificParameters exportTypeSpecificParameters = new ExportTypeSpecificParameters();
 
   @JsonProperty("status")
   private JobStatus status;
@@ -80,7 +82,7 @@ public class Job {
   private IdentifierType identifierType;
 
   @JsonProperty("entityType")
-  private org.folio.bulkops.domain.dto.EntityType entityType;
+  private EntityType entityType;
 
   @JsonProperty("progress")
   private Progress progress;
