@@ -304,6 +304,55 @@ paths:
               schema:
                 type: string
                 example: Internal server error
+  /bulk-operations/{operationId}/download:
+    get:
+      description: Download file by operation id
+      operationId: downloadFileByOperationId
+      parameters:
+        - name: operationId
+          in: path
+          required: true
+          description: UUID of the Bulk Operation
+          schema:
+            $ref: "#/components/schemas/UUID"
+        - in: query
+          name: fileContentType
+          required: true
+          schema:
+            $ref: "#/components/schemas/fileContentType"
+          description: The file content type
+      responses:
+        '200':
+          description: Preview of updated items to download
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+        "500":
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
   /bulk-operations/{operationId}:
     get:
       description: Get bulk operation by id
@@ -349,6 +398,8 @@ components:
       $ref: 'schemas/entity_type.json#/EntityType'
     identifierType:
       $ref: 'schemas/identifier_type.json#/IdentifierType'
+    fileContentType:
+      $ref: 'schemas/file_content_type.json#/FileContentType'
     UUID:
       type: string
       format: uuid

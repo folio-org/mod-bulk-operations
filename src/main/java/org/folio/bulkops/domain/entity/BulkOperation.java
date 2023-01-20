@@ -52,6 +52,11 @@ public class BulkOperation {
   private String linkToOriginFile;
   private String linkToModifiedFile;
   private String linkToResultFile;
+
+  private String linkToTriggeringFile;
+
+
+
   private Integer totalNumOfRecords;
   private Integer processedNumOfRecords;
   private Integer executionChunkSize;

@@ -102,6 +102,7 @@ public class BulkOperationService {
       bulkOperation.setDataExportJobId(job.getId());
       if (JobStatus.SCHEDULED.equals(job.getStatus())) {
         bulkEditClient.uploadFile(job.getId(), multipartFile);
+        remoteFileSystemClient.put(multipartFile.getName(), multipartFile.getInputStream());
         job = dataExportSpringClient.getJob(job.getId());
         if (JobStatus.FAILED.equals(job.getStatus())) {
           errorMessage = "Data export job failed";

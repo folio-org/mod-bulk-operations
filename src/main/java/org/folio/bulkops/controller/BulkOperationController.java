@@ -2,6 +2,7 @@ package org.folio.bulkops.controller;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.dto.BulkOperationDto;
@@ -9,6 +10,7 @@ import org.folio.bulkops.domain.dto.BulkOperationCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.Errors;
+import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -25,9 +27,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -98,5 +104,11 @@ public class BulkOperationController implements BulkOperationsApi {
   @Override
   public ResponseEntity<BulkOperationDto> getBulkOperationById(UUID operationId) {
     return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.getOperationById(operationId)), HttpStatus.OK);
+  }
+
+  public ResponseEntity<Resource> downloadFileByOperationId(
+    UUID operationId, FileContentType fileContentType) {
+    var bulkOperation = bulkOperationService.getOperationById(operationId);
+    return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
   }
 }
