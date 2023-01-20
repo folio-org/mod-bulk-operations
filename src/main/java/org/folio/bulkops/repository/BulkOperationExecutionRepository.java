@@ -1,5 +1,6 @@
 package org.folio.bulkops.repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
@@ -8,4 +9,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BulkOperationExecutionRepository extends JpaRepository<BulkOperationExecution, UUID> {
+  Optional<BulkOperationExecution> findByBulkOperationId(UUID uuid);
 }
