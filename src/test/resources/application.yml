@@ -34,4 +34,4 @@ application:
     topic-pattern: ${ENV:folio}.(.*\.)?data-export.job.update
     group-id: ${ENV:folio}-mod-bulk-operations-events-group
   file-uploading:
-    max-retry-count: 5
+    max-retry-count: ${MAX_UPLOADING_RETRIES:50}
