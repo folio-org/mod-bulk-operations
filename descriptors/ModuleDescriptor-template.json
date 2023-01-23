@@ -262,10 +262,6 @@
       "version": "16.0"
     },
     {
-      "id": "custom-fields",
-      "version": "2.0"
-    },
-    {
       "id": "bulk-edit",
       "version": "3.0"
     },
