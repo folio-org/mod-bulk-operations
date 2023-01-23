@@ -18,7 +18,7 @@
         {
           "methods": [ "POST" ],
           "pathPattern": "/bulk-operations/{operationId}/content-update",
-          "permissionsRequired": [ "bulk-operations.content-update.collection.post" ],
+          "permissionsRequired": [ "bulk-operations.content-update.item.post" ],
           "modulePermissions": [
           ]
         },
@@ -136,9 +136,9 @@
       "description" : "Upload list of identifiers"
     },
     {
-      "permissionName" : "bulk-operations.content-update.collection.post",
-      "displayName" : "upload content update collection",
-      "description" : "Upload collection of  content updates"
+      "permissionName" : "bulk-operations.content-update.item.post",
+      "displayName" : "upload content update",
+      "description" : "Upload content updates"
     },
     {
       "permissionName" : "bulk-operations.preview.item.get",
@@ -181,7 +181,7 @@
       "description" : "All permissions for bulk-operations module",
       "subPermissions" : [
         "bulk-operations.upload.item.post",
-        "bulk-operations.content-update.collection.post",
+        "bulk-operations.content-update.item.post",
         "bulk-operations.preview.item.get",
         "bulk-operations.preview.download.item.get",
         "bulk-operations.start.item.post",
