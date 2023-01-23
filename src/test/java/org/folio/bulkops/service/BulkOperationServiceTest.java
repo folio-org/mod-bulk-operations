@@ -43,7 +43,6 @@ import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
-import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -196,6 +195,31 @@ class BulkOperationServiceTest extends BaseTest {
 
     when(dataExportSpringClient.getJob(jobId))
       .thenReturn(Job.builder().id(jobId).status(JobStatus.FAILED).build());
+
+    bulkOperationService.uploadIdentifiers(EntityType.USER, IdentifierType.BARCODE, file);
+
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
+    assertEquals(OperationStatusType.FAILED, operationCaptor.getAllValues().get(1).getStatus());
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldFailIfDataExportJobNotFound() {
+    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
+
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(BulkOperation.builder().id(UUID.randomUUID()).build());
+
+    var jobId = UUID.randomUUID();
+    when(dataExportSpringClient.upsertJob(any(Job.class)))
+      .thenReturn(Job.builder().id(jobId).status(JobStatus.SCHEDULED).build());
+
+    when(dataExportSpringClient.getJob(jobId))
+      .thenReturn(Job.builder().id(jobId).status(JobStatus.SCHEDULED).build());
+
+    when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
+      .thenThrow(new NotFoundException("Job was not found"));
 
     bulkOperationService.uploadIdentifiers(EntityType.USER, IdentifierType.BARCODE, file);
 

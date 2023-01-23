@@ -21,6 +21,7 @@ import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.StateType;
@@ -52,6 +53,7 @@ import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -70,6 +72,9 @@ import java.util.stream.Collectors;
 @Log4j2
 @RequiredArgsConstructor
 public class BulkOperationService {
+  @Value("${application.file-uploading.max-retry-count}")
+  private int maxRetryCount;
+
   private static final String JSON_STRINGS_DELIMITER = ",\n";
   private final BulkOperationRepository bulkOperationRepository;
   private final DataExportSpringClient dataExportSpringClient;
@@ -98,10 +103,12 @@ public class BulkOperationService {
       var job = dataExportSpringClient.upsertJob(Job.builder()
         .type(ExportType.BULK_EDIT_IDENTIFIERS)
         .entityType(entityType)
-        .identifierType(identifierType).build());
+        .identifierType(identifierType)
+        .exportTypeSpecificParameters(new ExportTypeSpecificParameters())
+        .build());
       bulkOperation.setDataExportJobId(job.getId());
       if (JobStatus.SCHEDULED.equals(job.getStatus())) {
-        bulkEditClient.uploadFile(job.getId(), multipartFile);
+        uploadIdentifiers(job.getId(), multipartFile);
         job = dataExportSpringClient.getJob(job.getId());
         if (JobStatus.FAILED.equals(job.getStatus())) {
           errorMessage = "Data export job failed";
@@ -127,6 +134,19 @@ public class BulkOperationService {
     }
 
     return bulkOperationRepository.save(bulkOperation);
+  }
+
+  private String uploadIdentifiers(UUID dataExportJobId, MultipartFile file) throws BulkOperationException {
+    var retryCount = 0;
+    while (true) {
+      try {
+        return bulkEditClient.uploadFile(dataExportJobId, file);
+      } catch (NotFoundException e) {
+        if (++retryCount == maxRetryCount) {
+          throw new BulkOperationException("Failed to upload file with identifiers: data export job was not found");
+        }
+      }
+    }
   }
 
   public void confirmChanges(UUID bulkOperationId) throws BulkOperationException {
