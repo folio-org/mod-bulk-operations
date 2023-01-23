@@ -32,6 +32,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class KafkaConfiguration {
 
+  public static final String STAR = "*";
   private final KafkaProperties kafkaProperties;
 
   @Bean
@@ -48,12 +49,13 @@ public class KafkaConfiguration {
   @Bean
   public <V> ConsumerFactory<String, V> consumerFactory(ObjectMapper objectMapper, FolioModuleMetadata folioModuleMetadata) {
     Map<String, Object> props = new HashMap<>(kafkaProperties.buildConsumerProperties());
-    var deserializer = new JsonDeserializer<V>(TypeFactory.defaultInstance().constructType(TypeFactory.rawClass(Job.class)), objectMapper, false).trustedPackages("*");
-    props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-    props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
-    props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-    props.put("folioModuleMetadata", folioModuleMetadata);
-    return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), deserializer);
+    try (var deserializer = new JsonDeserializer<V>(TypeFactory.defaultInstance().constructType(TypeFactory.rawClass(Job.class)), objectMapper, false).trustedPackages(STAR);) {
+      props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+      props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
+      props.put(JsonDeserializer.TRUSTED_PACKAGES, STAR);
+      props.put("folioModuleMetadata", folioModuleMetadata);
+      return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), deserializer);
+    }
   }
 
   @Bean
