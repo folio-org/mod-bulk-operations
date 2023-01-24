@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 
@@ -66,8 +67,12 @@ public class KafkaService {
   public void restartEventListeners() {
     log.info("Restarting kafka consumer to start listening created topics [id: {}]", EVENT_LISTENER_ID);
     var listenerContainer = kafkaListenerEndpointRegistry.getListenerContainer(EVENT_LISTENER_ID);
-    listenerContainer.stop();
-    listenerContainer.start();
+    if (Objects.nonNull(listenerContainer)) {
+      listenerContainer.stop();
+      listenerContainer.start();
+    } else {
+      log.error("Consumer isn't initialized and cannot be restarted");
+    }
   }
 
   private List<NewTopic> tenantSpecificTopics(String tenant) {
