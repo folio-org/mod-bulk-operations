@@ -19,13 +19,13 @@ For the purposes of this form, "store" includes the following:
 - [x] Last name
 - [x] Middle name
 - [x] Pseudonym / Alias / Nickname / Username / User ID
-- [x] Gender
+- [ ] Gender
 - [x] Date of birth
-- [x] Place of birth
+- [ ] Place of birth
 - [ ] Racial or ethnic origin
-- [ ] Address
+- [x] Address
 - [ ] Location information
-- [ ] Phone numbers
+- [x] Phone numbers
 - [ ] Passport number / National identification numbers
 - [ ] Driver’s license number
 - [ ] Social security number
