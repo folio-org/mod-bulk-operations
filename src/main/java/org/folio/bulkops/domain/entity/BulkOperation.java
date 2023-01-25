@@ -11,6 +11,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
@@ -48,14 +49,19 @@ public class BulkOperation {
   @Enumerated(EnumType.STRING)
   private OperationStatusType status;
 
+  @Enumerated(EnumType.STRING)
+  private ApproachType approach;
+
   private UUID dataExportJobId;
-  private String linkToOriginFile;
-  private String linkToModifiedFile;
+  private String linkToTriggeringFile; // csv
+  private String linkToOriginFile; // json
+  private String linkToMatchingRecordsFile; // csv
+  private String linkToMatchingErrorsFile; // csv
+  private String linkToModifiedFile; // json
+  private String linkToThePreviewFile; // csv
   private String linkToResultFile;
-
-  private String linkToTriggeringFile;
-
-
+  private String linkToUpdatedRecordsFile;
+  private String linkToCommittingErrorsFile; // csv
 
   private Integer totalNumOfRecords;
   private Integer processedNumOfRecords;

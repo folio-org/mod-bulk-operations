@@ -1,10 +1,18 @@
 package org.folio.bulkops.controller;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
+import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 
-import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.codehaus.plexus.util.FileUtils;
+import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationDto;
 import org.folio.bulkops.domain.dto.BulkOperationCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -22,18 +30,16 @@ import org.folio.bulkops.service.RuleService;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -46,6 +52,7 @@ public class BulkOperationController implements BulkOperationsApi {
   private final JpaCqlRepository<BulkOperation, UUID> bulkOperationCqlRepository;
   private final ErrorService errorService;
   private final RuleService ruleService;
+  private final RemoteFileSystemClient remoteFileSystemClient;
   @Override
   public ResponseEntity<Resource> downloadErrorsByOperationId(UUID operationId) {
     var contentBytes = errorService.getErrorsCsvByBulkOperationId(operationId).getBytes();
@@ -92,8 +99,8 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   @Override
-  public ResponseEntity<BulkOperationDto> startBulkOperation(UUID operationId) {
-    return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.startBulkOperation(operationId)), HttpStatus.OK);
+  public ResponseEntity<BulkOperationDto> startBulkOperation(UUID operationId, ApproachType approachType) {
+    return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.startBulkOperation(operationId, approachType)), HttpStatus.OK);
   }
 
   @Override
@@ -109,6 +116,33 @@ public class BulkOperationController implements BulkOperationsApi {
   public ResponseEntity<Resource> downloadFileByOperationId(
     UUID operationId, FileContentType fileContentType) {
     var bulkOperation = bulkOperationService.getOperationById(operationId);
-    return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+
+    String path;
+    if (fileContentType == TRIGGERING_FILE) {
+      path = bulkOperation.getLinkToTriggeringFile();
+    } else if (fileContentType == MATCHED_RECORDS_FILE) {
+      path = bulkOperation.getLinkToMatchingRecordsFile();
+    } else if (fileContentType == RECORD_MATCHING_ERROR_FILE) {
+      path = bulkOperation.getLinkToMatchingErrorsFile();
+    } else if (fileContentType == PROPOSED_CHANGES_FILE) {
+      path = bulkOperation.getLinkToThePreviewFile();
+    } else if (fileContentType == COMMITTED_RECORDS_FILE) {
+      path = bulkOperation.getLinkToUpdatedRecordsFile();
+    } else if (fileContentType == COMMITTING_CHANGES_ERROR_FILE) {
+      path = bulkOperation.getLinkToCommittingErrorsFile();
+    } else {
+      return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+    }
+
+    try (var is = remoteFileSystemClient.get(path)) {
+      var content = is.readAllBytes();
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+      headers.setContentLength(content.length);
+      headers.setContentDispositionFormData(FileUtils.filename(path), FileUtils.filename(path));
+      return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(content));
+    } catch (IOException e) {
+      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 }

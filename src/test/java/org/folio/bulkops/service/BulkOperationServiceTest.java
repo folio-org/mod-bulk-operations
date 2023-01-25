@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,6 +28,7 @@ import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.bean.BriefInstance;
@@ -43,7 +45,6 @@ import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
-import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -137,17 +138,26 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
       .thenReturn("3");
 
-    bulkOperationService.uploadIdentifiers(EntityType.USER, IdentifierType.BARCODE, file);
+    var bulkOperation = bulkOperationService.uploadIdentifiers(EntityType.USER, IdentifierType.BARCODE, file);
+    var bulkOperationId = bulkOperation.getId();
+
+    when(bulkOperationRepository.findById(bulkOperationId))
+      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringFile("barcodes.csv").build()));
+
+    bulkOperationService.startBulkOperation(bulkOperation.getId(), ApproachType.IN_APP);
 
     verify(dataExportSpringClient).upsertJob(any(Job.class));
     verify(dataExportSpringClient).getJob(jobId);
-    verify(bulkEditClient).uploadFile(jobId, file);
+    verify(bulkEditClient, times(0)).uploadFile(jobId, file);
     verify(bulkEditClient, times(0)).startJob(jobId);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
+    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
     assertEquals(OperationStatusType.NEW, operationCaptor.getAllValues().get(0).getStatus());
-    assertEquals(OperationStatusType.RETRIEVING_RECORDS, operationCaptor.getAllValues().get(1).getStatus());
+    // saving during upload
+    assertEquals(OperationStatusType.RETRIEVING_RECORDS, operationCaptor.getAllValues().get(2).getStatus());
+    // saving during start
+    assertEquals(OperationStatusType.RETRIEVING_RECORDS, operationCaptor.getAllValues().get(3).getStatus());
   }
 
   @Test
@@ -155,10 +165,13 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldUploadIdentifiersAndStartJobIfJobWasNotStarted() {
     var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
 
-    when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(BulkOperation.builder().id(UUID.randomUUID()).build());
-
+    var bulkOperationId = UUID.randomUUID();
     var jobId = UUID.randomUUID();
+
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
+
+
     when(dataExportSpringClient.upsertJob(any(Job.class)))
       .thenReturn(Job.builder().id(jobId).status(JobStatus.SCHEDULED).build());
 
@@ -168,17 +181,24 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
       .thenReturn("3");
 
+
+    when(bulkOperationRepository.findById(bulkOperationId))
+      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).status(OperationStatusType.NEW).dataExportJobId(jobId).linkToTriggeringFile("barcodes.csv").build()));
+
+
+
     bulkOperationService.uploadIdentifiers(EntityType.USER, IdentifierType.BARCODE, file);
+    bulkOperationService.startBulkOperation(bulkOperationId, ApproachType.IN_APP);
 
     verify(dataExportSpringClient).upsertJob(any(Job.class));
     verify(dataExportSpringClient).getJob(jobId);
-    verify(bulkEditClient).uploadFile(jobId, file);
+    verify(bulkEditClient).uploadFile(eq(jobId), any());
     verify(bulkEditClient).startJob(jobId);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
+    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
     assertEquals(OperationStatusType.NEW, operationCaptor.getAllValues().get(0).getStatus());
-    assertEquals(OperationStatusType.RETRIEVING_RECORDS, operationCaptor.getAllValues().get(1).getStatus());
+    assertEquals(OperationStatusType.RETRIEVING_RECORDS, operationCaptor.getAllValues().get(3).getStatus());
   }
 
   @ParameterizedTest
@@ -187,10 +207,16 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldFailOperationWhenDataExportJobFails(JobStatus jobStatus) {
     var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
 
+    var bulkOperationId = UUID.randomUUID();
+
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(BulkOperation.builder().id(UUID.randomUUID()).build());
+      .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
 
     var jobId = UUID.randomUUID();
+
+    when(bulkOperationRepository.findById(any(UUID.class)))
+      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringFile("barcodes.csv").build()));
+
     when(dataExportSpringClient.upsertJob(any(Job.class)))
       .thenReturn(Job.builder().id(jobId).status(jobStatus).build());
 
@@ -198,18 +224,21 @@ class BulkOperationServiceTest extends BaseTest {
       .thenReturn(Job.builder().id(jobId).status(JobStatus.FAILED).build());
 
     bulkOperationService.uploadIdentifiers(EntityType.USER, IdentifierType.BARCODE, file);
+    bulkOperationService.startBulkOperation(bulkOperationId, ApproachType.IN_APP);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
-    assertEquals(OperationStatusType.FAILED, operationCaptor.getAllValues().get(1).getStatus());
+    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
+    assertEquals(OperationStatusType.FAILED, operationCaptor.getAllValues().get(3).getStatus());
   }
 
   @Test
   @SneakyThrows
   void shouldConfirmChanges() {
     var bulkOperationId = UUID.randomUUID();
+    var originalPatronGroupId = "3684a786-6671-4268-8ed0-9db82ebca60b";
     var newPatronGroupId = UUID.randomUUID().toString();
     var pathToOrigin = "path/origin.json";
+    var pathToModified = bulkOperationId + "/json/modified-origin.json";
     var pathToUserJson = "src/test/resources/files/user.json";
 
     when(bulkOperationRepository.findById(any(UUID.class)))
@@ -238,15 +267,21 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(pathToOrigin))
       .thenReturn(new FileInputStream(pathToUserJson));
 
-    when(groupClient.getGroupById(newPatronGroupId)).thenReturn(new UserGroup());
+    when(remoteFileSystemClient.get(pathToModified))
+      .thenReturn(new FileInputStream(pathToUserJson));
 
-    bulkOperationService.confirmChanges(bulkOperationId);
+    when(groupClient.getGroupById(newPatronGroupId)).thenReturn(new UserGroup());
+    when(groupClient.getGroupById(originalPatronGroupId)).thenReturn(new UserGroup());
+
+    bulkOperationService.confirm(bulkOperationId);
+
+
 
     var processingCaptor = ArgumentCaptor.forClass(BulkOperationProcessingContent.class);
     verify(processingContentRepository).save(processingCaptor.capture());
     assertThat(processingCaptor.getValue().getState(), equalTo(StateType.PROCESSED));
 
-    var expectedPathToModifiedFile = bulkOperationId + "/modified-origin.json";
+    var expectedPathToModifiedFile = bulkOperationId + "/json/modified-origin.json";
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     verify(remoteFileSystemClient).append(streamCaptor.capture(), pathCaptor.capture());
@@ -300,7 +335,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(pathToOrigin))
       .thenThrow(new RuntimeException("Failed to read file"));
 
-    bulkOperationService.confirmChanges(bulkOperationId);
+    bulkOperationService.confirm(bulkOperationId);
 
     var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
     verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture());
@@ -320,21 +355,21 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldNotConfirmChangesIfBulkOperationWasNotFound() {
     when(bulkOperationRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
     var operationId = UUID.randomUUID();
-    assertThrows(NotFoundException.class, () -> bulkOperationService.confirmChanges(operationId));
+    assertThrows(NotFoundException.class, () -> bulkOperationService.confirm(operationId));
   }
 
   @Test
   void shouldNotConfirmChangesIfNoLinkToOriginFile() {
     when(bulkOperationRepository.findById(any(UUID.class))).thenReturn(Optional.of(BulkOperation.builder().build()));
-    assertThrows(BulkOperationException.class, () -> bulkOperationService.confirmChanges(UUID.randomUUID()));
+    assertThrows(BulkOperationException.class, () -> bulkOperationService.confirm(UUID.randomUUID()));
   }
 
   @Test
   @SneakyThrows
   void shouldCommitChanges() {
     var bulkOperationId = UUID.randomUUID();
-    var pathToOrigin = bulkOperationId + "/origin.json";
-    var pathToModified = bulkOperationId + "/modified-origin.json";
+    var pathToOrigin = bulkOperationId + "/json/origin.json";
+    var pathToModified = bulkOperationId + "/json/modified-origin.json";
     var pathToUserJson = "src/test/resources/files/user.json";
     var pathToModifiedUserJson = "src/test/resources/files/modified-user.json";
 
@@ -367,14 +402,19 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(pathToModified))
       .thenReturn(new FileInputStream(pathToModifiedUserJson));
 
+    var expectedPathToResultFile = bulkOperationId + "/json/result-origin.json";
+    when(remoteFileSystemClient.get(expectedPathToResultFile))
+      .thenReturn(new FileInputStream(pathToModifiedUserJson));
+
     when(executionContentRepository.save(any(BulkOperationExecutionContent.class)))
       .thenReturn(BulkOperationExecutionContent.builder().build());
 
-    bulkOperationService.commitChanges(bulkOperationId);
+    when(groupClient.getGroupById("cdd8a5c8-dce7-4d7f-859a-83754b36c740")).thenReturn(new UserGroup());
+
+    bulkOperationService.commit(bulkOperationId);
 
     verify(userClient).updateUser(any(User.class), anyString());
 
-    var expectedPathToResultFile = bulkOperationId + "/result-origin.json";
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     verify(remoteFileSystemClient).append(streamCaptor.capture(), pathCaptor.capture());
@@ -442,13 +482,13 @@ class BulkOperationServiceTest extends BaseTest {
     when(executionContentRepository.save(any(BulkOperationExecutionContent.class)))
       .thenReturn(BulkOperationExecutionContent.builder().build());
 
-    bulkOperationService.commitChanges(bulkOperationId);
+    bulkOperationService.commit(bulkOperationId);
 
     verify(userClient, times(0)).updateUser(any(User.class), anyString());
 
     verify(executionContentRepository, times(0)).save(any(BulkOperationExecutionContent.class));
 
-    var expectedPathToResultFile = bulkOperationId + "/result-origin.json";
+    var expectedPathToResultFile = bulkOperationId + "/json/result-origin.json";
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     verify(remoteFileSystemClient).append(streamCaptor.capture(), pathCaptor.capture());
@@ -500,13 +540,13 @@ class BulkOperationServiceTest extends BaseTest {
 
     doThrow(new BadRequestException("Bad request")).when(userClient).updateUser(any(User.class), anyString());
 
-    bulkOperationService.commitChanges(bulkOperationId);
+    bulkOperationService.commit(bulkOperationId);
 
     var executionContentCaptor = ArgumentCaptor.forClass(BulkOperationExecutionContent.class);
     verify(executionContentRepository).save(executionContentCaptor.capture());
     assertThat(executionContentCaptor.getValue().getState(), equalTo(StateType.FAILED));
 
-    var expectedPathToResultFile = bulkOperationId + "/result-origin.json";
+    var expectedPathToResultFile = bulkOperationId + "/json/result-origin.json";
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     verify(remoteFileSystemClient).append(streamCaptor.capture(), pathCaptor.capture());
@@ -519,8 +559,8 @@ class BulkOperationServiceTest extends BaseTest {
   @SneakyThrows
   void shouldUpdateStatusesWhenCommitChangesFails() {
     var bulkOperationId = UUID.randomUUID();
-    var pathToOrigin = bulkOperationId + "/origin.json";
-    var pathToModified = bulkOperationId + "/modified-origin.json";
+    var pathToOrigin = bulkOperationId + "/json/origin.json";
+    var pathToModified = bulkOperationId + "/json/modified-origin.json";
 
     when(bulkOperationRepository.findById(any(UUID.class)))
       .thenReturn(Optional.of(BulkOperation.builder()
@@ -548,7 +588,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(pathToOrigin))
       .thenThrow(new RuntimeException("Failed to read file"));
 
-    bulkOperationService.commitChanges(bulkOperationId);
+    bulkOperationService.commit(bulkOperationId);
 
     var executionCaptor = ArgumentCaptor.forClass(BulkOperationExecution.class);
     verify(executionRepository, times(2)).save(executionCaptor.capture());
@@ -569,18 +609,32 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldNotCommitChangesIfBulkOperationWasNotFound() {
     when(bulkOperationRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
     var operationId = UUID.randomUUID();
-    assertThrows(NotFoundException.class, () -> bulkOperationService.commitChanges(operationId));
+    assertThrows(NotFoundException.class, () -> bulkOperationService.commit(operationId));
   }
 
-  @ParameterizedTest
-  @CsvSource(value = { ",link", "link," }, delimiter = ',')
-  void shouldNotCommitChangesIfNoLinkToOriginOrModifiedFile(String linkToOrigin, String linkToModified) {
+  @Test
+  void shouldNotCommitChangesIfNoLinkToOriginFile() {
     when(bulkOperationRepository.findById(any(UUID.class)))
       .thenReturn(Optional.of(BulkOperation.builder()
-        .linkToOriginFile(linkToOrigin)
-        .linkToModifiedFile(linkToModified)
+        .linkToOriginFile(null)
+        .linkToModifiedFile("link")
         .build()));
-    assertThrows(BulkOperationException.class, () -> bulkOperationService.commitChanges(UUID.randomUUID()));
+    assertThrows(BulkOperationException.class, () -> bulkOperationService.commit(UUID.randomUUID()));
+  }
+
+  @Test
+  void shouldProcessIfNoLinkToModifiedFile() {
+    when(bulkOperationRepository.findById(any(UUID.class)))
+      .thenReturn(Optional.of(BulkOperation.builder()
+        .linkToOriginFile("link")
+        .linkToModifiedFile(null)
+        .build()));
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(BulkOperation.builder()
+        .linkToOriginFile("link")
+        .linkToModifiedFile(null)
+        .build());
+    assertDoesNotThrow(() -> bulkOperationService.commit(UUID.randomUUID()));
   }
 
   @ParameterizedTest

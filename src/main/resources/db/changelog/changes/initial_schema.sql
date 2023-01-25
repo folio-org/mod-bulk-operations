@@ -8,6 +8,8 @@ CREATE TYPE IdentifierType as ENUM ('ID', 'BARCODE', 'HRID', 'FORMER_IDS', 'ACCE
 CREATE CAST (character varying as IdentifierType) WITH INOUT AS IMPLICIT;
 CREATE TYPE OperationStatusType as ENUM ('NEW', 'RETRIEVING_RECORDS', 'SAVING_RECORDS_LOCALLY', 'DATA_MODIFICATION', 'REVIEW_CHANGES', 'APPLY_CHANGES', 'SUSPENDED', 'COMPLETED', 'COMPLETED_WITH_ERRORS', 'CANCELLED', 'SCHEDULED', 'FAILED');
 CREATE CAST (character varying as OperationStatusType) WITH INOUT AS IMPLICIT;
+CREATE TYPE ApproachType as ENUM ('IN_APP', 'MANUAL');
+CREATE CAST (character varying as ApproachType) WITH INOUT AS IMPLICIT;
 
 CREATE TABLE IF NOT EXISTS bulk_operation (
   id UUID PRIMARY KEY,
@@ -16,10 +18,17 @@ CREATE TABLE IF NOT EXISTS bulk_operation (
   entity_type EntityType,
   identifier_type IdentifierType,
   status OperationStatusType,
+  approach ApproachType,
   data_export_job_id UUID,
+  link_to_triggering_file TEXT,
   link_to_origin_file TEXT,
+  link_to_matching_records_file TEXT,
+  link_to_matching_errors_file TEXT,
   link_to_modified_file TEXT,
+  link_to_the_preview_file TEXT,
   link_to_result_file TEXT,
+  link_to_updated_records_file TEXT,
+  link_to_committing_errors_file TEXT,
   total_num_of_records INT,
   processed_num_of_records INT,
   execution_chunk_size INT,

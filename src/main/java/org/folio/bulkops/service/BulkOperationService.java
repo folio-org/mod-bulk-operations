@@ -4,6 +4,7 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
@@ -21,11 +22,13 @@ import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
+import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -85,6 +88,8 @@ public class BulkOperationService {
   private final ModClientAdapterFactory modClientAdapterFactory;
   private final BulkOperationProcessingContentRepository processingContentRepository;
 
+  private final ErrorService errorService;
+
   public BulkOperation uploadIdentifiers(EntityType entityType, IdentifierType identifierType, MultipartFile multipartFile) {
     var bulkOperation = bulkOperationRepository.save(BulkOperation.builder()
         .entityType(entityType)
@@ -94,27 +99,10 @@ public class BulkOperationService {
       .build());
 
     String errorMessage = null;
+
     try {
-      var job = dataExportSpringClient.upsertJob(Job.builder()
-        .type(ExportType.BULK_EDIT_IDENTIFIERS)
-        .entityType(entityType)
-        .identifierType(identifierType).build());
-      bulkOperation.setDataExportJobId(job.getId());
-      if (JobStatus.SCHEDULED.equals(job.getStatus())) {
-        bulkEditClient.uploadFile(job.getId(), multipartFile);
-        remoteFileSystemClient.put(multipartFile.getName(), multipartFile.getInputStream());
-        job = dataExportSpringClient.getJob(job.getId());
-        if (JobStatus.FAILED.equals(job.getStatus())) {
-          errorMessage = "Data export job failed";
-        } else {
-          if (JobStatus.SCHEDULED.equals(job.getStatus())) {
-            bulkEditClient.startJob(job.getId());
-          }
-          bulkOperation.setStatus(RETRIEVING_RECORDS);
-        }
-      } else {
-        errorMessage = String.format("File uploading failed - invalid job status: %s (expected: SCHEDULED)", job.getStatus().getValue());
-      }
+      var linkToTriggeringFile = remoteFileSystemClient.put(multipartFile.getInputStream(), bulkOperation.getId() + "/" + multipartFile.getOriginalFilename());
+      bulkOperation.setLinkToTriggeringFile(linkToTriggeringFile);
     } catch (Exception e) {
       errorMessage = String.format("File uploading failed, reason: %s", e.getMessage());
     }
@@ -130,10 +118,10 @@ public class BulkOperationService {
     return bulkOperationRepository.save(bulkOperation);
   }
 
-  public void confirmChanges(UUID bulkOperationId) throws BulkOperationException {
+  public void confirm(UUID bulkOperationId) throws BulkOperationException {
     var bulkOperation = getBulkOperationOrThrow(bulkOperationId);
 
-    if (StringUtils.isEmpty(bulkOperation.getLinkToOriginFile())) {
+    if (isEmpty(bulkOperation.getLinkToOriginFile())) {
       throw new BulkOperationException("Missing link to origin file");
     }
 
@@ -152,17 +140,32 @@ public class BulkOperationService {
       .processedNumOfRecords(0)
       .build());
     try (var scanner = new Scanner(remoteFileSystemClient.get(bulkOperation.getLinkToOriginFile()))) {
-      var modifiedFileName = bulkOperation.getId() + "/modified-" + FilenameUtils.getName(bulkOperation.getLinkToOriginFile());
+      var modifiedFileName = bulkOperation.getId() + "/json/modified-" + FilenameUtils.getName(bulkOperation.getLinkToOriginFile());
+      var modifiedCsvFileName = bulkOperation.getId() + "/modified-" + FilenameUtils.getName(bulkOperation.getLinkToOriginFile());
+      boolean isModifiedFileEmpty = true;
       while (scanner.hasNext()) {
         var modifiedString = processUpdate(scanner.nextLine(), bulkOperation, ruleCollection, entityClass);
-        remoteFileSystemClient.append(new ByteArrayInputStream(modifiedString.concat(scanner.hasNext() ? JSON_STRINGS_DELIMITER : EMPTY).getBytes()), modifiedFileName);
+
+        if (StringUtils.isNotEmpty(modifiedString)) {
+          isModifiedFileEmpty = false;
+          remoteFileSystemClient.append(new ByteArrayInputStream(modifiedString.concat(scanner.hasNext() ? JSON_STRINGS_DELIMITER : EMPTY).getBytes()), modifiedFileName);
+          bulkOperation.setLinkToModifiedFile(modifiedFileName);
+        }
+
         dataProcessingRepository.save(dataProcessing
           .withProcessedNumOfRecords(dataProcessing.getProcessedNumOfRecords() + 1)
           .withStatus(scanner.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
           .withEndTime(scanner.hasNext() ? null : LocalDateTime.now()));
       }
+
+      if (!isModifiedFileEmpty) {
+        try (var is = new ByteArrayInputStream(getCsvPreviewFromUnifiedTable(buildPreview(modifiedFileName, entityClass, Integer.MAX_VALUE)).getBytes())) {
+          remoteFileSystemClient.put(is, modifiedCsvFileName);
+        }
+        bulkOperation.setLinkToThePreviewFile(modifiedCsvFileName);
+      }
+
       bulkOperationRepository.save(bulkOperation
-        .withLinkToModifiedFile(modifiedFileName)
         .withStatus(OperationStatusType.REVIEW_CHANGES));
     } catch (Exception e) {
       dataProcessingRepository.save(dataProcessing
@@ -184,8 +187,12 @@ public class BulkOperationService {
       var entity = objectMapper.readValue(entityString, entityClass);
       processingContent.setIdentifier(entity.getIdentifier(bulkOperation.getIdentifierType()));
       entity = processor.process(entity.getIdentifier(bulkOperation.getIdentifierType()), entity, rules);
-      entityString = objectMapper.writeValueAsString(entity);
-      processingContent.setState(StateType.PROCESSED);
+      if (Objects.nonNull(entity)) {
+        entityString = objectMapper.writeValueAsString(entity);
+        processingContent.setState(StateType.PROCESSED);
+      } else {
+        return EMPTY;
+      }
     } catch (Exception e) {
       processingContent = processingContent
         .withState(StateType.FAILED)
@@ -195,57 +202,66 @@ public class BulkOperationService {
     return entityString;
   }
 
-  public BulkOperation commitChanges(UUID bulkOperationId) throws BulkOperationException {
+  public BulkOperation commit(UUID bulkOperationId) throws BulkOperationException {
     var bulkOperation = getBulkOperationOrThrow(bulkOperationId);
 
-    if (StringUtils.isEmpty(bulkOperation.getLinkToOriginFile())) {
+    if (isEmpty(bulkOperation.getLinkToOriginFile())) {
       throw new BulkOperationException("Missing link to origin file");
-    } else if (StringUtils.isEmpty(bulkOperation.getLinkToModifiedFile())) {
-      throw new BulkOperationException("Missing link to modified file");
     }
-
-    var entityClass = resolveEntityClass(bulkOperation.getEntityType());
 
     bulkOperation = bulkOperationRepository.save(bulkOperation.withStatus(OperationStatusType.APPLY_CHANGES));
-    startCommitChanges(bulkOperation, entityClass);
-    return bulkOperation;
+
+    if (StringUtils.isNotEmpty(bulkOperation.getLinkToModifiedFile())) {
+      var entityClass = resolveEntityClass(bulkOperation.getEntityType());
+      var operationId = bulkOperation.getId();
+      var execution = executionRepository.save(BulkOperationExecution.builder()
+        .bulkOperationId(operationId)
+        .startTime(LocalDateTime.now())
+        .processedRecords(0)
+        .status(StatusType.ACTIVE)
+        .build());
+      try (var origin = new Scanner(remoteFileSystemClient.get(bulkOperation.getLinkToOriginFile()));
+           var modified = new Scanner(remoteFileSystemClient.get(bulkOperation.getLinkToModifiedFile()))) {
+        var resultFileName = bulkOperation.getId() + "/json/result-" + FilenameUtils.getName(bulkOperation.getLinkToOriginFile());
+        var resultCsvFileName = bulkOperation.getId() + "/result-" + FilenameUtils.getName(bulkOperation.getLinkToMatchingRecordsFile());
+        while (origin.hasNext() && modified.hasNext()) {
+          var resultString = updateEntityIfNeeded(origin.nextLine(), modified.nextLine(), bulkOperation, entityClass);
+          remoteFileSystemClient.append(new ByteArrayInputStream(resultString.concat(origin.hasNext() ? JSON_STRINGS_DELIMITER : EMPTY).getBytes()), resultFileName);
+          execution = execution
+            .withStatus(origin.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
+            .withProcessedRecords(execution.getProcessedRecords() + 1)
+            .withEndTime(origin.hasNext() ? null : LocalDateTime.now());
+        }
+
+        try (var is = new ByteArrayInputStream(getCsvPreviewFromUnifiedTable(buildPreview(resultFileName, entityClass, Integer.MAX_VALUE)).getBytes())) {
+          remoteFileSystemClient.put(is, resultCsvFileName);
+        }
+
+        bulkOperation = bulkOperation
+          .withStatus(OperationStatusType.COMPLETED)
+          .withEndTime(LocalDateTime.now())
+          .withLinkToUpdatedRecordsFile(resultCsvFileName)
+          .withLinkToResultFile(resultFileName);
+      } catch (Exception e) {
+        execution = execution
+          .withStatus(StatusType.FAILED)
+          .withEndTime(LocalDateTime.now());
+        bulkOperation = bulkOperation
+          .withStatus(OperationStatusType.FAILED)
+          .withEndTime(LocalDateTime.now())
+          .withErrorMessage(e.getMessage());
+      }
+      executionRepository.save(execution);
+    } else {
+      bulkOperation.setStatus(OperationStatusType.COMPLETED);
+    }
+
+    var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(bulkOperationId);
+    bulkOperation.setLinkToCommittingErrorsFile(linkToCommittingErrorsFile);
+
+    return bulkOperationRepository.save(bulkOperation);
   }
 
-  @Async
-  public void startCommitChanges(BulkOperation bulkOperation, Class<? extends BulkOperationsEntity> entityClass) {
-    var execution = executionRepository.save(BulkOperationExecution.builder()
-      .bulkOperationId(bulkOperation.getId())
-      .startTime(LocalDateTime.now())
-      .processedRecords(0)
-      .status(StatusType.ACTIVE)
-      .build());
-    try (var origin = new Scanner(remoteFileSystemClient.get(bulkOperation.getLinkToOriginFile()));
-      var modified = new Scanner(remoteFileSystemClient.get(bulkOperation.getLinkToModifiedFile()))) {
-      var resultFileName = bulkOperation.getId() + "/result-" + FilenameUtils.getName(bulkOperation.getLinkToOriginFile());
-      while (origin.hasNext() && modified.hasNext()) {
-        var resultString = updateEntityIfNeeded(origin.nextLine(), modified.nextLine(), bulkOperation, entityClass);
-        remoteFileSystemClient.append(new ByteArrayInputStream(resultString.concat(origin.hasNext() ? JSON_STRINGS_DELIMITER : EMPTY).getBytes()), resultFileName);
-        execution = execution
-          .withStatus(origin.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
-          .withProcessedRecords(execution.getProcessedRecords() + 1)
-          .withEndTime(origin.hasNext() ? null : LocalDateTime.now());
-      }
-      bulkOperation = bulkOperation
-        .withStatus(OperationStatusType.COMPLETED)
-        .withEndTime(LocalDateTime.now())
-        .withLinkToResultFile(resultFileName);
-    } catch (Exception e) {
-      execution = execution
-        .withStatus(StatusType.FAILED)
-        .withEndTime(LocalDateTime.now());
-      bulkOperation = bulkOperation
-        .withStatus(OperationStatusType.FAILED)
-        .withEndTime(LocalDateTime.now())
-        .withErrorMessage(e.getMessage());
-    }
-    executionRepository.save(execution);
-    bulkOperationRepository.save(bulkOperation);
-  }
 
   private String updateEntityIfNeeded(String originalString, String modifiedString, BulkOperation bulkOperation, Class<? extends BulkOperationsEntity> entityClass) {
     if (!originalString.equals(modifiedString)) {
@@ -254,7 +270,7 @@ public class BulkOperationService {
         .bulkOperationId(bulkOperation.getId())
         .build();
       try {
-        var entity = objectMapper.readValue(originalString, entityClass);
+        var entity = objectMapper.readValue(modifiedString, entityClass);
         executionContent.setIdentifier(entity.getIdentifier(bulkOperation.getIdentifierType()));
         updater.updateRecord(entity);
         executionContentRepository.save(executionContent.withState(StateType.PROCESSED));
@@ -274,10 +290,19 @@ public class BulkOperationService {
       var entityClass = resolveEntityClass(bulkOperation.getEntityType());
       switch (bulkOperation.getStatus()) {
       case DATA_MODIFICATION:
+        if (isEmpty(bulkOperation.getLinkToOriginFile())) {
+          throw new BulkOperationException("Preview is not available");
+        }
         return buildPreview(bulkOperation.getLinkToOriginFile(), entityClass, limit);
       case REVIEW_CHANGES:
+        if (isEmpty(bulkOperation.getLinkToModifiedFile())) {
+          throw new BulkOperationException("Preview is not available");
+        }
         return buildPreview(bulkOperation.getLinkToModifiedFile(), entityClass, limit);
       case COMPLETED:
+        if (isEmpty(bulkOperation.getLinkToResultFile())) {
+          throw new BulkOperationException("Preview is not available");
+        }
         return buildPreview(bulkOperation.getLinkToResultFile(), entityClass, limit);
       default:
         throw new BulkOperationException("Preview is not available");
@@ -304,8 +329,7 @@ public class BulkOperationService {
     }
   }
 
-  public String getCsvPreviewByBulkOperationId(UUID bulkOperationId) {
-    var table = getPreview(bulkOperationId, Integer.MAX_VALUE);
+  public String getCsvPreviewFromUnifiedTable(UnifiedTable table) {
     return table.getHeader()
       .stream()
       .map(Cell::getValue)
@@ -315,15 +339,65 @@ public class BulkOperationService {
       .collect(Collectors.joining(LF));
   }
 
-  public BulkOperation startBulkOperation(UUID bulkOperationId) {
+  public String getCsvPreviewByBulkOperationId(UUID bulkOperationId) {
+    var table = getPreview(bulkOperationId, Integer.MAX_VALUE);
+    return getCsvPreviewFromUnifiedTable(table);
+  }
+
+  public BulkOperation startBulkOperation(UUID bulkOperationId, ApproachType approachType) {
     var bulkOperation = bulkOperationRepository.findById(bulkOperationId)
       .orElseThrow(() -> new NotFoundException("Bulk operation was not found bu id=" + bulkOperationId));
+    String errorMessage = null;
     try {
-      if (DATA_MODIFICATION.equals(bulkOperation.getStatus())) {
-        confirmChanges(bulkOperationId);
+      if (NEW.equals(bulkOperation.getStatus())) {
+        try {
+          if (ApproachType.IN_APP == approachType) {
+            var job = dataExportSpringClient.upsertJob(Job.builder()
+              .type(ExportType.BULK_EDIT_IDENTIFIERS)
+              .entityType(bulkOperation.getEntityType())
+              .exportTypeSpecificParameters(new ExportTypeSpecificParameters())
+              .identifierType(bulkOperation.getIdentifierType()).build());
+            bulkOperation.setDataExportJobId(job.getId());
+            bulkOperationRepository.save(bulkOperation);
+
+            if (JobStatus.SCHEDULED.equals(job.getStatus())) {
+              bulkEditClient.uploadFile(job.getId(),
+                new FolioMultiPartFile(FilenameUtils.getName(bulkOperation.getLinkToTriggeringFile()), "application/json", remoteFileSystemClient.get(bulkOperation.getLinkToTriggeringFile())));
+
+              job = dataExportSpringClient.getJob(job.getId());
+              if (JobStatus.FAILED.equals(job.getStatus())) {
+                errorMessage = "Data export job failed";
+              } else {
+                if (JobStatus.SCHEDULED.equals(job.getStatus())) {
+                  bulkEditClient.startJob(job.getId());
+                }
+                bulkOperation.setStatus(RETRIEVING_RECORDS);
+              }
+            } else {
+              errorMessage = String.format("File uploading failed - invalid job status: %s (expected: SCHEDULED)", job.getStatus().getValue());
+            }
+          } else {
+
+          }
+
+        } catch (Exception e) {
+          errorMessage = String.format("File uploading failed, reason: %s", e.getMessage());
+        }
+
+        if (nonNull(errorMessage)) {
+          log.error(errorMessage);
+          bulkOperation = bulkOperation
+            .withStatus(FAILED)
+            .withErrorMessage(errorMessage)
+            .withEndTime(LocalDateTime.now());
+        }
+        bulkOperationRepository.save(bulkOperation);
+        return bulkOperation;
+      } else if (DATA_MODIFICATION.equals(bulkOperation.getStatus())) {
+        confirm(bulkOperationId);
         return bulkOperation;
       } else if (REVIEW_CHANGES.equals(bulkOperation.getStatus())) {
-        return commitChanges(bulkOperationId);
+        return commit(bulkOperationId);
       } else {
         throw new IllegalOperationStateException("Bulk operation cannot be started, reason: invalid state: " + bulkOperation.getStatus());
       }

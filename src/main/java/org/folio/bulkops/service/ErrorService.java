@@ -11,7 +11,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
-import org.folio.bulkops.client.DataExportWorkerClient;
+import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.dto.Error;
@@ -41,7 +41,7 @@ public class ErrorService {
   private final BulkOperationExecutionContentRepository executionContentRepository;
   private final JpaCqlRepository<BulkOperationExecutionContent, UUID> executionContentCqlRepository;
   private final BulkOperationProcessingContentRepository processingContentRepository;
-  private final DataExportWorkerClient dataExportWorkerClient;
+  private final BulkEditClient bulkEditClient;
 
   public void saveError(UUID bulkOperationId, String identifier, String errorMessage) {
     executionContentRepository.save(BulkOperationExecutionContent.builder()
@@ -57,7 +57,7 @@ public class ErrorService {
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
     switch (bulkOperation.getStatus()) {
     case DATA_MODIFICATION:
-      return dataExportWorkerClient.getErrorsPreview(bulkOperation.getDataExportJobId(), limit);
+      return bulkEditClient.getErrorsPreview(bulkOperation.getDataExportJobId(), limit);
     case REVIEW_CHANGES:
       return getProcessingErrors(bulkOperationId, limit);
     case COMPLETED:
@@ -120,7 +120,7 @@ public class ErrorService {
         .map(content -> String.join(",", content.getIdentifier(), content.getErrorMessage()))
         .collect(Collectors.joining(LF));
       var errorsFileName = LocalDate.now().format(ISO_LOCAL_DATE) + operationRepository.findById(bulkOperationId)
-        .map(BulkOperation::getLinkToOriginFile)
+        .map(BulkOperation::getLinkToMatchingRecordsFile)
         .map(FilenameUtils::getName)
         .map(fileName -> "-Errors-" + fileName)
         .orElse("-Errors.csv");

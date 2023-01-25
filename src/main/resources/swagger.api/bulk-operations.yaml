@@ -65,6 +65,8 @@ paths:
         required: true
         content:
           application/json:
+            example:
+              $ref: "##/components/examples/bulkOperationRuleCollection"
             schema:
               $ref: "#/components/schemas/bulkOperationRuleCollection"
       responses:
@@ -110,6 +112,8 @@ paths:
           description: Collection of records for preview
           content:
             application/json:
+              example:
+                $ref: "#/components/examples/unifiedTable"
               schema:
                 $ref: "#/components/schemas/unifiedTable"
         '400':
@@ -178,6 +182,12 @@ paths:
           description: UUID of the Bulk Operation
           schema:
             $ref: "#/components/schemas/UUID"
+        - name: approachType
+          in: query
+          required: true
+          description: Approach type of the Bulk Operation
+          schema:
+            $ref: "#/components/schemas/approachType"
       responses:
         "200":
           description: Bulk Operation is started
@@ -400,6 +410,8 @@ components:
       $ref: 'schemas/identifier_type.json#/IdentifierType'
     fileContentType:
       $ref: 'schemas/file_content_type.json#/FileContentType'
+    approachType:
+      $ref: 'schemas/approach_type.json#/ApproachType'
     UUID:
       type: string
       format: uuid
@@ -411,4 +423,9 @@ components:
         record:
           type: object
           description: Example response
+  examples:
+    bulkOperationRuleCollection:
+      $ref: "examples/bulk_operation_rule_collection.sample"
+    unifiedTable:
+      $ref: "examples/unified_table.sample"
 

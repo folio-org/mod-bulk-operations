@@ -18,6 +18,7 @@ import static org.testcontainers.shaded.org.hamcrest.Matchers.hasSize;
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -207,10 +208,10 @@ class BulkOperationControllerTest extends BaseTest {
   void shouldStartBulkOperationById() {
     var operationId = UUID.randomUUID();
 
-    when(bulkOperationService.startBulkOperation(operationId))
+    when(bulkOperationService.startBulkOperation(operationId, ApproachType.IN_APP))
       .thenReturn(BulkOperation.builder().id(operationId).build());
 
-    var response = mockMvc.perform(post(String.format("/bulk-operations/%s/start", operationId))
+    var response = mockMvc.perform(post(String.format("/bulk-operations/%s/start?approachType=IN_APP", operationId))
         .headers(defaultHeaders())
         .contentType(APPLICATION_JSON))
       .andExpect(status().isOk())
@@ -225,7 +226,7 @@ class BulkOperationControllerTest extends BaseTest {
   void shouldNotStartBulkOperationWithWrongState() {
     var operationId = UUID.randomUUID();
 
-    when(bulkOperationService.startBulkOperation(operationId))
+    when(bulkOperationService.startBulkOperation(operationId, ApproachType.IN_APP))
       .thenThrow(new IllegalOperationStateException("Bulk operation cannot be started"));
 
     mockMvc.perform(post(String.format("/bulk-operations/%s/start", operationId))
@@ -239,10 +240,10 @@ class BulkOperationControllerTest extends BaseTest {
   void shouldNotStartBulkOperationIfOperationWasNotFound() {
     var operationId = UUID.randomUUID();
 
-    when(bulkOperationService.startBulkOperation(operationId))
+    when(bulkOperationService.startBulkOperation(operationId, ApproachType.IN_APP))
       .thenThrow(new NotFoundException("Bulk operation was not found"));
 
-    mockMvc.perform(post(String.format("/bulk-operations/%s/start", operationId))
+    mockMvc.perform(post(String.format("/bulk-operations/%s/start?approachType=IN_APP", operationId))
         .headers(defaultHeaders())
         .contentType(APPLICATION_JSON))
       .andExpect(status().isNotFound());

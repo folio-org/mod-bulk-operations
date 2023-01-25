@@ -21,7 +21,7 @@ import java.util.UUID;
 import java.util.stream.IntStream;
 
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.client.DataExportWorkerClient;
+import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.Errors;
@@ -66,14 +66,14 @@ class ErrorServiceTest extends BaseTest {
   private RemoteFileSystemClient remoteFileSystemClient;
 
   @MockBean
-  private DataExportWorkerClient workerClient;
+  private BulkEditClient bulkEditClient;
 
   private UUID bulkOperationId;
 
   @BeforeEach
   void saveBulkOperation() {
     bulkOperationId = bulkOperationRepository.save(BulkOperation.builder()
-      .linkToOriginFile("some/path/records.csv")
+      .linkToMatchingRecordsFile("some/path/records.csv")
       .build()).getId();
   }
 
@@ -126,7 +126,7 @@ class ErrorServiceTest extends BaseTest {
   void shouldGetErrorsPreviewByBulkOperationId(OperationStatusType statusType) {
     var operationId = bulkOperationRepository.save(BulkOperation.builder().dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
 
-    when(workerClient.getErrorsPreview(any(UUID.class), eq(2)))
+    when(bulkEditClient.getErrorsPreview(any(UUID.class), eq(2)))
       .thenReturn(new Errors()
         .errors(List.of(new Error(), new Error())));
 
@@ -153,7 +153,7 @@ class ErrorServiceTest extends BaseTest {
   void shouldGetErrorsCsvByBulkOperationId(OperationStatusType statusType) {
     var operationId = bulkOperationRepository.save(BulkOperation.builder().dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
 
-    when(workerClient.getErrorsPreview(any(UUID.class), anyInt()))
+    when(bulkEditClient.getErrorsPreview(any(UUID.class), anyInt()))
       .thenReturn(new Errors()
         .errors(List.of(new Error(), new Error(), new Error())));
 

@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Bulk Operation Approach Type",
+  "ApproachType": {
+    "type": "string",
+    "enum": [
+      "MANUAL",
+      "IN_APP"
+    ]
+  }
+}

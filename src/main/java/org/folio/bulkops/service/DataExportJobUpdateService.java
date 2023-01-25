@@ -3,28 +3,33 @@ package org.folio.bulkops.service;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.util.Constants.UTC_ZONE;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.configs.kafka.KafkaService;
 import org.folio.bulkops.domain.bean.BatchStatus;
+import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.folio.bulkops.domain.bean.Job;
-import org.folio.s3.client.FolioS3Client;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 @Service
 @Log4j2
@@ -44,7 +49,7 @@ public class DataExportJobUpdateService {
   }
 
   private final BulkOperationRepository bulkOperationRepository;
-  private final FolioS3Client localFolioS3Client;
+  private final RemoteFileSystemClient remoteFileSystemClient;
 
   @Transactional
   @KafkaListener(
@@ -78,7 +83,7 @@ public class DataExportJobUpdateService {
       } else if (JobStatus.FAILED.equals(status)) {
         bulkOperation = bulkOperation
           .withStatus(OperationStatusType.FAILED)
-          .withEndTime(LocalDateTime.ofInstant(jobExecutionUpdate.getEndTime().toInstant(), ZoneId.of("UTC")))
+          .withEndTime(LocalDateTime.ofInstant(jobExecutionUpdate.getEndTime().toInstant(), UTC_ZONE))
           .withErrorMessage(isNull(jobExecutionUpdate.getErrorDetails()) ? EMPTY : jobExecutionUpdate.getErrorDetails());
       }
     }
@@ -91,12 +96,19 @@ public class DataExportJobUpdateService {
       if (isNull(jobUpdate.getFiles()) || jobUpdate.getFiles().size() < 3 || isNull(jobUpdate.getFiles().get(2))) {
         throw new BulkOperationException("Job update doesn't contain download URL");
       }
-      var url = jobUpdate.getFiles().get(2);
-      var linkToOriginFile = localFolioS3Client.write(bulkOperation.getId() + "/" + FilenameUtils.getName(url.split("\\?")[0]), new URL(url).openStream());
-      return bulkOperation
+      var linkToMatchingRecordsFile = downloadAndSaveCsvFile(bulkOperation, jobUpdate);
+      var linkToOriginFile = downloadAndSaveJsonFile(bulkOperation, jobUpdate);
+      var errorsUrl = jobUpdate.getFiles().get(1);
+      var result = bulkOperation
         .withStatus(OperationStatusType.DATA_MODIFICATION)
         .withLinkToOriginFile(linkToOriginFile)
-        .withEndTime(LocalDateTime.ofInstant(jobUpdate.getEndTime().toInstant(), ZoneId.of("UTC")));
+        .withLinkToMatchingRecordsFile(linkToMatchingRecordsFile)
+        .withEndTime(LocalDateTime.ofInstant(jobUpdate.getEndTime().toInstant(), UTC_ZONE));
+      if (StringUtils.isNotEmpty(errorsUrl)) {
+        var linkToMatchingErrorsFile = remoteFileSystemClient.put(new URL(errorsUrl).openStream(), bulkOperation.getId() + "/" + FilenameUtils.getName(errorsUrl.split("\\?")[0]));
+        return result.withLinkToMatchingErrorsFile(linkToMatchingErrorsFile);
+      }
+      return result;
     } catch (Exception e) {
       var msg = "Failed to download origin file, reason: " + e.getMessage();
       log.error(msg);
@@ -105,5 +117,15 @@ public class DataExportJobUpdateService {
         .withEndTime(LocalDateTime.now())
         .withErrorMessage(msg);
     }
+  }
+
+  public String downloadAndSaveJsonFile(BulkOperation bulkOperation, Job jobUpdate) throws IOException {
+    var jsonUrl = jobUpdate.getFiles().get(2);
+    return remoteFileSystemClient.put(new URL(jsonUrl).openStream(), bulkOperation.getId() + "/json/" + FilenameUtils.getName(jsonUrl.split("\\?")[0]));
+  }
+
+  public String downloadAndSaveCsvFile(BulkOperation bulkOperation, Job jobUpdate) throws IOException {
+    var csvUrl = jobUpdate.getFiles().get(0);
+    return remoteFileSystemClient.put(new URL(csvUrl).openStream(), bulkOperation.getId() + "/" + FilenameUtils.getName(csvUrl.split("\\?")[0]));
   }
 }

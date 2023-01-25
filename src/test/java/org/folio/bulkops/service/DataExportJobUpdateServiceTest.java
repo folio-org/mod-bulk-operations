@@ -51,9 +51,13 @@ class DataExportJobUpdateServiceTest extends BaseTest {
         .id(bulkOperationId)
         .build()));
 
-    var expectedFileName = bulkOperationId + "/users.csv";
-    when(localFolioS3Client.write(eq(expectedFileName), any(InputStream.class)))
-      .thenReturn(expectedFileName);
+    var expectedCsvFileName = bulkOperationId + "/users.csv";
+    when(localFolioS3Client.write(eq(expectedCsvFileName), any(InputStream.class)))
+      .thenReturn(expectedCsvFileName);
+
+    var expectedJsonFileName = bulkOperationId + "/json/user.json";
+    when(localFolioS3Client.write(eq(expectedJsonFileName), any(InputStream.class)))
+      .thenReturn(expectedJsonFileName);
 
     var totalRecords = 10;
     var processedRecords = 10;
@@ -65,7 +69,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
       .progress(Progress.builder()
         .total(totalRecords)
         .processed(processedRecords).build())
-      .files(List.of("", "", "file:src/test/resources/files/users.csv")).build();
+      .files(List.of("file:src/test/resources/files/users.csv", "", "file:src/test/resources/files/user.json")).build();
 
     dataExportJobUpdateService.receiveJobExecutionUpdate(jobUpdate);
 
@@ -73,7 +77,8 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
     assertEquals(OperationStatusType.SAVING_RECORDS_LOCALLY, operationCaptor.getAllValues().get(0).getStatus());
     assertEquals(OperationStatusType.DATA_MODIFICATION, operationCaptor.getAllValues().get(1).getStatus());
-    assertEquals(expectedFileName, operationCaptor.getAllValues().get(1).getLinkToOriginFile());
+    assertEquals(expectedJsonFileName, operationCaptor.getAllValues().get(1).getLinkToOriginFile());
+    assertEquals(expectedCsvFileName, operationCaptor.getAllValues().get(1).getLinkToMatchingRecordsFile());
   }
 
   @ParameterizedTest

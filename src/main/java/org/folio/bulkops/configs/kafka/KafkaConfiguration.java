@@ -1,11 +1,13 @@
 package org.folio.bulkops.configs.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.folio.bulkops.domain.bean.Job;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
@@ -47,7 +49,7 @@ public class KafkaConfiguration {
   @Bean
   public <V> ConsumerFactory<String, V> consumerFactory(ObjectMapper objectMapper, FolioModuleMetadata folioModuleMetadata) {
     Map<String, Object> props = new HashMap<>(kafkaProperties.buildConsumerProperties());
-    try (var deserializer = new JsonDeserializer<V>(objectMapper).trustedPackages(STAR)) {
+    try (var deserializer = new JsonDeserializer<V>(TypeFactory.defaultInstance().constructType(TypeFactory.rawClass(Job.class)), objectMapper, false).trustedPackages("*");) {
       props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
       props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
       props.put(JsonDeserializer.TRUSTED_PACKAGES, STAR);

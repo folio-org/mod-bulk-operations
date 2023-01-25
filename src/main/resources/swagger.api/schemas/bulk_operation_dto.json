@@ -30,6 +30,10 @@
         "description": "Bulk Operation status",
         "$ref": "operation_status_type.json#/OperationStatusType"
       },
+      "approach": {
+        "description": "Bulk Operation approach type",
+        "$ref": "approach_type.json#/ApproachType"
+      },
       "dataExportJobId": {
         "description": "Data export Job UUID",
         "type": "string",
@@ -39,12 +43,32 @@
         "description": "Path to the origin file",
         "type": "string"
       },
+      "linkToMatchingRecordsFile": {
+        "description": "Path to the origin file",
+        "type": "string"
+      },
       "linkToModifiedFile": {
         "description": "Path to the modified file",
         "type": "string"
       },
       "linkToResultFile": {
         "description": "Path to the result file",
+        "type": "string"
+      },
+      "linkToTriggeringFile": {
+        "description": "Path to the bulk operation triggering file",
+        "type": "string"
+      },
+      "linkToMatchingErrorsFile": {
+        "description": "Path to the matching errors file",
+        "type": "string"
+      },
+      "linkToCommittingErrorsFile": {
+        "description": "Path to the committing errors file",
+        "type": "string"
+      },
+      "linkToThePreviewFile": {
+        "description": "Path to the committing errors file",
         "type": "string"
       },
       "totalNumOfRecords": {

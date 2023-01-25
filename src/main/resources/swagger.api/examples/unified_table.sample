@@ -1,0 +1,218 @@
+{
+    "header": [
+        {
+            "value": "User id",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "User name",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "External system id",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Barcode",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Active",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Type",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Patron group",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Departments",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Proxy for",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Last name",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "First name",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Middle name",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Preferred first name",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Email",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Phone",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Mobile phone",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Date Of Birth",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Addresses",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Preferred contact type id",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Enrollment date",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Expiration date",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Created cate",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Updated date",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Tags",
+            "dataType": "STRING",
+            "visible": false
+        },
+        {
+            "value": "Custom fields",
+            "dataType": "STRING",
+            "visible": false
+        }
+    ],
+    "rows": [
+        {
+            "row": [
+                "rick",
+                "2205005b-ca51-4a04-87fd-938eefa8f6de",
+                null,
+                "123",
+                "false",
+                null,
+                "staff",
+                "",
+                "",
+                "rick",
+                "psych",
+                null,
+                null,
+                "rick@example.com",
+                null,
+                null,
+                "",
+                "",
+                "002",
+                "2020-10-07 06:00:00.000+02",
+                "2023-01-23 12:52:30.714+01",
+                "2023-01-23 18:29:48.917+01",
+                "2023-01-23 18:29:48.917+01",
+                "",
+                ""
+            ]
+        },
+        {
+            "row": [
+                "morty",
+                "bec20636-fb68-41fd-84ea-2cf910673599",
+                null,
+                "456",
+                "false",
+                null,
+                "staff",
+                "",
+                "",
+                "morty",
+                "panic",
+                null,
+                null,
+                "morty@example.com",
+                null,
+                null,
+                "",
+                "",
+                "002",
+                "2020-10-07 06:00:00.000+02",
+                "2023-01-23 12:52:30.714+01",
+                "2023-01-23 18:29:48.998+01",
+                "2023-01-23 18:29:48.998+01",
+                "",
+                ""
+            ]
+        },
+        {
+            "row": [
+                "sheldon",
+                "b4cee18d-f862-4ef1-95a5-879fdd619603",
+                null,
+                "789",
+                "false",
+                null,
+                "staff",
+                "",
+                "",
+                "sheldon",
+                "bazinga",
+                null,
+                null,
+                "sheldon@example.com",
+                null,
+                null,
+                "",
+                "",
+                "002",
+                "",
+                "2023-01-23 12:52:30.714+01",
+                "2023-01-23 18:29:49.093+01",
+                "2023-01-23 18:29:49.093+01",
+                "",
+                ""
+            ]
+        }
+    ]
+}
