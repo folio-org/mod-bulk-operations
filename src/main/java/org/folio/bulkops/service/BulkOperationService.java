@@ -74,6 +74,7 @@ import java.util.stream.Collectors;
 @Log4j2
 @RequiredArgsConstructor
 public class BulkOperationService {
+  public static final String PREVIEW_IS_NOT_AVAILABLE = "Preview is not available";
   @Value("${application.file-uploading.max-retry-count}")
   private int maxRetryCount;
 
@@ -295,21 +296,21 @@ public class BulkOperationService {
       switch (bulkOperation.getStatus()) {
       case DATA_MODIFICATION:
         if (isEmpty(bulkOperation.getLinkToOriginFile())) {
-          throw new BulkOperationException("Preview is not available");
+          throw new BulkOperationException(PREVIEW_IS_NOT_AVAILABLE);
         }
         return buildPreview(bulkOperation.getLinkToOriginFile(), entityClass, limit);
       case REVIEW_CHANGES:
         if (isEmpty(bulkOperation.getLinkToModifiedFile())) {
-          throw new BulkOperationException("Preview is not available");
+          throw new BulkOperationException(PREVIEW_IS_NOT_AVAILABLE);
         }
         return buildPreview(bulkOperation.getLinkToModifiedFile(), entityClass, limit);
       case COMPLETED:
         if (isEmpty(bulkOperation.getLinkToResultFile())) {
-          throw new BulkOperationException("Preview is not available");
+          throw new BulkOperationException(PREVIEW_IS_NOT_AVAILABLE);
         }
         return buildPreview(bulkOperation.getLinkToResultFile(), entityClass, limit);
       default:
-        throw new BulkOperationException("Preview is not available");
+        throw new BulkOperationException(PREVIEW_IS_NOT_AVAILABLE);
       }
     } catch (BulkOperationException e) {
       log.error(e.getMessage());

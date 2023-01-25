@@ -105,8 +105,10 @@ public class DataExportJobUpdateService {
         .withLinkToMatchingRecordsFile(linkToMatchingRecordsFile)
         .withEndTime(LocalDateTime.ofInstant(jobUpdate.getEndTime().toInstant(), UTC_ZONE));
       if (StringUtils.isNotEmpty(errorsUrl)) {
-        var linkToMatchingErrorsFile = remoteFileSystemClient.put(new URL(errorsUrl).openStream(), bulkOperation.getId() + "/" + FilenameUtils.getName(errorsUrl.split("\\?")[0]));
-        return result.withLinkToMatchingErrorsFile(linkToMatchingErrorsFile);
+        try(var is = new URL(errorsUrl).openStream()) {
+          var linkToMatchingErrorsFile = remoteFileSystemClient.put(is, bulkOperation.getId() + "/" + FilenameUtils.getName(errorsUrl.split("\\?")[0]));
+          return result.withLinkToMatchingErrorsFile(linkToMatchingErrorsFile);
+        }
       }
       return result;
     } catch (Exception e) {

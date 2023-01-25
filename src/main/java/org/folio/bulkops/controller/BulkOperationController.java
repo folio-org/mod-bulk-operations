@@ -30,7 +30,6 @@ import org.folio.bulkops.service.RuleService;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -113,6 +112,7 @@ public class BulkOperationController implements BulkOperationsApi {
     return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.getOperationById(operationId)), HttpStatus.OK);
   }
 
+  @Override
   public ResponseEntity<Resource> downloadFileByOperationId(
     UUID operationId, FileContentType fileContentType) {
     var bulkOperation = bulkOperationService.getOperationById(operationId);
