@@ -65,8 +65,6 @@ paths:
         required: true
         content:
           application/json:
-            example:
-              $ref: "##/components/examples/bulkOperationRuleCollection"
             schema:
               $ref: "#/components/schemas/bulkOperationRuleCollection"
       responses:
@@ -112,8 +110,6 @@ paths:
           description: Collection of records for preview
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/unifiedTable"
               schema:
                 $ref: "#/components/schemas/unifiedTable"
         '400':
