@@ -122,19 +122,6 @@ public class BulkOperationService {
     return bulkOperationRepository.save(bulkOperation);
   }
 
-  private String uploadIdentifiers(UUID dataExportJobId, MultipartFile file) throws BulkOperationException {
-    var retryCount = 0;
-    while (true) {
-      try {
-        return bulkEditClient.uploadFile(dataExportJobId, file);
-      } catch (NotFoundException e) {
-        if (++retryCount == maxRetryCount) {
-          throw new BulkOperationException("Failed to upload file with identifiers: data export job was not found");
-        }
-      }
-    }
-  }
-
   public void confirm(UUID bulkOperationId) throws BulkOperationException {
     var bulkOperation = getBulkOperationOrThrow(bulkOperationId);
 
@@ -378,9 +365,7 @@ public class BulkOperationService {
             bulkOperationRepository.save(bulkOperation);
 
             if (JobStatus.SCHEDULED.equals(job.getStatus())) {
-              bulkEditClient.uploadFile(job.getId(),
-                new FolioMultiPartFile(FilenameUtils.getName(bulkOperation.getLinkToTriggeringFile()), "application/json", remoteFileSystemClient.get(bulkOperation.getLinkToTriggeringFile())));
-
+              uploadIdentifiers(job.getId(), new FolioMultiPartFile(FilenameUtils.getName(bulkOperation.getLinkToTriggeringFile()), "application/json", remoteFileSystemClient.get(bulkOperation.getLinkToTriggeringFile())));
               job = dataExportSpringClient.getJob(job.getId());
               if (JobStatus.FAILED.equals(job.getStatus())) {
                 errorMessage = "Data export job failed";
@@ -394,7 +379,7 @@ public class BulkOperationService {
               errorMessage = String.format("File uploading failed - invalid job status: %s (expected: SCHEDULED)", job.getStatus().getValue());
             }
           } else {
-
+            // MANUAL APPROACH
           }
 
         } catch (Exception e) {
@@ -420,6 +405,19 @@ public class BulkOperationService {
       }
     } catch (BulkOperationException e) {
       throw new IllegalOperationStateException("Bulk operation cannot be started, reason: " + e.getMessage());
+    }
+  }
+
+  private String uploadIdentifiers(UUID dataExportJobId, MultipartFile file) throws BulkOperationException {
+    var retryCount = 0;
+    while (true) {
+      try {
+        return bulkEditClient.uploadFile(dataExportJobId, file);
+      } catch (NotFoundException e) {
+        if (++retryCount == maxRetryCount) {
+          throw new BulkOperationException("Failed to upload file with identifiers: data export job was not found");
+        }
+      }
     }
   }
 
