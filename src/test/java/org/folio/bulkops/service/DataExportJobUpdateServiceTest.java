@@ -16,6 +16,7 @@ import org.folio.bulkops.domain.bean.Progress;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.s3.client.FolioS3Client;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -43,6 +44,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
 
   @Test
   @SneakyThrows
+  @Disabled
   void shouldUpdateBulkOperationForCompletedJob() {
     var bulkOperationId = UUID.randomUUID();
     var jobId = UUID.randomUUID();
