@@ -44,7 +44,7 @@ public class Job {
   private ExportType type;
 
   @JsonProperty("exportTypeSpecificParameters")
-  private ExportTypeSpecificParameters exportTypeSpecificParameters = new ExportTypeSpecificParameters();
+  private ExportTypeSpecificParameters exportTypeSpecificParameters;
 
   @JsonProperty("status")
   private JobStatus status;

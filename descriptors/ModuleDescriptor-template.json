@@ -9,7 +9,7 @@
         {
           "methods": [ "POST" ],
           "pathPattern": "/bulk-operations/upload",
-          "permissionsRequired": [ "bulk-operations.upload.item.post" ],
+          "permissionsRequired": [ "bulk-operations.item.upload.post" ],
           "modulePermissions": [
             "data-export.job.item.post",
             "bulk-edit.item.post"
@@ -18,14 +18,14 @@
         {
           "methods": [ "POST" ],
           "pathPattern": "/bulk-operations/{operationId}/content-update",
-          "permissionsRequired": [ "bulk-operations.content-update.collection.post" ],
+          "permissionsRequired": [ "bulk-operations.item.content-update.post" ],
           "modulePermissions": [
           ]
         },
         {
           "methods": [ "GET" ],
           "pathPattern": "/bulk-operations/{operationId}/preview",
-          "permissionsRequired": [ "bulk-operations.preview.item.get" ],
+          "permissionsRequired": [ "bulk-operations.item.preview.get" ],
           "modulePermissions": [
             "addresstypes.item.get",
             "departments.item.get",
@@ -50,7 +50,7 @@
         {
           "methods": [ "GET" ],
           "pathPattern": "/bulk-operations/{operationId}/preview/download",
-          "permissionsRequired": [ "bulk-operations.preview.download.item.get" ],
+          "permissionsRequired": [ "bulk-operations.item.preview.download.get" ],
           "modulePermissions": [
             "addresstypes.item.get",
             "departments.item.get",
@@ -75,7 +75,7 @@
         {
           "methods": [ "POST" ],
           "pathPattern": "/bulk-operations/{operationId}/start",
-          "permissionsRequired": [ "bulk-operations.start.item.post" ],
+          "permissionsRequired": [ "bulk-operations.item.start.post" ],
           "modulePermissions": [
             "inventory-storage.holdings.item.put",
             "inventory.items.item.put",
@@ -85,7 +85,7 @@
         {
           "methods": [ "GET" ],
           "pathPattern": "/bulk-operations/{operationId}/errors",
-          "permissionsRequired": [ "bulk-operations.errors.collection.get" ],
+          "permissionsRequired": [ "bulk-operations.item.errors.get" ],
           "modulePermissions": [
             "bulk-edit.errors.collection.get"
           ]
@@ -93,7 +93,7 @@
         {
           "methods": [ "GET" ],
           "pathPattern": "/bulk-operations/{operationId}/errors/download",
-          "permissionsRequired": [ "bulk-operations.errors.download.item.get" ],
+          "permissionsRequired": [ "bulk-operations.item.errors.download.get" ],
           "modulePermissions": [
             "bulk-edit.errors.collection.get"
           ]
@@ -131,64 +131,64 @@
   ],
   "permissionSets": [
     {
-      "permissionName" : "bulk-operations.upload.item.post",
-      "displayName" : "upload identifiers list",
-      "description" : "Upload list of identifiers"
+      "permissionName" : "bulk-operations.item.upload.post",
+      "displayName" : "upload identifiers list to initiate bulk-operation",
+      "description" : "Upload identifiers list to initiate bulk-operation"
     },
     {
-      "permissionName" : "bulk-operations.content-update.collection.post",
-      "displayName" : "upload content update collection",
-      "description" : "Upload collection of  content updates"
+      "permissionName" : "bulk-operations.item.content-update.post",
+      "displayName" : "upload content updates for bulk operation",
+      "description" : "Upload content updates for bulk operation"
     },
     {
-      "permissionName" : "bulk-operations.preview.item.get",
-      "displayName" : "get Bulk Operation preview",
-      "description" : "Get Bulk Operation preview"
+      "permissionName" : "bulk-operations.item.preview.get",
+      "displayName" : "get bulk operation preview",
+      "description" : "Get bulk operation preview"
     },
     {
-      "permissionName" : "bulk-operations.preview.download.item.get",
-      "displayName" : "download Bulk Operation preview",
-      "description" : "Download Bulk Operation preview"
+      "permissionName" : "bulk-operations.item.preview.download.get",
+      "displayName" : "download bulk operation preview",
+      "description" : "Download bulk operation preview"
     },
     {
-      "permissionName" : "bulk-operations.start.item.post",
-      "displayName" : "start Bulk Operation",
-      "description" : "Start Bulk Operation"
+      "permissionName" : "bulk-operations.item.start.post",
+      "displayName" : "start bulk operation",
+      "description" : "Start bulk operation"
     },
     {
-      "permissionName" : "bulk-operations.errors.collection.get",
-      "displayName" : "get errors collection for preview",
-      "description" : "Get errors collection for preview"
+      "permissionName" : "bulk-operations.item.errors.get",
+      "displayName" : "get errors for bulk operation",
+      "description" : "Get errors for bulk operation"
     },
     {
-      "permissionName": "bulk-operations.errors.download.item.get",
-      "displayName": "download errors",
-      "description": "Download errors"
-    },
-    {
-      "permissionName" : "bulk-operations.collection.get",
-      "displayName" : "get list of Bulk Operations",
-      "description" : "Get list of Bulk Operations"
+      "permissionName": "bulk-operations.item.errors.download.get",
+      "displayName": "download bulk operation errors",
+      "description": "Download bulk operation errors"
     },
     {
       "permissionName" : "bulk-operations.item.get",
-      "displayName" : "get Bulk Operation by id",
-      "description" : "Get Bulk Operation By Id"
+      "displayName" : "get bulk operation by id",
+      "description" : "Get bulk operation By Id"
+    },
+    {
+      "permissionName" : "bulk-operations.collection.get",
+      "displayName" : "get list of bulk operations",
+      "description" : "Get list of bulk operations"
     },
     {
       "permissionName" : "bulk-operations.all",
       "displayName" : "bulk-operations all",
       "description" : "All permissions for bulk-operations module",
       "subPermissions" : [
-        "bulk-operations.upload.item.post",
-        "bulk-operations.content-update.collection.post",
-        "bulk-operations.preview.item.get",
-        "bulk-operations.preview.download.item.get",
-        "bulk-operations.start.item.post",
-        "bulk-operations.errors.collection.get",
-        "bulk-operations.errors.download.item.get",
-        "bulk-operations.collection.get",
-        "bulk-operations.item.get"
+        "bulk-operations.item.upload.post",
+        "bulk-operations.item.content-update.post",
+        "bulk-operations.item.preview.get",
+        "bulk-operations.item.preview.download.get",
+        "bulk-operations.item.start.post",
+        "bulk-operations.item.errors.get",
+        "bulk-operations.item.errors.download.get",
+        "bulk-operations.item.get",
+        "bulk-operations.collection.get"
       ]
     }
   ],
@@ -262,10 +262,6 @@
       "version": "16.0"
     },
     {
-      "id": "custom-fields",
-      "version": "2.0"
-    },
-    {
       "id": "bulk-edit",
       "version": "3.0"
     },
@@ -303,7 +299,8 @@
       {"name": "S3_ACCESS_KEY_ID", "value": "AKIAIOSFODNN7EXAMPLE"},
       {"name": "S3_SECRET_ACCESS_KEY", "value": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"},
       {"name": "S3_IS_AWS", "value": false},
-      {"name": "ENV", "value": "folio"}
+      {"name": "ENV", "value": "folio"},
+      {"name": "MAX_UPLOADING_RETRIES", "value": "50"}
     ]
   }
 }
