@@ -419,9 +419,4 @@ components:
         record:
           type: object
           description: Example response
-  examples:
-    bulkOperationRuleCollection:
-      $ref: "examples/bulk_operation_rule_collection.sample"
-    unifiedTable:
-      $ref: "examples/unified_table.sample"
 
