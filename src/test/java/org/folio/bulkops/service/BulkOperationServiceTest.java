@@ -236,8 +236,13 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldFailIfDataExportJobNotFound() {
     var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
 
+    var bulkOperationId = UUID.randomUUID();
+
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(BulkOperation.builder().id(UUID.randomUUID()).build());
+      .thenReturn(BulkOperation.builder().id(bulkOperationId).status(OperationStatusType.NEW).build());
+
+    when(bulkOperationRepository.findById(bulkOperationId))
+      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).status(OperationStatusType.NEW).build()));
 
     var jobId = UUID.randomUUID();
     when(dataExportSpringClient.upsertJob(any(Job.class)))
@@ -250,10 +255,11 @@ class BulkOperationServiceTest extends BaseTest {
       .thenThrow(new NotFoundException("Job was not found"));
 
     bulkOperationService.uploadIdentifiers(EntityType.USER, IdentifierType.BARCODE, file);
+    bulkOperationService.startBulkOperation(bulkOperationId, ApproachType.IN_APP);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
-    assertEquals(OperationStatusType.FAILED, operationCaptor.getAllValues().get(1).getStatus());
+    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
+    assertEquals(OperationStatusType.FAILED, operationCaptor.getAllValues().get(3).getStatus());
   }
 
   @Test
