@@ -39,36 +39,40 @@
         "type": "string",
         "format": "uuid"
       },
-      "linkToOriginFile": {
-        "description": "Path to the origin file",
-        "type": "string"
-      },
-      "linkToMatchingRecordsFile": {
-        "description": "Path to the origin file",
-        "type": "string"
-      },
-      "linkToModifiedFile": {
-        "description": "Path to the modified file",
-        "type": "string"
-      },
-      "linkToResultFile": {
-        "description": "Path to the result file",
-        "type": "string"
-      },
-      "linkToTriggeringFile": {
+      "linkToTriggeringCsvFile": {
         "description": "Path to the bulk operation triggering file",
         "type": "string"
       },
-      "linkToMatchingErrorsFile": {
-        "description": "Path to the matching errors file",
+      "linkToMatchedRecordsJsonFile": {
+        "description": "Path to the matched (origin) json file",
         "type": "string"
       },
-      "linkToCommittingErrorsFile": {
-        "description": "Path to the committing errors file",
+      "linkToMatchedRecordsCsvFile": {
+        "description": "Path to the matched (origin) csv file",
         "type": "string"
       },
-      "linkToThePreviewFile": {
-        "description": "Path to the committing errors file",
+      "linkToMatchedRecordsErrorsCsvFile": {
+        "description": "Path to the matching errors csv file",
+        "type": "string"
+      },
+      "linkToModifiedRecordsJsonFile": {
+        "description": "Path to the modified (updated) json file",
+        "type": "string"
+      },
+      "linkToModifiedRecordsCsvFile": {
+        "description": "Path to the modified (updated) csv file",
+        "type": "string"
+      },
+      "linkToCommittedRecordsJsonFile": {
+        "description": "Path to the committed (result) json file",
+        "type": "string"
+      },
+      "linkToCommittedRecordsCsvFile": {
+        "description": "Path to the committed (result) csv file",
+        "type": "string"
+      },
+      "linkToCommittedRecordsErrorsCsvFile": {
+        "description": "Path to the committing errors csv file",
         "type": "string"
       },
       "totalNumOfRecords": {

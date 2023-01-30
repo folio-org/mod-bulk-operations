@@ -79,8 +79,8 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
     assertEquals(OperationStatusType.SAVING_RECORDS_LOCALLY, operationCaptor.getAllValues().get(0).getStatus());
     assertEquals(OperationStatusType.DATA_MODIFICATION, operationCaptor.getAllValues().get(1).getStatus());
-    assertEquals(expectedJsonFileName, operationCaptor.getAllValues().get(1).getLinkToOriginFile());
-    assertEquals(expectedCsvFileName, operationCaptor.getAllValues().get(1).getLinkToMatchingRecordsFile());
+    assertEquals(expectedJsonFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsJsonFile());
+    assertEquals(expectedCsvFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsCsvFile());
   }
 
   @ParameterizedTest

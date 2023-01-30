@@ -73,7 +73,7 @@ class ErrorServiceTest extends BaseTest {
   @BeforeEach
   void saveBulkOperation() {
     bulkOperationId = bulkOperationRepository.save(BulkOperation.builder()
-      .linkToMatchingRecordsFile("some/path/records.csv")
+      .linkToMatchedRecordsCsvFile("some/path/records.csv")
       .build()).getId();
   }
 

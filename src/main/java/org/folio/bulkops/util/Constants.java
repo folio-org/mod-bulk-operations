@@ -4,6 +4,9 @@ import java.time.ZoneId;
 
 public class Constants {
 
+  public static final String COMMA_DELIMETER = ",";
+  public static final String NEW_LINE_SEPARATOR = "\n";
+
   private Constants() {
   }
 

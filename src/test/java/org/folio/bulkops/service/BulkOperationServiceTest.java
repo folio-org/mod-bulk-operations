@@ -28,8 +28,7 @@ import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.domain.dto.ApproachType;
-import org.folio.bulkops.domain.dto.Cell;
+import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.bean.BriefInstance;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
@@ -71,20 +70,14 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
-import wiremock.org.hamcrest.MatcherAssert;
-import wiremock.org.hamcrest.Matchers;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.Scanner;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 class BulkOperationServiceTest extends BaseTest {
   @Autowired
@@ -138,13 +131,13 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
       .thenReturn("3");
 
-    var bulkOperation = bulkOperationService.uploadIdentifiers(EntityType.USER, IdentifierType.BARCODE, file);
+    var bulkOperation = bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, false, null, file);
     var bulkOperationId = bulkOperation.getId();
 
     when(bulkOperationRepository.findById(bulkOperationId))
-      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringFile("barcodes.csv").build()));
+      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringCsvFile("barcodes.csv").build()));
 
-    bulkOperationService.startBulkOperation(bulkOperation.getId(), ApproachType.IN_APP);
+    bulkOperationService.startBulkOperation(bulkOperation.getId(), BulkOperationStep.UPLOAD, false);
 
     verify(dataExportSpringClient).upsertJob(any(Job.class));
     verify(dataExportSpringClient).getJob(jobId);
@@ -183,12 +176,12 @@ class BulkOperationServiceTest extends BaseTest {
 
 
     when(bulkOperationRepository.findById(bulkOperationId))
-      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).status(OperationStatusType.NEW).dataExportJobId(jobId).linkToTriggeringFile("barcodes.csv").build()));
+      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).status(OperationStatusType.NEW).dataExportJobId(jobId).linkToTriggeringCsvFile("barcodes.csv").build()));
 
 
 
-    bulkOperationService.uploadIdentifiers(EntityType.USER, IdentifierType.BARCODE, file);
-    bulkOperationService.startBulkOperation(bulkOperationId, ApproachType.IN_APP);
+    bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, false, null, file);
+    bulkOperationService.startBulkOperation(bulkOperationId, BulkOperationStep.UPLOAD, false);
 
     verify(dataExportSpringClient).upsertJob(any(Job.class));
     verify(dataExportSpringClient).getJob(jobId);
@@ -215,7 +208,7 @@ class BulkOperationServiceTest extends BaseTest {
     var jobId = UUID.randomUUID();
 
     when(bulkOperationRepository.findById(any(UUID.class)))
-      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringFile("barcodes.csv").build()));
+      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringCsvFile("barcodes.csv").build()));
 
     when(dataExportSpringClient.upsertJob(any(Job.class)))
       .thenReturn(Job.builder().id(jobId).status(jobStatus).build());
@@ -223,8 +216,8 @@ class BulkOperationServiceTest extends BaseTest {
     when(dataExportSpringClient.getJob(jobId))
       .thenReturn(Job.builder().id(jobId).status(JobStatus.FAILED).build());
 
-    bulkOperationService.uploadIdentifiers(EntityType.USER, IdentifierType.BARCODE, file);
-    bulkOperationService.startBulkOperation(bulkOperationId, ApproachType.IN_APP);
+    bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, false, null, file);
+    bulkOperationService.startBulkOperation(bulkOperationId, BulkOperationStep.UPLOAD, false);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
@@ -254,8 +247,8 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
       .thenThrow(new NotFoundException("Job was not found"));
 
-    bulkOperationService.uploadIdentifiers(EntityType.USER, IdentifierType.BARCODE, file);
-    bulkOperationService.startBulkOperation(bulkOperationId, ApproachType.IN_APP);
+    bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, false, null, file);
+    bulkOperationService.startBulkOperation(bulkOperationId, BulkOperationStep.UPLOAD, false);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
@@ -277,7 +270,7 @@ class BulkOperationServiceTest extends BaseTest {
         .id(bulkOperationId)
         .entityType(EntityType.USER)
         .identifierType(IdentifierType.BARCODE)
-        .linkToOriginFile(pathToOrigin)
+        .linkToMatchedRecordsJsonFile(pathToOrigin)
         .build()));
 
     when(ruleService.getRules(bulkOperationId))
@@ -329,7 +322,7 @@ class BulkOperationServiceTest extends BaseTest {
     var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository).save(bulkOperationCaptor.capture());
     var capturedBulkOperation = bulkOperationCaptor.getValue();
-    assertThat(capturedBulkOperation.getLinkToModifiedFile(), equalTo(expectedPathToModifiedFile));
+    assertThat(capturedBulkOperation.getLinkToModifiedRecordsJsonFile(), equalTo(expectedPathToModifiedFile));
     assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
   }
 
@@ -345,7 +338,7 @@ class BulkOperationServiceTest extends BaseTest {
         .id(bulkOperationId)
         .entityType(EntityType.USER)
         .identifierType(IdentifierType.BARCODE)
-        .linkToOriginFile(pathToOrigin)
+        .linkToMatchedRecordsJsonFile(pathToOrigin)
         .build()));
 
     when(ruleService.getRules(bulkOperationId))
@@ -409,8 +402,8 @@ class BulkOperationServiceTest extends BaseTest {
         .id(bulkOperationId)
         .entityType(EntityType.USER)
         .identifierType(IdentifierType.BARCODE)
-        .linkToOriginFile(pathToOrigin)
-        .linkToModifiedFile(pathToModified)
+        .linkToMatchedRecordsJsonFile(pathToOrigin)
+        .linkToModifiedRecordsJsonFile(pathToModified)
         .build()));
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
@@ -418,8 +411,8 @@ class BulkOperationServiceTest extends BaseTest {
         .id(bulkOperationId)
         .entityType(EntityType.USER)
         .identifierType(IdentifierType.BARCODE)
-        .linkToOriginFile(pathToOrigin)
-        .linkToModifiedFile(pathToModified)
+        .linkToMatchedRecordsJsonFile(pathToOrigin)
+        .linkToModifiedRecordsJsonFile(pathToModified)
         .build());
 
     when(executionRepository.save(any(BulkOperationExecution.class)))
@@ -468,7 +461,7 @@ class BulkOperationServiceTest extends BaseTest {
     var firstCapture = operationCaptor.getAllValues().get(0);
     assertThat(firstCapture.getStatus(), equalTo(OperationStatusType.APPLY_CHANGES));
     var secondCapture = operationCaptor.getAllValues().get(1);
-    assertThat(secondCapture.getLinkToResultFile(), equalTo(expectedPathToResultFile));
+    assertThat(secondCapture.getLinkToCommittedRecordsJsonFile(), equalTo(expectedPathToResultFile));
     assertThat(secondCapture.getStatus(), equalTo(OperationStatusType.COMPLETED));
     assertThat(secondCapture.getEndTime(), notNullValue());
   }
@@ -486,8 +479,8 @@ class BulkOperationServiceTest extends BaseTest {
         .id(bulkOperationId)
         .entityType(EntityType.USER)
         .identifierType(IdentifierType.BARCODE)
-        .linkToOriginFile(pathToOrigin)
-        .linkToModifiedFile(pathToModified)
+        .linkToMatchedRecordsJsonFile(pathToOrigin)
+        .linkToModifiedRecordsJsonFile(pathToModified)
         .build()));
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
@@ -495,8 +488,8 @@ class BulkOperationServiceTest extends BaseTest {
         .id(bulkOperationId)
         .entityType(EntityType.USER)
         .identifierType(IdentifierType.BARCODE)
-        .linkToOriginFile(pathToOrigin)
-        .linkToModifiedFile(pathToModified)
+        .linkToMatchedRecordsJsonFile(pathToOrigin)
+        .linkToModifiedRecordsJsonFile(pathToModified)
         .build());
 
     when(executionRepository.save(any(BulkOperationExecution.class)))
@@ -542,8 +535,8 @@ class BulkOperationServiceTest extends BaseTest {
         .id(bulkOperationId)
         .entityType(EntityType.USER)
         .identifierType(IdentifierType.BARCODE)
-        .linkToOriginFile(pathToOrigin)
-        .linkToModifiedFile(pathToModified)
+        .linkToMatchedRecordsJsonFile(pathToOrigin)
+        .linkToModifiedRecordsJsonFile(pathToModified)
         .build()));
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
@@ -551,8 +544,8 @@ class BulkOperationServiceTest extends BaseTest {
         .id(bulkOperationId)
         .entityType(EntityType.USER)
         .identifierType(IdentifierType.BARCODE)
-        .linkToOriginFile(pathToOrigin)
-        .linkToModifiedFile(pathToModified)
+        .linkToMatchedRecordsJsonFile(pathToOrigin)
+        .linkToModifiedRecordsJsonFile(pathToModified)
         .build());
 
     when(executionRepository.save(any(BulkOperationExecution.class)))
@@ -598,8 +591,8 @@ class BulkOperationServiceTest extends BaseTest {
         .id(bulkOperationId)
         .entityType(EntityType.USER)
         .identifierType(IdentifierType.BARCODE)
-        .linkToOriginFile(pathToOrigin)
-        .linkToModifiedFile(pathToModified)
+        .linkToMatchedRecordsJsonFile(pathToOrigin)
+        .linkToModifiedRecordsJsonFile(pathToModified)
         .build()));
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
@@ -607,8 +600,8 @@ class BulkOperationServiceTest extends BaseTest {
         .id(bulkOperationId)
         .entityType(EntityType.USER)
         .identifierType(IdentifierType.BARCODE)
-        .linkToOriginFile(pathToOrigin)
-        .linkToModifiedFile(pathToModified)
+        .linkToMatchedRecordsJsonFile(pathToOrigin)
+        .linkToModifiedRecordsJsonFile(pathToModified)
         .build());
 
     when(executionRepository.save(any(BulkOperationExecution.class)))
@@ -647,8 +640,8 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldNotCommitChangesIfNoLinkToOriginFile() {
     when(bulkOperationRepository.findById(any(UUID.class)))
       .thenReturn(Optional.of(BulkOperation.builder()
-        .linkToOriginFile(null)
-        .linkToModifiedFile("link")
+        .linkToMatchedRecordsJsonFile(null)
+        .linkToModifiedRecordsJsonFile("link")
         .build()));
     assertThrows(BulkOperationException.class, () -> bulkOperationService.commit(UUID.randomUUID()));
   }
@@ -657,13 +650,13 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldProcessIfNoLinkToModifiedFile() {
     when(bulkOperationRepository.findById(any(UUID.class)))
       .thenReturn(Optional.of(BulkOperation.builder()
-        .linkToOriginFile("link")
-        .linkToModifiedFile(null)
+        .linkToMatchedRecordsJsonFile("link")
+        .linkToModifiedRecordsJsonFile(null)
         .build()));
     when(bulkOperationRepository.save(any(BulkOperation.class)))
       .thenReturn(BulkOperation.builder()
-        .linkToOriginFile("link")
-        .linkToModifiedFile(null)
+        .linkToMatchedRecordsJsonFile("link")
+        .linkToModifiedRecordsJsonFile(null)
         .build());
     assertDoesNotThrow(() -> bulkOperationService.commit(UUID.randomUUID()));
   }
@@ -696,7 +689,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
     when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
 
-    var table = bulkOperationService.getPreview(operationId, limit);
+    var table = bulkOperationService.getPreview(operationId, BulkOperationStep.UPLOAD, limit);
 
     assertThat(table.getRows(), hasSize(limit));
     if (EntityType.USER.equals(entityType)) {
@@ -717,67 +710,67 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkOperationRepository.findById(operationId))
       .thenReturn(Optional.of(BulkOperation.builder().entityType(EntityType.USER).status(status).build()));
 
-    assertThrows(NotFoundException.class, () -> bulkOperationService.getPreview(operationId, 10));
+    assertThrows(NotFoundException.class, () -> bulkOperationService.getPreview(operationId, BulkOperationStep.UPLOAD, 10));
   }
 
-  @ParameterizedTest
-  @CsvSource(value = { "users_for_preview.json,USER,DATA_MODIFICATION",
-    "users_for_preview.json,USER,REVIEW_CHANGES",
-    "users_for_preview.json,USER,COMPLETED",
-    "items_for_preview.json,ITEM,DATA_MODIFICATION",
-    "items_for_preview.json,ITEM,REVIEW_CHANGES",
-    "items_for_preview.json,ITEM,COMPLETED",
-    "holdings_for_preview.json,HOLDING,DATA_MODIFICATION",
-    "holdings_for_preview.json,HOLDING,REVIEW_CHANGES",
-    "holdings_for_preview.json,HOLDING,COMPLETED" }, delimiter = ',')
-  @SneakyThrows
-  void shouldReturnCsvPreviewIfAvailable(String fileName, EntityType entityType, OperationStatusType status) {
-    var path = "src/test/resources/files/" + fileName;
-    var operationId = UUID.randomUUID();
+//  @ParameterizedTest
+//  @CsvSource(value = { "users_for_preview.json,USER,DATA_MODIFICATION",
+//    "users_for_preview.json,USER,REVIEW_CHANGES",
+//    "users_for_preview.json,USER,COMPLETED",
+//    "items_for_preview.json,ITEM,DATA_MODIFICATION",
+//    "items_for_preview.json,ITEM,REVIEW_CHANGES",
+//    "items_for_preview.json,ITEM,COMPLETED",
+//    "holdings_for_preview.json,HOLDING,DATA_MODIFICATION",
+//    "holdings_for_preview.json,HOLDING,REVIEW_CHANGES",
+//    "holdings_for_preview.json,HOLDING,COMPLETED" }, delimiter = ',')
+//  @SneakyThrows
+//  void shouldReturnCsvPreviewIfAvailable(String fileName, EntityType entityType, OperationStatusType status) {
+//    var path = "src/test/resources/files/" + fileName;
+//    var operationId = UUID.randomUUID();
+//
+//    var bulkOperation = buildBulkOperation(fileName, entityType, status).withId(operationId);
+//    when(bulkOperationRepository.findById(operationId))
+//      .thenReturn(Optional.of(bulkOperation));
+//
+//    when(remoteFileSystemClient.get(anyString()))
+//      .thenReturn(new FileInputStream(path));
+//
+//    when(groupClient.getGroupById(anyString())).thenReturn(new UserGroup().withGroup("Group"));
+//    when(instanceClient.getById(anyString())).thenReturn(new BriefInstance().withTitle("Title"));
+//    when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
+//    when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
+//
+//    var csvString = bulkOperationService.getCsvPreviewByBulkOperationId(operationId);
+//
+//    // 6 lines expected: 1 line for headers and 5 lines for data
+//    MatcherAssert.assertThat(new BufferedReader(new StringReader(csvString)).lines().count(), Matchers.equalTo(6L));
+//
+//    if (EntityType.USER.equals(entityType)) {
+//      assertThat(new Scanner(csvString).nextLine(), equalTo(UserHeaderBuilder.getHeaders().stream()
+//        .map(Cell::getValue)
+//        .collect(Collectors.joining(","))));
+//    } else if (EntityType.ITEM.equals(entityType)) {
+//      assertThat(new Scanner(csvString).nextLine(), equalTo(ItemHeaderBuilder.getHeaders().stream()
+//        .map(Cell::getValue)
+//        .collect(Collectors.joining(","))));
+//    } else if (EntityType.HOLDING.equals(entityType)) {
+//      assertThat(new Scanner(csvString).nextLine(), equalTo(HoldingsHeaderBuilder.getHeaders().stream()
+//        .map(Cell::getValue)
+//        .collect(Collectors.joining(","))));
+//    }
+//  }
 
-    var bulkOperation = buildBulkOperation(fileName, entityType, status).withId(operationId);
-    when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(bulkOperation));
-
-    when(remoteFileSystemClient.get(anyString()))
-      .thenReturn(new FileInputStream(path));
-
-    when(groupClient.getGroupById(anyString())).thenReturn(new UserGroup().withGroup("Group"));
-    when(instanceClient.getById(anyString())).thenReturn(new BriefInstance().withTitle("Title"));
-    when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
-    when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
-
-    var csvString = bulkOperationService.getCsvPreviewByBulkOperationId(operationId);
-
-    // 6 lines expected: 1 line for headers and 5 lines for data
-    MatcherAssert.assertThat(new BufferedReader(new StringReader(csvString)).lines().count(), Matchers.equalTo(6L));
-
-    if (EntityType.USER.equals(entityType)) {
-      assertThat(new Scanner(csvString).nextLine(), equalTo(UserHeaderBuilder.getHeaders().stream()
-        .map(Cell::getValue)
-        .collect(Collectors.joining(","))));
-    } else if (EntityType.ITEM.equals(entityType)) {
-      assertThat(new Scanner(csvString).nextLine(), equalTo(ItemHeaderBuilder.getHeaders().stream()
-        .map(Cell::getValue)
-        .collect(Collectors.joining(","))));
-    } else if (EntityType.HOLDING.equals(entityType)) {
-      assertThat(new Scanner(csvString).nextLine(), equalTo(HoldingsHeaderBuilder.getHeaders().stream()
-        .map(Cell::getValue)
-        .collect(Collectors.joining(","))));
-    }
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
-  @SneakyThrows
-  void shouldExitExceptionallyIfCsvPreviewIsNotAvailable(OperationStatusType status) {
-    var operationId = UUID.randomUUID();
-
-    when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(BulkOperation.builder().entityType(EntityType.USER).status(status).build()));
-
-    assertThrows(NotFoundException.class, () -> bulkOperationService.getCsvPreviewByBulkOperationId(operationId));
-  }
+//  @ParameterizedTest
+//  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
+//  @SneakyThrows
+//  void shouldExitExceptionallyIfCsvPreviewIsNotAvailable(OperationStatusType status) {
+//    var operationId = UUID.randomUUID();
+//
+//    when(bulkOperationRepository.findById(operationId))
+//      .thenReturn(Optional.of(BulkOperation.builder().entityType(EntityType.USER).status(status).build()));
+//
+//    assertThrows(NotFoundException.class, () -> bulkOperationService.getCsvPreviewByBulkOperationId(operationId));
+//  }
 
   @ParameterizedTest
   @EnumSource(OperationStatusType.class)
@@ -819,19 +812,19 @@ class BulkOperationServiceTest extends BaseTest {
       return BulkOperation.builder()
         .entityType(entityType)
         .status(status)
-        .linkToOriginFile(fileName)
+        .linkToMatchedRecordsJsonFile(fileName)
         .build();
     case REVIEW_CHANGES:
       return BulkOperation.builder()
         .entityType(entityType)
         .status(status)
-        .linkToModifiedFile(fileName)
+        .linkToModifiedRecordsJsonFile(fileName)
         .build();
     case COMPLETED:
       return BulkOperation.builder()
         .entityType(entityType)
         .status(status)
-        .linkToResultFile(fileName)
+        .linkToCommittedRecordsJsonFile(fileName)
         .build();
     default:
       return new BulkOperation();

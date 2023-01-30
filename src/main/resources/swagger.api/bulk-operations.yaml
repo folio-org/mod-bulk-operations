@@ -7,7 +7,7 @@ info:
 paths:
   /bulk-operations/upload:
     post:
-      description: Upload csv file with identifiers list (barcodes, UUIDs, HRIDs, etc.)
+      description: Upload csv file with identifiers list (barcodes, UUIDs, HRIDs, etc.) or csv-file with already updated entities
       operationId: uploadCsvFile
       parameters:
         - name: entityType
@@ -22,6 +22,19 @@ paths:
           description: Identifier type (ID, BARCODE, etc.)
           schema:
             $ref: "#/components/schemas/identifierType"
+        - name: manual
+          in: query
+          required: false
+          description: Key if manual approach is used
+          schema:
+            default: false
+            type: boolean
+        - name: operationId
+          in: query
+          required: false
+          description: UUID of the Bulk Operation (applicable for (manual = true) case)
+          schema:
+            $ref: "#/components/schemas/UUID"
       requestBody:
         content:
           multipart/form-data:
@@ -70,6 +83,10 @@ paths:
       responses:
         "200":
           description: Rules are saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bulkOperationRuleCollection"
         "400":
           description: Bad request
           content:
@@ -99,6 +116,12 @@ paths:
           description: UUID of the Bulk Operation
           schema:
             $ref: "#/components/schemas/UUID"
+        - name: step
+          in: query
+          required: true
+          description: Key if manual approach is used
+          schema:
+            $ref: "#/components/schemas/bulkOperationStep"
         - in: query
           name: limit
           required: true
@@ -130,43 +153,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/errors"
-  /bulk-operations/{operationId}/preview/download:
-    get:
-      description: Download updated entities preview as csv-file
-      operationId: downloadPreviewByOperationId
-      parameters:
-        - name: operationId
-          in: path
-          required: true
-          description: UUID of the Bulk Operation
-          schema:
-            $ref: "#/components/schemas/UUID"
-      responses:
-        '200':
-          description: Preview of updated items to download
-          content:
-            text/csv:
-              schema:
-                type: string
-                format: binary
-        "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errors"
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errors"
-        "500":
-          description: Internal server errors, e.g. due to misconfiguration
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errors"
   /bulk-operations/{operationId}/start:
     post:
       description: Start Bulk Operation
@@ -178,12 +164,19 @@ paths:
           description: UUID of the Bulk Operation
           schema:
             $ref: "#/components/schemas/UUID"
-        - name: approachType
+        - name: step
           in: query
           required: true
-          description: Approach type of the Bulk Operation
+          description: Key if manual approach is used
           schema:
-            $ref: "#/components/schemas/approachType"
+            $ref: "#/components/schemas/bulkOperationStep"
+        - name: manual
+          in: query
+          required: false
+          description: Key if manual approach is used
+          schema:
+            default: false
+            type: boolean
       responses:
         "200":
           description: Bulk Operation is started
@@ -248,43 +241,6 @@ paths:
               schema:
                 type: string
                 example: Internal server error
-  /bulk-operations/{operationId}/errors/download:
-    get:
-      description: Download errors as csv-file
-      operationId: downloadErrorsByOperationId
-      parameters:
-        - name: operationId
-          in: path
-          required: true
-          description: UUID of the Bulk Operation
-          schema:
-            $ref: "#/components/schemas/UUID"
-      responses:
-        '200':
-          description: Preview of updated items to download
-          content:
-            text/csv:
-              schema:
-                type: string
-                format: binary
-        "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errors"
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errors"
-        "500":
-          description: Internal server errors, e.g. due to misconfiguration
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errors"
   /bulk-operations:
     get:
       description: Get a list of operations
@@ -408,6 +364,8 @@ components:
       $ref: 'schemas/file_content_type.json#/FileContentType'
     approachType:
       $ref: 'schemas/approach_type.json#/ApproachType'
+    bulkOperationStep:
+      $ref: 'schemas/bulk_operation_step.json#/Step'
     UUID:
       type: string
       format: uuid

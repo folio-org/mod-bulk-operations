@@ -1,6 +1,5 @@
 package org.folio.bulkops.controller;
 
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
@@ -12,10 +11,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.codehaus.plexus.util.FileUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationDto;
 import org.folio.bulkops.domain.dto.BulkOperationCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.FileContentType;
@@ -39,7 +38,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.UUID;
 
 @RestController
@@ -52,27 +50,6 @@ public class BulkOperationController implements BulkOperationsApi {
   private final ErrorService errorService;
   private final RuleService ruleService;
   private final RemoteFileSystemClient remoteFileSystemClient;
-  @Override
-  public ResponseEntity<Resource> downloadErrorsByOperationId(UUID operationId) {
-    var contentBytes = errorService.getErrorsCsvByBulkOperationId(operationId).getBytes();
-    var fileName = LocalDate.now().format(ISO_LOCAL_DATE) + operationId + "-errors.csv";
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-    headers.setContentLength(contentBytes.length);
-    headers.setContentDispositionFormData(fileName, fileName);
-    return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(contentBytes));
-  }
-
-  @Override
-  public ResponseEntity<Resource> downloadPreviewByOperationId(UUID operationId) {
-    var contentBytes = bulkOperationService.getCsvPreviewByBulkOperationId(operationId).getBytes();
-    var fileName = LocalDate.now().format(ISO_LOCAL_DATE) + operationId + "-preview.csv";
-    HttpHeaders headers = new HttpHeaders();
-    headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-    headers.setContentLength(contentBytes.length);
-    headers.setContentDispositionFormData(fileName, fileName);
-    return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(contentBytes));
-  }
 
   @Override
   public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(String query) {
@@ -86,25 +63,25 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   @Override
-  public ResponseEntity<UnifiedTable> getPreviewByOperationId(UUID operationId, Integer limit) {
-    return new ResponseEntity<>(bulkOperationService.getPreview(operationId, limit), HttpStatus.OK);
+  public ResponseEntity<UnifiedTable> getPreviewByOperationId(UUID operationId, BulkOperationStep step, Integer limit) {
+    return new ResponseEntity<>(bulkOperationService.getPreview(operationId, step, limit), HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<Void> postContentUpdates(UUID operationId, BulkOperationRuleCollection bulkOperationRuleCollection) {
+  public ResponseEntity<BulkOperationRuleCollection> postContentUpdates(UUID operationId, BulkOperationRuleCollection bulkOperationRuleCollection) {
     bulkOperationService.getBulkOperationOrThrow(operationId);
-    ruleService.saveRules(bulkOperationRuleCollection);
-    return ResponseEntity.ok().build();
+    var rules = ruleService.saveRules(bulkOperationRuleCollection);
+    return ResponseEntity.ok(rules);
   }
 
   @Override
-  public ResponseEntity<BulkOperationDto> startBulkOperation(UUID operationId, ApproachType approachType) {
-    return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.startBulkOperation(operationId, approachType)), HttpStatus.OK);
+  public ResponseEntity<BulkOperationDto> startBulkOperation(UUID operationId, BulkOperationStep step, Boolean manual) {
+    return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.startBulkOperation(operationId, step, manual)), HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<BulkOperationDto> uploadCsvFile(EntityType entityType, IdentifierType identifierType, MultipartFile file) {
-    return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.uploadIdentifiers(entityType, identifierType, file)), HttpStatus.OK);
+  public ResponseEntity<BulkOperationDto> uploadCsvFile(EntityType entityType, IdentifierType identifierType, Boolean manual, UUID operationId, MultipartFile file) {
+    return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.uploadCsvFile(entityType, identifierType, manual, operationId, file)), HttpStatus.OK);
   }
 
   @Override
@@ -119,17 +96,17 @@ public class BulkOperationController implements BulkOperationsApi {
 
     String path;
     if (fileContentType == TRIGGERING_FILE) {
-      path = bulkOperation.getLinkToTriggeringFile();
+      path = bulkOperation.getLinkToTriggeringCsvFile();
     } else if (fileContentType == MATCHED_RECORDS_FILE) {
-      path = bulkOperation.getLinkToMatchingRecordsFile();
+      path = bulkOperation.getLinkToMatchedRecordsCsvFile();
     } else if (fileContentType == RECORD_MATCHING_ERROR_FILE) {
-      path = bulkOperation.getLinkToMatchingErrorsFile();
+      path = bulkOperation.getLinkToMatchedRecordsErrorsCsvFile();
     } else if (fileContentType == PROPOSED_CHANGES_FILE) {
-      path = bulkOperation.getLinkToThePreviewFile();
+      path = bulkOperation.getLinkToModifiedRecordsCsvFile();
     } else if (fileContentType == COMMITTED_RECORDS_FILE) {
-      path = bulkOperation.getLinkToUpdatedRecordsFile();
+      path = bulkOperation.getLinkToCommittedRecordsCsvFile();
     } else if (fileContentType == COMMITTING_CHANGES_ERROR_FILE) {
-      path = bulkOperation.getLinkToCommittingErrorsFile();
+      path = bulkOperation.getLinkToCommittedRecordsErrorsCsvFile();
     } else {
       return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }

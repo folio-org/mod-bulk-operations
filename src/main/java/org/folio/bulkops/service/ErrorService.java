@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.LF;
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -24,18 +25,20 @@ import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.util.Constants;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.util.ObjectUtils;
 
 @Service
 @RequiredArgsConstructor
 public class ErrorService {
   private static final String POSTFIX_ERROR_MESSAGE_NON_NULL = " AND errorMessage<>null";
+  public static final String IDENTIFIER = "IDENTIFIER";
   private final BulkOperationRepository operationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final BulkOperationExecutionContentRepository executionContentRepository;
@@ -57,7 +60,12 @@ public class ErrorService {
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
     switch (bulkOperation.getStatus()) {
     case DATA_MODIFICATION:
-      return bulkEditClient.getErrorsPreview(bulkOperation.getDataExportJobId(), limit);
+      var errors = bulkEditClient.getErrorsPreview(bulkOperation.getDataExportJobId(), limit);
+      return new Errors().errors(errors.getErrors().stream().map(e -> {
+          var error = e.getMessage().split(Constants.COMMA_DELIMETER);
+          return new Error().message(error[1]).parameters(List.of(new Parameter().key(IDENTIFIER).value(error[0])));
+        }).collect(Collectors.toList()))
+        .totalRecords(errors.getTotalRecords());
     case REVIEW_CHANGES:
       return getProcessingErrors(bulkOperationId, limit);
     case COMPLETED:
@@ -69,8 +77,8 @@ public class ErrorService {
 
   public String getErrorsCsvByBulkOperationId(UUID bulkOperationId) {
     return getErrorsPreviewByBulkOperationId(bulkOperationId, Integer.MAX_VALUE).getErrors().stream()
-      .map(error -> String.join(",", ObjectUtils.isEmpty(error.getParameters()) ? EMPTY : error.getParameters().get(0).getValue(), error.getMessage()))
-      .collect(Collectors.joining("\n"));
+      .map(error -> String.join(Constants.COMMA_DELIMETER, ObjectUtils.isEmpty(error.getParameters()) ? EMPTY : error.getParameters().get(0).getValue(), error.getMessage()))
+      .collect(Collectors.joining(Constants.NEW_LINE_SEPARATOR));
   }
 
   private Errors getProcessingErrors(UUID bulkOperationId, int limit) {
@@ -87,7 +95,7 @@ public class ErrorService {
     return new Error()
       .message(content.getErrorMessage())
       .parameters(Collections.singletonList(new Parameter()
-        .key("IDENTIFIER")
+        .key(IDENTIFIER)
         .value(content.getIdentifier())));
   }
 
@@ -105,7 +113,7 @@ public class ErrorService {
     return new Error()
       .message(content.getErrorMessage())
       .parameters(Collections.singletonList(new Parameter()
-        .key("IDENTIFIER")
+        .key(IDENTIFIER)
         .value(content.getIdentifier())));
   }
 
@@ -117,10 +125,10 @@ public class ErrorService {
     var contents = executionContentCqlRepository.findByCQL("bulkOperationId==" + bulkOperationId + POSTFIX_ERROR_MESSAGE_NON_NULL, OffsetRequest.of(0, Integer.MAX_VALUE));
     if (!contents.isEmpty()) {
       var errorsString = contents.stream()
-        .map(content -> String.join(",", content.getIdentifier(), content.getErrorMessage()))
+        .map(content -> String.join(Constants.COMMA_DELIMETER, content.getIdentifier(), content.getErrorMessage()))
         .collect(Collectors.joining(LF));
       var errorsFileName = LocalDate.now().format(ISO_LOCAL_DATE) + operationRepository.findById(bulkOperationId)
-        .map(BulkOperation::getLinkToMatchingRecordsFile)
+        .map(BulkOperation::getLinkToMatchedRecordsCsvFile)
         .map(FilenameUtils::getName)
         .map(fileName -> "-Errors-" + fileName)
         .orElse("-Errors.csv");

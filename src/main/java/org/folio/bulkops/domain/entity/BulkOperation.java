@@ -53,15 +53,19 @@ public class BulkOperation {
   private ApproachType approach;
 
   private UUID dataExportJobId;
-  private String linkToTriggeringFile; // csv
-  private String linkToOriginFile; // json
-  private String linkToMatchingRecordsFile; // csv
-  private String linkToMatchingErrorsFile; // csv
-  private String linkToModifiedFile; // json
-  private String linkToThePreviewFile; // csv
-  private String linkToResultFile;
-  private String linkToUpdatedRecordsFile;
-  private String linkToCommittingErrorsFile; // csv
+  private String linkToTriggeringCsvFile;
+
+  private String linkToMatchedRecordsJsonFile;
+  private String linkToMatchedRecordsCsvFile;
+  private String linkToMatchedRecordsErrorsCsvFile;
+
+  private String linkToModifiedRecordsJsonFile;
+  private String linkToModifiedRecordsCsvFile;
+
+  private String linkToCommittedRecordsJsonFile;
+  private String linkToCommittedRecordsCsvFile;
+
+  private String linkToCommittedRecordsErrorsCsvFile;
 
   private Integer totalNumOfRecords;
   private Integer processedNumOfRecords;
