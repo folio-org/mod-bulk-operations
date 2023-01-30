@@ -5,9 +5,9 @@ spring:
     name: @project.artifactId@
     version: @project.version@
   datasource:
-    username: ${DB_USERNAME:folio_admin}
-    password: ${DB_PASSWORD:folio_admin}
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_DATABASE:okapi_modules}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_DATABASE:db}
   sql:
     init:
       # to boot up application despite of any DB connection issues
@@ -61,12 +61,12 @@ management:
 debug: false
 application:
   remote-files-storage:
-    endpoint: http://localhost:9000/
-    region: region
-    bucket: bulk-ops
-    accessKey: minioadmin
-    secretKey: minioadmin
-    awsSdk: false
+    endpoint: ${S3_URL:http://localhost:9000/}
+    region: ${S3_REGION:}
+    bucket: ${S3_BUCKET:}
+    accessKey: ${S3_ACCESS_KEY_ID:}
+    secretKey: ${S3_SECRET_ACCESS_KEY:}
+    awsSdk: ${S3_IS_AWS:false}
   kafka:
     topic-pattern: ${ENV:folio}.(.*\.)?data-export.job.update
     group-id: ${ENV:folio}-mod-bulk-operations-events-group
