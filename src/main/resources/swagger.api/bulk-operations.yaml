@@ -13,7 +13,7 @@ paths:
         - name: entityType
           in: query
           required: true
-          description: Entity type (USER, ITEM, HOLDING)
+          description: Entity type (USER, ITEM, HOLDINGS_RECORD)
           schema:
             $ref: "#/components/schemas/entityType"
         - name: identifierType
@@ -164,19 +164,12 @@ paths:
           description: UUID of the Bulk Operation
           schema:
             $ref: "#/components/schemas/UUID"
-        - name: step
-          in: query
-          required: true
-          description: Key if manual approach is used
-          schema:
-            $ref: "#/components/schemas/bulkOperationStep"
-        - name: manual
-          in: query
-          required: false
-          description: Key if manual approach is used
-          schema:
-            default: false
-            type: boolean
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bulkOperationStart"
       responses:
         "200":
           description: Bulk Operation is started
@@ -365,7 +358,9 @@ components:
     approachType:
       $ref: 'schemas/approach_type.json#/ApproachType'
     bulkOperationStep:
-      $ref: 'schemas/bulk_operation_step.json#/Step'
+      $ref: 'schemas/bulk_operation_step.json#/BulkOperationStep'
+    bulkOperationStart:
+      $ref: 'schemas/bulk_operation_start.json#/Start'
     UUID:
       type: string
       format: uuid

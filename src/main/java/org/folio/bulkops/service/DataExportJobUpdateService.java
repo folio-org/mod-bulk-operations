@@ -111,7 +111,7 @@ public class DataExportJobUpdateService {
       }
       return result;
     } catch (Exception e) {
-      var msg = "Failed to download origin file, reason: " + e.getMessage();
+      var msg = "Failed to download origin file, reason: " + e.getCause();
       log.error(msg);
       return bulkOperation
         .withStatus(OperationStatusType.FAILED)

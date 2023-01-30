@@ -24,6 +24,7 @@ import org.folio.bulkops.domain.dto.BulkOperationCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
+import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.DataType;
@@ -210,7 +211,7 @@ class BulkOperationControllerTest extends BaseTest {
   void shouldStartBulkOperationById() {
     var operationId = UUID.randomUUID();
 
-    when(bulkOperationService.startBulkOperation(operationId, BulkOperationStep.UPLOAD, false))
+    when(bulkOperationService.startBulkOperation(operationId, new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD)))
       .thenReturn(BulkOperation.builder().id(operationId).build());
 
     var response = mockMvc.perform(post(String.format("/bulk-operations/%s/start?approachType=IN_APP", operationId))
@@ -228,7 +229,7 @@ class BulkOperationControllerTest extends BaseTest {
   void shouldNotStartBulkOperationWithWrongState() {
     var operationId = UUID.randomUUID();
 
-    when(bulkOperationService.startBulkOperation(operationId, BulkOperationStep.UPLOAD, false))
+    when(bulkOperationService.startBulkOperation(operationId, new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD)))
       .thenThrow(new IllegalOperationStateException("Bulk operation cannot be started"));
 
     mockMvc.perform(post(String.format("/bulk-operations/%s/start", operationId))
@@ -242,7 +243,7 @@ class BulkOperationControllerTest extends BaseTest {
   void shouldNotStartBulkOperationIfOperationWasNotFound() {
     var operationId = UUID.randomUUID();
 
-    when(bulkOperationService.startBulkOperation(operationId, BulkOperationStep.UPLOAD, false))
+    when(bulkOperationService.startBulkOperation(operationId, new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD)))
       .thenThrow(new NotFoundException("Bulk operation was not found"));
 
     mockMvc.perform(post(String.format("/bulk-operations/%s/start?approachType=IN_APP", operationId))

@@ -62,12 +62,12 @@ public class ErrorService {
     case DATA_MODIFICATION:
       var errors = bulkEditClient.getErrorsPreview(bulkOperation.getDataExportJobId(), limit);
       return new Errors().errors(errors.getErrors().stream().map(e -> {
-          var error = e.getMessage().split(Constants.COMMA_DELIMETER);
+          var error= e.getMessage().split(Constants.COMMA_DELIMETER);
           return new Error().message(error[1]).parameters(List.of(new Parameter().key(IDENTIFIER).value(error[0])));
         }).collect(Collectors.toList()))
         .totalRecords(errors.getTotalRecords());
     case REVIEW_CHANGES:
-      return getProcessingErrors(bulkOperationId, limit);
+      return getExecutionErrors(bulkOperationId, limit);
     case COMPLETED:
       return getExecutionErrors(bulkOperationId, limit);
     default:

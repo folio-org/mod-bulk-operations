@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.LF;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
+import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
@@ -45,6 +46,7 @@ import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -361,6 +363,7 @@ public class BulkOperationService {
         executionContentRepository.save(executionContent.withState(StateType.PROCESSED));
         return modified;
       } catch (Exception e) {
+        log.error("Error updating entity: " + e.getCause());
         executionContentRepository.save(executionContent
           .withState(StateType.FAILED)
           .withErrorMessage("Failed to update entity, reason:" + e.getMessage()));
@@ -384,7 +387,7 @@ public class BulkOperationService {
           throw new BulkOperationException(PREVIEW_IS_NOT_AVAILABLE);
       }
     } catch (BulkOperationException e) {
-      log.error(e.getMessage());
+      log.error(e.getCause());
       throw new NotFoundException(e.getMessage());
     }
   }
@@ -414,7 +417,9 @@ public class BulkOperationService {
       .collect(Collectors.joining(LF));
   }
 
-  public BulkOperation startBulkOperation(UUID bulkOperationId, BulkOperationStep step, boolean manual) {
+  public BulkOperation startBulkOperation(UUID bulkOperationId, BulkOperationStart bulkOperationStart) {
+    var step = bulkOperationStart.getStep();
+    var approach = bulkOperationStart.getApproach();
     var bulkOperation = bulkOperationRepository.findById(bulkOperationId)
       .orElseThrow(() -> new NotFoundException("Bulk operation was not found bu id=" + bulkOperationId));
     String errorMessage = null;
@@ -422,18 +427,26 @@ public class BulkOperationService {
       if (BulkOperationStep.UPLOAD == step) {
         try {
           if (NEW.equals(bulkOperation.getStatus())) {
-            if (!manual) {
+            if (MANUAL != approach) {
               var job = dataExportSpringClient.upsertJob(Job.builder()
-                .type(ExportType.BULK_EDIT_IDENTIFIERS)
+                .type((QUERY == approach) ?
+                  ExportType.BULK_EDIT_QUERY :
+                  ExportType.BULK_EDIT_IDENTIFIERS)
                 .entityType(bulkOperation.getEntityType())
-                .exportTypeSpecificParameters(new ExportTypeSpecificParameters())
+                .exportTypeSpecificParameters((QUERY == approach) ?
+                  new ExportTypeSpecificParameters()
+                .withQuery(bulkOperationStart.getQuery()) :
+                  new ExportTypeSpecificParameters())
                 .identifierType(bulkOperation.getIdentifierType()).build());
               bulkOperation.setDataExportJobId(job.getId());
               bulkOperationRepository.save(bulkOperation);
 
               if (JobStatus.SCHEDULED.equals(job.getStatus())) {
-                uploadCsvFile(job.getId(), new FolioMultiPartFile(FilenameUtils.getName(bulkOperation.getLinkToTriggeringCsvFile()), "application/json", remoteFileSystemClient.get(bulkOperation.getLinkToTriggeringCsvFile())));
-                job = dataExportSpringClient.getJob(job.getId());
+                if (QUERY != approach) {
+                  uploadCsvFile(job.getId(), new FolioMultiPartFile(FilenameUtils.getName(bulkOperation.getLinkToTriggeringCsvFile()), "application/json", remoteFileSystemClient.get(bulkOperation.getLinkToTriggeringCsvFile())));
+                  job = dataExportSpringClient.getJob(job.getId());
+                }
+
                 if (JobStatus.FAILED.equals(job.getStatus())) {
                   errorMessage = "Data export job failed";
                 } else {
@@ -450,6 +463,7 @@ public class BulkOperationService {
             throw new BadRequestException(String.format("Step %s is not applicable for bulk operation status %s", step, bulkOperation.getStatus()));
           }
         } catch (Exception e) {
+          log.error("Error starting Bulk Operation: " + e.getCause());
           errorMessage = String.format("File uploading failed, reason: %s", e.getMessage());
         }
 
@@ -462,9 +476,9 @@ public class BulkOperationService {
         }
         bulkOperationRepository.save(bulkOperation);
         return bulkOperation;
-      } else if (EDIT == step) {
+      } else if (BulkOperationStep.EDIT == step) {
         if (DATA_MODIFICATION.equals(bulkOperation.getStatus())) {
-          if (manual) {
+          if (MANUAL == approach) {
             apply(bulkOperation);
           } else {
             confirm(bulkOperationId);
@@ -485,6 +499,7 @@ public class BulkOperationService {
         throw new IllegalOperationStateException("Bulk operation cannot be started, reason: invalid state: " + bulkOperation.getStatus());
       }
     } catch (BulkOperationException e) {
+      log.error(e.getCause());
       throw new IllegalOperationStateException("Bulk operation cannot be started, reason: " + e.getMessage());
     }
   }
@@ -527,6 +542,7 @@ public class BulkOperationService {
       bulkOperationRepository.save(bulkOperation);
 
     } catch (Exception e) {
+      log.error("Error applying changes: " + e.getCause());
       throw new ServerErrorException(e.getMessage());
     }
   }
@@ -564,7 +580,7 @@ public class BulkOperationService {
     try {
       return objectMapper.readValue(string, clazz);
     } catch (IOException e) {
-      log.error("Failed to convert string to POJO: {}", e.getMessage());
+      log.error("Failed to convert string to POJO: " + e.getCause());
       return null;
     }
   }
@@ -575,7 +591,7 @@ public class BulkOperationService {
       return User.class;
     case ITEM:
       return Item.class;
-    case HOLDING:
+      case HOLDINGS_RECORD:
       return HoldingsRecord.class;
     default:
       throw new BulkOperationException("Unsupported entity type: " + entityType);
