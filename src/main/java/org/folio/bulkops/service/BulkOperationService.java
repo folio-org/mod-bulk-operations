@@ -4,6 +4,7 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.replaceEach;
 import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
@@ -127,6 +129,7 @@ public class BulkOperationService {
           bulkOperation.setLinkToModifiedRecordsCsvFile(linkToThePreviewFile);
 
         } catch (Exception e) {
+          log.error("Error starting Bulk Operation: " + e.getCause());
           errorMessage = String.format("File uploading failed, reason: %s", e.getMessage());
         }
       }
@@ -142,6 +145,7 @@ public class BulkOperationService {
         var linkToTriggeringFile = remoteFileSystemClient.put(multipartFile.getInputStream(), bulkOperation.getId() + "/" + multipartFile.getOriginalFilename());
         bulkOperation.setLinkToTriggeringCsvFile(linkToTriggeringFile);
       } catch (Exception e) {
+        log.error("Error starting Bulk Operation: " + e);
         errorMessage = String.format("File uploading failed, reason: %s", e.getMessage());
       }
     }
@@ -182,8 +186,8 @@ public class BulkOperationService {
       .processedNumOfRecords(0)
       .build());
 
-    var modifiedJsonFileName = bulkOperationId + "/json/modified-" + FilenameUtils.getName(bulkOperation.getLinkToMatchedRecordsCsvFile());
-    var modifiedCsvFileName = bulkOperationId + "/modified-" + FilenameUtils.getName(bulkOperation.getLinkToMatchedRecordsJsonFile());
+    var modifiedJsonFileName = bulkOperationId + "/json/modified-" + FilenameUtils.getName(bulkOperation.getLinkToMatchedRecordsJsonFile());
+    var modifiedCsvFileName = bulkOperationId + "/modified-" + FilenameUtils.getName(bulkOperation.getLinkToMatchedRecordsCsvFile());
 
     try (var reader = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile());
          var writerForJsonFile = remoteFileSystemClient.writer(modifiedJsonFileName);
@@ -217,7 +221,7 @@ public class BulkOperationService {
           if (entityClass.equals(User.class)) {
             sbc.write(modified);
           }
-          writerForJsonFile.write(objectMapper.writeValueAsString(modified));
+          writerForJsonFile.write(objectMapper.writeValueAsString(modified) + LF);
         }
 
         dataProcessingRepository.save(dataProcessing
@@ -395,16 +399,18 @@ public class BulkOperationService {
   private UnifiedTable buildPreview(String pathToFile, Class<? extends BulkOperationsEntity> entityClass, int limit) throws BulkOperationException {
     var adapter = modClientAdapterFactory.getModClientAdapter(entityClass);
     try (var reader = new BufferedReader(new InputStreamReader(remoteFileSystemClient.get(pathToFile)))) {
-      return adapter.getEmptyTableWithHeaders().rows(reader.lines()
-        .limit(limit)
-        .map(s -> stringToPojoOrNull(s, entityClass))
-        .filter(Objects::nonNull)
-        .map(adapter::convertEntityToUnifiedTableRow)
-        .collect(Collectors.toList()));
+        return adapter.getEmptyTableWithHeaders().rows(reader.lines()
+          .limit(limit)
+          .map(s -> stringToPojoOrNull(s, entityClass))
+          .filter(Objects::nonNull)
+          .map(adapter::convertEntityToUnifiedTableRow)
+          .collect(Collectors.toList()));
     } catch (Exception e) {
       return adapter.getEmptyTableWithHeaders();
     }
   }
+
+
 
   public String getCsvPreviewByBulkOperationId(UUID bulkOperationId, BulkOperationStep step) {
     var table = getPreview(bulkOperationId, step, Integer.MAX_VALUE);
@@ -477,7 +483,7 @@ public class BulkOperationService {
         bulkOperationRepository.save(bulkOperation);
         return bulkOperation;
       } else if (BulkOperationStep.EDIT == step) {
-        if (DATA_MODIFICATION.equals(bulkOperation.getStatus())) {
+        if (DATA_MODIFICATION.equals(bulkOperation.getStatus()) || REVIEW_CHANGES.equals(bulkOperation.getStatus())) {
           if (MANUAL == approach) {
             apply(bulkOperation);
           } else {
