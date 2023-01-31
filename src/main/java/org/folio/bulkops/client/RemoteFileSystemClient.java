@@ -49,7 +49,11 @@ public class RemoteFileSystemClient {
 
       @Override
       public void flush() {
-        throw new NotImplementedException("Method isn't implemented yet");
+        try {
+          put(new ByteArrayInputStream(buffer), path);
+        } finally {
+          buffer = new byte[0];
+        }
       }
 
       @Override
