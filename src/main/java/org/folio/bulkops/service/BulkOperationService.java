@@ -217,7 +217,7 @@ public class BulkOperationService {
             isChangesPresented = true;
           }
 
-          // Correct implementation via OpenCSV currently works only for User.class
+          // TODO Correct implementation via OpenCSV currently works only for User.class
           if (entityClass.equals(User.class)) {
             sbc.write(modified);
           }
@@ -230,8 +230,7 @@ public class BulkOperationService {
           .withEndTime(iterator.hasNext() ? null : LocalDateTime.now()));
       }
 
-      // This is workaround and potential source of OOM - should be refactored via OpenCSV like
-      // it is done for User.class
+      //TODO This is workaround and potential source of OOM - should be refactored via OpenCSV like it is done for User.class
       if (!entityClass.equals(User.class)) {
         writerForCsvFile.write(getCsvPreviewByBulkOperationId(bulkOperationId, EDIT));
       }
@@ -246,6 +245,7 @@ public class BulkOperationService {
         .withStatus(OperationStatusType.REVIEW_CHANGES));
 
     } catch (Exception e) {
+      log.error(e);
       dataProcessingRepository.save(dataProcessing
         .withStatus(StatusType.FAILED)
         .withEndTime(LocalDateTime.now()));

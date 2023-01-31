@@ -5,8 +5,15 @@ import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.Constants.UTC_ZONE;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.time.LocalDateTime;
+import java.util.EnumMap;
+import java.util.Map;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
@@ -22,13 +29,10 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.time.LocalDateTime;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Scanner;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Service
 @Log4j2
@@ -49,6 +53,7 @@ public class DataExportJobUpdateService {
 
   private final BulkOperationRepository bulkOperationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
+  private final ObjectMapper objectMapper;
 
   @Transactional
   @KafkaListener(
@@ -120,18 +125,19 @@ public class DataExportJobUpdateService {
     }
   }
 
+  //TODO Should be removed after ffixing json format on mod-data-export-worker
   public String downloadAndSaveJsonFile(BulkOperation bulkOperation, Job jobUpdate) throws IOException {
     var jsonUrl = jobUpdate.getFiles().get(2);
-    var scanner = new Scanner(new URL(jsonUrl).openStream());
-    while(scanner.hasNext()) {
-      var line = scanner.next();
-      if (scanner.hasNext()) {
-        line = line.substring(0, line.length() - 1) + "\n";
-      }
-      remoteFileSystemClient.append(new ByteArrayInputStream(line.getBytes()), bulkOperation.getId() + "/json/" + FilenameUtils.getName(jsonUrl.split("\\?")[0]));
+    var reader = new BufferedReader(new InputStreamReader(new URL(jsonUrl).openStream()));
+    var sb = new StringBuilder();
+    while(reader.ready()) {
+      var line = reader.readLine();
+      sb.append(line).delete(sb.length() - 1, sb.length()).append("\n");
     }
+    sb.delete(sb.length() - 1, sb.length()).append("}");
+    remoteFileSystemClient.append(new ByteArrayInputStream(sb.toString().getBytes()), bulkOperation.getId() + "/json/" + FilenameUtils.getName(jsonUrl.split("\\?")[0]));
+
     return  bulkOperation.getId() + "/json/" + FilenameUtils.getName(jsonUrl.split("\\?")[0]);
-//    return remoteFileSystemClient.put(new URL(jsonUrl).openStream(), bulkOperation.getId() + "/json/" + FilenameUtils.getName(jsonUrl.split("\\?")[0]));
   }
 
   public String downloadAndSaveCsvFile(BulkOperation bulkOperation, Job jobUpdate) throws IOException {
