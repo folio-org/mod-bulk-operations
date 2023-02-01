@@ -48,15 +48,6 @@ public class RemoteFileSystemClient {
       }
 
       @Override
-      public void flush() {
-        try {
-          put(new ByteArrayInputStream(buffer), path);
-        } finally {
-          buffer = new byte[0];
-        }
-      }
-
-      @Override
       public void close() {
         try {
           put(new ByteArrayInputStream(buffer), path);

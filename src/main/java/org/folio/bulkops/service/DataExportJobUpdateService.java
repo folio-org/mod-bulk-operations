@@ -96,32 +96,36 @@ public class DataExportJobUpdateService {
   }
 
   private BulkOperation downloadOriginFileAndUpdateBulkOperation(BulkOperation bulkOperation, Job jobUpdate) {
+    BulkOperation result;
     try {
-      if (isNull(jobUpdate.getFiles()) || jobUpdate.getFiles().size() < 3 || isNull(jobUpdate.getFiles().get(2))) {
-        throw new BulkOperationException("Job update doesn't contain download URL");
-      }
-      var linkToMatchingRecordsFile = downloadAndSaveCsvFile(bulkOperation, jobUpdate);
-      var linkToOriginFile = downloadAndSaveJsonFile(bulkOperation, jobUpdate);
+
+      result = bulkOperation
+        .withStatus(OperationStatusType.DATA_MODIFICATION);
+
       var errorsUrl = jobUpdate.getFiles().get(1);
-      var result = bulkOperation
-        .withStatus(OperationStatusType.DATA_MODIFICATION)
-        .withLinkToMatchedRecordsJsonFile(linkToOriginFile)
-        .withLinkToMatchedRecordsCsvFile(linkToMatchingRecordsFile)
-        .withEndTime(LocalDateTime.ofInstant(jobUpdate.getEndTime().toInstant(), UTC_ZONE));
       if (StringUtils.isNotEmpty(errorsUrl)) {
         try(var is = new URL(errorsUrl).openStream()) {
           var linkToMatchingErrorsFile = remoteFileSystemClient.put(is, bulkOperation.getId() + "/" + FilenameUtils.getName(errorsUrl.split("\\?")[0]));
-          return result.withLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
+          result.withLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
         }
       }
+
+      var linkToMatchingRecordsFile = downloadAndSaveCsvFile(bulkOperation, jobUpdate);
+      var linkToOriginFile = downloadAndSaveJsonFile(bulkOperation, jobUpdate);
+      result = bulkOperation
+        .withStatus(OperationStatusType.DATA_MODIFICATION)
+        .withLinkToMatchedRecordsJsonFile(linkToOriginFile)
+        .withLinkToMatchedRecordsCsvFile(linkToMatchingRecordsFile)
+        .withMatchedNumOfRecords(jobUpdate.getProgress().getSuccess())
+        .withEndTime(LocalDateTime.ofInstant(jobUpdate.getEndTime().toInstant(), UTC_ZONE));
+
       return result;
     } catch (Exception e) {
-      var msg = "Failed to download origin file, reason: " + e.getCause();
+      var msg = "Failed to download origin file, reason: " + e;
       log.error(msg);
       return bulkOperation
-        .withStatus(OperationStatusType.FAILED)
-        .withEndTime(LocalDateTime.now())
-        .withErrorMessage(msg);
+        .withStatus(OperationStatusType.SAVING_RECORDS_LOCALLY)
+        .withEndTime(LocalDateTime.now());
     }
   }
 

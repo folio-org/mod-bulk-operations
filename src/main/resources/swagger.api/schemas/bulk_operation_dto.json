@@ -87,6 +87,18 @@
         "format": "int64",
         "default": 0
       },
+      "matchedNumOfRecords": {
+        "description": "Number of matched records",
+        "type": "integer",
+        "format": "int64",
+        "default": 0
+      },
+      "committedNumOfRecords": {
+        "description": "Number of committed records",
+        "type": "integer",
+        "format": "int64",
+        "default": 0
+      },
       "executionChunkSize": {
         "description": "Size of chunk",
         "type": "integer",

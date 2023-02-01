@@ -70,6 +70,8 @@ public class BulkOperation {
   private Integer totalNumOfRecords;
   private Integer processedNumOfRecords;
   private Integer executionChunkSize;
+  private Integer matchedNumOfRecords;
+  private Integer committedNumOfRecords;
   private LocalDateTime startTime;
   private LocalDateTime endTime;
   private String errorMessage;

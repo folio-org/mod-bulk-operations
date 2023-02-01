@@ -18,6 +18,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORD
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -190,7 +191,6 @@ public class BulkOperationService {
     var modifiedCsvFileName = bulkOperationId + "/modified-" + FilenameUtils.getName(bulkOperation.getLinkToMatchedRecordsCsvFile());
 
     try (var reader = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile());
-         var writerForJsonFile = remoteFileSystemClient.writer(modifiedJsonFileName);
          var writerForCsvFile = remoteFileSystemClient.writer(modifiedCsvFileName)) {
 
       var strategy = new ColumnPositionMappingStrategy<BulkOperationsEntity>();
@@ -201,7 +201,7 @@ public class BulkOperationService {
         .withMappingStrategy(strategy)
         .build();
 
-      strategy.setType(User.class);
+      strategy.setType(entityClass);
 
       var parser = new JsonFactory().createParser(reader);
       var iterator = objectMapper.readValues(parser, entityClass);
@@ -221,7 +221,7 @@ public class BulkOperationService {
           if (entityClass.equals(User.class)) {
             sbc.write(modified);
           }
-          writerForJsonFile.write(objectMapper.writeValueAsString(modified) + LF);
+          remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(modified) + LF).getBytes()), modifiedJsonFileName);
         }
 
         dataProcessingRepository.save(dataProcessing
@@ -230,14 +230,14 @@ public class BulkOperationService {
           .withEndTime(iterator.hasNext() ? null : LocalDateTime.now()));
       }
 
-      //TODO This is workaround and potential source of OOM - should be refactored via OpenCSV like it is done for User.class
-      if (!entityClass.equals(User.class)) {
-        writerForCsvFile.write(getCsvPreviewByBulkOperationId(bulkOperationId, EDIT));
-      }
-
       if (isChangesPresented) {
         bulkOperation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
         bulkOperation.setLinkToModifiedRecordsCsvFile(modifiedCsvFileName);
+      }
+
+      //TODO This is workaround and potential source of OOM - should be refactored via OpenCSV like it is done for User.class
+      if (!entityClass.equals(User.class)) {
+        writerForCsvFile.write(getCsvPreviewByBulkOperationId(bulkOperationId, EDIT));
       }
 
       bulkOperationRepository.save(bulkOperation
@@ -300,7 +300,6 @@ public class BulkOperationService {
 
       try (var originalFileReader = new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile()));
            var modifiedFileReader = new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsJsonFile()));
-           var writerForJsonFile = remoteFileSystemClient.writer(resultFileName);
            var writerForCsvFile = remoteFileSystemClient.writer(resultCsvFileName)) {
 
         var originalFileParser = new JsonFactory().createParser(originalFileReader);
@@ -317,23 +316,26 @@ public class BulkOperationService {
           .withMappingStrategy(strategy)
           .build();
 
-        strategy.setType(User.class);
+        strategy.setType(entityClass);
 
+        int committedNumOfRecords = 0;
         while (originalFileIterator.hasNext() && modifiedFileIterator.hasNext()) {
           var original = originalFileIterator.next();
           var modified = modifiedFileIterator.next();
           var result = updateEntityIfNeeded(original, modified, bulkOperation, entityClass);
-          writerForJsonFile.write(objectMapper.writeValueAsString(result));
+          remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(result) + LF).getBytes()), resultFileName);
           sbc.write(result);
           execution = execution.withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
             .withProcessedRecords(execution.getProcessedRecords() + 1)
             .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
+          committedNumOfRecords++;
         }
 
         bulkOperation = bulkOperation.withStatus(OperationStatusType.COMPLETED)
           .withEndTime(LocalDateTime.now())
           .withLinkToCommittedRecordsCsvFile(resultCsvFileName)
-          .withLinkToCommittedRecordsJsonFile(resultFileName);
+          .withLinkToCommittedRecordsJsonFile(resultFileName)
+          .withCommittedNumOfRecords(committedNumOfRecords);
 
         executionRepository.save(execution);
 
