@@ -96,32 +96,29 @@ public class DataExportJobUpdateService {
   }
 
   private BulkOperation downloadOriginFileAndUpdateBulkOperation(BulkOperation bulkOperation, Job jobUpdate) {
-    BulkOperation result;
     try {
 
-      result = bulkOperation
-        .withStatus(OperationStatusType.DATA_MODIFICATION);
+      bulkOperation.setStatus(OperationStatusType.DATA_MODIFICATION);
 
       var errorsUrl = jobUpdate.getFiles().get(1);
       if (StringUtils.isNotEmpty(errorsUrl)) {
         try(var is = new URL(errorsUrl).openStream()) {
           var linkToMatchingErrorsFile = remoteFileSystemClient.put(is, bulkOperation.getId() + "/" + FilenameUtils.getName(errorsUrl.split("\\?")[0]));
-          result.withLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
+          bulkOperation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
         }
       }
 
       var linkToMatchingRecordsFile = downloadAndSaveCsvFile(bulkOperation, jobUpdate);
       var linkToOriginFile = downloadAndSaveJsonFile(bulkOperation, jobUpdate);
       var progress = jobUpdate.getProgress();
-      result = bulkOperation
+
+      return bulkOperation
         .withStatus(OperationStatusType.DATA_MODIFICATION)
         .withLinkToMatchedRecordsJsonFile(linkToOriginFile)
         .withLinkToMatchedRecordsCsvFile(linkToMatchingRecordsFile)
         .withMatchedNumOfRecords(progress.getSuccess())
         .withMatchedNumOfErrors(progress.getErrors())
         .withEndTime(LocalDateTime.ofInstant(jobUpdate.getEndTime().toInstant(), UTC_ZONE));
-
-      return result;
     } catch (Exception e) {
       var msg = "Failed to download origin file, reason: " + e;
       log.error(msg);
