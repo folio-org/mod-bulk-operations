@@ -316,23 +316,30 @@ public class BulkOperationService {
         strategy.setType(entityClass);
 
         int committedNumOfRecords = 0;
+        int committedNumOfErrors = 0;
         while (hasNextRecord(originalFileIterator, modifiedFileIterator)) {
           var original = originalFileIterator.next();
           var modified = modifiedFileIterator.next();
-          var result = updateEntityIfNeeded(original, modified, bulkOperation, entityClass);
-          var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
-          remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY)).getBytes()), resultFileName);
-          sbc.write(result);
-          execution = execution.withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
-            .withProcessedRecords(execution.getProcessedRecords() + 1)
-            .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
-          committedNumOfRecords++;
+          try {
+            var result = updateEntityIfNeeded(original, modified, bulkOperation, entityClass);
+            var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
+            remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY)).getBytes()), resultFileName);
+            sbc.write(result);
+            execution = execution.withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
+              .withProcessedRecords(execution.getProcessedRecords() + 1)
+              .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
+            committedNumOfRecords++;
+          } catch (Exception e) {
+            committedNumOfErrors++;
+            errorService.saveError(bulkOperationId, original.getIdentifier(bulkOperation.getIdentifierType()), e.getMessage());
+          }
         }
 
         bulkOperation = bulkOperation.withStatus(OperationStatusType.COMPLETED)
           .withEndTime(LocalDateTime.now())
           .withLinkToCommittedRecordsCsvFile(resultCsvFileName)
           .withLinkToCommittedRecordsJsonFile(resultFileName)
+          .withCommittedNumOfErrors(committedNumOfErrors)
           .withCommittedNumOfRecords(committedNumOfRecords);
 
         executionRepository.save(execution);

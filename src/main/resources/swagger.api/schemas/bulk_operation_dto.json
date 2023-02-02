@@ -99,6 +99,18 @@
         "format": "int64",
         "default": 0
       },
+      "matchedNumOfErrors": {
+        "description": "Number of matching errors",
+        "type": "integer",
+        "format": "int64",
+        "default": 0
+      },
+      "committedNumOfErrors": {
+        "description": "Number of committing errors",
+        "type": "integer",
+        "format": "int64",
+        "default": 0
+      },
       "executionChunkSize": {
         "description": "Size of chunk",
         "type": "integer",

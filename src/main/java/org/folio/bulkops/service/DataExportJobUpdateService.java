@@ -112,11 +112,13 @@ public class DataExportJobUpdateService {
 
       var linkToMatchingRecordsFile = downloadAndSaveCsvFile(bulkOperation, jobUpdate);
       var linkToOriginFile = downloadAndSaveJsonFile(bulkOperation, jobUpdate);
+      var progress = jobUpdate.getProgress();
       result = bulkOperation
         .withStatus(OperationStatusType.DATA_MODIFICATION)
         .withLinkToMatchedRecordsJsonFile(linkToOriginFile)
         .withLinkToMatchedRecordsCsvFile(linkToMatchingRecordsFile)
-        .withMatchedNumOfRecords(jobUpdate.getProgress().getSuccess())
+        .withMatchedNumOfRecords(progress.getSuccess())
+        .withMatchedNumOfErrors(progress.getErrors())
         .withEndTime(LocalDateTime.ofInstant(jobUpdate.getEndTime().toInstant(), UTC_ZONE));
 
       return result;
