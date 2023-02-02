@@ -244,7 +244,19 @@ paths:
           required: true
           schema:
             type: string
-          description: The numbers of operations to return
+          description: Request query
+        - in: query
+          name: offset
+          required: false
+          schema:
+            type: integer
+          description: Query offset
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+          description: Query limit
       responses:
         '200':
           description: Collection of operations for preview

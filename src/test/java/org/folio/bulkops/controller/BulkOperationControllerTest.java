@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.testcontainers.shaded.org.hamcrest.MatcherAssert.assertThat;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.equalTo;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.hasSize;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
@@ -45,6 +46,8 @@ import org.folio.bulkops.service.RuleService;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -53,7 +56,9 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 class BulkOperationControllerTest extends BaseTest {
   @MockBean
@@ -99,17 +104,14 @@ class BulkOperationControllerTest extends BaseTest {
 //    assertThat(response.getResponse().getContentAsString(), equalTo(csvString));
 //  }
 
-  @Test
+  @ParameterizedTest
+  @CsvSource(value = { ",", ",10", "0,10", "10,5" }, delimiter = ',')
   @SneakyThrows
-  void shouldGetBulkOperationsByQuery() {
-    var query = "status==\"DATA_MODIFICATION\"";
+  void shouldGetBulkOperationsByQuery(Integer offset, Integer limit) {
 
-    bulkOperationCqlRepository.save(BulkOperation.builder()
+    IntStream.range(0, 20).forEach(i -> bulkOperationCqlRepository.save(BulkOperation.builder()
       .status(DATA_MODIFICATION)
-      .build());
-    bulkOperationCqlRepository.save(BulkOperation.builder()
-      .status(DATA_MODIFICATION)
-      .build());
+      .build()));
     bulkOperationCqlRepository.save(BulkOperation.builder()
       .status(OperationStatusType.REVIEW_CHANGES)
       .build());
@@ -118,14 +120,18 @@ class BulkOperationControllerTest extends BaseTest {
       .build());
 
 
-    var response = mockMvc.perform(get(String.format("/bulk-operations?query=%s", query))
+    var query = "/bulk-operations?query=status==\"DATA_MODIFICATION\""
+      .concat(Objects.isNull(offset) ? EMPTY : "&offset=" + offset)
+      .concat(Objects.isNull(limit) ? EMPTY : "&limit=" + limit);
+    var response = mockMvc.perform(get(query)
         .headers(defaultHeaders())
         .contentType(APPLICATION_JSON))
       .andExpect(status().isOk())
       .andReturn();
 
     var bulkOperations = OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), BulkOperationCollection.class);
-    assertThat(bulkOperations.getBulkOperations(), hasSize(2));
+
+    assertThat(bulkOperations.getBulkOperations(), hasSize(Objects.isNull(limit) ? 20 : limit));
     assertTrue(bulkOperations.getBulkOperations().stream()
       .allMatch(bulkOperationDto -> DATA_MODIFICATION.equals(bulkOperationDto.getStatus())));
   }
