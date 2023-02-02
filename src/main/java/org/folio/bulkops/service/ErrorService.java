@@ -3,6 +3,10 @@ package org.folio.bulkops.service;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
+import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
@@ -15,7 +19,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.StateType;
-import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.Parameter;
@@ -66,18 +69,15 @@ public class ErrorService {
   public Errors getErrorsPreviewByBulkOperationId(UUID bulkOperationId, int limit) {
     var bulkOperation = operationRepository.findById(bulkOperationId)
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
-    switch (bulkOperation.getStatus()) {
-    case DATA_MODIFICATION:
-      case COMPLETED_WITH_ERRORS:
+    if (DATA_MODIFICATION == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
       var errors = bulkEditClient.getErrorsPreview(bulkOperation.getDataExportJobId(), limit);
       return new Errors().errors(errors.getErrors().stream()
           .map(this::prepareInternalErrorRepresentation)
           .collect(Collectors.toList()))
         .totalRecords(errors.getTotalRecords());
-    case REVIEW_CHANGES:
-      case COMPLETED:
-        return getExecutionErrors(bulkOperationId, limit);
-      default:
+    } else if (REVIEW_CHANGES == bulkOperation.getStatus() || COMPLETED == bulkOperation.getStatus()) {
+      return getExecutionErrors(bulkOperationId, limit);
+    } else {
       throw new NotFoundException("Errors preview is not available");
     }
   }
