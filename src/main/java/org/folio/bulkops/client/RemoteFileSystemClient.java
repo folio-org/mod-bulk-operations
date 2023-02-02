@@ -36,6 +36,10 @@ public class RemoteFileSystemClient {
     return remoteFolioS3Client.read(fileName);
   }
 
+  public void remove(String filename) {
+    remoteFolioS3Client.remove(filename);
+  }
+
   public OutputStream newOutputStream(String path) {
 
     return new OutputStream() {

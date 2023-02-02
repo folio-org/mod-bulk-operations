@@ -7,7 +7,6 @@ import static org.apache.commons.lang3.StringUtils.LF;
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -16,6 +15,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.StateType;
+import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.Parameter;
@@ -29,8 +29,10 @@ import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.Constants;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -47,7 +49,7 @@ public class ErrorService {
   private final BulkOperationProcessingContentRepository processingContentRepository;
   private final BulkEditClient bulkEditClient;
 
-  public void saveError(UUID bulkOperationId, String identifier, String errorMessage) {
+  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage) {
     executionContentRepository.save(BulkOperationExecutionContent.builder()
         .identifier(identifier)
         .bulkOperationId(bulkOperationId)
@@ -56,11 +58,17 @@ public class ErrorService {
       .build());
   }
 
+  @Transactional
+  public void deleteErrorsByBulkOperationId(UUID bulkOperationId) {
+    executionContentRepository.deleteByBulkOperationId(bulkOperationId);
+  }
+
   public Errors getErrorsPreviewByBulkOperationId(UUID bulkOperationId, int limit) {
     var bulkOperation = operationRepository.findById(bulkOperationId)
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
     switch (bulkOperation.getStatus()) {
     case DATA_MODIFICATION:
+      case COMPLETED_WITH_ERRORS:
       var errors = bulkEditClient.getErrorsPreview(bulkOperation.getDataExportJobId(), limit);
       return new Errors().errors(errors.getErrors().stream()
           .map(this::prepareInternalErrorRepresentation)

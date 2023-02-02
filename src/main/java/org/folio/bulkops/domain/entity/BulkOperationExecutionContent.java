@@ -17,6 +17,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 import org.folio.bulkops.domain.bean.StateType;
+import org.folio.bulkops.domain.dto.BulkOperationStep;
 
 @Data
 @Builder

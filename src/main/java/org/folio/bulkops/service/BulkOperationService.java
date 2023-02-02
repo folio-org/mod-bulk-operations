@@ -5,7 +5,6 @@ import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.replaceEach;
 import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
@@ -24,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
-import java.nio.charset.Charset;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
@@ -77,8 +75,8 @@ import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -485,6 +483,11 @@ public class BulkOperationService {
         bulkOperationRepository.save(bulkOperation);
         return bulkOperation;
       } else if (BulkOperationStep.EDIT == step) {
+        errorService.deleteErrorsByBulkOperationId(bulkOperationId);
+        if (bulkOperation.getLinkToModifiedRecordsJsonFile() != null) {
+          remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsJsonFile());
+          remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsCsvFile());
+        }
         if (DATA_MODIFICATION.equals(bulkOperation.getStatus()) || REVIEW_CHANGES.equals(bulkOperation.getStatus())) {
           if (MANUAL == approach) {
             apply(bulkOperation);

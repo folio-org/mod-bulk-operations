@@ -12,6 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.folio.bulkops.domain.dto.ApproachType;
+import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
@@ -58,13 +59,10 @@ public class BulkOperation {
   private String linkToMatchedRecordsJsonFile;
   private String linkToMatchedRecordsCsvFile;
   private String linkToMatchedRecordsErrorsCsvFile;
-
   private String linkToModifiedRecordsJsonFile;
   private String linkToModifiedRecordsCsvFile;
-
   private String linkToCommittedRecordsJsonFile;
   private String linkToCommittedRecordsCsvFile;
-
   private String linkToCommittedRecordsErrorsCsvFile;
 
   private Integer totalNumOfRecords;
