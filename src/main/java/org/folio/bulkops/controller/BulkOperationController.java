@@ -54,8 +54,8 @@ public class BulkOperationController implements BulkOperationsApi {
   private final RemoteFileSystemClient remoteFileSystemClient;
 
   @Override
-  public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(String query) {
-    var page = bulkOperationCqlRepository.findByCQL(query, OffsetRequest.of(0, Integer.MAX_VALUE));
+  public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(String query, Integer offset, Integer limit) {
+    var page = bulkOperationCqlRepository.findByCQL(query, OffsetRequest.of(Objects.isNull(offset) ? 0 : offset, Objects.isNull(limit) ? Integer.MAX_VALUE : limit));
     return new ResponseEntity<>(new BulkOperationCollection().bulkOperations(bulkOperationMapper.mapToDtoList(page.toList())).totalRecords((int) page.getTotalElements()), HttpStatus.OK);
   }
 
