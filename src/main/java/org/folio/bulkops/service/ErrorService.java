@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.LF;
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -61,18 +62,21 @@ public class ErrorService {
     switch (bulkOperation.getStatus()) {
     case DATA_MODIFICATION:
       var errors = bulkEditClient.getErrorsPreview(bulkOperation.getDataExportJobId(), limit);
-      return new Errors().errors(errors.getErrors().stream().map(e -> {
-          var error= e.getMessage().split(Constants.COMMA_DELIMETER);
-          return new Error().message(error[1]).parameters(List.of(new Parameter().key(IDENTIFIER).value(error[0])));
-        }).collect(Collectors.toList()))
+      return new Errors().errors(errors.getErrors().stream()
+          .map(this::prepareInternalErrorRepresentation)
+          .collect(Collectors.toList()))
         .totalRecords(errors.getTotalRecords());
     case REVIEW_CHANGES:
-      return getExecutionErrors(bulkOperationId, limit);
-    case COMPLETED:
-      return getExecutionErrors(bulkOperationId, limit);
-    default:
+      case COMPLETED:
+        return getExecutionErrors(bulkOperationId, limit);
+      default:
       throw new NotFoundException("Errors preview is not available");
     }
+  }
+
+  private Error prepareInternalErrorRepresentation(Error e) {
+    var error= e.getMessage().split(Constants.COMMA_DELIMETER);
+    return new Error().message(error[1]).parameters(List.of(new Parameter().key(IDENTIFIER).value(error[0])));
   }
 
   public String getErrorsCsvByBulkOperationId(UUID bulkOperationId) {

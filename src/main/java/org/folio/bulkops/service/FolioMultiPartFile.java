@@ -64,7 +64,7 @@ public class FolioMultiPartFile implements MultipartFile {
   }
 
   @Override
-  public void transferTo(File dest) throws IOException, IllegalStateException {
+  public void transferTo(@NonNull File dest) throws IOException, IllegalStateException {
     FileCopyUtils.copy(this.content, dest);
   }
 

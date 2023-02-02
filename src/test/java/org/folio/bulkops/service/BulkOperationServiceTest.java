@@ -1,7 +1,11 @@
 package org.folio.bulkops.service;
 
+import static org.apache.commons.lang3.StringUtils.LF;
+import static org.awaitility.Awaitility.await;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -20,6 +24,7 @@ import static org.testcontainers.shaded.org.hamcrest.Matchers.is;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.notNullValue;
 
 import lombok.SneakyThrows;
+import org.awaitility.core.ThrowingRunnable;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.adapters.impl.holdings.HoldingsHeaderBuilder;
 import org.folio.bulkops.adapters.impl.items.ItemHeaderBuilder;
@@ -31,6 +36,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
+import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.bean.BriefInstance;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
@@ -62,6 +68,7 @@ import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -80,6 +87,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 class BulkOperationServiceTest extends BaseTest {
   @Autowired
@@ -405,6 +414,7 @@ class BulkOperationServiceTest extends BaseTest {
         .entityType(EntityType.USER)
         .identifierType(IdentifierType.BARCODE)
         .linkToMatchedRecordsJsonFile(pathToOrigin)
+
         .linkToModifiedRecordsJsonFile(pathToModified)
         .build()));
 
@@ -445,7 +455,7 @@ class BulkOperationServiceTest extends BaseTest {
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     verify(remoteFileSystemClient).append(streamCaptor.capture(), pathCaptor.capture());
     assertEquals(new String(streamCaptor.getValue().readAllBytes()),
-      Files.readString(Path.of(pathToModifiedUserJson)));
+      Files.readString(Path.of(pathToModifiedUserJson)).trim());
     assertEquals(expectedPathToResultFile, pathCaptor.getValue());
 
     var executionContentCaptor = ArgumentCaptor.forClass(BulkOperationExecutionContent.class);
@@ -519,7 +529,7 @@ class BulkOperationServiceTest extends BaseTest {
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     verify(remoteFileSystemClient).append(streamCaptor.capture(), pathCaptor.capture());
     assertEquals(new String(streamCaptor.getValue().readAllBytes()),
-      Files.readString(Path.of(pathToUserJson)));
+      Files.readString(Path.of(pathToUserJson)).trim());
     assertEquals(expectedPathToResultFile, pathCaptor.getValue());
   }
 
@@ -670,9 +680,9 @@ class BulkOperationServiceTest extends BaseTest {
     "items_for_preview.json,ITEM,DATA_MODIFICATION",
     "items_for_preview.json,ITEM,REVIEW_CHANGES",
     "items_for_preview.json,ITEM,COMPLETED",
-    "holdings_for_preview.json,HOLDING,DATA_MODIFICATION",
-    "holdings_for_preview.json,HOLDING,REVIEW_CHANGES",
-    "holdings_for_preview.json,HOLDING,COMPLETED" }, delimiter = ',')
+    "holdings_for_preview.json,HOLDINGS_RECORD,DATA_MODIFICATION",
+    "holdings_for_preview.json,HOLDINGS_RECORD,REVIEW_CHANGES",
+    "holdings_for_preview.json,HOLDINGS_RECORD,COMPLETED" }, delimiter = ',')
   @SneakyThrows
   void shouldReturnPreviewIfAvailable(String fileName, EntityType entityType, OperationStatusType status) {
     var path = "src/test/resources/files/" + fileName;
@@ -706,13 +716,15 @@ class BulkOperationServiceTest extends BaseTest {
   @ParameterizedTest
   @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
   @SneakyThrows
-  void shouldExitExceptionallyIfPreviewIsNotAvailable(OperationStatusType status) {
+  void shouldReturnOnlyHeadersIfPreviewIsNotAvailable(OperationStatusType status) {
     var operationId = UUID.randomUUID();
 
     when(bulkOperationRepository.findById(operationId))
       .thenReturn(Optional.of(BulkOperation.builder().entityType(EntityType.USER).status(status).build()));
 
-    assertThrows(NotFoundException.class, () -> bulkOperationService.getPreview(operationId, BulkOperationStep.UPLOAD, 10));
+    var table = bulkOperationService.getPreview(operationId, BulkOperationStep.UPLOAD, 10);
+    assertEquals(0, table.getRows().size());
+    Assertions.assertTrue(table.getHeader().size() > 0);
   }
 
 //  @ParameterizedTest
@@ -762,17 +774,20 @@ class BulkOperationServiceTest extends BaseTest {
 //    }
 //  }
 
-//  @ParameterizedTest
-//  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
-//  @SneakyThrows
-//  void shouldExitExceptionallyIfCsvPreviewIsNotAvailable(OperationStatusType status) {
-//    var operationId = UUID.randomUUID();
-//
-//    when(bulkOperationRepository.findById(operationId))
-//      .thenReturn(Optional.of(BulkOperation.builder().entityType(EntityType.USER).status(status).build()));
-//
-//    assertThrows(NotFoundException.class, () -> bulkOperationService.getCsvPreviewByBulkOperationId(operationId));
-//  }
+  @ParameterizedTest
+  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
+  @SneakyThrows
+  void shouldReturnOnlyHeaderIfCsvPreviewIsNotAvailable(OperationStatusType status) {
+    var operationId = UUID.randomUUID();
+
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(BulkOperation.builder().entityType(EntityType.USER).status(status).build()));
+
+    var actual = bulkOperationService.getCsvPreviewByBulkOperationId(operationId, BulkOperationStep.EDIT);
+    var expected = UserHeaderBuilder.getHeaders().stream().map(Cell::getValue).collect(Collectors.joining(",")) + LF;
+
+    assertEquals(expected, actual);
+    }
 
   @ParameterizedTest
   @EnumSource(OperationStatusType.class)

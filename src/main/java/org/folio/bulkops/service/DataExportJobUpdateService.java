@@ -124,7 +124,7 @@ public class DataExportJobUpdateService {
       var msg = "Failed to download origin file, reason: " + e;
       log.error(msg);
       return bulkOperation
-        .withStatus(OperationStatusType.SAVING_RECORDS_LOCALLY)
+        .withStatus(OperationStatusType.COMPLETED_WITH_ERRORS)
         .withEndTime(LocalDateTime.now());
     }
   }

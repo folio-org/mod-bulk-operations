@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.replaceEach;
@@ -30,6 +31,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.MappingIterator;
 import com.opencsv.bean.ColumnPositionMappingStrategy;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -170,11 +172,9 @@ public class BulkOperationService {
     }
 
     var entityClass = resolveEntityClass(bulkOperation.getEntityType());
-
     applyRules(bulkOperation, ruleService.getRules(bulkOperationId), entityClass);
   }
 
-  @Async
   public void applyRules(BulkOperation bulkOperation, BulkOperationRuleCollection ruleCollection, Class<? extends BulkOperationsEntity> entityClass) {
 
     var bulkOperationId = bulkOperation.getId();
@@ -295,8 +295,7 @@ public class BulkOperationService {
         .build());
 
       var resultFileName = bulkOperation.getId() + "/json/result-" + FilenameUtils.getName(bulkOperation.getLinkToMatchedRecordsJsonFile());
-      var resultCsvFileName = bulkOperation.getId() + "/result-"
-        + FilenameUtils.getName(bulkOperation.getLinkToMatchedRecordsCsvFile());
+      var resultCsvFileName = bulkOperation.getId() + "/result-" + FilenameUtils.getName(bulkOperation.getLinkToMatchedRecordsCsvFile());
 
       try (var originalFileReader = new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile()));
            var modifiedFileReader = new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsJsonFile()));
@@ -319,11 +318,12 @@ public class BulkOperationService {
         strategy.setType(entityClass);
 
         int committedNumOfRecords = 0;
-        while (originalFileIterator.hasNext() && modifiedFileIterator.hasNext()) {
+        while (hasNextRecord(originalFileIterator, modifiedFileIterator)) {
           var original = originalFileIterator.next();
           var modified = modifiedFileIterator.next();
           var result = updateEntityIfNeeded(original, modified, bulkOperation, entityClass);
-          remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(result) + LF).getBytes()), resultFileName);
+          var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
+          remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY)).getBytes()), resultFileName);
           sbc.write(result);
           execution = execution.withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
             .withProcessedRecords(execution.getProcessedRecords() + 1)
@@ -635,5 +635,9 @@ public class BulkOperationService {
     }
 
     return s;
+  }
+
+  private boolean hasNextRecord(MappingIterator<? extends BulkOperationsEntity> originalFileIterator, MappingIterator<? extends BulkOperationsEntity> modifiedFileIterator) {
+    return originalFileIterator.hasNext() && modifiedFileIterator.hasNext();
   }
 }

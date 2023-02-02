@@ -1,5 +1,8 @@
 package org.folio.bulkops.service;
 
+import static org.apache.commons.lang3.StringUtils.LF;
+import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,6 +29,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.OperationStatusType;
+import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.domain.entity.BulkOperationProcessingContent;
@@ -126,14 +130,15 @@ class ErrorServiceTest extends BaseTest {
   void shouldGetErrorsPreviewByBulkOperationId(OperationStatusType statusType) {
     var operationId = bulkOperationRepository.save(BulkOperation.builder().dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
 
-    when(bulkEditClient.getErrorsPreview(any(UUID.class), eq(2)))
-      .thenReturn(new Errors()
-        .errors(List.of(new Error(), new Error())));
+    var expected = List.of(
+      new Error().message("No match found").parameters(List.of(new Parameter().key("IDENTIFIER").value("123"))),
+      new Error().message("Invalid format").parameters(List.of(new Parameter().key("IDENTIFIER").value("456")))
+    );
 
-    prepareErrors(operationId);
+    mockErrorsData(statusType, operationId);
 
-    var preview = errorService.getErrorsPreviewByBulkOperationId(operationId, 2);
-    assertThat(preview.getErrors(), hasSize(2));
+    var actual = errorService.getErrorsPreviewByBulkOperationId(operationId, 2);
+    assertThat(actual.getErrors(), hasSize(2));
 
     bulkOperationRepository.deleteById(operationId);
   }
@@ -153,14 +158,13 @@ class ErrorServiceTest extends BaseTest {
   void shouldGetErrorsCsvByBulkOperationId(OperationStatusType statusType) {
     var operationId = bulkOperationRepository.save(BulkOperation.builder().dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
 
-    when(bulkEditClient.getErrorsPreview(any(UUID.class), anyInt()))
-      .thenReturn(new Errors()
-        .errors(List.of(new Error(), new Error(), new Error())));
+    var expected = "123,No match found\n456,Invalid format";
 
-    prepareErrors(operationId);
+    mockErrorsData(statusType, operationId);
 
-    var csvString = errorService.getErrorsCsvByBulkOperationId(operationId);
-    assertThat(new BufferedReader(new StringReader(csvString)).lines().count(), equalTo(3L));
+    var actual = errorService.getErrorsCsvByBulkOperationId(operationId);
+    assertArrayEquals(expected.split(LF), actual.split(LF));
+    assertThat(new BufferedReader(new StringReader(actual)).lines().count(), equalTo(2L));
 
     bulkOperationRepository.deleteById(operationId);
   }
@@ -175,37 +179,33 @@ class ErrorServiceTest extends BaseTest {
     bulkOperationRepository.deleteById(operationId);
   }
 
-  private void prepareErrors(UUID operationId) {
-    executionContentRepository.save(BulkOperationExecutionContent.builder()
-      .bulkOperationId(operationId)
-      .identifier("1")
-      .errorMessage("Error")
-      .build());
-    executionContentRepository.save(BulkOperationExecutionContent.builder()
-      .bulkOperationId(operationId)
-      .identifier("2")
-      .errorMessage("Error")
-      .build());
-    executionContentRepository.save(BulkOperationExecutionContent.builder()
-      .bulkOperationId(operationId)
-      .identifier("3")
-      .errorMessage("Error")
-      .build());
-
-    processingContentRepository.save(BulkOperationProcessingContent.builder()
-      .bulkOperationId(operationId)
-      .identifier("1")
-      .errorMessage("Error")
-      .build());
-    processingContentRepository.save(BulkOperationProcessingContent.builder()
-      .bulkOperationId(operationId)
-      .identifier("2")
-      .errorMessage("Error")
-      .build());
-    processingContentRepository.save(BulkOperationProcessingContent.builder()
-      .bulkOperationId(operationId)
-      .identifier("3")
-      .errorMessage("Error")
-      .build());
+  private void mockErrorsData(OperationStatusType statusType, UUID operationId) {
+    if (DATA_MODIFICATION == statusType) {
+      when(bulkEditClient.getErrorsPreview(any(UUID.class), anyInt()))
+        .thenReturn(new Errors()
+          .errors(List.of(new Error().type("BULK_EDIT_ERROR").message("123,No match found"),
+            new Error().type("BULK_EDIT_ERROR").message("456,Invalid format"))));
+    } else {
+      executionContentRepository.save(BulkOperationExecutionContent.builder()
+        .bulkOperationId(operationId)
+        .identifier("123")
+        .errorMessage("No match found")
+        .build());
+      executionContentRepository.save(BulkOperationExecutionContent.builder()
+        .bulkOperationId(operationId)
+        .identifier("456")
+        .errorMessage("Invalid format")
+        .build());
+      processingContentRepository.save(BulkOperationProcessingContent.builder()
+        .bulkOperationId(operationId)
+        .identifier("123")
+        .errorMessage("No match found")
+        .build());
+      processingContentRepository.save(BulkOperationProcessingContent.builder()
+        .bulkOperationId(operationId)
+        .identifier("456")
+        .errorMessage("Invalid format")
+        .build());
+    }
   }
 }

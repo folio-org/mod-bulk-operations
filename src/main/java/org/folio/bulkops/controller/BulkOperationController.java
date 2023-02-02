@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.UUID;
 
 @RestController
@@ -77,7 +78,11 @@ public class BulkOperationController implements BulkOperationsApi {
 
   @Override
   public ResponseEntity<BulkOperationDto> startBulkOperation(UUID operationId, BulkOperationStart bulkOperationStart) {
-    return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.startBulkOperation(operationId, bulkOperationStart)), HttpStatus.OK);
+    try {
+      return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.startBulkOperation(operationId, bulkOperationStart)), HttpStatus.OK);
+    } catch(Exception e) {
+      return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).contentType(MediaType.TEXT_PLAIN).build();
+    }
   }
 
   @Override
@@ -96,6 +101,7 @@ public class BulkOperationController implements BulkOperationsApi {
     var bulkOperation = bulkOperationService.getOperationById(operationId);
 
     String path;
+
     if (fileContentType == TRIGGERING_FILE) {
       path = bulkOperation.getLinkToTriggeringCsvFile();
     } else if (fileContentType == MATCHED_RECORDS_FILE) {
@@ -112,15 +118,19 @@ public class BulkOperationController implements BulkOperationsApi {
       return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }
 
-    try (var is = remoteFileSystemClient.get(path)) {
-      var content = is.readAllBytes();
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-      headers.setContentLength(content.length);
-      headers.setContentDispositionFormData(FileUtils.filename(path), FileUtils.filename(path));
-      return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(content));
-    } catch (IOException e) {
-      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+    if (Objects.isNull(path)) {
+      return ResponseEntity.ok().build();
+    } else {
+      try (var is = remoteFileSystemClient.get(path)) {
+        var content = is.readAllBytes();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.setContentLength(content.length);
+        headers.setContentDispositionFormData(FileUtils.filename(path), FileUtils.filename(path));
+        return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(content));
+      } catch (IOException e) {
+        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     }
   }
 }

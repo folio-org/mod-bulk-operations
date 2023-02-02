@@ -1,8 +1,13 @@
 CREATE TYPE ApproachType as ENUM ('IN_APP', 'MANUAL');
 CREATE CAST (character varying as ApproachType) WITH INOUT AS IMPLICIT;
 
+DROP TYPE IF EXISTS EntityType CASCADE;
+CREATE TYPE EntityType as ENUM ('USER', 'ITEM', 'HOLDINGS_RECORD');
+CREATE CAST (character varying as EntityType) WITH INOUT AS IMPLICIT;
+
 ALTER TABLE bulk_operation
 ADD COLUMN IF NOT EXISTS approach ApproachType,
+ADD COLUMN IF NOT EXISTS entity_type EntityType,
 ADD COLUMN IF NOT EXISTS link_to_triggering_csv_file TEXT,
 ADD COLUMN IF NOT EXISTS link_to_matched_records_csv_file TEXT,
 ADD COLUMN IF NOT EXISTS link_to_matched_records_errors_csv_file TEXT,
