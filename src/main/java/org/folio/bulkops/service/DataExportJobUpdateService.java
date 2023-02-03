@@ -3,6 +3,8 @@ package org.folio.bulkops.service;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
+import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.util.Constants.UTC_ZONE;
 
 import java.io.BufferedReader;
@@ -21,6 +23,7 @@ import org.folio.bulkops.configs.kafka.KafkaService;
 import org.folio.bulkops.domain.bean.BatchStatus;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
+import org.folio.bulkops.domain.bean.Progress;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.BulkOperationException;
@@ -73,12 +76,6 @@ public class DataExportJobUpdateService {
 
     var bulkOperation = optionalBulkOperation.get();
 
-    if (nonNull(jobExecutionUpdate.getProgress())) {
-      bulkOperation = bulkOperation
-        .withTotalNumOfRecords(jobExecutionUpdate.getProgress().getTotal())
-        .withProcessedNumOfRecords(jobExecutionUpdate.getProgress().getProcessed());
-    }
-
     var status = JOB_STATUSES.get(jobExecutionUpdate.getBatchStatus());
     if (nonNull(status)) {
       if (JobStatus.SUCCESSFUL.equals(status)) {
@@ -110,7 +107,18 @@ public class DataExportJobUpdateService {
 
       var linkToMatchingRecordsFile = downloadAndSaveCsvFile(bulkOperation, jobUpdate);
       var linkToOriginFile = downloadAndSaveJsonFile(bulkOperation, jobUpdate);
-      var progress = jobUpdate.getProgress();
+
+      Progress progress;
+      if (QUERY == bulkOperation.getApproach()) {
+        var value = (int) new BufferedReader(new InputStreamReader(remoteFileSystemClient.get(linkToMatchingRecordsFile))).lines().count() - 1;
+        progress =  new Progress()
+          .withErrors(0)
+          .withSuccess(value)
+          .withTotal(value)
+          .withProcessed(value);
+      } else {
+        progress = jobUpdate.getProgress();
+      }
 
       return bulkOperation
         .withStatus(OperationStatusType.DATA_MODIFICATION)
@@ -118,6 +126,8 @@ public class DataExportJobUpdateService {
         .withLinkToMatchedRecordsCsvFile(linkToMatchingRecordsFile)
         .withMatchedNumOfRecords(progress.getSuccess())
         .withMatchedNumOfErrors(progress.getErrors())
+        .withTotalNumOfRecords(progress.getTotal())
+        .withProcessedNumOfRecords(progress.getProcessed())
         .withEndTime(LocalDateTime.ofInstant(jobUpdate.getEndTime().toInstant(), UTC_ZONE));
     } catch (Exception e) {
       var msg = "Failed to download origin file, reason: " + e;
@@ -128,19 +138,9 @@ public class DataExportJobUpdateService {
     }
   }
 
-  //TODO Should be removed after ffixing json format on mod-data-export-worker
   public String downloadAndSaveJsonFile(BulkOperation bulkOperation, Job jobUpdate) throws IOException {
     var jsonUrl = jobUpdate.getFiles().get(2);
-    var reader = new BufferedReader(new InputStreamReader(new URL(jsonUrl).openStream()));
-    var sb = new StringBuilder();
-    while(reader.ready()) {
-      var line = reader.readLine();
-      sb.append(line).delete(sb.length() - 1, sb.length()).append("\n");
-    }
-    sb.delete(sb.length() - 1, sb.length()).append("}");
-    remoteFileSystemClient.append(new ByteArrayInputStream(sb.toString().getBytes()), bulkOperation.getId() + "/json/" + FilenameUtils.getName(jsonUrl.split("\\?")[0]));
-
-    return  bulkOperation.getId() + "/json/" + FilenameUtils.getName(jsonUrl.split("\\?")[0]);
+    return remoteFileSystemClient.put(new URL(jsonUrl).openStream(), bulkOperation.getId() + "/" + FilenameUtils.getName(jsonUrl.split("\\?")[0]));
   }
 
   public String downloadAndSaveCsvFile(BulkOperation bulkOperation, Job jobUpdate) throws IOException {

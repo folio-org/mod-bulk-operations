@@ -1,4 +1,4 @@
-CREATE TYPE ApproachType as ENUM ('IN_APP', 'MANUAL');
+CREATE TYPE ApproachType as ENUM ('IN_APP', 'MANUAL', 'QUERY');
 CREATE CAST (character varying as ApproachType) WITH INOUT AS IMPLICIT;
 
 DROP TYPE IF EXISTS EntityType CASCADE;

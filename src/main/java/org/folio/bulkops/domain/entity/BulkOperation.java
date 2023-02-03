@@ -33,7 +33,6 @@ import lombok.With;
 @Table(name = "bulk_operation")
 public class BulkOperation {
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
   private UUID userId;
