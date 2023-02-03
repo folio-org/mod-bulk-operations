@@ -352,7 +352,7 @@ public class BulkOperationService {
           .withEndTime(LocalDateTime.now())
           .withLinkToCommittedRecordsCsvFile(resultCsvFileName)
           .withLinkToCommittedRecordsJsonFile(resultFileName)
-          .withCommittedNumOfErrors(committedNumOfErrors)
+          .withCommittedNumOfErrors(bulkOperation.getCommittedNumOfErrors() + committedNumOfErrors)
           .withCommittedNumOfRecords(committedNumOfRecords);
 
         executionRepository.save(execution);
