@@ -76,6 +76,12 @@ public class DataExportJobUpdateService {
 
     var bulkOperation = optionalBulkOperation.get();
 
+    if (nonNull(jobExecutionUpdate.getProgress())) {
+      bulkOperation = bulkOperation
+        .withTotalNumOfRecords(jobExecutionUpdate.getProgress().getTotal())
+        .withProcessedNumOfRecords(jobExecutionUpdate.getProgress().getProcessed());
+    }
+
     var status = JOB_STATUSES.get(jobExecutionUpdate.getBatchStatus());
     if (nonNull(status)) {
       if (JobStatus.SUCCESSFUL.equals(status)) {
