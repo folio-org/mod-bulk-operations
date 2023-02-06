@@ -217,7 +217,7 @@ class BulkOperationControllerTest extends BaseTest {
   void shouldStartBulkOperationById() {
     var operationId = UUID.randomUUID();
 
-    when(bulkOperationService.startBulkOperation(operationId, new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD)))
+    when(bulkOperationService.startBulkOperation(operationId, any(UUID.class), new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD)))
       .thenReturn(BulkOperation.builder().id(operationId).build());
 
     var response = mockMvc.perform(post(String.format("/bulk-operations/%s/start?approachType=IN_APP", operationId))
@@ -235,7 +235,7 @@ class BulkOperationControllerTest extends BaseTest {
   void shouldNotStartBulkOperationWithWrongState() {
     var operationId = UUID.randomUUID();
 
-    when(bulkOperationService.startBulkOperation(operationId, new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD)))
+    when(bulkOperationService.startBulkOperation(operationId, any(UUID.class), new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD)))
       .thenThrow(new IllegalOperationStateException("Bulk operation cannot be started"));
 
     mockMvc.perform(post(String.format("/bulk-operations/%s/start", operationId))
@@ -249,7 +249,7 @@ class BulkOperationControllerTest extends BaseTest {
   void shouldNotStartBulkOperationIfOperationWasNotFound() {
     var operationId = UUID.randomUUID();
 
-    when(bulkOperationService.startBulkOperation(operationId, new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD)))
+    when(bulkOperationService.startBulkOperation(operationId, any(UUID.class), new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD)))
       .thenThrow(new NotFoundException("Bulk operation was not found"));
 
     mockMvc.perform(post(String.format("/bulk-operations/%s/start?approachType=IN_APP", operationId))
@@ -265,7 +265,7 @@ class BulkOperationControllerTest extends BaseTest {
     var identifiers = "123\n456\n789";
     var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, identifiers.getBytes());
 
-    when(bulkOperationService.uploadCsvFile(eq(EntityType.USER), eq(IdentifierType.BARCODE), anyBoolean(), any(), any(MultipartFile.class)))
+    when(bulkOperationService.uploadCsvFile(eq(EntityType.USER), eq(IdentifierType.BARCODE), anyBoolean(), any(), any(), any(MultipartFile.class)))
       .thenReturn(BulkOperation.builder().id(operationId).build());
 
     var result = mockMvc.perform(multipart("/bulk-operations/upload?entityType=USER&identifierType=BARCODE")
@@ -278,7 +278,7 @@ class BulkOperationControllerTest extends BaseTest {
     assertThat(operation.getId(), equalTo(operationId));
 
     var fileCaptor = ArgumentCaptor.forClass(MultipartFile.class);
-    verify(bulkOperationService).uploadCsvFile(eq(EntityType.USER), eq(IdentifierType.BARCODE), anyBoolean(), any(), fileCaptor.capture());
+    verify(bulkOperationService).uploadCsvFile(eq(EntityType.USER), eq(IdentifierType.BARCODE), anyBoolean(), any(), any(), fileCaptor.capture());
     assertThat(new String(fileCaptor.getValue().getInputStream().readAllBytes()), equalTo(identifiers));
   }
 

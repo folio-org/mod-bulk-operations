@@ -25,6 +25,8 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -32,6 +34,12 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.opencsv.bean.ColumnPositionMappingStrategy;
+import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvCustomBindByName;
+import com.opencsv.bean.HeaderColumnNameMappingStrategy;
+import com.opencsv.bean.HeaderIndex;
+import com.opencsv.bean.HeaderNameBaseMappingStrategy;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -49,6 +57,7 @@ import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
+import org.folio.bulkops.domain.converter.CustomMappingStrategy;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
@@ -71,6 +80,7 @@ import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.processor.DataProcessorFactory;
 import org.folio.bulkops.processor.UpdateProcessorFactory;
+import org.folio.bulkops.processor.UpdatedEntityHolder;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
@@ -114,7 +124,7 @@ public class BulkOperationService {
   private final BulkOperationProcessingContentRepository processingContentRepository;
   private final ErrorService errorService;
 
-  public BulkOperation uploadCsvFile(EntityType entityType, IdentifierType identifierType, Boolean manual, UUID operationId, MultipartFile multipartFile) {
+  public BulkOperation uploadCsvFile(EntityType entityType, IdentifierType identifierType, Boolean manual, UUID operationId, UUID xOkapiUserId, MultipartFile multipartFile) {
 
     String errorMessage = null;
     BulkOperation bulkOperation;
@@ -167,6 +177,8 @@ public class BulkOperationService {
         .withEndTime(LocalDateTime.now());
     }
 
+    bulkOperation.setUserId(xOkapiUserId);
+
     return bulkOperationRepository.save(bulkOperation);
   }
 
@@ -199,7 +211,9 @@ public class BulkOperationService {
     try (var reader = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile());
          var writerForCsvFile = remoteFileSystemClient.writer(modifiedCsvFileName)) {
 
-      var strategy = new ColumnPositionMappingStrategy<BulkOperationsEntity>();
+      var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
+
+      strategy.setType(entityClass);
 
       StatefulBeanToCsv<BulkOperationsEntity> sbc = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writerForCsvFile)
         .withSeparator(CSVWriter.DEFAULT_SEPARATOR)
@@ -207,28 +221,27 @@ public class BulkOperationService {
         .withMappingStrategy(strategy)
         .build();
 
-      strategy.setType(entityClass);
-
       var parser = new JsonFactory().createParser(reader);
       var iterator = objectMapper.readValues(parser, entityClass);
 
       boolean isChangesPresented = false;
       var committedNumOfErrors = 0;
 
+
       while (iterator.hasNext()) {
         var original = iterator.next();
         var modified = processUpdate(original, bulkOperation, ruleCollection, entityClass);
 
-        if (Objects.nonNull(modified)) {
+        // TODO Correct implementation via OpenCSV currently works only for User.class
+        if (entityClass.equals(User.class)) {
+          sbc.write(modified.getEntity());
+        }
+
+        if (modified.isChanged()) {
           if (!isChangesPresented) {
             isChangesPresented = true;
           }
-
-          // TODO Correct implementation via OpenCSV currently works only for User.class
-          if (entityClass.equals(User.class)) {
-            sbc.write(modified);
-          }
-          remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(modified) + LF).getBytes()), modifiedJsonFileName);
+          remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(modified.getEntity()) + LF).getBytes()), modifiedJsonFileName);
         } else {
           committedNumOfErrors++;
         }
@@ -267,12 +280,12 @@ public class BulkOperationService {
     }
   }
 
-  private BulkOperationsEntity processUpdate(BulkOperationsEntity original, BulkOperation bulkOperation, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> entityClass) {
+  private UpdatedEntityHolder<? extends BulkOperationsEntity> processUpdate(BulkOperationsEntity original, BulkOperation bulkOperation, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> entityClass) {
     var processor = dataProcessorFactory.getProcessorFromFactory(entityClass);
     var processingContent = BulkOperationProcessingContent.builder()
       .bulkOperationId(bulkOperation.getId())
       .build();
-    BulkOperationsEntity modified = null;
+    UpdatedEntityHolder modified = null;
     try {
       processingContent.setIdentifier(original.getIdentifier(bulkOperation.getIdentifierType()));
       modified = processor.process(original.getIdentifier(bulkOperation.getIdentifierType()), original, rules);
@@ -318,7 +331,7 @@ public class BulkOperationService {
         var modifiedFileParser = new JsonFactory().createParser(modifiedFileReader);
         var modifiedFileIterator = objectMapper.readValues(modifiedFileParser, entityClass);
 
-        var strategy = new ColumnPositionMappingStrategy<BulkOperationsEntity>();
+        var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
 
         StatefulBeanToCsv<BulkOperationsEntity> sbc = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writerForCsvFile)
           .withSeparator(CSVWriter.DEFAULT_SEPARATOR)
@@ -443,7 +456,7 @@ public class BulkOperationService {
       .collect(Collectors.joining(LF));
   }
 
-  public BulkOperation startBulkOperation(UUID bulkOperationId, BulkOperationStart bulkOperationStart) {
+  public BulkOperation startBulkOperation(UUID bulkOperationId, UUID xOkapiUserId, BulkOperationStart bulkOperationStart) {
     var step = bulkOperationStart.getStep();
     var approach = bulkOperationStart.getApproach();
     BulkOperation bulkOperation;
@@ -460,6 +473,7 @@ public class BulkOperationService {
       bulkOperation = bulkOperationRepository.findById(bulkOperationId)
         .orElseThrow(() -> new NotFoundException("Bulk operation was not found bu id=" + bulkOperationId));
     }
+    bulkOperation.setUserId(xOkapiUserId);
 
     String errorMessage = null;
     try {

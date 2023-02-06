@@ -89,9 +89,9 @@ class ItemDataProcessorTest extends BaseTest {
 
     var result = processor.process(IDENTIFIER, item, rules);
     assertNotNull(result);
-    assertNull(result.getPermanentLocation());
-    assertNull(result.getTemporaryLocation());
-    assertNull(result.getTemporaryLoanType());
+    assertNull(result.getEntity().getPermanentLocation());
+    assertNull(result.getEntity().getTemporaryLocation());
+    assertNull(result.getEntity().getTemporaryLoanType());
   }
 
   @Test
@@ -122,10 +122,10 @@ class ItemDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, item, rules);
 
     assertNotNull(result);
-    assertEquals(updatedLocationId, result.getPermanentLocation().getId());
-    assertEquals(updatedLocationId, result.getTemporaryLocation().getId());
-    assertEquals(updatedLoanTypeId, result.getPermanentLoanType().getId());
-    assertEquals(updatedLoanTypeId, result.getTemporaryLoanType().getId());
+    assertEquals(updatedLocationId, result.getEntity().getPermanentLocation().getId());
+    assertEquals(updatedLocationId, result.getEntity().getTemporaryLocation().getId());
+    assertEquals(updatedLoanTypeId, result.getEntity().getPermanentLoanType().getId());
+    assertEquals(updatedLoanTypeId, result.getEntity().getTemporaryLoanType().getId());
   }
 
   @Test
@@ -147,8 +147,8 @@ class ItemDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, item, rules);
 
     assertNotNull(result);
-    assertEquals(InventoryItemStatus.NameEnum.MISSING, result.getStatus().getName());
-    assertNotNull(result.getStatus().getDate());
+    assertEquals(InventoryItemStatus.NameEnum.MISSING, result.getEntity().getStatus().getName());
+    assertNotNull(result.getEntity().getStatus().getDate());
   }
 
   @Test

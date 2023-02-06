@@ -46,14 +46,13 @@ import lombok.With;
 public class User extends BulkOperationsEntity {
 
   @JsonProperty("username")
-  @CsvBindByName(column = "User name")
   @CsvCustomBindByName(column = "User name", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 0, converter = StringConverter.class)
   private String username;
 
   @JsonProperty("id")
-  @CsvBindByName(column = "User id")
-  @CsvBindByPosition(position = 1)
+  @CsvCustomBindByName(column = "User id", converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 1, converter = StringConverter.class)
   private String id;
 
   @JsonProperty("externalSystemId")
@@ -67,7 +66,6 @@ public class User extends BulkOperationsEntity {
   private String barcode;
 
   @JsonProperty("active")
-  @CsvBindByName(column = "Active")
   @CsvCustomBindByName(column = "Active", converter = BooleanConverter.class)
   @CsvCustomBindByPosition(position = 4, converter = BooleanConverter.class)
   private Boolean active;

@@ -142,13 +142,13 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
       .thenReturn("3");
 
-    var bulkOperation = bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, false, null, file);
+    var bulkOperation = bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, false, null, null, file);
     var bulkOperationId = bulkOperation.getId();
 
     when(bulkOperationRepository.findById(bulkOperationId))
       .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringCsvFile("barcodes.csv").build()));
 
-    bulkOperationService.startBulkOperation(bulkOperation.getId(), new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD));
+    bulkOperationService.startBulkOperation(bulkOperation.getId(), any(UUID.class), new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD));
 
     verify(dataExportSpringClient).upsertJob(any(Job.class));
     verify(dataExportSpringClient).getJob(jobId);
@@ -191,8 +191,8 @@ class BulkOperationServiceTest extends BaseTest {
 
 
 
-    bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, false, null, file);
-    bulkOperationService.startBulkOperation(bulkOperationId, new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD));
+    bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, false, null, null, file);
+    bulkOperationService.startBulkOperation(bulkOperationId, any(UUID.class), new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD));
 
     verify(dataExportSpringClient).upsertJob(any(Job.class));
     verify(dataExportSpringClient).getJob(jobId);
@@ -227,8 +227,8 @@ class BulkOperationServiceTest extends BaseTest {
     when(dataExportSpringClient.getJob(jobId))
       .thenReturn(Job.builder().id(jobId).status(JobStatus.FAILED).build());
 
-    bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, false, null, file);
-    bulkOperationService.startBulkOperation(bulkOperationId, new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD));
+    bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, false, null, null, file);
+    bulkOperationService.startBulkOperation(bulkOperationId, any(UUID.class), new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD));
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
@@ -258,8 +258,8 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
       .thenThrow(new NotFoundException("Job was not found"));
 
-    bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, false, null, file);
-    bulkOperationService.startBulkOperation(bulkOperationId, new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD));
+    bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, false, null, null, file);
+    bulkOperationService.startBulkOperation(bulkOperationId, any(UUID.class), new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD));
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());

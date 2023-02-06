@@ -84,8 +84,8 @@ class UserDataProcessorTest extends BaseTest {
     ));
 
     assertNotNull(result);
-    assertEquals(new SimpleDateFormat(DATE_TIME_FORMAT).parse(date), result.getExpirationDate());
-    assertEquals(newPatronGroupId, result.getPatronGroup());
-    assertEquals("test@mail.com", result.getPersonal().getEmail());
+    assertEquals(new SimpleDateFormat(DATE_TIME_FORMAT).parse(date), result.getEntity().getExpirationDate());
+    assertEquals(newPatronGroupId, result.getEntity().getPatronGroup());
+    assertEquals("test@mail.com", result.getEntity().getPersonal().getEmail());
   }
 }

@@ -80,15 +80,15 @@ class HoldingsDataProcessorTest extends BaseTest {
     var temporaryLocationUpdatingResult = processor.process(IDENTIFIER, holding, rules(rule(TEMPORARY_LOCATION, REPLACE_WITH, updatedLocationId)));
 
     assertNotNull(temporaryLocationUpdatingResult);
-    assertEquals(updatedLocationId, temporaryLocationUpdatingResult.getTemporaryLocationId());
-    assertEquals(updatedLocationId, temporaryLocationUpdatingResult.getEffectiveLocationId());
+    assertEquals(updatedLocationId, temporaryLocationUpdatingResult.getEntity().getTemporaryLocationId());
+    assertEquals(updatedLocationId, temporaryLocationUpdatingResult.getEntity().getEffectiveLocationId());
 
     var permanentLocationUpdatingResult = processor.process(IDENTIFIER, holding, rules(rule(PERMANENT_LOCATION, REPLACE_WITH, updatedLocationId)));
 
     assertNotNull(permanentLocationUpdatingResult);
-    assertEquals(updatedLocation, permanentLocationUpdatingResult.getPermanentLocation());
-    assertEquals(updatedLocationId, permanentLocationUpdatingResult.getPermanentLocationId());
-    assertEquals(temporaryLocationId, permanentLocationUpdatingResult.getEffectiveLocationId());
+    assertEquals(updatedLocation, permanentLocationUpdatingResult.getEntity().getPermanentLocation());
+    assertEquals(updatedLocationId, permanentLocationUpdatingResult.getEntity().getPermanentLocationId());
+    assertEquals(temporaryLocationId, permanentLocationUpdatingResult.getEntity().getEffectiveLocationId());
   }
 
   @Test
@@ -122,8 +122,8 @@ class HoldingsDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, holding, rules(rule(TEMPORARY_LOCATION, CLEAR_FIELD, null)));
 
     assertNotNull(result);
-    assertNull(result.getTemporaryLocationId());
-    assertEquals(permanentLocationId, result.getEffectiveLocationId());
+    assertNull(result.getEntity().getTemporaryLocationId());
+    assertEquals(permanentLocationId, result.getEntity().getEffectiveLocationId());
   }
 
   @Test

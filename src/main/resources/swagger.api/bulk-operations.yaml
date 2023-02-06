@@ -35,6 +35,11 @@ paths:
           description: UUID of the Bulk Operation (applicable for (manual = true) case)
           schema:
             $ref: "#/components/schemas/UUID"
+        - name: X-Okapi-User-Id
+          in: header
+          schema:
+            type: string
+            format: uuid
       requestBody:
         content:
           multipart/form-data:
@@ -164,6 +169,11 @@ paths:
           description: UUID of the Bulk Operation
           schema:
             $ref: "#/components/schemas/UUID"
+        - name: X-Okapi-User-Id
+          in: header
+          schema:
+            type: string
+            format: uuid
       requestBody:
         required: true
         content:
