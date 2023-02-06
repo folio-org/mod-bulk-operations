@@ -23,4 +23,5 @@ DROP COLUMN IF EXISTS link_to_modified_file,
 DROP COLUMN IF EXISTS link_to_result_file,
 ADD COLUMN IF NOT EXISTS link_to_matched_records_json_file TEXT,
 ADD COLUMN IF NOT EXISTS link_to_modified_records_json_file TEXT,
+ADD COLUMN IF NOT EXISTS link_to_modified_for_preview_records_json_file TEXT,
 ADD COLUMN IF NOT EXISTS link_to_committed_records_json_file TEXT;

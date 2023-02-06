@@ -54,7 +54,7 @@ public class RemoteFileSystemClient {
       @Override
       public void close() {
         try {
-          put(new ByteArrayInputStream(buffer), path);
+          append(new ByteArrayInputStream(buffer), path);
         } finally {
           buffer = new byte[0];
         }

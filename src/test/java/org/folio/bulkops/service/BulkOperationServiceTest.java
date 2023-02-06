@@ -1,9 +1,6 @@
 package org.folio.bulkops.service;
 
-import static org.apache.commons.lang3.StringUtils.LF;
 import static org.awaitility.Awaitility.await;
-import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
-import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -25,9 +22,6 @@ import static org.testcontainers.shaded.org.hamcrest.Matchers.notNullValue;
 
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.adapters.impl.holdings.HoldingsHeaderBuilder;
-import org.folio.bulkops.adapters.impl.items.ItemHeaderBuilder;
-import org.folio.bulkops.adapters.impl.users.UserHeaderBuilder;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.InstanceClient;
@@ -35,11 +29,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
-import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.OperationStatusType;
-import org.folio.bulkops.domain.bean.BriefInstance;
-import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
-import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
@@ -67,7 +57,6 @@ import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -86,7 +75,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 class BulkOperationServiceTest extends BaseTest {
   @Autowired
@@ -306,7 +294,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(groupClient.getGroupById(newPatronGroupId)).thenReturn(new UserGroup());
     when(groupClient.getGroupById(originalPatronGroupId)).thenReturn(new UserGroup());
 
-    bulkOperationService.confirm(bulkOperationId);
+    bulkOperationService.confirmBulkOperation(bulkOperationId);
 
 
 
@@ -368,7 +356,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(pathToOrigin))
       .thenThrow(new RuntimeException("Failed to read file"));
 
-    bulkOperationService.confirm(bulkOperationId);
+    bulkOperationService.confirmBulkOperation(bulkOperationId);
 
     var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
     verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture());
@@ -388,13 +376,13 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldNotConfirmChangesIfBulkOperationWasNotFound() {
     when(bulkOperationRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
     var operationId = UUID.randomUUID();
-    assertThrows(NotFoundException.class, () -> bulkOperationService.confirm(operationId));
+    assertThrows(NotFoundException.class, () -> bulkOperationService.confirmBulkOperation(operationId));
   }
 
   @Test
   void shouldNotConfirmChangesIfNoLinkToOriginFile() {
     when(bulkOperationRepository.findById(any(UUID.class))).thenReturn(Optional.of(BulkOperation.builder().build()));
-    assertThrows(BulkOperationException.class, () -> bulkOperationService.confirm(UUID.randomUUID()));
+    assertThrows(BulkOperationException.class, () -> bulkOperationService.confirmBulkOperation(UUID.randomUUID()));
   }
 
   @Test
@@ -445,7 +433,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     when(groupClient.getGroupById("cdd8a5c8-dce7-4d7f-859a-83754b36c740")).thenReturn(new UserGroup());
 
-    bulkOperationService.commit(bulkOperationId);
+    bulkOperationService.commitBulkOperation(bulkOperationId);
 
     verify(userClient).updateUser(any(User.class), anyString());
 
@@ -516,7 +504,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(executionContentRepository.save(any(BulkOperationExecutionContent.class)))
       .thenReturn(BulkOperationExecutionContent.builder().build());
 
-    bulkOperationService.commit(bulkOperationId);
+    bulkOperationService.commitBulkOperation(bulkOperationId);
 
     verify(userClient, times(0)).updateUser(any(User.class), anyString());
 
@@ -574,7 +562,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     doThrow(new BadRequestException("Bad request")).when(userClient).updateUser(any(User.class), anyString());
 
-    bulkOperationService.commit(bulkOperationId);
+    bulkOperationService.commitBulkOperation(bulkOperationId);
 
     var executionContentCaptor = ArgumentCaptor.forClass(BulkOperationExecutionContent.class);
     verify(executionContentRepository).save(executionContentCaptor.capture());
@@ -622,7 +610,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(pathToOrigin))
       .thenThrow(new RuntimeException("Failed to read file"));
 
-    bulkOperationService.commit(bulkOperationId);
+    bulkOperationService.commitBulkOperation(bulkOperationId);
 
     var executionCaptor = ArgumentCaptor.forClass(BulkOperationExecution.class);
     verify(executionRepository, times(2)).save(executionCaptor.capture());
@@ -643,7 +631,7 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldNotCommitChangesIfBulkOperationWasNotFound() {
     when(bulkOperationRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
     var operationId = UUID.randomUUID();
-    assertThrows(NotFoundException.class, () -> bulkOperationService.commit(operationId));
+    assertThrows(NotFoundException.class, () -> bulkOperationService.commitBulkOperation(operationId));
   }
 
   @Test
@@ -653,7 +641,7 @@ class BulkOperationServiceTest extends BaseTest {
         .linkToMatchedRecordsJsonFile(null)
         .linkToModifiedRecordsJsonFile("link")
         .build()));
-    assertThrows(BulkOperationException.class, () -> bulkOperationService.commit(UUID.randomUUID()));
+    assertThrows(BulkOperationException.class, () -> bulkOperationService.commitBulkOperation(UUID.randomUUID()));
   }
 
   @Test
@@ -668,7 +656,7 @@ class BulkOperationServiceTest extends BaseTest {
         .linkToMatchedRecordsJsonFile("link")
         .linkToModifiedRecordsJsonFile(null)
         .build());
-    assertDoesNotThrow(() -> bulkOperationService.commit(UUID.randomUUID()));
+    assertDoesNotThrow(() -> bulkOperationService.commitBulkOperation(UUID.randomUUID()));
   }
 
   @ParameterizedTest
