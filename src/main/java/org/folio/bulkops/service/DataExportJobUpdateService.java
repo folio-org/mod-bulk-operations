@@ -140,6 +140,7 @@ public class DataExportJobUpdateService {
       log.error(msg);
       return bulkOperation
         .withStatus(OperationStatusType.COMPLETED_WITH_ERRORS)
+        .withMatchedNumOfErrors(jobUpdate.getProgress().getErrors())
         .withEndTime(LocalDateTime.now());
     }
   }
