@@ -8,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
@@ -25,21 +26,12 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.MappingIterator;
-import com.opencsv.bean.ColumnPositionMappingStrategy;
-import com.opencsv.bean.CsvBindByName;
-import com.opencsv.bean.CsvCustomBindByName;
-import com.opencsv.bean.HeaderColumnNameMappingStrategy;
-import com.opencsv.bean.HeaderIndex;
-import com.opencsv.bean.HeaderNameBaseMappingStrategy;
-import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -58,7 +50,6 @@ import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.converter.CustomMappingStrategy;
-import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
@@ -88,7 +79,6 @@ import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -261,7 +251,7 @@ public class BulkOperationService {
 
       //TODO This is workaround and potential source of OOM - should be refactored via OpenCSV like it is done for User.class
       if (!entityClass.equals(User.class)) {
-        writerForCsvFile.write(getCsvPreviewByBulkOperationId(bulkOperationId, EDIT));
+        writerForCsvFile.write(getCsvPreviewForBulkOperation(bulkOperation, EDIT));
       }
 
       bulkOperationRepository.save(bulkOperation
@@ -350,7 +340,12 @@ public class BulkOperationService {
             var result = updateEntityIfNeeded(original, modified, bulkOperation, entityClass);
             var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
             remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY)).getBytes()), resultFileName);
-            sbc.write(result);
+
+            // TODO Should be refactored to use open csv
+            if (User.class == entityClass) {
+              sbc.write(result);
+            }
+
             execution = execution.withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
               .withProcessedRecords(execution.getProcessedRecords() + 1)
               .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
@@ -367,6 +362,11 @@ public class BulkOperationService {
           .withLinkToCommittedRecordsJsonFile(resultFileName)
           .withCommittedNumOfErrors(bulkOperation.getCommittedNumOfErrors() + committedNumOfErrors)
           .withCommittedNumOfRecords(committedNumOfRecords);
+
+        // TODO Should be refactored to use open csv
+        if (User.class != entityClass) {
+          writerForCsvFile.write(getCsvPreviewForBulkOperation(bulkOperation, COMMIT));
+        }
 
         executionRepository.save(execution);
 
@@ -409,9 +409,8 @@ public class BulkOperationService {
     return original;
   }
 
-  public UnifiedTable getPreview(UUID bulkOperationId, BulkOperationStep step, int limit) {
+  public UnifiedTable getPreview(BulkOperation bulkOperation, BulkOperationStep step, int limit) {
     try {
-      var bulkOperation = getBulkOperationOrThrow(bulkOperationId);
       var entityClass = resolveEntityClass(bulkOperation.getEntityType());
       switch (step) {
         case UPLOAD:
@@ -445,8 +444,8 @@ public class BulkOperationService {
 
 
 
-  public String getCsvPreviewByBulkOperationId(UUID bulkOperationId, BulkOperationStep step) {
-    var table = getPreview(bulkOperationId, step, Integer.MAX_VALUE);
+  public String getCsvPreviewForBulkOperation(BulkOperation bulkOperation, BulkOperationStep step) {
+    var table = getPreview(bulkOperation, step, Integer.MAX_VALUE);
     return table.getHeader()
       .stream()
       .map(Cell::getValue)

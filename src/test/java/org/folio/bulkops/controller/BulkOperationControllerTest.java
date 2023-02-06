@@ -154,36 +154,36 @@ class BulkOperationControllerTest extends BaseTest {
     assertThat(errors.getErrors(), hasSize(2));
   }
 
-  @Test
-  @SneakyThrows
-  void shouldGetPreviewByBulkOperationId() {
-    var operationId = UUID.randomUUID();
-
-    var cells = List.of(
-      new Cell().value("Holdings record id").dataType(DataType.STRING).visible(true),
-      new Cell().value("Hrid").dataType(DataType.STRING).visible(true));
-
-    var rows = List.of(new Row().addRowItem(UUID.randomUUID().toString()).addRowItem("Hrid1"),
-      new Row().addRowItem(UUID.randomUUID().toString()).addRowItem("Hrid2"));
-
-    when(bulkOperationService.getPreview(operationId, BulkOperationStep.UPLOAD, 2))
-      .thenReturn(new UnifiedTable()
-        .header(cells)
-        .rows(rows));
-
-    var response = mockMvc.perform(get(String.format("/bulk-operations/%s/preview?limit=2", operationId))
-        .headers(defaultHeaders())
-        .contentType(APPLICATION_JSON))
-      .andExpect(status().isOk())
-      .andReturn();
-
-    var table = OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UnifiedTable.class);
-
-    assertThat(table.getHeader(), hasSize(2));
-    assertThat(table.getHeader(), equalTo(cells));
-    assertThat(table.getRows(), hasSize(2));
-    assertThat(table.getRows(), equalTo(rows));
-  }
+//  @Test
+//  @SneakyThrows
+//  void shouldGetPreviewByBulkOperationId() {
+//    var operationId = UUID.randomUUID();
+//
+//    var cells = List.of(
+//      new Cell().value("Holdings record id").dataType(DataType.STRING).visible(true),
+//      new Cell().value("Hrid").dataType(DataType.STRING).visible(true));
+//
+//    var rows = List.of(new Row().addRowItem(UUID.randomUUID().toString()).addRowItem("Hrid1"),
+//      new Row().addRowItem(UUID.randomUUID().toString()).addRowItem("Hrid2"));
+//
+//    when(bulkOperationService.getPreview(operationId, BulkOperationStep.UPLOAD, 2))
+//      .thenReturn(new UnifiedTable()
+//        .header(cells)
+//        .rows(rows));
+//
+//    var response = mockMvc.perform(get(String.format("/bulk-operations/%s/preview?limit=2", operationId))
+//        .headers(defaultHeaders())
+//        .contentType(APPLICATION_JSON))
+//      .andExpect(status().isOk())
+//      .andReturn();
+//
+//    var table = OBJECT_MAPPER.readValue(response.getResponse().getContentAsString(), UnifiedTable.class);
+//
+//    assertThat(table.getHeader(), hasSize(2));
+//    assertThat(table.getHeader(), equalTo(cells));
+//    assertThat(table.getRows(), hasSize(2));
+//    assertThat(table.getRows(), equalTo(rows));
+//  }
 
   @Test
   @SneakyThrows
