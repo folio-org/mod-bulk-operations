@@ -503,7 +503,7 @@ public class BulkOperationService {
                 if (JobStatus.FAILED.equals(job.getStatus())) {
                   errorMessage = "Data export job failed";
                 } else {
-                  if (JobStatus.SCHEDULED.equals(job.getStatus())) {
+                  if (QUERY != approach && JobStatus.SCHEDULED.equals(job.getStatus())) {
                     bulkEditClient.startJob(job.getId());
                   }
                   bulkOperation.setStatus(RETRIEVING_RECORDS);
@@ -511,9 +511,6 @@ public class BulkOperationService {
               } else {
                 errorMessage = String.format("File uploading failed - invalid job status: %s (expected: SCHEDULED)", job.getStatus().getValue());
               }
-            } else {
-              bulkOperation.setTotalNumOfRecords(bulkOperation.getMatchedNumOfRecords());
-              bulkOperation.setProcessedNumOfRecords(bulkOperation.getMatchedNumOfRecords());
             }
           } else {
             throw new BadRequestException(String.format("Step %s is not applicable for bulk operation status %s", step, bulkOperation.getStatus()));
@@ -592,9 +589,9 @@ public class BulkOperationService {
       while (originalJsonFileIterator.hasNext() && modifiedCsvFileIterator.hasNext()) {
         var originalEntity = originalJsonFileIterator.next();
         var modifiedEntity = modifiedCsvFileIterator.next();
-        committedNumOfErrors++;
-        if (EqualsBuilder.reflectionEquals(originalEntity, modifiedEntity, true, entityType, "metadata", "createdDate", "updatedDate")) {
 
+        if (EqualsBuilder.reflectionEquals(originalEntity, modifiedEntity, true, entityType, "metadata", "createdDate", "updatedDate")) {
+          committedNumOfErrors++;
           errorService.saveError(bulkOperationId, originalEntity.getIdentifier(bulkOperation.getIdentifierType()), "No change in value required");
         } else {
           writer.write(objectMapper.writeValueAsString(modifiedEntity));
