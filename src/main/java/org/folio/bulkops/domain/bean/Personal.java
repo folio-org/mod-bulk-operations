@@ -3,7 +3,7 @@ package org.folio.bulkops.domain.bean;
 import java.util.Date;
 import java.util.List;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import org.springframework.format.annotation.DateTimeFormat;
 

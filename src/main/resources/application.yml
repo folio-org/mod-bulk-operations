@@ -13,7 +13,6 @@ spring:
       # to boot up application despite of any DB connection issues
       continue-on-error: true
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQL10Dialect
     hibernate:
       ddl-auto: none
       naming:
@@ -21,7 +20,7 @@ spring:
         implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQL10Dialect
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
     show-sql: false
   liquibase:
@@ -32,6 +31,10 @@ spring:
     deserialization:
       fail-on-unknown-properties: false
       accept-single-value-as-array: true
+  cloud:
+    openfeign:
+      okhttp:
+        enabled: true
   mustache:
     check-template-location: false
   kafka:
