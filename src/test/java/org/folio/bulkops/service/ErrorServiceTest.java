@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.io.StringReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
@@ -77,6 +78,7 @@ class ErrorServiceTest extends BaseTest {
   @BeforeEach
   void saveBulkOperation() {
     bulkOperationId = bulkOperationRepository.save(BulkOperation.builder()
+      .id(UUID.randomUUID())
       .linkToMatchedRecordsCsvFile("some/path/records.csv")
       .build()).getId();
   }
@@ -128,7 +130,7 @@ class ErrorServiceTest extends BaseTest {
   @ParameterizedTest
   @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.INCLUDE)
   void shouldGetErrorsPreviewByBulkOperationId(OperationStatusType statusType) {
-    var operationId = bulkOperationRepository.save(BulkOperation.builder().dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
+    var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
 
     var expected = List.of(
       new Error().message("No match found").parameters(List.of(new Parameter().key("IDENTIFIER").value("123"))),
@@ -144,9 +146,9 @@ class ErrorServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
+  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED_WITH_ERRORS", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
   void shouldRejectErrorsPreviewOnWrongOperationStatus(OperationStatusType statusType) {
-    var operationId = bulkOperationRepository.save(BulkOperation.builder().status(statusType).build()).getId();
+    var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).status(statusType).build()).getId();
 
     assertThrows(NotFoundException.class, () -> errorService.getErrorsPreviewByBulkOperationId(operationId, 10));
 
@@ -156,23 +158,25 @@ class ErrorServiceTest extends BaseTest {
   @ParameterizedTest
   @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.INCLUDE)
   void shouldGetErrorsCsvByBulkOperationId(OperationStatusType statusType) {
-    var operationId = bulkOperationRepository.save(BulkOperation.builder().dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
+    var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
 
-    var expected = "123,No match found\n456,Invalid format";
+    var expected = "123,No match found\n456,Invalid format".split(LF);
 
     mockErrorsData(statusType, operationId);
 
-    var actual = errorService.getErrorsCsvByBulkOperationId(operationId);
-    assertArrayEquals(expected.split(LF), actual.split(LF));
-    assertThat(new BufferedReader(new StringReader(actual)).lines().count(), equalTo(2L));
+    var actual = errorService.getErrorsCsvByBulkOperationId(operationId).split(LF);
+    Arrays.sort(expected); Arrays.sort(actual);
+
+    assertArrayEquals(expected, actual);
+    assertThat(actual.length, equalTo(2));
 
     bulkOperationRepository.deleteById(operationId);
   }
 
   @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
+  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED", "COMPLETED_WITH_ERRORS" }, mode = EnumSource.Mode.EXCLUDE)
   void shouldRejectErrorsCsvOnWrongOperationStatus(OperationStatusType statusType) {
-    var operationId = bulkOperationRepository.save(BulkOperation.builder().status(statusType).build()).getId();
+    var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).status(statusType).build()).getId();
 
     assertThrows(NotFoundException.class, () -> errorService.getErrorsCsvByBulkOperationId(operationId));
 

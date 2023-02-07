@@ -360,7 +360,7 @@ public class BulkOperationService {
           .withEndTime(LocalDateTime.now())
           .withLinkToCommittedRecordsCsvFile(resultCsvFileName)
           .withLinkToCommittedRecordsJsonFile(resultFileName)
-          .withCommittedNumOfErrors(bulkOperation.getCommittedNumOfErrors() + committedNumOfErrors)
+          .withCommittedNumOfErrors((bulkOperation.getCommittedNumOfErrors() != null ? bulkOperation.getCommittedNumOfErrors() : 0) + committedNumOfErrors)
           .withCommittedNumOfRecords(committedNumOfRecords);
 
         // TODO Should be refactored to use open csv

@@ -60,6 +60,7 @@ class BulkOperationExecutionChunkRepositoryTest extends BaseTest {
 
   private BulkOperationExecutionChunk createEntity() {
     var bulkOperation = bulkOperationRepository.save(BulkOperation.builder()
+      .id(UUID.randomUUID())
       .userId(UUID.randomUUID())
       .operationType(UPDATE)
       .entityType(USER)

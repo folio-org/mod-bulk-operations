@@ -8,6 +8,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.EMAIL_ADDRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
@@ -97,7 +98,9 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withName("MARC")
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
-    assertNull(processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(MARC_SOURCE_ID), rules(rule(PERMANENT_LOCATION, CLEAR_FIELD, null))));
+    var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(MARC_SOURCE_ID), rules(rule(PERMANENT_LOCATION, CLEAR_FIELD, null)));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
   }
 
   @Test
@@ -132,7 +135,9 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withName("FOLIO")
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
-    assertNull(processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, CLEAR_FIELD, null))));
+    var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, CLEAR_FIELD, null)));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
   }
 
   @Test
@@ -141,7 +146,9 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withName("FOLIO")
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
-    assertNull(processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, null))));
+    var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, null)));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
   }
 
   @Test
@@ -154,7 +161,9 @@ class HoldingsDataProcessorTest extends BaseTest {
     when(locationClient.getLocationById(nonExistedLocationId))
       .thenThrow(FeignException.FeignClientException.class);
 
-    assertNull(processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, nonExistedLocationId))));
+    var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, nonExistedLocationId)));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);;
   }
 
   @Test
@@ -165,7 +174,9 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withName("FOLIO")
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
-    assertNull(processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, invalidLocationId))));
+    var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, invalidLocationId)));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
   }
 
   @Test
@@ -181,7 +192,10 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     when(locationClient.getLocationById(updatedLocationId)).thenReturn(updatedLocation);
 
-    assertNull(processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(EMAIL_ADDRESS, REPLACE_WITH, updatedLocationId),
-      rule(PERMANENT_LOCATION, ADD_TO_EXISTING, updatedLocationId))));
+    var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(EMAIL_ADDRESS, REPLACE_WITH, updatedLocationId),
+      rule(PERMANENT_LOCATION, ADD_TO_EXISTING, updatedLocationId)));
+
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
   }
 }

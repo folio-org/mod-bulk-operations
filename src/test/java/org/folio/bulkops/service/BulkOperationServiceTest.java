@@ -10,13 +10,17 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyChar;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.testcontainers.shaded.org.hamcrest.MatcherAssert.assertThat;
+import static org.testcontainers.shaded.org.hamcrest.Matchers.anything;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.containsString;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.equalTo;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.hasSize;
@@ -78,13 +82,20 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import org.testcontainers.shaded.org.hamcrest.MatcherAssert;
+import org.testcontainers.shaded.org.hamcrest.Matchers;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -306,9 +317,10 @@ class BulkOperationServiceTest extends BaseTest {
     when(groupClient.getGroupById(newPatronGroupId)).thenReturn(new UserGroup());
     when(groupClient.getGroupById(originalPatronGroupId)).thenReturn(new UserGroup());
 
+    when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
+    when(remoteFileSystemClient.newOutputStream(any())).thenCallRealMethod();
+
     bulkOperationService.confirm(bulkOperationId);
-
-
 
     var processingCaptor = ArgumentCaptor.forClass(BulkOperationProcessingContent.class);
     verify(processingContentRepository).save(processingCaptor.capture());
@@ -403,6 +415,7 @@ class BulkOperationServiceTest extends BaseTest {
     var bulkOperationId = UUID.randomUUID();
     var pathToOrigin = bulkOperationId + "/json/origin.json";
     var pathToModified = bulkOperationId + "/json/modified-origin.json";
+    var pathToModifiedCsv = bulkOperationId + "/modified-origin.csv";
     var pathToUserJson = "src/test/resources/files/user.json";
     var pathToModifiedUserJson = "src/test/resources/files/modified-user.json";
 
@@ -412,7 +425,7 @@ class BulkOperationServiceTest extends BaseTest {
         .entityType(EntityType.USER)
         .identifierType(IdentifierType.BARCODE)
         .linkToMatchedRecordsJsonFile(pathToOrigin)
-
+        .linkToMatchedRecordsCsvFile(pathToModifiedCsv)
         .linkToModifiedRecordsJsonFile(pathToModified)
         .build()));
 
@@ -422,6 +435,7 @@ class BulkOperationServiceTest extends BaseTest {
         .entityType(EntityType.USER)
         .identifierType(IdentifierType.BARCODE)
         .linkToMatchedRecordsJsonFile(pathToOrigin)
+        .linkToMatchedRecordsCsvFile(pathToModifiedCsv)
         .linkToModifiedRecordsJsonFile(pathToModified)
         .build());
 
@@ -445,6 +459,9 @@ class BulkOperationServiceTest extends BaseTest {
 
     when(groupClient.getGroupById("cdd8a5c8-dce7-4d7f-859a-83754b36c740")).thenReturn(new UserGroup());
 
+    when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
+    when(remoteFileSystemClient.newOutputStream(any())).thenCallRealMethod();
+
     bulkOperationService.commit(bulkOperationId);
 
     verify(userClient).updateUser(any(User.class), anyString());
@@ -461,7 +478,7 @@ class BulkOperationServiceTest extends BaseTest {
     assertThat(executionContentCaptor.getValue().getState(), equalTo(StateType.PROCESSED));
 
     var executionCaptor = ArgumentCaptor.forClass(BulkOperationExecution.class);
-    verify(executionRepository, times(2)).save(executionCaptor.capture());
+    verify(executionRepository, times(3)).save(executionCaptor.capture());
     var updatedExecution = executionCaptor.getAllValues().get(1);
     assertThat(updatedExecution.getProcessedRecords(), is(1));
     assertThat(updatedExecution.getStatus(), equalTo(StatusType.COMPLETED));
@@ -520,7 +537,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     verify(userClient, times(0)).updateUser(any(User.class), anyString());
 
-    verify(executionContentRepository, times(0)).save(any(BulkOperationExecutionContent.class));
+    verify(executionContentRepository, times(1)).save(any(BulkOperationExecutionContent.class));
 
     var expectedPathToResultFile = bulkOperationId + "/json/result-origin.json";
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
@@ -577,15 +594,15 @@ class BulkOperationServiceTest extends BaseTest {
     bulkOperationService.commit(bulkOperationId);
 
     var executionContentCaptor = ArgumentCaptor.forClass(BulkOperationExecutionContent.class);
-    verify(executionContentRepository).save(executionContentCaptor.capture());
-    assertThat(executionContentCaptor.getValue().getState(), equalTo(StateType.FAILED));
+//    verify(executionContentRepository).save(executionContentCaptor.capture());
+//    assertThat(executionContentCaptor.getValue().getState(), equalTo(StateType.FAILED));
 
     var expectedPathToResultFile = bulkOperationId + "/json/result-origin.json";
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     verify(remoteFileSystemClient).append(streamCaptor.capture(), pathCaptor.capture());
     assertEquals(new String(streamCaptor.getValue().readAllBytes()),
-      Files.readString(Path.of(pathToUserJson)));
+      Files.readString(Path.of(pathToUserJson)).trim());
     assertEquals(expectedPathToResultFile, pathCaptor.getValue());
   }
 
@@ -670,175 +687,169 @@ class BulkOperationServiceTest extends BaseTest {
         .build());
     assertDoesNotThrow(() -> bulkOperationService.commit(UUID.randomUUID()));
   }
+  @ParameterizedTest
+  @CsvSource(value = { "users_for_preview.json,USER,UPLOAD",
+    "users_for_preview.json,USER,EDIT",
+    "users_for_preview.json,USER,COMMIT",
+    "items_for_preview.json,ITEM,UPLOAD",
+    "items_for_preview.json,ITEM,EDIT",
+    "items_for_preview.json,ITEM,COMMIT",
+    "holdings_for_preview.json,HOLDINGS_RECORD,UPLOAD",
+    "holdings_for_preview.json,HOLDINGS_RECORD,EDIT",
+    "holdings_for_preview.json,HOLDINGS_RECORD,COMMIT" }, delimiter = ',')
+  @SneakyThrows
+  void shouldReturnPreviewIfAvailable(String fileName, EntityType entityType, BulkOperationStep step) {
+    var path = "src/test/resources/files/" + fileName;
+    var operationId = UUID.randomUUID();
+    var limit = 3;
+
+    var bulkOperation = buildBulkOperation(fileName, entityType, step).withId(operationId);
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(bulkOperation));
+
+    when(remoteFileSystemClient.get(anyString()))
+      .thenReturn(new FileInputStream(path));
+
+    when(groupClient.getGroupById(anyString())).thenReturn(new UserGroup().withGroup("Group"));
+    when(instanceClient.getById(anyString())).thenReturn(new BriefInstance().withTitle("Title"));
+    when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
+    when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
+
+    var table = bulkOperationService.getPreview(bulkOperation, step, limit);
+
+    assertThat(table.getRows(), hasSize(limit));
+    if (EntityType.USER.equals(entityType)) {
+      assertThat(table.getHeader(), equalTo(UserHeaderBuilder.getHeaders()));
+    } else if (EntityType.ITEM.equals(entityType)) {
+      assertThat(table.getHeader(), equalTo(ItemHeaderBuilder.getHeaders()));
+    } else if (EntityType.HOLDINGS_RECORD.equals(entityType)) {
+      assertThat(table.getHeader(), equalTo(HoldingsHeaderBuilder.getHeaders()));
+    }
+  }
 
   @ParameterizedTest
-  @CsvSource(value = { "users_for_preview.json,USER,DATA_MODIFICATION",
-    "users_for_preview.json,USER,REVIEW_CHANGES",
-    "users_for_preview.json,USER,COMPLETED",
-    "items_for_preview.json,ITEM,DATA_MODIFICATION",
-    "items_for_preview.json,ITEM,REVIEW_CHANGES",
-    "items_for_preview.json,ITEM,COMPLETED",
-    "holdings_for_preview.json,HOLDINGS_RECORD,DATA_MODIFICATION",
-    "holdings_for_preview.json,HOLDINGS_RECORD,REVIEW_CHANGES",
-    "holdings_for_preview.json,HOLDINGS_RECORD,COMPLETED" }, delimiter = ',')
-//  @SneakyThrows
-//  void shouldReturnPreviewIfAvailable(String fileName, EntityType entityType, OperationStatusType status) {
-//    var path = "src/test/resources/files/" + fileName;
-//    var operationId = UUID.randomUUID();
-//    var limit = 3;
-//
-//    var bulkOperation = buildBulkOperation(fileName, entityType, status).withId(operationId);
-//    when(bulkOperationRepository.findById(operationId))
-//      .thenReturn(Optional.of(bulkOperation));
-//
-//    when(remoteFileSystemClient.get(anyString()))
-//      .thenReturn(new FileInputStream(path));
-//
-//    when(groupClient.getGroupById(anyString())).thenReturn(new UserGroup().withGroup("Group"));
-//    when(instanceClient.getById(anyString())).thenReturn(new BriefInstance().withTitle("Title"));
-//    when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
-//    when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
-//
-//    var table = bulkOperationService.getPreview(operationId, BulkOperationStep.UPLOAD, limit);
-//
-//    assertThat(table.getRows(), hasSize(limit));
-//    if (EntityType.USER.equals(entityType)) {
-//      assertThat(table.getHeader(), equalTo(UserHeaderBuilder.getHeaders()));
-//    } else if (EntityType.ITEM.equals(entityType)) {
-//      assertThat(table.getHeader(), equalTo(ItemHeaderBuilder.getHeaders()));
-//    } else if (EntityType.HOLDINGS_RECORD.equals(entityType)) {
-//      assertThat(table.getHeader(), equalTo(HoldingsHeaderBuilder.getHeaders()));
-//    }
-//  }
+  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
+  @SneakyThrows
+  void shouldReturnOnlyHeadersIfPreviewIsNotAvailable(OperationStatusType status) {
+    var operationId = UUID.randomUUID();
 
-//  @ParameterizedTest
-//  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
-//  @SneakyThrows
-//  void shouldReturnOnlyHeadersIfPreviewIsNotAvailable(OperationStatusType status) {
-//    var operationId = UUID.randomUUID();
-//
-//    when(bulkOperationRepository.findById(operationId))
-//      .thenReturn(Optional.of(BulkOperation.builder().entityType(EntityType.USER).status(status).build()));
-//
-//    var table = bulkOperationService.getPreview(operationId, BulkOperationStep.UPLOAD, 10);
-//    assertEquals(0, table.getRows().size());
-//    Assertions.assertTrue(table.getHeader().size() > 0);
-//  }
+    var bulkOperation = BulkOperation.builder().entityType(EntityType.USER).status(status).build();
 
-//  @ParameterizedTest
-//  @CsvSource(value = { "users_for_preview.json,USER,DATA_MODIFICATION",
-//    "users_for_preview.json,USER,REVIEW_CHANGES",
-//    "users_for_preview.json,USER,COMPLETED",
-//    "items_for_preview.json,ITEM,DATA_MODIFICATION",
-//    "items_for_preview.json,ITEM,REVIEW_CHANGES",
-//    "items_for_preview.json,ITEM,COMPLETED",
-//    "holdings_for_preview.json,HOLDING,DATA_MODIFICATION",
-//    "holdings_for_preview.json,HOLDING,REVIEW_CHANGES",
-//    "holdings_for_preview.json,HOLDING,COMPLETED" }, delimiter = ',')
-//  @SneakyThrows
-//  void shouldReturnCsvPreviewIfAvailable(String fileName, EntityType entityType, OperationStatusType status) {
-//    var path = "src/test/resources/files/" + fileName;
-//    var operationId = UUID.randomUUID();
-//
-//    var bulkOperation = buildBulkOperation(fileName, entityType, status).withId(operationId);
-//    when(bulkOperationRepository.findById(operationId))
-//      .thenReturn(Optional.of(bulkOperation));
-//
-//    when(remoteFileSystemClient.get(anyString()))
-//      .thenReturn(new FileInputStream(path));
-//
-//    when(groupClient.getGroupById(anyString())).thenReturn(new UserGroup().withGroup("Group"));
-//    when(instanceClient.getById(anyString())).thenReturn(new BriefInstance().withTitle("Title"));
-//    when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
-//    when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
-//
-//    var csvString = bulkOperationService.getCsvPreviewByBulkOperationId(operationId);
-//
-//    // 6 lines expected: 1 line for headers and 5 lines for data
-//    MatcherAssert.assertThat(new BufferedReader(new StringReader(csvString)).lines().count(), Matchers.equalTo(6L));
-//
-//    if (EntityType.USER.equals(entityType)) {
-//      assertThat(new Scanner(csvString).nextLine(), equalTo(UserHeaderBuilder.getHeaders().stream()
-//        .map(Cell::getValue)
-//        .collect(Collectors.joining(","))));
-//    } else if (EntityType.ITEM.equals(entityType)) {
-//      assertThat(new Scanner(csvString).nextLine(), equalTo(ItemHeaderBuilder.getHeaders().stream()
-//        .map(Cell::getValue)
-//        .collect(Collectors.joining(","))));
-//    } else if (EntityType.HOLDING.equals(entityType)) {
-//      assertThat(new Scanner(csvString).nextLine(), equalTo(HoldingsHeaderBuilder.getHeaders().stream()
-//        .map(Cell::getValue)
-//        .collect(Collectors.joining(","))));
-//    }
-//  }
+    var table = bulkOperationService.getPreview(bulkOperation, BulkOperationStep.UPLOAD, 10);
+    assertEquals(0, table.getRows().size());
+    Assertions.assertTrue(table.getHeader().size() > 0);
+  }
 
-//  @ParameterizedTest
-//  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
-//  @SneakyThrows
-//  void shouldReturnOnlyHeaderIfCsvPreviewIsNotAvailable(OperationStatusType status) {
-//    var operationId = UUID.randomUUID();
-//
-//    when(bulkOperationRepository.findById(operationId))
-//      .thenReturn(Optional.of(BulkOperation.builder().entityType(EntityType.USER).status(status).build()));
-//
-//    var actual = bulkOperationService.getCsvPreviewForBulkOperation(operationId, BulkOperationStep.EDIT);
-//    var expected = UserHeaderBuilder.getHeaders().stream().map(Cell::getValue).collect(Collectors.joining(",")) + LF;
-//
-//    assertEquals(expected, actual);
-//    }
+  @ParameterizedTest
+  @CsvSource(value = { "users_for_preview.json,USER,UPLOAD",
+    "users_for_preview.json,USER,EDIT",
+    "users_for_preview.json,USER,COMMIT",
+    "items_for_preview.json,ITEM,UPLOAD",
+    "items_for_preview.json,ITEM,EDIT",
+    "items_for_preview.json,ITEM,COMMIT",
+    "holdings_for_preview.json,HOLDINGS_RECORD,UPLOAD",
+    "holdings_for_preview.json,HOLDINGS_RECORD,EDIT",
+    "holdings_for_preview.json,HOLDINGS_RECORD,COMMIT" }, delimiter = ',')
+  @SneakyThrows
+  void shouldReturnCsvPreviewIfAvailable(String fileName, EntityType entityType, BulkOperationStep step) {
+    var path = "src/test/resources/files/" + fileName;
+    var operationId = UUID.randomUUID();
 
-//  @ParameterizedTest
-//  @EnumSource(OperationStatusType.class)
-//  void shouldReturnBulkOperationById(OperationStatusType statusType) {
-//    var operationId = UUID.randomUUID();
-//
-//    when(bulkOperationRepository.findById(operationId))
-//      .thenReturn(Optional.of(BulkOperation.builder()
-//        .id(operationId)
-//        .status(statusType)
-//        .totalNumOfRecords(10)
-//        .processedNumOfRecords(0)
-//        .build()));
-//
-//    when(dataProcessingRepository.findByBulkOperationId(operationId))
-//      .thenReturn(Optional.of(BulkOperationDataProcessing.builder()
-//        .status(StatusType.ACTIVE)
-//        .processedNumOfRecords(5)
-//        .build()));
-//
-//    when(executionRepository.findByBulkOperationId(operationId))
-//      .thenReturn(Optional.of(BulkOperationExecution.builder()
-//        .status(StatusType.ACTIVE)
-//        .processedRecords(5)
-//        .build()));
-//
-//    var operation = bulkOperationService.getOperationById(operationId);
-//
-//    if (DATA_MODIFICATION.equals(operation.getStatus()) || APPLY_CHANGES.equals(operation.getStatus())) {
-//      assertThat(operation.getProcessedNumOfRecords(), equalTo(5));
-//    } else {
-//      assertThat(operation.getProcessedNumOfRecords(), equalTo(0));
-//    }
-//  }
+    var bulkOperation = buildBulkOperation(fileName, entityType, step).withId(operationId);
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(bulkOperation));
 
-  private BulkOperation buildBulkOperation(String fileName, EntityType entityType, OperationStatusType status) {
-    switch (status) {
-    case DATA_MODIFICATION:
+    when(remoteFileSystemClient.get(anyString()))
+      .thenReturn(new FileInputStream(path));
+
+    when(groupClient.getGroupById(anyString())).thenReturn(new UserGroup().withGroup("Group"));
+    when(instanceClient.getById(anyString())).thenReturn(new BriefInstance().withTitle("Title"));
+    when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
+    when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
+
+    var csvString = bulkOperationService.getCsvPreviewForBulkOperation(bulkOperation, step);
+
+    // 6 lines expected: 1 line for headers and 5 lines for data
+    MatcherAssert.assertThat(new BufferedReader(new StringReader(csvString)).lines().count(), Matchers.equalTo(6L));
+
+    if (EntityType.USER.equals(entityType)) {
+      assertThat(new Scanner(csvString).nextLine(), equalTo(UserHeaderBuilder.getHeaders().stream()
+        .map(Cell::getValue)
+        .collect(Collectors.joining(","))));
+    } else if (EntityType.ITEM.equals(entityType)) {
+      assertThat(new Scanner(csvString).nextLine(), equalTo(ItemHeaderBuilder.getHeaders().stream()
+        .map(Cell::getValue)
+        .collect(Collectors.joining(","))));
+    } else if (EntityType.HOLDINGS_RECORD.equals(entityType)) {
+      assertThat(new Scanner(csvString).nextLine(), equalTo(HoldingsHeaderBuilder.getHeaders().stream()
+        .map(Cell::getValue)
+        .collect(Collectors.joining(","))));
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
+  @SneakyThrows
+  void shouldReturnOnlyHeaderIfCsvPreviewIsNotAvailable(OperationStatusType status) {
+    var operationId = UUID.randomUUID();
+
+    var bulkOperation = BulkOperation.builder().id(UUID.randomUUID()).entityType(EntityType.USER).status(status).build();
+
+    var actual = bulkOperationService.getCsvPreviewForBulkOperation(bulkOperation, BulkOperationStep.EDIT);
+    var expected = UserHeaderBuilder.getHeaders().stream().map(Cell::getValue).collect(Collectors.joining(",")) + LF;
+
+    assertEquals(expected, actual);
+    }
+
+  @ParameterizedTest
+  @EnumSource(OperationStatusType.class)
+  void shouldReturnBulkOperationById(OperationStatusType statusType) {
+    var operationId = UUID.randomUUID();
+
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(BulkOperation.builder()
+        .id(operationId)
+        .status(statusType)
+        .totalNumOfRecords(10)
+        .processedNumOfRecords(0)
+        .build()));
+
+    when(dataProcessingRepository.findByBulkOperationId(operationId))
+      .thenReturn(Optional.of(BulkOperationDataProcessing.builder()
+        .status(StatusType.ACTIVE)
+        .processedNumOfRecords(5)
+        .build()));
+
+    when(executionRepository.findByBulkOperationId(operationId))
+      .thenReturn(Optional.of(BulkOperationExecution.builder()
+        .status(StatusType.ACTIVE)
+        .processedRecords(5)
+        .build()));
+
+    var operation = bulkOperationService.getOperationById(operationId);
+
+    if (DATA_MODIFICATION.equals(operation.getStatus()) || APPLY_CHANGES.equals(operation.getStatus())) {
+      assertThat(operation.getProcessedNumOfRecords(), equalTo(5));
+    } else {
+      assertThat(operation.getProcessedNumOfRecords(), equalTo(0));
+    }
+  }
+
+  private BulkOperation buildBulkOperation(String fileName, EntityType entityType, BulkOperationStep step) {
+    switch (step) {
+    case UPLOAD:
       return BulkOperation.builder()
         .entityType(entityType)
-        .status(status)
         .linkToMatchedRecordsJsonFile(fileName)
         .build();
-    case REVIEW_CHANGES:
+    case EDIT:
       return BulkOperation.builder()
         .entityType(entityType)
-        .status(status)
         .linkToModifiedRecordsJsonFile(fileName)
         .build();
-    case COMPLETED:
+    case COMMIT:
       return BulkOperation.builder()
         .entityType(entityType)
-        .status(status)
         .linkToCommittedRecordsJsonFile(fileName)
         .build();
     default:

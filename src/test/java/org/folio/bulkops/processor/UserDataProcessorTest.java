@@ -10,6 +10,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.PATRON_GROUP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.processor.UserDataProcessor.DATE_TIME_FORMAT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
@@ -50,23 +51,35 @@ class UserDataProcessorTest extends BaseTest {
 
   @Test
   void testUpdateUserWithInvalidData() {
-    assertNull(processor.process(IDENTIFIER, new User(), rules(rule(EXPIRATION_DATE, FIND, null),
+    var actual = processor.process(IDENTIFIER, new User(), rules(rule(EXPIRATION_DATE, FIND, null),
       rule(EXPIRATION_DATE, REPLACE_WITH, null),
       rule(EXPIRATION_DATE, REPLACE_WITH, "1234-43")
-    )));
+    ));
+
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
 
     var patronGroup = UUID.randomUUID().toString();
     when(groupClient.getGroupById(patronGroup)).thenThrow(new NotFoundException("Not found"));
-    assertNull(processor.process(IDENTIFIER, new User(), rules(
+    actual = processor.process(IDENTIFIER, new User(), rules(
       rule(PATRON_GROUP, FIND, null),
       rule(PATRON_GROUP, REPLACE_WITH, null),
-      rule(PATRON_GROUP, REPLACE_WITH, patronGroup))));
+      rule(PATRON_GROUP, REPLACE_WITH, patronGroup)));
 
-    assertNull(processor.process(IDENTIFIER, new User(), rules(rule(EMAIL_ADDRESS, FIND, null),
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
+
+    actual = processor.process(IDENTIFIER, new User(), rules(rule(EMAIL_ADDRESS, FIND, null),
       rule(EMAIL_ADDRESS, FIND_AND_REPLACE, "@mail", null),
-      rule(EXPIRATION_DATE, REPLACE_WITH, null, "@gmail"))));
+      rule(EXPIRATION_DATE, REPLACE_WITH, null, "@gmail")));
 
-    assertNull(processor.process(IDENTIFIER, new User(), rules(rule(PERMANENT_LOCATION, FIND, null))));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
+
+    actual = processor.process(IDENTIFIER, new User(), rules(rule(PERMANENT_LOCATION, FIND, null)));
+
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
   }
 
   @Test

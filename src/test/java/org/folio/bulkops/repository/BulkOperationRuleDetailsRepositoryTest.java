@@ -60,6 +60,7 @@ class BulkOperationRuleDetailsRepositoryTest extends BaseTest {
 
   private BulkOperationRuleDetails createEntity() {
     var bulkOperation = bulkOperationRepository.save(BulkOperation.builder()
+      .id(UUID.randomUUID())
       .userId(UUID.randomUUID())
       .operationType(UPDATE)
       .entityType(USER)

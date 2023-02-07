@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BatchStatus;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.dto.OperationStatusType;

@@ -12,6 +12,7 @@ import static org.folio.bulkops.processor.ItemDataProcessor.BULK_EDIT_CONFIGURAT
 import static org.folio.bulkops.processor.ItemDataProcessor.MODULE_NAME;
 import static org.folio.bulkops.processor.ItemDataProcessor.STATUSES_CONFIG_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
@@ -74,7 +75,9 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Test
   void testClearItemStatus() {
-    assertNull(processor.process(IDENTIFIER, new Item(), rules(rule(STATUS, CLEAR_FIELD, null))));
+    var actual = processor.process(IDENTIFIER, new Item(), rules(rule(STATUS, CLEAR_FIELD, null)));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
   }
 
   @Test
@@ -130,12 +133,16 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Test
   void testClearPermanentLoanType() {
-    assertNull(processor.process(IDENTIFIER, new Item(), rules(rule(PERMANENT_LOAN_TYPE, CLEAR_FIELD, null))));
+    var actual = processor.process(IDENTIFIER, new Item(), rules(rule(PERMANENT_LOAN_TYPE, CLEAR_FIELD, null)));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
   }
 
   @Test
   void testReplaceLoanTypeWithEmptyValue() {
-    assertNull(processor.process(IDENTIFIER, new Item(), rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, null))));
+    var actual = processor.process(IDENTIFIER, new Item(), rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, null)));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
   }
 
   @Test
@@ -153,10 +160,14 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Test
   void testUpdateRestrictedItemStatus() {
-    assertNull(processor.process(IDENTIFIER, new Item()
-      .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AGED_TO_LOST)), rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.MISSING.getValue()))));
+    var actual = processor.process(IDENTIFIER, new Item()
+      .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AGED_TO_LOST)), rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.MISSING.getValue())));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
 
-    assertNull(processor.process(IDENTIFIER, new Item()
-      .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AVAILABLE)), rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.IN_TRANSIT.getValue()))));
+    actual = processor.process(IDENTIFIER, new Item()
+      .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AVAILABLE)), rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.IN_TRANSIT.getValue())));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
   }
 }
