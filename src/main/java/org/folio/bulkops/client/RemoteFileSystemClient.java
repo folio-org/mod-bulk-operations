@@ -2,19 +2,26 @@ package org.folio.bulkops.client;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.Writer;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.folio.bulkops.exception.ServerErrorException;
+import org.folio.s3.client.AwsS3Client;
 import org.folio.s3.client.FolioS3Client;
+import org.folio.s3.client.S3ClientProperties;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
+import software.amazon.awssdk.services.s3.S3Client;
 
 @Lazy
 @Component
@@ -40,7 +47,7 @@ public class RemoteFileSystemClient {
     remoteFolioS3Client.remove(filename);
   }
 
-  public OutputStream newOutputStream(String path) {
+  private OutputStream newOutputStream(String path) {
 
     return new OutputStream() {
 
@@ -62,7 +69,7 @@ public class RemoteFileSystemClient {
     };
   }
 
-  public BufferedWriter writer(String path) {
-    return new BufferedWriter(new OutputStreamWriter(newOutputStream(path)));
+  public Writer writer(String path) {
+    return new OutputStreamWriter(newOutputStream(path));
   }
 }

@@ -200,8 +200,7 @@ public class BulkOperationService {
 
     try (var matchedJsonFileReader = remoteFileSystemClient.get(linkToMatchedRecordsJsonFile);
          var modifiedCsvFileWriter = remoteFileSystemClient.writer(modifiedCsvFileName);
-         var modifiedJsonFileWriter = remoteFileSystemClient.writer(modifiedJsonFileName);
-         var modifiedForPreviewJsonFileWriter = remoteFileSystemClient.writer(modifiedForPreviewJsonFileName)) {
+         var modifiedJsonFileWriter = remoteFileSystemClient.writer(modifiedJsonFileName)) {
 
       var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
       strategy.setType(clazz);
@@ -228,16 +227,17 @@ public class BulkOperationService {
 
         var result = objectMapper.writeValueAsString(modified.getEntity()) + LF;
 
-        modifiedForPreviewJsonFileWriter.write(result);
+        remoteFileSystemClient.append(new ByteArrayInputStream(result.getBytes()), modifiedForPreviewJsonFileName);
+
         bulkOperation.setLinkToModifiedForPreviewRecordsJsonFile(modifiedForPreviewJsonFileName);
+        bulkOperation.setLinkToModifiedRecordsCsvFile(modifiedCsvFileName);
 
         if (modified.isChanged()) {
           if (!isChangesPresented) {
             isChangesPresented = true;
             bulkOperation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
-            bulkOperation.setLinkToModifiedRecordsCsvFile(modifiedCsvFileName);
           }
-          modifiedJsonFileWriter.write(result);
+          objectMapper.writeValue(modifiedJsonFileWriter, modified.getEntity());
         } else {
           committedNumOfErrors++;
         }
@@ -314,8 +314,7 @@ public class BulkOperationService {
 
       try (var originalFileReader = new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile()));
            var modifiedFileReader = new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsJsonFile()));
-           var writerForCsvFile = remoteFileSystemClient.writer(resultCsvFileName);
-           var writerForJsonFile = remoteFileSystemClient.writer(resultJsonFileName)) {
+           var writerForCsvFile = remoteFileSystemClient.writer(resultCsvFileName)) {
 
         var originalFileIterator = objectMapper.readValues(new JsonFactory().createParser(originalFileReader), clazz);
         var modifiedFileIterator = objectMapper.readValues(new JsonFactory().createParser(modifiedFileReader), clazz);
@@ -337,7 +336,7 @@ public class BulkOperationService {
           try {
             var result = updateEntityIfNeeded(original, modified, bulkOperation, clazz);
             var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
-            writerForJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
+            remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY)).getBytes()), resultJsonFileName);
 
             // TODO Should be refactored to use open csv
             if (User.class == clazz) {
@@ -436,6 +435,7 @@ public class BulkOperationService {
           .map(adapter::convertEntityToUnifiedTableRow)
           .collect(Collectors.toList()));
     } catch (Exception e) {
+      log.error(e);
       return adapter.getEmptyTableWithHeaders();
     }
   }
@@ -562,11 +562,16 @@ public class BulkOperationService {
 
   private void deletePreviouslyCreatedArtifacts(UUID bulkOperationId, BulkOperation bulkOperation) {
     errorService.deleteErrorsByBulkOperationId(bulkOperationId);
-    bulkOperation.setCommittedNumOfErrors(0);
-    if (bulkOperation.getLinkToModifiedRecordsJsonFile() != null) {
+    if (Objects.nonNull(bulkOperation.getLinkToModifiedRecordsJsonFile())) {
       remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsJsonFile());
+    }
+    if (Objects.nonNull(bulkOperation.getLinkToModifiedRecordsCsvFile())) {
       remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsCsvFile());
     }
+    if (Objects.nonNull(bulkOperation.getLinkToModifiedForPreviewRecordsJsonFile())) {
+      remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedForPreviewRecordsJsonFile());
+    }
+    bulkOperation.setCommittedNumOfErrors(0);
   }
 
   private BulkOperation applyChanges(BulkOperation bulkOperation) {
