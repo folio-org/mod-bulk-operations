@@ -199,8 +199,7 @@ public class BulkOperationService {
 
 
     try (var matchedJsonFileReader = remoteFileSystemClient.get(linkToMatchedRecordsJsonFile);
-         var modifiedCsvFileWriter = remoteFileSystemClient.writer(modifiedCsvFileName);
-         var modifiedJsonFileWriter = remoteFileSystemClient.writer(modifiedJsonFileName)) {
+         var modifiedCsvFileWriter = remoteFileSystemClient.writer(modifiedCsvFileName)) {
 
       var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
       strategy.setType(clazz);
@@ -237,7 +236,7 @@ public class BulkOperationService {
             isChangesPresented = true;
             bulkOperation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
           }
-          objectMapper.writeValue(modifiedJsonFileWriter, modified.getEntity());
+          remoteFileSystemClient.append(new ByteArrayInputStream(result.getBytes()), modifiedJsonFileName);
         } else {
           committedNumOfErrors++;
         }
@@ -514,11 +513,11 @@ public class BulkOperationService {
         bulkOperationRepository.save(bulkOperation);
         return bulkOperation;
       } else if (BulkOperationStep.EDIT == step) {
-        deletePreviouslyCreatedArtifacts(bulkOperationId, bulkOperation);
         if (DATA_MODIFICATION.equals(bulkOperation.getStatus()) || REVIEW_CHANGES.equals(bulkOperation.getStatus())) {
           if (MANUAL == approach) {
             applyChanges(bulkOperation);
           } else {
+            deletePreviouslyCreatedArtifacts(bulkOperationId, bulkOperation);
             confirmBulkOperation(bulkOperationId);
           }
           return bulkOperation;
@@ -576,13 +575,14 @@ public class BulkOperationService {
 
   private BulkOperation applyChanges(BulkOperation bulkOperation) {
     var bulkOperationId = bulkOperation.getId();
-    var linkToOriginFile = bulkOperation.getLinkToMatchedRecordsJsonFile();
+    var linkToMatchedRecordsJsonFile = bulkOperation.getLinkToMatchedRecordsJsonFile();
     var linkToModifiedCsvFile = bulkOperation.getLinkToModifiedRecordsCsvFile();
-    var linkToModifiedFile = bulkOperationId + "/json/modified-" + FilenameUtils.getName(linkToOriginFile);
+    var linkToModifiedRecordsJson = bulkOperationId + "/json/modified-" + FilenameUtils.getName(linkToMatchedRecordsJsonFile);
+    var linkToModifiedForPreviewRecordsJson = bulkOperationId + "/json/preview-" + FilenameUtils.getName(linkToMatchedRecordsJsonFile);
 
-    try (Reader originalFileReader = new InputStreamReader(remoteFileSystemClient.get(linkToOriginFile));
+    try (Reader originalFileReader = new InputStreamReader(remoteFileSystemClient.get(linkToMatchedRecordsJsonFile));
          Reader modifiedFileReader = new InputStreamReader(remoteFileSystemClient.get(linkToModifiedCsvFile));
-         Writer writer = remoteFileSystemClient.writer(linkToModifiedFile)) {
+         Writer modifiedRecordsJsonFileWriter = remoteFileSystemClient.writer(linkToModifiedRecordsJson)) {
 
       CsvToBean<User> csvToBean = new CsvToBeanBuilder<User>(modifiedFileReader)
         .withType(User.class)
@@ -601,18 +601,20 @@ public class BulkOperationService {
         var originalEntity = originalJsonFileIterator.next();
         var modifiedEntity = modifiedCsvFileIterator.next();
 
+        remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(modifiedEntity) + LF).getBytes()), linkToModifiedForPreviewRecordsJson);
+
         if (EqualsBuilder.reflectionEquals(originalEntity, modifiedEntity, true, entityType, "metadata", "createdDate", "updatedDate")) {
           committedNumOfErrors++;
           errorService.saveError(bulkOperationId, originalEntity.getIdentifier(bulkOperation.getIdentifierType()), "No change in value required");
         } else {
-          writer.write(objectMapper.writeValueAsString(modifiedEntity));
+          modifiedRecordsJsonFileWriter.write(objectMapper.writeValueAsString(modifiedEntity));
         }
       }
 
       bulkOperation.setCommittedNumOfErrors(committedNumOfErrors);
       bulkOperation.setStatus(REVIEW_CHANGES);
-      bulkOperation.setLinkToModifiedRecordsJsonFile(linkToModifiedFile);
-
+      bulkOperation.setLinkToModifiedRecordsJsonFile(linkToModifiedRecordsJson);
+      bulkOperation.setLinkToModifiedForPreviewRecordsJsonFile(linkToModifiedForPreviewRecordsJson);
       bulkOperationRepository.save(bulkOperation);
       return bulkOperation;
 
