@@ -442,8 +442,6 @@ public class BulkOperationService {
     }
   }
 
-
-
   public String getCsvPreviewForBulkOperation(BulkOperation bulkOperation, BulkOperationStep step) {
     var table = getPreview(bulkOperation, step, Integer.MAX_VALUE);
     return table.getHeader()
@@ -562,15 +560,15 @@ public class BulkOperationService {
     }
   }
 
-  private void apply(BulkOperation bulkOperation) {
+  public void apply(BulkOperation bulkOperation) {
     var bulkOperationId = bulkOperation.getId();
-    var linkToOriginFile = bulkOperation.getLinkToMatchedRecordsJsonFile();
-    var linkToModifiedCsvFile = bulkOperation.getLinkToModifiedRecordsCsvFile();
-    var linkToModifiedFile = bulkOperationId + "/json/modified-" + FilenameUtils.getName(linkToOriginFile);
+    var linkToMatchedRecordsJsonFile = bulkOperation.getLinkToMatchedRecordsJsonFile();
+    var linkToModifiedRecordsCsvFile = bulkOperation.getLinkToModifiedRecordsCsvFile();
+    var linkToModifiedRecordsJsonFile = bulkOperationId + "/json/modified-" + FilenameUtils.getName(linkToMatchedRecordsJsonFile);
 
-    try (Reader originalFileReader = new InputStreamReader(remoteFileSystemClient.get(linkToOriginFile));
-         Reader modifiedFileReader = new InputStreamReader(remoteFileSystemClient.get(linkToModifiedCsvFile));
-         Writer writer = remoteFileSystemClient.writer(linkToModifiedFile)) {
+    try (Reader originalFileReader = new InputStreamReader(remoteFileSystemClient.get(linkToMatchedRecordsJsonFile));
+         Reader modifiedFileReader = new InputStreamReader(remoteFileSystemClient.get(linkToModifiedRecordsCsvFile));
+         Writer writer = remoteFileSystemClient.writer(linkToModifiedRecordsJsonFile)) {
 
       CsvToBean<User> csvToBean = new CsvToBeanBuilder<User>(modifiedFileReader)
         .withType(User.class)
@@ -599,7 +597,7 @@ public class BulkOperationService {
 
       bulkOperation.setCommittedNumOfErrors(committedNumOfErrors);
       bulkOperation.setStatus(REVIEW_CHANGES);
-      bulkOperation.setLinkToModifiedRecordsJsonFile(linkToModifiedFile);
+      bulkOperation.setLinkToModifiedRecordsJsonFile(linkToModifiedRecordsJsonFile);
       bulkOperationRepository.save(bulkOperation);
 
     } catch (Exception e) {

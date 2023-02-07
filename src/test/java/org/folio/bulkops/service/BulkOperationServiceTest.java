@@ -36,6 +36,7 @@ import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.bean.UserGroupCollection;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
@@ -491,6 +492,55 @@ class BulkOperationServiceTest extends BaseTest {
     assertThat(secondCapture.getLinkToCommittedRecordsJsonFile(), equalTo(expectedPathToResultFile));
     assertThat(secondCapture.getStatus(), equalTo(OperationStatusType.COMPLETED));
     assertThat(secondCapture.getEndTime(), notNullValue());
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldApplyChanges() {
+    var bulkOperationId = UUID.randomUUID();
+    var pathToOrigin = bulkOperationId + "/json/origin.json";
+    var pathToModified = bulkOperationId + "/json/modified-origin.json";
+    var pathToModifiedCsv = bulkOperationId + "/modified-origin.csv";
+    var pathToUserJson = "src/test/resources/files/user.json";
+    var pathToModifiedUserJson = "src/test/resources/files/modified-user.json";
+    var pathToModifiedUserCsv = "src/test/resources/files/modified-user.csv";
+
+
+    var bulkOperation = BulkOperation.builder()
+      .id(bulkOperationId)
+      .entityType(EntityType.USER)
+      .identifierType(IdentifierType.BARCODE)
+      .linkToMatchedRecordsJsonFile(pathToOrigin)
+      .linkToMatchedRecordsCsvFile(pathToModifiedCsv)
+      .linkToModifiedRecordsJsonFile(pathToModified)
+      .linkToModifiedRecordsCsvFile(pathToModifiedCsv)
+      .build();
+
+    when(remoteFileSystemClient.get(pathToOrigin))
+      .thenReturn(new FileInputStream(pathToUserJson));
+
+    when(remoteFileSystemClient.get(pathToModified))
+      .thenReturn(new FileInputStream(pathToModifiedUserJson));
+
+    when(remoteFileSystemClient.get(pathToModifiedCsv))
+      .thenReturn(new FileInputStream(pathToModifiedUserCsv));
+
+    var expectedPathToResultFile = bulkOperationId + "/json/modified-origin.json";
+    when(remoteFileSystemClient.get(expectedPathToResultFile))
+      .thenReturn(new FileInputStream(pathToModifiedUserJson));
+
+    when(groupClient.getGroupByQuery(String.format("group==\"%s\"", "staff"))).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup())));
+
+    when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
+    when(remoteFileSystemClient.newOutputStream(any())).thenCallRealMethod();
+
+    bulkOperationService.apply(bulkOperation);
+
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository, times(1)).save(operationCaptor.capture());
+    var capture = operationCaptor.getAllValues().get(0);
+    assertThat(capture.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
+    assertThat(capture.getLinkToModifiedRecordsJsonFile(), equalTo(expectedPathToResultFile));
   }
 
   @Test
