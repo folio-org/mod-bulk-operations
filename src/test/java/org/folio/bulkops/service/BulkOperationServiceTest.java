@@ -5,6 +5,7 @@ import static org.awaitility.Awaitility.await;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.junit.Assert.assertNotNull;
@@ -193,7 +194,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.put(any(InputStream.class), eq(operationId + "/barcodes.csv")))
       .thenReturn("modified.csv");
 
-    when(remoteFileSystemClient.getNumOfLines(eq("modified.csv")))
+    when(remoteFileSystemClient.getNumOfLines("modified.csv"))
       .thenReturn(3);
 
     bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, true, operationId, UUID.randomUUID(), file);
@@ -310,7 +311,29 @@ class BulkOperationServiceTest extends BaseTest {
     assertEquals(OperationStatusType.FAILED, operationCaptor.getAllValues().get(3).getStatus());
   }
 
+  @SneakyThrows
   @Test
+  void shouldStartDataExportJobForQueryApproach() {
+    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
+
+    var bulkOperationId = UUID.randomUUID();
+
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(BulkOperation.builder().id(bulkOperationId).status(OperationStatusType.NEW).build());
+
+    var jobId = UUID.randomUUID();
+    when(dataExportSpringClient.upsertJob(any(Job.class)))
+      .thenReturn(Job.builder().id(jobId).status(JobStatus.SCHEDULED).build());
+
+    bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, false, null, null, file);
+    bulkOperationService.startBulkOperation(bulkOperationId, any(UUID.class), new BulkOperationStart().approach(ApproachType.QUERY).step(BulkOperationStep.UPLOAD));
+
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
+    assertEquals(OperationStatusType.RETRIEVING_RECORDS, operationCaptor.getAllValues().get(3).getStatus());
+  }
+  @ParameterizedTest
+  @EnumSource(value = ApproachType.class, names = {"IN_APP", "QUERY"}, mode = EnumSource.Mode.INCLUDE)
   @SneakyThrows
   void shouldConfirmChanges() {
     var bulkOperationId = UUID.randomUUID();
@@ -323,10 +346,11 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkOperationRepository.findById(any(UUID.class)))
       .thenReturn(Optional.of(BulkOperation.builder()
         .id(bulkOperationId)
-          .status(DATA_MODIFICATION)
+        .status(DATA_MODIFICATION)
         .entityType(EntityType.USER)
         .identifierType(IdentifierType.BARCODE)
         .linkToMatchedRecordsJsonFile(pathToOrigin)
+        .linkToModifiedRecordsJsonFile(pathToModified)
         .build()));
 
     when(ruleService.getRules(bulkOperationId))
@@ -356,7 +380,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
     when(remoteFileSystemClient.newOutputStream(any())).thenCallRealMethod();
 
-    bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
+    bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.QUERY).step(EDIT));
 
     var processingCaptor = ArgumentCaptor.forClass(BulkOperationProcessingContent.class);
     verify(processingContentRepository).save(processingCaptor.capture());
@@ -529,6 +553,23 @@ class BulkOperationServiceTest extends BaseTest {
     assertThat(secondCapture.getLinkToCommittedRecordsJsonFile(), equalTo(expectedPathToResultFile));
     assertThat(secondCapture.getStatus(), equalTo(OperationStatusType.COMPLETED));
     assertThat(secondCapture.getEndTime(), notNullValue());
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApproachType.class)
+  void shouldNotCommitCompletedOperation(ApproachType approach) {
+    var bulkOperationId = UUID.randomUUID();
+
+    when(bulkOperationRepository.findById(any(UUID.class)))
+      .thenReturn(Optional.of(BulkOperation.builder()
+        .id(bulkOperationId)
+        .entityType(EntityType.USER)
+        .status(COMPLETED)
+        .identifierType(IdentifierType.BARCODE)
+        .build()));
+
+    assertThrows(BadRequestException.class, () -> bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(approach).step(COMMIT)));
+
   }
 
   @Test
@@ -809,7 +850,6 @@ class BulkOperationServiceTest extends BaseTest {
   @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
   @SneakyThrows
   void shouldReturnOnlyHeadersIfPreviewIsNotAvailable(OperationStatusType status) {
-    var operationId = UUID.randomUUID();
 
     var bulkOperation = BulkOperation.builder().entityType(EntityType.USER).status(status).build();
 

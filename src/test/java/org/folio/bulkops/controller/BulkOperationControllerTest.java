@@ -12,6 +12,7 @@ import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -69,31 +70,65 @@ class BulkOperationControllerTest extends BaseTest {
   @Autowired
   private JpaCqlRepository<BulkOperation, UUID> bulkOperationCqlRepository;
 
-  @Test
-  void shouldDownloadFileWithPreview() throws Exception {
+  @ParameterizedTest
+  @EnumSource(value = FileContentType.class)
+  void shouldDownloadFileWithPreview(FileContentType type) throws Exception {
     var operationId = UUID.randomUUID();
 
     when(remoteFileSystemClient.get(any(String.class))).thenReturn(InputStream.nullInputStream());
 
     when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(BulkOperation.builder()
       .id(UUID.randomUUID())
-      .linkToTriggeringCsvFile("F")
-      .linkToMatchedRecordsJsonFile("A")
-      .linkToMatchedRecordsCsvFile("B")
-      .linkToMatchedRecordsErrorsCsvFile("C")
-      .linkToModifiedRecordsJsonFile("D")
-      .linkToModifiedRecordsCsvFile("E")
-      .linkToCommittedRecordsJsonFile("F")
-      .linkToCommittedRecordsCsvFile("G")
-      .linkToCommittedRecordsErrorsCsvFile("H")
+      .linkToTriggeringCsvFile("A")
+      .linkToMatchedRecordsJsonFile("B")
+      .linkToMatchedRecordsCsvFile("C")
+      .linkToMatchedRecordsErrorsCsvFile("D")
+      .linkToModifiedRecordsJsonFile("E")
+      .linkToModifiedRecordsCsvFile("F")
+      .linkToCommittedRecordsJsonFile("G")
+      .linkToCommittedRecordsCsvFile("H")
+      .linkToCommittedRecordsErrorsCsvFile("I")
       .build());
 
-    mockMvc.perform(get(format("/bulk-operations/%s/download?fileContentType=TRIGGERING_FILE", operationId))
+    mockMvc.perform(get(format("/bulk-operations/%s/download?fileContentType=%s", operationId, type))
         .headers(defaultHeaders())
         .contentType(APPLICATION_JSON))
       .andExpect(status().isOk());
-
   }
+
+  @Test
+  @SneakyThrows
+  @Disabled
+  void shouldReturnPreview() {
+    var operationId = UUID.randomUUID();
+
+    when(bulkOperationService.getBulkOperationOrThrow(any(UUID.class))).thenReturn(BulkOperation.builder().id(operationId).build());
+
+    var contentUpdates = new BulkOperationRuleCollection()
+      .bulkOperationRules(List.of(new BulkOperationRule()
+        .id(UUID.randomUUID())
+        .bulkOperationId(operationId)
+        .ruleDetails(new BulkOperationRuleRuleDetails()
+          .option(UpdateOptionType.PERMANENT_LOCATION)
+          .actions(List.of(new Action()
+            .type(UpdateActionType.REPLACE_WITH)
+            .updated("location"))))))
+      .totalRecords(1);
+
+    mockMvc.perform(post(format("/bulk-operations/%s/content-update", operationId))
+        .content(OBJECT_MAPPER.writeValueAsString(contentUpdates))
+        .headers(defaultHeaders())
+        .contentType(APPLICATION_JSON))
+      .andExpect(status().isOk());
+  }
+
+
+
+
+
+
+
+
 
   @Test
   @SneakyThrows

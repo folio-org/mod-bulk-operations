@@ -1,37 +1,15 @@
 package org.folio.bulkops.service;
 
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.LF;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
-import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
-import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
-import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
-import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
-import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
-import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
-import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
-import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
-import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.Writer;
-import java.time.LocalDateTime;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencsv.CSVWriter;
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.bean.StatefulBeanToCsv;
+import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -81,15 +59,34 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opencsv.CSVWriter;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.Writer;
+import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.LF;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
+import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
+import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
+import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
+import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
+import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
+import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 
 @Service
 @Log4j2
@@ -549,8 +546,6 @@ public class BulkOperationService {
         } else {
           throw new BadRequestException(String.format("Step %s is not applicable for bulk operation status %s", step, bulkOperation.getStatus()));
         }
-      } else if (COMPLETED.equals(bulkOperation.getStatus())) {
-        return bulkOperation;
       } else {
         throw new IllegalOperationStateException("Bulk operation cannot be started, reason: invalid state: " + bulkOperation.getStatus());
       }

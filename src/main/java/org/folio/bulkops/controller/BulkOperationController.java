@@ -1,18 +1,11 @@
 package org.folio.bulkops.controller;
 
-import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.codehaus.plexus.util.FileUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.domain.dto.BulkOperationDto;
 import org.folio.bulkops.domain.dto.BulkOperationCollection;
+import org.folio.bulkops.domain.dto.BulkOperationDto;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
@@ -41,6 +34,13 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
+
+import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 
 @RestController
 @RequiredArgsConstructor
@@ -126,6 +126,7 @@ public class BulkOperationController implements BulkOperationsApi {
         headers.setContentDispositionFormData(FileUtils.filename(path), FileUtils.filename(path));
         return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(content));
       } catch (IOException e) {
+        log.error(e);
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }

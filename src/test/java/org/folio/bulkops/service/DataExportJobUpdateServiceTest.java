@@ -66,7 +66,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     when(remoteFileSystemClient.put(any(InputStream.class), eq(expectedCsvErrorsFileName)))
       .thenReturn(expectedCsvErrorsFileName);
 
-    when(remoteFileSystemClient.getNumOfLines(eq(expectedCsvFileName)))
+    when(remoteFileSystemClient.getNumOfLines(expectedCsvFileName))
       .thenReturn(3);
 
     var totalRecords = 10;

@@ -1,27 +1,24 @@
 package org.folio.bulkops.service;
 
-import static java.lang.String.format;
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-
-import java.net.URI;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.CustomFieldsClient;
 import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.client.GroupClient;
 import org.folio.bulkops.client.OkapiClient;
 import org.folio.bulkops.domain.bean.CustomField;
-import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.NotFoundException;
-import org.folio.bulkops.exception.UserFormatException;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import java.net.URI;
+
+import static java.lang.String.format;
+import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 @Service
 @RequiredArgsConstructor

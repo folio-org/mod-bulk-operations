@@ -59,8 +59,10 @@ public class RemoteFileSystemClient {
 
       @Override
       public void close() {
-        try {
-          put(new ByteArrayInputStream(buffer), path);
+        try(var is = new ByteArrayInputStream(buffer)) {
+          put(is, path);
+        } catch (IOException e) {
+          buffer = new byte[0];
         } finally {
           buffer = new byte[0];
         }
