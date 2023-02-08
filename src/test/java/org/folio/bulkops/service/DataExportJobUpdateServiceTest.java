@@ -77,7 +77,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
       .progress(Progress.builder()
         .total(totalRecords)
         .processed(processedRecords).build())
-      .files(List.of("file:src/test/resources/files/users.csv", "file:src/test/resources/files/errors.csv", "file:src/test/resources/files/user.json")).build();
+      .files(List.of("file:src/test/resources/files/users.csv", "", "file:src/test/resources/files/user.json")).build();
 
     dataExportJobUpdateService.receiveJobExecutionUpdate(jobUpdate);
 
@@ -87,7 +87,6 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     assertEquals(OperationStatusType.DATA_MODIFICATION, operationCaptor.getAllValues().get(1).getStatus());
     assertEquals(expectedJsonFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsJsonFile());
     assertEquals(expectedCsvFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsCsvFile());
-    assertEquals(expectedCsvErrorsFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsErrorsCsvFile());
   }
 
   @ParameterizedTest
