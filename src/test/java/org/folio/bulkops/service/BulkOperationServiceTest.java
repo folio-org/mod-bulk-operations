@@ -177,45 +177,36 @@ class BulkOperationServiceTest extends BaseTest {
     assertEquals(OperationStatusType.RETRIEVING_RECORDS, operationCaptor.getAllValues().get(3).getStatus());
   }
 
-//  @Test
-//  @SneakyThrows
-//  void shouldUploadManualInstances() {
-//    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/modified-user.csv").readAllBytes());
-//
-//    when(bulkOperationRepository.save(any(BulkOperation.class)))
-//      .thenReturn(BulkOperation.builder().id(UUID.randomUUID()).build());
-//
-//    var jobId = UUID.randomUUID();
-//    when(dataExportSpringClient.upsertJob(any(Job.class)))
-//      .thenReturn(Job.builder().id(jobId).status(JobStatus.SCHEDULED).build());
-//
-//    when(dataExportSpringClient.getJob(jobId))
-//      .thenReturn(Job.builder().id(jobId).status(JobStatus.IN_PROGRESS).build());
-//
-//    when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
-//      .thenReturn("3");
-//
-//    var bulkOperation = bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, true, null, null, file);
-//    var bulkOperationId = bulkOperation.getId();
-//
-//    when(bulkOperationRepository.findById(bulkOperationId))
-//      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringCsvFile("barcodes.csv").build()));
-//
-//    bulkOperationService.startBulkOperation(bulkOperation.getId(), any(UUID.class), new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD));
-//
-//    verify(dataExportSpringClient).upsertJob(any(Job.class));
-//    verify(dataExportSpringClient).getJob(jobId);
-//    verify(bulkEditClient, times(0)).uploadFile(jobId, file);
-//    verify(bulkEditClient, times(0)).startJob(jobId);
-//
-//    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-//    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
-//    assertEquals(OperationStatusType.NEW, operationCaptor.getAllValues().get(0).getStatus());
-//    // saving during upload
-//    assertEquals(OperationStatusType.RETRIEVING_RECORDS, operationCaptor.getAllValues().get(2).getStatus());
-//    // saving during start
-//    assertEquals(OperationStatusType.RETRIEVING_RECORDS, operationCaptor.getAllValues().get(3).getStatus());
-//  }
+  @Test
+  @SneakyThrows
+  void shouldUploadManualInstances() {
+    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/modified-user.csv").readAllBytes());
+
+    var operationId = UUID.randomUUID();
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(BulkOperation.builder().id(operationId).build());
+
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(BulkOperation.builder().id(operationId).status(DATA_MODIFICATION).build()));
+
+    var jobId = UUID.randomUUID();
+    when(remoteFileSystemClient.put(any(InputStream.class), eq(operationId + "/barcodes.csv")))
+      .thenReturn("modified.csv");
+
+    when(remoteFileSystemClient.getNumOfLines(eq("modified.csv")))
+      .thenReturn(3);
+
+    bulkOperationService.uploadCsvFile(EntityType.USER, IdentifierType.BARCODE, true, operationId, UUID.randomUUID(), file);
+
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository, times(1)).save(operationCaptor.capture());
+    var capture = operationCaptor.getAllValues().get(0);
+    assertEquals(DATA_MODIFICATION, capture.getStatus());
+    assertEquals(ApproachType.MANUAL, capture.getApproach());
+    assertEquals(2, capture.getTotalNumOfRecords());
+    assertEquals(2, capture.getProcessedNumOfRecords());
+    assertEquals(2, capture.getMatchedNumOfRecords());
+  }
 
   @Test
   @SneakyThrows

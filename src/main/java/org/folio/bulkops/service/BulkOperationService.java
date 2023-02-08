@@ -131,10 +131,10 @@ public class BulkOperationService {
           var linkToThePreviewFile = remoteFileSystemClient.put(multipartFile.getInputStream(), bulkOperation.getId() + "/" + multipartFile.getOriginalFilename());
           bulkOperation.setLinkToModifiedRecordsCsvFile(linkToThePreviewFile);
 
-          var value = (int) new BufferedReader(new InputStreamReader(remoteFileSystemClient.get(linkToThePreviewFile))).lines().count() - 1;
-          bulkOperation.setTotalNumOfRecords(value);
-          bulkOperation.setProcessedNumOfRecords(value);
-          bulkOperation.setMatchedNumOfRecords(value);
+          var numOfLines = remoteFileSystemClient.getNumOfLines(linkToThePreviewFile) - 1;
+          bulkOperation.setTotalNumOfRecords(numOfLines);
+          bulkOperation.setProcessedNumOfRecords(numOfLines);
+          bulkOperation.setMatchedNumOfRecords(numOfLines);
 
         } catch (Exception e) {
           log.error("Error starting Bulk Operation: " + e.getCause());

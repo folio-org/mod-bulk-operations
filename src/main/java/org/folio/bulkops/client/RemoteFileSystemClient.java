@@ -1,9 +1,11 @@
 package org.folio.bulkops.client;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
@@ -29,6 +31,10 @@ public class RemoteFileSystemClient {
 
   public String append(InputStream content, String fileNameToAppend) {
     return remoteFolioS3Client.append(fileNameToAppend, content);
+  }
+
+  public int getNumOfLines(String file) {
+    return (int) new BufferedReader(new InputStreamReader(get(file))).lines().count();
   }
 
   // Code below should be moved to folio-s3-client
