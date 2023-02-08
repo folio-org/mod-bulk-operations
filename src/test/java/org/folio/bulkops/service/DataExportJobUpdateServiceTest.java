@@ -25,6 +25,8 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -39,8 +41,9 @@ class DataExportJobUpdateServiceTest extends BaseTest {
 
   @MockBean
   private BulkOperationRepository bulkOperationRepository;
-  @MockBean
-  private RemoteFileSystemClient remoteFileSystemClient;
+
+  @MockBean(name = "localFolioS3Client")
+  private FolioS3Client localFolioS3Client;
 
   @ParameterizedTest
   @EnumSource(value = ApproachType.class, names = {"QUERY", "IN_APP" }, mode = EnumSource.Mode.INCLUDE)
@@ -57,18 +60,18 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     var expectedCsvErrorsFileName = bulkOperationId + "/errors.csv";
 
     var expectedCsvFileName = bulkOperationId + "/users.csv";
-    when(remoteFileSystemClient.put(any(InputStream.class), eq(expectedCsvFileName)))
+    when(localFolioS3Client.write(eq(expectedCsvFileName), any(InputStream.class)))
       .thenReturn(expectedCsvFileName);
 
     var expectedJsonFileName = bulkOperationId + "/user.json";
-    when(remoteFileSystemClient.put(any(InputStream.class), eq(expectedJsonFileName)))
+    when(localFolioS3Client.write(eq(expectedJsonFileName), any(InputStream.class)))
       .thenReturn(expectedJsonFileName);
 
-    when(remoteFileSystemClient.put(any(InputStream.class), eq(expectedCsvErrorsFileName)))
+    when(localFolioS3Client.write(eq(expectedCsvErrorsFileName), any(InputStream.class)))
       .thenReturn(expectedCsvErrorsFileName);
 
-    when(remoteFileSystemClient.getNumOfLines(eq(expectedCsvFileName)))
-      .thenReturn(3);
+    when(localFolioS3Client.read(eq(expectedCsvFileName)))
+      .thenReturn(new FileInputStream("src/test/resources/files/errors.csv"));
 
     var totalRecords = 10;
     var processedRecords = 10;
