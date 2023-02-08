@@ -1,48 +1,37 @@
 package org.folio.bulkops.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BatchStatus;
 import org.folio.bulkops.domain.bean.Job;
+import org.folio.bulkops.domain.bean.Progress;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
-import org.folio.bulkops.domain.bean.Progress;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.s3.client.FolioS3Client;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DataExportJobUpdateServiceTest extends BaseTest {
   @Autowired
   private DataExportJobUpdateService dataExportJobUpdateService;
 
-  @MockBean
+  @Autowired
   private BulkOperationRepository bulkOperationRepository;
 
-  @MockBean(name = "localFolioS3Client")
+  @Autowired
   private FolioS3Client localFolioS3Client;
 
   @ParameterizedTest
@@ -51,27 +40,12 @@ class DataExportJobUpdateServiceTest extends BaseTest {
   void shouldUpdateBulkOperationForCompletedJob(ApproachType approach) {
     var bulkOperationId = UUID.randomUUID();
     var jobId = UUID.randomUUID();
-    when(bulkOperationRepository.findByDataExportJobId(jobId))
-      .thenReturn(Optional.of(BulkOperation.builder()
-        .id(bulkOperationId)
-          .approach(approach)
-        .build()));
 
-    var expectedCsvErrorsFileName = bulkOperationId + "/errors.csv";
-
-    var expectedCsvFileName = bulkOperationId + "/users.csv";
-    when(localFolioS3Client.write(eq(expectedCsvFileName), any(InputStream.class)))
-      .thenReturn(expectedCsvFileName);
-
-    var expectedJsonFileName = bulkOperationId + "/user.json";
-    when(localFolioS3Client.write(eq(expectedJsonFileName), any(InputStream.class)))
-      .thenReturn(expectedJsonFileName);
-
-    when(localFolioS3Client.write(eq(expectedCsvErrorsFileName), any(InputStream.class)))
-      .thenReturn(expectedCsvErrorsFileName);
-
-    when(localFolioS3Client.read(eq(expectedCsvFileName)))
-      .thenReturn(new FileInputStream("src/test/resources/files/errors.csv"));
+    bulkOperationRepository.save(BulkOperation.builder()
+      .id(bulkOperationId)
+        .dataExportJobId(jobId)
+      .approach(approach)
+      .build());
 
     var totalRecords = 10;
     var processedRecords = 10;
@@ -87,23 +61,24 @@ class DataExportJobUpdateServiceTest extends BaseTest {
 
     dataExportJobUpdateService.receiveJobExecutionUpdate(jobUpdate);
 
-    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
-    assertEquals(OperationStatusType.SAVING_RECORDS_LOCALLY, operationCaptor.getAllValues().get(0).getStatus());
-    assertEquals(OperationStatusType.DATA_MODIFICATION, operationCaptor.getAllValues().get(1).getStatus());
-    assertEquals(expectedJsonFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsJsonFile());
-    assertEquals(expectedCsvFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsCsvFile());
-    assertEquals(expectedCsvErrorsFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsErrorsCsvFile());
+    var bulkOperation = bulkOperationRepository.findById(bulkOperationId).get();
+
+    assertEquals(OperationStatusType.DATA_MODIFICATION, bulkOperation.getStatus());
+    assertEquals(bulkOperationId + "/user.json", bulkOperation.getLinkToMatchedRecordsJsonFile());
+    assertEquals(bulkOperationId + "/users.csv", bulkOperation.getLinkToMatchedRecordsCsvFile());
+    assertEquals(bulkOperationId + "/errors.csv", bulkOperation.getLinkToMatchedRecordsErrorsCsvFile());
   }
 
   @ParameterizedTest
   @EnumSource(value = BatchStatus.class, names = { "STARTING", "STARTED", "STOPPING", "STOPPED" }, mode = EnumSource.Mode.INCLUDE)
   void shouldUpdateBulkOperationForJobInProgress(BatchStatus batchStatus) {
+    var bulkOperationId = UUID.randomUUID();
     var jobId = UUID.randomUUID();
-    when(bulkOperationRepository.findByDataExportJobId(jobId))
-      .thenReturn(Optional.of(BulkOperation.builder()
-        .id(UUID.randomUUID())
-        .build()));
+
+    bulkOperationRepository.save(BulkOperation.builder()
+      .id(bulkOperationId)
+      .dataExportJobId(jobId)
+      .build());
 
     var totalRecords = 10;
     var processedRecords = 5;
@@ -114,20 +89,21 @@ class DataExportJobUpdateServiceTest extends BaseTest {
         .total(totalRecords)
         .processed(processedRecords).build()).build());
 
-    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository).save(operationCaptor.capture());
-    assertEquals(totalRecords, operationCaptor.getValue().getTotalNumOfRecords());
-    assertEquals(processedRecords, operationCaptor.getValue().getProcessedNumOfRecords());
+    var bulkOperation = bulkOperationRepository.findById(bulkOperationId).get();
+    assertEquals(totalRecords, bulkOperation.getTotalNumOfRecords());
+    assertEquals(processedRecords, bulkOperation.getProcessedNumOfRecords());
   }
 
   @ParameterizedTest
   @EnumSource(value = BatchStatus.class, names = { "FAILED", "ABANDONED" }, mode = EnumSource.Mode.INCLUDE)
   void shouldUpdateBulkOperationForFailedJob(BatchStatus batchStatus) {
+    var bulkOperationId = UUID.randomUUID();
     var jobId = UUID.randomUUID();
-    when(bulkOperationRepository.findByDataExportJobId(jobId))
-      .thenReturn(Optional.of(BulkOperation.builder()
-        .id(UUID.randomUUID())
-        .build()));
+
+    bulkOperationRepository.save(BulkOperation.builder()
+      .id(bulkOperationId)
+      .dataExportJobId(jobId)
+      .build());
 
     var totalRecords = 10;
     var processedRecords = 5;
@@ -142,21 +118,17 @@ class DataExportJobUpdateServiceTest extends BaseTest {
         .total(totalRecords)
         .processed(processedRecords).build()).build());
 
-    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository).save(operationCaptor.capture());
-    assertEquals(totalRecords, operationCaptor.getValue().getTotalNumOfRecords());
-    assertEquals(processedRecords, operationCaptor.getValue().getProcessedNumOfRecords());
-    assertEquals(OperationStatusType.FAILED, operationCaptor.getValue().getStatus());
-    assertEquals(expectedEndTime, operationCaptor.getValue().getEndTime());
+    var bulkOperation = bulkOperationRepository.findById(bulkOperationId).get();
+    assertEquals(totalRecords, bulkOperation.getTotalNumOfRecords());
+    assertEquals(processedRecords, bulkOperation.getProcessedNumOfRecords());
+    assertEquals(OperationStatusType.FAILED, bulkOperation.getStatus());
+    assertEquals(expectedEndTime, bulkOperation.getEndTime());
   }
 
   @Test
   void shouldSkipUpdateForUnknownJob() {
-    when(bulkOperationRepository.findByDataExportJobId(any(UUID.class)))
-      .thenReturn(Optional.empty());
-
-    dataExportJobUpdateService.receiveJobExecutionUpdate(Job.builder().id(UUID.randomUUID()).build());
-
-    verify(bulkOperationRepository, times(0)).save(any(BulkOperation.class));
+    var jobId = UUID.randomUUID();
+    dataExportJobUpdateService.receiveJobExecutionUpdate(Job.builder().id(jobId).build());
+    Assertions.assertTrue(bulkOperationRepository.findByDataExportJobId(jobId).isEmpty());
   }
 }
