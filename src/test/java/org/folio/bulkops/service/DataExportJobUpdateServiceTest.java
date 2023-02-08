@@ -17,6 +17,7 @@ import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.bean.Progress;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.s3.client.FolioS3Client;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -38,8 +39,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
 
   @MockBean
   private BulkOperationRepository bulkOperationRepository;
-
-  @MockBean(name = "localFolioS3Client")
+  @MockBean
   private RemoteFileSystemClient remoteFileSystemClient;
 
   @ParameterizedTest
@@ -64,6 +64,9 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     when(remoteFileSystemClient.put(any(InputStream.class), eq(expectedJsonFileName)))
       .thenReturn(expectedJsonFileName);
 
+    when(remoteFileSystemClient.put(any(InputStream.class), eq(expectedCsvErrorsFileName)))
+      .thenReturn(expectedCsvErrorsFileName);
+
     when(remoteFileSystemClient.getNumOfLines(eq(expectedCsvFileName)))
       .thenReturn(3);
 
@@ -77,7 +80,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
       .progress(Progress.builder()
         .total(totalRecords)
         .processed(processedRecords).build())
-      .files(List.of("file:src/test/resources/files/users.csv", "", "file:src/test/resources/files/user.json")).build();
+      .files(List.of("file:src/test/resources/files/users.csv", "file:src/test/resources/files/errors.csv", "file:src/test/resources/files/user.json")).build();
 
     dataExportJobUpdateService.receiveJobExecutionUpdate(jobUpdate);
 
@@ -87,6 +90,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     assertEquals(OperationStatusType.DATA_MODIFICATION, operationCaptor.getAllValues().get(1).getStatus());
     assertEquals(expectedJsonFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsJsonFile());
     assertEquals(expectedCsvFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsCsvFile());
+    assertEquals(expectedCsvErrorsFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsErrorsCsvFile());
   }
 
   @ParameterizedTest
