@@ -1,6 +1,7 @@
 package org.folio.bulkops.controller;
 
 import lombok.SneakyThrows;
+import org.apache.commons.io.IOUtils;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.dto.Action;
@@ -27,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.UUID;
 
@@ -82,7 +84,7 @@ class BulkOperationControllerTest extends BaseTest {
   @EnumSource(value = EntityType.class)
   void shouldUploadIdentifiers(EntityType entity) {
     var identifiers = "123\n456\n789";
-    var file = new MockMultipartFile("file", TRIGGERING_FILE_NAME, MediaType.TEXT_PLAIN_VALUE, identifiers.getBytes());
+    var file = new MockMultipartFile("file", TRIGGERING_FILE_NAME, MediaType.TEXT_PLAIN_VALUE, identifiers.getBytes(Charset.defaultCharset()));
 
     var initial = OBJECT_MAPPER.readValue(mockMvc.perform(multipart(format("/bulk-operations/upload?entityType=%s&identifierType=BARCODE", entity.getValue()))
         .file(file)
@@ -108,7 +110,7 @@ class BulkOperationControllerTest extends BaseTest {
   @Test
   void shouldUploadFileForManualApproach() {
     var identifiers = "123\n456\n789";
-    var file = new MockMultipartFile("file", TRIGGERING_FILE_NAME, MediaType.TEXT_PLAIN_VALUE, identifiers.getBytes());
+    var file = new MockMultipartFile("file", TRIGGERING_FILE_NAME, MediaType.TEXT_PLAIN_VALUE, identifiers.getBytes(Charset.defaultCharset()));
 
     var initial = OBJECT_MAPPER.readValue(mockMvc.perform(multipart("/bulk-operations/upload?entityType=USER&identifierType=BARCODE")
         .file(file)
@@ -121,7 +123,7 @@ class BulkOperationControllerTest extends BaseTest {
     assertThat(initial.getStatus(), equalTo(NEW));
 
     var content = "123,456,789";
-    var matched = new MockMultipartFile("file", MODIFIED_FILE_NAME, MediaType.TEXT_PLAIN_VALUE, content.getBytes());
+    var matched = new MockMultipartFile("file", MODIFIED_FILE_NAME, MediaType.TEXT_PLAIN_VALUE, content.getBytes(Charset.defaultCharset()));
 
     var manual = OBJECT_MAPPER.readValue(mockMvc.perform(multipart(format("/bulk-operations/upload?entityType=USER&identifierType=BARCODE&manual=true&operationId=%s", initial.getId()))
         .file(matched)
