@@ -147,7 +147,7 @@ public class DataExportJobUpdateService {
 
   public String downloadAndSaveJsonFile(BulkOperation bulkOperation, Job jobUpdate) throws IOException {
     var jsonUrl = jobUpdate.getFiles().get(2);
-    return remoteFileSystemClient.put(new URL(jsonUrl).openStream(), bulkOperation.getId() + "/json/" + FilenameUtils.getName(jsonUrl.split("\\?")[0]));
+    return remoteFileSystemClient.put(new URL(jsonUrl).openStream(), bulkOperation.getId() + "/" + FilenameUtils.getName(jsonUrl.split("\\?")[0]));
   }
 
   public String downloadAndSaveCsvFile(BulkOperation bulkOperation, Job jobUpdate) throws IOException {
