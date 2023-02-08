@@ -46,7 +46,7 @@
     <hibernate-types-52.version>2.10.3</hibernate-types-52.version>
     <folio-s3-client.version>1.0.0-SNAPSHOT</folio-s3-client.version>
     <opencsv.version>5.6</opencsv.version>
-    <feign-jackson.version>11.8</feign-jackson.version>
+    <feign-jackson.version>12.1</feign-jackson.version>
     <!-- Test dependencies versions -->
     <testcontainer.version>1.17.6</testcontainer.version>
     <wiremock.version>2.35.0</wiremock.version>
