@@ -12,12 +12,11 @@ import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BatchStatus;
 import org.folio.bulkops.domain.bean.Job;
+import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.bean.Progress;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.folio.s3.client.FolioS3Client;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -41,26 +40,32 @@ class DataExportJobUpdateServiceTest extends BaseTest {
   private BulkOperationRepository bulkOperationRepository;
 
   @MockBean(name = "localFolioS3Client")
-  private FolioS3Client localFolioS3Client;
+  private RemoteFileSystemClient remoteFileSystemClient;
 
-  @Test
+  @ParameterizedTest
+  @EnumSource(value = ApproachType.class, names = {"QUERY", "IN_APP" }, mode = EnumSource.Mode.INCLUDE)
   @SneakyThrows
-  @Disabled
-  void shouldUpdateBulkOperationForCompletedJob() {
+  void shouldUpdateBulkOperationForCompletedJob(ApproachType approach) {
     var bulkOperationId = UUID.randomUUID();
     var jobId = UUID.randomUUID();
     when(bulkOperationRepository.findByDataExportJobId(jobId))
       .thenReturn(Optional.of(BulkOperation.builder()
         .id(bulkOperationId)
+          .approach(approach)
         .build()));
 
+    var expectedCsvErrorsFileName = bulkOperationId + "/errors.csv";
+
     var expectedCsvFileName = bulkOperationId + "/users.csv";
-    when(localFolioS3Client.write(eq(expectedCsvFileName), any(InputStream.class)))
+    when(remoteFileSystemClient.put(any(InputStream.class), eq(expectedCsvFileName)))
       .thenReturn(expectedCsvFileName);
 
     var expectedJsonFileName = bulkOperationId + "/json/user.json";
-    when(localFolioS3Client.write(eq(expectedJsonFileName), any(InputStream.class)))
+    when(remoteFileSystemClient.put(any(InputStream.class), eq(expectedJsonFileName)))
       .thenReturn(expectedJsonFileName);
+
+    when(remoteFileSystemClient.getNumOfLines(eq(expectedCsvFileName)))
+      .thenReturn(3);
 
     var totalRecords = 10;
     var processedRecords = 10;
@@ -72,7 +77,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
       .progress(Progress.builder()
         .total(totalRecords)
         .processed(processedRecords).build())
-      .files(List.of("file:src/test/resources/files/users.csv", "", "file:src/test/resources/files/user.json")).build();
+      .files(List.of("file:src/test/resources/files/users.csv", "file:src/test/resources/files/errors.csv", "file:src/test/resources/files/user.json")).build();
 
     dataExportJobUpdateService.receiveJobExecutionUpdate(jobUpdate);
 
@@ -82,6 +87,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     assertEquals(OperationStatusType.DATA_MODIFICATION, operationCaptor.getAllValues().get(1).getStatus());
     assertEquals(expectedJsonFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsJsonFile());
     assertEquals(expectedCsvFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsCsvFile());
+    assertEquals(expectedCsvErrorsFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsErrorsCsvFile());
   }
 
   @ParameterizedTest
