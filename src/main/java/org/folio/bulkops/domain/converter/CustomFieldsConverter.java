@@ -32,7 +32,7 @@ import static org.folio.bulkops.adapters.Constants.LINE_BREAK_REPLACEMENT;
 
 public class CustomFieldsConverter extends AbstractBeanField<String, Map<String, Object>> {
   @Override
-  protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
+  protected Map<String, Object> convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
     if (isNotEmpty(value)) {
       return Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
         .map(this::restoreCustomFieldValue)

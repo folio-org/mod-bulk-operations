@@ -37,25 +37,15 @@ public class UserReferenceService implements InitializingBean {
   private final FolioExecutionContext folioExecutionContext;
   private final OkapiClient okapiClient;
 
-
-  public CustomField getCustomFieldByRefId(String refId) {
-
-    var customFields = customFieldsClient.getCustomFieldsByQuery(getModuleId(MOD_USERS),String.format("refId==\"%s\"", refId));
-    if (customFields.getCustomFields().isEmpty()) {
-      var msg = format("Custom field with refId=%s not found", refId);
-      log.error(msg);
-      throw new NotFoundException(msg);
-    }
-    return customFields.getCustomFields().get(0);
-  }
-
   public String getAddressTypeIdByDesc(String desc) {
     if (isEmpty(desc)) {
       return null;
     } else {
       var response = addressTypeClient.getAddressTypeByQuery(String.format("desc==\"%s\"", desc));
       if (response.getAddressTypes().isEmpty()) {
-        return desc;
+        var msg = format("Address type=%s not found", desc);
+        log.error(msg);
+        throw new NotFoundException(msg);
       }
       return response.getAddressTypes().get(0).getId();
     }
@@ -76,7 +66,9 @@ public class UserReferenceService implements InitializingBean {
     } else {
       var response = departmentClient.getDepartmentByQuery(String.format("name==\"%s\"", name));
       if (response.getDepartments().isEmpty()) {
-        return name;
+        var msg = format("Department=%s not found", name);
+        log.error(msg);
+        throw new NotFoundException(msg);
       }
       return response.getDepartments().get(0).getId();
     }
@@ -88,13 +80,13 @@ public class UserReferenceService implements InitializingBean {
 
   public String getPatronGroupIdByName(String name) {
     if (isEmpty(name)) {
-      throw new BadRequestException("Patron group can not be empty");
+      throw new NotFoundException("Patron group can not be empty");
     }
     var response = groupClient.getGroupByQuery(String.format("group==\"%s\"", name));
     if (response.getUsergroups().isEmpty()) {
       var msg = "Invalid patron group value: " + name;
       log.error(msg);
-      throw new BadRequestException(msg);
+      throw new NotFoundException(msg);
     }
     return response.getUsergroups().get(0).getId();
   }
@@ -105,7 +97,18 @@ public class UserReferenceService implements InitializingBean {
     if (customFields.getCustomFields().isEmpty()) {
       var msg = format("Custom field with name=%s not found", name);
       log.error(msg);
-      throw new UserFormatException(msg);
+      throw new NotFoundException(msg);
+    }
+    return customFields.getCustomFields().get(0);
+  }
+
+  public CustomField getCustomFieldByRefId(String refId) {
+
+    var customFields = customFieldsClient.getCustomFieldsByQuery(getModuleId(MOD_USERS),String.format("refId==\"%s\"", refId));
+    if (customFields.getCustomFields().isEmpty()) {
+      var msg = format("Custom field with refId=%s not found", refId);
+      log.error(msg);
+      throw new NotFoundException(msg);
     }
     return customFields.getCustomFields().get(0);
   }
