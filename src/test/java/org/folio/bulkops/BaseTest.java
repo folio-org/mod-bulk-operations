@@ -156,7 +156,6 @@ public abstract class BaseTest {
     Map<String, Collection<String>> okapiHeaders = new LinkedHashMap<>();
     okapiHeaders.put(XOkapiHeaders.TENANT, List.of(TENANT));
     okapiHeaders.put(XOkapiHeaders.TOKEN, List.of(TOKEN));
-//    okapiHeaders.put(XOkapiHeaders.URL, List.of(wireMockServer.baseUrl()));
     okapiHeaders.put(XOkapiHeaders.USER_ID, List.of(UUID.randomUUID().toString()));
     var defaultFolioExecutionContext = new DefaultFolioExecutionContext(folioModuleMetadata, okapiHeaders);
     FolioExecutionScopeExecutionContextManager.beginFolioExecutionContext(defaultFolioExecutionContext);
@@ -180,7 +179,6 @@ public abstract class BaseTest {
 
     httpHeaders.setContentType(APPLICATION_JSON);
     httpHeaders.put(XOkapiHeaders.TENANT, List.of(TENANT));
-//    httpHeaders.add(XOkapiHeaders.URL, wireMockServer.baseUrl());
     httpHeaders.add(XOkapiHeaders.TOKEN, TOKEN);
     httpHeaders.add(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
