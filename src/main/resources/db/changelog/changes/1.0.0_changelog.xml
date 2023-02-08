@@ -7,7 +7,7 @@
 
 
   <changeSet id="1.0.0_changelog" author="firebird">
-    <sqlFile path="/changes/add_processing_content_table.sql" relativeToChangelogFile="true" />
+    <sqlFile path="add_processing_content_table.sql" relativeToChangelogFile="true" />
   </changeSet>
 
 </databaseChangeLog>
