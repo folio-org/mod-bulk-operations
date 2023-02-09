@@ -529,9 +529,9 @@ class BulkOperationServiceTest extends BaseTest {
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     verify(remoteFileSystemClient, times(2)).append(streamCaptor.capture(), pathCaptor.capture());
-    assertEquals(new String(streamCaptor.getValue().readAllBytes()),
+    assertEquals(new String(streamCaptor.getAllValues().get(0).readAllBytes()),
       Files.readString(Path.of(pathToModifiedUserJson)).trim());
-    assertEquals(expectedPathToResultFile, pathCaptor.getValue());
+    assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().get(0));
 
     var executionContentCaptor = ArgumentCaptor.forClass(BulkOperationExecutionContent.class);
     verify(executionContentRepository).save(executionContentCaptor.capture());
