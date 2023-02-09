@@ -223,19 +223,21 @@ public class BulkOperationService {
         var original = iterator.next();
         var modified = processUpdate(original, bulkOperation, ruleCollection, entityClass);
 
-        // TODO Correct implementation via OpenCSV currently works only for User.class
-        if (entityClass.equals(User.class)) {
-          sbc.write(modified.getEntity());
+        if (Objects.nonNull(modified)) {
+          // TODO Correct implementation via OpenCSV currently works only for User.class
+          if (entityClass.equals(User.class)) {
+            sbc.write(modified.getEntity());
+          }
+          if (modified.isChanged()) {
+            if (!isChangesPresented) {
+              isChangesPresented = true;
+            }
+            remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(modified.getEntity()) + LF).getBytes()), modifiedJsonFileName);
+          } else {
+            committedNumOfErrors++;
+          }
         }
 
-        if (modified.isChanged()) {
-          if (!isChangesPresented) {
-            isChangesPresented = true;
-          }
-          remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(modified.getEntity()) + LF).getBytes()), modifiedJsonFileName);
-        } else {
-          committedNumOfErrors++;
-        }
 
         bulkOperation.setCommittedNumOfErrors(committedNumOfErrors);
 
