@@ -39,4 +39,3 @@ application:
     group-id: ${ENV:folio}-mod-bulk-operations-events-group
   file-uploading:
     max-retry-count: ${MAX_UPLOADING_RETRIES:50}
-
