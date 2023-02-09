@@ -1,7 +1,6 @@
 package org.folio.bulkops.controller;
 
 import lombok.SneakyThrows;
-import org.apache.commons.io.IOUtils;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.dto.Action;
