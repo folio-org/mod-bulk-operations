@@ -62,6 +62,7 @@ import org.testcontainers.shaded.org.hamcrest.Matchers;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -332,6 +333,7 @@ class BulkOperationServiceTest extends BaseTest {
     var newPatronGroupId = UUID.randomUUID().toString();
     var pathToOrigin = "path/origin.json";
     var pathToModified = bulkOperationId + "/json/modified-origin.json";
+    var pathToOriginalCsv = bulkOperationId + "/origin.csv";
     var pathToUserJson = "src/test/resources/files/user.json";
 
     when(bulkOperationRepository.findById(any(UUID.class)))
@@ -342,6 +344,7 @@ class BulkOperationServiceTest extends BaseTest {
         .identifierType(IdentifierType.BARCODE)
         .linkToMatchedRecordsJsonFile(pathToOrigin)
         .linkToModifiedRecordsJsonFile(pathToModified)
+        .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
         .build()));
 
     when(ruleService.getRules(bulkOperationId))
@@ -378,11 +381,15 @@ class BulkOperationServiceTest extends BaseTest {
     assertThat(processingCaptor.getValue().getState(), equalTo(StateType.PROCESSED));
 
     var expectedPathToModifiedFile = bulkOperationId + "/json/modified-origin.json";
+    var expectedPathToPreviewFile = bulkOperationId + "/json/preview-origin.json";
+    var expectedPathToModifiedCsvFile = bulkOperationId + "/modified-origin.csv";
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
-    verify(remoteFileSystemClient).append(streamCaptor.capture(), pathCaptor.capture());
-    assertThat(new String(streamCaptor.getValue().readAllBytes()), containsString(newPatronGroupId));
-    assertEquals(expectedPathToModifiedFile, pathCaptor.getValue());
+    verify(remoteFileSystemClient, times(3)).append(streamCaptor.capture(), pathCaptor.capture());
+    assertThat(new String(streamCaptor.getAllValues().get(0).readAllBytes()), containsString(newPatronGroupId));
+    assertEquals(expectedPathToModifiedFile, pathCaptor.getAllValues().get(1));
+    assertEquals(expectedPathToPreviewFile, pathCaptor.getAllValues().get(0));
+    assertEquals(expectedPathToModifiedCsvFile, pathCaptor.getAllValues().get(2));
 
     var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
     verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture());
@@ -521,7 +528,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
-    verify(remoteFileSystemClient).append(streamCaptor.capture(), pathCaptor.capture());
+    verify(remoteFileSystemClient, times(2)).append(streamCaptor.capture(), pathCaptor.capture());
     assertEquals(new String(streamCaptor.getValue().readAllBytes()),
       Files.readString(Path.of(pathToModifiedUserJson)).trim());
     assertEquals(expectedPathToResultFile, pathCaptor.getValue());
@@ -559,7 +566,8 @@ class BulkOperationServiceTest extends BaseTest {
         .identifierType(IdentifierType.BARCODE)
         .build()));
 
-    assertThrows(BadRequestException.class, () -> bulkOperationService.startBulkOperation(bulkOperationId, null, new BulkOperationStart().approach(approach).step(COMMIT)));
+    var bulkOperation = new BulkOperationStart().approach(approach).step(COMMIT);
+    assertThrows(BadRequestException.class, () -> bulkOperationService.startBulkOperation(bulkOperationId, null, bulkOperation));
 
   }
 
@@ -569,6 +577,7 @@ class BulkOperationServiceTest extends BaseTest {
     var bulkOperationId = UUID.randomUUID();
     var pathToOrigin = bulkOperationId + "/json/origin.json";
     var pathToModifiedCsv = bulkOperationId + "/modified-origin.csv";
+    var pathToPreviewJson = bulkOperationId + "/json/preview-origin.json";
     var expectedPathToResultFile = bulkOperationId + "/json/modified-origin.json";
     var pathToUserJson = "src/test/resources/files/user.json";
     var pathToModifiedUserCsv = "src/test/resources/files/modified-user.csv";
@@ -601,6 +610,7 @@ class BulkOperationServiceTest extends BaseTest {
     var capture = operationCaptor.getAllValues().get(0);
     assertThat(capture.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
     assertThat(capture.getLinkToModifiedRecordsJsonFile(), equalTo(expectedPathToResultFile));
+    assertThat(capture.getLinkToPreviewRecordsJsonFile(), equalTo(pathToPreviewJson));
   }
 
   @Test
@@ -663,6 +673,7 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldFailUpdateExecutionContentStatusOnFailedUpdate() {
     var bulkOperationId = UUID.randomUUID();
     var pathToOrigin = bulkOperationId + "/origin.json";
+    var pathToOriginCsv = bulkOperationId + "/origin.csv";
     var pathToModified = bulkOperationId + "/modified-origin.json";
     var pathToUserJson = "src/test/resources/files/user.json";
     var pathToModifiedUserJson = "src/test/resources/files/modified-user.json";
@@ -674,6 +685,7 @@ class BulkOperationServiceTest extends BaseTest {
         .identifierType(IdentifierType.BARCODE)
         .linkToMatchedRecordsJsonFile(pathToOrigin)
         .linkToModifiedRecordsJsonFile(pathToModified)
+        .linkToMatchedRecordsCsvFile(pathToOriginCsv)
         .build()));
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
@@ -683,6 +695,7 @@ class BulkOperationServiceTest extends BaseTest {
         .identifierType(IdentifierType.BARCODE)
         .linkToMatchedRecordsJsonFile(pathToOrigin)
         .linkToModifiedRecordsJsonFile(pathToModified)
+        .linkToMatchedRecordsCsvFile(pathToOriginCsv)
         .build());
 
     when(executionRepository.save(any(BulkOperationExecution.class)))
@@ -696,6 +709,12 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(pathToModified))
       .thenReturn(new FileInputStream(pathToModifiedUserJson));
 
+    when(remoteFileSystemClient.writer(any()))
+  .thenCallRealMethod();
+
+    when(remoteFileSystemClient.newOutputStream(any()))
+      .thenReturn(OutputStream.nullOutputStream());
+
     when(executionContentRepository.save(any(BulkOperationExecutionContent.class)))
       .thenReturn(BulkOperationExecutionContent.builder().build());
 
@@ -704,16 +723,9 @@ class BulkOperationServiceTest extends BaseTest {
     bulkOperationService.commit(bulkOperationId);
 
     var executionContentCaptor = ArgumentCaptor.forClass(BulkOperationExecutionContent.class);
-//    verify(executionContentRepository).save(executionContentCaptor.capture());
-//    assertThat(executionContentCaptor.getValue().getState(), equalTo(StateType.FAILED));
+    verify(executionContentRepository, times(1)).save(executionContentCaptor.capture());
+    assertThat(executionContentCaptor.getValue().getState(), equalTo(StateType.FAILED));
 
-    var expectedPathToResultFile = bulkOperationId + "/json/result-origin.json";
-    var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
-    var pathCaptor = ArgumentCaptor.forClass(String.class);
-    verify(remoteFileSystemClient).append(streamCaptor.capture(), pathCaptor.capture());
-    assertEquals(new String(streamCaptor.getValue().readAllBytes()),
-      Files.readString(Path.of(pathToUserJson)).trim());
-    assertEquals(expectedPathToResultFile, pathCaptor.getValue());
   }
 
   @Test
@@ -876,7 +888,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
     when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
 
-    var csvString = bulkOperationService.getCsvPreviewForBulkOperation(bulkOperation, step);
+    var csvString = bulkOperationService.buildCsvStringFomUnifiedTable(bulkOperationService.getPreview(bulkOperation, step, Integer.MAX_VALUE));
 
     // 6 lines expected: 1 line for headers and 5 lines for data
     MatcherAssert.assertThat(new BufferedReader(new StringReader(csvString)).lines().count(), Matchers.equalTo(6L));
@@ -904,7 +916,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     var bulkOperation = BulkOperation.builder().id(UUID.randomUUID()).entityType(EntityType.USER).status(status).build();
 
-    var actual = bulkOperationService.getCsvPreviewForBulkOperation(bulkOperation, BulkOperationStep.EDIT);
+    var actual = bulkOperationService.buildCsvStringFomUnifiedTable(bulkOperationService.getPreview(bulkOperation, EDIT, Integer.MAX_VALUE));
     var expected = UserHeaderBuilder.getHeaders().stream().map(Cell::getValue).collect(Collectors.joining(",")) + LF;
 
     assertEquals(expected, actual);
@@ -954,7 +966,7 @@ class BulkOperationServiceTest extends BaseTest {
     case EDIT:
       return BulkOperation.builder()
         .entityType(entityType)
-        .linkToModifiedRecordsJsonFile(fileName)
+        .linkToPreviewRecordsJsonFile(fileName)
         .build();
     case COMMIT:
       return BulkOperation.builder()
