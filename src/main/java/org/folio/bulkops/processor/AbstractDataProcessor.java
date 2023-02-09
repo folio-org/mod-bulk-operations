@@ -20,8 +20,9 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
   private ErrorService errorService;
 
   @Override
-  public T process(String identifier, T entity, BulkOperationRuleCollection rules) {
+  public UpdatedEntityHolder process(String identifier, T entity, BulkOperationRuleCollection rules) {
     var hasProcessingError = false;
+    var holder = UpdatedEntityHolder.builder().build();
     var updated = clone(entity);
     for (BulkOperationRule rule : rules.getBulkOperationRules()) {
       var details = rule.getRuleDetails();
@@ -41,9 +42,12 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
       if (!hasProcessingError) {
         errorService.saveError(rules.getBulkOperationRules().get(0).getBulkOperationId(), identifier, "No change in value required");
       }
-      return null;
+      holder.setChanged(false);
+    } else {
+      holder.setChanged(true);
     }
-    return updated;
+    holder.setEntity(updated);
+    return holder;
   }
 
   /**

@@ -2,11 +2,14 @@ package org.folio.bulkops;
 
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
+import static org.folio.bulkops.processor.UserDataProcessor.DATE_TIME_FORMAT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,6 +19,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import org.folio.bulkops.client.ConfigurationClient;
 import org.folio.bulkops.client.GroupClient;
 import org.folio.bulkops.client.HoldingsClient;
@@ -77,10 +83,14 @@ import lombok.extern.log4j.Log4j2;
 public abstract class BaseTest {
   public static PostgreSQLContainer<?> postgresDBContainer = new PostgreSQLContainer<>("postgres:13");
 
+  public static LocalDateTimeDeserializer localDateTimeDeserializer = new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
+
   public static RemoteFileSystemClient client;
   public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
+    .registerModule(new JavaTimeModule().addDeserializer(LocalDateTime.class, localDateTimeDeserializer))
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+
 
   protected static final String TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkaWt1X2FkbWluIiwidXNlcl9pZCI6IjFkM2I1OGNiLTA3YjUtNWZjZC04YTJhLTNjZTA2YTBlYjkwZiIsImlhdCI6MTYxNjQyMDM5MywidGVuYW50IjoiZGlrdSJ9.2nvEYQBbJP1PewEgxixBWLHSX_eELiBEBpjufWiJZRs";
   protected static final String TENANT = "diku";
@@ -146,7 +156,6 @@ public abstract class BaseTest {
     Map<String, Collection<String>> okapiHeaders = new LinkedHashMap<>();
     okapiHeaders.put(XOkapiHeaders.TENANT, List.of(TENANT));
     okapiHeaders.put(XOkapiHeaders.TOKEN, List.of(TOKEN));
-//    okapiHeaders.put(XOkapiHeaders.URL, List.of(wireMockServer.baseUrl()));
     okapiHeaders.put(XOkapiHeaders.USER_ID, List.of(UUID.randomUUID().toString()));
     var defaultFolioExecutionContext = new DefaultFolioExecutionContext(folioModuleMetadata, okapiHeaders);
     FolioExecutionScopeExecutionContextManager.beginFolioExecutionContext(defaultFolioExecutionContext);
@@ -170,7 +179,6 @@ public abstract class BaseTest {
 
     httpHeaders.setContentType(APPLICATION_JSON);
     httpHeaders.put(XOkapiHeaders.TENANT, List.of(TENANT));
-//    httpHeaders.add(XOkapiHeaders.URL, wireMockServer.baseUrl());
     httpHeaders.add(XOkapiHeaders.TOKEN, TOKEN);
     httpHeaders.add(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 

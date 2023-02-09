@@ -21,7 +21,7 @@ public class RuleService {
   private final BulkOperationRuleDetailsRepository ruleDetailsRepository;
 
   @Transactional
-  public void saveRules(BulkOperationRuleCollection ruleCollection) {
+  public BulkOperationRuleCollection saveRules(BulkOperationRuleCollection ruleCollection) {
     ruleCollection.getBulkOperationRules().stream()
       .map(BulkOperationRule::getBulkOperationId)
       .distinct()
@@ -40,6 +40,7 @@ public class RuleService {
           .updatedValue(action.getUpdated())
           .build()));
     });
+    return ruleCollection;
   }
 
   public BulkOperationRuleCollection getRules(UUID bulkOperationId) {

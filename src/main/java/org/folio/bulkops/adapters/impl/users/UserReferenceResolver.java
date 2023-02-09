@@ -17,7 +17,6 @@ import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.spring.FolioExecutionContext;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
@@ -37,12 +36,11 @@ public class UserReferenceResolver {
   private final OkapiClient okapiClient;
   private final ErrorService errorService;
 
-  @Cacheable(cacheNames = "addressTypeNames")
   public String getAddressTypeDescById(String id, UUID bulkOperationId, String identifier) {
     try {
       return isNull(id) ? EMPTY
-          : addressTypeClient.getAddressTypeById(id)
-            .getDesc();
+        : addressTypeClient.getAddressTypeById(id)
+        .getDesc();
     } catch (NotFoundException e) {
       var msg = String.format("Address type was not found by id: [%s]", id);
       log.error(msg);
@@ -52,8 +50,6 @@ public class UserReferenceResolver {
       return id;
     }
   }
-
-  @Cacheable(cacheNames = "departmentNames")
   public String getDepartmentNameById(String id, UUID bulkOperationId, String identifier) {
     try {
       return isNull(id) ? EMPTY
@@ -69,7 +65,6 @@ public class UserReferenceResolver {
     }
   }
 
-  @Cacheable(cacheNames = "patronGroupNames")
   public String getPatronGroupNameById(String id, UUID bulkOperationId, String identifier) {
     try {
       return isNull(id) ? EMPTY
@@ -85,7 +80,6 @@ public class UserReferenceResolver {
     }
   }
 
-  @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByRefId(String refId) {
     var customFields = customFieldsClient.getCustomFieldsByQuery(getModuleId(MOD_USERS), String.format("refId==\"%s\"", refId));
     if (customFields.getCustomFields().isEmpty()) {
@@ -96,7 +90,6 @@ public class UserReferenceResolver {
     return customFields.getCustomFields().get(0);
   }
 
-  @Cacheable(cacheNames = "moduleIds")
   public String getModuleId(String moduleName) {
     var tenantId = folioExecutionContext.getTenantId();
     var moduleNamesJson = okapiClient.getModuleIds(URI.create(OKAPI_URL), tenantId, moduleName);

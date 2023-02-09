@@ -12,6 +12,7 @@ import static org.folio.bulkops.processor.ItemDataProcessor.BULK_EDIT_CONFIGURAT
 import static org.folio.bulkops.processor.ItemDataProcessor.MODULE_NAME;
 import static org.folio.bulkops.processor.ItemDataProcessor.STATUSES_CONFIG_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
@@ -27,6 +28,13 @@ import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.ModelConfiguration;
 import org.folio.bulkops.domain.bean.ResultInfo;
+import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.BulkOperationCollection;
+import org.folio.bulkops.domain.dto.BulkOperationRule;
+import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
+import org.folio.bulkops.domain.dto.UpdateActionType;
+import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -67,7 +75,9 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Test
   void testClearItemStatus() {
-    assertNull(processor.process(IDENTIFIER, new Item(), rules(rule(STATUS, CLEAR_FIELD, null))));
+    var actual = processor.process(IDENTIFIER, new Item(), rules(rule(STATUS, CLEAR_FIELD, null)));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
   }
 
   @Test
@@ -82,9 +92,9 @@ class ItemDataProcessorTest extends BaseTest {
 
     var result = processor.process(IDENTIFIER, item, rules);
     assertNotNull(result);
-    assertNull(result.getPermanentLocation());
-    assertNull(result.getTemporaryLocation());
-    assertNull(result.getTemporaryLoanType());
+    assertNull(result.getEntity().getPermanentLocation());
+    assertNull(result.getEntity().getTemporaryLocation());
+    assertNull(result.getEntity().getTemporaryLoanType());
   }
 
   @Test
@@ -115,20 +125,24 @@ class ItemDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, item, rules);
 
     assertNotNull(result);
-    assertEquals(updatedLocationId, result.getPermanentLocation().getId());
-    assertEquals(updatedLocationId, result.getTemporaryLocation().getId());
-    assertEquals(updatedLoanTypeId, result.getPermanentLoanType().getId());
-    assertEquals(updatedLoanTypeId, result.getTemporaryLoanType().getId());
+    assertEquals(updatedLocationId, result.getEntity().getPermanentLocation().getId());
+    assertEquals(updatedLocationId, result.getEntity().getTemporaryLocation().getId());
+    assertEquals(updatedLoanTypeId, result.getEntity().getPermanentLoanType().getId());
+    assertEquals(updatedLoanTypeId, result.getEntity().getTemporaryLoanType().getId());
   }
 
   @Test
   void testClearPermanentLoanType() {
-    assertNull(processor.process(IDENTIFIER, new Item(), rules(rule(PERMANENT_LOAN_TYPE, CLEAR_FIELD, null))));
+    var actual = processor.process(IDENTIFIER, new Item(), rules(rule(PERMANENT_LOAN_TYPE, CLEAR_FIELD, null)));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
   }
 
   @Test
   void testReplaceLoanTypeWithEmptyValue() {
-    assertNull(processor.process(IDENTIFIER, new Item(), rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, null))));
+    var actual = processor.process(IDENTIFIER, new Item(), rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, null)));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
   }
 
   @Test
@@ -140,16 +154,20 @@ class ItemDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, item, rules);
 
     assertNotNull(result);
-    assertEquals(InventoryItemStatus.NameEnum.MISSING, result.getStatus().getName());
-    assertNotNull(result.getStatus().getDate());
+    assertEquals(InventoryItemStatus.NameEnum.MISSING, result.getEntity().getStatus().getName());
+    assertNotNull(result.getEntity().getStatus().getDate());
   }
 
   @Test
   void testUpdateRestrictedItemStatus() {
-    assertNull(processor.process(IDENTIFIER, new Item()
-      .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AGED_TO_LOST)), rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.MISSING.getValue()))));
+    var actual = processor.process(IDENTIFIER, new Item()
+      .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AGED_TO_LOST)), rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.MISSING.getValue())));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
 
-    assertNull(processor.process(IDENTIFIER, new Item()
-      .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AVAILABLE)), rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.IN_TRANSIT.getValue()))));
+    actual = processor.process(IDENTIFIER, new Item()
+      .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AVAILABLE)), rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.IN_TRANSIT.getValue())));
+    assertNotNull(actual.getEntity());
+    assertFalse(actual.isChanged);
   }
 }
