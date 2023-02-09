@@ -30,21 +30,49 @@
         "description": "Bulk Operation status",
         "$ref": "operation_status_type.json#/OperationStatusType"
       },
+      "approach": {
+        "description": "Bulk Operation approach type",
+        "$ref": "approach_type.json#/ApproachType"
+      },
       "dataExportJobId": {
         "description": "Data export Job UUID",
         "type": "string",
         "format": "uuid"
       },
-      "linkToOriginFile": {
-        "description": "Path to the origin file",
+      "linkToTriggeringCsvFile": {
+        "description": "Path to the bulk operation triggering file",
         "type": "string"
       },
-      "linkToModifiedFile": {
-        "description": "Path to the modified file",
+      "linkToMatchedRecordsJsonFile": {
+        "description": "Path to the matched (origin) json file",
         "type": "string"
       },
-      "linkToResultFile": {
-        "description": "Path to the result file",
+      "linkToMatchedRecordsCsvFile": {
+        "description": "Path to the matched (origin) csv file",
+        "type": "string"
+      },
+      "linkToMatchedRecordsErrorsCsvFile": {
+        "description": "Path to the matching errors csv file",
+        "type": "string"
+      },
+      "linkToModifiedRecordsJsonFile": {
+        "description": "Path to the modified (updated) json file",
+        "type": "string"
+      },
+      "linkToModifiedRecordsCsvFile": {
+        "description": "Path to the modified (updated) csv file",
+        "type": "string"
+      },
+      "linkToCommittedRecordsJsonFile": {
+        "description": "Path to the committed (result) json file",
+        "type": "string"
+      },
+      "linkToCommittedRecordsCsvFile": {
+        "description": "Path to the committed (result) csv file",
+        "type": "string"
+      },
+      "linkToCommittedRecordsErrorsCsvFile": {
+        "description": "Path to the committing errors csv file",
         "type": "string"
       },
       "totalNumOfRecords": {
@@ -55,6 +83,30 @@
       },
       "processedNumOfRecords": {
         "description": "Number of processed records",
+        "type": "integer",
+        "format": "int64",
+        "default": 0
+      },
+      "matchedNumOfRecords": {
+        "description": "Number of matched records",
+        "type": "integer",
+        "format": "int64",
+        "default": 0
+      },
+      "committedNumOfRecords": {
+        "description": "Number of committed records",
+        "type": "integer",
+        "format": "int64",
+        "default": 0
+      },
+      "matchedNumOfErrors": {
+        "description": "Number of matching errors",
+        "type": "integer",
+        "format": "int64",
+        "default": 0
+      },
+      "committedNumOfErrors": {
+        "description": "Number of committing errors",
         "type": "integer",
         "format": "int64",
         "default": 0

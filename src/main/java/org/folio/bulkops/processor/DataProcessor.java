@@ -12,7 +12,7 @@ public interface DataProcessor<T extends BulkOperationsEntity> {
    * @param rule   rule with updates
    * @return updated result
    */
-  T process(String identifier, T entity, BulkOperationRuleCollection rule);
+  UpdatedEntityHolder<T> process(String identifier, T entity, BulkOperationRuleCollection rule);
 
   Class<T> getProcessedType();
 }

@@ -3,6 +3,7 @@ package org.folio.bulkops.adapters;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.adapters.Constants.DATE_TIME_PATTERN;
+import static org.folio.bulkops.util.Constants.UTC;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -21,7 +22,7 @@ public class BulkEditAdapterHelper {
 
   static {
     dateFormat = new SimpleDateFormat(DATE_TIME_PATTERN);
-    dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+    dateFormat.setTimeZone(TimeZone.getTimeZone(UTC));
   }
 
   public static String dateToString(Date date) {

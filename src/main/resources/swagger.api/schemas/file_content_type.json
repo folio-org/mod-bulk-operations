@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Type of generated files",
+  "FileContentType": {
+    "type": "string",
+    "enum": [
+      "TRIGGERING_FILE",
+      "MATCHED_RECORDS_FILE",
+      "RECORD_MATCHING_ERROR_FILE",
+      "PROPOSED_CHANGES_FILE",
+      "COMMITTED_RECORDS_FILE",
+      "COMMITTING_CHANGES_ERROR_FILE"
+    ]
+  }
+}

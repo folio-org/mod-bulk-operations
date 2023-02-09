@@ -16,6 +16,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 
+import static org.folio.bulkops.util.Constants.UTC;
+
 @Data
 @With
 @Builder(toBuilder = true)
@@ -131,6 +133,6 @@ public class ScheduleParameters {
   private List<WeekDaysEnum> weekDays = null;
 
   @JsonProperty("timeZone")
-  private String timeZone = "UTC";
+  private String timeZone = UTC;
 }
 

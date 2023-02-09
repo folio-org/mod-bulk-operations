@@ -1,6 +1,7 @@
 package org.folio.bulkops.processor;
 
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
@@ -87,6 +88,9 @@ public class UserDataProcessor extends AbstractDataProcessor<User> {
       return user -> {
         var initial = action.getInitial();
         var updated = action.getUpdated();
+        if (isNull(user.getPersonal()) || isNull(user.getPersonal().getEmail())) {
+          throw new BulkOperationException("Email is null");
+        }
         if (user.getPersonal()
           .getEmail()
           .contains(initial)) {

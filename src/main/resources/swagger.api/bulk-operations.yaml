@@ -7,13 +7,13 @@ info:
 paths:
   /bulk-operations/upload:
     post:
-      description: Upload csv file with identifiers list (barcodes, UUIDs, HRIDs, etc.)
+      description: Upload csv file with identifiers list (barcodes, UUIDs, HRIDs, etc.) or csv-file with already updated entities
       operationId: uploadCsvFile
       parameters:
         - name: entityType
           in: query
           required: true
-          description: Entity type (USER, ITEM, HOLDING)
+          description: Entity type (USER, ITEM, HOLDINGS_RECORD)
           schema:
             $ref: "#/components/schemas/entityType"
         - name: identifierType
@@ -22,6 +22,24 @@ paths:
           description: Identifier type (ID, BARCODE, etc.)
           schema:
             $ref: "#/components/schemas/identifierType"
+        - name: manual
+          in: query
+          required: false
+          description: Key if manual approach is used
+          schema:
+            default: false
+            type: boolean
+        - name: operationId
+          in: query
+          required: false
+          description: UUID of the Bulk Operation (applicable for (manual = true) case)
+          schema:
+            $ref: "#/components/schemas/UUID"
+        - name: X-Okapi-User-Id
+          in: header
+          schema:
+            type: string
+            format: uuid
       requestBody:
         content:
           multipart/form-data:
@@ -70,6 +88,10 @@ paths:
       responses:
         "200":
           description: Rules are saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bulkOperationRuleCollection"
         "400":
           description: Bad request
           content:
@@ -99,6 +121,12 @@ paths:
           description: UUID of the Bulk Operation
           schema:
             $ref: "#/components/schemas/UUID"
+        - name: step
+          in: query
+          required: true
+          description: Key if manual approach is used
+          schema:
+            $ref: "#/components/schemas/bulkOperationStep"
         - in: query
           name: limit
           required: true
@@ -130,43 +158,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/errors"
-  /bulk-operations/{operationId}/preview/download:
-    get:
-      description: Download updated entities preview as csv-file
-      operationId: downloadPreviewByOperationId
-      parameters:
-        - name: operationId
-          in: path
-          required: true
-          description: UUID of the Bulk Operation
-          schema:
-            $ref: "#/components/schemas/UUID"
-      responses:
-        '200':
-          description: Preview of updated items to download
-          content:
-            text/csv:
-              schema:
-                type: string
-                format: binary
-        "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errors"
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errors"
-        "500":
-          description: Internal server errors, e.g. due to misconfiguration
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errors"
   /bulk-operations/{operationId}/start:
     post:
       description: Start Bulk Operation
@@ -178,6 +169,17 @@ paths:
           description: UUID of the Bulk Operation
           schema:
             $ref: "#/components/schemas/UUID"
+        - name: X-Okapi-User-Id
+          in: header
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/bulkOperationStart"
       responses:
         "200":
           description: Bulk Operation is started
@@ -242,43 +244,6 @@ paths:
               schema:
                 type: string
                 example: Internal server error
-  /bulk-operations/{operationId}/errors/download:
-    get:
-      description: Download errors as csv-file
-      operationId: downloadErrorsByOperationId
-      parameters:
-        - name: operationId
-          in: path
-          required: true
-          description: UUID of the Bulk Operation
-          schema:
-            $ref: "#/components/schemas/UUID"
-      responses:
-        '200':
-          description: Preview of updated items to download
-          content:
-            text/csv:
-              schema:
-                type: string
-                format: binary
-        "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errors"
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errors"
-        "500":
-          description: Internal server errors, e.g. due to misconfiguration
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errors"
   /bulk-operations:
     get:
       description: Get a list of operations
@@ -289,7 +254,19 @@ paths:
           required: true
           schema:
             type: string
-          description: The numbers of operations to return
+          description: Request query
+        - in: query
+          name: offset
+          required: false
+          schema:
+            type: integer
+          description: Query offset
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+          description: Query limit
       responses:
         '200':
           description: Collection of operations for preview
@@ -304,6 +281,55 @@ paths:
               schema:
                 type: string
                 example: Internal server error
+  /bulk-operations/{operationId}/download:
+    get:
+      description: Download file by operation id
+      operationId: downloadFileByOperationId
+      parameters:
+        - name: operationId
+          in: path
+          required: true
+          description: UUID of the Bulk Operation
+          schema:
+            $ref: "#/components/schemas/UUID"
+        - in: query
+          name: fileContentType
+          required: true
+          schema:
+            $ref: "#/components/schemas/fileContentType"
+          description: The file content type
+      responses:
+        '200':
+          description: Preview of updated items to download
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
+        "500":
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            application/json:
+              example:
+                $ref: "#/components/examples/errors"
+              schema:
+                $ref: "#/components/schemas/errors"
   /bulk-operations/{operationId}:
     get:
       description: Get bulk operation by id
@@ -349,6 +375,14 @@ components:
       $ref: 'schemas/entity_type.json#/EntityType'
     identifierType:
       $ref: 'schemas/identifier_type.json#/IdentifierType'
+    fileContentType:
+      $ref: 'schemas/file_content_type.json#/FileContentType'
+    approachType:
+      $ref: 'schemas/approach_type.json#/ApproachType'
+    bulkOperationStep:
+      $ref: 'schemas/bulk_operation_step.json#/BulkOperationStep'
+    bulkOperationStart:
+      $ref: 'schemas/bulk_operation_start.json#/Start'
     UUID:
       type: string
       format: uuid

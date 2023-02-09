@@ -1,0 +1,18 @@
+{
+   "bulkOperationRules":[
+      {
+         "bulkOperationId":"{{operationId}}",
+         "rule_details":{
+            "option":"EXPIRATION_DATE",
+            "actions":[
+               {
+                  "type":"REPLACE_WITH",
+                  "initial":null,
+                  "updated":"2023-01-23T11:52:30.714+00:00"
+               }
+            ]
+         }
+      }
+   ],
+   "totalRecords":1
+}
