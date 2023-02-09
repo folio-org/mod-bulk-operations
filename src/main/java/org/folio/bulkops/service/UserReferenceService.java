@@ -121,7 +121,7 @@ public class UserReferenceService implements InitializingBean {
     throw new NotFoundException(msg);
   }
 
-  private static UserReferenceService service;
+  private static UserReferenceService service = null;
 
   @Override
   public void afterPropertiesSet() {

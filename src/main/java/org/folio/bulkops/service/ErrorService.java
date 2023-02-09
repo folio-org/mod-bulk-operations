@@ -91,16 +91,6 @@ public class ErrorService {
       .collect(Collectors.joining(Constants.NEW_LINE_SEPARATOR));
   }
 
-  private Errors getProcessingErrors(UUID bulkOperationId, int limit) {
-    var errorPage = processingContentRepository.findByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId, OffsetRequest.of(0, limit));
-    var errors = errorPage.toList().stream()
-      .map(this::processingContentToError)
-      .collect(Collectors.toList());
-    return new Errors()
-      .errors(errors)
-      .totalRecords((int) errorPage.getTotalElements());
-  }
-
   private Error processingContentToError(BulkOperationProcessingContent content) {
     return new Error()
       .message(content.getErrorMessage())

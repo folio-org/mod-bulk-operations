@@ -559,7 +559,7 @@ class BulkOperationServiceTest extends BaseTest {
         .identifierType(IdentifierType.BARCODE)
         .build()));
 
-    assertThrows(BadRequestException.class, () -> bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(approach).step(COMMIT)));
+    assertThrows(BadRequestException.class, () -> bulkOperationService.startBulkOperation(bulkOperationId, null, new BulkOperationStart().approach(approach).step(COMMIT)));
 
   }
 

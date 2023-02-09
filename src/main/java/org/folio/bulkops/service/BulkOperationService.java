@@ -3,7 +3,6 @@ package org.folio.bulkops.service;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opencsv.CSVWriter;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.StatefulBeanToCsv;
@@ -28,6 +27,7 @@ import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.converter.CustomMappingStrategy;
+import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
@@ -70,6 +70,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -93,6 +94,9 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 @RequiredArgsConstructor
 public class BulkOperationService {
   public static final String PREVIEW_IS_NOT_AVAILABLE = "Preview is not available";
+  public static final String FILE_UPLOADING_FAILED_REASON = "File uploading failed, reason: %s";
+  public static final String STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS = "Step %s is not applicable for bulk operation status %s";
+  public static final String ERROR_STARTING_BULK_OPERATION = "Error starting Bulk Operation: ";
   @Value("${application.file-uploading.max-retry-count}")
   private int maxRetryCount;
 
@@ -111,7 +115,7 @@ public class BulkOperationService {
   private final BulkOperationProcessingContentRepository processingContentRepository;
   private final ErrorService errorService;
 
-  public BulkOperation uploadCsvFile(EntityType entityType, IdentifierType identifierType, Boolean manual, UUID operationId, UUID xOkapiUserId, MultipartFile multipartFile) {
+  public BulkOperation uploadCsvFile(EntityType entityType, IdentifierType identifierType, boolean manual, UUID operationId, UUID xOkapiUserId, MultipartFile multipartFile) {
 
     String errorMessage = null;
     BulkOperation bulkOperation;
@@ -134,8 +138,8 @@ public class BulkOperationService {
           bulkOperation.setMatchedNumOfRecords(numOfLines);
 
         } catch (Exception e) {
-          log.error("Error starting Bulk Operation: " + e.getCause());
-          errorMessage = String.format("File uploading failed, reason: %s", e.getMessage());
+          log.error(ERROR_STARTING_BULK_OPERATION + e.getCause());
+          errorMessage = String.format(FILE_UPLOADING_FAILED_REASON, e.getMessage());
         }
       }
       bulkOperation.setApproach(MANUAL);
@@ -151,8 +155,8 @@ public class BulkOperationService {
         var linkToTriggeringFile = remoteFileSystemClient.put(multipartFile.getInputStream(), bulkOperation.getId() + "/" + multipartFile.getOriginalFilename());
         bulkOperation.setLinkToTriggeringCsvFile(linkToTriggeringFile);
       } catch (Exception e) {
-        log.error("Error starting Bulk Operation: " + e);
-        errorMessage = String.format("File uploading failed, reason: %s", e.getMessage());
+        log.error(ERROR_STARTING_BULK_OPERATION + e);
+        errorMessage = String.format(FILE_UPLOADING_FAILED_REASON, e.getMessage());
       }
     }
 
@@ -203,7 +207,7 @@ public class BulkOperationService {
       strategy.setType(entityClass);
 
       StatefulBeanToCsv<BulkOperationsEntity> sbc = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writerForCsvFile)
-        .withSeparator(CSVWriter.DEFAULT_SEPARATOR)
+        .withSeparator(DEFAULT_SEPARATOR)
         .withApplyQuotesToAll(false)
         .withMappingStrategy(strategy)
         .build();
@@ -272,7 +276,7 @@ public class BulkOperationService {
     var processingContent = BulkOperationProcessingContent.builder()
       .bulkOperationId(bulkOperation.getId())
       .build();
-    UpdatedEntityHolder modified = null;
+    UpdatedEntityHolder<BulkOperationsEntity> modified = null;
     try {
       processingContent.setIdentifier(original.getIdentifier(bulkOperation.getIdentifierType()));
       modified = processor.process(original.getIdentifier(bulkOperation.getIdentifierType()), original, rules);
@@ -321,7 +325,7 @@ public class BulkOperationService {
         var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
 
         StatefulBeanToCsv<BulkOperationsEntity> sbc = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writerForCsvFile)
-          .withSeparator(CSVWriter.DEFAULT_SEPARATOR)
+          .withSeparator(DEFAULT_SEPARATOR)
           .withApplyQuotesToAll(false)
           .withMappingStrategy(strategy)
           .build();
@@ -425,7 +429,7 @@ public class BulkOperationService {
     }
   }
 
-  private UnifiedTable buildPreview(String pathToFile, Class<? extends BulkOperationsEntity> entityClass, int limit) throws BulkOperationException {
+  private UnifiedTable buildPreview(String pathToFile, Class<? extends BulkOperationsEntity> entityClass, int limit) {
     var adapter = modClientAdapterFactory.getModClientAdapter(entityClass);
     try (var reader = new BufferedReader(new InputStreamReader(remoteFileSystemClient.get(pathToFile)))) {
         return adapter.getEmptyTableWithHeaders().rows(reader.lines()
@@ -472,47 +476,7 @@ public class BulkOperationService {
     String errorMessage = null;
     try {
       if (UPLOAD == step) {
-        try {
-          if (NEW.equals(bulkOperation.getStatus())) {
-            if (MANUAL != approach) {
-              var job = dataExportSpringClient.upsertJob(Job.builder()
-                .type((QUERY == approach) ?
-                  ExportType.BULK_EDIT_QUERY :
-                  ExportType.BULK_EDIT_IDENTIFIERS)
-                .entityType(bulkOperation.getEntityType())
-                .exportTypeSpecificParameters((QUERY == approach) ?
-                  new ExportTypeSpecificParameters()
-                .withQuery(bulkOperationStart.getQuery()) :
-                  new ExportTypeSpecificParameters())
-                .identifierType(bulkOperation.getIdentifierType()).build());
-              bulkOperation.setDataExportJobId(job.getId());
-              bulkOperationRepository.save(bulkOperation);
-
-              if (JobStatus.SCHEDULED.equals(job.getStatus())) {
-                if (QUERY != approach) {
-                  uploadCsvFile(job.getId(), new FolioMultiPartFile(FilenameUtils.getName(bulkOperation.getLinkToTriggeringCsvFile()), "application/json", remoteFileSystemClient.get(bulkOperation.getLinkToTriggeringCsvFile())));
-                  job = dataExportSpringClient.getJob(job.getId());
-                }
-
-                if (JobStatus.FAILED.equals(job.getStatus())) {
-                  errorMessage = "Data export job failed";
-                } else {
-                  if (QUERY != approach && JobStatus.SCHEDULED.equals(job.getStatus())) {
-                    bulkEditClient.startJob(job.getId());
-                  }
-                  bulkOperation.setStatus(RETRIEVING_RECORDS);
-                }
-              } else {
-                errorMessage = String.format("File uploading failed - invalid job status: %s (expected: SCHEDULED)", job.getStatus().getValue());
-              }
-            }
-          } else {
-            throw new BadRequestException(String.format("Step %s is not applicable for bulk operation status %s", step, bulkOperation.getStatus()));
-          }
-        } catch (Exception e) {
-          log.error("Error starting Bulk Operation: " + e.getCause());
-          errorMessage = String.format("File uploading failed, reason: %s", e.getMessage());
-        }
+        errorMessage = executeDataExportJob(bulkOperationStart, step, approach, bulkOperation, errorMessage);
 
         if (nonNull(errorMessage)) {
           log.error(errorMessage);
@@ -538,13 +502,13 @@ public class BulkOperationService {
           }
           return bulkOperation;
         } else {
-          throw new BadRequestException(String.format("Step %s is not applicable for bulk operation status %s", step, bulkOperation.getStatus()));
+          throw new BadRequestException(String.format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, bulkOperation.getStatus()));
         }
       } else if (BulkOperationStep.COMMIT == step) {
         if (REVIEW_CHANGES.equals(bulkOperation.getStatus())) {
           return commit(bulkOperationId);
         } else {
-          throw new BadRequestException(String.format("Step %s is not applicable for bulk operation status %s", step, bulkOperation.getStatus()));
+          throw new BadRequestException(String.format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, bulkOperation.getStatus()));
         }
       } else {
         throw new IllegalOperationStateException("Bulk operation cannot be started, reason: invalid state: " + bulkOperation.getStatus());
@@ -553,6 +517,51 @@ public class BulkOperationService {
       log.error(e.getCause());
       throw new IllegalOperationStateException("Bulk operation cannot be started, reason: " + e.getMessage());
     }
+  }
+
+  private String executeDataExportJob(BulkOperationStart bulkOperationStart, BulkOperationStep step, ApproachType approach, BulkOperation bulkOperation, String errorMessage) {
+    try {
+      if (NEW.equals(bulkOperation.getStatus())) {
+        if (MANUAL != approach) {
+          var job = dataExportSpringClient.upsertJob(Job.builder()
+            .type((QUERY == approach) ?
+              ExportType.BULK_EDIT_QUERY :
+              ExportType.BULK_EDIT_IDENTIFIERS)
+            .entityType(bulkOperation.getEntityType())
+            .exportTypeSpecificParameters((QUERY == approach) ?
+              new ExportTypeSpecificParameters()
+            .withQuery(bulkOperationStart.getQuery()) :
+              new ExportTypeSpecificParameters())
+            .identifierType(bulkOperation.getIdentifierType()).build());
+          bulkOperation.setDataExportJobId(job.getId());
+          bulkOperationRepository.save(bulkOperation);
+
+          if (JobStatus.SCHEDULED.equals(job.getStatus())) {
+            if (QUERY != approach) {
+              uploadCsvFile(job.getId(), new FolioMultiPartFile(FilenameUtils.getName(bulkOperation.getLinkToTriggeringCsvFile()), "application/json", remoteFileSystemClient.get(bulkOperation.getLinkToTriggeringCsvFile())));
+              job = dataExportSpringClient.getJob(job.getId());
+            }
+
+            if (JobStatus.FAILED.equals(job.getStatus())) {
+              errorMessage = "Data export job failed";
+            } else {
+              if (QUERY != approach && JobStatus.SCHEDULED.equals(job.getStatus())) {
+                bulkEditClient.startJob(job.getId());
+              }
+              bulkOperation.setStatus(RETRIEVING_RECORDS);
+            }
+          } else {
+            errorMessage = String.format("File uploading failed - invalid job status: %s (expected: SCHEDULED)", job.getStatus().getValue());
+          }
+        }
+      } else {
+        throw new BadRequestException(String.format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, bulkOperation.getStatus()));
+      }
+    } catch (Exception e) {
+      log.error(ERROR_STARTING_BULK_OPERATION + e.getCause());
+      errorMessage = String.format(FILE_UPLOADING_FAILED_REASON, e.getMessage());
+    }
+    return errorMessage;
   }
 
   public void apply(BulkOperation bulkOperation) {
