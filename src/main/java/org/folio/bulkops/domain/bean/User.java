@@ -23,7 +23,7 @@ import org.folio.bulkops.domain.converter.UserDepartmentsConverter;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -135,14 +135,14 @@ public class User extends BulkOperationsEntity {
   @Override
   public String getIdentifier(IdentifierType identifierType) {
     switch (identifierType) {
-    case BARCODE:
-      return barcode;
-    case EXTERNAL_SYSTEM_ID:
-      return externalSystemId;
-    case USER_NAME:
-      return username;
-    default:
-      return id;
+      case BARCODE:
+        return barcode;
+      case EXTERNAL_SYSTEM_ID:
+        return externalSystemId;
+      case USER_NAME:
+        return username;
+      default:
+        return id;
     }
   }
 }

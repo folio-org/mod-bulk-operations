@@ -1,6 +1,7 @@
 package org.folio.bulkops.processor;
 
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
@@ -14,10 +15,12 @@ import java.util.List;
 import java.util.Objects;
 
 import org.folio.bulkops.client.ConfigurationClient;
+import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.LoanTypeClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.domain.bean.InventoryItemStatus;
 import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.BulkOperationException;
@@ -44,6 +47,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
 
   private final LoanTypeClient loanTypeClient;
   private final LocationClient locationClient;
+  private final HoldingsClient holdingsClient;
   private final ConfigurationClient configurationClient;
   private final ObjectMapper objectMapper;
 
@@ -96,9 +100,15 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
       case TEMPORARY_LOAN_TYPE:
         return item -> item.setTemporaryLoanType(loanTypeClient.getLoanTypeById(action.getUpdated()));
       case PERMANENT_LOCATION:
-        return item -> item.setPermanentLocation(locationClient.getLocationById(action.getUpdated()));
+        return item -> {
+          item.setPermanentLocation(locationClient.getLocationById(action.getUpdated()));
+          item.setEffectiveLocation(getEffectiveLocation(item));
+        };
       case TEMPORARY_LOCATION:
-        return item -> item.setTemporaryLocation(locationClient.getLocationById(action.getUpdated()));
+        return item -> {
+          item.setTemporaryLocation(locationClient.getLocationById(action.getUpdated()));
+          item.setEffectiveLocation(getEffectiveLocation(item));
+        };
       case STATUS:
         return item -> item.setStatus(new InventoryItemStatus().withDate(new Date())
           .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated())));
@@ -110,9 +120,15 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
     } else if (CLEAR_FIELD == action.getType()) {
       switch (option) {
       case PERMANENT_LOCATION:
-        return item -> item.setPermanentLocation(null);
+        return item -> {
+          item.setPermanentLocation(null);
+          item.setEffectiveLocation(getEffectiveLocation(item));
+        };
       case TEMPORARY_LOCATION:
-        return item -> item.setTemporaryLocation(null);
+        return item -> {
+          item.setTemporaryLocation(null);
+          item.setEffectiveLocation(getEffectiveLocation(item));
+        };
       case TEMPORARY_LOAN_TYPE:
         return item -> item.setTemporaryLoanType(null);
       default:
@@ -140,5 +156,15 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
   @Override
   public Class<Item> getProcessedType() {
     return Item.class;
+  }
+
+  private ItemLocation getEffectiveLocation(Item item) {
+    if (isNull(item.getTemporaryLocation()) && isNull(item.getPermanentLocation())) {
+      var holdingsJson = holdingsClient.getHoldingById(item.getHoldingsRecordId());
+      var holdingsEffectiveLocationId = isNull(holdingsJson.get("temporaryLocationId")) ? holdingsJson.get("permanentLocationId") : holdingsJson.get("temporaryLocationId");
+      return locationClient.getLocationById(holdingsEffectiveLocationId.asText());
+    } else {
+      return isNull(item.getTemporaryLocation()) ? item.getPermanentLocation() : item.getTemporaryLocation();
+    }
   }
 }
