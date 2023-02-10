@@ -18,7 +18,7 @@ import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.service.UserReferenceService;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -157,4 +157,3 @@ public class Personal {
     }
   }
 }
-
