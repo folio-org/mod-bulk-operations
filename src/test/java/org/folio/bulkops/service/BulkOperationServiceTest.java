@@ -327,7 +327,7 @@ class BulkOperationServiceTest extends BaseTest {
   @ParameterizedTest
   @EnumSource(value = ApproachType.class, names = {"IN_APP", "QUERY"}, mode = EnumSource.Mode.INCLUDE)
   @SneakyThrows
-  void shouldConfirmChanges() {
+  void shouldConfirmChanges(ApproachType approach) {
     var bulkOperationId = UUID.randomUUID();
     var originalPatronGroupId = "3684a786-6671-4268-8ed0-9db82ebca60b";
     var newPatronGroupId = UUID.randomUUID().toString();
@@ -376,7 +376,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
     when(remoteFileSystemClient.newOutputStream(any())).thenCallRealMethod();
 
-    bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.QUERY).step(EDIT));
+    bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(approach).step(EDIT));
 
     var processingCaptor = ArgumentCaptor.forClass(BulkOperationProcessingContent.class);
     verify(processingContentRepository).save(processingCaptor.capture());
