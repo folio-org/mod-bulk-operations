@@ -495,12 +495,15 @@ public class BulkOperationService {
           } else {
             if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsJsonFile())) {
               remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsJsonFile());
+              bulkOperation.setLinkToModifiedRecordsJsonFile(null);
             }
             if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsCsvFile())) {
               remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsCsvFile());
+              bulkOperation.setLinkToModifiedRecordsCsvFile(null);
             }
             if (isNotEmpty(bulkOperation.getLinkToPreviewRecordsJsonFile())) {
               remoteFileSystemClient.remove(bulkOperation.getLinkToPreviewRecordsJsonFile());
+              bulkOperation.setLinkToPreviewRecordsJsonFile(null);
             }
             confirm(bulkOperationId);
           }

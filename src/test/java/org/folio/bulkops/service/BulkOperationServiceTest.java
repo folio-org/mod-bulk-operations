@@ -343,7 +343,8 @@ class BulkOperationServiceTest extends BaseTest {
         .entityType(EntityType.USER)
         .identifierType(IdentifierType.BARCODE)
         .linkToMatchedRecordsJsonFile(pathToOrigin)
-        .linkToModifiedRecordsJsonFile(pathToModified)
+        .linkToModifiedRecordsJsonFile("existing.csv")
+        .linkToModifiedRecordsCsvFile("existing.json")
         .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
         .build()));
 
