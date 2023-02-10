@@ -345,6 +345,7 @@ class BulkOperationServiceTest extends BaseTest {
         .linkToMatchedRecordsJsonFile(pathToOrigin)
         .linkToModifiedRecordsJsonFile("existing.csv")
         .linkToModifiedRecordsCsvFile("existing.json")
+        .linkToPreviewRecordsJsonFile("existing-preview.json")
         .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
         .build()));
 
