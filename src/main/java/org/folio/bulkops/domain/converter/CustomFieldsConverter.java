@@ -8,7 +8,7 @@ import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.bean.CustomFieldTypes;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.exception.NotFoundException;
-import org.folio.bulkops.exception.UserFormatException;
+import org.folio.bulkops.exception.EntityFormatException;
 import org.folio.bulkops.service.UserReferenceService;
 
 import java.util.ArrayList;
@@ -64,7 +64,7 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
       case MULTI_SELECT_DROPDOWN:
         return Pair.of(customField.getRefId(), restoreValueIds(customField, fieldValue));
       default:
-        throw new UserFormatException("Invalid custom field: " + s);
+        throw new EntityFormatException("Invalid custom field: " + s);
     }
   }
 
@@ -74,7 +74,7 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
       return Pair.of(SpecialCharacterEscaper.restore(tokens[0]), SpecialCharacterEscaper.restore(tokens[1]));
     } else {
       var msg = "Invalid key/value pair: " + value;
-      throw new UserFormatException(msg);
+      throw new EntityFormatException(msg);
     }
   }
 
@@ -94,7 +94,7 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
       return optionalValue.get().getId();
     } else {
       var msg = "Invalid custom field value: " + value;
-      throw new UserFormatException(msg);
+      throw new EntityFormatException(msg);
     }
   }
 

@@ -79,8 +79,6 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
@@ -224,10 +222,7 @@ public class BulkOperationService {
         var modified = processUpdate(original, bulkOperation, ruleCollection, entityClass);
 
         if (Objects.nonNull(modified)) {
-          // TODO Correct implementation via OpenCSV currently works only for User.class
-          if (entityClass.equals(User.class)) {
-            sbc.write(modified.getEntity());
-          }
+          sbc.write(modified.getEntity());
           if (modified.isChanged()) {
             if (!isChangesPresented) {
               isChangesPresented = true;
@@ -250,11 +245,6 @@ public class BulkOperationService {
       if (isChangesPresented) {
         bulkOperation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
         bulkOperation.setLinkToModifiedRecordsCsvFile(modifiedCsvFileName);
-      }
-
-      //TODO This is workaround and potential source of OOM - should be refactored via OpenCSV like it is done for User.class
-      if (!entityClass.equals(User.class)) {
-        writerForCsvFile.write(getCsvPreviewForBulkOperation(bulkOperation, EDIT));
       }
 
       bulkOperationRepository.save(bulkOperation
@@ -343,12 +333,7 @@ public class BulkOperationService {
             var result = updateEntityIfNeeded(original, modified, bulkOperation, entityClass);
             var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
             remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY)).getBytes()), resultFileName);
-
-            // TODO Should be refactored to use open csv
-            if (User.class == entityClass) {
-              sbc.write(result);
-            }
-
+            sbc.write(result);
             execution = execution.withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
               .withProcessedRecords(execution.getProcessedRecords() + 1)
               .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
@@ -365,11 +350,6 @@ public class BulkOperationService {
           .withLinkToCommittedRecordsJsonFile(resultFileName)
           .withCommittedNumOfErrors((bulkOperation.getCommittedNumOfErrors() != null ? bulkOperation.getCommittedNumOfErrors() : 0) + committedNumOfErrors)
           .withCommittedNumOfRecords(committedNumOfRecords);
-
-        // TODO Should be refactored to use open csv
-        if (User.class != entityClass) {
-          writerForCsvFile.write(getCsvPreviewForBulkOperation(bulkOperation, COMMIT));
-        }
 
         executionRepository.save(execution);
 
