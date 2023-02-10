@@ -20,6 +20,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.UUID;
 
+import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.ConfigurationCollection;
 import org.folio.bulkops.domain.bean.InventoryItemStatus;
@@ -28,16 +29,13 @@ import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.ModelConfiguration;
 import org.folio.bulkops.domain.bean.ResultInfo;
-import org.folio.bulkops.domain.dto.Action;
-import org.folio.bulkops.domain.dto.BulkOperationCollection;
-import org.folio.bulkops.domain.dto.BulkOperationRule;
-import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
-import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
-import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -129,6 +127,89 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(updatedLocationId, result.getEntity().getTemporaryLocation().getId());
     assertEquals(updatedLoanTypeId, result.getEntity().getPermanentLoanType().getId());
     assertEquals(updatedLoanTypeId, result.getEntity().getTemporaryLoanType().getId());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = { "PERMANENT_LOCATION", "TEMPORARY_LOCATION" })
+  void shouldUpdateItemEffectiveLocationOnClearLocation(UpdateOptionType optionType) {
+    var permanentLocation = new ItemLocation().withId(UUID.randomUUID().toString()).withName("Permanent location");
+    var temporaryLocation = new ItemLocation().withId(UUID.randomUUID().toString()).withName("Temporary location");
+    var item = new Item()
+      .withPermanentLocation(permanentLocation)
+      .withTemporaryLocation(temporaryLocation);
+
+    var rules = rules(rule(optionType, CLEAR_FIELD, null));
+
+    var result = processor.process(IDENTIFIER, item, rules);
+
+    if (PERMANENT_LOCATION.equals(optionType)) {
+      assertNull(result.getEntity().getPermanentLocation());
+      assertEquals(temporaryLocation, result.getEntity().getTemporaryLocation());
+      assertEquals(temporaryLocation, result.getEntity().getEffectiveLocation());
+    } else {
+      assertNull(result.getEntity().getTemporaryLocation());
+      assertEquals(permanentLocation, result.getEntity().getPermanentLocation());
+      assertEquals(permanentLocation, result.getEntity().getEffectiveLocation());
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldSetEffectiveLocationBasedOnHoldingsWhenBothLocationsCleared() {
+    var holdingsId = UUID.randomUUID().toString();
+    var holdingsLocationId = UUID.randomUUID().toString();
+    var holdingsLocation = ItemLocation.builder().id(holdingsLocationId).name("Holdings' location").build();
+
+    when(holdingsClient.getHoldingById(holdingsId)).thenReturn(OBJECT_MAPPER.readTree(String.format("{ \"permanentLocationId\": \"%s\" }", holdingsLocationId)));
+    when(locationClient.getLocationById(holdingsLocationId)).thenReturn(holdingsLocation);
+
+    var item = new Item()
+      .withHoldingsRecordId(holdingsId)
+      .withPermanentLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Permanent location"))
+      .withTemporaryLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Temporary location"));
+
+    var rules = rules(rule(PERMANENT_LOCATION, CLEAR_FIELD, null),
+      rule(TEMPORARY_LOCATION, CLEAR_FIELD, null));
+
+    var result = processor.process(IDENTIFIER, item, rules);
+
+    assertNull(result.getEntity().getPermanentLocation());
+    assertNull(result.getEntity().getTemporaryLocation());
+    assertEquals(holdingsLocation, result.getEntity().getEffectiveLocation());
+  }
+
+  @ParameterizedTest
+  @CsvSource(value = { ",,PERMANENT_LOCATION", ",,TEMPORARY_LOCATION",
+    "p,,PERMANENT_LOCATION", "p,,TEMPORARY_LOCATION",
+    ",t,PERMANENT_LOCATION", ",t,TEMPORARY_LOCATION",
+    "p,t,PERMANENT_LOCATION", "p,t,TEMPORARY_LOCATION"}, delimiter = ',')
+  @SneakyThrows
+  void shouldUpdateItemEffectiveLocationOnClear(String permanentLocation, String temporaryLocation, UpdateOptionType optionType) {
+    var newLocationId = UUID.randomUUID().toString();
+    var newLocation = ItemLocation.builder().id(newLocationId).name("new location").build();
+    var item = Item.builder()
+      .permanentLocation(isNull(permanentLocation) ? null : ItemLocation.builder().id(UUID.randomUUID().toString()).name("permanent").build())
+      .temporaryLocation(isNull(temporaryLocation) ? null : ItemLocation.builder().id(UUID.randomUUID().toString()).name("temporary").build())
+      .build();
+
+    when(locationClient.getLocationById(newLocationId)).thenReturn(newLocation);
+
+    var rules = rules(rule(optionType, REPLACE_WITH, newLocationId));
+
+    var result = processor.process(IDENTIFIER, item, rules);
+
+    assertNotNull(result);
+    if (PERMANENT_LOCATION.equals(optionType)) {
+      assertEquals(newLocation, result.getEntity().getPermanentLocation());
+      if (isNull(temporaryLocation)) {
+        assertEquals(newLocation, result.getEntity().getEffectiveLocation());
+      } else {
+        assertEquals("temporary", result.getEntity().getEffectiveLocation().getName());
+      }
+    } else {
+      assertEquals(newLocation, result.getEntity().getTemporaryLocation());
+      assertEquals(newLocation, result.getEntity().getEffectiveLocation());
+    }
   }
 
   @Test
