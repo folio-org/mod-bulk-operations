@@ -77,6 +77,7 @@
           "pathPattern": "/bulk-operations/{operationId}/start",
           "permissionsRequired": [ "bulk-operations.item.start.post" ],
           "modulePermissions": [
+            "bulk-edit.item.post",
             "inventory-storage.holdings.item.put",
             "inventory.items.item.put",
             "users.item.put"
