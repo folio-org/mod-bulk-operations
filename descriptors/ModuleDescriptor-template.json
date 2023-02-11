@@ -11,8 +11,6 @@
           "pathPattern": "/bulk-operations/upload",
           "permissionsRequired": [ "bulk-operations.item.upload.post" ],
           "modulePermissions": [
-            "data-export.job.item.post",
-            "bulk-edit.item.post"
           ]
         },
         {
@@ -77,9 +75,14 @@
           "pathPattern": "/bulk-operations/{operationId}/start",
           "permissionsRequired": [ "bulk-operations.item.start.post" ],
           "modulePermissions": [
+            "bulk-edit.item.post",
+            "bulk-edit.start.item.post",
+            "data-export.job.item.post",
+            "data-export.job.item.get",
             "inventory-storage.holdings.item.put",
             "inventory.items.item.put",
-            "users.item.put"
+            "users.item.put",
+            "usergroups.item.get"
           ]
         },
         {
