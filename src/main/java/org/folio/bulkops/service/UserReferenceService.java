@@ -11,6 +11,7 @@ import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -34,6 +35,7 @@ public class UserReferenceService implements InitializingBean {
   private final FolioExecutionContext folioExecutionContext;
   private final OkapiClient okapiClient;
 
+  @Cacheable(cacheNames = "addressTypeIds")
   public String getAddressTypeIdByDesc(String desc) {
     if (isEmpty(desc)) {
       return null;
@@ -57,6 +59,7 @@ public class UserReferenceService implements InitializingBean {
   }
 
 
+  @Cacheable(cacheNames = "departmentIds")
   public String getDepartmentIdByName(String name) {
     if (isEmpty(name)) {
       return null;
@@ -75,6 +78,7 @@ public class UserReferenceService implements InitializingBean {
       return isNull(id) ? EMPTY : groupClient.getGroupById(id).getGroup();
   }
 
+  @Cacheable(cacheNames = "patronGroupIds")
   public String getPatronGroupIdByName(String name) {
     if (isEmpty(name)) {
       throw new NotFoundException("Patron group can not be empty");
@@ -89,6 +93,7 @@ public class UserReferenceService implements InitializingBean {
   }
 
 
+  @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByName(String name)  {
     var customFields = customFieldsClient.getCustomFieldsByQuery(getModuleId(MOD_USERS), String.format("name==\"%s\"", name));
     if (customFields.getCustomFields().isEmpty()) {
@@ -99,6 +104,7 @@ public class UserReferenceService implements InitializingBean {
     return customFields.getCustomFields().get(0);
   }
 
+  @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByRefId(String refId) {
 
     var customFields = customFieldsClient.getCustomFieldsByQuery(getModuleId(MOD_USERS),String.format("refId==\"%s\"", refId));
@@ -110,6 +116,7 @@ public class UserReferenceService implements InitializingBean {
     return customFields.getCustomFields().get(0);
   }
 
+  @Cacheable(cacheNames = "moduleIds")
   public String getModuleId(String moduleName) {
     var tenantId = folioExecutionContext.getTenantId();
     var moduleNamesJson = okapiClient.getModuleIds(URI.create(OKAPI_URL), tenantId, moduleName);

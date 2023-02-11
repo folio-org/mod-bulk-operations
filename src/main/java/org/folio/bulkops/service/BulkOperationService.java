@@ -56,6 +56,7 @@ import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -170,6 +171,7 @@ public class BulkOperationService {
     return bulkOperationRepository.save(operation);
   }
 
+  @Async
   public void confirm(UUID operationId) throws BulkOperationException {
     var operation = getBulkOperationOrThrow(operationId);
 
@@ -262,19 +264,20 @@ public class BulkOperationService {
         writerForModifiedCsvFile.write(buildCsvStringFomUnifiedTable(buildPreview(previewJsonFileName, clazz, Integer.MAX_VALUE)));
       }
 
-      bulkOperationRepository.save(operation
-        .withApproach(IN_APP)
-        .withStatus(OperationStatusType.REVIEW_CHANGES));
+      operation.setApproach(IN_APP);
+      operation.setStatus(OperationStatusType.REVIEW_CHANGES);
+
+      bulkOperationRepository.save(operation);
 
     } catch (Exception e) {
       log.error(e);
       dataProcessingRepository.save(dataProcessing
         .withStatus(StatusType.FAILED)
         .withEndTime(LocalDateTime.now()));
-      bulkOperationRepository.save(operation
-        .withStatus(OperationStatusType.FAILED)
-        .withEndTime(LocalDateTime.now())
-        .withErrorMessage("Confirm changes operation failed, reason: " + e.getMessage()));
+      operation.setStatus(OperationStatusType.FAILED);
+      operation.setEndTime(LocalDateTime.now());
+      operation.setErrorMessage("Confirm changes operation failed, reason: " + e.getMessage());
+      operation = bulkOperationRepository.save(operation);
     }
   }
 
@@ -297,18 +300,20 @@ public class BulkOperationService {
     return modified;
   }
 
-  public BulkOperation commit(UUID bulkOperationId) throws BulkOperationException {
-    var operation = getBulkOperationOrThrow(bulkOperationId);
+  @Async
+  public void commit(BulkOperation operation) throws BulkOperationException {
 
     if (isEmpty(operation.getLinkToMatchedRecordsJsonFile())) {
       throw new BulkOperationException("Missing link to origin file");
     }
 
-    operation = bulkOperationRepository.save(operation.withStatus(OperationStatusType.APPLY_CHANGES));
+    var operationId = operation.getId();
+    operation.setStatus(OperationStatusType.APPLY_CHANGES);
+    operation = bulkOperationRepository.save(operation);
 
     if (StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsJsonFile())) {
       var entityClass = resolveEntityClass(operation.getEntityType());
-      var operationId = operation.getId();
+
       var execution = executionRepository.save(BulkOperationExecution.builder()
         .bulkOperationId(operationId)
         .startTime(LocalDateTime.now())
@@ -362,16 +367,16 @@ public class BulkOperationService {
             committedNumOfRecords++;
           } catch (Exception e) {
             committedNumOfErrors++;
-            errorService.saveError(bulkOperationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage());
+            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage());
           }
         }
 
-        operation = operation.withStatus(OperationStatusType.COMPLETED)
-          .withEndTime(LocalDateTime.now())
-          .withLinkToCommittedRecordsCsvFile(resultCsvFileName)
-          .withLinkToCommittedRecordsJsonFile(resultJsonFileName)
-          .withCommittedNumOfErrors((operation.getCommittedNumOfErrors() != null ? operation.getCommittedNumOfErrors() : 0) + committedNumOfErrors)
-          .withCommittedNumOfRecords(committedNumOfRecords);
+        operation.setStatus(OperationStatusType.COMPLETED);
+        operation.setEndTime(LocalDateTime.now());
+        operation.setLinkToCommittedRecordsCsvFile(resultCsvFileName);
+        operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
+        operation.setCommittedNumOfErrors((operation.getCommittedNumOfErrors() != null ? operation.getCommittedNumOfErrors() : 0) + committedNumOfErrors);
+        operation.setCommittedNumOfRecords(committedNumOfRecords);
 
         // TODO Should be refactored to use open csv
         if (User.class != entityClass) {
@@ -383,19 +388,19 @@ public class BulkOperationService {
       } catch (Exception e) {
         execution = execution.withStatus(StatusType.FAILED)
           .withEndTime(LocalDateTime.now());
-        operation = operation.withStatus(OperationStatusType.FAILED)
-          .withEndTime(LocalDateTime.now())
-          .withErrorMessage(e.getMessage());
+        operation.setStatus(OperationStatusType.FAILED);
+        operation.setEndTime(LocalDateTime.now());
+        operation.setErrorMessage(e.getMessage());
       }
       executionRepository.save(execution);
     } else {
       operation.setStatus(OperationStatusType.COMPLETED);
     }
 
-    var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(bulkOperationId);
+    var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operationId);
     operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
 
-    return bulkOperationRepository.save(operation);
+    bulkOperationRepository.save(operation);
   }
 
   private BulkOperationsEntity updateEntityIfNeeded(BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation, Class<? extends BulkOperationsEntity> entityClass) {
@@ -476,10 +481,9 @@ public class BulkOperationService {
 
         if (nonNull(errorMessage)) {
           log.error(errorMessage);
-          operation = operation
-            .withStatus(FAILED)
-            .withErrorMessage(errorMessage)
-            .withEndTime(LocalDateTime.now());
+          operation.setStatus(FAILED);
+          operation.setErrorMessage(errorMessage);
+          operation.setEndTime(LocalDateTime.now());
         }
         bulkOperationRepository.save(operation);
         return operation;
@@ -499,7 +503,8 @@ public class BulkOperationService {
         }
       } else if (BulkOperationStep.COMMIT == step) {
         if (REVIEW_CHANGES.equals(operation.getStatus())) {
-          return commit(bulkOperationId);
+          commit(operation);
+          return operation;
         } else {
           throw new BadRequestException(String.format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
         }
@@ -572,6 +577,7 @@ public class BulkOperationService {
     return errorMessage;
   }
 
+  @Async
   public void apply(BulkOperation operation) {
     var bulkOperationId = operation.getId();
     var linkToMatchedRecordsJsonFile = operation.getLinkToMatchedRecordsJsonFile();
@@ -642,12 +648,14 @@ public class BulkOperationService {
     if (DATA_MODIFICATION.equals(operation.getStatus())) {
       var processing = dataProcessingRepository.findByBulkOperationId(bulkOperationId);
       if (processing.isPresent() && StatusType.ACTIVE.equals(processing.get().getStatus())) {
-        return operation.withProcessedNumOfRecords(processing.get().getProcessedNumOfRecords());
+        operation.setProcessedNumOfRecords(processing.get().getProcessedNumOfRecords());
+        return operation;
       }
     } else if (APPLY_CHANGES.equals(operation.getStatus())) {
       var execution = executionRepository.findByBulkOperationId(bulkOperationId);
       if (execution.isPresent() && StatusType.ACTIVE.equals(execution.get().getStatus())) {
-        return operation.withProcessedNumOfRecords(execution.get().getProcessedRecords());
+        operation.setProcessedNumOfRecords(execution.get().getProcessedRecords());
+        return operation;
       }
     }
     return operation;
