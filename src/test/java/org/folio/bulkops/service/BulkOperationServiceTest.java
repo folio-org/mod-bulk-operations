@@ -621,6 +621,7 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldNotUpdateIfEntitiesAreEqual() {
     var bulkOperationId = UUID.randomUUID();
     var pathToOrigin = bulkOperationId + "/origin.json";
+    var pathToOriginCsv = bulkOperationId + "/origin.csv";
     var pathToModified = bulkOperationId + "/modified-origin.json";
     var pathToUserJson = "src/test/resources/files/user.json";
 
@@ -630,6 +631,7 @@ class BulkOperationServiceTest extends BaseTest {
         .entityType(USER)
         .identifierType(IdentifierType.BARCODE)
         .linkToMatchedRecordsJsonFile(pathToOrigin)
+          .linkToMatchedRecordsCsvFile(pathToOriginCsv)
         .linkToModifiedRecordsJsonFile(pathToModified)
         .build()));
 
@@ -639,6 +641,7 @@ class BulkOperationServiceTest extends BaseTest {
         .entityType(USER)
         .identifierType(IdentifierType.BARCODE)
         .linkToMatchedRecordsJsonFile(pathToOrigin)
+        .linkToMatchedRecordsCsvFile(pathToOriginCsv)
         .linkToModifiedRecordsJsonFile(pathToModified)
         .build());
 
@@ -663,12 +666,11 @@ class BulkOperationServiceTest extends BaseTest {
     verify(executionContentRepository, times(1)).save(any(BulkOperationExecutionContent.class));
 
     var expectedPathToResultFile = bulkOperationId + "/json/result-origin.json";
-    var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
+    var expectedPathToResultCsvFile = bulkOperationId + "/result-origin.csv";
     var pathCaptor = ArgumentCaptor.forClass(String.class);
-    verify(remoteFileSystemClient).append(streamCaptor.capture(), pathCaptor.capture());
-    assertEquals(new String(streamCaptor.getValue().readAllBytes()),
-      Files.readString(Path.of(pathToUserJson)).trim());
-    assertEquals(expectedPathToResultFile, pathCaptor.getValue());
+    verify(remoteFileSystemClient, times(2)).writer(pathCaptor.capture());
+    assertEquals(expectedPathToResultCsvFile, pathCaptor.getAllValues().get(0));
+    assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().get(1));
   }
 
   @Test
