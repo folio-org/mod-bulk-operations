@@ -56,7 +56,6 @@ import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -68,6 +67,8 @@ import java.io.Writer;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
@@ -75,7 +76,6 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
@@ -92,7 +92,6 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 @Log4j2
 @RequiredArgsConstructor
 public class BulkOperationService {
-  public static final String PREVIEW_IS_NOT_AVAILABLE = "Preview is not available";
   public static final String FILE_UPLOADING_FAILED_REASON = "File uploading failed, reason: %s";
   public static final String STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS = "Step %s is not applicable for bulk operation status %s";
   public static final String ERROR_STARTING_BULK_OPERATION = "Error starting Bulk Operation: ";
@@ -113,6 +112,8 @@ public class BulkOperationService {
   private final ModClientAdapterFactory modClientAdapterFactory;
   private final BulkOperationProcessingContentRepository processingContentRepository;
   private final ErrorService errorService;
+
+  private ExecutorService executor = Executors.newCachedThreadPool();
 
   public BulkOperation uploadCsvFile(EntityType entityType, IdentifierType identifierType, boolean manual, UUID operationId, UUID xOkapiUserId, MultipartFile multipartFile) {
 
@@ -171,21 +172,12 @@ public class BulkOperationService {
     return bulkOperationRepository.save(operation);
   }
 
-  @Async
-  public void confirm(UUID operationId) throws BulkOperationException {
-    var operation = getBulkOperationOrThrow(operationId);
-
-    if (isEmpty(operation.getLinkToMatchedRecordsJsonFile())) {
-      throw new BulkOperationException("Missing link to origin file");
-    }
-
-    var clazz = resolveEntityClass(operation.getEntityType());
-    applyRules(operation, ruleService.getRules(operationId), clazz);
-  }
-
-  public void applyRules(BulkOperation operation, BulkOperationRuleCollection ruleCollection, Class<? extends BulkOperationsEntity> clazz) {
+  public void confirm(BulkOperation operation)  {
 
     var operationId = operation.getId();
+
+    var clazz = resolveEntityClass(operation.getEntityType());
+    var ruleCollection = ruleService.getRules(operationId);
 
     var dataProcessing = dataProcessingRepository.save(BulkOperationDataProcessing.builder()
       .bulkOperationId(operation.getId())
@@ -277,7 +269,7 @@ public class BulkOperationService {
       operation.setStatus(OperationStatusType.FAILED);
       operation.setEndTime(LocalDateTime.now());
       operation.setErrorMessage("Confirm changes operation failed, reason: " + e.getMessage());
-      operation = bulkOperationRepository.save(operation);
+      bulkOperationRepository.save(operation);
     }
   }
 
@@ -300,12 +292,11 @@ public class BulkOperationService {
     return modified;
   }
 
-  @Async
-  public void commit(BulkOperation operation) throws BulkOperationException {
+  public void commit(BulkOperation operation) {
 
-    if (isEmpty(operation.getLinkToMatchedRecordsJsonFile())) {
-      throw new BulkOperationException("Missing link to origin file");
-    }
+//    if (isEmpty(operation.getLinkToMatchedRecordsJsonFile())) {
+//      throw new BulkOperationException("Missing link to origin file");
+//    }
 
     var operationId = operation.getId();
     operation.setStatus(OperationStatusType.APPLY_CHANGES);
@@ -418,17 +409,12 @@ public class BulkOperationService {
   }
 
   public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int limit) {
-    try {
       var entityClass = resolveEntityClass(operation.getEntityType());
       return switch (step) {
         case UPLOAD -> buildPreview(operation.getLinkToMatchedRecordsJsonFile(), entityClass, limit);
         case EDIT -> buildPreview(operation.getLinkToPreviewRecordsJsonFile(), entityClass, limit);
         case COMMIT -> buildPreview(operation.getLinkToCommittedRecordsJsonFile(), entityClass, limit);
       };
-    } catch (BulkOperationException e) {
-      log.error(e.getCause());
-      throw new NotFoundException(e.getMessage());
-    }
   }
 
   private UnifiedTable buildPreview(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int limit) {
@@ -475,45 +461,40 @@ public class BulkOperationService {
     operation.setUserId(xOkapiUserId);
 
     String errorMessage = null;
-    try {
-      if (UPLOAD == step) {
-        errorMessage = executeDataExportJob(bulkOperationStart, step, approach, operation, errorMessage);
+    if (UPLOAD == step) {
+      errorMessage = executeDataExportJob(bulkOperationStart, step, approach, operation, errorMessage);
 
-        if (nonNull(errorMessage)) {
-          log.error(errorMessage);
-          operation.setStatus(FAILED);
-          operation.setErrorMessage(errorMessage);
-          operation.setEndTime(LocalDateTime.now());
-        }
-        bulkOperationRepository.save(operation);
-        return operation;
-      } else if (BulkOperationStep.EDIT == step) {
-        errorService.deleteErrorsByBulkOperationId(bulkOperationId);
-        operation.setCommittedNumOfErrors(0);
-        if (DATA_MODIFICATION.equals(operation.getStatus()) || REVIEW_CHANGES.equals(operation.getStatus())) {
-          if (MANUAL == approach) {
-            apply(operation);
-          } else {
-            clear(operation);
-            confirm(bulkOperationId);
-          }
-          return operation;
-        } else {
-          throw new BadRequestException(String.format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
-        }
-      } else if (BulkOperationStep.COMMIT == step) {
-        if (REVIEW_CHANGES.equals(operation.getStatus())) {
-          commit(operation);
-          return operation;
-        } else {
-          throw new BadRequestException(String.format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
-        }
-      } else {
-        throw new IllegalOperationStateException("Bulk operation cannot be started, reason: invalid state: " + operation.getStatus());
+      if (nonNull(errorMessage)) {
+        log.error(errorMessage);
+        operation.setStatus(FAILED);
+        operation.setErrorMessage(errorMessage);
+        operation.setEndTime(LocalDateTime.now());
       }
-    } catch (BulkOperationException e) {
-      log.error(e.getCause());
-      throw new IllegalOperationStateException("Bulk operation cannot be started, reason: " + e.getMessage());
+      bulkOperationRepository.save(operation);
+      return operation;
+    } else if (BulkOperationStep.EDIT == step) {
+      errorService.deleteErrorsByBulkOperationId(bulkOperationId);
+      operation.setCommittedNumOfErrors(0);
+      if (DATA_MODIFICATION.equals(operation.getStatus()) || REVIEW_CHANGES.equals(operation.getStatus())) {
+        if (MANUAL == approach) {
+          executor.execute(() -> apply(operation));
+        } else {
+          clear(operation);
+          executor.execute(() -> confirm(operation));
+        }
+        return operation;
+      } else {
+        throw new BadRequestException(String.format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
+      }
+    } else if (BulkOperationStep.COMMIT == step) {
+      if (REVIEW_CHANGES.equals(operation.getStatus())) {
+        executor.execute(() -> commit(operation));
+        return operation;
+      } else {
+        throw new BadRequestException(String.format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
+      }
+    } else {
+      throw new IllegalOperationStateException("Bulk operation cannot be started, reason: invalid state: " + operation.getStatus());
     }
   }
 
@@ -577,7 +558,6 @@ public class BulkOperationService {
     return errorMessage;
   }
 
-  @Async
   public void apply(BulkOperation operation) {
     var bulkOperationId = operation.getId();
     var linkToMatchedRecordsJsonFile = operation.getLinkToMatchedRecordsJsonFile();
@@ -670,12 +650,11 @@ public class BulkOperationService {
     }
   }
 
-  private Class<? extends BulkOperationsEntity> resolveEntityClass(EntityType clazz) throws BulkOperationException {
+  private Class<? extends BulkOperationsEntity> resolveEntityClass(EntityType clazz) {
     return switch (clazz) {
       case USER -> User.class;
       case ITEM -> Item.class;
       case HOLDINGS_RECORD -> HoldingsRecord.class;
-      default -> throw new BulkOperationException("Unsupported entity type: " + clazz);
     };
   }
 

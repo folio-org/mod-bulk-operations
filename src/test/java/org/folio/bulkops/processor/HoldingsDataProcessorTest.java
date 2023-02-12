@@ -17,6 +17,7 @@ import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import feign.FeignException;
+
+import java.util.UUID;
 
 class HoldingsDataProcessorTest extends BaseTest {
 
@@ -101,6 +104,31 @@ class HoldingsDataProcessorTest extends BaseTest {
     var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(MARC_SOURCE_ID), rules(rule(PERMANENT_LOCATION, CLEAR_FIELD, null)));
     assertNotNull(actual.getEntity());
     assertFalse(actual.isChanged);
+  }
+
+  @Test
+  void testUpdateHoldingsWithUnknownSource() {
+    var permanentLocationId = "2508a0cb-e43a-404d-bd78-2e847dfca229";
+    var temporaryLocationId = "c8d27cb7-a86b-45f7-b6f4-1604fb467660";
+
+    var unknownSourceId = UUID.randomUUID().toString();
+
+    var holding = new HoldingsRecord()
+      .withPermanentLocation(new ItemLocation()
+        .withId(permanentLocationId)
+        .withName("Permanent Location"))
+      .withSourceId(unknownSourceId)
+      .withPermanentLocationId(permanentLocationId)
+      .withTemporaryLocationId(temporaryLocationId)
+      .withEffectiveLocationId(temporaryLocationId);
+
+    when(holdingsSourceClient.getById(unknownSourceId)).thenThrow(new NotFoundException("Source was not found"));
+
+    var result = processor.process(IDENTIFIER, holding, rules(rule(TEMPORARY_LOCATION, CLEAR_FIELD, null)));
+
+    assertNotNull(result);
+    assertNull(result.getEntity().getTemporaryLocationId());
+    assertEquals(permanentLocationId, result.getEntity().getEffectiveLocationId());
   }
 
   @Test

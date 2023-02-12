@@ -382,7 +382,7 @@ class BulkOperationServiceTest extends BaseTest {
     bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(approach).step(EDIT));
 
     var processingCaptor = ArgumentCaptor.forClass(BulkOperationProcessingContent.class);
-    verify(processingContentRepository).save(processingCaptor.capture());
+    Awaitility.await().untilAsserted(() -> verify(processingContentRepository).save(processingCaptor.capture()));
     assertThat(processingCaptor.getValue().getState(), equalTo(StateType.PROCESSED));
 
     var expectedPathToModifiedFile = bulkOperationId + "/json/modified-origin.json";
@@ -390,21 +390,21 @@ class BulkOperationServiceTest extends BaseTest {
     var expectedPathToModifiedCsvFile = bulkOperationId + "/modified-origin.csv";
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
-    verify(remoteFileSystemClient, times(3)).append(streamCaptor.capture(), pathCaptor.capture());
+    Awaitility.await().untilAsserted(() ->verify(remoteFileSystemClient, times(3)).append(streamCaptor.capture(), pathCaptor.capture()));
     assertThat(new String(streamCaptor.getAllValues().get(0).readAllBytes()), containsString(newPatronGroupId));
     assertEquals(expectedPathToModifiedFile, pathCaptor.getAllValues().get(1));
     assertEquals(expectedPathToPreviewFile, pathCaptor.getAllValues().get(0));
     assertEquals(expectedPathToModifiedCsvFile, pathCaptor.getAllValues().get(2));
 
     var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
-    verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture());
+    Awaitility.await().untilAsserted(() -> verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));
     var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(1);
     assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(1));
     assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));
     assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
 
     var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository).save(bulkOperationCaptor.capture());
+    Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository).save(bulkOperationCaptor.capture()));
     var capturedBulkOperation = bulkOperationCaptor.getValue();
     assertThat(capturedBulkOperation.getLinkToModifiedRecordsJsonFile(), equalTo(expectedPathToModifiedFile));
     assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
@@ -417,13 +417,15 @@ class BulkOperationServiceTest extends BaseTest {
     var newPatronGroupId = UUID.randomUUID().toString();
     var pathToOrigin = bulkOperationId + "/origin.json";
 
+    var operation = BulkOperation.builder()
+      .id(bulkOperationId)
+      .entityType(USER)
+      .identifierType(IdentifierType.BARCODE)
+      .linkToMatchedRecordsJsonFile(pathToOrigin)
+      .build();
+
     when(bulkOperationRepository.findById(any(UUID.class)))
-      .thenReturn(Optional.of(BulkOperation.builder()
-        .id(bulkOperationId)
-        .entityType(USER)
-        .identifierType(IdentifierType.BARCODE)
-        .linkToMatchedRecordsJsonFile(pathToOrigin)
-        .build()));
+      .thenReturn(Optional.of(operation));
 
     when(ruleService.getRules(bulkOperationId))
       .thenReturn(new BulkOperationRuleCollection()
@@ -443,7 +445,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(pathToOrigin))
       .thenThrow(new RuntimeException("Failed to read file"));
 
-    bulkOperationService.confirm(bulkOperationId);
+    bulkOperationService.confirm(operation);
 
     var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
     Awaitility.await().untilAsserted(() -> verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));
@@ -516,27 +518,27 @@ class BulkOperationServiceTest extends BaseTest {
 
     bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(COMMIT));
 
-    verify(userClient).updateUser(any(User.class), anyString());
+    Awaitility.await().untilAsserted(() -> verify(userClient).updateUser(any(User.class), anyString()));
 
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
-    verify(remoteFileSystemClient, times(2)).append(streamCaptor.capture(), pathCaptor.capture());
+    Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).append(streamCaptor.capture(), pathCaptor.capture()));
     assertEquals(new String(streamCaptor.getAllValues().get(0).readAllBytes()),
       Files.readString(Path.of(pathToModifiedUserJson)).trim());
     assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().get(0));
 
     var executionContentCaptor = ArgumentCaptor.forClass(BulkOperationExecutionContent.class);
-    verify(executionContentRepository).save(executionContentCaptor.capture());
+    Awaitility.await().untilAsserted(() -> verify(executionContentRepository).save(executionContentCaptor.capture()));
     assertThat(executionContentCaptor.getValue().getState(), equalTo(StateType.PROCESSED));
 
     var executionCaptor = ArgumentCaptor.forClass(BulkOperationExecution.class);
-    verify(executionRepository, times(3)).save(executionCaptor.capture());
+    Awaitility.await().untilAsserted(() -> verify(executionRepository, times(3)).save(executionCaptor.capture()));
     var updatedExecution = executionCaptor.getAllValues().get(1);
     assertThat(updatedExecution.getProcessedRecords(), is(1));
     assertThat(updatedExecution.getStatus(), equalTo(StatusType.COMPLETED));
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
+    Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(2)).save(operationCaptor.capture()));
     var firstCapture = operationCaptor.getAllValues().get(0);
     assertThat(firstCapture.getStatus(), equalTo(OperationStatusType.APPLY_CHANGES));
     var secondCapture = operationCaptor.getAllValues().get(1);
@@ -598,7 +600,7 @@ class BulkOperationServiceTest extends BaseTest {
     bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.MANUAL).step(EDIT));
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(1)).save(operationCaptor.capture());
+    Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(1)).save(operationCaptor.capture()));
     var capture = operationCaptor.getAllValues().get(0);
     assertThat(capture.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
     assertThat(capture.getLinkToModifiedRecordsJsonFile(), equalTo(expectedPathToResultFile));
@@ -922,24 +924,19 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   private BulkOperation buildBulkOperation(String fileName, EntityType entityType, BulkOperationStep step) {
-    switch (step) {
-    case UPLOAD:
-      return BulkOperation.builder()
+    return switch (step) {
+      case UPLOAD -> BulkOperation.builder()
         .entityType(entityType)
         .linkToMatchedRecordsJsonFile(fileName)
         .build();
-    case EDIT:
-      return BulkOperation.builder()
+      case EDIT -> BulkOperation.builder()
         .entityType(entityType)
         .linkToPreviewRecordsJsonFile(fileName)
         .build();
-    case COMMIT:
-      return BulkOperation.builder()
+      case COMMIT -> BulkOperation.builder()
         .entityType(entityType)
         .linkToCommittedRecordsJsonFile(fileName)
         .build();
-    default:
-      return new BulkOperation();
-    }
+    };
   }
 }

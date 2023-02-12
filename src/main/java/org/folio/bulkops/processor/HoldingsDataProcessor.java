@@ -16,6 +16,7 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.BulkOperationException;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.springframework.stereotype.Component;
 
@@ -36,8 +37,12 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
   @Override
   public Validator<UpdateOptionType, Action> validator(HoldingsRecord entity) {
     return (option, action) -> {
-      if ("MARC".equals(holdingsSourceClient.getById(entity.getSourceId()).getName())) {
-        throw new RuleValidationException("Holdings records that have source \"MARC\" cannot be changed");
+      try {
+        if ("MARC".equals(holdingsSourceClient.getById(entity.getSourceId()).getName())) {
+          throw new RuleValidationException("Holdings records that have source \"MARC\" cannot be changed");
+        }
+      } catch (NotFoundException e) {
+        log.error("Holdings source was not found by id={}", entity.getSourceId());
       }
       if (REPLACE_WITH == action.getType()) {
         var locationId = action.getUpdated();
