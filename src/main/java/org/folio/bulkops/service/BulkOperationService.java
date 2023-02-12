@@ -176,6 +176,7 @@ public class BulkOperationService {
 
   public void confirm(BulkOperation operation)  {
 
+    operation.setProcessedNumOfRecords(0);
     var operationId = operation.getId();
 
     var clazz = resolveEntityClass(operation.getEntityType());
@@ -308,6 +309,7 @@ public class BulkOperationService {
 //    }
 
     var operationId = operation.getId();
+    operation.setCommittedNumOfRecords(0);
     operation.setStatus(OperationStatusType.APPLY_CHANGES);
     operation = bulkOperationRepository.save(operation);
 
@@ -574,6 +576,7 @@ public class BulkOperationService {
   }
 
   public void apply(BulkOperation operation) {
+    operation.setProcessedNumOfRecords(0);
     var bulkOperationId = operation.getId();
     var linkToMatchedRecordsJsonFile = operation.getLinkToMatchedRecordsJsonFile();
     var linkToModifiedRecordsCsvFile = operation.getLinkToModifiedRecordsCsvFile();
