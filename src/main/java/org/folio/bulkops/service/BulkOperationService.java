@@ -113,6 +113,8 @@ public class BulkOperationService {
   private final BulkOperationProcessingContentRepository processingContentRepository;
   private final ErrorService errorService;
 
+  private static final int OPERATION_UPDATING_STEP = 100;
+
   private ExecutorService executor = Executors.newCachedThreadPool();
 
   public BulkOperation uploadCsvFile(EntityType entityType, IdentifierType identifierType, boolean manual, UUID operationId, UUID xOkapiUserId, MultipartFile multipartFile) {
@@ -211,6 +213,7 @@ public class BulkOperationService {
 
       boolean isChangesPresented = false;
       var committedNumOfErrors = 0;
+      var processedNumOfRecords = 0;
 
       if(iterator.hasNext()) {
         operation.setLinkToPreviewRecordsJsonFile(previewJsonFileName);
@@ -245,6 +248,12 @@ public class BulkOperationService {
           .withProcessedNumOfRecords(dataProcessing.getProcessedNumOfRecords() + 1)
           .withStatus(iterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
           .withEndTime(iterator.hasNext() ? null : LocalDateTime.now()));
+
+        processedNumOfRecords++;
+        if (processedNumOfRecords - operation.getProcessedNumOfRecords() > OPERATION_UPDATING_STEP) {
+          operation.setProcessedNumOfRecords(processedNumOfRecords);
+          bulkOperationRepository.save(operation);
+        }
       }
 
       if (isChangesPresented) {
@@ -258,7 +267,7 @@ public class BulkOperationService {
 
       operation.setApproach(IN_APP);
       operation.setStatus(OperationStatusType.REVIEW_CHANGES);
-
+      operation.setProcessedNumOfRecords(processedNumOfRecords);
       bulkOperationRepository.save(operation);
 
     } catch (Exception e) {
@@ -360,9 +369,15 @@ public class BulkOperationService {
             committedNumOfErrors++;
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage());
           }
+
+          if (committedNumOfRecords - operation.getCommittedNumOfRecords() > OPERATION_UPDATING_STEP) {
+            operation.setCommittedNumOfRecords(committedNumOfRecords);
+            bulkOperationRepository.save(operation);
+          }
         }
 
         operation.setStatus(OperationStatusType.COMPLETED);
+        operation.setProcessedNumOfRecords(committedNumOfRecords);
         operation.setEndTime(LocalDateTime.now());
         operation.setLinkToCommittedRecordsCsvFile(resultCsvFileName);
         operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
@@ -582,6 +597,7 @@ public class BulkOperationService {
 
       var originalJsonFileIterator = objectMapper.readValues(parser, entityType);
       var committedNumOfErrors = 0;
+      var processedNumOfRecords = 0;
 
       while (originalJsonFileIterator.hasNext() && modifiedCsvFileIterator.hasNext()) {
         var originalEntity = originalJsonFileIterator.next();
@@ -596,9 +612,14 @@ public class BulkOperationService {
         } else {
           modifiedJsonWriter.write(modifiedEntityString);
         }
+        processedNumOfRecords++;
+        if (processedNumOfRecords - operation.getProcessedNumOfRecords() > OPERATION_UPDATING_STEP) {
+          operation.setProcessedNumOfRecords(processedNumOfRecords);
+          bulkOperationRepository.save(operation);
+        }
       }
-
       operation.setCommittedNumOfErrors(committedNumOfErrors);
+      operation.setProcessedNumOfRecords(processedNumOfRecords);
       operation.setStatus(REVIEW_CHANGES);
       operation.setLinkToModifiedRecordsJsonFile(linkToModifiedRecordsJsonFile);
       operation.setLinkToPreviewRecordsJsonFile(linkToPreviewRecordsJsonFile);

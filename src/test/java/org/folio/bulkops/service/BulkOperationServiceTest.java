@@ -39,7 +39,6 @@ import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.domain.entity.BulkOperationProcessingContent;
 import org.folio.bulkops.exception.BadRequestException;
-import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
@@ -47,7 +46,6 @@ import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -333,7 +331,7 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldConfirmChanges(ApproachType approach) {
     var bulkOperationId = UUID.randomUUID();
     var originalPatronGroupId = "3684a786-6671-4268-8ed0-9db82ebca60b";
-    var newPatronGroupId = UUID.randomUUID().toString();
+    var newPatronGroupId = "56c86552-20ec-41d1-964a-5a2be46969e5";
     var pathToOrigin = "path/origin.json";
     var pathToModified = bulkOperationId + "/json/modified-origin.json";
     var pathToOriginalCsv = bulkOperationId + "/origin.csv";
@@ -350,6 +348,7 @@ class BulkOperationServiceTest extends BaseTest {
         .linkToModifiedRecordsCsvFile("existing.json")
         .linkToPreviewRecordsJsonFile("existing-preview.json")
         .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
+        .processedNumOfRecords(0)
         .build()));
 
     when(ruleService.getRules(bulkOperationId))
@@ -373,8 +372,9 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(pathToModified))
       .thenReturn(new FileInputStream(pathToUserJson));
 
-    when(groupClient.getGroupById(newPatronGroupId)).thenReturn(new UserGroup());
-    when(groupClient.getGroupById(originalPatronGroupId)).thenReturn(new UserGroup());
+    // 56c86552-20ec-41d1-964a-5a2be46969e5
+    when(groupClient.getGroupById(newPatronGroupId)).thenReturn(new UserGroup().withGroup("original"));
+    when(groupClient.getGroupById(originalPatronGroupId)).thenReturn(new UserGroup().withGroup("updated"));
 
     when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
     when(remoteFileSystemClient.newOutputStream(any())).thenCallRealMethod();
@@ -481,6 +481,7 @@ class BulkOperationServiceTest extends BaseTest {
         .linkToMatchedRecordsJsonFile(pathToOrigin)
         .linkToMatchedRecordsCsvFile(pathToModifiedCsv)
         .linkToModifiedRecordsJsonFile(pathToModified)
+          .committedNumOfRecords(0)
         .build()));
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
@@ -491,6 +492,7 @@ class BulkOperationServiceTest extends BaseTest {
         .linkToMatchedRecordsJsonFile(pathToOrigin)
         .linkToMatchedRecordsCsvFile(pathToModifiedCsv)
         .linkToModifiedRecordsJsonFile(pathToModified)
+        .committedNumOfRecords(0)
         .build());
 
     when(executionRepository.save(any(BulkOperationExecution.class)))
@@ -584,6 +586,7 @@ class BulkOperationServiceTest extends BaseTest {
         .identifierType(IdentifierType.BARCODE)
         .linkToMatchedRecordsJsonFile(pathToOrigin)
           .linkToModifiedRecordsCsvFile(pathToModifiedCsv)
+          .processedNumOfRecords(0)
         .build()));
 
     when(remoteFileSystemClient.get(pathToOrigin))
