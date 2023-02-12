@@ -46,7 +46,7 @@ public class RemoteFileSystemClient {
 
   public OutputStream newOutputStream(String path) {
 
-    final int BUFFER_SIZE = 10000000;
+    final int BUFFER_SIZE = 50000000;
 
     return new OutputStream() {
 
