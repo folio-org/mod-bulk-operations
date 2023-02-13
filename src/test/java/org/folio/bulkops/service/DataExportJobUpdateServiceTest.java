@@ -59,7 +59,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     when(remoteFileSystemClient.put(any(InputStream.class), eq(expectedCsvFileName)))
       .thenReturn(expectedCsvFileName);
 
-    var expectedJsonFileName = bulkOperationId + "/user.json";
+    var expectedJsonFileName = bulkOperationId + "/json/user.json";
     when(remoteFileSystemClient.put(any(InputStream.class), eq(expectedJsonFileName)))
       .thenReturn(expectedJsonFileName);
 

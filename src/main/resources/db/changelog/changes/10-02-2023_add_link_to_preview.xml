@@ -6,8 +6,8 @@
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
 
-  <changeSet id="1.0.0_changelog" author="firebird">
-    <sqlFile path="changes/add_processing_content_table.sql" relativeToChangelogFile="true" />
+  <changeSet id="10-02-2023_add_link_to_preview" author="firebird">
+    <sqlFile path="changes/10-02-2023_add_link_to_preview.sql" relativeToChangelogFile="true" />
   </changeSet>
 
 </databaseChangeLog>

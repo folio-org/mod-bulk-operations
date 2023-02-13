@@ -11,11 +11,11 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.OperationType;
 
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -55,6 +55,7 @@ public class BulkOperation {
   private String linkToMatchedRecordsErrorsCsvFile;
   private String linkToModifiedRecordsJsonFile;
   private String linkToModifiedRecordsCsvFile;
+  private String linkToPreviewRecordsJsonFile;
   private String linkToCommittedRecordsJsonFile;
   private String linkToCommittedRecordsCsvFile;
   private String linkToCommittedRecordsErrorsCsvFile;

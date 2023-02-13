@@ -3,7 +3,7 @@ package org.folio.bulkops.domain.bean;
 import java.math.BigDecimal;
 import java.util.List;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
