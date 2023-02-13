@@ -226,10 +226,7 @@ public class BulkOperationService {
         var modified = processUpdate(original, operation, ruleCollection, clazz);
 
         if (Objects.nonNull(modified)) {
-          // TODO Correct implementation via OpenCSV currently works only for User.class
-          if (clazz.equals(User.class)) {
-            sbc.write(modified.getEntity());
-          }
+          sbc.write(modified.getEntity());
           var modifiedRecord = objectMapper.writeValueAsString(modified.getEntity()) + LF;
           writerForPreviewJsonFile.write(modifiedRecord);
 
@@ -259,11 +256,6 @@ public class BulkOperationService {
 
       if (isChangesPresented) {
         operation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
-      }
-
-      //TODO This is workaround and potential source of OOM - should be refactored via OpenCSV like it is done for User.class
-      if (!clazz.equals(User.class)) {
-        writerForModifiedCsvFile.write(buildCsvStringFomUnifiedTable(buildPreview(previewJsonFileName, clazz, Integer.MAX_VALUE)));
       }
 
       operation.setApproach(IN_APP);
@@ -355,14 +347,8 @@ public class BulkOperationService {
           try {
             var result = updateEntityIfNeeded(original, modified, operation, entityClass);
             var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
-
-            writerForJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
-
-            // TODO Should be refactored to use open csv
-            if (User.class == entityClass) {
-              sbc.write(result);
-            }
-
+            remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY)).getBytes()), resultJsonFileName);
+            sbc.write(result);
             execution = execution.withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
               .withProcessedRecords(execution.getProcessedRecords() + 1)
               .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
@@ -385,11 +371,6 @@ public class BulkOperationService {
         operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
         operation.setCommittedNumOfErrors((operation.getCommittedNumOfErrors() != null ? operation.getCommittedNumOfErrors() : 0) + committedNumOfErrors);
         operation.setCommittedNumOfRecords(committedNumOfRecords);
-
-        // TODO Should be refactored to use open csv
-        if (User.class != entityClass) {
-          writerForCsvFile.write(buildCsvStringFomUnifiedTable(buildPreview(resultJsonFileName, entityClass, Integer.MAX_VALUE)));
-        }
 
         executionRepository.save(execution);
 
