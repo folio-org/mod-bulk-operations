@@ -55,32 +55,32 @@ class ItemReferenceServiceTest extends BaseTest {
 
   @Test
   void testGetCallNumberTypeNameById() {
-    when(callNumberTypeClient.getById("id")).thenReturn(new CallNumberType().withName("name"));
-    var actual = itemReferenceService.getCallNumberTypeNameById("id");
-    assertEquals("name", actual);
+    when(callNumberTypeClient.getById("id_1")).thenReturn(new CallNumberType().withName("name_1"));
+    var actual = itemReferenceService.getCallNumberTypeNameById("id_1");
+    assertEquals("name_1", actual);
 
-    when(callNumberTypeClient.getById("id")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceService.getCallNumberTypeNameById("id"));
+    when(callNumberTypeClient.getById("id_2")).thenThrow(new NotFoundException("Not found"));
+    assertThrows(NotFoundException.class, () -> itemReferenceService.getCallNumberTypeNameById("id_2"));
 
     assertEquals(EMPTY, itemReferenceService.getCallNumberTypeNameById(null));
   }
 
   @Test
   void testGetDamagedStatus() {
-    when(damagedStatusClient.getById("id")).thenReturn(new DamagedStatus().withName("name"));
-    var actual = itemReferenceService.getDamagedStatusNameById("id");
-    assertEquals("name", actual);
+    when(damagedStatusClient.getById("id_1")).thenReturn(new DamagedStatus().withName("name_1"));
+    var actual = itemReferenceService.getDamagedStatusNameById("id_1");
+    assertEquals("name_1", actual);
 
-    when(damagedStatusClient.getByQuery("name==\"name\"")).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.singletonList(new DamagedStatus().withId("id"))));
-    actual = itemReferenceService.getDamagedStatusIdByName("name");
-    assertEquals("id", actual);
+    when(damagedStatusClient.getByQuery("name==\"name_2\"")).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.singletonList(new DamagedStatus().withId("id_2"))));
+    actual = itemReferenceService.getDamagedStatusIdByName("name_2");
+    assertEquals("id_2", actual);
 
-    when(damagedStatusClient.getById("id")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceService.getDamagedStatusNameById("id"));
+    when(damagedStatusClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
+    assertThrows(NotFoundException.class, () -> itemReferenceService.getDamagedStatusNameById("id_3"));
 
-    when(damagedStatusClient.getByQuery("name==\"name\"")).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.emptyList()));
-    actual = itemReferenceService.getDamagedStatusIdByName("name");
-    assertEquals("name", actual);
+    when(damagedStatusClient.getByQuery("name==\"name_4\"")).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.emptyList()));
+    actual = itemReferenceService.getDamagedStatusIdByName("name_4");
+    assertEquals("name_4", actual);
 
     assertEquals(EMPTY, itemReferenceService.getDamagedStatusNameById(null));
     assertNull(itemReferenceService.getDamagedStatusIdByName(EMPTY));
@@ -88,20 +88,20 @@ class ItemReferenceServiceTest extends BaseTest {
 
   @Test
   void testGetNoteType() {
-    when(itemNoteTypeClient.getById("id")).thenReturn(new NoteType().withName("name"));
-    var actual = itemReferenceService.getNoteTypeNameById("id");
-    assertEquals("name", actual);
+    when(itemNoteTypeClient.getById("id_1")).thenReturn(new NoteType().withName("name_1"));
+    var actual = itemReferenceService.getNoteTypeNameById("id_1");
+    assertEquals("name_1", actual);
 
-    when(itemNoteTypeClient.getByQuery("name==\"name\"")).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.singletonList(new NoteType().withId("id"))));
-    actual = itemReferenceService.getNoteTypeIdByName("name");
-    assertEquals("id", actual);
+    when(itemNoteTypeClient.getByQuery("name==\"name_2\"")).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.singletonList(new NoteType().withId("id_2"))));
+    actual = itemReferenceService.getNoteTypeIdByName("name_2");
+    assertEquals("id_2", actual);
 
-    when(itemNoteTypeClient.getById("id")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceService.getNoteTypeNameById("id"));
+    when(itemNoteTypeClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
+    assertThrows(NotFoundException.class, () -> itemReferenceService.getNoteTypeNameById("id_3"));
 
-    when(itemNoteTypeClient.getByQuery("name==\"name\"")).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.emptyList()));
-    actual = itemReferenceService.getNoteTypeIdByName("name");
-    assertEquals("name", actual);
+    when(itemNoteTypeClient.getByQuery("name==\"name_4\"")).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.emptyList()));
+    actual = itemReferenceService.getNoteTypeIdByName("name_4");
+    assertEquals("name_4", actual);
 
     assertEquals(EMPTY, itemReferenceService.getNoteTypeNameById(null));
     assertNull(itemReferenceService.getNoteTypeIdByName(EMPTY));
@@ -109,20 +109,20 @@ class ItemReferenceServiceTest extends BaseTest {
 
   @Test
   void testGetServicePoint() {
-    when(servicePointClient.getById("id")).thenReturn(new ServicePoint().withName("name"));
-    var actual = itemReferenceService.getServicePointNameById("id");
-    assertEquals("name", actual);
+    when(servicePointClient.getById("id_1")).thenReturn(new ServicePoint().withName("name_1"));
+    var actual = itemReferenceService.getServicePointNameById("id_1");
+    assertEquals("name_1", actual);
 
-    when(servicePointClient.get("name==\"name\"", 1L)).thenReturn(new ServicePoints().withServicepoints(Collections.singletonList(new ServicePoint().withId("id"))));
-    actual = itemReferenceService.getServicePointIdByName("name");
-    assertEquals("id", actual);
+    when(servicePointClient.get("name==\"name_2\"", 1L)).thenReturn(new ServicePoints().withServicepoints(Collections.singletonList(new ServicePoint().withId("id_2"))));
+    actual = itemReferenceService.getServicePointIdByName("name_2");
+    assertEquals("id_2", actual);
 
-    when(servicePointClient.getById("id")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceService.getServicePointNameById("id"));
+    when(servicePointClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
+    assertThrows(NotFoundException.class, () -> itemReferenceService.getServicePointNameById("id_3"));
 
-    when(servicePointClient.get("name==\"name\"", 1L)).thenReturn(new ServicePoints().withServicepoints(Collections.emptyList()));
-    actual = itemReferenceService.getServicePointIdByName("name");
-    assertEquals("name", actual);
+    when(servicePointClient.get("name==\"name_4\"", 1L)).thenReturn(new ServicePoints().withServicepoints(Collections.emptyList()));
+    actual = itemReferenceService.getServicePointIdByName("name_4");
+    assertEquals("name_4", actual);
 
     assertEquals(EMPTY, itemReferenceService.getServicePointNameById(null));
     assertNull(itemReferenceService.getServicePointIdByName(EMPTY));
@@ -130,20 +130,20 @@ class ItemReferenceServiceTest extends BaseTest {
 
   @Test
   void testGetStatisticalCode() {
-    when(statisticalCodeClient.getById("id")).thenReturn(new StatisticalCode().withCode("code"));
-    var actual = itemReferenceService.getStatisticalCodeById("id");
-    assertEquals("code", actual);
+    when(statisticalCodeClient.getById("id_1")).thenReturn(new StatisticalCode().withCode("code_1"));
+    var actual = itemReferenceService.getStatisticalCodeById("id_1");
+    assertEquals("code_1", actual);
 
-    when(statisticalCodeClient.getByQuery("code==\"code\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.singletonList(new StatisticalCode().withId("id"))));
-    actual = itemReferenceService.getStatisticalCodeIdByCode("code");
-    assertEquals("id", actual);
+    when(statisticalCodeClient.getByQuery("code==\"code_2\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.singletonList(new StatisticalCode().withId("id_2"))));
+    actual = itemReferenceService.getStatisticalCodeIdByCode("code_2");
+    assertEquals("id_2", actual);
 
-    when(statisticalCodeClient.getById("id")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceService.getStatisticalCodeById("id"));
+    when(statisticalCodeClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
+    assertThrows(NotFoundException.class, () -> itemReferenceService.getStatisticalCodeById("id_3"));
 
-    when(statisticalCodeClient.getByQuery("code==\"code\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.emptyList()));
-    actual = itemReferenceService.getStatisticalCodeIdByCode("code");
-    assertEquals("code", actual);
+    when(statisticalCodeClient.getByQuery("code==\"code_4\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.emptyList()));
+    actual = itemReferenceService.getStatisticalCodeIdByCode("code_4");
+    assertEquals("code_4", actual);
 
     assertEquals(EMPTY, itemReferenceService.getStatisticalCodeById(null));
     assertNull(itemReferenceService.getDamagedStatusIdByName(EMPTY));
@@ -151,20 +151,20 @@ class ItemReferenceServiceTest extends BaseTest {
 
   @Test
   void testGetUserName() {
-    when(userClient.getUserById("id")).thenReturn(new User().withUsername("name"));
-    var actual = itemReferenceService.getUserNameById("id");
-    assertEquals("name", actual);
+    when(userClient.getUserById("id_1")).thenReturn(new User().withUsername("name_1"));
+    var actual = itemReferenceService.getUserNameById("id_1");
+    assertEquals("name_1", actual);
 
-    when(userClient.getUserByQuery("username==\"name\"", 1L)).thenReturn(new UserCollection().withUsers(Collections.singletonList(new User().withId("id"))));
-    actual = itemReferenceService.getUserIdByUserName("name");
-    assertEquals("id", actual);
+    when(userClient.getUserByQuery("username==\"name_2\"", 1L)).thenReturn(new UserCollection().withUsers(Collections.singletonList(new User().withId("id_2"))));
+    actual = itemReferenceService.getUserIdByUserName("name_2");
+    assertEquals("id_2", actual);
 
-    when(userClient.getUserById("id")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceService.getUserNameById("id"));
+    when(userClient.getUserById("id_3")).thenThrow(new NotFoundException("Not found"));
+    assertThrows(NotFoundException.class, () -> itemReferenceService.getUserNameById("id_3"));
 
-    when(userClient.getUserByQuery("username==\"name\"", 1L)).thenReturn(new UserCollection().withUsers(Collections.emptyList()));
-    actual = itemReferenceService.getUserIdByUserName("name");
-    assertEquals("name", actual);
+    when(userClient.getUserByQuery("username==\"name_4\"", 1L)).thenReturn(new UserCollection().withUsers(Collections.emptyList()));
+    actual = itemReferenceService.getUserIdByUserName("name_4");
+    assertEquals("name_4", actual);
 
     assertEquals(EMPTY, itemReferenceService.getUserNameById(null));
     assertNull(itemReferenceService.getUserIdByUserName(EMPTY));
@@ -172,31 +172,31 @@ class ItemReferenceServiceTest extends BaseTest {
 
   @Test
   void testGetItemLocation() {
-    when(locationClient.getLocationByQuery("name==\"name\"")).thenReturn(new ItemLocationCollection().withLocations(Collections.singletonList(new ItemLocation().withId("id"))));
-    var actual = itemReferenceService.getLocationByName("name");
-    assertEquals("id", actual.getId());
+    when(locationClient.getLocationByQuery("name==\"name_1\"")).thenReturn(new ItemLocationCollection().withLocations(Collections.singletonList(new ItemLocation().withId("id_1"))));
+    var actual = itemReferenceService.getLocationByName("name_1");
+    assertEquals("id_1", actual.getId());
 
-    when(locationClient.getLocationByQuery("name==\"name\"")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceService.getLocationByName("name"));
+    when(locationClient.getLocationByQuery("name==\"name_2\"")).thenThrow(new NotFoundException("Not found"));
+    assertThrows(NotFoundException.class, () -> itemReferenceService.getLocationByName("name_2"));
   }
 
   @Test
   void testGetMaterialType() {
-    when(materialTypeClient.getByQuery("name==\"name\"")).thenReturn(new MaterialTypeCollection().withMtypes(Collections.singletonList(new MaterialType().withId("id"))));
-    var actual = itemReferenceService.getMaterialTypeByName("name");
-    assertEquals("id", actual.getId());
+    when(materialTypeClient.getByQuery("name==\"name_1\"")).thenReturn(new MaterialTypeCollection().withMtypes(Collections.singletonList(new MaterialType().withId("id_1"))));
+    var actual = itemReferenceService.getMaterialTypeByName("name_1");
+    assertEquals("id_1", actual.getId());
 
-    when(materialTypeClient.getByQuery("name==\"name\"")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceService.getMaterialTypeByName("name"));
+    when(materialTypeClient.getByQuery("name==\"name_2\"")).thenThrow(new NotFoundException("Not found"));
+    assertThrows(NotFoundException.class, () -> itemReferenceService.getMaterialTypeByName("name_2"));
   }
 
   @Test
   void testGetLoanType() {
-    when(loanTypeClient.getByQuery("name==\"name\"")).thenReturn(new LoanTypeCollection().withLoantypes(Collections.singletonList(new LoanType().withId("id"))));
-    var actual = itemReferenceService.getLoanTypeByName("name");
-    assertEquals("id", actual.getId());
+    when(loanTypeClient.getByQuery("name==\"name_1\"")).thenReturn(new LoanTypeCollection().withLoantypes(Collections.singletonList(new LoanType().withId("id_1"))));
+    var actual = itemReferenceService.getLoanTypeByName("name_1");
+    assertEquals("id_1", actual.getId());
 
-    when(loanTypeClient.getByQuery("name==\"name\"")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceService.getLoanTypeByName("name"));
+    when(loanTypeClient.getByQuery("name==\"name_2\"")).thenThrow(new NotFoundException("Not found"));
+    assertThrows(NotFoundException.class, () -> itemReferenceService.getLoanTypeByName("name_2"));
   }
 }

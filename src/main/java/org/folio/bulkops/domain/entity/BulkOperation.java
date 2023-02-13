@@ -1,10 +1,11 @@
 package org.folio.bulkops.domain.entity;
 
+import jakarta.persistence.Convert;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.With;
+import org.folio.bulkops.domain.converter.PostgresUUIDConverter;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
@@ -16,6 +17,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -27,6 +29,7 @@ import java.util.UUID;
 @Table(name = "bulk_operation")
 public class BulkOperation {
   @Id
+  @Convert(converter = PostgresUUIDConverter.class)
   private UUID id;
 
   private UUID userId;

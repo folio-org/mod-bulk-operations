@@ -524,7 +524,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
-    Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).append(streamCaptor.capture(), pathCaptor.capture()));
+    Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(3)).append(streamCaptor.capture(), pathCaptor.capture()));
     assertEquals(new String(streamCaptor.getAllValues().get(0).readAllBytes()),
       Files.readString(Path.of(pathToModifiedUserJson)).trim());
     assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().get(0));

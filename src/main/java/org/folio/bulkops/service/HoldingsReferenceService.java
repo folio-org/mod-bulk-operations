@@ -1,8 +1,5 @@
 package org.folio.bulkops.service;
 
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.CallNumberTypeClient;
@@ -13,9 +10,14 @@ import org.folio.bulkops.client.IllPolicyClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
+import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +45,7 @@ public class HoldingsReferenceService implements InitializingBean {
     }
   }
 
+  @Cacheable(cacheNames = "holdingsTypesNames")
   public String getHoldingsTypeNameById(String id) {
     try {
       return isEmpty(id) ? EMPTY
@@ -54,6 +57,7 @@ public class HoldingsReferenceService implements InitializingBean {
     }
   }
 
+  @Cacheable(cacheNames = "holdingsTypeIds")
   public String getHoldingsTypeIdByName(String name) {
     if (isEmpty(name)) {
       return null;
@@ -66,6 +70,7 @@ public class HoldingsReferenceService implements InitializingBean {
     return holdingsTypes.getHoldingsTypes().get(0).getId();
   }
 
+  @Cacheable(cacheNames = "holdingsLocationsNames")
   public String getLocationNameById(String id) {
     try {
       return isEmpty(id) ? EMPTY
@@ -89,6 +94,7 @@ public class HoldingsReferenceService implements InitializingBean {
     return locations.getLocations().get(0).getId();
   }
 
+  @Cacheable(cacheNames = "holdingsCallNumberTypesNames")
   public String getCallNumberTypeNameById(String id) {
     try {
       return isEmpty(id) ? EMPTY
@@ -100,6 +106,7 @@ public class HoldingsReferenceService implements InitializingBean {
     }
   }
 
+  @Cacheable(cacheNames = "holdingsCallNumberTypes")
   public String getCallNumberTypeIdByName(String name) {
     if (isEmpty(name)) {
       return null;
@@ -112,6 +119,7 @@ public class HoldingsReferenceService implements InitializingBean {
     return callNumberTypes.getCallNumberTypes().get(0).getId();
   }
 
+  @Cacheable(cacheNames = "holdingsNoteTypesNames")
   public String getNoteTypeNameById(String id) {
     try {
       return isEmpty(id) ? EMPTY
@@ -123,6 +131,7 @@ public class HoldingsReferenceService implements InitializingBean {
     }
   }
 
+  @Cacheable(cacheNames = "holdingsNoteTypes")
   public String getNoteTypeIdByName(String name) {
     if (isEmpty(name)) {
       return null;
@@ -135,6 +144,7 @@ public class HoldingsReferenceService implements InitializingBean {
     return noteTypes.getHoldingsNoteTypes().get(0).getId();
   }
 
+  @Cacheable(cacheNames = "illPolicyNames")
   public String getIllPolicyNameById(String id) {
     try {
       return isEmpty(id) ? EMPTY
@@ -146,6 +156,7 @@ public class HoldingsReferenceService implements InitializingBean {
     }
   }
 
+  @Cacheable(cacheNames = "illPolicies")
   public String getIllPolicyIdByName(String name) {
     if (isEmpty(name)) {
       return null;
@@ -158,6 +169,7 @@ public class HoldingsReferenceService implements InitializingBean {
     return illPolicies.getIllPolicies().get(0).getId();
   }
 
+  @Cacheable(cacheNames = "holdingsSourceNames")
   public String getSourceNameById(String id) {
     try {
       return isEmpty(id) ? EMPTY
@@ -169,6 +181,7 @@ public class HoldingsReferenceService implements InitializingBean {
     }
   }
 
+  @Cacheable(cacheNames = "holdingsSources")
   public String getSourceIdByName(String name) {
     var sources = holdingsSourceClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
     if (sources.getHoldingsRecordsSources().isEmpty()) {
@@ -178,6 +191,7 @@ public class HoldingsReferenceService implements InitializingBean {
     return sources.getHoldingsRecordsSources().get(0).getId();
   }
 
+  @Cacheable(cacheNames = "holdingsStatisticalCodeNames")
   public String getStatisticalCodeNameById(String id) {
     try {
       return isEmpty(id) ? EMPTY
@@ -189,6 +203,7 @@ public class HoldingsReferenceService implements InitializingBean {
     }
   }
 
+  @Cacheable(cacheNames = "holdingsStatisticalCodes")
   public String getStatisticalCodeIdByName(String name) {
     var statisticalCodes = statisticalCodeClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
     if (statisticalCodes.getStatisticalCodes().isEmpty()) {
