@@ -3,7 +3,7 @@ package org.folio.bulkops.domain.converter;
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import org.folio.bulkops.exception.UserFormatException;
+import org.folio.bulkops.exception.EntityFormatException;
 
 import static java.util.Objects.isNull;
 
@@ -14,7 +14,7 @@ public class BooleanConverter extends AbstractBeanField<String, Boolean> {
     if (value.matches("true") || value.matches("false")) {
       return Boolean.parseBoolean(value);
     }
-    throw new UserFormatException(String.format("Value %s cannot be converted to boolean", value));
+    throw new EntityFormatException(String.format("Value %s cannot be converted to boolean", value));
   }
 
   @Override
