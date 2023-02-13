@@ -48,18 +48,6 @@ public class ItemReferenceService implements InitializingBean {
     }
   }
 
-  public String getCallNumberTypeIdByName(String name) {
-    if (isEmpty(name)) {
-      return null;
-    }
-    var response = callNumberTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
-    if (response.getCallNumberTypes().isEmpty()) {
-      log.error("Call number type was not found by name={}", name);
-      return name;
-    }
-    return response.getCallNumberTypes().get(0).getId();
-  }
-
   public String getDamagedStatusNameById(String damagedStatusId) {
     try {
       return isEmpty(damagedStatusId) ? EMPTY : damagedStatusClient.getById(damagedStatusId).getName();
@@ -188,7 +176,7 @@ public class ItemReferenceService implements InitializingBean {
     var loanTypes = loanTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
     if (loanTypes.getLoantypes().isEmpty()) {
       log.error("Loan type not found by name={}", name);
-      return null;
+      throw new NotFoundException("Loan type not found: " + name);
     }
     return loanTypes.getLoantypes().get(0);
   }

@@ -84,6 +84,7 @@ public class HoldingsReferenceService implements InitializingBean {
     var locations = locationClient.getLocationByQuery(String.format(QUERY_PATTERN_NAME, name));
     if (locations.getLocations().isEmpty()) {
       log.error("Location not found by name={}", name);
+      return name;
     }
     return locations.getLocations().get(0).getId();
   }
