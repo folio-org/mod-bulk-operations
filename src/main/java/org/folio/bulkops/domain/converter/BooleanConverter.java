@@ -14,7 +14,7 @@ public class BooleanConverter extends AbstractBeanField<String, Boolean> {
     if (value.matches("true") || value.matches("false")) {
       return Boolean.parseBoolean(value);
     }
-    throw new EntityFormatException(String.format("Value %s cannot be converted to boolean", value));
+    return Boolean.FALSE;
   }
 
   @Override

@@ -32,24 +32,16 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserCollection;
 import org.folio.spring.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.Collections;
 
+@ExtendWith(MockitoExtension.class)
 class ItemReferenceServiceTest extends BaseTest {
-  @MockBean
-  private CallNumberTypeClient callNumberTypeClient;
-  @MockBean
-  private DamagedStatusClient damagedStatusClient;
-  @MockBean
-  private ItemNoteTypeClient itemNoteTypeClient;
-  @MockBean
-  private ServicePointClient servicePointClient;
-  @MockBean
-  private StatisticalCodeClient statisticalCodeClient;
-  @MockBean
-  private MaterialTypeClient materialTypeClient;
+
   @Autowired
   private ItemReferenceService itemReferenceService;
 

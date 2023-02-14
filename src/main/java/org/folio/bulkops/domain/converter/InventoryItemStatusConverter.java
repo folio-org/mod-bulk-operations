@@ -1,15 +1,17 @@
 package org.folio.bulkops.domain.converter;
 
+import com.opencsv.bean.AbstractBeanField;
+import com.opencsv.exceptions.CsvConstraintViolationException;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import org.apache.commons.lang3.ObjectUtils;
+import org.folio.bulkops.domain.bean.InventoryItemStatus;
+import org.folio.bulkops.exception.EntityFormatException;
+
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.adapters.BulkEditAdapterHelper.dateFromString;
 import static org.folio.bulkops.adapters.BulkEditAdapterHelper.dateToString;
 import static org.folio.bulkops.adapters.Constants.ARRAY_DELIMITER;
-
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import org.folio.bulkops.domain.bean.InventoryItemStatus;
-import org.folio.bulkops.exception.EntityFormatException;
 
 public class InventoryItemStatusConverter extends AbstractBeanField<String, InventoryItemStatus> {
   private static final int NUMBER_OF_STATUS_COMPONENTS = 2;
@@ -33,7 +35,10 @@ public class InventoryItemStatusConverter extends AbstractBeanField<String, Inve
 
   @Override
   protected String convertToWrite(Object value) {
-    var status = (InventoryItemStatus) value;
-    return String.join(ARRAY_DELIMITER, status.getName().getValue(), dateToString(status.getDate()));
+    if (ObjectUtils.isNotEmpty(value)) {
+      var status = (InventoryItemStatus) value;
+      return String.join(ARRAY_DELIMITER, status.getName().getValue(), dateToString(status.getDate()));
+    }
+    return EMPTY;
   }
 }

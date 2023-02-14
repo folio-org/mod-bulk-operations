@@ -1,16 +1,5 @@
 package org.folio.bulkops.domain.converter;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.adapters.BulkEditAdapterHelper.dateFromString;
-import static org.folio.bulkops.adapters.BulkEditAdapterHelper.dateToString;
-import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER;
-import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER_PATTERN;
-import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
-import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
-
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
@@ -26,6 +15,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.folio.bulkops.adapters.BulkEditAdapterHelper.dateFromString;
+import static org.folio.bulkops.adapters.BulkEditAdapterHelper.dateToString;
+import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER;
+import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER_PATTERN;
+import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
+import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 public class CirculationNoteListConverter extends AbstractBeanField<String, List<CirculationNote>> {
   private static final int NUMBER_OF_CIRCULATION_NOTE_COMPONENTS = 8;

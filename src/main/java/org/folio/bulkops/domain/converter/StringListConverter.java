@@ -1,9 +1,5 @@
 package org.folio.bulkops.domain.converter;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
-
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
@@ -14,11 +10,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+
 public class StringListConverter extends AbstractBeanField<String, List<String>> {
 
   @Override
   protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
-    return isEmpty(value) ?
+    return ObjectUtils.isEmpty(value) ?
       Collections.emptyList() :
       SpecialCharacterEscaper.restore(Arrays.asList(value.split(ARRAY_DELIMITER)));
   }

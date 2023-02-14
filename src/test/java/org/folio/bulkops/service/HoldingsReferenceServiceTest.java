@@ -6,12 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.client.CallNumberTypeClient;
-import org.folio.bulkops.client.HoldingsNoteTypeClient;
-import org.folio.bulkops.client.HoldingsTypeClient;
-import org.folio.bulkops.client.IllPolicyClient;
-import org.folio.bulkops.client.InstanceClient;
-import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.domain.bean.BriefInstance;
 import org.folio.bulkops.domain.bean.CallNumberType;
 import org.folio.bulkops.domain.bean.CallNumberTypeCollection;
@@ -29,24 +23,15 @@ import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.bulkops.domain.bean.StatisticalCodeCollection;
 import org.folio.bulkops.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.Collections;
 
+@ExtendWith(MockitoExtension.class)
 class HoldingsReferenceServiceTest extends BaseTest {
-  @MockBean
-  private InstanceClient instanceClient;
-  @MockBean
-  private HoldingsTypeClient holdingsTypeClient;
-  @MockBean
-  private CallNumberTypeClient callNumberTypeClient;
-  @MockBean
-  private HoldingsNoteTypeClient holdingsNoteTypeClient;
-  @MockBean
-  private IllPolicyClient illPolicyClient;
-  @MockBean
-  private StatisticalCodeClient statisticalCodeClient;
+
   @Autowired
   private HoldingsReferenceService holdingsReferenceService;
 
@@ -189,7 +174,7 @@ class HoldingsReferenceServiceTest extends BaseTest {
 
     when(holdingsSourceClient.getByQuery("name==\"name_4\"")).thenReturn(new HoldingsRecordsSourceCollection().withHoldingsRecordsSources(Collections.emptyList()));
     actual = holdingsReferenceService.getSourceIdByName("name_4");
-    assertEquals("name_4", actual);
+    assertEquals(EMPTY, actual);
 
     assertEquals(EMPTY, holdingsReferenceService.getSourceNameById(null));
   }

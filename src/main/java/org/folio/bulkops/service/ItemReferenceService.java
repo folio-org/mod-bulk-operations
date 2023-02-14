@@ -1,11 +1,9 @@
 package org.folio.bulkops.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.client.CallNumberTypeClient;
 import org.folio.bulkops.client.ConfigurationClient;
 import org.folio.bulkops.client.DamagedStatusClient;
@@ -28,11 +26,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-
-import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
@@ -198,12 +191,17 @@ public class ItemReferenceService implements InitializingBean {
     return locationClient.getLocationByQuery(String.format(QUERY_PATTERN_NAME, name));
   }
 
+  @Cacheable(cacheNames = "locations")
+  public ItemLocation getItemLocationById(String id) {
+    return locationClient.getLocationById(id);
+  }
+
   public ItemLocation getLocationByName(String name) {
     var locations = locationClient.getLocationByQuery(String.format(QUERY_PATTERN_NAME, name));
-    if (locations.getLocations().isEmpty()) {
+    if (ObjectUtils.isEmpty(locations) || ObjectUtils.isEmpty(locations.getLocations())) {
       var msg = "Location not found by name=" + name;
       log.error(msg);
-      throw new NotFoundException(msg);
+      return new ItemLocation();
     }
     return locations.getLocations().get(0);
   }
@@ -225,6 +223,10 @@ public class ItemReferenceService implements InitializingBean {
   @Cacheable(cacheNames = "loanTypes")
   public LoanTypeCollection getLoanTypesByName(String name) {
     return loanTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
+  }
+
+  public LoanType getLoanTypeById(String id) {
+    return loanTypeClient.getLoanTypeById(id);
   }
 
   public LoanType getLoanTypeByName(String name) {

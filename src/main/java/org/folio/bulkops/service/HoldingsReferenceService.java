@@ -2,7 +2,9 @@ package org.folio.bulkops.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.client.CallNumberTypeClient;
+import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.HoldingsNoteTypeClient;
 import org.folio.bulkops.client.HoldingsSourceClient;
 import org.folio.bulkops.client.HoldingsTypeClient;
@@ -10,7 +12,7 @@ import org.folio.bulkops.client.IllPolicyClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
-import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cache.annotation.Cacheable;
@@ -26,6 +28,7 @@ public class HoldingsReferenceService implements InitializingBean {
   private static final String QUERY_PATTERN_NAME = "name==\"%s\"";
 
   private final InstanceClient instanceClient;
+  private final HoldingsClient holdingsClient;
   private final HoldingsTypeClient holdingsTypeClient;
   private final LocationClient locationClient;
   private final CallNumberTypeClient callNumberTypeClient;
@@ -33,6 +36,10 @@ public class HoldingsReferenceService implements InitializingBean {
   private final IllPolicyClient illPolicyClient;
   private final HoldingsSourceClient holdingsSourceClient;
   private final StatisticalCodeClient statisticalCodeClient;
+
+  public HoldingsRecord getHoldingsRecordById(String id) {
+    return holdingsClient.getHoldingById(id);
+  }
 
   public String getInstanceTitleById(String id) {
     try {
@@ -184,9 +191,9 @@ public class HoldingsReferenceService implements InitializingBean {
   @Cacheable(cacheNames = "holdingsSources")
   public String getSourceIdByName(String name) {
     var sources = holdingsSourceClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
-    if (sources.getHoldingsRecordsSources().isEmpty()) {
+    if (ObjectUtils.isEmpty(sources) || ObjectUtils.isEmpty(sources.getHoldingsRecordsSources())) {
       log.error("Source not found by name={}", name);
-      return name;
+      return EMPTY;
     }
     return sources.getHoldingsRecordsSources().get(0).getId();
   }

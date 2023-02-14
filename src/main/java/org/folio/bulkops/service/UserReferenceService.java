@@ -2,13 +2,13 @@ package org.folio.bulkops.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.CustomFieldsClient;
 import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.client.GroupClient;
 import org.folio.bulkops.client.OkapiClient;
 import org.folio.bulkops.domain.bean.CustomField;
-import org.folio.bulkops.exception.NotFoundException;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cache.annotation.Cacheable;
@@ -44,7 +44,7 @@ public class UserReferenceService implements InitializingBean {
       if (response.getAddressTypes().isEmpty()) {
         var msg = format("Address type=%s not found", desc);
         log.error(msg);
-        throw new NotFoundException(msg);
+        return EMPTY;
       }
       return response.getAddressTypes().get(0).getId();
     }
@@ -62,13 +62,13 @@ public class UserReferenceService implements InitializingBean {
   @Cacheable(cacheNames = "departmentIds")
   public String getDepartmentIdByName(String name) {
     if (isEmpty(name)) {
-      return null;
+      return EMPTY;
     } else {
       var response = departmentClient.getDepartmentByQuery(String.format("name==\"%s\"", name));
       if (response.getDepartments().isEmpty()) {
         var msg = format("Department=%s not found", name);
         log.error(msg);
-        throw new NotFoundException(msg);
+        return EMPTY;
       }
       return response.getDepartments().get(0).getId();
     }
@@ -81,13 +81,13 @@ public class UserReferenceService implements InitializingBean {
   @Cacheable(cacheNames = "patronGroupIds")
   public String getPatronGroupIdByName(String name) {
     if (isEmpty(name)) {
-      throw new NotFoundException("Patron group can not be empty");
+      return EMPTY;
     }
     var response = groupClient.getGroupByQuery(String.format("group==\"%s\"", name));
-    if (response.getUsergroups().isEmpty()) {
+    if (ObjectUtils.isEmpty(response) || ObjectUtils.isEmpty(response.getUsergroups())) {
       var msg = "Invalid patron group value: " + name;
       log.error(msg);
-      throw new NotFoundException(msg);
+      return EMPTY;
     }
     return response.getUsergroups().get(0).getId();
   }
@@ -99,19 +99,18 @@ public class UserReferenceService implements InitializingBean {
     if (customFields.getCustomFields().isEmpty()) {
       var msg = format("Custom field with name=%s not found", name);
       log.error(msg);
-      throw new NotFoundException(msg);
+      return new CustomField();
     }
     return customFields.getCustomFields().get(0);
   }
 
   @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByRefId(String refId) {
-
     var customFields = customFieldsClient.getCustomFieldsByQuery(getModuleId(MOD_USERS),String.format("refId==\"%s\"", refId));
     if (customFields.getCustomFields().isEmpty()) {
       var msg = format("Custom field with refId=%s not found", refId);
       log.error(msg);
-      throw new NotFoundException(msg);
+      return new CustomField();
     }
     return customFields.getCustomFields().get(0);
   }
@@ -125,7 +124,7 @@ public class UserReferenceService implements InitializingBean {
     }
     var msg = "Module id not found for name: " + moduleName;
     log.error(msg);
-    throw new NotFoundException(msg);
+    return EMPTY;
   }
 
   private static UserReferenceService service = null;

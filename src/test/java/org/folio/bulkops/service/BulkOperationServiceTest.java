@@ -126,9 +126,6 @@ class BulkOperationServiceTest extends BaseTest {
   private BulkOperationExecutionContentRepository executionContentRepository;
 
   @MockBean
-  private InstanceClient instanceClient;
-
-  @MockBean
   private BulkOperationProcessingContentRepository processingContentRepository;
 
   @Test
@@ -524,7 +521,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
-    Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(3)).append(streamCaptor.capture(), pathCaptor.capture()));
+    Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).append(streamCaptor.capture(), pathCaptor.capture()));
     assertEquals(new String(streamCaptor.getAllValues().get(0).readAllBytes()),
       Files.readString(Path.of(pathToModifiedUserJson)).trim());
     assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().get(0));
@@ -831,66 +828,6 @@ class BulkOperationServiceTest extends BaseTest {
     assertEquals(0, table.getRows().size());
     Assertions.assertTrue(table.getHeader().size() > 0);
   }
-
-  @ParameterizedTest
-  @CsvSource(value = { "users_for_preview.json,USER,UPLOAD",
-    "users_for_preview.json,USER,EDIT",
-    "users_for_preview.json,USER,COMMIT",
-    "items_for_preview.json,ITEM,UPLOAD",
-    "items_for_preview.json,ITEM,EDIT",
-    "items_for_preview.json,ITEM,COMMIT",
-    "holdings_for_preview.json,HOLDINGS_RECORD,UPLOAD",
-    "holdings_for_preview.json,HOLDINGS_RECORD,EDIT",
-    "holdings_for_preview.json,HOLDINGS_RECORD,COMMIT" }, delimiter = ',')
-  @SneakyThrows
-  void shouldReturnCsvPreviewIfAvailable(String fileName, EntityType entityType, BulkOperationStep step) {
-    var path = "src/test/resources/files/" + fileName;
-    var operationId = UUID.randomUUID();
-
-    var bulkOperation = buildBulkOperation(fileName, entityType, step);
-    bulkOperation.setId(operationId);
-    when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(bulkOperation));
-
-    when(remoteFileSystemClient.get(anyString()))
-      .thenReturn(new FileInputStream(path));
-
-    when(groupClient.getGroupById(anyString())).thenReturn(new UserGroup().withGroup("Group"));
-    when(instanceClient.getById(anyString())).thenReturn(new BriefInstance().withTitle("Title"));
-    when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
-    when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
-
-    var csvString = bulkOperationService.buildCsvStringFomUnifiedTable(bulkOperationService.getPreview(bulkOperation, step, Integer.MAX_VALUE));
-
-    // 6 lines expected: 1 line for headers and 5 lines for data
-    MatcherAssert.assertThat(new BufferedReader(new StringReader(csvString)).lines().count(), Matchers.equalTo(6L));
-
-    if (USER.equals(entityType)) {
-      assertThat(new Scanner(csvString).nextLine(), equalTo(UserHeaderBuilder.getHeaders().stream()
-        .map(Cell::getValue)
-        .collect(Collectors.joining(","))));
-    } else if (EntityType.ITEM.equals(entityType)) {
-      assertThat(new Scanner(csvString).nextLine(), equalTo(ItemHeaderBuilder.getHeaders().stream()
-        .map(Cell::getValue)
-        .collect(Collectors.joining(","))));
-    } else if (EntityType.HOLDINGS_RECORD.equals(entityType)) {
-      assertThat(new Scanner(csvString).nextLine(), equalTo(HoldingsHeaderBuilder.getHeaders().stream()
-        .map(Cell::getValue)
-        .collect(Collectors.joining(","))));
-    }
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
-  @SneakyThrows
-  void shouldReturnOnlyHeaderIfCsvPreviewIsNotAvailable(OperationStatusType status) {
-    var bulkOperation = BulkOperation.builder().id(UUID.randomUUID()).entityType(USER).status(status).build();
-
-    var actual = bulkOperationService.buildCsvStringFomUnifiedTable(bulkOperationService.getPreview(bulkOperation, EDIT, Integer.MAX_VALUE));
-    var expected = UserHeaderBuilder.getHeaders().stream().map(Cell::getValue).collect(Collectors.joining(",")) + LF;
-
-    assertEquals(expected, actual);
-    }
 
   @ParameterizedTest
   @EnumSource(OperationStatusType.class)

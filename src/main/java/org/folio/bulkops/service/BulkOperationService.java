@@ -31,7 +31,6 @@ import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
-import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
@@ -348,7 +347,7 @@ public class BulkOperationService {
           try {
             var result = updateEntityIfNeeded(original, modified, operation, entityClass);
             var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
-            remoteFileSystemClient.append(new ByteArrayInputStream((objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY)).getBytes()), resultJsonFileName);
+            writerForJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
             sbc.write(result);
             execution = execution.withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
               .withProcessedRecords(execution.getProcessedRecords() + 1)
@@ -428,16 +427,6 @@ public class BulkOperationService {
     } catch (Exception e) {
       return adapter.getEmptyTableWithHeaders();
     }
-  }
-
-  public String buildCsvStringFomUnifiedTable(UnifiedTable table) {
-    return table.getHeader()
-      .stream()
-      .map(Cell::getValue)
-      .collect(Collectors.joining(",")) + LF + table.getRows()
-      .stream()
-      .map(this::rowToCsvLine)
-      .collect(Collectors.joining(LF));
   }
 
   public BulkOperation startBulkOperation(UUID bulkOperationId, UUID xOkapiUserId, BulkOperationStart bulkOperationStart) {
@@ -568,10 +557,12 @@ public class BulkOperationService {
     try (Reader originalFileReader = new InputStreamReader(remoteFileSystemClient.get(linkToMatchedRecordsJsonFile));
          Reader modifiedFileReader = new InputStreamReader(remoteFileSystemClient.get(linkToModifiedRecordsCsvFile));
          Writer modifiedJsonWriter = remoteFileSystemClient.writer(linkToModifiedRecordsJsonFile);
-         Writer previewJsonWriter = remoteFileSystemClient.writer(linkToPreviewRecordsJsonFile);) {
+         Writer previewJsonWriter = remoteFileSystemClient.writer(linkToPreviewRecordsJsonFile)) {
 
-      CsvToBean<User> csvToBean = new CsvToBeanBuilder<User>(modifiedFileReader)
-        .withType(User.class)
+      var clazz = resolveEntityClass(operation.getEntityType());
+
+      CsvToBean<BulkOperationsEntity> csvToBean = new CsvToBeanBuilder<BulkOperationsEntity>(modifiedFileReader)
+        .withType(clazz)
         .withSkipLines(1)
         .build();
 

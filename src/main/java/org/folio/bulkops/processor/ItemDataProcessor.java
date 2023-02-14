@@ -15,9 +15,6 @@ import java.util.List;
 import java.util.Objects;
 
 import org.folio.bulkops.client.ConfigurationClient;
-import org.folio.bulkops.client.HoldingsClient;
-import org.folio.bulkops.client.LoanTypeClient;
-import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.domain.bean.InventoryItemStatus;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
@@ -27,6 +24,8 @@ import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.ConfigurationException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.RuleValidationException;
+import org.folio.bulkops.service.HoldingsReferenceService;
+import org.folio.bulkops.service.ItemReferenceService;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -45,9 +44,8 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
   public static final String MODULE_NAME = "BULKEDIT";
   public static final String STATUSES_CONFIG_NAME = "statuses";
 
-  private final LoanTypeClient loanTypeClient;
-  private final LocationClient locationClient;
-  private final HoldingsClient holdingsClient;
+  private final HoldingsReferenceService holdingsReferenceService;
+  private final ItemReferenceService itemReferenceService;
   private final ConfigurationClient configurationClient;
   private final ObjectMapper objectMapper;
 
@@ -94,52 +92,43 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
   @Override
   public Updater<Item> updater(UpdateOptionType option, Action action) {
     if (REPLACE_WITH == action.getType()) {
-      switch (option) {
-      case PERMANENT_LOAN_TYPE:
-        return item -> item.setPermanentLoanType(loanTypeClient.getLoanTypeById(action.getUpdated()));
-      case TEMPORARY_LOAN_TYPE:
-        return item -> item.setTemporaryLoanType(loanTypeClient.getLoanTypeById(action.getUpdated()));
-      case PERMANENT_LOCATION:
-        return item -> {
-          item.setPermanentLocation(locationClient.getLocationById(action.getUpdated()));
+      return switch (option) {
+        case PERMANENT_LOAN_TYPE ->
+          item -> item.setPermanentLoanType(itemReferenceService.getLoanTypeById(action.getUpdated()));
+        case TEMPORARY_LOAN_TYPE ->
+          item -> item.setTemporaryLoanType(itemReferenceService.getLoanTypeById(action.getUpdated()));
+        case PERMANENT_LOCATION -> item -> {
+          item.setPermanentLocation(itemReferenceService.getItemLocationById(action.getUpdated()));
           item.setEffectiveLocation(getEffectiveLocation(item));
         };
-      case TEMPORARY_LOCATION:
-        return item -> {
-          item.setTemporaryLocation(locationClient.getLocationById(action.getUpdated()));
+        case TEMPORARY_LOCATION -> item -> {
+          item.setTemporaryLocation(itemReferenceService.getItemLocationById(action.getUpdated()));
           item.setEffectiveLocation(getEffectiveLocation(item));
         };
-      case STATUS:
-        return item -> item.setStatus(new InventoryItemStatus().withDate(new Date())
+        case STATUS -> item -> item.setStatus(new InventoryItemStatus().withDate(new Date())
           .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated())));
-      default:
-        return item -> {
+        default -> item -> {
           throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
         };
-      }
+      };
     } else if (CLEAR_FIELD == action.getType()) {
-      switch (option) {
-      case PERMANENT_LOCATION:
-        return item -> {
+      return switch (option) {
+        case PERMANENT_LOCATION -> item -> {
           item.setPermanentLocation(null);
           item.setEffectiveLocation(getEffectiveLocation(item));
         };
-      case TEMPORARY_LOCATION:
-        return item -> {
+        case TEMPORARY_LOCATION -> item -> {
           item.setTemporaryLocation(null);
           item.setEffectiveLocation(getEffectiveLocation(item));
         };
-      case TEMPORARY_LOAN_TYPE:
-        return item -> item.setTemporaryLoanType(null);
-      default:
-        return item -> {
+        case TEMPORARY_LOAN_TYPE -> item -> item.setTemporaryLoanType(null);
+        default -> item -> {
         };
-      }
+      };
     }
     return item -> {
       throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
     };
-
   }
 
   @Override
@@ -160,9 +149,9 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
 
   private ItemLocation getEffectiveLocation(Item item) {
     if (isNull(item.getTemporaryLocation()) && isNull(item.getPermanentLocation())) {
-      var holdingsJson = holdingsClient.getHoldingById(item.getHoldingsRecordId());
-      var holdingsEffectiveLocationId = isNull(holdingsJson.get("temporaryLocationId")) ? holdingsJson.get("permanentLocationId") : holdingsJson.get("temporaryLocationId");
-      return locationClient.getLocationById(holdingsEffectiveLocationId.asText());
+      var holdingsRecord = holdingsReferenceService.getHoldingsRecordById(item.getHoldingsRecordId());
+      var holdingsEffectiveLocationId = isNull(holdingsRecord.getTemporaryLocationId()) ? holdingsRecord.getPermanentLocationId() : holdingsRecord.getTemporaryLocationId();
+      return itemReferenceService.getItemLocationById(holdingsEffectiveLocationId);
     } else {
       return isNull(item.getTemporaryLocation()) ? item.getPermanentLocation() : item.getTemporaryLocation();
     }

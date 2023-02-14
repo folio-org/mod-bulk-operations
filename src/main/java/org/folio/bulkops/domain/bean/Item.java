@@ -300,19 +300,13 @@ public class Item extends BulkOperationsEntity {
 
   @Override
   public String getIdentifier(IdentifierType identifierType) {
-    switch (identifierType) {
-    case BARCODE:
-      return barcode;
-    case HOLDINGS_RECORD_ID:
-      return holdingsRecordId;
-    case HRID:
-      return hrid;
-    case FORMER_IDS:
-      return isNull(formerIds) ? EMPTY : String.join(",", formerIds);
-    case ACCESSION_NUMBER:
-      return accessionNumber;
-    default:
-      return id;
-    }
+    return switch (identifierType) {
+      case BARCODE -> barcode;
+      case HOLDINGS_RECORD_ID -> holdingsRecordId;
+      case HRID -> hrid;
+      case FORMER_IDS -> isNull(formerIds) ? EMPTY : String.join(",", formerIds);
+      case ACCESSION_NUMBER -> accessionNumber;
+      default -> id;
+    };
   }
 }

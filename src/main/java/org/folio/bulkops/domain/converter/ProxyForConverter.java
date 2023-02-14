@@ -7,13 +7,14 @@ import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.adapters.Constants.ARRAY_DELIMITER;
 
-public class ProxyForConverter extends AbstractBeanField<String, String> {
+public class ProxyForConverter extends AbstractBeanField<String, List<String>> {
   @Override
-  protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
+  protected List<String> convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
     return isEmpty(value) ? Collections.emptyList() : Arrays.asList(value.split(ARRAY_DELIMITER));
   }
 
