@@ -192,7 +192,7 @@ public class ItemReferenceService implements InitializingBean {
   }
 
   @Cacheable(cacheNames = "locations")
-  public ItemLocation getItemLocationById(String id) {
+  public ItemLocation getLocationById(String id) {
     return locationClient.getLocationById(id);
   }
 

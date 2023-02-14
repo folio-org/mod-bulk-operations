@@ -1,6 +1,20 @@
 package org.folio.bulkops.processor;
 
-import static java.lang.String.format;
+import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.domain.bean.User;
+import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.exception.BulkOperationException;
+import org.folio.bulkops.exception.RuleValidationException;
+import org.folio.bulkops.service.UserReferenceService;
+import org.springframework.stereotype.Component;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Objects;
+
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
@@ -9,29 +23,13 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.EMAIL_ADDRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.EXPIRATION_DATE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PATRON_GROUP;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Objects;
-
-import org.folio.bulkops.client.GroupClient;
-import org.folio.bulkops.domain.bean.User;
-import org.folio.bulkops.domain.dto.Action;
-import org.folio.bulkops.domain.dto.UpdateOptionType;
-import org.folio.bulkops.exception.BulkOperationException;
-import org.folio.bulkops.exception.RuleValidationException;
-import org.springframework.stereotype.Component;
-
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
-
 @Log4j2
 @Component
 @AllArgsConstructor
 public class UserDataProcessor extends AbstractDataProcessor<User> {
 
   public static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
-  private final GroupClient groupClient;
+  private final UserReferenceService userReferenceService;
 
   @Override
   public Validator<UpdateOptionType, Action> validator(User entity) {
@@ -51,7 +49,7 @@ public class UserDataProcessor extends AbstractDataProcessor<User> {
           throw new RuleValidationException("Updated value cannot be null or empty");
         } else {
           try {
-            groupClient.getGroupById(action.getUpdated());
+            userReferenceService.getPatronGroupById(action.getUpdated());
           } catch (Exception e) {
             throw new RuleValidationException(String.format("Patron group %s doesn't exist", action.getUpdated()));
           }
@@ -69,23 +67,20 @@ public class UserDataProcessor extends AbstractDataProcessor<User> {
 
   @Override
   public Updater<User> updater(UpdateOptionType option, Action action) {
-    switch (option) {
-    case PATRON_GROUP:
-      return user -> user.setPatronGroup(action.getUpdated());
-    case EXPIRATION_DATE:
-      return user -> {
+    return switch (option) {
+      case PATRON_GROUP -> user -> user.setPatronGroup(action.getUpdated());
+      case EXPIRATION_DATE -> user -> {
         Date date;
         try {
           date = new SimpleDateFormat(DATE_TIME_FORMAT).parse(action.getUpdated());
         } catch (ParseException e) {
           throw new BulkOperationException(
-              String.format("Invalid date format: %s, expected yyyy-MM-dd'T'HH:mm:ss.SSSXXX", action.getUpdated()));
+            String.format("Invalid date format: %s, expected yyyy-MM-dd'T'HH:mm:ss.SSSXXX", action.getUpdated()));
         }
         user.setExpirationDate(date);
         user.setActive(date.after(new Date()));
       };
-    case EMAIL_ADDRESS:
-      return user -> {
+      case EMAIL_ADDRESS -> user -> {
         var initial = action.getInitial();
         var updated = action.getUpdated();
         if (isNull(user.getPersonal()) || isNull(user.getPersonal().getEmail())) {
@@ -103,11 +98,8 @@ public class UserDataProcessor extends AbstractDataProcessor<User> {
           user.setPersonal(personal);
         }
       };
-    default:
-      return user -> {
-        throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
-      };
-    }
+      default -> user -> {};
+    };
   }
 
   @Override

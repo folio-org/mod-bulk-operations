@@ -98,11 +98,11 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         case TEMPORARY_LOAN_TYPE ->
           item -> item.setTemporaryLoanType(itemReferenceService.getLoanTypeById(action.getUpdated()));
         case PERMANENT_LOCATION -> item -> {
-          item.setPermanentLocation(itemReferenceService.getItemLocationById(action.getUpdated()));
+          item.setPermanentLocation(itemReferenceService.getLocationById(action.getUpdated()));
           item.setEffectiveLocation(getEffectiveLocation(item));
         };
         case TEMPORARY_LOCATION -> item -> {
-          item.setTemporaryLocation(itemReferenceService.getItemLocationById(action.getUpdated()));
+          item.setTemporaryLocation(itemReferenceService.getLocationById(action.getUpdated()));
           item.setEffectiveLocation(getEffectiveLocation(item));
         };
         case STATUS -> item -> item.setStatus(new InventoryItemStatus().withDate(new Date())
@@ -151,7 +151,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
     if (isNull(item.getTemporaryLocation()) && isNull(item.getPermanentLocation())) {
       var holdingsRecord = holdingsReferenceService.getHoldingsRecordById(item.getHoldingsRecordId());
       var holdingsEffectiveLocationId = isNull(holdingsRecord.getTemporaryLocationId()) ? holdingsRecord.getPermanentLocationId() : holdingsRecord.getTemporaryLocationId();
-      return itemReferenceService.getItemLocationById(holdingsEffectiveLocationId);
+      return itemReferenceService.getLocationById(holdingsEffectiveLocationId);
     } else {
       return isNull(item.getTemporaryLocation()) ? item.getPermanentLocation() : item.getTemporaryLocation();
     }

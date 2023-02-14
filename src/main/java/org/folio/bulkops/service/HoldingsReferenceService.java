@@ -13,6 +13,7 @@ import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cache.annotation.Cacheable;
@@ -174,6 +175,11 @@ public class HoldingsReferenceService implements InitializingBean {
       return name;
     }
     return illPolicies.getIllPolicies().get(0).getId();
+  }
+
+  @Cacheable(cacheNames = "sources")
+  public HoldingsRecordsSource getSourceById(String id) {
+    return holdingsSourceClient.getById(id);
   }
 
   @Cacheable(cacheNames = "holdingsSourceNames")

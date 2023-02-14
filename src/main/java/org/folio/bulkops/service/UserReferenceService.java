@@ -74,6 +74,10 @@ public class UserReferenceService implements InitializingBean {
     }
   }
 
+  public String getPatronGroupById(String id) {
+    return groupClient.getGroupById(id).getGroup();
+  }
+
   public String getPatronGroupNameById(String id) {
       return isNull(id) ? EMPTY : groupClient.getGroupById(id).getGroup();
   }
