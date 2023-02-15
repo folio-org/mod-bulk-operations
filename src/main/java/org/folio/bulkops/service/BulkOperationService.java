@@ -34,7 +34,6 @@ import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
-import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
@@ -59,7 +58,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -72,7 +70,6 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
@@ -658,32 +655,6 @@ public class BulkOperationService {
   public BulkOperation getBulkOperationOrThrow(UUID operationId) {
     return bulkOperationRepository.findById(operationId)
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + operationId));
-  }
-
-  private String rowToCsvLine(Row row) {
-    return row.getRow().stream()
-      .map(this::prepareStringForCsv)
-      .collect(Collectors.joining(","));
-  }
-
-  private String prepareStringForCsv(String s) {
-    if (isNull(s)) {
-      return "";
-    }
-
-    if (s.contains("\"")) {
-      s = s.replace("\"", "\"\"");
-    }
-
-    if (s.contains(LF)) {
-      s = s.replace(LF, "\\n");
-    }
-
-    if (s.contains(",")) {
-      s = "\"" + s + "\"";
-    }
-
-    return s;
   }
 
   private boolean hasNextRecord(MappingIterator<? extends BulkOperationsEntity> originalFileIterator, MappingIterator<? extends BulkOperationsEntity> modifiedFileIterator) {

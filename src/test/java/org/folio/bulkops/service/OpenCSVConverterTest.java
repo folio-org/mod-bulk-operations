@@ -31,7 +31,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
 
-public class OpenCSVConverterTest extends BaseTest {
+class OpenCSVConverterTest extends BaseTest {
 
   private static class BulkOperationEntityClassProvider implements ArgumentsProvider {
     @Override
