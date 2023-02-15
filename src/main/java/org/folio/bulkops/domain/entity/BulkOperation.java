@@ -1,10 +1,11 @@
 package org.folio.bulkops.domain.entity;
 
+import jakarta.persistence.Convert;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.With;
+import org.folio.bulkops.domain.converter.PostgresUUIDConverter;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
@@ -16,18 +17,19 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
 @Builder
-@With
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(name = "bulk_operation")
 public class BulkOperation {
   @Id
+  @Convert(converter = PostgresUUIDConverter.class)
   private UUID id;
 
   private UUID userId;
@@ -60,13 +62,13 @@ public class BulkOperation {
   private String linkToCommittedRecordsCsvFile;
   private String linkToCommittedRecordsErrorsCsvFile;
 
-  private Integer totalNumOfRecords;
-  private Integer processedNumOfRecords;
-  private Integer executionChunkSize;
-  private Integer matchedNumOfRecords;
-  private Integer committedNumOfRecords;
-  private Integer matchedNumOfErrors;
-  private Integer committedNumOfErrors;
+  private Integer totalNumOfRecords = 0;
+  private Integer processedNumOfRecords = 0;
+  private Integer executionChunkSize = 0;
+  private Integer matchedNumOfRecords = 0;
+  private Integer committedNumOfRecords = 0;
+  private Integer matchedNumOfErrors = 0;
+  private Integer committedNumOfErrors = 0;
   private LocalDateTime startTime;
   private LocalDateTime endTime;
   private String errorMessage;

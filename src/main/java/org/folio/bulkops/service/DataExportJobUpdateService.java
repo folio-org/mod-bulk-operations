@@ -63,52 +63,50 @@ public class DataExportJobUpdateService {
     var optionalBulkOperation = bulkOperationRepository.findByDataExportJobId(jobExecutionUpdate.getId());
 
     if (optionalBulkOperation.isEmpty()) {
-      log.error("Update for unknown job {}.", jobExecutionUpdate.getId());
+      log.error("Update for unknown job {}.", jobExecutionUpdate);
       return;
     }
 
-    var bulkOperation = optionalBulkOperation.get();
+    var operation = optionalBulkOperation.get();
 
     if (nonNull(jobExecutionUpdate.getProgress())) {
-      bulkOperation = bulkOperation
-        .withTotalNumOfRecords(jobExecutionUpdate.getProgress().getTotal())
-        .withProcessedNumOfRecords(jobExecutionUpdate.getProgress().getProcessed());
+      operation.setTotalNumOfRecords(jobExecutionUpdate.getProgress().getTotal());
+      operation.setProcessedNumOfRecords(jobExecutionUpdate.getProgress().getProcessed());
     }
 
     var status = JOB_STATUSES.get(jobExecutionUpdate.getBatchStatus());
     if (nonNull(status)) {
       if (JobStatus.SUCCESSFUL.equals(status)) {
-        bulkOperationRepository.save(bulkOperation.withStatus(OperationStatusType.SAVING_RECORDS_LOCALLY));
-        bulkOperation = downloadOriginFileAndUpdateBulkOperation(bulkOperation, jobExecutionUpdate);
+        operation.setStatus(OperationStatusType.SAVING_RECORDS_LOCALLY);
+        bulkOperationRepository.save(operation);
+        downloadOriginFileAndUpdateBulkOperation(operation, jobExecutionUpdate);
       } else if (JobStatus.FAILED.equals(status)) {
-        bulkOperation = bulkOperation
-          .withStatus(OperationStatusType.FAILED)
-          .withEndTime(LocalDateTime.ofInstant(jobExecutionUpdate.getEndTime().toInstant(), UTC_ZONE))
-          .withErrorMessage(isNull(jobExecutionUpdate.getErrorDetails()) ? EMPTY : jobExecutionUpdate.getErrorDetails());
+        operation.setStatus(OperationStatusType.FAILED);
+        operation.setEndTime(LocalDateTime.ofInstant(jobExecutionUpdate.getEndTime().toInstant(), UTC_ZONE));
+        operation.setErrorMessage(isNull(jobExecutionUpdate.getErrorDetails()) ? EMPTY : jobExecutionUpdate.getErrorDetails());
       }
     }
-
-    bulkOperationRepository.save(bulkOperation);
+    bulkOperationRepository.save(operation);
   }
 
-  private BulkOperation downloadOriginFileAndUpdateBulkOperation(BulkOperation bulkOperation, Job jobUpdate) {
+  private void downloadOriginFileAndUpdateBulkOperation(BulkOperation operation, Job jobUpdate) {
     try {
 
-      bulkOperation.setStatus(OperationStatusType.DATA_MODIFICATION);
+      operation.setStatus(OperationStatusType.DATA_MODIFICATION);
 
       var errorsUrl = jobUpdate.getFiles().get(1);
       if (StringUtils.isNotEmpty(errorsUrl)) {
         try(var is = new URL(errorsUrl).openStream()) {
-          var linkToMatchingErrorsFile = remoteFileSystemClient.put(is, bulkOperation.getId() + "/" + FilenameUtils.getName(errorsUrl.split("\\?")[0]));
-          bulkOperation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
+          var linkToMatchingErrorsFile = remoteFileSystemClient.put(is, operation.getId() + "/" + FilenameUtils.getName(errorsUrl.split("\\?")[0]));
+          operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
         }
       }
 
-      var linkToMatchingRecordsFile = downloadAndSaveCsvFile(bulkOperation, jobUpdate);
-      var linkToOriginFile = downloadAndSaveJsonFile(bulkOperation, jobUpdate);
+      var linkToMatchingRecordsFile = downloadAndSaveCsvFile(operation, jobUpdate);
+      var linkToOriginFile = downloadAndSaveJsonFile(operation, jobUpdate);
 
       Progress progress;
-      if (QUERY == bulkOperation.getApproach()) {
+      if (QUERY == operation.getApproach()) {
         var value = remoteFileSystemClient.getNumOfLines(linkToMatchingRecordsFile);
         progress =  new Progress()
           .withErrors(0)
@@ -119,22 +117,21 @@ public class DataExportJobUpdateService {
         progress = jobUpdate.getProgress();
       }
 
-      return bulkOperation
-        .withStatus(OperationStatusType.DATA_MODIFICATION)
-        .withLinkToMatchedRecordsJsonFile(linkToOriginFile)
-        .withLinkToMatchedRecordsCsvFile(linkToMatchingRecordsFile)
-        .withMatchedNumOfRecords(progress.getSuccess())
-        .withMatchedNumOfErrors(progress.getErrors())
-        .withTotalNumOfRecords(progress.getTotal())
-        .withProcessedNumOfRecords(progress.getProcessed())
-        .withEndTime(LocalDateTime.ofInstant(jobUpdate.getEndTime().toInstant(), UTC_ZONE));
+      operation.setStatus(OperationStatusType.DATA_MODIFICATION);
+      operation.setLinkToMatchedRecordsJsonFile(linkToOriginFile);
+      operation.setLinkToMatchedRecordsCsvFile(linkToMatchingRecordsFile);
+      operation.setMatchedNumOfRecords(progress.getSuccess());
+      operation.setMatchedNumOfErrors(progress.getErrors());
+      operation.setTotalNumOfRecords(progress.getTotal());
+      operation.setProcessedNumOfRecords(progress.getProcessed());
+      operation.setEndTime(LocalDateTime.ofInstant(jobUpdate.getEndTime().toInstant(), UTC_ZONE));
+
     } catch (Exception e) {
       var msg = "Failed to download origin file, reason: " + e;
       log.error(msg);
-      return bulkOperation
-        .withStatus(OperationStatusType.COMPLETED_WITH_ERRORS)
-        .withMatchedNumOfErrors(jobUpdate.getProgress().getErrors())
-        .withEndTime(LocalDateTime.now());
+      operation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);
+      operation.setMatchedNumOfErrors(jobUpdate.getProgress().getErrors());
+      operation.setEndTime(LocalDateTime.now());
     }
   }
 

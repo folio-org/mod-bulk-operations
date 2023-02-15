@@ -23,6 +23,7 @@ import java.util.UUID;
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.ConfigurationCollection;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.InventoryItemStatus;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
@@ -160,7 +161,7 @@ class ItemDataProcessorTest extends BaseTest {
     var holdingsLocationId = UUID.randomUUID().toString();
     var holdingsLocation = ItemLocation.builder().id(holdingsLocationId).name("Holdings' location").build();
 
-    when(holdingsClient.getHoldingById(holdingsId)).thenReturn(OBJECT_MAPPER.readTree(String.format("{ \"permanentLocationId\": \"%s\" }", holdingsLocationId)));
+    when(holdingsClient.getHoldingById(holdingsId)).thenReturn(new HoldingsRecord().withPermanentLocationId(holdingsLocationId));
     when(locationClient.getLocationById(holdingsLocationId)).thenReturn(holdingsLocation);
 
     var item = new Item()

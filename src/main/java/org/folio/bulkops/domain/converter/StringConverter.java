@@ -6,8 +6,6 @@ import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Objects;
-
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 public class StringConverter extends AbstractBeanField<Object, String> {

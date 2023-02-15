@@ -1,5 +1,21 @@
 package org.folio.bulkops.processor;
 
+import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.client.HoldingsSourceClient;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.exception.BulkOperationException;
+import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.RuleValidationException;
+import org.folio.bulkops.service.HoldingsReferenceService;
+import org.folio.bulkops.service.ItemReferenceService;
+import org.springframework.stereotype.Component;
+
+import java.util.Objects;
+import java.util.regex.Pattern;
+
 import static java.lang.String.format;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
@@ -7,28 +23,14 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 
-import java.util.Objects;
-import java.util.regex.Pattern;
-
-import org.folio.bulkops.client.HoldingsSourceClient;
-import org.folio.bulkops.client.LocationClient;
-import org.folio.bulkops.domain.bean.HoldingsRecord;
-import org.folio.bulkops.domain.dto.Action;
-import org.folio.bulkops.domain.dto.UpdateOptionType;
-import org.folio.bulkops.exception.BulkOperationException;
-import org.folio.bulkops.exception.NotFoundException;
-import org.folio.bulkops.exception.RuleValidationException;
-import org.springframework.stereotype.Component;
-
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
-
 @Log4j2
 @Component
 @AllArgsConstructor
 public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord> {
 
-  private final LocationClient locationClient;
+
+  private final ItemReferenceService itemReferenceService;
+  private final HoldingsReferenceService holdingsReferenceService;
   private final HoldingsSourceClient holdingsSourceClient;
 
   private static final Pattern UUID_REGEX =
@@ -38,7 +40,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
   public Validator<UpdateOptionType, Action> validator(HoldingsRecord entity) {
     return (option, action) -> {
       try {
-        if ("MARC".equals(holdingsSourceClient.getById(entity.getSourceId()).getName())) {
+        if ("MARC".equals(holdingsReferenceService.getSourceById(entity.getSourceId()).getName())) {
           throw new RuleValidationException("Holdings records that have source \"MARC\" cannot be changed");
         }
       } catch (NotFoundException e) {
@@ -53,7 +55,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
           throw new RuleValidationException("Location id has invalid format: %s" + locationId);
         }
         try {
-          locationClient.getLocationById(locationId);
+          itemReferenceService.getLocationById(locationId);
         } catch (Exception e) {
           throw new RuleValidationException(format("Location %s doesn't exist", locationId));
         }
@@ -75,7 +77,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
         return holding -> {
           var locationId = action.getUpdated();
           if (PERMANENT_LOCATION == option) {
-            holding.setPermanentLocation(locationClient.getLocationById(locationId));
+            holding.setPermanentLocation(itemReferenceService.getLocationById(locationId));
             holding.setPermanentLocationId(locationId);
             holding.setEffectiveLocationId(isEmpty(holding.getTemporaryLocationId()) ? locationId : holding.getTemporaryLocationId());
           } else {

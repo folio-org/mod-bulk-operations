@@ -1,15 +1,15 @@
 package org.folio.bulkops.domain.converter;
 
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
-
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import org.folio.bulkops.domain.bean.EffectiveCallNumberComponents;
 import org.folio.bulkops.service.ItemReferenceService;
+
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 public class EffectiveCallNumberComponentsConverter extends AbstractBeanField<String, EffectiveCallNumberComponents> {
   @Override

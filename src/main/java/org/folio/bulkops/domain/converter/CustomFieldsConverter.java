@@ -3,12 +3,13 @@ package org.folio.bulkops.domain.converter;
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.bean.CustomFieldTypes;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
-import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.EntityFormatException;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.service.UserReferenceService;
 
 import java.util.ArrayList;
@@ -43,8 +44,11 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
 
   @Override
   protected String convertToWrite(Object value) {
-    var map = (Map<String, Object>) value;
-    return nonNull(map) ? customFieldsToString(map) : EMPTY;
+    if (ObjectUtils.isNotEmpty(value)) {
+      var map = (Map<String, Object>) value;
+      return nonNull(map) ? customFieldsToString(map) : EMPTY;
+    }
+    return EMPTY;
   }
 
   private Pair<String, Object> restoreCustomFieldValue(String s) {

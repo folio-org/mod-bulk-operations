@@ -1,19 +1,18 @@
 package org.folio.bulkops.domain.converter;
 
+import com.opencsv.bean.AbstractBeanField;
+import com.opencsv.exceptions.CsvConstraintViolationException;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import org.folio.bulkops.domain.bean.LastCheckIn;
+import org.folio.bulkops.exception.EntityFormatException;
+import org.folio.bulkops.service.ItemReferenceService;
+
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.adapters.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
-
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import org.folio.bulkops.domain.bean.LastCheckIn;
-
-import org.folio.bulkops.exception.EntityFormatException;
-import org.folio.bulkops.service.ItemReferenceService;
 
 public class LastCheckInConverter extends AbstractBeanField<String, LastCheckIn> {
   private static final int NUMBER_OF_LAST_CHECK_IN_COMPONENTS = 3;
@@ -22,7 +21,7 @@ public class LastCheckInConverter extends AbstractBeanField<String, LastCheckIn>
   private static final int LAST_CHECK_IN_DATE_TIME_INDEX = 2;
 
   @Override
-  protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
+  protected LastCheckIn convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
     if (isNotEmpty(value)) {
       var tokens = value.split(ARRAY_DELIMITER, -1);
       if (NUMBER_OF_LAST_CHECK_IN_COMPONENTS == tokens.length) {

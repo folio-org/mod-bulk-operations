@@ -1,6 +1,5 @@
 package org.folio.bulkops.client;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordCollection;
@@ -15,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface HoldingsClient {
 
   @GetMapping(value = "/{holdingsRecordId}", produces = MediaType.APPLICATION_JSON_VALUE)
-  JsonNode getHoldingById(@PathVariable String holdingsRecordId);
+  HoldingsRecord getHoldingById(@PathVariable String holdingsRecordId);
 
   @PutMapping(value = "/{holdingsId}")
   void updateHoldingsRecord(@RequestBody HoldingsRecord holdingsRecord, @PathVariable String holdingsId);

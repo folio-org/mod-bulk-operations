@@ -45,21 +45,32 @@ public class RemoteFileSystemClient {
 
   public OutputStream newOutputStream(String path) {
 
+    final int BUFFER_SIZE = 50000000;
+
     return new OutputStream() {
 
       byte[] buffer = new byte[0];
 
       @Override
-      public void write(int b) {
+      public synchronized void write(int b) {
         buffer = ArrayUtils.add(buffer, (byte) b);
+        if (buffer.length >= BUFFER_SIZE) {
+          try (var input = new ByteArrayInputStream(buffer)) {
+            append(input, path);
+          } catch (IOException e) {
+            // Just skip writing and clean buffer
+          } finally {
+            buffer = new byte[0];
+          }
+        }
       }
 
       @Override
       public void close() {
-        try(var is = new ByteArrayInputStream(buffer)) {
-          append(is, path);
+        try(var input = new ByteArrayInputStream(buffer)) {
+          append(input, path);
         } catch (IOException e) {
-          buffer = new byte[0];
+          // Just skip writing and clean buffer
         } finally {
           buffer = new byte[0];
         }

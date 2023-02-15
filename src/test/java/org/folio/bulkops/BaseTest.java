@@ -1,35 +1,34 @@
 package org.folio.bulkops;
 
-import static java.lang.String.format;
-import static java.util.Objects.isNull;
-import static org.folio.bulkops.processor.UserDataProcessor.DATE_TIME_FORMAT;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.HostConfig;
+import com.github.dockerjava.api.model.PortBinding;
+import com.github.dockerjava.api.model.Ports;
+import lombok.SneakyThrows;
+import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.client.CallNumberTypeClient;
 import org.folio.bulkops.client.ConfigurationClient;
+import org.folio.bulkops.client.DamagedStatusClient;
 import org.folio.bulkops.client.GroupClient;
 import org.folio.bulkops.client.HoldingsClient;
+import org.folio.bulkops.client.HoldingsNoteTypeClient;
 import org.folio.bulkops.client.HoldingsSourceClient;
+import org.folio.bulkops.client.HoldingsTypeClient;
+import org.folio.bulkops.client.IllPolicyClient;
+import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.ItemClient;
+import org.folio.bulkops.client.ItemNoteTypeClient;
 import org.folio.bulkops.client.LoanTypeClient;
 import org.folio.bulkops.client.LocationClient;
+import org.folio.bulkops.client.MaterialTypeClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.client.ServicePointClient;
+import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
@@ -63,16 +62,24 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.dockerjava.api.model.ExposedPort;
-import com.github.dockerjava.api.model.HostConfig;
-import com.github.dockerjava.api.model.PortBinding;
-import com.github.dockerjava.api.model.Ports;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
-import lombok.SneakyThrows;
-import lombok.extern.log4j.Log4j2;
+import static java.lang.String.format;
+import static java.util.Objects.isNull;
+import static org.folio.bulkops.processor.UserDataProcessor.DATE_TIME_FORMAT;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -120,6 +127,26 @@ public abstract class BaseTest {
   public LocationClient locationClient;
   @MockBean
   public HoldingsSourceClient holdingsSourceClient;
+  @MockBean
+  public CallNumberTypeClient callNumberTypeClient;
+  @MockBean
+  public InstanceClient instanceClient;
+  @MockBean
+  public HoldingsTypeClient holdingsTypeClient;
+  @MockBean
+  public HoldingsNoteTypeClient holdingsNoteTypeClient;
+  @MockBean
+  public IllPolicyClient illPolicyClient;
+  @MockBean
+  public StatisticalCodeClient statisticalCodeClient;
+  @MockBean
+  public DamagedStatusClient damagedStatusClient;
+  @MockBean
+  public ItemNoteTypeClient itemNoteTypeClient;
+  @MockBean
+  public ServicePointClient servicePointClient;
+  @MockBean
+  public MaterialTypeClient materialTypeClient;
 
   @Autowired
   protected MockMvc mockMvc;

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
@@ -68,7 +69,7 @@ class UserReferenceServiceTest {
     assertEquals(expected, actual);
 
     when(addressTypeClient.getAddressTypeByQuery("desc==\"*\"")).thenReturn(new AddressTypeCollection());
-    assertThrows(NotFoundException.class, () -> userReferenceService.getAddressTypeIdByDesc("*"));
+    assertEquals(EMPTY, userReferenceService.getAddressTypeIdByDesc("*"));
   }
 
   @Test
@@ -97,7 +98,7 @@ class UserReferenceServiceTest {
     assertEquals(expected, actual);
 
     when(departmentClient.getDepartmentByQuery("name==\"*\"")).thenReturn(new DepartmentCollection());
-    assertThrows(NotFoundException.class, () -> userReferenceService.getDepartmentIdByName("*"));
+    assertEquals(EMPTY, userReferenceService.getDepartmentIdByName("*"));
   }
 
   @Test
@@ -127,7 +128,7 @@ class UserReferenceServiceTest {
     assertEquals(expected, actual);
 
     when(groupClient.getGroupByQuery("group==\"*\"")).thenReturn(new UserGroupCollection().withUsergroups(new ArrayList<>()));
-    assertThrows(NotFoundException.class, () -> userReferenceService.getPatronGroupIdByName("*"));
+    assertEquals(EMPTY, userReferenceService.getPatronGroupIdByName("*"));
   }
 
   @Test
@@ -149,7 +150,7 @@ class UserReferenceServiceTest {
     var actual = userReferenceService.getCustomFieldByRefId("refId");
     assertEquals(customField, actual);
 
-    assertThrows(NotFoundException.class, () ->userReferenceService.getCustomFieldByRefId("refId2"));
+    assertEquals(new CustomField(), userReferenceService.getCustomFieldByRefId("refId2"));
   }
 
   @Test
@@ -165,6 +166,6 @@ class UserReferenceServiceTest {
     when(customFieldsClient.getCustomFieldsByQuery(isA(String.class), eq("name==\"name\"")))
       .thenReturn(new CustomFieldCollection().withCustomFields(new ArrayList<>()));
     doReturn("module").when(userReferenceService).getModuleId(isA(String.class));
-    assertThrows(NotFoundException.class, () -> userReferenceService.getCustomFieldByName("name"));
+    assertEquals(new CustomField(), userReferenceService.getCustomFieldByName("name"));
   }
 }

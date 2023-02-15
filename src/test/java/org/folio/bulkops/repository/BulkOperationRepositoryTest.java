@@ -37,7 +37,8 @@ class BulkOperationRepositoryTest extends BaseTest {
   void shouldUpdateEntity() {
     var created = repository.save(createEntity());
     var endTime = LocalDateTime.now();
-    var updated = repository.save(created.withEndTime(endTime));
+    created.setEndTime(endTime);
+    var updated = repository.save(created);
     assertTrue(created.getId().equals(updated.getId()) && endTime.isEqual(updated.getEndTime()));
   }
 
