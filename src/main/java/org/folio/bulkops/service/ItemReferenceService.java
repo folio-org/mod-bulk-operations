@@ -8,6 +8,7 @@ import org.folio.bulkops.client.CallNumberTypeClient;
 import org.folio.bulkops.client.ConfigurationClient;
 import org.folio.bulkops.client.DamagedStatusClient;
 import org.folio.bulkops.client.HoldingsClient;
+import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.ItemNoteTypeClient;
 import org.folio.bulkops.client.LoanTypeClient;
 import org.folio.bulkops.client.LocationClient;
@@ -15,6 +16,7 @@ import org.folio.bulkops.client.MaterialTypeClient;
 import org.folio.bulkops.client.ServicePointClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.client.UserClient;
+import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.ItemLocationCollection;
 import org.folio.bulkops.domain.bean.LoanType;
@@ -46,9 +48,14 @@ public class ItemReferenceService implements InitializingBean {
   private final LocationClient locationClient;
   private final MaterialTypeClient materialTypeClient;
   private final HoldingsClient holdingClient;
+  private final ItemClient itemClient;
   private final LoanTypeClient loanTypeClient;
   private final ConfigurationClient configurationClient;
   private final ObjectMapper objectMapper;
+
+  public ItemCollection getItemByQuery(String query, long offset, long limit) {
+    return itemClient.getItemByQuery(query, offset, limit);
+  }
 
   @Cacheable(cacheNames = "callNumberTypeNames")
   public String getCallNumberTypeNameById(String callNumberTypeId) {

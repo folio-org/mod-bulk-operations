@@ -11,15 +11,14 @@ import org.folio.bulkops.service.HoldingsReferenceService;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER;
-import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER_PATTERN;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
 
 public class HoldingsNoteListConverter extends AbstractBeanField<String, List<HoldingsNote>> {
   private static final int NUMBER_OF_HOLDINGS_NOTE_ELEMENTS = 3;
@@ -33,7 +32,7 @@ public class HoldingsNoteListConverter extends AbstractBeanField<String, List<Ho
       Collections.emptyList() :
       Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
         .map(this::restoreHoldingsNote)
-        .filter(Objects::nonNull)
+        .filter(ObjectUtils::isNotEmpty)
         .collect(Collectors.toList());
   }
 

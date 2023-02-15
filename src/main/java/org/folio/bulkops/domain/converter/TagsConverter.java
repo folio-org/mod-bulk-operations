@@ -12,7 +12,7 @@ import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.adapters.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 public class TagsConverter extends AbstractBeanField<String, Tags> {
   @Override
@@ -22,7 +22,7 @@ public class TagsConverter extends AbstractBeanField<String, Tags> {
       List<String> tagList = SpecialCharacterEscaper.restore(Arrays.asList(value.split(ARRAY_DELIMITER)));
       return tags.withTagList(tagList);
     }
-    return null;
+    return new Tags();
   }
 
   @Override

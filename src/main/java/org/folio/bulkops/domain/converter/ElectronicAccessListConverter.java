@@ -3,6 +3,8 @@ package org.folio.bulkops.domain.converter;
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.service.ElectronicAccessService;
 
@@ -25,7 +27,7 @@ public class ElectronicAccessListConverter extends AbstractBeanField<String, Lis
       Collections.emptyList() :
       Arrays.stream(value.split(ARRAY_DELIMITER))
         .map(ElectronicAccessService.service()::restoreElectronicAccessItem)
-        .filter(Objects::nonNull)
+        .filter(ObjectUtils::isNotEmpty)
         .collect(Collectors.toList());
   }
 
@@ -35,6 +37,7 @@ public class ElectronicAccessListConverter extends AbstractBeanField<String, Lis
       EMPTY :
       ((List<ElectronicAccess>) value).stream()
         .map(ElectronicAccessService.service()::electronicAccessToString)
+        .filter(StringUtils::isNotEmpty)
         .collect(Collectors.joining(ITEM_DELIMITER));
   }
 }

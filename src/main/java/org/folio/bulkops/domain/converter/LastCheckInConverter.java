@@ -10,9 +10,9 @@ import org.folio.bulkops.service.ItemReferenceService;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.adapters.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 public class LastCheckInConverter extends AbstractBeanField<String, LastCheckIn> {
   private static final int NUMBER_OF_LAST_CHECK_IN_COMPONENTS = 3;

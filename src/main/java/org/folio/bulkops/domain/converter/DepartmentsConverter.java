@@ -15,9 +15,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.adapters.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
-public class UserDepartmentsConverter extends AbstractBeanField<String, Set<UUID>> {
+public class DepartmentsConverter extends AbstractBeanField<String, Set<UUID>> {
 
   @Override
   protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
@@ -38,6 +38,7 @@ public class UserDepartmentsConverter extends AbstractBeanField<String, Set<UUID
     if (ObjectUtils.isNotEmpty(value)) {
       return ((Set<UUID>) value).stream()
         .map(id -> UserReferenceService.service().getDepartmentNameById(id.toString()))
+        .filter(StringUtils::isNotEmpty)
         .map(SpecialCharacterEscaper::escape)
         .collect(Collectors.joining(ARRAY_DELIMITER));
     }

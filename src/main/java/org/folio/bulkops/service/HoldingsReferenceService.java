@@ -13,6 +13,7 @@ import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.HoldingsRecordCollection;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.beans.factory.InitializingBean;
@@ -40,6 +41,10 @@ public class HoldingsReferenceService implements InitializingBean {
 
   public HoldingsRecord getHoldingsRecordById(String id) {
     return holdingsClient.getHoldingById(id);
+  }
+
+  public HoldingsRecordCollection getHoldingsByQuery(String query, long offset, long limit) {
+    return holdingsClient.getHoldingsByQuery(query, offset, limit);
   }
 
   public String getInstanceTitleById(String id) {

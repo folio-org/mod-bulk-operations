@@ -3,12 +3,11 @@ package org.folio.bulkops.service;
 import lombok.SneakyThrows;
 import org.awaitility.Awaitility;
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.adapters.impl.holdings.HoldingsHeaderBuilder;
-import org.folio.bulkops.adapters.impl.items.ItemHeaderBuilder;
-import org.folio.bulkops.adapters.impl.users.UserHeaderBuilder;
+import org.folio.bulkops.adapters.HoldingUnifiedTableHeaderBuilder;
+import org.folio.bulkops.adapters.ItemUnifiedTableHeaderBuilder;
+import org.folio.bulkops.adapters.UserUnifiedTableHeaderBuilder;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
-import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BriefInstance;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
@@ -27,7 +26,6 @@ import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
-import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
@@ -56,23 +54,16 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
-import org.testcontainers.shaded.org.hamcrest.MatcherAssert;
-import org.testcontainers.shaded.org.hamcrest.Matchers;
 
-import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.Scanner;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-import static org.apache.commons.lang3.StringUtils.LF;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
@@ -343,7 +334,6 @@ class BulkOperationServiceTest extends BaseTest {
         .linkToMatchedRecordsJsonFile(pathToOrigin)
         .linkToModifiedRecordsJsonFile("existing.csv")
         .linkToModifiedRecordsCsvFile("existing.json")
-        .linkToPreviewRecordsJsonFile("existing-preview.json")
         .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
         .processedNumOfRecords(0)
         .build()));
@@ -387,7 +377,7 @@ class BulkOperationServiceTest extends BaseTest {
     var expectedPathToModifiedCsvFile = bulkOperationId + "/modified-origin.csv";
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
-    Awaitility.await().untilAsserted(() ->verify(remoteFileSystemClient, times(3)).append(streamCaptor.capture(), pathCaptor.capture()));
+    Awaitility.await().untilAsserted(() ->verify(remoteFileSystemClient, times(2)).append(streamCaptor.capture(), pathCaptor.capture()));
     assertThat(new String(streamCaptor.getAllValues().get(0).readAllBytes()), containsString(newPatronGroupId));
     assertEquals(expectedPathToModifiedFile, pathCaptor.getAllValues().get(1));
     assertEquals(expectedPathToPreviewFile, pathCaptor.getAllValues().get(0));
@@ -604,7 +594,7 @@ class BulkOperationServiceTest extends BaseTest {
     var capture = operationCaptor.getAllValues().get(0);
     assertThat(capture.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
     assertThat(capture.getLinkToModifiedRecordsJsonFile(), equalTo(expectedPathToResultFile));
-    assertThat(capture.getLinkToPreviewRecordsJsonFile(), equalTo(pathToPreviewJson));
+//    assertThat(capture.getLinkToPreviewRecordsJsonFile(), equalTo(pathToPreviewJson));
   }
 
   @Test
@@ -805,15 +795,15 @@ class BulkOperationServiceTest extends BaseTest {
     when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
     when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
 
-    var table = bulkOperationService.getPreview(bulkOperation, step, limit);
+    var table = bulkOperationService.getPreview(bulkOperation, step, 0, limit);
 
     assertThat(table.getRows(), hasSize(limit));
     if (USER.equals(entityType)) {
-      assertThat(table.getHeader(), equalTo(UserHeaderBuilder.getHeaders()));
+      assertThat(table.getHeader(), equalTo(UserUnifiedTableHeaderBuilder.UserHeaderBuilder.getHeaders()));
     } else if (EntityType.ITEM.equals(entityType)) {
-      assertThat(table.getHeader(), equalTo(ItemHeaderBuilder.getHeaders()));
+      assertThat(table.getHeader(), equalTo(ItemUnifiedTableHeaderBuilder.ItemHeaderBuilder.getHeaders()));
     } else if (EntityType.HOLDINGS_RECORD.equals(entityType)) {
-      assertThat(table.getHeader(), equalTo(HoldingsHeaderBuilder.getHeaders()));
+      assertThat(table.getHeader(), equalTo(HoldingUnifiedTableHeaderBuilder.HoldingsHeaderBuilder.getHeaders()));
     }
   }
 
@@ -824,7 +814,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     var bulkOperation = BulkOperation.builder().entityType(USER).status(status).build();
 
-    var table = bulkOperationService.getPreview(bulkOperation, BulkOperationStep.UPLOAD, 10);
+    var table = bulkOperationService.getPreview(bulkOperation, BulkOperationStep.UPLOAD, 0, 10);
     assertEquals(0, table.getRows().size());
     Assertions.assertTrue(table.getHeader().size() > 0);
   }
@@ -871,7 +861,7 @@ class BulkOperationServiceTest extends BaseTest {
         .build();
       case EDIT -> BulkOperation.builder()
         .entityType(entityType)
-        .linkToPreviewRecordsJsonFile(fileName)
+//        .linkToPreviewRecordsJsonFile(fileName)
         .build();
       case COMMIT -> BulkOperation.builder()
         .entityType(entityType)

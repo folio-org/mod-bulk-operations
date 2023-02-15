@@ -10,7 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.folio.bulkops.adapters.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 public class ProxyForConverter extends AbstractBeanField<String, List<String>> {
   @Override

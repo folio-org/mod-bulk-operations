@@ -8,7 +8,9 @@ import org.folio.bulkops.client.CustomFieldsClient;
 import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.client.GroupClient;
 import org.folio.bulkops.client.OkapiClient;
+import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.CustomField;
+import org.folio.bulkops.domain.bean.UserCollection;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cache.annotation.Cacheable;
@@ -31,9 +33,14 @@ public class UserReferenceService implements InitializingBean {
   private final AddressTypeClient addressTypeClient;
   private final DepartmentClient departmentClient;
   private final GroupClient groupClient;
+  private final UserClient userClient;
   private final CustomFieldsClient customFieldsClient;
   private final FolioExecutionContext folioExecutionContext;
   private final OkapiClient okapiClient;
+
+  public UserCollection getUserByQuery(String query, long offset, long limit) {
+    return userClient.getUserByQuery(query, offset, limit);
+  }
 
   @Cacheable(cacheNames = "addressTypeIds")
   public String getAddressTypeIdByDesc(String desc) {
