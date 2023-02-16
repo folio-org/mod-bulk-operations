@@ -9,15 +9,13 @@ import static org.folio.bulkops.util.Utils.ofEmptyString;
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.EffectiveCallNumberComponents;
-import org.folio.bulkops.service.ItemReferenceService;
+import org.folio.bulkops.service.ItemReferenceHelper;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class EffectiveCallNumberComponentsConverter extends AbstractBeanField<String, EffectiveCallNumberComponents> {
-
   @Override
   protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
     return null;
@@ -33,7 +31,7 @@ public class EffectiveCallNumberComponentsConverter extends AbstractBeanField<St
     ofEmptyString(components.getCallNumber()).ifPresent(comps::add);
     ofEmptyString(components.getPrefix()).ifPresent(comps::add);
     ofEmptyString(components.getSuffix()).ifPresent(comps::add);
-    ofEmptyString(ItemReferenceService.service().getCallNumberTypeNameById(components.getTypeId())).ifPresent(comps::add);
+    ofEmptyString(ItemReferenceHelper.service().getCallNumberTypeNameById(components.getTypeId())).ifPresent(comps::add);
     return join(ARRAY_DELIMITER, comps);
   }
 }

@@ -1,5 +1,10 @@
 package org.folio.bulkops.service;
 
+import static java.lang.String.format;
+import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
@@ -12,21 +17,15 @@ import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.bean.UserCollection;
 import org.folio.spring.FolioExecutionContext;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
 
-import static java.lang.String.format;
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-
 @Service
 @RequiredArgsConstructor
 @Log4j2
-public class UserReferenceService implements InitializingBean {
+public class UserReferenceService {
   private static final String OKAPI_URL = "http://_";
   private static final String MOD_USERS = "mod-users";
 
@@ -85,6 +84,7 @@ public class UserReferenceService implements InitializingBean {
     return groupClient.getGroupById(id).getGroup();
   }
 
+  @Cacheable(cacheNames = "patronGroupNames")
   public String getPatronGroupNameById(String id) {
       return isNull(id) ? EMPTY : groupClient.getGroupById(id).getGroup();
   }
@@ -136,16 +136,5 @@ public class UserReferenceService implements InitializingBean {
     var msg = "Module id not found for name: " + moduleName;
     log.error(msg);
     return EMPTY;
-  }
-
-  private static UserReferenceService service = null;
-
-  @Override
-  public void afterPropertiesSet() {
-    service = this;
-  }
-
-  public static UserReferenceService service() {
-    return service;
   }
 }

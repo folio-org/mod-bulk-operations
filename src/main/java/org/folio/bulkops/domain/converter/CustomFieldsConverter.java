@@ -1,5 +1,15 @@
 package org.folio.bulkops.domain.converter;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
+import static org.folio.bulkops.util.Constants.KEY_VALUE_DELIMITER;
+import static org.folio.bulkops.util.Constants.LINE_BREAK;
+import static org.folio.bulkops.util.Constants.LINE_BREAK_REPLACEMENT;
+
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
@@ -11,7 +21,7 @@ import org.folio.bulkops.domain.bean.CustomFieldTypes;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.exception.EntityFormatException;
 import org.folio.bulkops.exception.NotFoundException;
-import org.folio.bulkops.service.UserReferenceService;
+import org.folio.bulkops.service.UserReferenceHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,16 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
-import static org.folio.bulkops.util.Constants.KEY_VALUE_DELIMITER;
-import static org.folio.bulkops.util.Constants.LINE_BREAK;
-import static org.folio.bulkops.util.Constants.LINE_BREAK_REPLACEMENT;
 
 public class CustomFieldsConverter extends AbstractBeanField<String, Map<String, Object>> {
   @Override
@@ -54,7 +54,7 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
     var valuePair = stringToPair(s);
     var fieldName = valuePair.getKey();
     var fieldValue = valuePair.getValue();
-    var customField = UserReferenceService.service().getCustomFieldByName(fieldName);
+    var customField = UserReferenceHelper.service().getCustomFieldByName(fieldName);
     return switch (customField.getType()) {
       case SINGLE_CHECKBOX -> Pair.of(customField.getRefId(), Boolean.parseBoolean(fieldValue));
       case TEXTBOX_LONG, TEXTBOX_SHORT ->
