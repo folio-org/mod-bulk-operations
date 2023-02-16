@@ -87,6 +87,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
+import static org.folio.bulkops.util.Utils.resolveEntityClass;
 
 @Service
 @Log4j2
@@ -629,14 +630,6 @@ public class BulkOperationService {
       }
     }
     return operation;
-  }
-
-  private Class<? extends BulkOperationsEntity> resolveEntityClass(EntityType clazz) {
-    return switch (clazz) {
-      case USER -> User.class;
-      case ITEM -> Item.class;
-      case HOLDINGS_RECORD -> HoldingsRecord.class;
-    };
   }
 
   public BulkOperation getBulkOperationOrThrow(UUID operationId) {

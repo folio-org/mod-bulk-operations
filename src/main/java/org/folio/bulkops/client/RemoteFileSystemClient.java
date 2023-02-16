@@ -1,7 +1,6 @@
 package org.folio.bulkops.client;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.ArrayUtils;
 import org.folio.s3.client.FolioS3Client;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -14,6 +13,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 @Lazy
 @Component
@@ -45,34 +46,36 @@ public class RemoteFileSystemClient {
 
   public OutputStream newOutputStream(String path) {
 
-    final int BUFFER_SIZE = 50000000;
+    final int BUFFER_SIZE = 10000000;
 
     return new OutputStream() {
 
-      byte[] buffer = new byte[0];
+      final ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
 
       @Override
       public synchronized void write(int b) {
-        buffer = ArrayUtils.add(buffer, (byte) b);
-        if (buffer.length >= BUFFER_SIZE) {
-          try (var input = new ByteArrayInputStream(buffer)) {
+
+        if (buffer.position() < BUFFER_SIZE) {
+          buffer.put((byte) b);
+        } else {
+          try (var input = new ByteArrayInputStream(buffer.array())) {
             append(input, path);
           } catch (IOException e) {
             // Just skip writing and clean buffer
           } finally {
-            buffer = new byte[0];
+            buffer.clear();
           }
         }
       }
 
       @Override
       public void close() {
-        try(var input = new ByteArrayInputStream(buffer)) {
+        try(var input = new ByteArrayInputStream(Arrays.copyOfRange(buffer.array(), 0, buffer.position()))) {
           append(input, path);
         } catch (IOException e) {
           // Just skip writing and clean buffer
         } finally {
-          buffer = new byte[0];
+          buffer.clear();
         }
       }
     };

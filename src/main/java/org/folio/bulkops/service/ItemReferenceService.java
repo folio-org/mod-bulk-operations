@@ -47,11 +47,8 @@ public class ItemReferenceService implements InitializingBean {
   private final UserClient userClient;
   private final LocationClient locationClient;
   private final MaterialTypeClient materialTypeClient;
-  private final HoldingsClient holdingClient;
   private final ItemClient itemClient;
   private final LoanTypeClient loanTypeClient;
-  private final ConfigurationClient configurationClient;
-  private final ObjectMapper objectMapper;
 
   public ItemCollection getItemByQuery(String query, long offset, long limit) {
     return itemClient.getItemByQuery(query, offset, limit);
