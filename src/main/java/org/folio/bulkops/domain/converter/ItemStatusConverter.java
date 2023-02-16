@@ -19,7 +19,7 @@ import static org.folio.bulkops.util.Constants.DATE_TIME_PATTERN;
 import static org.folio.bulkops.util.Utils.ofEmptyString;
 
 
-public class InventoryItemStatusConverter extends AbstractBeanField<String, InventoryItemStatus> {
+public class ItemStatusConverter extends AbstractBeanField<String, InventoryItemStatus> {
   private static final int NUMBER_OF_STATUS_COMPONENTS = 2;
   private static final int STATUS_NAME_INDEX = 0;
   private static final int STATUS_DATE_INDEX = 1;
@@ -36,7 +36,7 @@ public class InventoryItemStatusConverter extends AbstractBeanField<String, Inve
       }
       throw new EntityFormatException(String.format("Illegal number of item status elements: %d, expected: %d", tokens.length, NUMBER_OF_STATUS_COMPONENTS));
     }
-    return null;
+    return new InventoryItemStatus();
   }
 
   @Override

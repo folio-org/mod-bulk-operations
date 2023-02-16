@@ -31,7 +31,7 @@ public class ElectronicAccessService implements InitializingBean {
   private static final int ELECTRONIC_ACCESS_PUBLIC_NOTE_INDEX = 3;
 
   public String electronicAccessToString(ElectronicAccess access) {
-    List<String> entries = new ArrayList();
+    List<String> entries = new ArrayList<>();
     ofEmptyString(access.getUri()).ifPresent(e -> entries.add(escape(e)));
     ofEmptyString(access.getLinkText()).ifPresent(e -> entries.add(escape(e)));
     ofEmptyString(access.getMaterialsSpecification()).ifPresent(e -> entries.add(escape(e)));
