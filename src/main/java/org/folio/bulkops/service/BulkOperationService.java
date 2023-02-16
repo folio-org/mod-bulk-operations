@@ -420,7 +420,8 @@ public class BulkOperationService {
         csvReader.skip(offset + 1);
         String[] line;
         while ((line = csvReader.readNext()) != null && csvReader.getLinesRead() < limit + 2) {
-          var row = new Row().row(Arrays.stream(line).collect(Collectors.toList()));
+          var row = new Row();
+          row.setRow(Arrays.stream(line).collect(Collectors.toList()));
           table.addRowsItem(row);
         }
       }
