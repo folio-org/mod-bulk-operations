@@ -419,7 +419,7 @@ public class BulkOperationService {
       try (CSVReader csvReader = new CSVReader(reader)) {
         csvReader.skip(offset + 1);
         String[] line;
-        while ((line = csvReader.readNext()) != null && csvReader.getLinesRead() < limit) {
+        while ((line = csvReader.readNext()) != null && csvReader.getLinesRead() < limit + 2) {
           var row = new Row().row(Arrays.stream(line).collect(Collectors.toList()));
           table.addRowsItem(row);
         }

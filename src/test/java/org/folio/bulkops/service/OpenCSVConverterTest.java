@@ -6,7 +6,6 @@ import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.TestEntity;
-import org.folio.bulkops.client.GroupClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
@@ -33,7 +32,6 @@ import java.util.stream.Stream;
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
-import static org.mockito.Mockito.when;
 
 
 public class OpenCSVConverterTest extends BaseTest {
@@ -47,46 +45,11 @@ public class OpenCSVConverterTest extends BaseTest {
     }
   }
 
+  //TODO TechDebt - Large test to cover object -> json -> object -> csv -> object transformation to prevent all the possible convertation issues
   @ParameterizedTest
   @Disabled
   @EnumSource(value = TestEntity.class, names = {"USER"}, mode = EnumSource.Mode.INCLUDE)
   void shouldConvertEntity(TestEntity entity) {
-
-
-
-    var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
-    String csv;
-
-    strategy.setType(entity.getEntityClass());
-
-    try (Writer writer  = new StringWriter()) {
-
-      StatefulBeanToCsv<BulkOperationsEntity> sbc = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writer)
-        .withSeparator(DEFAULT_SEPARATOR)
-        .withApplyQuotesToAll(false)
-        .withMappingStrategy(strategy)
-        .build();
-
-      sbc.write(entity.entity());
-      csv = writer.toString();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-//      Assertions.fail("Error parsing bean to CSV");
-    }
-
-    List<BulkOperationsEntity> list = new ArrayList<>();
-
-    try (Reader reader = new StringReader(csv)) {
-      CsvToBean<BulkOperationsEntity> cb = new CsvToBeanBuilder<BulkOperationsEntity>(reader)
-        .withType(entity.getEntityClass())
-        .withSkipLines(1)
-        .build();
-      list = cb.parse().stream().toList();
-    } catch (IOException e) {
-      Assertions.fail("Error parsing CSV to bean");
-    }
-
-    assertThat(list, hasSize(1));
 
   }
 

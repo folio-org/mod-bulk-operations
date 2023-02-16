@@ -372,16 +372,13 @@ class BulkOperationServiceTest extends BaseTest {
     Awaitility.await().untilAsserted(() -> verify(processingContentRepository).save(processingCaptor.capture()));
     assertThat(processingCaptor.getValue().getState(), equalTo(StateType.PROCESSED));
 
-    var expectedPathToModifiedFile = bulkOperationId + "/json/modified-origin.json";
-    var expectedPathToPreviewFile = bulkOperationId + "/json/preview-origin.json";
+
     var expectedPathToModifiedCsvFile = bulkOperationId + "/modified-origin.csv";
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     Awaitility.await().untilAsserted(() ->verify(remoteFileSystemClient, times(2)).append(streamCaptor.capture(), pathCaptor.capture()));
     assertThat(new String(streamCaptor.getAllValues().get(0).readAllBytes()), containsString(newPatronGroupId));
-    assertEquals(expectedPathToModifiedFile, pathCaptor.getAllValues().get(1));
-    assertEquals(expectedPathToPreviewFile, pathCaptor.getAllValues().get(0));
-    assertEquals(expectedPathToModifiedCsvFile, pathCaptor.getAllValues().get(2));
+    assertEquals(expectedPathToModifiedCsvFile, pathCaptor.getAllValues().get(1));
 
     var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
     Awaitility.await().untilAsserted(() -> verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));
@@ -393,7 +390,7 @@ class BulkOperationServiceTest extends BaseTest {
     var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository).save(bulkOperationCaptor.capture()));
     var capturedBulkOperation = bulkOperationCaptor.getValue();
-    assertThat(capturedBulkOperation.getLinkToModifiedRecordsJsonFile(), equalTo(expectedPathToModifiedFile));
+    assertThat(capturedBulkOperation.getLinkToModifiedRecordsCsvFile(), equalTo(expectedPathToModifiedCsvFile));
     assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
   }
 
@@ -767,20 +764,21 @@ class BulkOperationServiceTest extends BaseTest {
     assertDoesNotThrow(() -> bulkOperationService.commit(operation));
   }
   @ParameterizedTest
-  @CsvSource(value = { "users_for_preview.json,USER,UPLOAD",
-    "users_for_preview.json,USER,EDIT",
-    "users_for_preview.json,USER,COMMIT",
-    "items_for_preview.json,ITEM,UPLOAD",
-    "items_for_preview.json,ITEM,EDIT",
-    "items_for_preview.json,ITEM,COMMIT",
-    "holdings_for_preview.json,HOLDINGS_RECORD,UPLOAD",
-    "holdings_for_preview.json,HOLDINGS_RECORD,EDIT",
-    "holdings_for_preview.json,HOLDINGS_RECORD,COMMIT" }, delimiter = ',')
+  @CsvSource(value = { "users_preview.csv,USER,UPLOAD",
+    "users_preview.csv,USER,EDIT",
+    "users_preview.csv,USER,COMMIT",
+    "items_preview.csv,ITEM,UPLOAD",
+    "items_preview.csv,ITEM,EDIT",
+    "items_preview.csv,ITEM,COMMIT",
+    "holdings_preview.csv,HOLDINGS_RECORD,UPLOAD",
+    "holdings_preview.csv,HOLDINGS_RECORD,EDIT",
+    "holdings_preview.csv,HOLDINGS_RECORD,COMMIT"}, delimiter = ',')
   @SneakyThrows
   void shouldReturnPreviewIfAvailable(String fileName, EntityType entityType, BulkOperationStep step) {
     var path = "src/test/resources/files/" + fileName;
     var operationId = UUID.randomUUID();
-    var limit = 3;
+    var offset = 2;
+    var limit = 5;
 
     var bulkOperation = buildBulkOperation(fileName, entityType, step);
     bulkOperation.setId(operationId);
@@ -795,9 +793,9 @@ class BulkOperationServiceTest extends BaseTest {
     when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
     when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
 
-    var table = bulkOperationService.getPreview(bulkOperation, step, 0, limit);
+    var table = bulkOperationService.getPreview(bulkOperation, step, offset, limit);
 
-    assertThat(table.getRows(), hasSize(limit));
+    assertThat(table.getRows(), hasSize(limit - offset));
     if (USER.equals(entityType)) {
       assertThat(table.getHeader(), equalTo(UserUnifiedTableHeaderBuilder.UserHeaderBuilder.getHeaders()));
     } else if (EntityType.ITEM.equals(entityType)) {
@@ -857,15 +855,15 @@ class BulkOperationServiceTest extends BaseTest {
     return switch (step) {
       case UPLOAD -> BulkOperation.builder()
         .entityType(entityType)
-        .linkToMatchedRecordsJsonFile(fileName)
+        .linkToMatchedRecordsCsvFile(fileName)
         .build();
       case EDIT -> BulkOperation.builder()
         .entityType(entityType)
-//        .linkToPreviewRecordsJsonFile(fileName)
+        .linkToModifiedRecordsCsvFile(fileName)
         .build();
       case COMMIT -> BulkOperation.builder()
         .entityType(entityType)
-        .linkToCommittedRecordsJsonFile(fileName)
+        .linkToCommittedRecordsCsvFile(fileName)
         .build();
     };
   }
