@@ -6,12 +6,11 @@ import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
-import org.folio.bulkops.service.ElectronicAccessService;
+import org.folio.bulkops.service.ElectronicAccessHelper;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
@@ -26,7 +25,7 @@ public class ElectronicAccessListConverter extends AbstractBeanField<String, Lis
     return isEmpty(value) ?
       Collections.emptyList() :
       Arrays.stream(value.split(ARRAY_DELIMITER))
-        .map(ElectronicAccessService.service()::restoreElectronicAccessItem)
+        .map(ElectronicAccessHelper.service()::restoreElectronicAccessItem)
         .filter(ObjectUtils::isNotEmpty)
         .collect(Collectors.toList());
   }
@@ -36,7 +35,7 @@ public class ElectronicAccessListConverter extends AbstractBeanField<String, Lis
     return isEmpty(value) ?
       EMPTY :
       ((List<ElectronicAccess>) value).stream()
-        .map(ElectronicAccessService.service()::electronicAccessToString)
+        .map(ElectronicAccessHelper.service()::electronicAccessToString)
         .filter(StringUtils::isNotEmpty)
         .collect(Collectors.joining(ITEM_DELIMITER));
   }
