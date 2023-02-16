@@ -7,9 +7,16 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.domain.bean.InventoryItemStatus;
 import org.folio.bulkops.exception.EntityFormatException;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.adapters.BulkEditAdapterHelper.dateFromString;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.DATE_TIME_PATTERN;
+import static org.folio.bulkops.util.Utils.ofEmptyString;
 
 
 public class InventoryItemStatusConverter extends AbstractBeanField<String, InventoryItemStatus> {
@@ -34,6 +41,13 @@ public class InventoryItemStatusConverter extends AbstractBeanField<String, Inve
 
   @Override
   protected String convertToWrite(Object value) {
-    return ObjectUtils.isNotEmpty(value) ? ((InventoryItemStatus) value).getName().getValue() : EMPTY;
+    if (ObjectUtils.isNotEmpty(value)) {
+      List<String> entries = new ArrayList<>();
+      var status = (InventoryItemStatus) value;
+      ofEmptyString(status.getName().getValue()).ifPresent(entries::add);
+      ofNullable(status.getDate()).ifPresent(d -> entries.add(new SimpleDateFormat(DATE_TIME_PATTERN).format(d)));
+      return String.join(ARRAY_DELIMITER, entries);
+    }
+    return EMPTY;
   }
 }

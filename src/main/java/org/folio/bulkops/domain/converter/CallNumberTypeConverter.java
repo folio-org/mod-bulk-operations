@@ -29,11 +29,11 @@ public class CallNumberTypeConverter extends AbstractBeanField<String, String> {
       return EMPTY;
     }
     var components = (EffectiveCallNumberComponents) value;
-    List<String> entities = new ArrayList<>();
-    ofEmptyString(components.getCallNumber()).ifPresent(e -> entities.add(SpecialCharacterEscaper.escape(e)));
-    ofEmptyString(components.getPrefix()).ifPresent(e -> entities.add(SpecialCharacterEscaper.escape(e)));
-    ofEmptyString(components.getSuffix()).ifPresent(e -> entities.add(SpecialCharacterEscaper.escape(e)));
-    entities.add(SpecialCharacterEscaper.escape(ItemReferenceService.service().getCallNumberTypeNameById(components.getTypeId())));
-    return String.join(ARRAY_DELIMITER, entities);
+    List<String> entries = new ArrayList<>();
+    ofEmptyString(components.getCallNumber()).ifPresent(e -> entries.add(SpecialCharacterEscaper.escape(e)));
+    ofEmptyString(components.getPrefix()).ifPresent(e -> entries.add(SpecialCharacterEscaper.escape(e)));
+    ofEmptyString(components.getSuffix()).ifPresent(e -> entries.add(SpecialCharacterEscaper.escape(e)));
+    entries.add(SpecialCharacterEscaper.escape(ItemReferenceService.service().getCallNumberTypeNameById(components.getTypeId())));
+    return String.join(ARRAY_DELIMITER, entries);
   }
 }
