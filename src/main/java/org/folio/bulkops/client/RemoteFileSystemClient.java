@@ -1,7 +1,6 @@
 package org.folio.bulkops.client;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.folio.s3.client.FolioS3Client;
 import org.springframework.context.annotation.Lazy;
