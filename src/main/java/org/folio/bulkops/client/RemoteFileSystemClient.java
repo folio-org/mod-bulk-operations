@@ -1,20 +1,22 @@
 package org.folio.bulkops.client;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.s3.client.FolioS3Client;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Lazy
 @Component
@@ -25,6 +27,10 @@ public class RemoteFileSystemClient {
 
   public String put(InputStream newFile, String fileNameToBeUpdated) {
     return remoteFolioS3Client.write(fileNameToBeUpdated, newFile);
+  }
+
+  public String upload(String path, String filename) {
+    return remoteFolioS3Client.upload(path, filename);
   }
 
   public String append(InputStream content, String fileNameToAppend) {
@@ -44,44 +50,42 @@ public class RemoteFileSystemClient {
     remoteFolioS3Client.remove(filename);
   }
 
-  public OutputStream newOutputStream(String path) {
-
-    final int BUFFER_SIZE = 10000000;
-
-    return new OutputStream() {
-
-      final ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+  public Writer writer(String path) {
+    return new StringWriter() {
+      final Path tmp;
+      {
+        try {
+          tmp = Files.createTempFile(FilenameUtils.getName(path), FilenameUtils.getExtension(path));
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
 
       @Override
-      public synchronized void write(int b) {
-
-        if (buffer.position() < BUFFER_SIZE) {
-          buffer.put((byte) b);
-        } else {
-          try (var input = new ByteArrayInputStream(buffer.array())) {
-            append(input, path);
+      public void write(String data) {
+        if (StringUtils.isNotEmpty(data)) {
+          try {
+            FileUtils.write(tmp.toFile(), data, Charset.defaultCharset(), true);
           } catch (IOException e) {
-            // Just skip writing and clean buffer
-          } finally {
-            buffer.clear();
+            FileUtils.deleteQuietly(tmp.toFile());
           }
+        } else {
+          FileUtils.deleteQuietly(tmp.toFile());
         }
       }
 
       @Override
       public void close() {
-        try(var input = new ByteArrayInputStream(Arrays.copyOfRange(buffer.array(), 0, buffer.position()))) {
-          append(input, path);
-        } catch (IOException e) {
-          // Just skip writing and clean buffer
+        try {
+          if (tmp.toFile().exists()) {
+            put(FileUtils.openInputStream(tmp.toFile()), path);
+          }
+        } catch (Exception e) {
+          // Just skip and wait file deletion
         } finally {
-          buffer.clear();
+          FileUtils.deleteQuietly(tmp.toFile());
         }
       }
     };
-  }
-
-  public BufferedWriter writer(String path) {
-    return new BufferedWriter(new OutputStreamWriter(newOutputStream(path)));
   }
 }
