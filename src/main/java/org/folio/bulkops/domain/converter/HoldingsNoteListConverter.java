@@ -1,24 +1,24 @@
 package org.folio.bulkops.domain.converter;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import org.apache.commons.lang3.ObjectUtils;
-import org.folio.bulkops.domain.bean.HoldingsNote;
-import org.folio.bulkops.exception.EntityFormatException;
-import org.folio.bulkops.service.HoldingsReferenceService;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
+
+import com.opencsv.bean.AbstractBeanField;
+import com.opencsv.exceptions.CsvConstraintViolationException;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import org.apache.commons.lang3.ObjectUtils;
+import org.folio.bulkops.domain.bean.HoldingsNote;
+import org.folio.bulkops.exception.EntityFormatException;
+import org.folio.bulkops.service.HoldingsReferenceHelper;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class HoldingsNoteListConverter extends AbstractBeanField<String, List<HoldingsNote>> {
   private static final int NUMBER_OF_HOLDINGS_NOTE_ELEMENTS = 3;
@@ -33,7 +33,7 @@ public class HoldingsNoteListConverter extends AbstractBeanField<String, List<Ho
       Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
         .map(this::restoreHoldingsNote)
         .filter(ObjectUtils::isNotEmpty)
-        .collect(Collectors.toList());
+        .toList();
   }
 
   @Override
@@ -42,7 +42,7 @@ public class HoldingsNoteListConverter extends AbstractBeanField<String, List<Ho
       EMPTY :
       ((List<HoldingsNote>) value).stream()
         .map(note -> String.join(ARRAY_DELIMITER,
-          escape(HoldingsReferenceService.service().getNoteTypeNameById(note.getHoldingsNoteTypeId())),
+          escape(HoldingsReferenceHelper.service().getNoteTypeNameById(note.getHoldingsNoteTypeId())),
           escape(note.getNote()),
           Boolean.toString(note.getStaffOnly())))
         .collect(Collectors.joining(ITEM_DELIMITER));
@@ -58,7 +58,7 @@ public class HoldingsNoteListConverter extends AbstractBeanField<String, List<Ho
         NUMBER_OF_HOLDINGS_NOTE_ELEMENTS));
     }
     return HoldingsNote.builder()
-      .holdingsNoteTypeId(HoldingsReferenceService.service().getNoteTypeIdByName(restore(tokens[HOLDINGS_NOTE_NOTE_TYPE_INDEX])))
+      .holdingsNoteTypeId(HoldingsReferenceHelper.service().getNoteTypeIdByName(restore(tokens[HOLDINGS_NOTE_NOTE_TYPE_INDEX])))
       .note(restore(tokens[HOLDINGS_NOTE_NOTE_INDEX]))
       .staffOnly(ObjectUtils.isEmpty(tokens[HOLDINGS_NOTE_STAFF_ONLY_INDEX]) ? null : Boolean.parseBoolean(tokens[HOLDINGS_NOTE_STAFF_ONLY_INDEX]))
       .build();
