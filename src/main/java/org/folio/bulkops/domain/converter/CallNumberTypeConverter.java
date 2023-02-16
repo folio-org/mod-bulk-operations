@@ -4,9 +4,17 @@ import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import org.apache.commons.lang3.ObjectUtils;
+import org.folio.bulkops.domain.bean.EffectiveCallNumberComponents;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.service.HoldingsReferenceService;
+import org.folio.bulkops.service.ItemReferenceService;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Utils.ofEmptyString;
 
 public class CallNumberTypeConverter extends AbstractBeanField<String, String> {
 
@@ -17,9 +25,15 @@ public class CallNumberTypeConverter extends AbstractBeanField<String, String> {
 
   @Override
   protected String convertToWrite(Object value) {
-    if (ObjectUtils.isNotEmpty(value)) {
-      return HoldingsReferenceService.service().getCallNumberTypeNameById(value.toString());
+    if (ObjectUtils.isEmpty((value))) {
+      return EMPTY;
     }
-    return EMPTY;
+    var components = (EffectiveCallNumberComponents) value;
+    List<String> entities = new ArrayList<>();
+    ofEmptyString(components.getCallNumber()).ifPresent(e -> entities.add(SpecialCharacterEscaper.escape(e)));
+    ofEmptyString(components.getPrefix()).ifPresent(e -> entities.add(SpecialCharacterEscaper.escape(e)));
+    ofEmptyString(components.getSuffix()).ifPresent(e -> entities.add(SpecialCharacterEscaper.escape(e)));
+    entities.add(SpecialCharacterEscaper.escape(ItemReferenceService.service().getCallNumberTypeNameById(components.getTypeId())));
+    return String.join(ARRAY_DELIMITER, entities);
   }
 }
