@@ -364,7 +364,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(groupClient.getGroupById(originalPatronGroupId)).thenReturn(new UserGroup().withGroup("updated"));
 
     when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
-    when(remoteFileSystemClient.newOutputStream(any())).thenCallRealMethod();
+//    when(remoteFileSystemClient.newOutputStream(any())).thenCallRealMethod();
 
     bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(approach).step(EDIT));
 
@@ -500,7 +500,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(groupClient.getGroupById("cdd8a5c8-dce7-4d7f-859a-83754b36c740")).thenReturn(new UserGroup());
 
     when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
-    when(remoteFileSystemClient.newOutputStream(any())).thenCallRealMethod();
+//    when(remoteFileSystemClient.newOutputStream(any())).thenCallRealMethod();
 
     bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(COMMIT));
 
@@ -582,7 +582,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(groupClient.getGroupByQuery(String.format("group==\"%s\"", "staff"))).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup())));
 
     when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
-    when(remoteFileSystemClient.newOutputStream(any())).thenCallRealMethod();
+//    when(remoteFileSystemClient.newOutputStream(any())).thenCallRealMethod();
 
     bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.MANUAL).step(EDIT));
 
@@ -685,8 +685,8 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.writer(any()))
   .thenCallRealMethod();
 
-    when(remoteFileSystemClient.newOutputStream(any()))
-      .thenReturn(OutputStream.nullOutputStream());
+//    when(remoteFileSystemClient.newOutputStream(any()))
+//      .thenReturn(OutputStream.nullOutputStream());
 
     when(executionContentRepository.save(any(BulkOperationExecutionContent.class)))
       .thenReturn(BulkOperationExecutionContent.builder().build());
