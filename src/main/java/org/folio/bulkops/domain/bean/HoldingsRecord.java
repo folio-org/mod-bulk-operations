@@ -223,8 +223,23 @@ public class HoldingsRecord extends BulkOperationsEntity {
   @CsvCustomBindByPosition(position = 32, converter = SourceConverter.class)
   private String sourceId;
 
+  @JsonProperty("instanceHrid")
+  @CsvCustomBindByName(column = "Instance HRID", converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 33, converter = StringConverter.class)
+  private String instanceHrid;
+
+  @JsonProperty("itemBarcode")
+  @CsvCustomBindByName(column = "Item barcode", converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 34, converter = StringConverter.class)
+  private String itemBarcode;
+
   @Override
   public String getIdentifier(IdentifierType identifierType) {
-    return hrid;
+    return switch (identifierType) {
+      case HRID -> hrid;
+      case INSTANCE_HRID -> instanceHrid;
+      case ITEM_BARCODE -> itemBarcode;
+      default -> id;
+    };
   }
 }
