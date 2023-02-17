@@ -64,7 +64,9 @@ public class HoldingUnifiedTableHeaderBuilder implements UnifiedTableHeaderBuild
     DISCOVERY_SUPPRESS("Discovery suppress", STRING, false),
     STATISTICAL_CODES("Statistical codes", STRING, false),
     TAGS("Tags", STRING, false),
-    SOURCE("Source", STRING, false);
+    SOURCE("Source", STRING, false),
+    INSTANCE_HRID("Instance HRID", STRING, false),
+    ITEM_BARCODE("Item barcode", STRING, false);
 
     private final String value;
     private final DataType dataType;
