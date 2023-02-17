@@ -75,6 +75,7 @@
           "pathPattern": "/bulk-operations/{operationId}/start",
           "permissionsRequired": [ "bulk-operations.item.start.post" ],
           "modulePermissions": [
+            "addresstypes.item.get",
             "bulk-edit.item.post",
             "bulk-edit.start.item.post",
             "data-export.job.item.post",
