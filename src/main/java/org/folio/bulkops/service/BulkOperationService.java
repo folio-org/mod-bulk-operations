@@ -338,16 +338,21 @@ public class BulkOperationService {
 
         int committedNumOfRecords = 0;
         int committedNumOfErrors = 0;
+        int processedNumOfRecords = 0;
+
         while (hasNextRecord(originalFileIterator, modifiedFileIterator)) {
           var original = originalFileIterator.next();
           var modified = modifiedFileIterator.next();
+
+          processedNumOfRecords++;
+
           try {
             var result = updateEntityIfNeeded(original, modified, operation, entityClass);
             var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
             writerForJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
             sbc.write(result);
-            execution = execution.withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
-              .withProcessedRecords(execution.getProcessedRecords() + 1)
+            execution = execution
+              .withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
               .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
             committedNumOfRecords++;
           } catch (Exception e) {
@@ -359,8 +364,14 @@ public class BulkOperationService {
             operation.setCommittedNumOfRecords(committedNumOfRecords);
             bulkOperationRepository.save(operation);
           }
+
+          if (processedNumOfRecords - execution.getProcessedRecords() > OPERATION_UPDATING_STEP) {
+            execution.setProcessedRecords(processedNumOfRecords);
+            executionRepository.save(execution);
+          }
         }
 
+        execution.setProcessedRecords(processedNumOfRecords);
         operation.setStatus(OperationStatusType.COMPLETED);
         operation.setProcessedNumOfRecords(committedNumOfRecords);
         operation.setEndTime(LocalDateTime.now());
@@ -368,11 +379,9 @@ public class BulkOperationService {
         operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
         operation.setCommittedNumOfErrors((operation.getCommittedNumOfErrors() != null ? operation.getCommittedNumOfErrors() : 0) + committedNumOfErrors);
         operation.setCommittedNumOfRecords(committedNumOfRecords);
-
-        executionRepository.save(execution);
-
       } catch (Exception e) {
-        execution = execution.withStatus(StatusType.FAILED)
+        execution = execution
+          .withStatus(StatusType.FAILED)
           .withEndTime(LocalDateTime.now());
         operation.setStatus(OperationStatusType.FAILED);
         operation.setEndTime(LocalDateTime.now());
