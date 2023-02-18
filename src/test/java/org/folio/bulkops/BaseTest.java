@@ -152,6 +152,8 @@ public abstract class BaseTest {
   protected MockMvc mockMvc;
   @Autowired
   private FolioModuleMetadata folioModuleMetadata;
+  @Autowired
+  public ObjectMapper objectMapper;
 
   static {
     postgresDBContainer.start();

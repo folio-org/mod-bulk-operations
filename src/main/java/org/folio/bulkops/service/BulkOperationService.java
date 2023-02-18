@@ -239,15 +239,15 @@ public class BulkOperationService {
 
         operation.setCommittedNumOfErrors(committedNumOfErrors);
 
-        dataProcessingRepository.save(dataProcessing
-          .withProcessedNumOfRecords(dataProcessing.getProcessedNumOfRecords() + 1)
-          .withStatus(iterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
-          .withEndTime(iterator.hasNext() ? null : LocalDateTime.now()));
-
         processedNumOfRecords++;
-        if (processedNumOfRecords - operation.getProcessedNumOfRecords() > OPERATION_UPDATING_STEP) {
-          operation.setProcessedNumOfRecords(processedNumOfRecords);
-          bulkOperationRepository.save(operation);
+
+        dataProcessing = dataProcessing
+          .withStatus(iterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
+          .withEndTime(iterator.hasNext() ? null : LocalDateTime.now());
+
+        if (processedNumOfRecords - dataProcessing.getProcessedNumOfRecords() > OPERATION_UPDATING_STEP) {
+          dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
+          dataProcessingRepository.save(dataProcessing);
         }
       }
 
@@ -255,11 +255,13 @@ public class BulkOperationService {
         operation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
       }
 
+      dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
+      dataProcessingRepository.save(dataProcessing);
+
       operation.setApproach(IN_APP);
       operation.setStatus(OperationStatusType.REVIEW_CHANGES);
       operation.setProcessedNumOfRecords(processedNumOfRecords);
       bulkOperationRepository.save(operation);
-
     } catch (Exception e) {
       log.error(e);
       dataProcessingRepository.save(dataProcessing
@@ -358,11 +360,6 @@ public class BulkOperationService {
           } catch (Exception e) {
             committedNumOfErrors++;
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage());
-          }
-
-          if (committedNumOfRecords - operation.getCommittedNumOfRecords() > OPERATION_UPDATING_STEP) {
-            operation.setCommittedNumOfRecords(committedNumOfRecords);
-            bulkOperationRepository.save(operation);
           }
 
           if (processedNumOfRecords - execution.getProcessedRecords() > OPERATION_UPDATING_STEP) {
@@ -620,6 +617,17 @@ public class BulkOperationService {
           throw new BulkOperationException("Failed to upload file with identifiers: data export job was not found");
         }
       }
+    }
+  }
+
+  public void clearOperationProcessing(BulkOperation operation) {
+    var processing = dataProcessingRepository.findByBulkOperationId(operation.getId());
+
+    if (processing.isPresent()) {
+      dataProcessingRepository.deleteById(processing.get().getId());
+
+      operation.setStatus(DATA_MODIFICATION);
+      bulkOperationRepository.save(operation);
     }
   }
 

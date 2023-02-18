@@ -376,7 +376,7 @@ class BulkOperationServiceTest extends BaseTest {
     var expectedPathToModifiedCsvFile = bulkOperationId + "/modified-origin.csv";
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
-    Awaitility.await().untilAsserted(() ->verify(remoteFileSystemClient, times(2)).append(streamCaptor.capture(), pathCaptor.capture()));
+    Awaitility.await().untilAsserted(() ->verify(remoteFileSystemClient, times(2)).put(streamCaptor.capture(), pathCaptor.capture()));
     assertThat(new String(streamCaptor.getAllValues().get(0).readAllBytes()), containsString(newPatronGroupId));
     assertEquals(expectedPathToModifiedCsvFile, pathCaptor.getAllValues().get(1));
 
@@ -500,7 +500,6 @@ class BulkOperationServiceTest extends BaseTest {
     when(groupClient.getGroupById("cdd8a5c8-dce7-4d7f-859a-83754b36c740")).thenReturn(new UserGroup());
 
     when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
-//    when(remoteFileSystemClient.newOutputStream(any())).thenCallRealMethod();
 
     bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(COMMIT));
 
@@ -508,7 +507,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
-    Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).append(streamCaptor.capture(), pathCaptor.capture()));
+    Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).put(streamCaptor.capture(), pathCaptor.capture()));
     assertEquals(new String(streamCaptor.getAllValues().get(0).readAllBytes()),
       Files.readString(Path.of(pathToModifiedUserJson)).trim());
     assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().get(0));
@@ -518,7 +517,7 @@ class BulkOperationServiceTest extends BaseTest {
     assertThat(executionContentCaptor.getValue().getState(), equalTo(StateType.PROCESSED));
 
     var executionCaptor = ArgumentCaptor.forClass(BulkOperationExecution.class);
-    Awaitility.await().untilAsserted(() -> verify(executionRepository, times(3)).save(executionCaptor.capture()));
+    Awaitility.await().untilAsserted(() -> verify(executionRepository, times(2)).save(executionCaptor.capture()));
     var updatedExecution = executionCaptor.getAllValues().get(1);
     assertThat(updatedExecution.getProcessedRecords(), is(1));
     assertThat(updatedExecution.getStatus(), equalTo(StatusType.COMPLETED));
