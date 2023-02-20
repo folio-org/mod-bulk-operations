@@ -40,6 +40,14 @@ public class UserReferenceHelper implements InitializingBean {
     return userReferenceService.getCustomFieldByName(name);
   }
 
+  public CustomField getCustomFieldByRefId(String refId) {
+    return userReferenceService.getCustomFieldByRefId(refId);
+  }
+
+  public String getModuleId(String moduleName) {
+    return userReferenceService.getModuleId(moduleName);
+  }
+
   private static UserReferenceHelper service = null;
 
   @Override

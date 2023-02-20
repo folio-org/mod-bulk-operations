@@ -30,173 +30,173 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.Collections;
 
 @ExtendWith(MockitoExtension.class)
-class HoldingsReferenceServiceTest extends BaseTest {
+class HoldingsReferenceHelperTest extends BaseTest {
 
   @Autowired
-  private HoldingsReferenceService holdingsReferenceService;
+  private HoldingsReferenceHelper holdingsReferenceHelper;
 
   @Test
   void testGetInstanceTitle() {
     when(instanceClient.getById("id_1")).thenReturn(new BriefInstance().withTitle("title_1"));
-    var actual = holdingsReferenceService.getInstanceTitleById("id_1");
+    var actual = holdingsReferenceHelper.getInstanceTitleById("id_1");
     assertEquals("title_1", actual);
 
     when(instanceClient.getById("id_2")).thenThrow(new NotFoundException("Not found"));
-    actual = holdingsReferenceService.getInstanceTitleById("id_2");
+    actual = holdingsReferenceHelper.getInstanceTitleById("id_2");
     assertEquals("id_2", actual);
 
-    assertEquals(EMPTY, holdingsReferenceService.getInstanceTitleById(null));
+    assertEquals(EMPTY, holdingsReferenceHelper.getInstanceTitleById(null));
   }
 
   @Test
   void testGetHoldingsType() {
     when(holdingsTypeClient.getById("id_1")).thenReturn(new HoldingsType().withName("name_1"));
-    var actual = holdingsReferenceService.getHoldingsTypeNameById("id_1");
+    var actual = holdingsReferenceHelper.getHoldingsTypeNameById("id_1");
     assertEquals("name_1", actual);
 
     when(holdingsTypeClient.getByQuery("name==\"name_2\"")).thenReturn(new HoldingsTypeCollection().withHoldingsTypes(Collections.singletonList(new HoldingsType().withId("id_2"))));
-    actual = holdingsReferenceService.getHoldingsTypeIdByName("name_2");
+    actual = holdingsReferenceHelper.getHoldingsTypeIdByName("name_2");
     assertEquals("id_2", actual);
 
     when(holdingsTypeClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
-    actual = holdingsReferenceService.getHoldingsTypeNameById("id_3");
+    actual = holdingsReferenceHelper.getHoldingsTypeNameById("id_3");
     assertEquals("id_3", actual);
 
     when(holdingsTypeClient.getByQuery("name==\"name_4\"")).thenReturn(new HoldingsTypeCollection().withHoldingsTypes(Collections.emptyList()));
-    actual = holdingsReferenceService.getHoldingsTypeIdByName("name_4");
+    actual = holdingsReferenceHelper.getHoldingsTypeIdByName("name_4");
     assertEquals("name_4", actual);
 
-    assertEquals(EMPTY, holdingsReferenceService.getHoldingsTypeNameById(null));
-    assertNull(holdingsReferenceService.getNoteTypeIdByName(EMPTY));
+    assertEquals(EMPTY, holdingsReferenceHelper.getHoldingsTypeNameById(null));
+    assertNull(holdingsReferenceHelper.getNoteTypeIdByName(EMPTY));
   }
 
   @Test
   void testGetLocation() {
     when(locationClient.getLocationById("id_1")).thenReturn(new ItemLocation().withName("name_1"));
-    var actual = holdingsReferenceService.getLocationNameById("id_1");
+    var actual = holdingsReferenceHelper.getLocationNameById("id_1");
     assertEquals("name_1", actual);
 
     when(locationClient.getLocationByQuery("name==\"name_2\"")).thenReturn(new ItemLocationCollection().withLocations(Collections.singletonList(new ItemLocation().withId("id_2"))));
-    actual = holdingsReferenceService.getLocationIdByName("name_2");
+    actual = holdingsReferenceHelper.getLocationIdByName("name_2");
     assertEquals("id_2", actual);
 
     when(locationClient.getLocationById("id_3")).thenThrow(new NotFoundException("Not found"));
-    actual = holdingsReferenceService.getLocationNameById("id_3");
+    actual = holdingsReferenceHelper.getLocationNameById("id_3");
     assertEquals("id_3", actual);
 
     when(locationClient.getLocationByQuery("name==\"name_4\"")).thenReturn(new ItemLocationCollection().withLocations(Collections.emptyList()));
-    actual = holdingsReferenceService.getLocationIdByName("name_4");
+    actual = holdingsReferenceHelper.getLocationIdByName("name_4");
     assertEquals("name_4", actual);
 
-    assertEquals(EMPTY, holdingsReferenceService.getLocationNameById(null));
-    assertNull(holdingsReferenceService.getLocationIdByName(EMPTY));
+    assertEquals(EMPTY, holdingsReferenceHelper.getLocationNameById(null));
+    assertNull(holdingsReferenceHelper.getLocationIdByName(EMPTY));
   }
 
   @Test
   void testGetCallNumberType() {
     when(callNumberTypeClient.getById("id_1")).thenReturn(new CallNumberType().withName("name_1"));
-    var actual = holdingsReferenceService.getCallNumberTypeNameById("id_1");
+    var actual = holdingsReferenceHelper.getCallNumberTypeNameById("id_1");
     assertEquals("name_1", actual);
 
     when(callNumberTypeClient.getByQuery("name==\"name_2\"")).thenReturn(new CallNumberTypeCollection().withCallNumberTypes(Collections.singletonList(new CallNumberType().withId("id_2"))));
-    actual = holdingsReferenceService.getCallNumberTypeIdByName("name_2");
+    actual = holdingsReferenceHelper.getCallNumberTypeIdByName("name_2");
     assertEquals("id_2", actual);
 
     when(callNumberTypeClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
-    actual = holdingsReferenceService.getCallNumberTypeNameById("id_3");
+    actual = holdingsReferenceHelper.getCallNumberTypeNameById("id_3");
     assertEquals("id_3", actual);
 
     when(callNumberTypeClient.getByQuery("name==\"name_4\"")).thenReturn(new CallNumberTypeCollection().withCallNumberTypes(Collections.emptyList()));
-    actual = holdingsReferenceService.getCallNumberTypeIdByName("name_4");
+    actual = holdingsReferenceHelper.getCallNumberTypeIdByName("name_4");
     assertEquals("name_4", actual);
 
-    assertEquals(EMPTY, holdingsReferenceService.getCallNumberTypeNameById(null));
-    assertNull(holdingsReferenceService.getCallNumberTypeIdByName(EMPTY));
+    assertEquals(EMPTY, holdingsReferenceHelper.getCallNumberTypeNameById(null));
+    assertNull(holdingsReferenceHelper.getCallNumberTypeIdByName(EMPTY));
   }
 
   @Test
   void testGetNoteType() {
     when(holdingsNoteTypeClient.getById("id_1")).thenReturn(new HoldingsNoteType().withName("name_1"));
-    var actual = holdingsReferenceService.getNoteTypeNameById("id_1");
+    var actual = holdingsReferenceHelper.getNoteTypeNameById("id_1");
     assertEquals("name_1", actual);
 
     when(holdingsNoteTypeClient.getByQuery("name==\"name_2\"")).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(Collections.singletonList(new HoldingsNoteType().withId("id_2"))));
-    actual = holdingsReferenceService.getNoteTypeIdByName("name_2");
+    actual = holdingsReferenceHelper.getNoteTypeIdByName("name_2");
     assertEquals("id_2", actual);
 
     when(holdingsNoteTypeClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
-    actual = holdingsReferenceService.getNoteTypeNameById("id_3");
+    actual = holdingsReferenceHelper.getNoteTypeNameById("id_3");
     assertEquals("id_3", actual);
 
     when(holdingsNoteTypeClient.getByQuery("name==\"name_4\"")).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(Collections.emptyList()));
-    actual = holdingsReferenceService.getNoteTypeIdByName("name_4");
+    actual = holdingsReferenceHelper.getNoteTypeIdByName("name_4");
     assertEquals("name_4", actual);
 
-    assertEquals(EMPTY, holdingsReferenceService.getNoteTypeNameById(null));
-    assertNull(holdingsReferenceService.getNoteTypeIdByName(EMPTY));
+    assertEquals(EMPTY, holdingsReferenceHelper.getNoteTypeNameById(null));
+    assertNull(holdingsReferenceHelper.getNoteTypeIdByName(EMPTY));
   }
 
   @Test
   void testGetIllPolicy() {
     when(illPolicyClient.getById("id_1")).thenReturn(new IllPolicy().withName("name_1"));
-    var actual = holdingsReferenceService.getIllPolicyNameById("id_1");
+    var actual = holdingsReferenceHelper.getIllPolicyNameById("id_1");
     assertEquals("name_1", actual);
 
     when(illPolicyClient.getByQuery("name==\"name_2\"")).thenReturn(new IllPolicyCollection().withIllPolicies(Collections.singletonList(new IllPolicy().withId("id_2"))));
-    actual = holdingsReferenceService.getIllPolicyIdByName("name_2");
+    actual = holdingsReferenceHelper.getIllPolicyIdByName("name_2");
     assertEquals("id_2", actual);
 
     when(illPolicyClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
-    actual = holdingsReferenceService.getIllPolicyNameById("id_3");
+    actual = holdingsReferenceHelper.getIllPolicyNameById("id_3");
     assertEquals("id_3", actual);
 
     when(illPolicyClient.getByQuery("name==\"name_4\"")).thenReturn(new IllPolicyCollection().withIllPolicies(Collections.emptyList()));
-    actual = holdingsReferenceService.getIllPolicyIdByName("name_4");
+    actual = holdingsReferenceHelper.getIllPolicyIdByName("name_4");
     assertEquals("name_4", actual);
 
-    assertEquals(EMPTY, holdingsReferenceService.getIllPolicyNameById(null));
-    assertNull(holdingsReferenceService.getIllPolicyIdByName(EMPTY));
+    assertEquals(EMPTY, holdingsReferenceHelper.getIllPolicyNameById(null));
+    assertNull(holdingsReferenceHelper.getIllPolicyIdByName(EMPTY));
   }
 
   @Test
   void testGetSource() {
     when(holdingsSourceClient.getById("id_1")).thenReturn(new HoldingsRecordsSource().withName("name_1"));
-    var actual = holdingsReferenceService.getSourceNameById("id_1");
+    var actual = holdingsReferenceHelper.getSourceNameById("id_1");
     assertEquals("name_1", actual);
 
     when(holdingsSourceClient.getByQuery("name==\"name_2\"")).thenReturn(new HoldingsRecordsSourceCollection().withHoldingsRecordsSources(Collections.singletonList(new HoldingsRecordsSource().withId("id_2"))));
-    actual = holdingsReferenceService.getSourceIdByName("name_2");
+    actual = holdingsReferenceHelper.getSourceIdByName("name_2");
     assertEquals("id_2", actual);
 
     when(holdingsSourceClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
-    actual = holdingsReferenceService.getSourceNameById("id_3");
+    actual = holdingsReferenceHelper.getSourceNameById("id_3");
     assertEquals("id_3", actual);
 
     when(holdingsSourceClient.getByQuery("name==\"name_4\"")).thenReturn(new HoldingsRecordsSourceCollection().withHoldingsRecordsSources(Collections.emptyList()));
-    actual = holdingsReferenceService.getSourceIdByName("name_4");
+    actual = holdingsReferenceHelper.getSourceIdByName("name_4");
     assertEquals(EMPTY, actual);
 
-    assertEquals(EMPTY, holdingsReferenceService.getSourceNameById(null));
+    assertEquals(EMPTY, holdingsReferenceHelper.getSourceNameById(null));
   }
 
   @Test
   void testStatisticalCode() {
     when(statisticalCodeClient.getById("id_1")).thenReturn(new StatisticalCode().withName("name_1"));
-    var actual = holdingsReferenceService.getStatisticalCodeNameById("id_1");
+    var actual = holdingsReferenceHelper.getStatisticalCodeNameById("id_1");
     assertEquals("name_1", actual);
 
     when(statisticalCodeClient.getByQuery("name==\"name_2\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.singletonList(new StatisticalCode().withId("id_2"))));
-    actual = holdingsReferenceService.getStatisticalCodeIdByName("name_2");
+    actual = holdingsReferenceHelper.getStatisticalCodeIdByName("name_2");
     assertEquals("id_2", actual);
 
     when(statisticalCodeClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
-    actual = holdingsReferenceService.getStatisticalCodeNameById("id_3");
+    actual = holdingsReferenceHelper.getStatisticalCodeNameById("id_3");
     assertEquals("id_3", actual);
 
     when(statisticalCodeClient.getByQuery("name==\"name_4\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.emptyList()));
-    actual = holdingsReferenceService.getStatisticalCodeIdByName("name_4");
+    actual = holdingsReferenceHelper.getStatisticalCodeIdByName("name_4");
     assertEquals("name_4", actual);
 
-    assertEquals(EMPTY, holdingsReferenceService.getStatisticalCodeNameById(null));
+    assertEquals(EMPTY, holdingsReferenceHelper.getStatisticalCodeNameById(null));
   }
 }

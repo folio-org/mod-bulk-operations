@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.s3.client.FolioS3Client;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -57,7 +58,7 @@ public class RemoteFileSystemClient {
         try {
           tmp = Files.createTempFile(FilenameUtils.getName(path), FilenameUtils.getExtension(path));
         } catch (IOException e) {
-          throw new RuntimeException(e);
+          throw new ServerErrorException("Files buffer cannot be created due to error: ", e);
         }
       }
 
