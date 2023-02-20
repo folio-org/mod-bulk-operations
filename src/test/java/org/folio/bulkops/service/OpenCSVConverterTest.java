@@ -41,7 +41,7 @@ class OpenCSVConverterTest extends BaseTest {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
-        Arguments.of(HoldingsRecord.class)
+        Arguments.of(User.class, Item.class, HoldingsRecord.class)
       );
     }
   }

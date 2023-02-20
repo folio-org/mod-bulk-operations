@@ -3,6 +3,7 @@ package org.folio.bulkops.domain.converter;
 import static java.lang.String.join;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Utils.ofEmptyString;
 
@@ -32,6 +33,6 @@ public class EffectiveCallNumberComponentsConverter extends AbstractBeanField<St
     ofEmptyString(components.getPrefix()).ifPresent(comps::add);
     ofEmptyString(components.getSuffix()).ifPresent(comps::add);
     ofEmptyString(ItemReferenceHelper.service().getCallNumberTypeNameById(components.getTypeId())).ifPresent(comps::add);
-    return join(ARRAY_DELIMITER, comps);
+    return join(SPACE, comps);
   }
 }
