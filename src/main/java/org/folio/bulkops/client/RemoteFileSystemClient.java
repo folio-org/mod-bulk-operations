@@ -52,41 +52,46 @@ public class RemoteFileSystemClient {
   }
 
   public Writer writer(String path) {
-    return new StringWriter() {
-      final Path tmp;
-      {
+    return new RemoteStorageWriter(path);
+  }
+
+  private class RemoteStorageWriter extends StringWriter {
+
+    private final Path tmp;
+    private final String path;
+    public RemoteStorageWriter(String path) {
+      try {
+        this.path = path;
+        tmp = Files.createTempFile(FilenameUtils.getName(path), FilenameUtils.getExtension(path));
+      } catch (IOException e) {
+        throw new ServerErrorException("Files buffer cannot be created due to error: ", e);
+      }
+    }
+
+    @Override
+    public void write(String data) {
+      if (StringUtils.isNotEmpty(data)) {
         try {
-          tmp = Files.createTempFile(FilenameUtils.getName(path), FilenameUtils.getExtension(path));
+          FileUtils.write(tmp.toFile(), data, Charset.defaultCharset(), true);
         } catch (IOException e) {
-          throw new ServerErrorException("Files buffer cannot be created due to error: ", e);
-        }
-      }
-
-      @Override
-      public void write(String data) {
-        if (StringUtils.isNotEmpty(data)) {
-          try {
-            FileUtils.write(tmp.toFile(), data, Charset.defaultCharset(), true);
-          } catch (IOException e) {
-            FileUtils.deleteQuietly(tmp.toFile());
-          }
-        } else {
           FileUtils.deleteQuietly(tmp.toFile());
         }
+      } else {
+        FileUtils.deleteQuietly(tmp.toFile());
       }
+    }
 
-      @Override
-      public void close() {
-        try {
-          if (tmp.toFile().exists()) {
-            put(FileUtils.openInputStream(tmp.toFile()), path);
-          }
-        } catch (Exception e) {
-          // Just skip and wait file deletion
-        } finally {
-          FileUtils.deleteQuietly(tmp.toFile());
+    @Override
+    public void close() {
+      try {
+        if (tmp.toFile().exists()) {
+          put(FileUtils.openInputStream(tmp.toFile()), path);
         }
+      } catch (Exception e) {
+        // Just skip and wait file deletion
+      } finally {
+        FileUtils.deleteQuietly(tmp.toFile());
       }
-    };
+    }
   }
 }
