@@ -105,7 +105,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
           item.setTemporaryLocation(itemReferenceService.getLocationById(action.getUpdated()));
           item.setEffectiveLocation(getEffectiveLocation(item));
         };
-        case STATUS -> item -> item.setStatus(new InventoryItemStatus().withDate(new Date())
+        case STATUS -> item -> item.setStatus(new InventoryItemStatus()
           .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated())));
         default -> item -> {
           throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));

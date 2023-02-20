@@ -20,13 +20,10 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExportType;
 import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
-import org.folio.bulkops.domain.bean.HoldingsRecord;
-import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
-import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.converter.CustomMappingStrategy;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -59,8 +56,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
@@ -70,7 +65,6 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
 import static java.util.Objects.nonNull;
@@ -224,10 +218,10 @@ public class BulkOperationService {
         var modified = processUpdate(original, operation, ruleCollection, clazz);
 
         if (Objects.nonNull(modified)) {
-          sbc.write(modified.getEntity());
-          var modifiedRecord = objectMapper.writeValueAsString(modified.getEntity()) + LF;
+          sbc.write(modified.getUpdated());
+          var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
 
-          if (modified.isChanged()) {
+          if (modified.isShouldBeUpdated()) {
             if (!isChangesPresented) {
               isChangesPresented = true;
             }

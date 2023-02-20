@@ -84,15 +84,15 @@ class HoldingsDataProcessorTest extends BaseTest {
     var temporaryLocationUpdatingResult = processor.process(IDENTIFIER, holding, rules(rule(TEMPORARY_LOCATION, REPLACE_WITH, updatedLocationId)));
 
     assertNotNull(temporaryLocationUpdatingResult);
-    assertEquals(updatedLocationId, temporaryLocationUpdatingResult.getEntity().getTemporaryLocationId());
-    assertEquals(updatedLocationId, temporaryLocationUpdatingResult.getEntity().getEffectiveLocationId());
+    assertEquals(updatedLocationId, temporaryLocationUpdatingResult.getUpdated().getTemporaryLocationId());
+    assertEquals(updatedLocationId, temporaryLocationUpdatingResult.getUpdated().getEffectiveLocationId());
 
     var permanentLocationUpdatingResult = processor.process(IDENTIFIER, holding, rules(rule(PERMANENT_LOCATION, REPLACE_WITH, updatedLocationId)));
 
     assertNotNull(permanentLocationUpdatingResult);
-    assertEquals(updatedLocation, permanentLocationUpdatingResult.getEntity().getPermanentLocation());
-    assertEquals(updatedLocationId, permanentLocationUpdatingResult.getEntity().getPermanentLocationId());
-    assertEquals(temporaryLocationId, permanentLocationUpdatingResult.getEntity().getEffectiveLocationId());
+    assertEquals(updatedLocation, permanentLocationUpdatingResult.getUpdated().getPermanentLocation());
+    assertEquals(updatedLocationId, permanentLocationUpdatingResult.getUpdated().getPermanentLocationId());
+    assertEquals(temporaryLocationId, permanentLocationUpdatingResult.getUpdated().getEffectiveLocationId());
   }
 
   @Test
@@ -102,8 +102,8 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
     var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(MARC_SOURCE_ID), rules(rule(PERMANENT_LOCATION, CLEAR_FIELD, null)));
-    assertNotNull(actual.getEntity());
-    assertFalse(actual.isChanged);
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);
   }
 
   @Test
@@ -127,8 +127,8 @@ class HoldingsDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, holding, rules(rule(TEMPORARY_LOCATION, CLEAR_FIELD, null)));
 
     assertNotNull(result);
-    assertNull(result.getEntity().getTemporaryLocationId());
-    assertEquals(permanentLocationId, result.getEntity().getEffectiveLocationId());
+    assertNull(result.getUpdated().getTemporaryLocationId());
+    assertEquals(permanentLocationId, result.getUpdated().getEffectiveLocationId());
   }
 
   @Test
@@ -153,8 +153,8 @@ class HoldingsDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, holding, rules(rule(TEMPORARY_LOCATION, CLEAR_FIELD, null)));
 
     assertNotNull(result);
-    assertNull(result.getEntity().getTemporaryLocationId());
-    assertEquals(permanentLocationId, result.getEntity().getEffectiveLocationId());
+    assertNull(result.getUpdated().getTemporaryLocationId());
+    assertEquals(permanentLocationId, result.getUpdated().getEffectiveLocationId());
   }
 
   @Test
@@ -164,8 +164,8 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
     var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, CLEAR_FIELD, null)));
-    assertNotNull(actual.getEntity());
-    assertFalse(actual.isChanged);
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);
   }
 
   @Test
@@ -175,8 +175,8 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
     var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, null)));
-    assertNotNull(actual.getEntity());
-    assertFalse(actual.isChanged);
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);
   }
 
   @Test
@@ -190,8 +190,8 @@ class HoldingsDataProcessorTest extends BaseTest {
       .thenThrow(FeignException.FeignClientException.class);
 
     var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, nonExistedLocationId)));
-    assertNotNull(actual.getEntity());
-    assertFalse(actual.isChanged);;
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);;
   }
 
   @Test
@@ -203,8 +203,8 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
     var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, invalidLocationId)));
-    assertNotNull(actual.getEntity());
-    assertFalse(actual.isChanged);
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);
   }
 
   @Test
@@ -223,7 +223,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(EMAIL_ADDRESS, REPLACE_WITH, updatedLocationId),
       rule(PERMANENT_LOCATION, ADD_TO_EXISTING, updatedLocationId)));
 
-    assertNotNull(actual.getEntity());
-    assertFalse(actual.isChanged);
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);
   }
 }
