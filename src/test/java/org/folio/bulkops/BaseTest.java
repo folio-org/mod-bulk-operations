@@ -250,7 +250,7 @@ public abstract class BaseTest {
     var uuid = UUID.randomUUID();
 
     return new BulkOperationRuleCollection()
-      .bulkOperationRules(Arrays.stream(rules).map(rule -> rule.bulkOperationId(uuid)).collect(Collectors.toList()))
+      .bulkOperationRules(Arrays.stream(rules).map(rule -> rule.bulkOperationId(uuid)).toList())
       .totalRecords(rules.length);
   }
 

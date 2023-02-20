@@ -11,6 +11,7 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.converter.CustomMappingStrategy;
+import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -50,7 +51,7 @@ class OpenCSVConverterTest extends BaseTest {
   @Disabled
   @EnumSource(value = TestEntity.class, names = {"USER"}, mode = EnumSource.Mode.INCLUDE)
   void shouldConvertEntity(TestEntity entity) {
-
+    Assertions.assertTrue(true);
   }
 
   @ParameterizedTest

@@ -75,7 +75,7 @@ public class HoldingUnifiedTableHeaderBuilder implements UnifiedTableHeaderBuild
     public static List<Cell> getHeaders() {
       return Arrays.stream(values())
         .map(v -> new Cell().value(v.value).dataType(v.dataType).visible(v.visible))
-        .collect(Collectors.toList());
+        .toList();
     }
   }
 }

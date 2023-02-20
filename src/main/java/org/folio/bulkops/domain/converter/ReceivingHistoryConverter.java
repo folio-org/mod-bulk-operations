@@ -36,7 +36,7 @@ public class ReceivingHistoryConverter extends AbstractBeanField<String, Receivi
         .entries(Arrays.stream(tokens)
           .skip(1)
           .map(this::restoreReceivingHistoryEntry)
-          .collect(Collectors.toList()))
+          .toList())
         .build();
     }
     throw new EntityFormatException("Invalid number of tokens in receiving history entries");

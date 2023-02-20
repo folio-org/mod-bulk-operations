@@ -427,7 +427,7 @@ public class BulkOperationService {
         String[] line;
         while ((line = csvReader.readNext()) != null && csvReader.getLinesRead() < limit + 2) {
           var row = new Row();
-          row.setRow(Arrays.stream(line).collect(Collectors.toList()));
+          row.setRow(Arrays.stream(line).toList());
           table.addRowsItem(row);
         }
       }
