@@ -29,10 +29,9 @@ public class EffectiveCallNumberComponentsConverter extends AbstractBeanField<St
     }
     var components = (EffectiveCallNumberComponents) value;
     List<String> comps = new ArrayList<>();
-    ofEmptyString(components.getCallNumber()).ifPresent(comps::add);
     ofEmptyString(components.getPrefix()).ifPresent(comps::add);
+    ofEmptyString(components.getCallNumber()).ifPresent(comps::add);
     ofEmptyString(components.getSuffix()).ifPresent(comps::add);
-    ofEmptyString(ItemReferenceHelper.service().getCallNumberTypeNameById(components.getTypeId())).ifPresent(comps::add);
     return join(SPACE, comps);
   }
 }
