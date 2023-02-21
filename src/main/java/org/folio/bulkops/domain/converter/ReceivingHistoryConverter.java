@@ -12,11 +12,11 @@ import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.adapters.Constants.ARRAY_DELIMITER;
-import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER;
-import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER_PATTERN;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
 
 public class ReceivingHistoryConverter extends AbstractBeanField<String, ReceivingHistoryEntries> {
   private static final int NUMBER_OF_RECEIVING_HISTORY_ENTRY_ELEMENTS = 3;
@@ -36,7 +36,7 @@ public class ReceivingHistoryConverter extends AbstractBeanField<String, Receivi
         .entries(Arrays.stream(tokens)
           .skip(1)
           .map(this::restoreReceivingHistoryEntry)
-          .collect(Collectors.toList()))
+          .toList())
         .build();
     }
     throw new EntityFormatException("Invalid number of tokens in receiving history entries");

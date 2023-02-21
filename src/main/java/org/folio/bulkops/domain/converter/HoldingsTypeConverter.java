@@ -1,26 +1,24 @@
 package org.folio.bulkops.domain.converter;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import org.apache.commons.lang3.ObjectUtils;
-import org.folio.bulkops.service.HoldingsReferenceService;
-
-import static org.apache.commons.lang3.StringUtils.EMPTY;
+import org.folio.bulkops.service.HoldingsReferenceHelper;
 
 public class HoldingsTypeConverter extends AbstractBeanField<String, String> {
-
   @Override
   protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
-    return HoldingsReferenceService.service().getHoldingsTypeIdByName(value);
+    return HoldingsReferenceHelper.service().getHoldingsTypeIdByName(value);
   }
 
   @Override
   protected String convertToWrite(Object value) {
     if (ObjectUtils.isNotEmpty(value)) {
-      return HoldingsReferenceService.service().getHoldingsTypeNameById(value.toString());
+      return HoldingsReferenceHelper.service().getHoldingsTypeNameById(value.toString());
     }
     return EMPTY;
-
   }
 }

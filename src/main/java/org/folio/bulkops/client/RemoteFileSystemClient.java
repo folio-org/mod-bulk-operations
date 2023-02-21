@@ -1,19 +1,23 @@
 package org.folio.bulkops.client;
 
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.s3.client.FolioS3Client;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Lazy
 @Component
@@ -24,6 +28,10 @@ public class RemoteFileSystemClient {
 
   public String put(InputStream newFile, String fileNameToBeUpdated) {
     return remoteFolioS3Client.write(fileNameToBeUpdated, newFile);
+  }
+
+  public String upload(String path, String filename) {
+    return remoteFolioS3Client.upload(path, filename);
   }
 
   public String append(InputStream content, String fileNameToAppend) {
@@ -43,42 +51,47 @@ public class RemoteFileSystemClient {
     remoteFolioS3Client.remove(filename);
   }
 
-  public OutputStream newOutputStream(String path) {
-
-    final int BUFFER_SIZE = 50000000;
-
-    return new OutputStream() {
-
-      byte[] buffer = new byte[0];
-
-      @Override
-      public synchronized void write(int b) {
-        buffer = ArrayUtils.add(buffer, (byte) b);
-        if (buffer.length >= BUFFER_SIZE) {
-          try (var input = new ByteArrayInputStream(buffer)) {
-            append(input, path);
-          } catch (IOException e) {
-            // Just skip writing and clean buffer
-          } finally {
-            buffer = new byte[0];
-          }
-        }
-      }
-
-      @Override
-      public void close() {
-        try(var input = new ByteArrayInputStream(buffer)) {
-          append(input, path);
-        } catch (IOException e) {
-          // Just skip writing and clean buffer
-        } finally {
-          buffer = new byte[0];
-        }
-      }
-    };
+  public Writer writer(String path) {
+    return new RemoteStorageWriter(path);
   }
 
-  public BufferedWriter writer(String path) {
-    return new BufferedWriter(new OutputStreamWriter(newOutputStream(path)));
+  private class RemoteStorageWriter extends StringWriter {
+
+    private final Path tmp;
+    private final String path;
+    public RemoteStorageWriter(String path) {
+      try {
+        this.path = path;
+        tmp = Files.createTempFile(FilenameUtils.getName(path), FilenameUtils.getExtension(path));
+      } catch (IOException e) {
+        throw new ServerErrorException("Files buffer cannot be created due to error: ", e);
+      }
+    }
+
+    @Override
+    public void write(String data) {
+      if (StringUtils.isNotEmpty(data)) {
+        try {
+          FileUtils.write(tmp.toFile(), data, Charset.defaultCharset(), true);
+        } catch (IOException e) {
+          FileUtils.deleteQuietly(tmp.toFile());
+        }
+      } else {
+        FileUtils.deleteQuietly(tmp.toFile());
+      }
+    }
+
+    @Override
+    public void close() {
+      try {
+        if (tmp.toFile().exists()) {
+          put(FileUtils.openInputStream(tmp.toFile()), path);
+        }
+      } catch (Exception e) {
+        // Just skip and wait file deletion
+      } finally {
+        FileUtils.deleteQuietly(tmp.toFile());
+      }
+    }
   }
 }

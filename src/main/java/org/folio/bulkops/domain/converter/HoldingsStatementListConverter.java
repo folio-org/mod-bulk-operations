@@ -15,11 +15,11 @@ import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER;
-import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER_PATTERN;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
 
 public class HoldingsStatementListConverter extends AbstractBeanField<String, List<HoldingsStatement>> {
   private static final int NUMBER_OF_HOLDINGS_STATEMENT_ELEMENTS = 3;
@@ -42,8 +42,11 @@ public class HoldingsStatementListConverter extends AbstractBeanField<String, Li
     return ObjectUtils.isEmpty(value) ?
       EMPTY :
       ((List<HoldingsStatement>) value).stream()
-        .map(statement -> String.join(ARRAY_DELIMITER, escape(statement.getStatement()),
-          escape(statement.getNote()), escape(statement.getStaffNote())))
+        .map(statement ->
+          String.join(ARRAY_DELIMITER,
+          escape(statement.getStatement()),
+          escape(statement.getNote()),
+          escape(statement.getStaffNote())))
         .collect(Collectors.joining(ITEM_DELIMITER));
   }
 

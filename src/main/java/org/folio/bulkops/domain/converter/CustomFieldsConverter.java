@@ -1,16 +1,27 @@
 package org.folio.bulkops.domain.converter;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
+import static org.folio.bulkops.util.Constants.KEY_VALUE_DELIMITER;
+import static org.folio.bulkops.util.Constants.LINE_BREAK;
+import static org.folio.bulkops.util.Constants.LINE_BREAK_REPLACEMENT;
+
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.bean.CustomFieldTypes;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.exception.EntityFormatException;
 import org.folio.bulkops.exception.NotFoundException;
-import org.folio.bulkops.service.UserReferenceService;
+import org.folio.bulkops.service.UserReferenceHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,17 +30,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.adapters.Constants.ARRAY_DELIMITER;
-import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER;
-import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER_PATTERN;
-import static org.folio.bulkops.adapters.Constants.KEY_VALUE_DELIMITER;
-import static org.folio.bulkops.adapters.Constants.LINE_BREAK;
-import static org.folio.bulkops.adapters.Constants.LINE_BREAK_REPLACEMENT;
 
 public class CustomFieldsConverter extends AbstractBeanField<String, Map<String, Object>> {
   @Override
@@ -45,8 +45,7 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
   @Override
   protected String convertToWrite(Object value) {
     if (ObjectUtils.isNotEmpty(value)) {
-      var map = (Map<String, Object>) value;
-      return nonNull(map) ? customFieldsToString(map) : EMPTY;
+      return customFieldsToString((Map<String, Object>) value);
     }
     return EMPTY;
   }
@@ -55,21 +54,15 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
     var valuePair = stringToPair(s);
     var fieldName = valuePair.getKey();
     var fieldValue = valuePair.getValue();
-    var customField = UserReferenceService.service().getCustomFieldByName(fieldName);
-    switch (customField.getType()) {
-      case SINGLE_CHECKBOX:
-        return Pair.of(customField.getRefId(), Boolean.parseBoolean(fieldValue));
-      case TEXTBOX_LONG:
-      case TEXTBOX_SHORT:
-        return Pair.of(customField.getRefId(), fieldValue.replace(LINE_BREAK_REPLACEMENT, LINE_BREAK));
-      case SINGLE_SELECT_DROPDOWN:
-      case RADIO_BUTTON:
-        return Pair.of(customField.getRefId(), restoreValueId(customField, fieldValue));
-      case MULTI_SELECT_DROPDOWN:
-        return Pair.of(customField.getRefId(), restoreValueIds(customField, fieldValue));
-      default:
-        throw new EntityFormatException("Invalid custom field: " + s);
-    }
+    var customField = UserReferenceHelper.service().getCustomFieldByName(fieldName);
+    return switch (customField.getType()) {
+      case SINGLE_CHECKBOX -> Pair.of(customField.getRefId(), Boolean.parseBoolean(fieldValue));
+      case TEXTBOX_LONG, TEXTBOX_SHORT ->
+        Pair.of(customField.getRefId(), fieldValue.replace(LINE_BREAK_REPLACEMENT, LINE_BREAK));
+      case SINGLE_SELECT_DROPDOWN, RADIO_BUTTON ->
+        Pair.of(customField.getRefId(), restoreValueId(customField, fieldValue));
+      case MULTI_SELECT_DROPDOWN -> Pair.of(customField.getRefId(), restoreValueIds(customField, fieldValue));
+    };
   }
 
   private Pair<String, String> stringToPair(String value) {
@@ -105,6 +98,7 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
   private String customFieldsToString(Map<String, Object> map) {
     return map.entrySet().stream()
       .map(this::customFieldToString)
+      .filter(StringUtils::isNotEmpty)
       .collect(Collectors.joining(ITEM_DELIMITER));
   }
 

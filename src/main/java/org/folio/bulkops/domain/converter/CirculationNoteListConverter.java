@@ -21,11 +21,11 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.adapters.BulkEditAdapterHelper.dateFromString;
 import static org.folio.bulkops.adapters.BulkEditAdapterHelper.dateToString;
-import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER;
-import static org.folio.bulkops.adapters.Constants.ITEM_DELIMITER_PATTERN;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
 
 public class CirculationNoteListConverter extends AbstractBeanField<String, List<CirculationNote>> {
   private static final int NUMBER_OF_CIRCULATION_NOTE_COMPONENTS = 8;
@@ -45,6 +45,15 @@ public class CirculationNoteListConverter extends AbstractBeanField<String, List
         .map(this::restoreCirculationNote)
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
+  }
+
+  @Override
+  protected String convertToWrite(Object value) {
+    return ObjectUtils.isEmpty(value) ?
+      EMPTY :
+      ((List<CirculationNote>) value).stream()
+        .map(this::circulationNotesToString)
+        .collect(Collectors.joining(ITEM_DELIMITER));
   }
 
   private CirculationNote restoreCirculationNote(String s) {
@@ -71,15 +80,6 @@ public class CirculationNoteListConverter extends AbstractBeanField<String, List
         .build();
     }
     return null;
-  }
-
-  @Override
-  protected String convertToWrite(Object value) {
-    return ObjectUtils.isEmpty(value) ?
-      EMPTY :
-      ((List<CirculationNote>) value).stream()
-        .map(this::circulationNotesToString)
-        .collect(Collectors.joining(ITEM_DELIMITER));
   }
 
   private String circulationNotesToString(CirculationNote note) {

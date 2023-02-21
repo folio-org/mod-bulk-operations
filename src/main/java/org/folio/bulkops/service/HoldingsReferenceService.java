@@ -1,5 +1,8 @@
 package org.folio.bulkops.service;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
@@ -13,19 +16,16 @@ import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.HoldingsRecordCollection;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.exception.NotFoundException;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
-public class HoldingsReferenceService implements InitializingBean {
+public class HoldingsReferenceService {
   private static final String QUERY_PATTERN_NAME = "name==\"%s\"";
 
   private final InstanceClient instanceClient;
@@ -40,6 +40,10 @@ public class HoldingsReferenceService implements InitializingBean {
 
   public HoldingsRecord getHoldingsRecordById(String id) {
     return holdingsClient.getHoldingById(id);
+  }
+
+  public HoldingsRecordCollection getHoldingsByQuery(String query, long offset, long limit) {
+    return holdingsClient.getHoldingsByQuery(query, offset, limit);
   }
 
   public String getInstanceTitleById(String id) {
@@ -224,16 +228,5 @@ public class HoldingsReferenceService implements InitializingBean {
       return name;
     }
     return statisticalCodes.getStatisticalCodes().get(0).getId();
-  }
-
-  private static HoldingsReferenceService service;
-
-  @Override
-  public void afterPropertiesSet() {
-    service = this;
-  }
-
-  public static HoldingsReferenceService service() {
-    return service;
   }
 }

@@ -8,10 +8,10 @@ import org.apache.commons.lang3.StringUtils;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
-public class StringConverter extends AbstractBeanField<Object, String> {
+public class StringConverter extends AbstractBeanField<String, String> {
 
   @Override
-  protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
+  protected String convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
     return StringUtils.isEmpty(value) || StringUtils.isBlank(value) ? null : value;
   }
 

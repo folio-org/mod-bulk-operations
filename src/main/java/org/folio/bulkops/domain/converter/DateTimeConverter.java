@@ -1,18 +1,20 @@
 package org.folio.bulkops.domain.converter;
 
 import com.opencsv.bean.AbstractBeanField;
+import org.apache.commons.lang3.ObjectUtils;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.Objects;
 
 import static java.time.ZoneOffset.UTC;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.adapters.Constants.DATE_TIME_PATTERN;
+import static org.folio.bulkops.util.Constants.DATE_TIME_PATTERN;
 
-public class DateConverter extends AbstractBeanField<String, Date> {
+
+public class DateTimeConverter extends AbstractBeanField<String, Date> {
   @Override
   protected Date convert(String value) {
     if (isNotEmpty(value)) {
@@ -24,6 +26,8 @@ public class DateConverter extends AbstractBeanField<String, Date> {
 
   @Override
   protected String convertToWrite(Object value) {
-    return (Objects.isNull(value)) ? EMPTY : value.toString();
+    var date = (Date) value;
+    var format = new SimpleDateFormat(DATE_TIME_PATTERN);
+    return ObjectUtils.isNotEmpty(date) ? format.format(date) : EMPTY;
   }
 }

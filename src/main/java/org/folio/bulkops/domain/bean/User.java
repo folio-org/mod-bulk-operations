@@ -14,12 +14,12 @@ import lombok.Setter;
 import lombok.With;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.CustomFieldsConverter;
-import org.folio.bulkops.domain.converter.DateConverter;
+import org.folio.bulkops.domain.converter.DateTimeConverter;
 import org.folio.bulkops.domain.converter.PatronGroupConverter;
 import org.folio.bulkops.domain.converter.ProxyForConverter;
 import org.folio.bulkops.domain.converter.StringConverter;
 import org.folio.bulkops.domain.converter.TagsConverter;
-import org.folio.bulkops.domain.converter.UserDepartmentsConverter;
+import org.folio.bulkops.domain.converter.DepartmentsConverter;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -77,8 +77,8 @@ public class User extends BulkOperationsEntity {
 
   @JsonProperty("departments")
   @Valid
-  @CsvCustomBindByName(column = "Departments", converter = UserDepartmentsConverter.class)
-  @CsvCustomBindByPosition(position = 7, converter = UserDepartmentsConverter.class)
+  @CsvCustomBindByName(column = "Departments", converter = DepartmentsConverter.class)
+  @CsvCustomBindByPosition(position = 7, converter = DepartmentsConverter.class)
   private Set<UUID> departments = null;
 
   @JsonProperty("meta")
@@ -96,26 +96,26 @@ public class User extends BulkOperationsEntity {
 
   @JsonProperty("enrollmentDate")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  @CsvCustomBindByName(column = "Enrollment date", converter = DateConverter.class)
-  @CsvCustomBindByPosition(position = 19, converter = DateConverter.class)
+  @CsvCustomBindByName(column = "Enrollment date", converter = DateTimeConverter.class)
+  @CsvCustomBindByPosition(position = 19, converter = DateTimeConverter.class)
   private Date enrollmentDate;
 
   @JsonProperty("expirationDate")
-  @CsvCustomBindByName(column = "Expiration date", converter = DateConverter.class)
-  @CsvCustomBindByPosition(position = 20, converter = DateConverter.class)
+  @CsvCustomBindByName(column = "Expiration date", converter = DateTimeConverter.class)
+  @CsvCustomBindByPosition(position = 20, converter = DateTimeConverter.class)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private Date expirationDate;
 
   @JsonProperty("createdDate")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  @CsvCustomBindByName(column = "Created date", converter = DateConverter.class)
-  @CsvCustomBindByPosition(position = 21, converter = DateConverter.class)
+  @CsvCustomBindByName(column = "Created date", converter = DateTimeConverter.class)
+  @CsvCustomBindByPosition(position = 21, converter = DateTimeConverter.class)
   private Date createdDate;
 
   @JsonProperty("updatedDate")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  @CsvCustomBindByName(column = "Updated date", converter = DateConverter.class)
-  @CsvCustomBindByPosition(position = 22, converter = DateConverter.class)
+  @CsvCustomBindByName(column = "Updated date", converter = DateTimeConverter.class)
+  @CsvCustomBindByPosition(position = 22, converter = DateTimeConverter.class)
   private Date updatedDate;
 
   @JsonProperty("metadata")
@@ -134,15 +134,11 @@ public class User extends BulkOperationsEntity {
 
   @Override
   public String getIdentifier(IdentifierType identifierType) {
-    switch (identifierType) {
-      case BARCODE:
-        return barcode;
-      case EXTERNAL_SYSTEM_ID:
-        return externalSystemId;
-      case USER_NAME:
-        return username;
-      default:
-        return id;
-    }
+    return switch (identifierType) {
+      case BARCODE -> barcode;
+      case EXTERNAL_SYSTEM_ID -> externalSystemId;
+      case USER_NAME -> username;
+      default -> id;
+    };
   }
 }

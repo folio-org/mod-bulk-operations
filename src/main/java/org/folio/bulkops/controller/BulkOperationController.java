@@ -65,15 +65,18 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   @Override
-  public ResponseEntity<UnifiedTable> getPreviewByOperationId(UUID operationId, BulkOperationStep step, Integer limit) {
+  public ResponseEntity<UnifiedTable> getPreviewByOperationId(UUID operationId, BulkOperationStep step, Integer limit, Integer offset) {
     var bulkOperation = bulkOperationService.getBulkOperationOrThrow(operationId);
-    return new ResponseEntity<>(bulkOperationService.getPreview(bulkOperation, step, limit), HttpStatus.OK);
+    return new ResponseEntity<>(bulkOperationService.getPreview(bulkOperation, step, 0, limit), HttpStatus.OK);
   }
 
   @Override
   public ResponseEntity<BulkOperationRuleCollection> postContentUpdates(UUID operationId, BulkOperationRuleCollection bulkOperationRuleCollection) {
-    bulkOperationService.getBulkOperationOrThrow(operationId);
+    var operation = bulkOperationService.getBulkOperationOrThrow(operationId);
     var rules = ruleService.saveRules(bulkOperationRuleCollection);
+
+    bulkOperationService.clearOperationProcessing(operation);
+
     return ResponseEntity.ok(rules);
   }
 

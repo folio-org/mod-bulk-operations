@@ -29,8 +29,13 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
       var option = details.getOption();
       for (Action action : details.getActions()) {
         try {
-          validator(updated).validate(option, action);
           updater(option, action).apply(updated);
+          try {
+            validator(entity).validate(option, action);
+          } catch (Exception e) {
+            errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
+            hasProcessingError = true;
+          }
         } catch (Exception e) {
           hasProcessingError = true;
           log.error(String.format("%s id=%s, error: %s", updated.getClass().getSimpleName(), "id", e.getMessage()));
@@ -38,15 +43,16 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
         }
       }
     }
-    if (compare(updated, entity)) {
-      if (!hasProcessingError) {
+
+    if (!hasProcessingError) {
+      if (compare(updated, entity)) {
         errorService.saveError(rules.getBulkOperationRules().get(0).getBulkOperationId(), identifier, "No change in value required");
+      } else {
+        holder.setShouldBeUpdated(true);
       }
-      holder.setChanged(false);
-    } else {
-      holder.setChanged(true);
     }
-    holder.setEntity(updated);
+
+    holder.setUpdated(updated);
     return holder;
   }
 

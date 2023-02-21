@@ -84,9 +84,16 @@
             "inventory-storage.holdings-sources.item.get",
             "inventory-storage.loan-types.item.get",
             "inventory-storage.holdings.item.put",
+            "inventory-storage.electronic-access-relationships.item.get",
+            "inventory-storage.holdings-types.item.get",
             "inventory.items.item.put",
             "users.item.put",
-            "usergroups.item.get"
+            "usergroups.item.get",
+            "inventory-storage.call-number-types.item.get",
+            "inventory-storage.call-number-types.collection.get",
+            "inventory-storage.holdings-sources.collection.get",
+            "inventory-storage.holdings-types.collection.get",
+            "inventory-storage.holdings.collection.get"
           ]
         },
         {

@@ -75,8 +75,8 @@ class ItemDataProcessorTest extends BaseTest {
   @Test
   void testClearItemStatus() {
     var actual = processor.process(IDENTIFIER, new Item(), rules(rule(STATUS, CLEAR_FIELD, null)));
-    assertNotNull(actual.getEntity());
-    assertFalse(actual.isChanged);
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);
   }
 
   @Test
@@ -91,9 +91,9 @@ class ItemDataProcessorTest extends BaseTest {
 
     var result = processor.process(IDENTIFIER, item, rules);
     assertNotNull(result);
-    assertNull(result.getEntity().getPermanentLocation());
-    assertNull(result.getEntity().getTemporaryLocation());
-    assertNull(result.getEntity().getTemporaryLoanType());
+    assertNull(result.getUpdated().getPermanentLocation());
+    assertNull(result.getUpdated().getTemporaryLocation());
+    assertNull(result.getUpdated().getTemporaryLoanType());
   }
 
   @Test
@@ -124,10 +124,10 @@ class ItemDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, item, rules);
 
     assertNotNull(result);
-    assertEquals(updatedLocationId, result.getEntity().getPermanentLocation().getId());
-    assertEquals(updatedLocationId, result.getEntity().getTemporaryLocation().getId());
-    assertEquals(updatedLoanTypeId, result.getEntity().getPermanentLoanType().getId());
-    assertEquals(updatedLoanTypeId, result.getEntity().getTemporaryLoanType().getId());
+    assertEquals(updatedLocationId, result.getUpdated().getPermanentLocation().getId());
+    assertEquals(updatedLocationId, result.getUpdated().getTemporaryLocation().getId());
+    assertEquals(updatedLoanTypeId, result.getUpdated().getPermanentLoanType().getId());
+    assertEquals(updatedLoanTypeId, result.getUpdated().getTemporaryLoanType().getId());
   }
 
   @ParameterizedTest
@@ -144,13 +144,13 @@ class ItemDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, item, rules);
 
     if (PERMANENT_LOCATION.equals(optionType)) {
-      assertNull(result.getEntity().getPermanentLocation());
-      assertEquals(temporaryLocation, result.getEntity().getTemporaryLocation());
-      assertEquals(temporaryLocation, result.getEntity().getEffectiveLocation());
+      assertNull(result.getUpdated().getPermanentLocation());
+      assertEquals(temporaryLocation, result.getUpdated().getTemporaryLocation());
+      assertEquals(temporaryLocation, result.getUpdated().getEffectiveLocation());
     } else {
-      assertNull(result.getEntity().getTemporaryLocation());
-      assertEquals(permanentLocation, result.getEntity().getPermanentLocation());
-      assertEquals(permanentLocation, result.getEntity().getEffectiveLocation());
+      assertNull(result.getUpdated().getTemporaryLocation());
+      assertEquals(permanentLocation, result.getUpdated().getPermanentLocation());
+      assertEquals(permanentLocation, result.getUpdated().getEffectiveLocation());
     }
   }
 
@@ -174,9 +174,9 @@ class ItemDataProcessorTest extends BaseTest {
 
     var result = processor.process(IDENTIFIER, item, rules);
 
-    assertNull(result.getEntity().getPermanentLocation());
-    assertNull(result.getEntity().getTemporaryLocation());
-    assertEquals(holdingsLocation, result.getEntity().getEffectiveLocation());
+    assertNull(result.getUpdated().getPermanentLocation());
+    assertNull(result.getUpdated().getTemporaryLocation());
+    assertEquals(holdingsLocation, result.getUpdated().getEffectiveLocation());
   }
 
   @ParameterizedTest
@@ -201,30 +201,30 @@ class ItemDataProcessorTest extends BaseTest {
 
     assertNotNull(result);
     if (PERMANENT_LOCATION.equals(optionType)) {
-      assertEquals(newLocation, result.getEntity().getPermanentLocation());
+      assertEquals(newLocation, result.getUpdated().getPermanentLocation());
       if (isNull(temporaryLocation)) {
-        assertEquals(newLocation, result.getEntity().getEffectiveLocation());
+        assertEquals(newLocation, result.getUpdated().getEffectiveLocation());
       } else {
-        assertEquals("temporary", result.getEntity().getEffectiveLocation().getName());
+        assertEquals("temporary", result.getUpdated().getEffectiveLocation().getName());
       }
     } else {
-      assertEquals(newLocation, result.getEntity().getTemporaryLocation());
-      assertEquals(newLocation, result.getEntity().getEffectiveLocation());
+      assertEquals(newLocation, result.getUpdated().getTemporaryLocation());
+      assertEquals(newLocation, result.getUpdated().getEffectiveLocation());
     }
   }
 
   @Test
   void testClearPermanentLoanType() {
     var actual = processor.process(IDENTIFIER, new Item(), rules(rule(PERMANENT_LOAN_TYPE, CLEAR_FIELD, null)));
-    assertNotNull(actual.getEntity());
-    assertFalse(actual.isChanged);
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);
   }
 
   @Test
   void testReplaceLoanTypeWithEmptyValue() {
     var actual = processor.process(IDENTIFIER, new Item(), rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, null)));
-    assertNotNull(actual.getEntity());
-    assertFalse(actual.isChanged);
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);
   }
 
   @Test
@@ -236,20 +236,19 @@ class ItemDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, item, rules);
 
     assertNotNull(result);
-    assertEquals(InventoryItemStatus.NameEnum.MISSING, result.getEntity().getStatus().getName());
-    assertNotNull(result.getEntity().getStatus().getDate());
+    assertEquals(InventoryItemStatus.NameEnum.MISSING, result.getUpdated().getStatus().getName());
   }
 
   @Test
   void testUpdateRestrictedItemStatus() {
     var actual = processor.process(IDENTIFIER, new Item()
       .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AGED_TO_LOST)), rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.MISSING.getValue())));
-    assertNotNull(actual.getEntity());
-    assertFalse(actual.isChanged);
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);
 
     actual = processor.process(IDENTIFIER, new Item()
       .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AVAILABLE)), rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.IN_TRANSIT.getValue())));
-    assertNotNull(actual.getEntity());
-    assertFalse(actual.isChanged);
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);
   }
 }

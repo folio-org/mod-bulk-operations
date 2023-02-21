@@ -1,13 +1,14 @@
 package org.folio.bulkops.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.client.CallNumberTypeClient;
-import org.folio.bulkops.client.ConfigurationClient;
 import org.folio.bulkops.client.DamagedStatusClient;
-import org.folio.bulkops.client.HoldingsClient;
+import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.ItemNoteTypeClient;
 import org.folio.bulkops.client.LoanTypeClient;
 import org.folio.bulkops.client.LocationClient;
@@ -15,6 +16,7 @@ import org.folio.bulkops.client.MaterialTypeClient;
 import org.folio.bulkops.client.ServicePointClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.client.UserClient;
+import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.ItemLocationCollection;
 import org.folio.bulkops.domain.bean.LoanType;
@@ -22,17 +24,13 @@ import org.folio.bulkops.domain.bean.LoanTypeCollection;
 import org.folio.bulkops.domain.bean.MaterialType;
 import org.folio.bulkops.domain.bean.MaterialTypeCollection;
 import org.folio.bulkops.exception.NotFoundException;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 @Service
 @Log4j2
 @RequiredArgsConstructor
-public class ItemReferenceService implements InitializingBean {
+public class ItemReferenceService {
   private static final String QUERY_PATTERN_NAME = "name==\"%s\"";
   private static final String QUERY_PATTERN_CODE = "code==\"%s\"";
   private static final String QUERY_PATTERN_USERNAME = "username==\"%s\"";
@@ -45,10 +43,12 @@ public class ItemReferenceService implements InitializingBean {
   private final UserClient userClient;
   private final LocationClient locationClient;
   private final MaterialTypeClient materialTypeClient;
-  private final HoldingsClient holdingClient;
+  private final ItemClient itemClient;
   private final LoanTypeClient loanTypeClient;
-  private final ConfigurationClient configurationClient;
-  private final ObjectMapper objectMapper;
+
+  public ItemCollection getItemByQuery(String query, long offset, long limit) {
+    return itemClient.getItemByQuery(query, offset, limit);
+  }
 
   @Cacheable(cacheNames = "callNumberTypeNames")
   public String getCallNumberTypeNameById(String callNumberTypeId) {
@@ -236,16 +236,5 @@ public class ItemReferenceService implements InitializingBean {
       throw new NotFoundException("Loan type not found: " + name);
     }
     return loanTypes.getLoantypes().get(0);
-  }
-
-  private static ItemReferenceService service;
-
-  @Override
-  public void afterPropertiesSet() {
-    service = this;
-  }
-
-  public static ItemReferenceService service() {
-    return service;
   }
 }

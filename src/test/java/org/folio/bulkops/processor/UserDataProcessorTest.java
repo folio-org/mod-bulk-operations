@@ -55,8 +55,8 @@ class UserDataProcessorTest extends BaseTest {
       rule(EXPIRATION_DATE, REPLACE_WITH, "1234-43")
     ));
 
-    assertNotNull(actual.getEntity());
-    assertFalse(actual.isChanged);
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);
 
     var patronGroup = UUID.randomUUID().toString();
     when(groupClient.getGroupById(patronGroup)).thenThrow(new NotFoundException("Not found"));
@@ -65,20 +65,20 @@ class UserDataProcessorTest extends BaseTest {
       rule(PATRON_GROUP, REPLACE_WITH, null),
       rule(PATRON_GROUP, REPLACE_WITH, patronGroup)));
 
-    assertNotNull(actual.getEntity());
-    assertFalse(actual.isChanged);
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);
 
     actual = processor.process(IDENTIFIER, new User(), rules(rule(EMAIL_ADDRESS, FIND, null),
       rule(EMAIL_ADDRESS, FIND_AND_REPLACE, "@mail", null),
       rule(EXPIRATION_DATE, REPLACE_WITH, null, "@gmail")));
 
-    assertNotNull(actual.getEntity());
-    assertFalse(actual.isChanged);
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);
 
     actual = processor.process(IDENTIFIER, new User(), rules(rule(PERMANENT_LOCATION, FIND, null)));
 
-    assertNotNull(actual.getEntity());
-    assertFalse(actual.isChanged);
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);
   }
 
   @Test
@@ -96,8 +96,8 @@ class UserDataProcessorTest extends BaseTest {
     ));
 
     assertNotNull(result);
-    assertEquals(new SimpleDateFormat(DATE_TIME_FORMAT).parse(date), result.getEntity().getExpirationDate());
-    assertEquals(newPatronGroupId, result.getEntity().getPatronGroup());
-    assertEquals("test@mail.com", result.getEntity().getPersonal().getEmail());
+    assertEquals(new SimpleDateFormat(DATE_TIME_FORMAT).parse(date), result.getUpdated().getExpirationDate());
+    assertEquals(newPatronGroupId, result.getUpdated().getPatronGroup());
+    assertEquals("test@mail.com", result.getUpdated().getPersonal().getEmail());
   }
 }

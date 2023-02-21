@@ -20,7 +20,7 @@ import org.folio.bulkops.domain.converter.DamagedStatusConverter;
 import org.folio.bulkops.domain.converter.EffectiveCallNumberComponentsConverter;
 import org.folio.bulkops.domain.converter.ElectronicAccessListConverter;
 import org.folio.bulkops.domain.converter.IntegerConverter;
-import org.folio.bulkops.domain.converter.InventoryItemStatusConverter;
+import org.folio.bulkops.domain.converter.ItemStatusConverter;
 import org.folio.bulkops.domain.converter.ItemLocationConverter;
 import org.folio.bulkops.domain.converter.ItemNoteListConverter;
 import org.folio.bulkops.domain.converter.ItemStatisticalCodeListConverter;
@@ -218,8 +218,8 @@ public class Item extends BulkOperationsEntity {
   private List<CirculationNote> circulationNotes = null;
 
   @JsonProperty("status")
-  @CsvCustomBindByName(column = "Status", converter = InventoryItemStatusConverter.class)
-  @CsvCustomBindByPosition(position = 33, converter = InventoryItemStatusConverter.class)
+  @CsvCustomBindByName(column = "Status", converter = ItemStatusConverter.class)
+  @CsvCustomBindByPosition(position = 33, converter = ItemStatusConverter.class)
   private InventoryItemStatus status;
 
   @JsonProperty("materialType")
