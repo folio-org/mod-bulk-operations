@@ -364,7 +364,6 @@ class BulkOperationServiceTest extends BaseTest {
     when(groupClient.getGroupById(originalPatronGroupId)).thenReturn(new UserGroup().withGroup("updated"));
 
     when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
-//    when(remoteFileSystemClient.newOutputStream(any())).thenCallRealMethod();
 
     bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(approach).step(EDIT));
 
@@ -581,7 +580,6 @@ class BulkOperationServiceTest extends BaseTest {
     when(groupClient.getGroupByQuery(String.format("group==\"%s\"", "staff"))).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup())));
 
     when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
-//    when(remoteFileSystemClient.newOutputStream(any())).thenCallRealMethod();
 
     bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.MANUAL).step(EDIT));
 
@@ -590,7 +588,6 @@ class BulkOperationServiceTest extends BaseTest {
     var capture = operationCaptor.getAllValues().get(0);
     assertThat(capture.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
     assertThat(capture.getLinkToModifiedRecordsJsonFile(), equalTo(expectedPathToResultFile));
-//    assertThat(capture.getLinkToPreviewRecordsJsonFile(), equalTo(pathToPreviewJson));
   }
 
   @Test
@@ -684,9 +681,6 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.writer(any()))
   .thenCallRealMethod();
 
-//    when(remoteFileSystemClient.newOutputStream(any()))
-//      .thenReturn(OutputStream.nullOutputStream());
-
     when(executionContentRepository.save(any(BulkOperationExecutionContent.class)))
       .thenReturn(BulkOperationExecutionContent.builder().build());
 
@@ -739,8 +733,6 @@ class BulkOperationServiceTest extends BaseTest {
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
-    var firstCapture = operationCaptor.getAllValues().get(0);
-//    assertThat(firstCapture.getStatus(), equalTo(OperationStatusType.APPLY_CHANGES));
     var secondCapture = operationCaptor.getAllValues().get(1);
     assertThat(secondCapture.getStatus(), equalTo(OperationStatusType.FAILED));
     assertThat(secondCapture.getEndTime(), notNullValue());

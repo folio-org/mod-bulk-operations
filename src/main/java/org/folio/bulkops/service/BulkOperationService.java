@@ -289,10 +289,6 @@ public class BulkOperationService {
 
   public void commit(BulkOperation operation) {
 
-//    if (isEmpty(operation.getLinkToMatchedRecordsJsonFile())) {
-//      throw new BulkOperationException("Missing link to origin file");
-//    }
-
     var operationId = operation.getId();
     operation.setCommittedNumOfRecords(0);
     operation.setStatus(OperationStatusType.APPLY_CHANGES);
