@@ -84,6 +84,7 @@
             "inventory-storage.holdings-sources.item.get",
             "inventory-storage.loan-types.item.get",
             "inventory-storage.holdings.item.put",
+            "inventory-storage.instances.item.get",
             "inventory-storage.electronic-access-relationships.item.get",
             "inventory-storage.holdings-types.item.get",
             "inventory.items.item.put",
