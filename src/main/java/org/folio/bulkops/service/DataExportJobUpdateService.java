@@ -107,7 +107,7 @@ public class DataExportJobUpdateService {
 
       Progress progress;
       if (QUERY == operation.getApproach()) {
-        var value = remoteFileSystemClient.getNumOfLines(linkToMatchingRecordsFile);
+        var value = remoteFileSystemClient.getNumOfLines(linkToMatchingRecordsFile) - 1;
         progress =  new Progress()
           .withErrors(0)
           .withSuccess(value)
