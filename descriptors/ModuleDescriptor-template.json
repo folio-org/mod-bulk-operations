@@ -98,7 +98,7 @@
             "inventory-storage.ill-policies.item.get",
             "inventory-storage.instances.item.get",
             "users.item.put",
-            "usergroups.item.get",
+            "usergroups.item.get"
           ]
         },
         {
