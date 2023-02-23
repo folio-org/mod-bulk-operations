@@ -197,11 +197,14 @@ public class ItemReferenceService {
   }
 
   public ItemLocation getLocationByName(String name) {
+    if (isEmpty(name)) {
+      return null;
+    }
     var locations = locationClient.getLocationByQuery(String.format(QUERY_PATTERN_NAME, name));
     if (ObjectUtils.isEmpty(locations) || ObjectUtils.isEmpty(locations.getLocations())) {
       var msg = "Location not found by name=" + name;
       log.error(msg);
-      return new ItemLocation();
+      return null;
     }
     return locations.getLocations().get(0);
   }
@@ -230,6 +233,9 @@ public class ItemReferenceService {
   }
 
   public LoanType getLoanTypeByName(String name) {
+    if (isEmpty(name)) {
+      return null;
+    }
     var loanTypes = loanTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
     if (loanTypes.getLoantypes().isEmpty()) {
       log.error("Loan type not found by name={}", name);

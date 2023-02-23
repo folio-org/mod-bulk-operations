@@ -18,6 +18,7 @@ import org.folio.bulkops.service.HoldingsReferenceHelper;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class HoldingsNoteListConverter extends AbstractBeanField<String, List<HoldingsNote>> {
@@ -41,6 +42,7 @@ public class HoldingsNoteListConverter extends AbstractBeanField<String, List<Ho
     return ObjectUtils.isEmpty(value) ?
       EMPTY :
       ((List<HoldingsNote>) value).stream()
+        .filter(Objects::nonNull)
         .map(note -> String.join(ARRAY_DELIMITER,
           escape(HoldingsReferenceHelper.service().getNoteTypeNameById(note.getHoldingsNoteTypeId())),
           escape(note.getNote()),

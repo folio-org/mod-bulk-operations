@@ -1,8 +1,9 @@
 package org.folio.bulkops.domain.converter;
 
-import static java.util.Objects.nonNull;
-import static java.util.Optional.ofNullable;
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public  class AddressesConverter extends AbstractBeanField<String, List<Address>> {
@@ -51,6 +53,7 @@ public  class AddressesConverter extends AbstractBeanField<String, List<Address>
     var addresses = (List<Address>) value;
     if (ObjectUtils.isNotEmpty(addresses)) {
       return addresses.stream()
+        .filter(Objects::nonNull)
         .map(this::toCsvString)
         .filter(StringUtils::isNotEmpty)
         .collect(Collectors.joining(ITEM_DELIMITER));
@@ -59,7 +62,7 @@ public  class AddressesConverter extends AbstractBeanField<String, List<Address>
   }
 
   private Address getAddressFromString(String stringAddress) {
-    List<String> fields = SpecialCharacterEscaper.restore(Arrays.asList(stringAddress.split(ARRAY_DELIMITER)));
+    List<String> fields = SpecialCharacterEscaper.restore(Arrays.asList(stringAddress.split(ARRAY_DELIMITER, -1)));
     return Address.builder()
         .id(fields.get(ADDRESS_ID))
           .countryId(fields.get(ADDRESS_COUNTRY_ID))
@@ -74,16 +77,16 @@ public  class AddressesConverter extends AbstractBeanField<String, List<Address>
   }
 
   private String toCsvString(Address address) {
-    List<String> addressData = new ArrayList<>();
-    addressData.add(ofNullable(address.getId()).orElse(EMPTY));
-    addressData.add(ofNullable(address.getCountryId()).orElse(EMPTY));
-    addressData.add(ofNullable(address.getAddressLine1()).orElse(EMPTY));
-    addressData.add(ofNullable(address.getAddressLine2()).orElse(EMPTY));
-    addressData.add(ofNullable(address.getCity()).orElse(EMPTY));
-    addressData.add(ofNullable(address.getRegion()).orElse(EMPTY));
-    addressData.add(ofNullable(address.getPostalCode()).orElse(EMPTY));
-    addressData.add(nonNull(address.getPrimaryAddress()) ? address.getPrimaryAddress().toString() : EMPTY);
-    addressData.add(UserReferenceHelper.service().getAddressTypeDescById(address.getAddressTypeId()));
-    return String.join(ARRAY_DELIMITER, SpecialCharacterEscaper.escape(addressData));
+    List<String> data = new ArrayList<>();
+    data.add(isEmpty(address.getId()) ? EMPTY : address.getId());
+    data.add(isEmpty(address.getCountryId()) ? EMPTY : address.getCountryId());
+    data.add(isEmpty(address.getAddressLine1()) ? EMPTY : address.getAddressLine1());
+    data.add(isEmpty(address.getAddressLine2()) ? EMPTY : address.getAddressLine2());
+    data.add(isEmpty(address.getCity()) ? EMPTY : address.getCity());
+    data.add(isEmpty(address.getRegion()) ? EMPTY : address.getRegion());
+    data.add(isEmpty(address.getPostalCode()) ? EMPTY : address.getPostalCode());
+    data.add(isNull(address.getPrimaryAddress()) ? EMPTY : address.getPrimaryAddress().toString());
+    data.add(UserReferenceHelper.service().getAddressTypeDescById(address.getAddressTypeId()));
+    return String.join(ARRAY_DELIMITER, escape(data));
   }
 }

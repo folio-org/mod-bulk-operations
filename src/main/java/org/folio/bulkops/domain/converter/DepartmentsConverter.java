@@ -13,6 +13,7 @@ import org.folio.bulkops.service.UserReferenceHelper;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -37,6 +38,7 @@ public class DepartmentsConverter extends AbstractBeanField<String, Set<UUID>> {
   protected String convertToWrite(Object value) {
     if (ObjectUtils.isNotEmpty(value)) {
       return ((Set<UUID>) value).stream()
+        .filter(Objects::nonNull)
         .map(id -> UserReferenceHelper.service().getDepartmentNameById(id.toString()))
         .filter(StringUtils::isNotEmpty)
         .map(SpecialCharacterEscaper::escape)

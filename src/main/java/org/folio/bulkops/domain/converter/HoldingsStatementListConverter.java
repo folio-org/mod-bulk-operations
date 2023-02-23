@@ -42,6 +42,7 @@ public class HoldingsStatementListConverter extends AbstractBeanField<String, Li
     return ObjectUtils.isEmpty(value) ?
       EMPTY :
       ((List<HoldingsStatement>) value).stream()
+        .filter(Objects::nonNull)
         .map(statement ->
           String.join(ARRAY_DELIMITER,
           escape(statement.getStatement()),

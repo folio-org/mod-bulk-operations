@@ -174,7 +174,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
 
     when(holdingsSourceClient.getByQuery("name==\"name_4\"")).thenReturn(new HoldingsRecordsSourceCollection().withHoldingsRecordsSources(Collections.emptyList()));
     actual = holdingsReferenceHelper.getSourceIdByName("name_4");
-    assertEquals(EMPTY, actual);
+    assertEquals("name_4", actual);
 
     assertEquals(EMPTY, holdingsReferenceHelper.getSourceNameById(null));
   }

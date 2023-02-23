@@ -52,6 +52,7 @@ public class CirculationNoteListConverter extends AbstractBeanField<String, List
     return ObjectUtils.isEmpty(value) ?
       EMPTY :
       ((List<CirculationNote>) value).stream()
+        .filter(Objects::nonNull)
         .map(this::circulationNotesToString)
         .collect(Collectors.joining(ITEM_DELIMITER));
   }

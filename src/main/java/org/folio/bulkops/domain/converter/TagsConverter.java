@@ -9,8 +9,11 @@ import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
@@ -27,6 +30,15 @@ public class TagsConverter extends AbstractBeanField<String, Tags> {
 
   @Override
   protected String convertToWrite(Object value) {
-    return ObjectUtils.isNotEmpty(value) ? String.join(ARRAY_DELIMITER, SpecialCharacterEscaper.escape(((Tags) value).getTagList())) : EMPTY;
+    if (ObjectUtils.isNotEmpty(value)) {
+      var tags = (Tags) value;
+      return Objects.isNull(tags.getTagList()) ?
+        EMPTY :
+        tags.getTagList().stream()
+          .filter(Objects::nonNull)
+          .map(SpecialCharacterEscaper::escape)
+          .collect(Collectors.joining(ARRAY_DELIMITER));
+    }
+    return EMPTY;
   }
 }
