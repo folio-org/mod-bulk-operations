@@ -97,6 +97,7 @@
             "inventory-storage.loan-types.item.get",
             "inventory-storage.ill-policies.item.get",
             "inventory-storage.instances.item.get",
+            "inventory-storage.statistical-codes.item.get",
             "users.item.put",
             "usergroups.item.get"
           ]
