@@ -1,11 +1,11 @@
 package org.folio.bulkops.domain.converter;
 
+import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
-import static org.folio.bulkops.util.Utils.ofEmptyString;
 
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
@@ -74,16 +74,16 @@ public  class AddressesConverter extends AbstractBeanField<String, List<Address>
   }
 
   private String toCsvString(Address address) {
-    List<String> data = new ArrayList<>();
-    ofEmptyString(address.getId()).ifPresent(data::add);
-    ofEmptyString(address.getCountryId()).ifPresent(data::add);
-    ofEmptyString(address.getAddressLine1()).ifPresent(data::add);
-    ofEmptyString(address.getAddressLine2()).ifPresent(data::add);
-    ofEmptyString(address.getCity()).ifPresent(data::add);
-    ofEmptyString(address.getRegion()).ifPresent(data::add);
-    ofEmptyString(address.getPostalCode()).ifPresent(data::add);
-    ofNullable(address.getPrimaryAddress()).ifPresent(primary -> data.add(primary.toString()));
-    ofEmptyString(UserReferenceHelper.service().getAddressTypeDescById(address.getAddressTypeId())).ifPresent(data::add);
-    return String.join(ARRAY_DELIMITER, SpecialCharacterEscaper.escape(data));
+    List<String> addressData = new ArrayList<>();
+    addressData.add(ofNullable(address.getId()).orElse(EMPTY));
+    addressData.add(ofNullable(address.getCountryId()).orElse(EMPTY));
+    addressData.add(ofNullable(address.getAddressLine1()).orElse(EMPTY));
+    addressData.add(ofNullable(address.getAddressLine2()).orElse(EMPTY));
+    addressData.add(ofNullable(address.getCity()).orElse(EMPTY));
+    addressData.add(ofNullable(address.getRegion()).orElse(EMPTY));
+    addressData.add(ofNullable(address.getPostalCode()).orElse(EMPTY));
+    addressData.add(nonNull(address.getPrimaryAddress()) ? address.getPrimaryAddress().toString() : EMPTY);
+    addressData.add(UserReferenceHelper.service().getAddressTypeDescById(address.getAddressTypeId()));
+    return String.join(ARRAY_DELIMITER, SpecialCharacterEscaper.escape(addressData));
   }
 }
