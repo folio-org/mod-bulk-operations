@@ -35,6 +35,7 @@ public class ItemStatisticalCodeListConverter extends AbstractBeanField<String, 
     return ObjectUtils.isEmpty(value) ?
       EMPTY :
       ((List<String>) value).stream()
+        .filter(Objects::nonNull)
         .map(ItemReferenceHelper.service()::getStatisticalCodeById)
         .map(SpecialCharacterEscaper::escape)
         .collect(Collectors.joining(ARRAY_DELIMITER));

@@ -1,8 +1,11 @@
 package org.folio.bulkops.service;
 
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.CustomField;
+import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
@@ -13,27 +16,54 @@ public class UserReferenceHelper implements InitializingBean {
   private final UserReferenceService userReferenceService;
 
   public String getAddressTypeIdByDesc(String desc) {
-    return userReferenceService.getAddressTypeIdByDesc(desc);
+    if (isEmpty(desc)) {
+      return null;
+    }
+    var res = userReferenceService.getAddressTypeIdByDesc(desc);
+    return isEmpty(res) ? desc : res;
   }
 
   public String getAddressTypeDescById(String id) {
+    try {
       return userReferenceService.getAddressTypeDescById(id);
+    } catch (NotFoundException e) {
+      log.error("Address type was not found by id={}", id);
+      return id;
+    }
   }
 
   public String getDepartmentNameById(String id) {
-    return userReferenceService.getDepartmentNameById(id);
+    try {
+      return userReferenceService.getDepartmentNameById(id);
+    } catch (NotFoundException e) {
+      log.error("Department was not found by id={}", id);
+      return id;
+    }
   }
 
   public String getDepartmentIdByName(String name) {
-    return userReferenceService.getDepartmentIdByName(name);
+    if (isEmpty(name)) {
+      return null;
+    }
+    var res = userReferenceService.getDepartmentIdByName(name);
+    return isEmpty(res) ? name : res;
   }
 
   public String getPatronGroupNameById(String id) {
-    return userReferenceService.getPatronGroupNameById(id);
+    try {
+      return userReferenceService.getPatronGroupNameById(id);
+    } catch (NotFoundException e) {
+      log.error("Patron group was not found by id=", id);
+      return id;
+    }
   }
 
   public String getPatronGroupIdByName(String name) {
-    return userReferenceService.getPatronGroupIdByName(name);
+    if (isEmpty(name)) {
+      return null;
+    }
+    var res = userReferenceService.getPatronGroupIdByName(name);
+    return isEmpty(res) ? name : res;
   }
 
   public CustomField getCustomFieldByName(String name)  {

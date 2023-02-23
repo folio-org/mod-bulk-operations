@@ -12,7 +12,7 @@ public class PatronGroupConverter extends AbstractBeanField<String, String> {
 
   @Override
   protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
-    return ObjectUtils.isNotEmpty(value) ? UserReferenceHelper.service().getPatronGroupIdByName(value) : EMPTY;
+    return UserReferenceHelper.service().getPatronGroupIdByName(value);
   }
 
   @Override

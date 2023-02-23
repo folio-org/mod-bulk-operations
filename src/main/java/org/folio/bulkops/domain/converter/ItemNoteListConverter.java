@@ -45,6 +45,7 @@ public class ItemNoteListConverter extends AbstractBeanField<String, List<Holdin
     return ObjectUtils.isEmpty(value) ?
       EMPTY :
       ((List<ItemNote>) value).stream()
+        .filter(Objects::nonNull)
         .map(itemNote -> String.join(ARRAY_DELIMITER,
           escape(ItemReferenceHelper.service().getNoteTypeNameById(itemNote.getItemNoteTypeId())),
           escape(itemNote.getNote()),

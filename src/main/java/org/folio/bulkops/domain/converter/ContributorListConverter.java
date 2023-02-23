@@ -13,6 +13,7 @@ import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ContributorListConverter extends AbstractBeanField<String, List<ContributorName>> {
@@ -31,6 +32,7 @@ public class ContributorListConverter extends AbstractBeanField<String, List<Con
     return ObjectUtils.isEmpty(value) ?
       EMPTY :
       ((List<ContributorName>) value).stream()
+        .filter(Objects::nonNull)
         .map(ContributorName::getName)
         .map(SpecialCharacterEscaper::escape)
         .collect(Collectors.joining(ARRAY_DELIMITER));

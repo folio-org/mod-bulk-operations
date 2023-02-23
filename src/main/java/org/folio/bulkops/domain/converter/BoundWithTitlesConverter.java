@@ -8,6 +8,7 @@ import org.folio.bulkops.domain.bean.Title;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -26,6 +27,7 @@ public class BoundWithTitlesConverter extends AbstractBeanField<String, List<Tit
     return ObjectUtils.isEmpty(value) ?
       EMPTY :
       ((List<Title>) value).stream()
+        .filter(Objects::nonNull)
         .map(this::titleToString)
         .collect(Collectors.joining(ITEM_DELIMITER));
   }

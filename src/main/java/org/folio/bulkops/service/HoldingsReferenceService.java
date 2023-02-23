@@ -200,10 +200,13 @@ public class HoldingsReferenceService {
 
   @Cacheable(cacheNames = "holdingsSources")
   public String getSourceIdByName(String name) {
+    if (isEmpty(name)) {
+      return null;
+    }
     var sources = holdingsSourceClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
     if (ObjectUtils.isEmpty(sources) || ObjectUtils.isEmpty(sources.getHoldingsRecordsSources())) {
       log.error("Source not found by name={}", name);
-      return EMPTY;
+      return name;
     }
     return sources.getHoldingsRecordsSources().get(0).getId();
   }
