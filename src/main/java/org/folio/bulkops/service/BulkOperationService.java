@@ -592,7 +592,9 @@ public class BulkOperationService {
       bulkOperationRepository.save(operation);
 
     } catch (Exception e) {
-      log.error("Error applying changes: " + e.getCause());
+      operation.setErrorMessage("Error applying changes: " + e.getCause());
+      bulkOperationRepository.save(operation);
+
       throw new ServerErrorException(e.getMessage());
     }
   }

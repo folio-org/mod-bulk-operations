@@ -66,7 +66,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
             .getName()
             .getValue()).contains(action.getUpdated())) {
         throw new RuleValidationException(
-            format("Actual status value \"%s\" cannot be changed to \"%s\"", item.getStatus(), action.getUpdated()));
+            format("New status value \"%s\" is not allowed", action.getUpdated()));
       }
     };
   }
