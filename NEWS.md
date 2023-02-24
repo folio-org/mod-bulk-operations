@@ -1,4 +1,4 @@
-## v1.1.0 - Unreleased
+## v2.0.0 - Unreleased
 
 ## v1.0.0 - Released
 The initial release of the mod-bulk operations functionality (refactored version of mod-bulk-operations).
