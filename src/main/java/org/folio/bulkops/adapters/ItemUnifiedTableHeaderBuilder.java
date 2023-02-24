@@ -73,12 +73,12 @@ public class ItemUnifiedTableHeaderBuilder implements UnifiedTableHeaderBuilder<
     PERMANENT_LOCATION("Permanent Location", STRING, false),
     TEMPORARY_LOCATION("Temporary Location", STRING, false),
     EFFECTIVE_LOCATION("Effective Location", STRING, true),
+    ELECTRONIC_ACCESS("Electronic Access", STRING, false),
     IN_TRANSIT_DESTINATION_SERVICE_POINT("In Transit Destination Service Point", STRING, false),
     STATISTICAL_CODES("Statistical Codes", STRING, false),
     PURCHASE_ORDER_LINE_IDENTIFIER("Purchase Order Line Identifier", STRING, false),
     TAGS("Tags", STRING, false),
-    LAST_CHECK_IN("Last CheckIn", STRING, false),
-    ELECTRONIC_ACCESS("Electronic Access", STRING, false);
+    LAST_CHECK_IN("Last CheckIn", STRING, false);
 
     private final String value;
     private final DataType dataType;
