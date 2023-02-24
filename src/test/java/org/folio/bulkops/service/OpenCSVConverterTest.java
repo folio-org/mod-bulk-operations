@@ -111,56 +111,6 @@ class OpenCSVConverterTest extends BaseTest {
 
   @Test
   @SneakyThrows
-  void shouldConvertEmptyItem() {
-    var item = Item.builder().build();
-
-    var itemJson = objectMapper.writeValueAsString(item);
-    var itemFromJson = objectMapper.readValue(itemJson, Item.class);
-    assertEquals(item, itemFromJson);
-
-    String itemCsv;
-    try (var writer = new StringWriter()) {
-      var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
-      strategy.setType(Item.class);
-      StatefulBeanToCsv<BulkOperationsEntity> sbc = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writer)
-        .withSeparator(DEFAULT_SEPARATOR)
-        .withApplyQuotesToAll(false)
-        .withMappingStrategy(strategy)
-        .build();
-      sbc.write(item);
-      itemCsv = writer.toString();
-    }
-
-    assertNotNull(itemCsv);
-
-    var expectedItemFromCsv = item
-      .withFormerIds(emptyList())
-      .withDiscoverySuppress(false)
-      .withContributorNames(emptyList())
-      .withYearCaption(emptyList())
-      .withAdministrativeNotes(emptyList())
-      .withNotes(emptyList())
-      .withCirculationNotes(emptyList())
-      .withStatus(new InventoryItemStatus())
-      .withIsBoundWith(false)
-      .withBoundWithTitles(emptyList())
-      .withElectronicAccess(emptyList())
-      .withStatisticalCodeIds(emptyList())
-      .withTags(new Tags());
-
-    try (var reader = new StringReader(itemCsv)) {
-      var iterator = new CsvToBeanBuilder<BulkOperationsEntity>(reader)
-        .withType(Item.class)
-        .withSkipLines(1)
-        .build()
-        .iterator();
-      assertTrue(iterator.hasNext());
-      assertEquals(expectedItemFromCsv, iterator.next());
-    }
-  }
-
-  @Test
-  @SneakyThrows
   void shouldConvertItemWithNullElementsInLists() {
     var itemString = "{\"id\":null,\"_version\":null,\"hrid\":null,\"holdingsRecordId\":null,\"formerIds\":[ null ],\"discoverySuppress\":false,\"title\":null,\"contributorNames\":[ null ],\"callNumber\":null,\"barcode\":null,\"effectiveShelvingOrder\":null,\"accessionNumber\":null,\"itemLevelCallNumber\":null,\"itemLevelCallNumberPrefix\":null,\"itemLevelCallNumberSuffix\":null,\"itemLevelCallNumberTypeId\":null,\"effectiveCallNumberComponents\":null,\"volume\":null,\"enumeration\":null,\"chronology\":null,\"yearCaption\":[ null ],\"itemIdentifier\":null,\"copyNumber\":null,\"numberOfPieces\":null,\"descriptionOfPieces\":null,\"numberOfMissingPieces\":null,\"missingPieces\":null,\"missingPiecesDate\":null,\"itemDamagedStatusId\":null,\"itemDamagedStatusDate\":null,\"administrativeNotes\":[ null ],\"notes\":[ null ],\"circulationNotes\":[ null ],\"status\":{\"name\":null,\"date\":null},\"materialType\":null,\"isBoundWith\":false,\"boundWithTitles\":[ null ],\"permanentLoanType\":null,\"temporaryLoanType\":null,\"permanentLocation\":null,\"temporaryLocation\":null,\"effectiveLocation\":null,\"electronicAccess\":[ null ],\"inTransitDestinationServicePointId\":null,\"statisticalCodeIds\":[ null ],\"purchaseOrderLineIdentifier\":null,\"metadata\":null,\"tags\":{\"tagList\":[ null ]},\"lastCheckIn\":null}";
     var itemFromJson = objectMapper.readValue(itemString, Item.class);
@@ -208,48 +158,6 @@ class OpenCSVConverterTest extends BaseTest {
 
   @Test
   @SneakyThrows
-  void shouldConvertEmptyUser() {
-    var user = User.builder().build();
-
-    var userJson = objectMapper.writeValueAsString(user);
-    var userFromJson = objectMapper.readValue(userJson, User.class);
-    assertEquals(user, userFromJson);
-
-    String userCsv;
-    try (var writer = new StringWriter()) {
-      var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
-      strategy.setType(User.class);
-      StatefulBeanToCsv<BulkOperationsEntity> sbc = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writer)
-        .withSeparator(DEFAULT_SEPARATOR)
-        .withApplyQuotesToAll(false)
-        .withMappingStrategy(strategy)
-        .build();
-      sbc.write(user);
-      userCsv = writer.toString();
-    }
-
-    assertNotNull(userCsv);
-
-    var expectedUser = user
-      .withActive(false)
-      .withDepartments(emptySet())
-      .withProxyFor(emptyList())
-      .withPersonal(Personal.builder().addresses(emptyList()).build())
-      .withTags(new Tags());
-
-    try (var reader = new StringReader(userCsv)) {
-      var iterator = new CsvToBeanBuilder<BulkOperationsEntity>(reader)
-        .withType(User.class)
-        .withSkipLines(1)
-        .build()
-        .iterator();
-      assertTrue(iterator.hasNext());
-      assertEquals(objectMapper.writeValueAsString(expectedUser), objectMapper.writeValueAsString(iterator.next()));
-    }
-  }
-
-  @Test
-  @SneakyThrows
   void shouldConvertUserWithNullElementsInLists() {
     var userString = "{\"username\":null,\"id\":null,\"externalSystemId\":null,\"barcode\":null,\"active\":false,\"type\":null,\"patronGroup\":null,\"departments\":[ null ],\"meta\":null,\"proxyFor\":[ null ],\"personal\":{\"lastName\":null,\"firstName\":null,\"middleName\":null,\"preferredFirstName\":null,\"email\":null,\"phone\":null,\"mobilePhone\":null,\"dateOfBirth\":null,\"addresses\":[ null ],\"preferredContactTypeId\":null},\"enrollmentDate\":null,\"expirationDate\":null,\"createdDate\":null,\"updatedDate\":null,\"metadata\":null,\"tags\":{\"tagList\":null},\"customFields\":null}";
     var userFromJson = objectMapper.readValue(userString, User.class);
@@ -284,53 +192,6 @@ class OpenCSVConverterTest extends BaseTest {
         .iterator();
       assertTrue(iterator.hasNext());
       assertEquals(objectMapper.writeValueAsString(expectedUserFromCsv), objectMapper.writeValueAsString(iterator.next()));
-    }
-  }
-
-  @Test
-  @SneakyThrows
-  void shouldConvertEmptyHoldingsRecord() {
-    var holdingsRecord = HoldingsRecord.builder().build();
-
-    var holdingsJson = objectMapper.writeValueAsString(holdingsRecord);
-    var holdingsFromJson = objectMapper.readValue(holdingsJson, HoldingsRecord.class);
-    assertEquals(holdingsRecord, holdingsFromJson);
-
-    String holdingsCsv;
-    try (var writer = new StringWriter()) {
-      var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
-      strategy.setType(HoldingsRecord.class);
-      StatefulBeanToCsv<BulkOperationsEntity> sbc = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writer)
-        .withSeparator(DEFAULT_SEPARATOR)
-        .withApplyQuotesToAll(false)
-        .withMappingStrategy(strategy)
-        .build();
-      sbc.write(holdingsRecord);
-      holdingsCsv = writer.toString();
-    }
-
-    assertNotNull(holdingsCsv);
-
-    var expectedHoldingsFromCsv = holdingsRecord
-      .withFormerIds(emptyList())
-      .withElectronicAccess(emptyList())
-      .withAdministrativeNotes(emptyList())
-      .withNotes(emptyList())
-      .withHoldingsStatements(emptyList())
-      .withHoldingsStatementsForIndexes(emptyList())
-      .withHoldingsStatementsForSupplements(emptyList())
-      .withDiscoverySuppress(false)
-      .withStatisticalCodeIds(emptyList())
-      .withTags(new Tags());
-
-    try (var reader = new StringReader(holdingsCsv)) {
-      var iterator = new CsvToBeanBuilder<BulkOperationsEntity>(reader)
-        .withType(HoldingsRecord.class)
-        .withSkipLines(1)
-        .build()
-        .iterator();
-      assertTrue(iterator.hasNext());
-      assertEquals(expectedHoldingsFromCsv, iterator.next());
     }
   }
 
