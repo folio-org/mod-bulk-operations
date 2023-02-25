@@ -38,6 +38,7 @@ public class HoldingsReferenceService {
   private final HoldingsSourceClient holdingsSourceClient;
   private final StatisticalCodeClient statisticalCodeClient;
 
+  @Cacheable(cacheNames = "holdings")
   public HoldingsRecord getHoldingsRecordById(String id) {
     return holdingsClient.getHoldingById(id);
   }
