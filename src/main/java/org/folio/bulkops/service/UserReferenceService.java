@@ -56,14 +56,15 @@ public class UserReferenceService {
     }
   }
 
+  @Cacheable(cacheNames = "addressTypeDesc")
   public String getAddressTypeDescById(String id) {
       return isNull(id) ? EMPTY : addressTypeClient.getAddressTypeById(id).getDesc();
   }
 
+  @Cacheable(cacheNames = "departmentNames")
   public String getDepartmentNameById(String id) {
     return isNull(id) ? EMPTY : departmentClient.getDepartmentById(id).getName();
   }
-
 
   @Cacheable(cacheNames = "departmentIds")
   public String getDepartmentIdByName(String name) {
@@ -80,6 +81,7 @@ public class UserReferenceService {
     }
   }
 
+  @Cacheable(cacheNames = "patronGroups")
   public String getPatronGroupById(String id) {
     log.debug("getPatronGroupById: {}", id);
     return groupClient.getGroupById(id).getGroup();

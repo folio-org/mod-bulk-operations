@@ -56,7 +56,6 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
-import org.folio.bulkops.domain.entity.BulkOperationProcessingContent;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
@@ -68,7 +67,6 @@ import org.folio.bulkops.processor.UpdatedEntityHolder;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
-import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -108,7 +106,6 @@ public class BulkOperationService {
   private final DataProcessorFactory dataProcessorFactory;
   private final UpdateProcessorFactory updateProcessorFactory;
   private final ModClientAdapterFactory modClientAdapterFactory;
-  private final BulkOperationProcessingContentRepository processingContentRepository;
   private final ErrorService errorService;
 
   private static final int OPERATION_UPDATING_STEP = 100;
@@ -273,20 +270,14 @@ public class BulkOperationService {
 
   private UpdatedEntityHolder<? extends BulkOperationsEntity> processUpdate(BulkOperationsEntity original, BulkOperation operation, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> entityClass) {
     var processor = dataProcessorFactory.getProcessorFromFactory(entityClass);
-    var processingContent = BulkOperationProcessingContent.builder()
-      .bulkOperationId(operation.getId())
-      .build();
     UpdatedEntityHolder<BulkOperationsEntity> modified = null;
+
     try {
-      processingContent.setIdentifier(original.getIdentifier(operation.getIdentifierType()));
       modified = processor.process(original.getIdentifier(operation.getIdentifierType()), original, rules);
-      processingContent.setState(StateType.PROCESSED);
     } catch (Exception e) {
-      processingContent = processingContent
-        .withState(StateType.FAILED)
-        .withErrorMessage("Failed to modify entity, reason:" + e.getMessage());
+      log.error("Failed to modify entity, reason:" + e.getMessage());
     }
-    processingContentRepository.save(processingContent);
+
     return modified;
   }
 
