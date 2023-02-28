@@ -198,18 +198,18 @@ class OpenCSVConverterTest extends BaseTest {
   private void initMocks() {
     // User
     Mockito.reset(groupClient);
-    when(groupClient.getGroupById(eq("503a81cd-6c26-400f-b620-14c08943697c"))).thenReturn(
+    when(groupClient.getGroupById("503a81cd-6c26-400f-b620-14c08943697c")).thenReturn(
       new UserGroup().withId("503a81cd-6c26-400f-b620-14c08943697c").withGroup("staff"));
-    when(departmentClient.getDepartmentById(eq("4ac6b846-e184-4cdd-8101-68f4af97d103"))).thenReturn(new Department()
+    when(departmentClient.getDepartmentById("4ac6b846-e184-4cdd-8101-68f4af97d103")).thenReturn(new Department()
       .withId("4ac6b846-e184-4cdd-8101-68f4af97d103")
       .withName("Department"));
     when(addressTypeClient.getAddressTypeById(any())).thenReturn(new AddressType().withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880").withDesc("desc").withAddressType("work"));
     when(groupClient.getGroupByQuery("group==\"staff\"")).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup().withId("503a81cd-6c26-400f-b620-14c08943697c").withGroup("staff"))));
-    when(departmentClient.getDepartmentByQuery(eq("name==\"Department\""))).thenReturn(new DepartmentCollection()
+    when(departmentClient.getDepartmentByQuery("name==\"Department\"")).thenReturn(new DepartmentCollection()
       .withDepartments(List.of(new Department()
         .withId("4ac6b846-e184-4cdd-8101-68f4af97d103")
         .withName("Department"))));
-    when(addressTypeClient.getAddressTypeByQuery(eq("desc==\"desc\""))).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880").withDesc("desc").withAddressType("work"))));
+    when(addressTypeClient.getAddressTypeByQuery("desc==\"desc\"")).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880").withDesc("desc").withAddressType("work"))));
     when(okapiClient.getModuleIds(any(), any(), any())).thenReturn(JsonNodeFactory.instance.arrayNode().add(JsonNodeFactory.instance.objectNode().put("id", "USERS")));
     when(customFieldsClient.getCustomFieldsByQuery(any(), eq("name==\"sierraCheckoutInformation\""))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
       .withName("sierraCheckoutInformation")
