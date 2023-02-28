@@ -7,12 +7,13 @@ import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import org.folio.bulkops.domain.bean.LastCheckIn;
 import org.folio.bulkops.exception.EntityFormatException;
 import org.folio.bulkops.service.ItemReferenceHelper;
+
+import com.opencsv.bean.AbstractBeanField;
+import com.opencsv.exceptions.CsvConstraintViolationException;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
 
 public class LastCheckInConverter extends AbstractBeanField<String, LastCheckIn> {
   private static final int NUMBER_OF_LAST_CHECK_IN_COMPONENTS = 3;

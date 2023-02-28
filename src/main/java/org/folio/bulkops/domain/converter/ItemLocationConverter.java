@@ -3,11 +3,12 @@ package org.folio.bulkops.domain.converter;
 import static com.github.jknack.handlebars.internal.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.service.ItemReferenceHelper;
+
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import org.folio.bulkops.domain.bean.ItemLocation;
-import org.folio.bulkops.service.ItemReferenceHelper;
 
 public class ItemLocationConverter extends AbstractBeanField<String, ItemLocation> {
 

@@ -1,5 +1,12 @@
 package org.folio.bulkops;
 
+import static java.util.UUID.randomUUID;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.CirculationNote;
 import org.folio.bulkops.domain.bean.ContributorName;
@@ -18,13 +25,6 @@ import org.folio.bulkops.domain.bean.Personal;
 import org.folio.bulkops.domain.bean.ReceivingHistoryEntries;
 import org.folio.bulkops.domain.bean.Tags;
 import org.folio.bulkops.domain.bean.User;
-
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static java.util.UUID.randomUUID;
 
 public enum TestEntity {
   USER {

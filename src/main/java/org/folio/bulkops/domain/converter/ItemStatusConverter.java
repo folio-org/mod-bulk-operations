@@ -3,12 +3,13 @@ package org.folio.bulkops.domain.converter;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.domain.bean.InventoryItemStatus;
 import org.folio.bulkops.exception.EntityFormatException;
+
+import com.opencsv.bean.AbstractBeanField;
+import com.opencsv.exceptions.CsvConstraintViolationException;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
 
 public class ItemStatusConverter extends AbstractBeanField<String, InventoryItemStatus> {
 

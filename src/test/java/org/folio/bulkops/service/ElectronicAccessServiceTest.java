@@ -6,9 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
-import com.github.jknack.handlebars.internal.lang3.StringUtils;
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.client.ElectronicAccessRelationshipClient;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.domain.bean.ElectronicAccessRelationship;
 import org.folio.bulkops.exception.EntityFormatException;
@@ -18,7 +16,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+
+import com.github.jknack.handlebars.internal.lang3.StringUtils;
 
 class ElectronicAccessServiceTest extends BaseTest {
 

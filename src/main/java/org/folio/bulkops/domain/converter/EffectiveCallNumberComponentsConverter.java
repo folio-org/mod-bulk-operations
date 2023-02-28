@@ -4,17 +4,16 @@ import static java.lang.String.join;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Utils.ofEmptyString;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.folio.bulkops.domain.bean.EffectiveCallNumberComponents;
 
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import org.folio.bulkops.domain.bean.EffectiveCallNumberComponents;
-import org.folio.bulkops.service.ItemReferenceHelper;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class EffectiveCallNumberComponentsConverter extends AbstractBeanField<String, EffectiveCallNumberComponents> {
   @Override

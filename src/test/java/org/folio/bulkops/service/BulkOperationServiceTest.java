@@ -1,6 +1,37 @@
 package org.folio.bulkops.service;
 
-import lombok.SneakyThrows;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
+import static org.folio.bulkops.domain.dto.EntityType.USER;
+import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
+import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.testcontainers.shaded.org.hamcrest.MatcherAssert.assertThat;
+import static org.testcontainers.shaded.org.hamcrest.Matchers.containsString;
+import static org.testcontainers.shaded.org.hamcrest.Matchers.equalTo;
+import static org.testcontainers.shaded.org.hamcrest.Matchers.hasSize;
+import static org.testcontainers.shaded.org.hamcrest.Matchers.is;
+import static org.testcontainers.shaded.org.hamcrest.Matchers.notNullValue;
+
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.awaitility.Awaitility;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.adapters.HoldingUnifiedTableHeaderBuilder;
@@ -53,38 +84,7 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
-import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
-import static org.folio.bulkops.domain.dto.EntityType.USER;
-import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
-import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
-import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
-import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.testcontainers.shaded.org.hamcrest.MatcherAssert.assertThat;
-import static org.testcontainers.shaded.org.hamcrest.Matchers.containsString;
-import static org.testcontainers.shaded.org.hamcrest.Matchers.equalTo;
-import static org.testcontainers.shaded.org.hamcrest.Matchers.hasSize;
-import static org.testcontainers.shaded.org.hamcrest.Matchers.is;
-import static org.testcontainers.shaded.org.hamcrest.Matchers.notNullValue;
+import lombok.SneakyThrows;
 
 class BulkOperationServiceTest extends BaseTest {
   @Autowired

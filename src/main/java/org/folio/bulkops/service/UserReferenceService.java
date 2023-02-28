@@ -1,7 +1,12 @@
 package org.folio.bulkops.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import static java.lang.String.format;
+import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
+import java.net.URI;
+
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.CustomFieldsClient;
@@ -14,12 +19,8 @@ import org.folio.spring.FolioExecutionContext;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
-
-import static java.lang.String.format;
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Service
 @RequiredArgsConstructor

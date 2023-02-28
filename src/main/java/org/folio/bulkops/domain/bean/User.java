@@ -1,17 +1,11 @@
 package org.folio.bulkops.domain.bean;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.opencsv.bean.CsvCustomBindByName;
-import com.opencsv.bean.CsvCustomBindByPosition;
-import com.opencsv.bean.CsvRecurse;
-import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.With;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.folio.bulkops.domain.converter.BooleanConverter;
@@ -25,11 +19,19 @@ import org.folio.bulkops.domain.converter.TagsConverter;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.opencsv.bean.CsvCustomBindByName;
+import com.opencsv.bean.CsvCustomBindByPosition;
+import com.opencsv.bean.CsvRecurse;
+
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.With;
 
 @Getter
 @Setter

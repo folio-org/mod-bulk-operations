@@ -2,11 +2,12 @@ package org.folio.bulkops.domain.converter;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import org.apache.commons.lang3.ObjectUtils;
+import org.folio.bulkops.service.UserReferenceHelper;
+
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import org.apache.commons.lang3.ObjectUtils;
-import org.folio.bulkops.service.UserReferenceHelper;
 
 public class PatronGroupConverter extends AbstractBeanField<String, String> {
 

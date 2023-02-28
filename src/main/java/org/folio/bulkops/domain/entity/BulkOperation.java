@@ -1,10 +1,8 @@
 package org.folio.bulkops.domain.entity;
 
-import jakarta.persistence.Convert;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
 import org.folio.bulkops.domain.converter.PostgresUUIDConverter;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -12,14 +10,16 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.OperationType;
 
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder

@@ -1,20 +1,5 @@
 package org.folio.bulkops.processor;
 
-import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.domain.bean.Personal;
-import org.folio.bulkops.domain.bean.User;
-import org.folio.bulkops.domain.bean.UserGroup;
-import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
-import org.folio.spring.exception.NotFoundException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.UUID;
-
 import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
@@ -28,6 +13,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.UUID;
+
+import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.bean.Personal;
+import org.folio.bulkops.domain.bean.User;
+import org.folio.bulkops.domain.bean.UserGroup;
+import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
+import org.folio.spring.exception.NotFoundException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 class UserDataProcessorTest extends BaseTest {
 

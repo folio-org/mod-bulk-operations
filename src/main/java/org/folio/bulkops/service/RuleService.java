@@ -1,6 +1,8 @@
 package org.folio.bulkops.service;
 
-import lombok.RequiredArgsConstructor;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -11,8 +13,7 @@ import org.folio.bulkops.repository.BulkOperationRuleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor

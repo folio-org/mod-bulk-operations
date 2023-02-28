@@ -1,6 +1,10 @@
 package org.folio.bulkops.adapters;
 
-import lombok.experimental.UtilityClass;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.folio.bulkops.util.Constants.DATE_TIME_PATTERN;
+import static org.folio.bulkops.util.Constants.UTC;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -10,11 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.TimeZone;
 
-import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.util.Constants.DATE_TIME_PATTERN;
-import static org.folio.bulkops.util.Constants.UTC;
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class BulkEditAdapterHelper {

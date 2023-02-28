@@ -2,11 +2,10 @@ package org.folio.bulkops.util;
 
 import static java.util.Objects.isNull;
 
-import jakarta.persistence.AttributeConverter;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.persistence.AttributeConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
