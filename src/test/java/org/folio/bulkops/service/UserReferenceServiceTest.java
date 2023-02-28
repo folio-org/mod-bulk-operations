@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
@@ -166,6 +167,6 @@ class UserReferenceServiceTest {
     when(customFieldsClient.getCustomFieldsByQuery(isA(String.class), eq("name==\"name\"")))
       .thenReturn(new CustomFieldCollection().withCustomFields(new ArrayList<>()));
     doReturn("module").when(userReferenceService).getModuleId(isA(String.class));
-    assertEquals(new CustomField(), userReferenceService.getCustomFieldByName("name"));
+    assertNull(userReferenceService.getCustomFieldByName("name"));
   }
 }

@@ -16,11 +16,14 @@ public class BooleanConverter extends AbstractBeanField<String, Boolean> {
     if (value.matches("true") || value.matches("false")) {
       return Boolean.parseBoolean(value);
     }
-    return Boolean.FALSE;
+    return null;
   }
 
   @Override
   protected String convertToWrite(Object value) {
-    return (ObjectUtils.isEmpty(value) ? Boolean.FALSE : (Boolean) value).toString();
+    if (ObjectUtils.isNotEmpty(value)) {
+      return ((Boolean) value).toString();
+    }
+    return null;
   }
 }

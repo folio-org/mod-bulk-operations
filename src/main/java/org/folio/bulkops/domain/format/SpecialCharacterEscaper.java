@@ -30,7 +30,7 @@ public class SpecialCharacterEscaper {
   }
 
   public static String restore(String escaped) {
-    if (StringUtils.isEmpty(escaped)) return escaped;
+    if (StringUtils.isEmpty(escaped)) return null;
     for (int i = 0; i < ESCAPED_VALUES.length; i++) {
       escaped = escaped.replace(ESCAPED_VALUES[i], SPECIAL_CHARACTERS[i]);
     }

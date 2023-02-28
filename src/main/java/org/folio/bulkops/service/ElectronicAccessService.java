@@ -1,5 +1,7 @@
 package org.folio.bulkops.service;
 
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
@@ -31,13 +33,13 @@ public class ElectronicAccessService {
   private static final int ELECTRONIC_ACCESS_PUBLIC_NOTE_INDEX = 3;
 
   public String electronicAccessToString(ElectronicAccess access) {
-    List<String> entries = new ArrayList<>();
-    ofEmptyString(access.getUri()).ifPresent(e -> entries.add(escape(e)));
-    ofEmptyString(access.getLinkText()).ifPresent(e -> entries.add(escape(e)));
-    ofEmptyString(access.getMaterialsSpecification()).ifPresent(e -> entries.add(escape(e)));
-    ofEmptyString(access.getPublicNote()).ifPresent(e -> entries.add(escape(e)));
-    ofEmptyString(access.getRelationshipId()).ifPresent(e -> entries.add(getRelationshipNameAndIdById(access.getRelationshipId())));
-    return String.join(ARRAY_DELIMITER, entries);
+    return String.join(ARRAY_DELIMITER,
+      escape(access.getUri()),
+      escape(isEmpty(access.getLinkText()) ? EMPTY : access.getLinkText()),
+      escape(isEmpty(access.getMaterialsSpecification()) ? EMPTY : access.getMaterialsSpecification()),
+      escape(isEmpty(access.getPublicNote()) ? EMPTY : access.getPublicNote()),
+      isEmpty(access.getRelationshipId()) ? ARRAY_DELIMITER : getRelationshipNameAndIdById(access.getRelationshipId()));
+
   }
 
   @Cacheable(cacheNames = "electronicAccessRelationshipNamesAndIds")

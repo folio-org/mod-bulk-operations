@@ -37,6 +37,7 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
     if (isNotEmpty(value)) {
       return Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
         .map(this::restoreCustomFieldValue)
+        .filter(pair -> isNotEmpty(pair.getKey()))
         .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
     }
     return null;
@@ -55,14 +56,18 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
     var fieldName = valuePair.getKey();
     var fieldValue = valuePair.getValue();
     var customField = UserReferenceHelper.service().getCustomFieldByName(fieldName);
-    return switch (customField.getType()) {
-      case SINGLE_CHECKBOX -> Pair.of(customField.getRefId(), Boolean.parseBoolean(fieldValue));
-      case TEXTBOX_LONG, TEXTBOX_SHORT ->
-        Pair.of(customField.getRefId(), fieldValue.replace(LINE_BREAK_REPLACEMENT, LINE_BREAK));
-      case SINGLE_SELECT_DROPDOWN, RADIO_BUTTON ->
-        Pair.of(customField.getRefId(), restoreValueId(customField, fieldValue));
-      case MULTI_SELECT_DROPDOWN -> Pair.of(customField.getRefId(), restoreValueIds(customField, fieldValue));
-    };
+    if (ObjectUtils.isNotEmpty(customField) && ObjectUtils.isNotEmpty(customField.getType())) {
+      return switch (customField.getType()) {
+        case SINGLE_CHECKBOX -> Pair.of(customField.getRefId(), Boolean.parseBoolean(fieldValue));
+        case TEXTBOX_LONG, TEXTBOX_SHORT ->
+          Pair.of(customField.getRefId(), fieldValue.replace(LINE_BREAK_REPLACEMENT, LINE_BREAK));
+        case SINGLE_SELECT_DROPDOWN, RADIO_BUTTON ->
+          Pair.of(customField.getRefId(), restoreValueId(customField, fieldValue));
+        case MULTI_SELECT_DROPDOWN -> Pair.of(customField.getRefId(), restoreValueIds(customField, fieldValue));
+      };
+    }
+    return Pair.of(EMPTY, new Object());
+
   }
 
   private Pair<String, String> stringToPair(String value) {
