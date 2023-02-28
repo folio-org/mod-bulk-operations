@@ -59,6 +59,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpHeaders;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.support.TestPropertySourceUtils;
 import org.springframework.test.web.servlet.MockMvc;
@@ -92,6 +93,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @AutoConfigureMockMvc
 @Log4j2
+@DirtiesContext(classMode= DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class BaseTest {
   public static PostgreSQLContainer<?> postgresDBContainer = new PostgreSQLContainer<>("postgres:13");
 
