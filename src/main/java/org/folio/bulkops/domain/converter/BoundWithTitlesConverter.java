@@ -19,7 +19,7 @@ import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 public class BoundWithTitlesConverter extends AbstractBeanField<String, List<Title>> {
   @Override
   protected List<Title> convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
-    return new ArrayList<>();
+    return null;
   }
 
   @Override

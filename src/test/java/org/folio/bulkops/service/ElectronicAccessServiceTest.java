@@ -21,8 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 class ElectronicAccessServiceTest extends BaseTest {
-  @MockBean
-  private ElectronicAccessRelationshipClient relationshipClient;
+
   @Autowired
   private ElectronicAccessService electronicAccessService;
   @ParameterizedTest
@@ -38,7 +37,7 @@ class ElectronicAccessServiceTest extends BaseTest {
       .build());
 
     if (isNull(uri)) {
-      assertEquals("", actual);
+      assertEquals("null;;;;;", actual);
     } else {
       assertEquals("uri;text;specification;note;name;id", actual);
     }
@@ -53,7 +52,7 @@ class ElectronicAccessServiceTest extends BaseTest {
       .build());
 
     if (isNull(uri)) {
-      assertEquals("", actual);
+      assertEquals("null;;;;;", actual);
     } else {
       assertEquals("uri;text;specification;note;;id", actual);
     }

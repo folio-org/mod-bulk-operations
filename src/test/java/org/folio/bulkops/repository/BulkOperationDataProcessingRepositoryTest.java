@@ -16,6 +16,8 @@ import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 
 class BulkOperationDataProcessingRepositoryTest extends BaseTest {

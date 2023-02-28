@@ -1,0 +1,51 @@
+{
+  "username":"user@name3-?",
+  "id":"fb1393e9-f5ab-4d87-a2d2-394f30e79235",
+  "externalSystemId":"ext.Sys@#)",
+  "barcode":"2498012-#",
+  "active":true,
+  "patronGroup":"503a81cd-6c26-400f-b620-14c08943697c",
+  "departments":[
+    "4ac6b846-e184-4cdd-8101-68f4af97d103"
+  ],
+  "proxyFor":[
+    "d48ee4f6-1f5e-4fc1-be6f-710229de6ad9"
+  ],
+  "personal":{
+    "lastName":"@_!-Last'_Name",
+    "firstName":"First-\"_Name",
+    "middleName":"Middle!@Name",
+    "preferredFirstName":"Preffered$#2",
+    "email":"mail@$.com",
+    "mobilePhone":"+123-457-789",
+    "dateOfBirth":"2023-02-27T00:00:00.000+00:00",
+    "addresses":[
+      {
+        "countryId":"AF",
+        "addressLine1":"line_13S--",
+        "addressLine2":null,
+        "city":"@City_'",
+        "region":" ",
+        "postalCode":"null",
+        "addressTypeId":"93d3d88d-499b-45d0-9bc7-ac73c3a19880"
+      }
+    ],
+    "preferredContactTypeId":"001"
+  },
+  "enrollmentDate":"2023-03-30T00:00:00.000+00:00",
+  "expirationDate":"2024-02-24T23:59:59.000+00:00",
+  "createdDate":"2023-02-24T06:47:12.444+00:00",
+  "updatedDate":"2023-02-24T06:47:12.444+00:00",
+  "metadata":{
+    "createdDate":"2023-02-24T06:43:46.929+00:00",
+    "createdByUserId":"65700962-d73d-5933-bfe6-38d6db9ac906",
+    "updatedDate":"2023-02-24T06:47:12.390+00:00",
+    "updatedByUserId":"65700962-d73d-5933-bfe6-38d6db9ac906"
+  },
+  "tags" : {
+    "tagList" : [ "news", "tag" ]
+  },
+  "customFields":{
+    "sierraCheckoutInformation":"10"
+  }
+}

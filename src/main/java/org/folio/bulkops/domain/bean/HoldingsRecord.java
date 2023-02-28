@@ -1,37 +1,36 @@
 package org.folio.bulkops.domain.bean;
 
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.CsvCustomBindByPosition;
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.With;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.CallNumberTypeConverter;
 import org.folio.bulkops.domain.converter.ElectronicAccessListConverter;
+import org.folio.bulkops.domain.converter.HoldingsLocationConverter;
 import org.folio.bulkops.domain.converter.HoldingsNoteListConverter;
 import org.folio.bulkops.domain.converter.HoldingsStatementListConverter;
+import org.folio.bulkops.domain.converter.HoldingsStatisticalCodeListConverter;
 import org.folio.bulkops.domain.converter.HoldingsTypeConverter;
 import org.folio.bulkops.domain.converter.IllPolicyConverter;
 import org.folio.bulkops.domain.converter.InstanceConverter;
 import org.folio.bulkops.domain.converter.IntegerConverter;
 import org.folio.bulkops.domain.converter.ReceivingHistoryConverter;
 import org.folio.bulkops.domain.converter.SourceConverter;
-import org.folio.bulkops.domain.converter.HoldingsStatisticalCodeListConverter;
-import org.folio.bulkops.domain.converter.StringListConverter;
-import org.folio.bulkops.domain.converter.HoldingsLocationConverter;
 import org.folio.bulkops.domain.converter.StringConverter;
+import org.folio.bulkops.domain.converter.StringListConverter;
 import org.folio.bulkops.domain.converter.TagsConverter;
 import org.folio.bulkops.domain.dto.IdentifierType;
 
-import jakarta.validation.Valid;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.With;
+import java.util.List;
 
 @Data
 @With
@@ -241,5 +240,15 @@ public class HoldingsRecord extends BulkOperationsEntity {
       case ITEM_BARCODE -> itemBarcode;
       default -> id;
     };
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    return EqualsBuilder.reflectionEquals(this, o, true, HoldingsRecord.class, "metadata");
+  }
+
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this, "metadata");
   }
 }

@@ -7,6 +7,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.domain.bean.Tags;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -25,7 +26,7 @@ public class TagsConverter extends AbstractBeanField<String, Tags> {
       List<String> tagList = SpecialCharacterEscaper.restore(Arrays.asList(value.split(ARRAY_DELIMITER)));
       return tags.withTagList(tagList);
     }
-    return new Tags();
+    return new Tags().withTagList(new ArrayList<>());
   }
 
   @Override

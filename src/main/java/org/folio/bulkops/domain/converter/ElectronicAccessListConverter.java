@@ -25,7 +25,7 @@ public class ElectronicAccessListConverter extends AbstractBeanField<String, Lis
   protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
     return isEmpty(value) ?
       Collections.emptyList() :
-      Arrays.stream(value.split(ARRAY_DELIMITER))
+      Arrays.stream(value.split("\\|"))
         .map(ElectronicAccessHelper.service()::restoreElectronicAccessItem)
         .filter(ObjectUtils::isNotEmpty)
         .collect(Collectors.toList());
@@ -38,7 +38,6 @@ public class ElectronicAccessListConverter extends AbstractBeanField<String, Lis
       ((List<ElectronicAccess>) value).stream()
         .filter(Objects::nonNull)
         .map(ElectronicAccessHelper.service()::electronicAccessToString)
-        .filter(StringUtils::isNotEmpty)
         .collect(Collectors.joining(ITEM_DELIMITER));
   }
 }

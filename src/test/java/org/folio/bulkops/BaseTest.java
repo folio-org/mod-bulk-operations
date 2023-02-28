@@ -11,9 +11,13 @@ import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.CallNumberTypeClient;
 import org.folio.bulkops.client.ConfigurationClient;
+import org.folio.bulkops.client.CustomFieldsClient;
 import org.folio.bulkops.client.DamagedStatusClient;
+import org.folio.bulkops.client.DepartmentClient;
+import org.folio.bulkops.client.ElectronicAccessRelationshipClient;
 import org.folio.bulkops.client.GroupClient;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.HoldingsNoteTypeClient;
@@ -26,6 +30,7 @@ import org.folio.bulkops.client.ItemNoteTypeClient;
 import org.folio.bulkops.client.LoanTypeClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.MaterialTypeClient;
+import org.folio.bulkops.client.OkapiClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.ServicePointClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
@@ -124,6 +129,14 @@ public abstract class BaseTest {
   @MockBean
   public GroupClient groupClient;
   @MockBean
+  public DepartmentClient departmentClient;
+  @MockBean
+  public AddressTypeClient addressTypeClient;
+  @MockBean
+  public CustomFieldsClient customFieldsClient;
+  @MockBean
+  public OkapiClient okapiClient;
+  @MockBean
   public LocationClient locationClient;
   @MockBean
   public HoldingsSourceClient holdingsSourceClient;
@@ -147,6 +160,8 @@ public abstract class BaseTest {
   public ServicePointClient servicePointClient;
   @MockBean
   public MaterialTypeClient materialTypeClient;
+  @MockBean
+  public ElectronicAccessRelationshipClient relationshipClient;
 
   @Autowired
   protected MockMvc mockMvc;

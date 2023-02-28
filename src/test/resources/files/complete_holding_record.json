@@ -1,0 +1,71 @@
+{
+  "id" : "eec24df6-072c-4faa-bb1b-2a7681bbbb87",
+  "_version" : 6,
+  "hrid" : "ho00000000010",
+  "holdingsTypeId" : "0c422f92-0f4d-4d32-8cbe-390ebc33a3e5",
+  "formerIds" : [ "@former-holding" ],
+  "instanceId" : "aca08922-a4ac-423e-8e40-065180222761",
+  "permanentLocationId" : "fcd64ce1-6995-48f0-840e-89ffa2288371",
+  "temporaryLocationId" : "b241764c-1466-4e1d-a028-1a3684a5da87",
+  "effectiveLocationId" : "b241764c-1466-4e1d-a028-1a3684a5da87",
+  "electronicAccess" : [ {
+    "uri" : "http://uri@",
+    "linkText" : "https://link@",
+    "materialsSpecification" : "MD3-5",
+    "publicNote" : "URL-note",
+    "relationshipId" : "f5d0068e-6272-458e-8a81-b85e7b9a14aa"
+  } ],
+  "callNumberTypeId" : "cd70562c-dd0b-42f6-aa80-ce803d24d4a1",
+  "callNumberPrefix" : "PR-1",
+  "callNumber" : "123-456",
+  "callNumberSuffix" : "SUF-2#",
+  "shelvingTitle" : "Shelving Title",
+  "acquisitionFormat" : "physical",
+  "acquisitionMethod" : "Acq_method",
+  "receiptStatus" : "receipt",
+  "administrativeNotes" : [ "@dministrative-holding-note" ],
+  "notes" : [ {
+    "note" : "note_for_holding",
+    "staffOnly" : false,
+    "holdingsNoteTypeId" : "88914775-f677-4759-b57b-1a33b90b24e0"
+  } ],
+  "retentionPolicy" : "retention",
+  "digitizationPolicy" : "digital",
+  "holdingsStatements" : [ {
+    "statement" : "Holdings statement",
+    "note" : "Holdings statement public note",
+    "staffNote" : "Holdings statement staff note"
+  } ],
+  "holdingsStatementsForIndexes" : [ {
+    "statement" : "Holdings statement for indexes",
+    "note" : "Holdings statement for indexes public note",
+    "staffNote" : "Holdings statement for indexes staff note"
+  } ],
+  "holdingsStatementsForSupplements" : [ {
+    "statement" : "Holdings statement for supplements",
+    "note" : "Holdings statement for supplements public note",
+    "staffNote" : "Holdings statement for supplements staff note"
+  } ],
+  "copyNumber" : "c-o-p-y-number",
+  "numberOfItems" : "5",
+  "receivingHistory" : {
+    "entries" : [ {
+      "publicDisplay" : true,
+      "enumeration" : "V123",
+      "chronology" : "H456"
+    } ]
+  },
+  "statisticalCodeIds" : [ "264c4f94-1538-43a3-8b40-bed68384b31b", "0868921a-4407-47c9-9b3e-db94644dbae7" ],
+  "holdingsItems" : [ ],
+  "bareHoldingsItems" : [ ],
+  "tags" : {
+    "tagList" : [ "important" ]
+  },
+  "metadata" : {
+    "createdDate" : "2023-02-27T10:54:58.637+00:00",
+    "createdByUserId" : "4c94064f-7d64-550e-9c41-b917d2228bac",
+    "updatedDate" : "2023-02-27T10:59:42.329+00:00",
+    "updatedByUserId" : "4c94064f-7d64-550e-9c41-b917d2228bac"
+  },
+  "sourceId" : "f32d531e-df79-46b3-8932-cdd35f7a2264"
+}

@@ -29,12 +29,6 @@ class UserReferenceHelperTest extends BaseTest {
 
   @Autowired
   private UserReferenceHelper userReferenceHelper;
-  @MockBean
-  private AddressTypeClient addressTypeClient;
-  @MockBean
-  private DepartmentClient departmentClient;
-  @MockBean
-  private CustomFieldsClient customFieldsClient;
 
   @Test
   void testGetAddressType() {
