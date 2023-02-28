@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.configs.kafka.KafkaService;
@@ -130,8 +131,10 @@ public class DataExportJobUpdateService {
       var msg = "Failed to download origin file, reason: " + e;
       log.error(msg);
       operation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);
-      operation.setMatchedNumOfErrors(jobUpdate.getProgress().getErrors());
       operation.setEndTime(LocalDateTime.now());
+      if (ObjectUtils.isNotEmpty(jobUpdate.getProgress())) {
+        operation.setMatchedNumOfErrors(jobUpdate.getProgress().getErrors());
+      }
     }
   }
 
