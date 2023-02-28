@@ -2,8 +2,6 @@ package org.folio.bulkops.configs;
 
 import java.util.UUID;
 
-import jakarta.persistence.EntityManager;
-
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.spring.cql.JpaCqlRepository;
@@ -11,6 +9,7 @@ import org.folio.spring.cql.JpaCqlRepositoryImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 
 @Configuration

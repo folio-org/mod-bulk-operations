@@ -2,6 +2,9 @@ package org.folio.bulkops.domain.entity;
 
 import java.util.UUID;
 
+import org.folio.bulkops.domain.bean.Error;
+import org.folio.bulkops.util.ErrorConverter;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -9,10 +12,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import org.folio.bulkops.domain.bean.Error;
-import org.folio.bulkops.util.ErrorConverter;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

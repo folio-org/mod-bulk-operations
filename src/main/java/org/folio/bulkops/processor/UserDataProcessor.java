@@ -1,7 +1,18 @@
 package org.folio.bulkops.processor;
 
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.EMAIL_ADDRESS;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.EXPIRATION_DATE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.PATRON_GROUP;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Objects;
+
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
@@ -10,18 +21,8 @@ import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.service.UserReferenceService;
 import org.springframework.stereotype.Component;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Objects;
-
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
-import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.EMAIL_ADDRESS;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.EXPIRATION_DATE;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.PATRON_GROUP;
+import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @Component

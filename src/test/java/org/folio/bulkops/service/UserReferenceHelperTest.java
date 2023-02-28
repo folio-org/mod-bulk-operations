@@ -8,9 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.client.AddressTypeClient;
-import org.folio.bulkops.client.CustomFieldsClient;
-import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.domain.bean.AddressType;
 import org.folio.bulkops.domain.bean.AddressTypeCollection;
 import org.folio.bulkops.domain.bean.Department;
@@ -22,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
 @ExtendWith(MockitoExtension.class)
 class UserReferenceHelperTest extends BaseTest {

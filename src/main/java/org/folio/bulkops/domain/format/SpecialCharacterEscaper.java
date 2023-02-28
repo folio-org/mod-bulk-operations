@@ -1,15 +1,15 @@
 package org.folio.bulkops.domain.format;
 
 
-import org.apache.commons.lang3.StringUtils;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
+import static org.folio.bulkops.util.Constants.KEY_VALUE_DELIMITER;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
-import static org.folio.bulkops.util.Constants.KEY_VALUE_DELIMITER;
+import org.apache.commons.lang3.StringUtils;
 
 public class SpecialCharacterEscaper {
 

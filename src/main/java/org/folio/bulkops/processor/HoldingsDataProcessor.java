@@ -1,7 +1,15 @@
 package org.folio.bulkops.processor;
 
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import static java.lang.String.format;
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
+import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
+
+import java.util.Objects;
+import java.util.regex.Pattern;
+
 import org.folio.bulkops.client.HoldingsSourceClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
@@ -13,15 +21,8 @@ import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
 import org.springframework.stereotype.Component;
 
-import java.util.Objects;
-import java.util.regex.Pattern;
-
-import static java.lang.String.format;
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
-import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
+import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @Component

@@ -1,6 +1,8 @@
 package org.folio.bulkops.processor;
 
-import lombok.AllArgsConstructor;
+import java.util.List;
+import java.util.Map;
+
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
@@ -9,8 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
-import java.util.List;
-import java.util.Map;
+import lombok.AllArgsConstructor;
 
 @Service
 @AllArgsConstructor

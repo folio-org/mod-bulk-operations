@@ -3,13 +3,13 @@ package org.folio.bulkops.domain.bean;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 
-import jakarta.validation.Valid;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
