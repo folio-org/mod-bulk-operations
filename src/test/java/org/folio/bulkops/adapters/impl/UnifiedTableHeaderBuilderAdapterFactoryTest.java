@@ -3,9 +3,9 @@ package org.folio.bulkops.adapters.impl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.adapters.ModClientAdapterFactory;
 import org.folio.bulkops.adapters.HoldingUnifiedTableHeaderBuilder;
 import org.folio.bulkops.adapters.ItemUnifiedTableHeaderBuilder;
+import org.folio.bulkops.adapters.ModClientAdapterFactory;
 import org.folio.bulkops.adapters.UserUnifiedTableHeaderBuilder;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;

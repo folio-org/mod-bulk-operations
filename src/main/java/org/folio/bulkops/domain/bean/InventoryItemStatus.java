@@ -3,7 +3,6 @@ package org.folio.bulkops.domain.bean;
 import java.util.Date;
 import java.util.Objects;
 
-import lombok.Getter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -12,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.With;
 

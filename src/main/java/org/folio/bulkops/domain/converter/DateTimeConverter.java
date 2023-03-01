@@ -1,17 +1,17 @@
 package org.folio.bulkops.domain.converter;
 
-import com.opencsv.bean.AbstractBeanField;
-import org.apache.commons.lang3.ObjectUtils;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.folio.bulkops.util.Constants.DATE_TIME_PATTERN;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
-import static java.time.ZoneOffset.UTC;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.util.Constants.DATE_TIME_PATTERN;
+import org.apache.commons.lang3.ObjectUtils;
+
+import com.opencsv.bean.AbstractBeanField;
 
 
 public class DateTimeConverter extends AbstractBeanField<String, Date> {
@@ -19,7 +19,7 @@ public class DateTimeConverter extends AbstractBeanField<String, Date> {
   protected Date convert(String value) {
     if (isNotEmpty(value)) {
       LocalDateTime localDateTime = LocalDateTime.parse(value, DateTimeFormatter.ofPattern(DATE_TIME_PATTERN));
-      return Date.from(localDateTime.atZone(UTC).toInstant());
+      return java.sql.Timestamp.valueOf(localDateTime);
     }
     return null;
   }

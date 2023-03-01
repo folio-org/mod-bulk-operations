@@ -1,10 +1,7 @@
 package org.folio.bulkops.domain.converter;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import org.apache.commons.lang3.ObjectUtils;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -12,8 +9,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import org.apache.commons.lang3.ObjectUtils;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+
+import com.opencsv.bean.AbstractBeanField;
+import com.opencsv.exceptions.CsvConstraintViolationException;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
 
 public class StringListConverter extends AbstractBeanField<String, List<String>> {
 

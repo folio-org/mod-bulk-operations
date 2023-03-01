@@ -5,12 +5,8 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.util.List;
 
-import jakarta.validation.Valid;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.opencsv.bean.CsvCustomBindByName;
-import com.opencsv.bean.CsvCustomBindByPosition;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.BoundWithTitlesConverter;
 import org.folio.bulkops.domain.converter.CallNumberTypeConverter;
@@ -20,10 +16,10 @@ import org.folio.bulkops.domain.converter.DamagedStatusConverter;
 import org.folio.bulkops.domain.converter.EffectiveCallNumberComponentsConverter;
 import org.folio.bulkops.domain.converter.ElectronicAccessListConverter;
 import org.folio.bulkops.domain.converter.IntegerConverter;
-import org.folio.bulkops.domain.converter.ItemStatusConverter;
 import org.folio.bulkops.domain.converter.ItemLocationConverter;
 import org.folio.bulkops.domain.converter.ItemNoteListConverter;
 import org.folio.bulkops.domain.converter.ItemStatisticalCodeListConverter;
+import org.folio.bulkops.domain.converter.ItemStatusConverter;
 import org.folio.bulkops.domain.converter.LastCheckInConverter;
 import org.folio.bulkops.domain.converter.LoanTypeConverter;
 import org.folio.bulkops.domain.converter.MaterialTypeConverter;
@@ -33,6 +29,12 @@ import org.folio.bulkops.domain.converter.StringListConverter;
 import org.folio.bulkops.domain.converter.TagsConverter;
 import org.folio.bulkops.domain.dto.IdentifierType;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.opencsv.bean.CsvCustomBindByName;
+import com.opencsv.bean.CsvCustomBindByPosition;
+
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -297,6 +299,16 @@ public class Item extends BulkOperationsEntity {
   @CsvCustomBindByName(column = "Last CheckIn", converter = LastCheckInConverter.class)
   @CsvCustomBindByPosition(position = 47, converter = LastCheckInConverter.class)
   private LastCheckIn lastCheckIn;
+
+  @Override
+  public boolean equals(Object o) {
+    return EqualsBuilder.reflectionEquals(this, o, true, Item.class, "metadata", "publicNote");
+  }
+
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this, "metadata", "publicNote");
+  }
 
   @Override
   public String getIdentifier(IdentifierType identifierType) {

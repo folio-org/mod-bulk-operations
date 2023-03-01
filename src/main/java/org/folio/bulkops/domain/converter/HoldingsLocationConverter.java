@@ -1,12 +1,13 @@
 package org.folio.bulkops.domain.converter;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.service.HoldingsReferenceHelper;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
+import com.opencsv.bean.AbstractBeanField;
+import com.opencsv.exceptions.CsvConstraintViolationException;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
 
 public class HoldingsLocationConverter extends AbstractBeanField<String, String> {
 

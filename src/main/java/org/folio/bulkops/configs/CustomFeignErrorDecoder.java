@@ -2,6 +2,9 @@ package org.folio.bulkops.configs;
 
 import static feign.FeignException.errorStatus;
 
+import java.io.IOException;
+import java.util.Arrays;
+
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.ServerErrorException;
@@ -9,9 +12,6 @@ import org.springframework.http.HttpStatus;
 
 import feign.Response;
 import feign.codec.ErrorDecoder;
-
-import java.io.IOException;
-import java.util.Arrays;
 
 public class CustomFeignErrorDecoder implements ErrorDecoder {
 

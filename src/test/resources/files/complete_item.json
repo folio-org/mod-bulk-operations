@@ -1,0 +1,110 @@
+{
+  "id" : "7663cc37-ed7c-4905-9ef1-a23ac4d4f9df",
+  "_version" : "1",
+  "status" : {
+    "name" : "Available",
+    "date" : "2023-02-27T11:04:08.692+00:00"
+  },
+  "administrativeNotes" : [ "Administrative note" ],
+  "title" : "@Item",
+  "callNumber" : "123-456",
+  "hrid" : "it00000000022",
+  "contributorNames" : [ {
+    "name" : "@uthor"
+  } ],
+  "formerIds" : [ "Former identifier" ],
+  "discoverySuppress" : null,
+  "holdingsRecordId" : "eec24df6-072c-4faa-bb1b-2a7681bbbb87",
+  "barcode" : "1234-@",
+  "itemLevelCallNumber" : "5834-876",
+  "itemLevelCallNumberPrefix" : "I-PR-1",
+  "itemLevelCallNumberSuffix" : "I-SUFFIX@",
+  "itemLevelCallNumberTypeId" : "5ba6b62e-6858-490a-8102-5b1369873835",
+  "volume" : "V333",
+  "enumeration" : "E1",
+  "chronology" : "C5",
+  "copyNumber" : "5",
+  "notes" : [ {
+    "itemNoteTypeId" : "1dde7141-ec8a-4dae-9825-49ce14c728e7",
+    "note" : "copy note",
+    "staffOnly" : true
+  }, {
+    "itemNoteTypeId" : "c3a539b9-9576-4e3a-b6de-d910200b2919",
+    "note" : "provenance",
+    "staffOnly" : false
+  } ],
+  "circulationNotes" : [ {
+    "id" : "ea48183e-98b8-4add-818d-ddf049950a43",
+    "noteType" : "Check in",
+    "note" : "checked-in",
+    "staffOnly" : false,
+    "source" : {
+      "id" : "4c94064f-7d64-550e-9c41-b917d2228bac",
+      "personal" : {
+        "lastName" : "ADMINISTRATOR",
+        "firstName" : "DIKU"
+      }
+    },
+    "date" : "2023-02-27T11:04:08.665+0000"
+  } ],
+  "numberOfPieces" : "5",
+  "descriptionOfPieces" : "Description of pieces",
+  "numberOfMissingPieces" : "1",
+  "missingPieces" : "missing",
+  "missingPiecesDate" : "2023-02-23",
+  "itemDamagedStatusId" : "54d1dd76-ea33-4bcb-955b-6b29df4f7930",
+  "itemDamagedStatusDate" : "2023-02-27",
+  "accessionNumber" : "ACS@3",
+  "itemIdentifier" : "IDN-321",
+  "tags" : {
+    "tagList" : [ ]
+  },
+  "yearCaption" : [ "2001/11/12" ],
+  "electronicAccess" : [ {
+    "uri" : "http://uri@",
+    "linkText" : "https://link@",
+    "materialsSpecification" : "spec-3",
+    "publicNote" : null,
+    "relationshipId" : "f5d0068e-6272-458e-8a81-b85e7b9a14aa"
+  } ],
+  "statisticalCodeIds" : [ "1c622d0f-2e91-4c30-ba43-2750f9735f51", "c7a32c50-ea7c-43b7-87ab-d134c8371330" ],
+  "purchaseOrderLineIdentifier" : null,
+  "materialType" : {
+    "id" : "fd6c6515-d470-4561-9c32-3e3290d4ca98",
+    "name" : "microform"
+  },
+  "permanentLoanType" : {
+    "id" : "2b94c631-fca9-4892-a730-03ee529ffe27",
+    "name" : "Can circulate"
+  },
+  "temporaryLoanType" : {
+    "id" : "2e48e713-17f3-4c13-a9f8-23845bb210a4",
+    "name" : "Reading room"
+  },
+  "permanentLocation" : {
+    "id" : "fcd64ce1-6995-48f0-840e-89ffa2288371",
+    "name" : "Main Library"
+  },
+  "temporaryLocation" : {
+    "id" : "b241764c-1466-4e1d-a028-1a3684a5da87",
+    "name" : "Popular Reading Collection"
+  },
+  "metadata" : {
+    "createdDate" : "2023-02-27T11:04:08.691+00:00",
+    "createdByUserId" : "4c94064f-7d64-550e-9c41-b917d2228bac",
+    "updatedDate" : "2023-02-27T11:04:08.691+00:00",
+    "updatedByUserId" : "4c94064f-7d64-550e-9c41-b917d2228bac"
+  },
+  "effectiveCallNumberComponents" : {
+    "callNumber" : "5834-876",
+    "prefix" : "I-PR-1",
+    "suffix" : "I-SUFFIX@",
+    "typeId" : "5ba6b62e-6858-490a-8102-5b1369873835"
+  },
+  "effectiveShelvingOrder" : "45834 3876 V 3333 E 11 C 15 15 I-SUFFIX@",
+  "isBoundWith" : false,
+  "effectiveLocation" : {
+    "id" : "b241764c-1466-4e1d-a028-1a3684a5da87",
+    "name" : "Popular Reading Collection"
+  }
+}

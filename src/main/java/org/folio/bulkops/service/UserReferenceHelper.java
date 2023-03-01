@@ -2,12 +2,13 @@ package org.folio.bulkops.service;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Service
 @RequiredArgsConstructor
