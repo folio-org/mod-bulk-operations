@@ -16,6 +16,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
+import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -457,10 +458,10 @@ public class BulkOperationService {
       operation.setCommittedNumOfErrors(0);
       if (DATA_MODIFICATION.equals(operation.getStatus()) || REVIEW_CHANGES.equals(operation.getStatus())) {
         if (MANUAL == approach) {
-          executor.execute(() -> apply(operation));
+          executor.execute(getRunnableWithCurrentFolioContext(() -> apply(operation)));
         } else {
           clear(operation);
-          executor.execute(() -> confirm(operation));
+          executor.execute(getRunnableWithCurrentFolioContext(() -> confirm(operation)));
         }
         return operation;
       } else {
@@ -468,7 +469,7 @@ public class BulkOperationService {
       }
     } else if (BulkOperationStep.COMMIT == step) {
       if (REVIEW_CHANGES.equals(operation.getStatus())) {
-        executor.execute(() -> commit(operation));
+        executor.execute(getRunnableWithCurrentFolioContext(() -> commit(operation)));
         return operation;
       } else {
         throw new BadRequestException(String.format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
