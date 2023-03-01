@@ -4,6 +4,9 @@ spring:
   application:
     name: @project.artifactId@
     version: @project.version@
+  servlet:
+    multipart:
+      max-file-size: 10MB
   datasource:
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
