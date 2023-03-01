@@ -1,19 +1,19 @@
 package org.folio.bulkops.adapters;
 
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import static org.folio.bulkops.domain.dto.DataType.STRING;
+
+import java.util.Arrays;
+import java.util.List;
+
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.DataType;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.folio.bulkops.domain.dto.DataType.STRING;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Component
 @Log4j2

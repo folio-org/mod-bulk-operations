@@ -1,14 +1,5 @@
 package org.folio.bulkops.client;
 
-import lombok.RequiredArgsConstructor;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.folio.bulkops.exception.ServerErrorException;
-import org.folio.s3.client.FolioS3Client;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Component;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,6 +9,16 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.exception.ServerErrorException;
+import org.folio.s3.client.FolioS3Client;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
+
+import lombok.RequiredArgsConstructor;
 
 @Lazy
 @Component

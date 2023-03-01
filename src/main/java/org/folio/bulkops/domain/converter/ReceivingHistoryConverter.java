@@ -1,15 +1,5 @@
 package org.folio.bulkops.domain.converter;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import org.folio.bulkops.domain.bean.ReceivingHistoryEntries;
-import org.folio.bulkops.domain.bean.ReceivingHistoryEntry;
-import org.folio.bulkops.exception.EntityFormatException;
-
-import java.util.Arrays;
-import java.util.stream.Collectors;
-
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
@@ -17,6 +7,17 @@ import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
+
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
+import org.folio.bulkops.domain.bean.ReceivingHistoryEntries;
+import org.folio.bulkops.domain.bean.ReceivingHistoryEntry;
+import org.folio.bulkops.exception.EntityFormatException;
+
+import com.opencsv.bean.AbstractBeanField;
+import com.opencsv.exceptions.CsvConstraintViolationException;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
 
 public class ReceivingHistoryConverter extends AbstractBeanField<String, ReceivingHistoryEntries> {
   private static final int NUMBER_OF_RECEIVING_HISTORY_ENTRY_ELEMENTS = 3;

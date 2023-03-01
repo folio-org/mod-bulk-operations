@@ -1,21 +1,23 @@
 package org.folio.bulkops.domain.bean;
 
+import java.util.Date;
+import java.util.List;
+
+import org.folio.bulkops.domain.converter.AddressesConverter;
+import org.folio.bulkops.domain.converter.DateTimeConverter;
+import org.folio.bulkops.domain.converter.StringConverter;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.CsvCustomBindByPosition;
+
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import org.folio.bulkops.domain.converter.AddressesConverter;
-import org.folio.bulkops.domain.converter.DateTimeConverter;
-import org.folio.bulkops.domain.converter.StringConverter;
-import org.springframework.format.annotation.DateTimeFormat;
-
-import java.util.Date;
-import java.util.List;
 
 
 @Data

@@ -10,9 +10,14 @@ import static org.folio.bulkops.util.Constants.KEY_VALUE_DELIMITER;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
 import static org.folio.bulkops.util.Constants.LINE_BREAK_REPLACEMENT;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -23,13 +28,9 @@ import org.folio.bulkops.exception.EntityFormatException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.service.UserReferenceHelper;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import com.opencsv.bean.AbstractBeanField;
+import com.opencsv.exceptions.CsvConstraintViolationException;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
 
 public class CustomFieldsConverter extends AbstractBeanField<String, Map<String, Object>> {
   @Override
@@ -37,6 +38,7 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
     if (isNotEmpty(value)) {
       return Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
         .map(this::restoreCustomFieldValue)
+        .filter(pair -> isNotEmpty(pair.getKey()))
         .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
     }
     return null;
@@ -55,14 +57,18 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
     var fieldName = valuePair.getKey();
     var fieldValue = valuePair.getValue();
     var customField = UserReferenceHelper.service().getCustomFieldByName(fieldName);
-    return switch (customField.getType()) {
-      case SINGLE_CHECKBOX -> Pair.of(customField.getRefId(), Boolean.parseBoolean(fieldValue));
-      case TEXTBOX_LONG, TEXTBOX_SHORT ->
-        Pair.of(customField.getRefId(), fieldValue.replace(LINE_BREAK_REPLACEMENT, LINE_BREAK));
-      case SINGLE_SELECT_DROPDOWN, RADIO_BUTTON ->
-        Pair.of(customField.getRefId(), restoreValueId(customField, fieldValue));
-      case MULTI_SELECT_DROPDOWN -> Pair.of(customField.getRefId(), restoreValueIds(customField, fieldValue));
-    };
+    if (ObjectUtils.isNotEmpty(customField) && ObjectUtils.isNotEmpty(customField.getType())) {
+      return switch (customField.getType()) {
+        case SINGLE_CHECKBOX -> Pair.of(customField.getRefId(), Boolean.parseBoolean(fieldValue));
+        case TEXTBOX_LONG, TEXTBOX_SHORT ->
+          Pair.of(customField.getRefId(), fieldValue.replace(LINE_BREAK_REPLACEMENT, LINE_BREAK));
+        case SINGLE_SELECT_DROPDOWN, RADIO_BUTTON ->
+          Pair.of(customField.getRefId(), restoreValueId(customField, fieldValue));
+        case MULTI_SELECT_DROPDOWN -> Pair.of(customField.getRefId(), restoreValueIds(customField, fieldValue));
+      };
+    }
+    return Pair.of(EMPTY, new Object());
+
   }
 
   private Pair<String, String> stringToPair(String value) {

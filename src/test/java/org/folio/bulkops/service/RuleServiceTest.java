@@ -5,6 +5,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+import java.util.UUID;
+
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
@@ -18,9 +21,6 @@ import org.folio.bulkops.repository.BulkOperationRuleRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-
-import java.util.List;
-import java.util.UUID;
 
 class RuleServiceTest extends BaseTest {
   private final static UUID BULK_OPERATION_ID = UUID.randomUUID();

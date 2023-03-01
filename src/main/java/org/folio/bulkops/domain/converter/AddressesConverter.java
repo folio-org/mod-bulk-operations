@@ -8,21 +8,22 @@ import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.folio.bulkops.domain.bean.Address;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
-import org.folio.bulkops.service.UserReferenceHelper;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.bean.Address;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import org.folio.bulkops.service.UserReferenceHelper;
+
+import com.opencsv.bean.AbstractBeanField;
+import com.opencsv.exceptions.CsvConstraintViolationException;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
 
 public  class AddressesConverter extends AbstractBeanField<String, List<Address>> {
 
@@ -64,15 +65,15 @@ public  class AddressesConverter extends AbstractBeanField<String, List<Address>
   private Address getAddressFromString(String stringAddress) {
     List<String> fields = SpecialCharacterEscaper.restore(Arrays.asList(stringAddress.split(ARRAY_DELIMITER, -1)));
     return Address.builder()
-        .id(fields.get(ADDRESS_ID))
-          .countryId(fields.get(ADDRESS_COUNTRY_ID))
-            .addressLine1(fields.get(ADDRESS_LINE_1))
-              .addressLine2(fields.get(ADDRESS_LINE_2))
-                .city(fields.get(ADDRESS_CITY))
-                  .region(fields.get(ADDRESS_REGION))
-                    .postalCode(fields.get(ADDRESS_POSTAL_CODE))
-                      .primaryAddress(Boolean.valueOf(fields.get(ADDRESS_PRIMARY_ADDRESS)))
-                        .addressTypeId(UserReferenceHelper.service().getAddressTypeIdByDesc(fields.get(ADDRESS_TYPE)))
+        .id(convertToNullableString(fields.get(ADDRESS_ID)))
+          .countryId(convertToNullableString(fields.get(ADDRESS_COUNTRY_ID)))
+            .addressLine1(convertToNullableString(fields.get(ADDRESS_LINE_1)))
+              .addressLine2(convertToNullableString(fields.get(ADDRESS_LINE_2)))
+                .city(convertToNullableString(fields.get(ADDRESS_CITY)))
+                  .region(convertToNullableString(fields.get(ADDRESS_REGION)))
+                    .postalCode(convertToNullableString(fields.get(ADDRESS_POSTAL_CODE)))
+                      .primaryAddress(convertToNullableBoolean(fields.get(ADDRESS_PRIMARY_ADDRESS)))
+                        .addressTypeId(convertToNullableString(UserReferenceHelper.service().getAddressTypeIdByDesc(fields.get(ADDRESS_TYPE))))
                           .build();
   }
 
@@ -88,5 +89,19 @@ public  class AddressesConverter extends AbstractBeanField<String, List<Address>
     data.add(isNull(address.getPrimaryAddress()) ? EMPTY : address.getPrimaryAddress().toString());
     data.add(UserReferenceHelper.service().getAddressTypeDescById(address.getAddressTypeId()));
     return String.join(ARRAY_DELIMITER, escape(data));
+  }
+
+  private String convertToNullableString(String str) {
+    if (StringUtils.isEmpty(str)) {
+      return null;
+    }
+    return str;
+  }
+
+  private Boolean convertToNullableBoolean(String str) {
+    if (StringUtils.isEmpty(str)) {
+      return null;
+    }
+    return Boolean.valueOf(str);
   }
 }

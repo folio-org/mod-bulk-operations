@@ -3,10 +3,11 @@ package org.folio.bulkops.domain.converter;
 import static com.github.jknack.handlebars.internal.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import org.folio.bulkops.service.HoldingsReferenceHelper;
+
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import org.folio.bulkops.service.HoldingsReferenceHelper;
 
 public class CallNumberTypeConverter extends AbstractBeanField<String, String> {
 

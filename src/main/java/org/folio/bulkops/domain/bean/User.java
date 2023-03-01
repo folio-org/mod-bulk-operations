@@ -1,38 +1,40 @@
 package org.folio.bulkops.domain.bean;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.opencsv.bean.CsvCustomBindByName;
-import com.opencsv.bean.CsvCustomBindByPosition;
-import com.opencsv.bean.CsvRecurse;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.With;
-import org.folio.bulkops.domain.converter.BooleanConverter;
-import org.folio.bulkops.domain.converter.CustomFieldsConverter;
-import org.folio.bulkops.domain.converter.DateTimeConverter;
-import org.folio.bulkops.domain.converter.PatronGroupConverter;
-import org.folio.bulkops.domain.converter.ProxyForConverter;
-import org.folio.bulkops.domain.converter.StringConverter;
-import org.folio.bulkops.domain.converter.TagsConverter;
-import org.folio.bulkops.domain.converter.DepartmentsConverter;
-import org.folio.bulkops.domain.dto.IdentifierType;
-import org.springframework.format.annotation.DateTimeFormat;
-
-import jakarta.validation.Valid;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.folio.bulkops.domain.converter.BooleanConverter;
+import org.folio.bulkops.domain.converter.CustomFieldsConverter;
+import org.folio.bulkops.domain.converter.DateTimeConverter;
+import org.folio.bulkops.domain.converter.DepartmentsConverter;
+import org.folio.bulkops.domain.converter.PatronGroupConverter;
+import org.folio.bulkops.domain.converter.ProxyForConverter;
+import org.folio.bulkops.domain.converter.StringConverter;
+import org.folio.bulkops.domain.converter.TagsConverter;
+import org.folio.bulkops.domain.dto.IdentifierType;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.opencsv.bean.CsvCustomBindByName;
+import com.opencsv.bean.CsvCustomBindByPosition;
+import com.opencsv.bean.CsvRecurse;
+
+import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.With;
+
 @Getter
 @Setter
-@EqualsAndHashCode
 @With
 @Builder(toBuilder = true)
 @NoArgsConstructor
@@ -140,5 +142,15 @@ public class User extends BulkOperationsEntity {
       case USER_NAME -> username;
       default -> id;
     };
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    return EqualsBuilder.reflectionEquals(this, o, true, User.class, "metadata");
+  }
+
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this, "metadata");
   }
 }

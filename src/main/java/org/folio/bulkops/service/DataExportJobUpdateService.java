@@ -1,9 +1,19 @@
 package org.folio.bulkops.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
+import static org.folio.bulkops.util.Constants.UTC_ZONE;
+
+import java.io.IOException;
+import java.net.URL;
+import java.time.LocalDateTime;
+import java.util.EnumMap;
+import java.util.Map;
+
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.configs.kafka.KafkaService;
@@ -18,17 +28,10 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
-import java.net.URL;
-import java.time.LocalDateTime;
-import java.util.EnumMap;
-import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
-import static org.folio.bulkops.util.Constants.UTC_ZONE;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Service
 @Log4j2
@@ -130,8 +133,10 @@ public class DataExportJobUpdateService {
       var msg = "Failed to download origin file, reason: " + e;
       log.error(msg);
       operation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);
-      operation.setMatchedNumOfErrors(jobUpdate.getProgress().getErrors());
       operation.setEndTime(LocalDateTime.now());
+      if (ObjectUtils.isNotEmpty(jobUpdate.getProgress())) {
+        operation.setMatchedNumOfErrors(jobUpdate.getProgress().getErrors());
+      }
     }
   }
 

@@ -1,15 +1,32 @@
 package org.folio.bulkops.service;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opencsv.CSVReader;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.LF;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
+import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
+import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
+import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
+import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
+import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
+import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
+import static org.folio.bulkops.util.Utils.resolveEntityClass;
+
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.Writer;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -54,32 +71,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.Writer;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencsv.CSVReader;
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.bean.StatefulBeanToCsv;
+import com.opencsv.bean.StatefulBeanToCsvBuilder;
 
-import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
-import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.LF;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
-import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
-import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
-import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
-import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
-import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
-import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
-import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
-import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
-import static org.folio.bulkops.util.Utils.resolveEntityClass;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Service
 @Log4j2

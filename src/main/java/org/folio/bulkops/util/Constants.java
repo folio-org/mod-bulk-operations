@@ -1,8 +1,8 @@
 package org.folio.bulkops.util;
 
-import lombok.experimental.UtilityClass;
-
 import java.time.ZoneId;
+
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class Constants {

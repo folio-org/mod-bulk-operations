@@ -5,8 +5,8 @@ import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import java.net.URI;
+
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.CustomFieldsClient;
@@ -15,18 +15,18 @@ import org.folio.bulkops.client.GroupClient;
 import org.folio.bulkops.client.OkapiClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.CustomField;
-import org.folio.bulkops.domain.bean.UserCollection;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.net.URI;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
 public class UserReferenceService {
-  private static final String OKAPI_URL = "http://_";
+  public static final String OKAPI_URL = "http://_";
   private static final String MOD_USERS = "mod-users";
 
   private final AddressTypeClient addressTypeClient;
@@ -36,10 +36,6 @@ public class UserReferenceService {
   private final CustomFieldsClient customFieldsClient;
   private final FolioExecutionContext folioExecutionContext;
   private final OkapiClient okapiClient;
-
-  public UserCollection getUserByQuery(String query, long offset, long limit) {
-    return userClient.getUserByQuery(query, offset, limit);
-  }
 
   @Cacheable(cacheNames = "addressTypeIds")
   public String getAddressTypeIdByDesc(String desc) {
@@ -112,7 +108,7 @@ public class UserReferenceService {
     if (customFields.getCustomFields().isEmpty()) {
       var msg = format("Custom field with name=%s not found", name);
       log.error(msg);
-      return new CustomField();
+      return null;
     }
     return customFields.getCustomFields().get(0);
   }

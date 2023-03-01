@@ -2,11 +2,12 @@ package org.folio.bulkops.domain.converter;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import org.apache.commons.lang3.ObjectUtils;
+import org.folio.bulkops.service.HoldingsReferenceHelper;
+
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import org.apache.commons.lang3.ObjectUtils;
-import org.folio.bulkops.service.HoldingsReferenceHelper;
 
 public class SourceConverter extends AbstractBeanField<String, String> {
   @Override

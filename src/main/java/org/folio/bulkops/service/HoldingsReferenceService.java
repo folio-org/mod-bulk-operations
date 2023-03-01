@@ -3,8 +3,6 @@ package org.folio.bulkops.service;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.client.CallNumberTypeClient;
 import org.folio.bulkops.client.HoldingsClient;
@@ -16,11 +14,13 @@ import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
-import org.folio.bulkops.domain.bean.HoldingsRecordCollection;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Service
 @RequiredArgsConstructor
@@ -41,10 +41,6 @@ public class HoldingsReferenceService {
   @Cacheable(cacheNames = "holdings")
   public HoldingsRecord getHoldingsRecordById(String id) {
     return holdingsClient.getHoldingById(id);
-  }
-
-  public HoldingsRecordCollection getHoldingsByQuery(String query, long offset, long limit) {
-    return holdingsClient.getHoldingsByQuery(query, offset, limit);
   }
 
   public String getInstanceTitleById(String id) {
@@ -218,7 +214,7 @@ public class HoldingsReferenceService {
       return isEmpty(id) ? EMPTY
         : statisticalCodeClient.getById(id)
           .getName();
-    } catch (NotFoundException e) {
+    } catch (Exception e) {
       log.error("Statistical code not found by id={}", id);
       return id;
     }

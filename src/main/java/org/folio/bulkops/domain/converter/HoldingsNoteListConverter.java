@@ -7,19 +7,20 @@ import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import org.apache.commons.lang3.ObjectUtils;
-import org.folio.bulkops.domain.bean.HoldingsNote;
-import org.folio.bulkops.exception.EntityFormatException;
-import org.folio.bulkops.service.HoldingsReferenceHelper;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.ObjectUtils;
+import org.folio.bulkops.domain.bean.HoldingsNote;
+import org.folio.bulkops.exception.EntityFormatException;
+import org.folio.bulkops.service.HoldingsReferenceHelper;
+
+import com.opencsv.bean.AbstractBeanField;
+import com.opencsv.exceptions.CsvConstraintViolationException;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
 
 public class HoldingsNoteListConverter extends AbstractBeanField<String, List<HoldingsNote>> {
   private static final int NUMBER_OF_HOLDINGS_NOTE_ELEMENTS = 3;

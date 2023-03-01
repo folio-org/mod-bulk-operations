@@ -1,22 +1,21 @@
 package org.folio.bulkops.domain.bean;
 
+import static org.folio.bulkops.util.Constants.UTC;
+
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
-
-import jakarta.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
-
-import static org.folio.bulkops.util.Constants.UTC;
 
 @Data
 @With

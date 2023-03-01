@@ -3,20 +3,21 @@ package org.folio.bulkops.domain.converter;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
-import org.folio.bulkops.service.UserReferenceHelper;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import org.folio.bulkops.service.UserReferenceHelper;
+
+import com.opencsv.bean.AbstractBeanField;
+import com.opencsv.exceptions.CsvConstraintViolationException;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
 
 public class DepartmentsConverter extends AbstractBeanField<String, Set<UUID>> {
 

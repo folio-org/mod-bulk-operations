@@ -1,7 +1,16 @@
 package org.folio.bulkops.controller;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
+
+import java.io.IOException;
+import java.util.Objects;
+import java.util.UUID;
+
 import org.codehaus.plexus.util.FileUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.dto.BulkOperationCollection;
@@ -31,16 +40,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.util.Objects;
-import java.util.UUID;
-
-import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @RestController
 @RequiredArgsConstructor

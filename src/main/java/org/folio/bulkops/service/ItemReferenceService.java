@@ -7,8 +7,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.client.CallNumberTypeClient;
 import org.folio.bulkops.client.ConfigurationClient;
@@ -23,11 +21,9 @@ import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.bean.ItemLocation;
-import org.folio.bulkops.domain.bean.ItemLocationCollection;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.LoanTypeCollection;
 import org.folio.bulkops.domain.bean.MaterialType;
-import org.folio.bulkops.domain.bean.MaterialTypeCollection;
 import org.folio.bulkops.exception.ConfigurationException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.cache.annotation.Cacheable;
@@ -36,6 +32,9 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Service
 @Log4j2
@@ -75,18 +74,6 @@ public class ItemReferenceService {
       log.error("Call number type was not found by id={}", callNumberTypeId);
       return callNumberTypeId;
     }
-  }
-
-  @Cacheable(cacheNames = "callNumberTypeIds")
-  public String getCallNumberTypeIdByName(String name) {
-    if (isEmpty(name)) {
-      return null;
-    }
-    var response = callNumberTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
-    if (response.getCallNumberTypes().isEmpty()) {
-      return name;
-    }
-    return response.getCallNumberTypes().get(0).getId();
   }
 
   @Cacheable(cacheNames = "damagedStatusNames")
@@ -204,11 +191,6 @@ public class ItemReferenceService {
   }
 
   @Cacheable(cacheNames = "locations")
-  public ItemLocationCollection getItemLocationsByName(String name) {
-    return locationClient.getLocationByQuery(String.format(QUERY_PATTERN_NAME, name));
-  }
-
-  @Cacheable(cacheNames = "locations")
   public ItemLocation getLocationById(String id) {
     return locationClient.getLocationById(id);
   }
@@ -226,12 +208,10 @@ public class ItemReferenceService {
     return locations.getLocations().get(0);
   }
 
-  @Cacheable(cacheNames = "materialTypes")
-  public MaterialTypeCollection getMaterialTypesByName(String name) {
-    return materialTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
-  }
-
   public MaterialType getMaterialTypeByName(String name) {
+    if (isEmpty(name)) {
+      return null;
+    }
     var types = materialTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
     if (types.getMtypes().isEmpty()) {
       log.error("Material type not found by name={}", name);
