@@ -79,11 +79,13 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "patronGroups")
   public String getPatronGroupById(String id) {
+    log.debug("getPatronGroupById: {}", id);
     return groupClient.getGroupById(id).getGroup();
   }
 
   @Cacheable(cacheNames = "patronGroupNames")
   public String getPatronGroupNameById(String id) {
+      log.debug("getPatronGroupNameById: {}", id);
       return isNull(id) ? EMPTY : groupClient.getGroupById(id).getGroup();
   }
 
