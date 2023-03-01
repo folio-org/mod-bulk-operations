@@ -280,6 +280,7 @@ public class BulkOperationService {
 
   public void commit(BulkOperation operation) {
 
+    log.debug("commit start: {}", operation);
     var operationId = operation.getId();
     operation.setCommittedNumOfRecords(0);
     operation.setStatus(OperationStatusType.APPLY_CHANGES);
@@ -374,6 +375,7 @@ public class BulkOperationService {
     operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
 
     bulkOperationRepository.save(operation);
+    log.debug("commit end: {}", operation);
   }
 
   private BulkOperationsEntity updateEntityIfNeeded(BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation, Class<? extends BulkOperationsEntity> entityClass) {
@@ -420,6 +422,7 @@ public class BulkOperationService {
   }
 
   public BulkOperation startBulkOperation(UUID bulkOperationId, UUID xOkapiUserId, BulkOperationStart bulkOperationStart) {
+    log.debug("startBulkOperation id: {}", bulkOperationId);
     var step = bulkOperationStart.getStep();
     var approach = bulkOperationStart.getApproach();
     BulkOperation operation;
@@ -449,6 +452,7 @@ public class BulkOperationService {
         operation.setEndTime(LocalDateTime.now());
       }
       bulkOperationRepository.save(operation);
+      log.debug("startBulkOperation complete id: {}", bulkOperationId);
       return operation;
     } else if (BulkOperationStep.EDIT == step) {
       errorService.deleteErrorsByBulkOperationId(bulkOperationId);
@@ -460,6 +464,7 @@ public class BulkOperationService {
           clear(operation);
           executor.execute(() -> confirm(operation));
         }
+        log.debug("startBulkOperation complete id: {}", bulkOperationId);
         return operation;
       } else {
         throw new BadRequestException(String.format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
@@ -467,6 +472,7 @@ public class BulkOperationService {
     } else if (BulkOperationStep.COMMIT == step) {
       if (REVIEW_CHANGES.equals(operation.getStatus())) {
         executor.execute(() -> commit(operation));
+        log.debug("startBulkOperation complete id: {}", bulkOperationId);
         return operation;
       } else {
         throw new BadRequestException(String.format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
