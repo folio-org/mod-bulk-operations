@@ -475,7 +475,6 @@ public class BulkOperationService {
     } else if (BulkOperationStep.COMMIT == step) {
       if (REVIEW_CHANGES.equals(operation.getStatus())) {
         executor.execute(getRunnableWithCurrentFolioContext(() -> commit(operation)));
-        log.debug("startBulkOperation complete id: {}", bulkOperationId);
         return operation;
       } else {
         throw new BadRequestException(String.format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
