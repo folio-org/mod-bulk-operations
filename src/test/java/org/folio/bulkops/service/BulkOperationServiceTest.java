@@ -628,7 +628,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     verify(userClient, times(0)).updateUser(any(User.class), anyString());
 
-    Awaitility.await().untilAsserted(() -> verify(executionContentRepository, times(1)).save(any(BulkOperationExecutionContent.class)));
+    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), anyString()));
 
     var expectedPathToResultFile = bulkOperationId + "/json/result-origin.json";
     var expectedPathToResultCsvFile = bulkOperationId + "/result-origin.csv";
@@ -684,9 +684,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     bulkOperationService.commit(operation);
 
-    var executionContentCaptor = ArgumentCaptor.forClass(BulkOperationExecutionContent.class);
-    Awaitility.await().untilAsserted(() -> verify(executionContentRepository, times(1)).save(executionContentCaptor.capture()));
-    assertThat(executionContentCaptor.getValue().getState(), equalTo(StateType.FAILED));
+    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), anyString()));
 
   }
 
