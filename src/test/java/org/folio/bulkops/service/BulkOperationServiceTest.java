@@ -114,6 +114,9 @@ class BulkOperationServiceTest extends BaseTest {
   @MockBean
   private BulkOperationExecutionContentRepository executionContentRepository;
 
+  @MockBean
+  private ErrorService errorService;
+
   @Test
   @SneakyThrows
   void shouldUploadIdentifiers() {
@@ -434,9 +437,10 @@ class BulkOperationServiceTest extends BaseTest {
     assertThat(capturedBulkOperation.getErrorMessage(), notNullValue());
   }
 
-  @Test
+  @ParameterizedTest
+  @CsvSource(value = {"'',COMPLETED", "path/to/file,COMPLETED_WITH_ERRORS"}, delimiter = ',')
   @SneakyThrows
-  void shouldCommitChanges() {
+  void shouldCommitChanges(String linkToErrors, OperationStatusType statusType) {
 
     var bulkOperationId = UUID.randomUUID();
     var pathToOrigin = bulkOperationId + "/json/origin.json";
@@ -490,6 +494,8 @@ class BulkOperationServiceTest extends BaseTest {
 
     when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
 
+    when(errorService.uploadErrorsToStorage(any(UUID.class))).thenReturn(linkToErrors);
+
     bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(COMMIT));
 
     Awaitility.await().untilAsserted(() -> verify(userClient).updateUser(any(User.class), anyString()));
@@ -517,7 +523,7 @@ class BulkOperationServiceTest extends BaseTest {
     assertThat(firstCapture.getStatus(), equalTo(OperationStatusType.APPLY_CHANGES));
     var secondCapture = operationCaptor.getAllValues().get(1);
     assertThat(secondCapture.getLinkToCommittedRecordsJsonFile(), equalTo(expectedPathToResultFile));
-    assertThat(secondCapture.getStatus(), equalTo(OperationStatusType.COMPLETED));
+    assertThat(secondCapture.getStatus(), equalTo(statusType));
     assertThat(secondCapture.getEndTime(), notNullValue());
   }
 

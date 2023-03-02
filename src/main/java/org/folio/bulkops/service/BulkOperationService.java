@@ -4,12 +4,15 @@ import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
@@ -352,7 +355,6 @@ public class BulkOperationService {
         }
 
         execution.setProcessedRecords(processedNumOfRecords);
-        operation.setStatus(OperationStatusType.COMPLETED);
         operation.setProcessedNumOfRecords(committedNumOfRecords);
         operation.setEndTime(LocalDateTime.now());
         operation.setLinkToCommittedRecordsCsvFile(resultCsvFileName);
@@ -368,13 +370,14 @@ public class BulkOperationService {
         operation.setErrorMessage(e.getMessage());
       }
       executionRepository.save(execution);
-    } else {
-      operation.setStatus(OperationStatusType.COMPLETED);
     }
 
     var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operationId);
     operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
 
+    if (!FAILED.equals(operation.getStatus())) {
+      operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
+    }
     bulkOperationRepository.save(operation);
   }
 
