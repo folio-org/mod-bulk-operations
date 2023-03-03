@@ -1,7 +1,7 @@
 ## v2.0.0 - Unreleased
 
 ## v1.0.1 - Released 2023/03/03
-This release includes infrastructural changes (memory settings, Prometheus integration) and bug-fixes.
+This release includes infrastructural changes (memory settings, Prometheus integration, increasing upload file size, performance optimization) and bug-fixes.
 
 ### Stories
 * [RANCHER-621](https://issues.folio.org/browse/RANCHER-621) - Add config file for Prometheus.
