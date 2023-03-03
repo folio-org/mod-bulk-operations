@@ -455,7 +455,6 @@ public class BulkOperationService {
         operation.setEndTime(LocalDateTime.now());
       }
       bulkOperationRepository.save(operation);
-      log.debug("startBulkOperation complete id: {}", bulkOperationId);
       return operation;
     } else if (BulkOperationStep.EDIT == step) {
       errorService.deleteErrorsByBulkOperationId(bulkOperationId);
@@ -467,7 +466,6 @@ public class BulkOperationService {
           clear(operation);
           executor.execute(getRunnableWithCurrentFolioContext(() -> confirm(operation)));
         }
-        log.debug("startBulkOperation complete id: {}", bulkOperationId);
         return operation;
       } else {
         throw new BadRequestException(String.format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
