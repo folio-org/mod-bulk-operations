@@ -7,8 +7,10 @@ import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
+import static org.folio.bulkops.util.Utils.booleanToStringNullSafe;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.folio.bulkops.domain.bean.ReceivingHistoryEntries;
@@ -63,6 +65,7 @@ public class ReceivingHistoryConverter extends AbstractBeanField<String, Receivi
     var entries = (ReceivingHistoryEntries) value;
     var displayType = isEmpty(entries.getDisplayType()) ? EMPTY : entries.getDisplayType();
     var entriesString = isEmpty(entries.getEntries()) ? EMPTY : entries.getEntries().stream()
+      .filter(Objects::nonNull)
       .map(this::receivingHistoryEntryToString)
       .collect(Collectors.joining(ITEM_DELIMITER));
     return String.join(ITEM_DELIMITER, displayType, entriesString);
@@ -70,7 +73,7 @@ public class ReceivingHistoryConverter extends AbstractBeanField<String, Receivi
 
   private String receivingHistoryEntryToString(ReceivingHistoryEntry entry) {
     return String.join(ARRAY_DELIMITER,
-      isEmpty(entry.getPublicDisplay()) ? EMPTY : Boolean.toString(entry.getPublicDisplay()),
+      isEmpty(entry.getPublicDisplay()) ? EMPTY : booleanToStringNullSafe(entry.getPublicDisplay()),
       isEmpty(entry.getEnumeration()) ? EMPTY : escape(entry.getEnumeration()),
       isEmpty(entry.getChronology()) ? EMPTY : escape(entry.getChronology()));
   }

@@ -136,6 +136,47 @@ class OpenCSVConverterTest extends BaseTest {
 
   @ParameterizedTest
   @ArgumentsSource(BulkOperationEntityClassProvider.class)
+  void shouldConvertBadDataEntity(Class<BulkOperationsEntity> clazz) throws IOException {
+
+    initMocks();
+
+    /* JSON -> Bean */
+    var bean = objectMapper.readValue(new FileInputStream(getPathToBadData(clazz)), clazz);
+
+    /* Bean -> CSV */
+    var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
+    String csv = null;
+    strategy.setType(clazz);
+    try (Writer writer = new StringWriter()) {
+      StatefulBeanToCsv<BulkOperationsEntity> sbc = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writer)
+        .withSeparator(DEFAULT_SEPARATOR)
+        .withApplyQuotesToAll(false)
+        .withMappingStrategy(strategy)
+        .build();
+      sbc.write(bean);
+      csv = writer.toString();
+    } catch (Exception e) {
+      Assertions.fail("Error parsing bean to CSV", e);
+    }
+
+    /* CSV -> Bean */
+    List<BulkOperationsEntity> list = new ArrayList<>();
+    try (Reader reader = new StringReader(csv)) {
+      CsvToBean<BulkOperationsEntity> cb = new CsvToBeanBuilder<BulkOperationsEntity>(reader)
+        .withType(clazz)
+        .withSkipLines(1)
+        .build();
+      list = cb.parse().stream().toList();
+    } catch (IOException e) {
+      Assertions.fail("Error parsing CSV to bean", e);
+    }
+
+    /* no NPE expected */
+    assertThat(list, hasSize(1));
+  }
+
+  @ParameterizedTest
+  @ArgumentsSource(BulkOperationEntityClassProvider.class)
   void shouldConvertEmptyEntity(Class<BulkOperationsEntity> clazz) {
 
     BulkOperationsEntity bean = getEmptyBean(clazz);
@@ -196,6 +237,16 @@ class OpenCSVConverterTest extends BaseTest {
     }
   }
 
+  private static String getPathToBadData(Class<BulkOperationsEntity> clazz) {
+    if (clazz.equals(User.class)) {
+      return "src/test/resources/files/bad_data_user.json";
+    } else if (clazz.equals(Item.class)) {
+      return "src/test/resources/files/bad_data_item.json";
+    } else {
+      return "src/test/resources/files/bad_data_holding_record.json";
+    }
+  }
+
   private void initMocks() {
     // User
     Mockito.reset(groupClient);
@@ -213,6 +264,12 @@ class OpenCSVConverterTest extends BaseTest {
     when(addressTypeClient.getAddressTypeByQuery("desc==\"desc\"")).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880").withDesc("desc").withAddressType("work"))));
     when(okapiClient.getModuleIds(any(), any(), any())).thenReturn(JsonNodeFactory.instance.arrayNode().add(JsonNodeFactory.instance.objectNode().put("id", "USERS")));
     when(customFieldsClient.getCustomFieldsByQuery(any(), eq("name==\"sierraCheckoutInformation\""))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
+      .withName("sierraCheckoutInformation")
+      .withType(CustomFieldTypes.TEXTBOX_LONG)
+      .withRefId("sierraCheckoutInformation")
+      .withSelectField(new SelectField().withOptions(new SelectFieldOptions().withValues(List.of(new SelectFieldOption().withValue("10")))))
+      .withTextField(new TextField().withFieldFormat(Format.TEXT)))));
+    when(customFieldsClient.getCustomFieldsByQuery(any(), eq("refId==\"sierraCheckoutInformation\""))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
       .withName("sierraCheckoutInformation")
       .withType(CustomFieldTypes.TEXTBOX_LONG)
       .withRefId("sierraCheckoutInformation")
