@@ -6,6 +6,7 @@ import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
+import static org.folio.bulkops.util.Utils.booleanToStringNullSafe;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,7 +48,7 @@ public class HoldingsNoteListConverter extends AbstractBeanField<String, List<Ho
         .map(note -> String.join(ARRAY_DELIMITER,
           escape(HoldingsReferenceHelper.service().getNoteTypeNameById(note.getHoldingsNoteTypeId())),
           escape(note.getNote()),
-          Boolean.toString(note.getStaffOnly())))
+          booleanToStringNullSafe(note.getStaffOnly())))
         .collect(Collectors.joining(ITEM_DELIMITER));
   }
 

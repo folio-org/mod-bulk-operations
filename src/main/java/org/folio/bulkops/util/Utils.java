@@ -1,5 +1,8 @@
 package org.folio.bulkops.util;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -23,5 +26,9 @@ public class Utils {
       case ITEM -> Item.class;
       case HOLDINGS_RECORD -> HoldingsRecord.class;
     };
+  }
+
+  public static String booleanToStringNullSafe(Boolean value) {
+    return Objects.isNull(value) ? EMPTY : value.toString();
   }
 }

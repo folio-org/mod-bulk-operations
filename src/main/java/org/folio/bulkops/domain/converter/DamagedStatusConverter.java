@@ -1,8 +1,8 @@
 package org.folio.bulkops.domain.converter;
 
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.domain.bean.DamagedStatus;
 import org.folio.bulkops.service.ItemReferenceHelper;
 
@@ -19,9 +19,6 @@ public class DamagedStatusConverter extends AbstractBeanField<String, DamagedSta
 
   @Override
   protected String convertToWrite(Object value) {
-    if (ObjectUtils.isNotEmpty(value)) {
-      return ItemReferenceHelper.service().getDamagedStatusNameById(value.toString());
-    }
-    return EMPTY;
+    return isEmpty(value) ? EMPTY : ItemReferenceHelper.service().getDamagedStatusNameById(value.toString());
   }
 }

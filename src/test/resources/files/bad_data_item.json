@@ -1,0 +1,33 @@
+{
+  "_version" : null,
+  "administrativeNotes" : [ null ],
+  "contributorNames" : [ null ],
+  "formerIds" : [ null ],
+  "discoverySuppress" : null,
+  "notes" : [ {
+      "itemNoteTypeId" : "1dde7141-ec8a-4dae-9825-49ce14c728e7",
+      "note" : "copy note",
+      "staffOnly" : null
+    },
+    null
+  ],
+  "circulationNotes" : [ {
+      "id" : "ea48183e-98b8-4add-818d-ddf049950a43",
+      "noteType" : "Check in",
+      "note" : "checked-in",
+      "staffOnly" : null,
+      "source" : {
+        "id" : "4c94064f-7d64-550e-9c41-b917d2228bac",
+        "personal" : null
+      },
+      "date" : "2023-02-27T11:04:08.665+0000"
+    },
+    null
+  ],
+  "tags" : {
+    "tagList" : [ null ]
+  },
+  "yearCaption" : [ null ],
+  "electronicAccess" : [ null ],
+  "statisticalCodeIds" : [ null ]
+}
