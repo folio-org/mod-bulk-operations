@@ -1,5 +1,14 @@
 ## v2.0.0 - Unreleased
 
+## v1.0.1 - Released 2023/03/03
+This release includes infrastructural changes (memory settings, Prometheus integration, increasing upload file size, performance optimization) and bug-fixes.
+
+### Stories
+* [RANCHER-621](https://issues.folio.org/browse/RANCHER-621) - Add config file for Prometheus.
+
+### Bugs
+* [MODEXPW-375](https://issues.folio.org/browse/MODEXPW-375) - Job runs by user not the one who created the job.
+
 ## v1.0.0 - Released 2023/02/24
 The initial release of the mod-bulk operations functionality (refactored version of mod-bulk-operations).
 

@@ -35,13 +35,11 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
-import org.folio.bulkops.domain.entity.BulkOperationProcessingContent;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
-import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -115,9 +113,6 @@ class BulkOperationServiceTest extends BaseTest {
 
   @MockBean
   private BulkOperationExecutionContentRepository executionContentRepository;
-
-  @MockBean
-  private BulkOperationProcessingContentRepository processingContentRepository;
 
   @Test
   @SneakyThrows
@@ -366,11 +361,6 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
 
     bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(approach).step(EDIT));
-
-    var processingCaptor = ArgumentCaptor.forClass(BulkOperationProcessingContent.class);
-    Awaitility.await().untilAsserted(() -> verify(processingContentRepository).save(processingCaptor.capture()));
-    assertThat(processingCaptor.getValue().getState(), equalTo(StateType.PROCESSED));
-
 
     var expectedPathToModifiedCsvFile = bulkOperationId + "/modified-origin.csv";
     var streamCaptor = ArgumentCaptor.forClass(InputStream.class);

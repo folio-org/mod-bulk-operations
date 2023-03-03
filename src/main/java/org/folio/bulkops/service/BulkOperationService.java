@@ -1,15 +1,33 @@
 package org.folio.bulkops.service;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opencsv.CSVReader;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.LF;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
+import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
+import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
+import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
+import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
+import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
+import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
+import static org.folio.bulkops.util.Utils.resolveEntityClass;
+import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
+
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.Writer;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -38,7 +56,6 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
-import org.folio.bulkops.domain.entity.BulkOperationProcessingContent;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
@@ -50,38 +67,22 @@ import org.folio.bulkops.processor.UpdatedEntityHolder;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
-import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.Writer;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencsv.CSVReader;
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.bean.StatefulBeanToCsv;
+import com.opencsv.bean.StatefulBeanToCsvBuilder;
 
-import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
-import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.LF;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
-import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
-import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
-import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
-import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
-import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
-import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
-import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
-import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
-import static org.folio.bulkops.util.Utils.resolveEntityClass;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Service
 @Log4j2
@@ -105,7 +106,6 @@ public class BulkOperationService {
   private final DataProcessorFactory dataProcessorFactory;
   private final UpdateProcessorFactory updateProcessorFactory;
   private final ModClientAdapterFactory modClientAdapterFactory;
-  private final BulkOperationProcessingContentRepository processingContentRepository;
   private final ErrorService errorService;
 
   private static final int OPERATION_UPDATING_STEP = 100;
@@ -270,20 +270,14 @@ public class BulkOperationService {
 
   private UpdatedEntityHolder<? extends BulkOperationsEntity> processUpdate(BulkOperationsEntity original, BulkOperation operation, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> entityClass) {
     var processor = dataProcessorFactory.getProcessorFromFactory(entityClass);
-    var processingContent = BulkOperationProcessingContent.builder()
-      .bulkOperationId(operation.getId())
-      .build();
     UpdatedEntityHolder<BulkOperationsEntity> modified = null;
+
     try {
-      processingContent.setIdentifier(original.getIdentifier(operation.getIdentifierType()));
       modified = processor.process(original.getIdentifier(operation.getIdentifierType()), original, rules);
-      processingContent.setState(StateType.PROCESSED);
     } catch (Exception e) {
-      processingContent = processingContent
-        .withState(StateType.FAILED)
-        .withErrorMessage("Failed to modify entity, reason:" + e.getMessage());
+      log.error("Failed to modify entity, reason:" + e.getMessage());
     }
-    processingContentRepository.save(processingContent);
+
     return modified;
   }
 
@@ -464,10 +458,10 @@ public class BulkOperationService {
       operation.setCommittedNumOfErrors(0);
       if (DATA_MODIFICATION.equals(operation.getStatus()) || REVIEW_CHANGES.equals(operation.getStatus())) {
         if (MANUAL == approach) {
-          executor.execute(() -> apply(operation));
+          executor.execute(getRunnableWithCurrentFolioContext(() -> apply(operation)));
         } else {
           clear(operation);
-          executor.execute(() -> confirm(operation));
+          executor.execute(getRunnableWithCurrentFolioContext(() -> confirm(operation)));
         }
         return operation;
       } else {
@@ -475,7 +469,7 @@ public class BulkOperationService {
       }
     } else if (BulkOperationStep.COMMIT == step) {
       if (REVIEW_CHANGES.equals(operation.getStatus())) {
-        executor.execute(() -> commit(operation));
+        executor.execute(getRunnableWithCurrentFolioContext(() -> commit(operation)));
         return operation;
       } else {
         throw new BadRequestException(String.format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));

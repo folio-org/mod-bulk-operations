@@ -24,12 +24,14 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
     var hasProcessingError = false;
     var holder = UpdatedEntityHolder.builder().build();
     var updated = clone(entity);
+
     for (BulkOperationRule rule : rules.getBulkOperationRules()) {
       var details = rule.getRuleDetails();
       var option = details.getOption();
       for (Action action : details.getActions()) {
         try {
           updater(option, action).apply(updated);
+
           try {
             validator(entity).validate(option, action);
           } catch (Exception e) {

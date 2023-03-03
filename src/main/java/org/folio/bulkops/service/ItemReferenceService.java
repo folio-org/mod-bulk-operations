@@ -3,10 +3,15 @@ package org.folio.bulkops.service;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.client.CallNumberTypeClient;
+import org.folio.bulkops.client.ConfigurationClient;
 import org.folio.bulkops.client.DamagedStatusClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.ItemNoteTypeClient;
@@ -23,19 +28,29 @@ import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.LoanTypeCollection;
 import org.folio.bulkops.domain.bean.MaterialType;
 import org.folio.bulkops.domain.bean.MaterialTypeCollection;
+import org.folio.bulkops.exception.ConfigurationException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 @Log4j2
 @RequiredArgsConstructor
 public class ItemReferenceService {
+  public static final String BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE = "module==%s and configName==%s";
+  public static final String MODULE_NAME = "BULKEDIT";
+  public static final String STATUSES_CONFIG_NAME = "statuses";
+
   private static final String QUERY_PATTERN_NAME = "name==\"%s\"";
   private static final String QUERY_PATTERN_CODE = "code==\"%s\"";
   private static final String QUERY_PATTERN_USERNAME = "username==\"%s\"";
 
   private final CallNumberTypeClient callNumberTypeClient;
+  private final ConfigurationClient configurationClient;
   private final DamagedStatusClient damagedStatusClient;
   private final ItemNoteTypeClient itemNoteTypeClient;
   private final ServicePointClient servicePointClient;
@@ -45,6 +60,8 @@ public class ItemReferenceService {
   private final MaterialTypeClient materialTypeClient;
   private final ItemClient itemClient;
   private final LoanTypeClient loanTypeClient;
+
+  private final ObjectMapper objectMapper;
 
   public ItemCollection getItemByQuery(String query, long offset, long limit) {
     return itemClient.getItemByQuery(query, offset, limit);
@@ -228,6 +245,7 @@ public class ItemReferenceService {
     return loanTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
   }
 
+  @Cacheable(cacheNames = "loanTypes")
   public LoanType getLoanTypeById(String id) {
     return loanTypeClient.getLoanTypeById(id);
   }
@@ -242,5 +260,24 @@ public class ItemReferenceService {
       throw new NotFoundException("Loan type not found: " + name);
     }
     return loanTypes.getLoantypes().get(0);
+  }
+
+  @Cacheable(cacheNames = "statusMapping")
+  public List<String> getAllowedStatuses(String statusName) {
+    var configurations = configurationClient
+      .getConfigurations(String.format(BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE, MODULE_NAME, STATUSES_CONFIG_NAME));
+    if (configurations.getConfigs()
+      .isEmpty()) {
+      throw new NotFoundException("Statuses configuration was not found");
+    }
+    try {
+      var statuses = objectMapper.readValue(configurations.getConfigs()
+        .get(0)
+        .getValue(), new TypeReference<HashMap<String, List<String>>>() {
+        });
+      return statuses.getOrDefault(statusName, Collections.emptyList());
+    } catch (JsonProcessingException e) {
+      throw new ConfigurationException(String.format("Error reading configuration, reason: %s", e.getMessage()));
+    }
   }
 }
