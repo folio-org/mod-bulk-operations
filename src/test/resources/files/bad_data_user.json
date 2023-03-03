@@ -1,0 +1,19 @@
+{
+  "active":true,
+  "departments":[ null ],
+  "proxyFor":[ null ],
+  "personal":{
+    "lastName":"@_!-Last'_Name",
+    "firstName":"First-\"_Name",
+    "middleName":"Middle!@Name",
+    "preferredFirstName":"Preffered$#2",
+    "email":"mail@$.com",
+    "mobilePhone":"+123-457-789",
+    "dateOfBirth":"2023-02-27T00:00:00.000+00:00",
+    "addresses":[ null ],
+    "preferredContactTypeId":"001"
+  },
+  "tags" : {
+    "tagList" : [ null ]
+  }
+}

@@ -1,8 +1,10 @@
 package org.folio.bulkops.domain.converter;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
@@ -22,10 +24,8 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.folio.bulkops.domain.bean.CustomField;
-import org.folio.bulkops.domain.bean.CustomFieldTypes;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.exception.EntityFormatException;
-import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.service.UserReferenceHelper;
 
 import com.opencsv.bean.AbstractBeanField;
@@ -86,7 +86,7 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
       Collections.emptyList() :
       Arrays.stream(values.split(ARRAY_DELIMITER))
         .map(token -> restoreValueId(customField, token))
-        .collect(Collectors.toList());
+        .toList();
   }
 
   private String restoreValueId(CustomField customField, String value) {
@@ -109,27 +109,22 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
   }
 
   private String customFieldToString(Map.Entry<String, Object> entry) {
-    var customField = new CustomField().withType(CustomFieldTypes.TEXTBOX_LONG).withName(entry.getKey()).withRefId(entry.getValue().toString()); // UserReferenceService.service().getCustomFieldByRefId(entry.getKey());
-    switch (customField.getType()) {
-      case TEXTBOX_LONG:
-      case TEXTBOX_SHORT:
-      case SINGLE_CHECKBOX:
-        if (entry.getValue() instanceof String) {
-          return SpecialCharacterEscaper.escape(customField.getName()) + KEY_VALUE_DELIMITER + SpecialCharacterEscaper.escape((String) entry.getValue());
-        } else {
-          return SpecialCharacterEscaper.escape(customField.getName()) + KEY_VALUE_DELIMITER + entry.getValue();
-        }
-      case SINGLE_SELECT_DROPDOWN:
-      case RADIO_BUTTON:
-        return SpecialCharacterEscaper.escape(customField.getName()) + KEY_VALUE_DELIMITER + SpecialCharacterEscaper.escape(extractValueById(customField, entry.getValue().toString()));
-      case MULTI_SELECT_DROPDOWN:
-        var values = (ArrayList) entry.getValue();
-        return SpecialCharacterEscaper.escape(customField.getName()) + KEY_VALUE_DELIMITER + values.stream()
-          .map(v -> SpecialCharacterEscaper.escape(extractValueById(customField, v.toString())))
-          .collect(Collectors.joining(ARRAY_DELIMITER));
-      default:
-        throw new NotFoundException("Invalid custom field: " + entry);
-    }
+    var customField = UserReferenceHelper.service().getCustomFieldByRefId(entry.getKey());
+    return switch (customField.getType()) {
+      case TEXTBOX_LONG, TEXTBOX_SHORT, SINGLE_CHECKBOX ->
+        escape(customField.getName()) + KEY_VALUE_DELIMITER + (isNull(entry.getValue()) ? EMPTY : escape(entry.getValue().toString()));
+      case SINGLE_SELECT_DROPDOWN, RADIO_BUTTON ->
+        escape(customField.getName()) + KEY_VALUE_DELIMITER + (isNull(entry.getValue()) ? EMPTY : escape(extractValueById(customField, entry.getValue().toString())));
+      case MULTI_SELECT_DROPDOWN ->
+        escape(customField.getName()) + KEY_VALUE_DELIMITER +
+          (entry.getValue() instanceof ArrayList<?> values ?
+            values.stream()
+              .filter(Objects::nonNull)
+              .map(v -> escape(extractValueById(customField, v.toString())))
+              .filter(ObjectUtils::isNotEmpty)
+              .collect(Collectors.joining(ARRAY_DELIMITER)) :
+            EMPTY);
+    };
   }
 
   private String extractValueById(CustomField customField, String id) {

@@ -25,7 +25,7 @@ public class ContributorListConverter extends AbstractBeanField<String, List<Con
       Arrays.stream(value.split(ARRAY_DELIMITER))
         .map(SpecialCharacterEscaper::restore)
         .map(new ContributorName()::withName)
-        .collect(Collectors.toList());
+        .toList();
   }
 
   @Override

@@ -14,6 +14,7 @@ import org.folio.bulkops.domain.bean.EffectiveCallNumberComponents;
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 
 public class EffectiveCallNumberComponentsConverter extends AbstractBeanField<String, EffectiveCallNumberComponents> {
   @Override
@@ -28,9 +29,9 @@ public class EffectiveCallNumberComponentsConverter extends AbstractBeanField<St
     }
     var components = (EffectiveCallNumberComponents) value;
     List<String> comps = new ArrayList<>();
-    ofEmptyString(components.getPrefix()).ifPresent(comps::add);
-    ofEmptyString(components.getCallNumber()).ifPresent(comps::add);
-    ofEmptyString(components.getSuffix()).ifPresent(comps::add);
+    ofEmptyString(components.getPrefix()).map(SpecialCharacterEscaper::escape).ifPresent(comps::add);
+    ofEmptyString(components.getCallNumber()).map(SpecialCharacterEscaper::escape).ifPresent(comps::add);
+    ofEmptyString(components.getSuffix()).map(SpecialCharacterEscaper::escape).ifPresent(comps::add);
     return join(SPACE, comps);
   }
 }

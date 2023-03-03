@@ -1,0 +1,30 @@
+{
+  "formerIds" : [ null ],
+  "electronicAccess" : [ null ],
+  "administrativeNotes" : [ null ],
+  "notes" : [ {
+      "note" : "note_for_holding",
+      "staffOnly" : null,
+      "holdingsNoteTypeId" : "88914775-f677-4759-b57b-1a33b90b24e0"
+    },
+    null
+  ],
+  "holdingsStatements" : [ null ],
+  "holdingsStatementsForIndexes" : [ null ],
+  "holdingsStatementsForSupplements" : [ null ],
+  "receivingHistory" : {
+    "entries" : [ {
+        "publicDisplay" : null,
+        "enumeration" : "V123",
+        "chronology" : "H456"
+      },
+      null
+    ]
+  },
+  "statisticalCodeIds" : [ null ],
+  "holdingsItems" : [ ],
+  "bareHoldingsItems" : [ ],
+  "tags" : {
+    "tagList" : [ null ]
+  }
+}

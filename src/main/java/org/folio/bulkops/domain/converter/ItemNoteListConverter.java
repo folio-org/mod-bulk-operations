@@ -8,6 +8,7 @@ import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
+import static org.folio.bulkops.util.Utils.booleanToStringNullSafe;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,7 +39,7 @@ public class ItemNoteListConverter extends AbstractBeanField<String, List<Holdin
       Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
         .map(this::restoreItemNote)
         .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+        .toList();
   }
 
   @Override
@@ -50,7 +51,7 @@ public class ItemNoteListConverter extends AbstractBeanField<String, List<Holdin
         .map(itemNote -> String.join(ARRAY_DELIMITER,
           escape(ItemReferenceHelper.service().getNoteTypeNameById(itemNote.getItemNoteTypeId())),
           escape(itemNote.getNote()),
-          escape(itemNote.getStaffOnly().toString())))
+          escape(booleanToStringNullSafe(itemNote.getStaffOnly()))))
         .collect(Collectors.joining(ITEM_DELIMITER));
   }
 

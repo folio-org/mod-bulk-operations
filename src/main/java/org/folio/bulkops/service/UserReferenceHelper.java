@@ -67,6 +67,10 @@ public class UserReferenceHelper implements InitializingBean {
     return isEmpty(res) ? name : res;
   }
 
+  public CustomField getCustomFieldByRefId(String refId) {
+    return userReferenceService.getCustomFieldByRefId(refId);
+  }
+
   public CustomField getCustomFieldByName(String name)  {
     return userReferenceService.getCustomFieldByName(name);
   }
