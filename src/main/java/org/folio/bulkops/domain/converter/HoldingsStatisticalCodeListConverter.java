@@ -35,6 +35,7 @@ public class HoldingsStatisticalCodeListConverter extends AbstractBeanField<Stri
     return ObjectUtils.isEmpty(value) ?
       EMPTY :
       ((List<String>) value).stream()
+        .filter(Objects::nonNull)
         .map(HoldingsReferenceHelper.service()::getStatisticalCodeNameById)
         .map(SpecialCharacterEscaper::escape)
         .collect(Collectors.joining(ARRAY_DELIMITER));

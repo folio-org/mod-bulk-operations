@@ -1,7 +1,7 @@
 package org.folio.bulkops.domain.converter;
 
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.adapters.BulkEditAdapterHelper.dateFromString;
 import static org.folio.bulkops.adapters.BulkEditAdapterHelper.dateToString;
@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.domain.bean.CirculationNote;
 import org.folio.bulkops.domain.bean.Personal;
 import org.folio.bulkops.domain.bean.Source;
@@ -45,12 +44,12 @@ public class CirculationNoteListConverter extends AbstractBeanField<String, List
       Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
         .map(this::restoreCirculationNote)
         .filter(Objects::nonNull)
-        .collect(Collectors.toList());
+        .toList();
   }
 
   @Override
   protected String convertToWrite(Object value) {
-    return ObjectUtils.isEmpty(value) ?
+    return isEmpty(value) ?
       EMPTY :
       ((List<CirculationNote>) value).stream()
         .filter(Objects::nonNull)
@@ -85,14 +84,15 @@ public class CirculationNoteListConverter extends AbstractBeanField<String, List
   }
 
   private String circulationNotesToString(CirculationNote note) {
+    var source = isEmpty(note.getSource()) ? new Source() : note.getSource();
     return String.join(ARRAY_DELIMITER,
       note.getId(),
-      note.getNoteType().getValue(),
+      isEmpty(note.getNoteType()) ? EMPTY : note.getNoteType().getValue(),
       escape(note.getNote()),
-      note.getStaffOnly().toString(),
-      ObjectUtils.isEmpty(note.getSource().getId()) ? EMPTY : note.getSource().getId(),
-      ObjectUtils.isEmpty(note.getSource().getPersonal().getLastName()) ? EMPTY : escape(note.getSource().getPersonal().getLastName()),
-      ObjectUtils.isEmpty(note.getSource().getPersonal().getFirstName()) ? EMPTY : escape(note.getSource().getPersonal().getFirstName()),
+      isEmpty(note.getStaffOnly()) ? EMPTY : note.getStaffOnly().toString(),
+      isEmpty(source.getId()) ? EMPTY : note.getSource().getId(),
+      isEmpty(source.getPersonal()) ? EMPTY : escape(source.getPersonal().getLastName()),
+      isEmpty(source.getPersonal()) ? EMPTY : escape(source.getPersonal().getFirstName()),
       dateToString(note.getDate()));
   }
 }

@@ -1,6 +1,8 @@
 package org.folio.bulkops.domain.converter;
 
-import org.apache.commons.lang3.ObjectUtils;
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
 import org.folio.bulkops.domain.bean.IllPolicy;
 import org.folio.bulkops.service.ItemReferenceHelper;
 
@@ -17,9 +19,6 @@ public class ServicePointConverter extends AbstractBeanField<String, IllPolicy> 
 
   @Override
   protected String convertToWrite(Object value) {
-    if(ObjectUtils.isNotEmpty(value)) {
-      return ItemReferenceHelper.service().getServicePointNameById(value.toString());
-    }
-    return null;
+    return isEmpty(value) ? EMPTY : ItemReferenceHelper.service().getServicePointNameById(value.toString());
   }
 }
