@@ -74,7 +74,7 @@ public class ErrorService {
           .map(this::prepareInternalErrorRepresentation)
           .collect(Collectors.toList()))
         .totalRecords(errors.getTotalRecords());
-    } else if (REVIEW_CHANGES == bulkOperation.getStatus() || COMPLETED == bulkOperation.getStatus()) {
+    } else if (REVIEW_CHANGES == bulkOperation.getStatus() || COMPLETED == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
       return getExecutionErrors(bulkOperationId, limit);
     } else {
       throw new NotFoundException("Errors preview is not available");
@@ -90,14 +90,6 @@ public class ErrorService {
     return getErrorsPreviewByBulkOperationId(bulkOperationId, Integer.MAX_VALUE).getErrors().stream()
       .map(error -> String.join(Constants.COMMA_DELIMETER, ObjectUtils.isEmpty(error.getParameters()) ? EMPTY : error.getParameters().get(0).getValue(), error.getMessage()))
       .collect(Collectors.joining(Constants.NEW_LINE_SEPARATOR));
-  }
-
-  private Error processingContentToError(BulkOperationProcessingContent content) {
-    return new Error()
-      .message(content.getErrorMessage())
-      .parameters(Collections.singletonList(new Parameter()
-        .key(IDENTIFIER)
-        .value(content.getIdentifier())));
   }
 
   private Errors getExecutionErrors(UUID bulkOperationId, int limit) {
