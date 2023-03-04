@@ -24,7 +24,6 @@ import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
-import org.folio.bulkops.domain.entity.BulkOperationProcessingContent;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
