@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
@@ -44,6 +45,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -184,6 +186,7 @@ class ErrorServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
+  @NullSource
   @ValueSource(ints = {0, 1})
   void shouldReturnErrorsPreviewOnCompletedWithErrors(Integer committed) {
     var jobId = UUID.randomUUID();
@@ -198,7 +201,7 @@ class ErrorServiceTest extends BaseTest {
 
     mockErrorsData(COMPLETED_WITH_ERRORS, operationId);
 
-    if (committed == 1) {
+    if (nonNull(committed) && committed == 1) {
       executionContentRepository.save(BulkOperationExecutionContent.builder()
         .bulkOperationId(operationId)
         .identifier("123")
