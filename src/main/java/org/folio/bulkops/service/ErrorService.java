@@ -24,7 +24,6 @@ import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
-import org.folio.bulkops.domain.entity.BulkOperationProcessingContent;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
@@ -68,13 +67,13 @@ public class ErrorService {
   public Errors getErrorsPreviewByBulkOperationId(UUID bulkOperationId, int limit) {
     var bulkOperation = operationRepository.findById(bulkOperationId)
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
-    if (DATA_MODIFICATION == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
+    if (DATA_MODIFICATION == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus() && bulkOperation.getCommittedNumOfRecords() == 0) {
       var errors = bulkEditClient.getErrorsPreview(bulkOperation.getDataExportJobId(), limit);
       return new Errors().errors(errors.getErrors().stream()
           .map(this::prepareInternalErrorRepresentation)
-          .collect(Collectors.toList()))
+          .toList())
         .totalRecords(errors.getTotalRecords());
-    } else if (REVIEW_CHANGES == bulkOperation.getStatus() || COMPLETED == bulkOperation.getStatus()) {
+    } else if (REVIEW_CHANGES == bulkOperation.getStatus() || COMPLETED == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
       return getExecutionErrors(bulkOperationId, limit);
     } else {
       throw new NotFoundException("Errors preview is not available");
@@ -92,19 +91,11 @@ public class ErrorService {
       .collect(Collectors.joining(Constants.NEW_LINE_SEPARATOR));
   }
 
-  private Error processingContentToError(BulkOperationProcessingContent content) {
-    return new Error()
-      .message(content.getErrorMessage())
-      .parameters(Collections.singletonList(new Parameter()
-        .key(IDENTIFIER)
-        .value(content.getIdentifier())));
-  }
-
   private Errors getExecutionErrors(UUID bulkOperationId, int limit) {
     var errorPage = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId, OffsetRequest.of(0, limit));
     var errors = errorPage.toList().stream()
       .map(this::executionContentToError)
-      .collect(Collectors.toList());
+      .toList();
     return new Errors()
       .errors(errors)
       .totalRecords((int) errorPage.getTotalElements());
