@@ -71,7 +71,7 @@ public class ErrorService {
       var errors = bulkEditClient.getErrorsPreview(bulkOperation.getDataExportJobId(), limit);
       return new Errors().errors(errors.getErrors().stream()
           .map(this::prepareInternalErrorRepresentation)
-          .collect(Collectors.toList()))
+          .toList())
         .totalRecords(errors.getTotalRecords());
     } else if (REVIEW_CHANGES == bulkOperation.getStatus() || COMPLETED == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
       return getExecutionErrors(bulkOperationId, limit);
@@ -95,7 +95,7 @@ public class ErrorService {
     var errorPage = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId, OffsetRequest.of(0, limit));
     var errors = errorPage.toList().stream()
       .map(this::executionContentToError)
-      .collect(Collectors.toList());
+      .toList();
     return new Errors()
       .errors(errors)
       .totalRecords((int) errorPage.getTotalElements());
