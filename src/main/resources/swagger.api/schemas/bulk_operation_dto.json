@@ -9,6 +9,11 @@
         "type": "string",
         "format": "uuid"
       },
+      "hrId": {
+        "description": "Bulk Operation human readable ID",
+        "type": "integer",
+        "format": "int64"
+      },
       "userId": {
         "description": "User UUID",
         "type": "string",
