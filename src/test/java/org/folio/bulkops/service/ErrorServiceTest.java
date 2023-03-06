@@ -188,20 +188,20 @@ class ErrorServiceTest extends BaseTest {
   @ParameterizedTest
   @NullSource
   @ValueSource(ints = {0, 1})
-  void shouldReturnErrorsPreviewOnCompletedWithErrors(Integer committed) {
+  void shouldReturnErrorsPreviewOnCompletedWithErrors(Integer committedErrors) {
     var jobId = UUID.randomUUID();
 
     var operationId = bulkOperationRepository.save(BulkOperation.builder()
         .id(UUID.randomUUID())
         .status(COMPLETED_WITH_ERRORS)
-        .committedNumOfRecords(committed)
+        .committedNumOfErrors(committedErrors)
         .dataExportJobId(jobId)
         .build())
       .getId();
 
     mockErrorsData(COMPLETED_WITH_ERRORS, operationId);
 
-    if (nonNull(committed) && committed == 1) {
+    if (nonNull(committedErrors) && committedErrors == 1) {
       executionContentRepository.save(BulkOperationExecutionContent.builder()
         .bulkOperationId(operationId)
         .identifier("123")
