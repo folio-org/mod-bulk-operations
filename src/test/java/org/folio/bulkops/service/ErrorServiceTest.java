@@ -1,6 +1,8 @@
 package org.folio.bulkops.service;
 
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.LF;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -43,6 +45,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -181,8 +185,42 @@ class ErrorServiceTest extends BaseTest {
     bulkOperationRepository.deleteById(operationId);
   }
 
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(ints = {0, 1})
+  void shouldReturnErrorsPreviewOnCompletedWithErrors(Integer committedErrors) {
+    var jobId = UUID.randomUUID();
+
+    var operationId = bulkOperationRepository.save(BulkOperation.builder()
+        .id(UUID.randomUUID())
+        .status(COMPLETED_WITH_ERRORS)
+        .committedNumOfErrors(committedErrors)
+        .dataExportJobId(jobId)
+        .build())
+      .getId();
+
+    mockErrorsData(COMPLETED_WITH_ERRORS, operationId);
+
+    if (nonNull(committedErrors) && committedErrors == 1) {
+      executionContentRepository.save(BulkOperationExecutionContent.builder()
+        .bulkOperationId(operationId)
+        .identifier("123")
+        .errorMessage("No match found")
+        .build());
+      executionContentRepository.save(BulkOperationExecutionContent.builder()
+        .bulkOperationId(operationId)
+        .identifier("456")
+        .errorMessage("Invalid format")
+        .build());
+    }
+
+    var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 10);
+
+    assertThat(errors.getErrors(), hasSize(2));
+  }
+
   private void mockErrorsData(OperationStatusType statusType, UUID operationId) {
-    if (DATA_MODIFICATION == statusType) {
+    if (DATA_MODIFICATION == statusType || COMPLETED_WITH_ERRORS == statusType) {
       when(bulkEditClient.getErrorsPreview(any(UUID.class), anyInt()))
         .thenReturn(new Errors()
           .errors(List.of(new Error().type("BULK_EDIT_ERROR").message("123,No match found"),

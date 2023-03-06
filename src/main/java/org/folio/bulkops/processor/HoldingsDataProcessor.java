@@ -88,11 +88,8 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
         };
       case CLEAR_FIELD:
         return holding -> {
-          holding
-            .setTemporaryLocationId(null);
-          holding.setEffectiveLocationId(holding
-            .getPermanentLocation()
-            .getId());
+          holding.setTemporaryLocationId(null);
+          holding.setEffectiveLocationId(holding.getPermanentLocationId());
         };
       default:
         return holding -> {
