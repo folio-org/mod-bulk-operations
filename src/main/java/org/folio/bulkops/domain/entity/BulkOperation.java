@@ -3,6 +3,7 @@ package org.folio.bulkops.domain.entity;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import jakarta.persistence.Column;
 import org.folio.bulkops.domain.converter.PostgresUUIDConverter;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -31,6 +32,9 @@ public class BulkOperation {
   @Id
   @Convert(converter = PostgresUUIDConverter.class)
   private UUID id;
+
+  @Column(insertable = false, updatable = false)
+  private Integer hrId;
 
   private UUID userId;
 
