@@ -6,12 +6,17 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.util.Constants.UTC_ZONE;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
-
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -24,14 +29,15 @@ import org.folio.bulkops.domain.bean.Progress;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.spring.DefaultFolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.integration.XOkapiHeaders;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.messaging.handler.annotation.Headers;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 
 @Service
 @Log4j2
@@ -50,6 +56,7 @@ public class DataExportJobUpdateService {
     JOB_STATUSES.put(BatchStatus.UNKNOWN, null);
   }
 
+  private final FolioModuleMetadata folioModuleMetadata;
   private final BulkOperationRepository bulkOperationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final ObjectMapper objectMapper;
@@ -60,36 +67,44 @@ public class DataExportJobUpdateService {
       containerFactory = "kafkaListenerContainerFactory",
       topicPattern = "${application.kafka.topic-pattern}",
       groupId = "${application.kafka.group-id}")
-  public void receiveJobExecutionUpdate(Job jobExecutionUpdate) {
-    log.info("Received {}.", jobExecutionUpdate);
+  public void receiveJobExecutionUpdate(@Payload Job jobExecutionUpdate, @Headers Map<String, Object> messageHeaders) {
+    var okapiHeaders =
+      messageHeaders.entrySet()
+        .stream()
+        .filter(e -> e.getKey().startsWith(XOkapiHeaders.OKAPI_HEADERS_PREFIX))
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> (Collection<String>)List.of(String.valueOf(e.getValue()))));
 
-    var optionalBulkOperation = bulkOperationRepository.findByDataExportJobId(jobExecutionUpdate.getId());
+    try (var context =  new FolioExecutionContextSetter(new DefaultFolioExecutionContext(folioModuleMetadata, okapiHeaders))) {
+      log.info("Received {}.", jobExecutionUpdate);
 
-    if (optionalBulkOperation.isEmpty()) {
-      log.error("Update for unknown job {}.", jobExecutionUpdate);
-      return;
-    }
+      var optionalBulkOperation = bulkOperationRepository.findByDataExportJobId(jobExecutionUpdate.getId());
 
-    var operation = optionalBulkOperation.get();
-
-    if (nonNull(jobExecutionUpdate.getProgress())) {
-      operation.setTotalNumOfRecords(jobExecutionUpdate.getProgress().getTotal());
-      operation.setProcessedNumOfRecords(jobExecutionUpdate.getProgress().getProcessed());
-    }
-
-    var status = JOB_STATUSES.get(jobExecutionUpdate.getBatchStatus());
-    if (nonNull(status)) {
-      if (JobStatus.SUCCESSFUL.equals(status)) {
-        operation.setStatus(OperationStatusType.SAVING_RECORDS_LOCALLY);
-        bulkOperationRepository.save(operation);
-        downloadOriginFileAndUpdateBulkOperation(operation, jobExecutionUpdate);
-      } else if (JobStatus.FAILED.equals(status)) {
-        operation.setStatus(OperationStatusType.FAILED);
-        operation.setEndTime(LocalDateTime.ofInstant(jobExecutionUpdate.getEndTime().toInstant(), UTC_ZONE));
-        operation.setErrorMessage(isNull(jobExecutionUpdate.getErrorDetails()) ? EMPTY : jobExecutionUpdate.getErrorDetails());
+      if (optionalBulkOperation.isEmpty()) {
+        log.error("Update for unknown job {}.", jobExecutionUpdate);
+        return;
       }
+
+      var operation = optionalBulkOperation.get();
+
+      if (nonNull(jobExecutionUpdate.getProgress())) {
+        operation.setTotalNumOfRecords(jobExecutionUpdate.getProgress().getTotal());
+        operation.setProcessedNumOfRecords(jobExecutionUpdate.getProgress().getProcessed());
+      }
+
+      var status = JOB_STATUSES.get(jobExecutionUpdate.getBatchStatus());
+      if (nonNull(status)) {
+        if (JobStatus.SUCCESSFUL.equals(status)) {
+          operation.setStatus(OperationStatusType.SAVING_RECORDS_LOCALLY);
+          bulkOperationRepository.save(operation);
+          downloadOriginFileAndUpdateBulkOperation(operation, jobExecutionUpdate);
+        } else if (JobStatus.FAILED.equals(status)) {
+          operation.setStatus(OperationStatusType.FAILED);
+          operation.setEndTime(LocalDateTime.ofInstant(jobExecutionUpdate.getEndTime().toInstant(), UTC_ZONE));
+          operation.setErrorMessage(isNull(jobExecutionUpdate.getErrorDetails()) ? EMPTY : jobExecutionUpdate.getErrorDetails());
+        }
+      }
+      bulkOperationRepository.save(operation);
     }
-    bulkOperationRepository.save(operation);
   }
 
   private void downloadOriginFileAndUpdateBulkOperation(BulkOperation operation, Job jobUpdate) {
