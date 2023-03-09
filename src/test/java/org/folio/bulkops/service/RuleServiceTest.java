@@ -7,7 +7,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.UUID;
-
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
@@ -18,6 +17,7 @@ import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperationRuleDetails;
 import org.folio.bulkops.repository.BulkOperationRuleDetailsRepository;
 import org.folio.bulkops.repository.BulkOperationRuleRepository;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -34,14 +34,16 @@ class RuleServiceTest extends BaseTest {
 
   @Test
   void shouldSaveRules() {
-    when(ruleRepository.save(any(org.folio.bulkops.domain.entity.BulkOperationRule.class)))
-      .thenReturn(org.folio.bulkops.domain.entity.BulkOperationRule.builder().id(UUID.randomUUID()).build());
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      when(ruleRepository.save(any(org.folio.bulkops.domain.entity.BulkOperationRule.class)))
+        .thenReturn(org.folio.bulkops.domain.entity.BulkOperationRule.builder().id(UUID.randomUUID()).build());
 
-    ruleService.saveRules(rules());
+      ruleService.saveRules(rules());
 
-    verify(ruleRepository).deleteAllByBulkOperationId(BULK_OPERATION_ID);
-    verify(ruleRepository).save(any(org.folio.bulkops.domain.entity.BulkOperationRule.class));
-    verify(ruleDetailsRepository).save(any(BulkOperationRuleDetails.class));
+      verify(ruleRepository).deleteAllByBulkOperationId(BULK_OPERATION_ID);
+      verify(ruleRepository).save(any(org.folio.bulkops.domain.entity.BulkOperationRule.class));
+      verify(ruleDetailsRepository).save(any(BulkOperationRuleDetails.class));
+    }
   }
 
   @Test

@@ -10,9 +10,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -22,31 +22,39 @@ class BulkOperationRepositoryTest extends BaseTest {
 
   @Test
   void shouldSaveEntity() {
-    var saved = repository.save(createEntity());
-    assertThat(saved.getId(), notNullValue());
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var saved = repository.save(createEntity());
+      assertThat(saved.getId(), notNullValue());
+    }
   }
 
   @Test
   void shouldFindEntityById() {
-    var created = repository.save(createEntity());
-    var retrieved = repository.findById(created.getId());
-    assertTrue(retrieved.isPresent() && created.getId().equals(retrieved.get().getId()));
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var created = repository.save(createEntity());
+      var retrieved = repository.findById(created.getId());
+      assertTrue(retrieved.isPresent() && created.getId().equals(retrieved.get().getId()));
+    }
   }
 
   @Test
   void shouldUpdateEntity() {
-    var created = repository.save(createEntity());
-    var endTime = LocalDateTime.now();
-    created.setEndTime(endTime);
-    var updated = repository.save(created);
-    assertTrue(created.getId().equals(updated.getId()) && endTime.isEqual(updated.getEndTime()));
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var created = repository.save(createEntity());
+      var endTime = LocalDateTime.now();
+      created.setEndTime(endTime);
+      var updated = repository.save(created);
+      assertTrue(created.getId().equals(updated.getId()) && endTime.isEqual(updated.getEndTime()));
+    }
   }
 
   @Test
   void shouldDeleteEntity() {
-    var created = repository.save(createEntity());
-    repository.deleteById(created.getId());
-    assertTrue(repository.findById(created.getId()).isEmpty());
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var created = repository.save(createEntity());
+      repository.deleteById(created.getId());
+      assertTrue(repository.findById(created.getId()).isEmpty());
+    }
   }
 
   private BulkOperation createEntity() {

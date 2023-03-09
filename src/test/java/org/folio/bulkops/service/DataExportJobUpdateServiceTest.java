@@ -14,7 +14,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
+import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BatchStatus;
@@ -30,8 +30,6 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-
-import lombok.SneakyThrows;
 
 class DataExportJobUpdateServiceTest extends BaseTest {
   @Autowired
@@ -83,7 +81,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
         .processed(processedRecords).build())
       .files(List.of("file:src/test/resources/files/users.csv", "file:src/test/resources/files/errors.csv", "file:src/test/resources/files/user.json")).build();
 
-    dataExportJobUpdateService.receiveJobExecutionUpdate(jobUpdate);
+    dataExportJobUpdateService.receiveJobExecutionUpdate(jobUpdate, okapiHeaders);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
@@ -109,7 +107,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
       .batchStatus(batchStatus)
       .progress(Progress.builder()
         .total(totalRecords)
-        .processed(processedRecords).build()).build());
+        .processed(processedRecords).build()).build(), okapiHeaders);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository).save(operationCaptor.capture());
@@ -137,7 +135,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
       .endTime(endTime)
       .progress(Progress.builder()
         .total(totalRecords)
-        .processed(processedRecords).build()).build());
+        .processed(processedRecords).build()).build(), okapiHeaders);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository).save(operationCaptor.capture());
@@ -152,7 +150,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     when(bulkOperationRepository.findByDataExportJobId(any(UUID.class)))
       .thenReturn(Optional.empty());
 
-    dataExportJobUpdateService.receiveJobExecutionUpdate(Job.builder().id(UUID.randomUUID()).build());
+    dataExportJobUpdateService.receiveJobExecutionUpdate(Job.builder().id(UUID.randomUUID()).build(), okapiHeaders);
 
     verify(bulkOperationRepository, times(0)).save(any(BulkOperation.class));
   }
