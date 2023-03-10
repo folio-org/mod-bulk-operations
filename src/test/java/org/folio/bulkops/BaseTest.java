@@ -65,7 +65,6 @@ import org.folio.spring.DefaultFolioExecutionContext;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
-import org.folio.spring.scope.FolioExecutionScopeExecutionContextManager;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -220,7 +219,6 @@ public abstract class BaseTest {
 
   @AfterEach
   void eachTearDown() {
-    FolioExecutionScopeExecutionContextManager.endFolioExecutionContext();
   }
 
   @SneakyThrows
