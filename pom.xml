@@ -32,7 +32,7 @@
     <argLine />
     <bulk-operations.yaml.file>${project.basedir}/src/main/resources/swagger.api/bulk-operations.yaml</bulk-operations.yaml.file>
 
-    <folio-spring-base.version>6.0.1</folio-spring-base.version>
+    <folio-spring-base.version>6.1.0-SNAPSHOT</folio-spring-base.version>
     <mapstruct.version>1.5.3.Final</mapstruct.version>
     <apache-commons-io.version>2.11.0</apache-commons-io.version>
     <apache-commons-collections.version>4.4</apache-commons-collections.version>
