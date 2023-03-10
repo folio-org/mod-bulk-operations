@@ -31,9 +31,10 @@ import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.spring.DefaultFolioExecutionContext;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
-import org.folio.spring.scope.FolioExecutionContextSetter;
+import org.folio.spring.scope.FolioExecutionScopeExecutionContextManager;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -58,6 +59,7 @@ public class DataExportJobUpdateService {
   }
 
   private final FolioModuleMetadata folioModuleMetadata;
+  private final FolioExecutionContext folioExecutionContext;
   private final BulkOperationRepository bulkOperationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final ObjectMapper objectMapper;
@@ -83,8 +85,15 @@ public class DataExportJobUpdateService {
 
     log.info("messageHeaders: {}", messageHeaders);
     log.info("okapiHeaders: {}", okapiHeaders);
-    try (var context = new FolioExecutionContextSetter(new DefaultFolioExecutionContext(folioModuleMetadata, okapiHeaders))) {
+
+    var defaultFolioExecutionContext = new DefaultFolioExecutionContext(folioModuleMetadata, okapiHeaders);
+
+    log.info("defaultFolioExecutionContext: {}", defaultFolioExecutionContext);
+
+    FolioExecutionScopeExecutionContextManager.beginFolioExecutionContext(defaultFolioExecutionContext);
+    try {
       log.info("Received {}.", jobExecutionUpdate);
+      log.info("folioExecutionContext: {}", folioExecutionContext);
 
       var optionalBulkOperation = bulkOperationRepository.findByDataExportJobId(jobExecutionUpdate.getId());
 
@@ -113,6 +122,9 @@ public class DataExportJobUpdateService {
         }
       }
       bulkOperationRepository.save(operation);
+    }
+    finally {
+      FolioExecutionScopeExecutionContextManager.endFolioExecutionContext();
     }
   }
 
