@@ -81,6 +81,8 @@ public class DataExportJobUpdateService {
           return (Collection<String>)List.of(String.valueOf(x));
         }));
 
+    log.info("messageHeaders: {}", messageHeaders);
+    log.info("okapiHeaders: {}", okapiHeaders);
     try (var context = new FolioExecutionContextSetter(new DefaultFolioExecutionContext(folioModuleMetadata, okapiHeaders))) {
       log.info("Received {}.", jobExecutionUpdate);
 
