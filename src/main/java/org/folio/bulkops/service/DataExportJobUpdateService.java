@@ -28,15 +28,13 @@ import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.spring.DefaultFolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Lazy
+//@Lazy
 @Log4j2
 @RequiredArgsConstructor
 public class DataExportJobUpdateService {
@@ -56,7 +54,7 @@ public class DataExportJobUpdateService {
   private final FolioModuleMetadata folioModuleMetadata;
   private final BulkOperationRepository bulkOperationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
-  private final DataExportJobUpdateService self;
+//  private final DataExportJobUpdateService self;
 
   @KafkaListener(
     id = KafkaService.EVENT_LISTENER_ID,
@@ -67,11 +65,11 @@ public class DataExportJobUpdateService {
     var defaultFolioExecutionContext = DefaultFolioExecutionContext.fromMessageHeaders(folioModuleMetadata, messageHeaders);
 
     try (var context = new FolioExecutionContextSetter(defaultFolioExecutionContext)) {
-      self.handleReceivedJobExecutionUpdate(jobExecutionUpdate);
+      handleReceivedJobExecutionUpdate(jobExecutionUpdate);
     }
   }
 
-  @Transactional
+//  @Transactional
   public void handleReceivedJobExecutionUpdate(Job jobExecutionUpdate) {
     log.info("Received {}.", jobExecutionUpdate);
 
