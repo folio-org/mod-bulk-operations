@@ -9,6 +9,7 @@ import static org.folio.bulkops.util.Constants.UTC_ZONE;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -63,18 +64,24 @@ public class DataExportJobUpdateService {
 
   @Transactional
   @KafkaListener(
-      id = KafkaService.EVENT_LISTENER_ID,
-      containerFactory = "kafkaListenerContainerFactory",
-      topicPattern = "${application.kafka.topic-pattern}",
-      groupId = "${application.kafka.group-id}")
+    id = KafkaService.EVENT_LISTENER_ID,
+    containerFactory = "kafkaListenerContainerFactory",
+    topicPattern = "${application.kafka.topic-pattern}",
+    groupId = "${application.kafka.group-id}")
   public void receiveJobExecutionUpdate(@Payload Job jobExecutionUpdate, @Headers Map<String, Object> messageHeaders) {
     var okapiHeaders =
       messageHeaders.entrySet()
         .stream()
         .filter(e -> e.getKey().startsWith(XOkapiHeaders.OKAPI_HEADERS_PREFIX))
-        .collect(Collectors.toMap(Map.Entry::getKey, e -> (Collection<String>)List.of(String.valueOf(e.getValue()))));
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> {
+          Object x = e.getValue();
+          if (x instanceof byte[] bytes) {
+            return List.of(new String(bytes, StandardCharsets.UTF_8));
+          }
+          return (Collection<String>)List.of(String.valueOf(x));
+        }));
 
-    try (var context =  new FolioExecutionContextSetter(new DefaultFolioExecutionContext(folioModuleMetadata, okapiHeaders))) {
+    try (var context = new FolioExecutionContextSetter(new DefaultFolioExecutionContext(folioModuleMetadata, okapiHeaders))) {
       log.info("Received {}.", jobExecutionUpdate);
 
       var optionalBulkOperation = bulkOperationRepository.findByDataExportJobId(jobExecutionUpdate.getId());
@@ -114,7 +121,7 @@ public class DataExportJobUpdateService {
 
       var errorsUrl = jobUpdate.getFiles().get(1);
       if (StringUtils.isNotEmpty(errorsUrl)) {
-        try(var is = new URL(errorsUrl).openStream()) {
+        try (var is = new URL(errorsUrl).openStream()) {
           var linkToMatchingErrorsFile = remoteFileSystemClient.put(is, operation.getId() + "/" + FilenameUtils.getName(errorsUrl.split("\\?")[0]));
           operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
         }
@@ -126,7 +133,7 @@ public class DataExportJobUpdateService {
       Progress progress;
       if (QUERY == operation.getApproach()) {
         var value = remoteFileSystemClient.getNumOfLines(linkToMatchingRecordsFile) - 1;
-        progress =  new Progress()
+        progress = new Progress()
           .withErrors(0)
           .withSuccess(value)
           .withTotal(value)
