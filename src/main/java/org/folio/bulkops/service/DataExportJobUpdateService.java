@@ -34,7 +34,7 @@ import org.folio.spring.DefaultFolioExecutionContext;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
-import org.folio.spring.scope.FolioExecutionScopeExecutionContextManager;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -87,11 +87,8 @@ public class DataExportJobUpdateService {
     log.info("okapiHeaders: {}", okapiHeaders);
 
     var defaultFolioExecutionContext = new DefaultFolioExecutionContext(folioModuleMetadata, okapiHeaders);
-
     log.info("defaultFolioExecutionContext: {}", defaultFolioExecutionContext);
-
-    FolioExecutionScopeExecutionContextManager.beginFolioExecutionContext(defaultFolioExecutionContext);
-    try {
+    try (var context = new FolioExecutionContextSetter(defaultFolioExecutionContext)) {
       log.info("Received {}.", jobExecutionUpdate);
       log.info("folioExecutionContext: {}", folioExecutionContext);
 
@@ -122,9 +119,6 @@ public class DataExportJobUpdateService {
         }
       }
       bulkOperationRepository.save(operation);
-    }
-    finally {
-      FolioExecutionScopeExecutionContextManager.endFolioExecutionContext();
     }
   }
 
