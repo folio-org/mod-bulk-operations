@@ -6,7 +6,6 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.util.Constants.UTC_ZONE;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
@@ -27,9 +26,9 @@ import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.spring.DefaultFolioExecutionContext;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -37,6 +36,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Lazy
 @Log4j2
 @RequiredArgsConstructor
 public class DataExportJobUpdateService {
@@ -54,10 +54,8 @@ public class DataExportJobUpdateService {
   }
 
   private final FolioModuleMetadata folioModuleMetadata;
-  private final FolioExecutionContext folioExecutionContext;
   private final BulkOperationRepository bulkOperationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
-  private final ObjectMapper objectMapper;
   private final DataExportJobUpdateService self;
 
   @KafkaListener(
