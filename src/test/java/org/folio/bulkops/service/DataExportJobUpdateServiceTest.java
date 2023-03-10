@@ -33,7 +33,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 class DataExportJobUpdateServiceTest extends BaseTest {
   @Autowired
-  private DataExportJobUpdateService dataExportJobUpdateService;
+  private DataExportJobUpdateReceiverService dataExportJobUpdateReceiverService;
 
   @MockBean
   private BulkOperationRepository bulkOperationRepository;
@@ -81,7 +81,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
         .processed(processedRecords).build())
       .files(List.of("file:src/test/resources/files/users.csv", "file:src/test/resources/files/errors.csv", "file:src/test/resources/files/user.json")).build();
 
-    dataExportJobUpdateService.receiveJobExecutionUpdate(jobUpdate, okapiHeaders);
+    dataExportJobUpdateReceiverService.receiveJobExecutionUpdate(jobUpdate, okapiHeaders);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
@@ -102,7 +102,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
 
     var totalRecords = 10;
     var processedRecords = 5;
-    dataExportJobUpdateService.receiveJobExecutionUpdate(Job.builder()
+    dataExportJobUpdateReceiverService.receiveJobExecutionUpdate(Job.builder()
       .id(jobId)
       .batchStatus(batchStatus)
       .progress(Progress.builder()
@@ -129,7 +129,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     var endTime = new Date();
     var expectedEndTime = LocalDateTime.ofInstant(endTime.toInstant(), ZoneId.of("UTC"));
 
-    dataExportJobUpdateService.receiveJobExecutionUpdate(Job.builder()
+    dataExportJobUpdateReceiverService.receiveJobExecutionUpdate(Job.builder()
       .id(jobId)
       .batchStatus(batchStatus)
       .endTime(endTime)
@@ -150,7 +150,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     when(bulkOperationRepository.findByDataExportJobId(any(UUID.class)))
       .thenReturn(Optional.empty());
 
-    dataExportJobUpdateService.receiveJobExecutionUpdate(Job.builder().id(UUID.randomUUID()).build(), okapiHeaders);
+    dataExportJobUpdateReceiverService.receiveJobExecutionUpdate(Job.builder().id(UUID.randomUUID()).build(), okapiHeaders);
 
     verify(bulkOperationRepository, times(0)).save(any(BulkOperation.class));
   }

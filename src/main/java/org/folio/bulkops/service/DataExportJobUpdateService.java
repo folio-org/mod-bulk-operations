@@ -17,7 +17,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.configs.kafka.KafkaService;
 import org.folio.bulkops.domain.bean.BatchStatus;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
@@ -25,16 +24,10 @@ import org.folio.bulkops.domain.bean.Progress;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.folio.spring.DefaultFolioExecutionContext;
-import org.folio.spring.FolioModuleMetadata;
-import org.folio.spring.scope.FolioExecutionContextSetter;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.messaging.handler.annotation.Headers;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
-//@Lazy
 @Log4j2
 @RequiredArgsConstructor
 public class DataExportJobUpdateService {
@@ -50,26 +43,10 @@ public class DataExportJobUpdateService {
     JOB_STATUSES.put(BatchStatus.ABANDONED, JobStatus.FAILED);
     JOB_STATUSES.put(BatchStatus.UNKNOWN, null);
   }
-
-  private final FolioModuleMetadata folioModuleMetadata;
   private final BulkOperationRepository bulkOperationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
-//  private final DataExportJobUpdateService self;
 
-  @KafkaListener(
-    id = KafkaService.EVENT_LISTENER_ID,
-    containerFactory = "kafkaListenerContainerFactory",
-    topicPattern = "${application.kafka.topic-pattern}",
-    groupId = "${application.kafka.group-id}")
-  public void receiveJobExecutionUpdate(@Payload Job jobExecutionUpdate, @Headers Map<String, Object> messageHeaders) {
-    var defaultFolioExecutionContext = DefaultFolioExecutionContext.fromMessageHeaders(folioModuleMetadata, messageHeaders);
-
-    try (var context = new FolioExecutionContextSetter(defaultFolioExecutionContext)) {
-      handleReceivedJobExecutionUpdate(jobExecutionUpdate);
-    }
-  }
-
-//  @Transactional
+  @Transactional
   public void handleReceivedJobExecutionUpdate(Job jobExecutionUpdate) {
     log.info("Received {}.", jobExecutionUpdate);
 
