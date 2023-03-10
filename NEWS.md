@@ -1,5 +1,18 @@
 ## v2.0.0 - Unreleased
 
+## v1.0.2 - Released 2023/03/10
+This release contains fixes for processing bad data and minor improvements
+
+### Technical tasks
+* [MODBULKOPS-50](https://issues.folio.org/browse/MODBULKOPS-50) - TD: csv <-> object conversion unit test.
+
+### Tech debts
+* [MODBULKOPS-71](https://issues.folio.org/browse/MODBULKOPS-71) - Handle bad data gracefully.
+
+### Bugs
+* [MODBULKOPS-61](https://issues.folio.org/browse/MODBULKOPS-61) - Reported "Completed" status instead of "Completed with errors"
+* [MODBULKOPS-30](https://issues.folio.org/browse/MODBULKOPS-30) - Provide human readable id for bulk edit jobs.
+
 ## v1.0.1 - Released 2023/03/03
 This release includes infrastructural changes (memory settings, Prometheus integration, increasing upload file size, performance optimization) and bug-fixes.
 
