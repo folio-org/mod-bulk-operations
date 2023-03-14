@@ -21,39 +21,37 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
 
   @Override
   public UpdatedEntityHolder process(String identifier, T entity, BulkOperationRuleCollection rules) {
-    var hasProcessingError = false;
     var holder = UpdatedEntityHolder.builder().build();
     var updated = clone(entity);
-
+    var countActions = 0;
+    var countErrors = 0;
     for (BulkOperationRule rule : rules.getBulkOperationRules()) {
       var details = rule.getRuleDetails();
       var option = details.getOption();
       for (Action action : details.getActions()) {
+        countActions++;
         try {
-          updater(option, action).apply(updated);
-
           try {
             validator(entity).validate(option, action);
           } catch (Exception e) {
             errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
-            hasProcessingError = true;
+            countErrors++;
+            continue;
           }
+          updater(option, action).apply(updated);
         } catch (Exception e) {
-          hasProcessingError = true;
+          countErrors++;
           log.error(String.format("%s id=%s, error: %s", updated.getClass().getSimpleName(), "id", e.getMessage()));
           errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
         }
       }
     }
-
-    if (!hasProcessingError) {
-      if (compare(updated, entity)) {
-        errorService.saveError(rules.getBulkOperationRules().get(0).getBulkOperationId(), identifier, "No change in value required");
-      } else {
-        holder.setShouldBeUpdated(true);
-      }
+    if (countErrors == 0 && compare(updated, entity)) {
+      errorService.saveError(rules.getBulkOperationRules().get(0).getBulkOperationId(), identifier, "No change in value required");
     }
-
+    if (countErrors < countActions) {
+      holder.setShouldBeUpdated(true);
+    }
     holder.setUpdated(updated);
     return holder;
   }
