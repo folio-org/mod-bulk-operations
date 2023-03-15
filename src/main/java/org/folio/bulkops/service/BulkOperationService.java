@@ -189,7 +189,7 @@ public class BulkOperationService {
       .build());
 
     var modifiedJsonFileName = operationId + "/json/modified-" + FilenameUtils.getName(operation.getLinkToMatchedRecordsJsonFile());
-    var modifiedCsvFileName = operationId + "/modified-" + FilenameUtils.getName(operation.getLinkToMatchedRecordsCsvFile());
+    var modifiedCsvFileName = operationId + "/modified-preview-" + FilenameUtils.getName(operation.getLinkToMatchedRecordsCsvFile());
 
     try (var readerForMatchedJsonFile = remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile());
          var writerForModifiedCsvFile = remoteFileSystemClient.writer(modifiedCsvFileName);
@@ -221,7 +221,7 @@ public class BulkOperationService {
         var modified = processUpdate(original, operation, ruleCollection, clazz);
 
         if (Objects.nonNull(modified)) {
-          sbc.write(modified.getUpdated());
+          sbc.write(modified.getPreview());
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
 
           if (modified.isShouldBeUpdated()) {
