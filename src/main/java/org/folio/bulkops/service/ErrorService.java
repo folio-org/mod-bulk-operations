@@ -81,10 +81,6 @@ public class ErrorService {
     }
   }
 
-  private boolean noCommittedErrors(BulkOperation bulkOperation) {
-    return Objects.isNull(bulkOperation.getCommittedNumOfErrors()) || bulkOperation.getCommittedNumOfErrors() == 0;
-  }
-
   private Error prepareInternalErrorRepresentation(Error e) {
     var error= e.getMessage().split(Constants.COMMA_DELIMETER);
     return new Error().message(error[1]).parameters(List.of(new Parameter().key(IDENTIFIER).value(error[0])));
