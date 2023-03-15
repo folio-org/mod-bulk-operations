@@ -221,18 +221,16 @@ class ErrorServiceTest extends BaseTest {
 
       mockErrorsData(COMPLETED_WITH_ERRORS, operationId);
 
-      if (nonNull(committedErrors) && committedErrors == 1) {
-        executionContentRepository.save(BulkOperationExecutionContent.builder()
-          .bulkOperationId(operationId)
-          .identifier("123")
-          .errorMessage("No match found")
-          .build());
-        executionContentRepository.save(BulkOperationExecutionContent.builder()
-          .bulkOperationId(operationId)
-          .identifier("456")
-          .errorMessage("Invalid format")
-          .build());
-      }
+      executionContentRepository.save(BulkOperationExecutionContent.builder()
+        .bulkOperationId(operationId)
+        .identifier("123")
+        .errorMessage("No match found")
+        .build());
+      executionContentRepository.save(BulkOperationExecutionContent.builder()
+        .bulkOperationId(operationId)
+        .identifier("456")
+        .errorMessage("Invalid format")
+        .build());
 
       var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 10);
 
