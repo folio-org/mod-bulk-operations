@@ -65,10 +65,10 @@ public class ErrorService {
     executionContentRepository.deleteByBulkOperationId(bulkOperationId);
   }
 
-  public Errors (UUID bulkOperationId, int limit) {
+  public Errors getErrorsPreviewByBulkOperationId(UUID bulkOperationId, int limit) {
     var bulkOperation = operationRepository.findById(bulkOperationId)
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
-    if (DATA_MODIFICATION == bulkOperation.getStatusgetErrorsPreviewByBulkOperationId()) {
+    if (DATA_MODIFICATION == bulkOperation.getStatus()) {
       var errors = bulkEditClient.getErrorsPreview(bulkOperation.getDataExportJobId(), limit);
       return new Errors().errors(errors.getErrors().stream()
           .map(this::prepareInternalErrorRepresentation)
