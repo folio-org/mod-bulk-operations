@@ -365,7 +365,7 @@ class BulkOperationServiceTest extends BaseTest {
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(approach).step(EDIT));
 
-      var expectedPathToModifiedCsvFile = bulkOperationId + "/modified-origin.csv";
+      var expectedPathToModifiedCsvFile = bulkOperationId + "/modified-preview-origin.csv";
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       var pathCaptor = ArgumentCaptor.forClass(String.class);
       Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).put(streamCaptor.capture(), pathCaptor.capture()));
