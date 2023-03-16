@@ -229,9 +229,8 @@ public class BulkOperationService {
             }
             writerForModifiedJsonFile.write(modifiedRecord);
           }
+          operation.setCommittedNumOfErrors(operation.getCommittedNumOfErrors() + modified.getErrorsCount());
         }
-
-        operation.setCommittedNumOfErrors(operation.getCommittedNumOfErrors() + modified.getErrors());
 
         processedNumOfRecords++;
 
