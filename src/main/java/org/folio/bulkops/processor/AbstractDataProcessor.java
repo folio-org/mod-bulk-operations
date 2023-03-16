@@ -23,7 +23,6 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
   public UpdatedEntityHolder process(String identifier, T entity, BulkOperationRuleCollection rules) {
     var holder = UpdatedEntityHolder.builder().build();
     var updated = clone(entity);
-    var preview = clone(entity);
     var countActions = 0;
     var countErrors = 0;
     for (BulkOperationRule rule : rules.getBulkOperationRules()) {
@@ -37,11 +36,9 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
           } catch (Exception e) {
             errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
             countErrors++;
-            updater(option, action).apply(preview);
             continue;
           }
           updater(option, action).apply(updated);
-          updater(option, action).apply(preview);
         } catch (Exception e) {
           countErrors++;
           log.error(String.format("%s id=%s, error: %s", updated.getClass().getSimpleName(), "id", e.getMessage()));
@@ -57,7 +54,7 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
       holder.setShouldBeUpdated(false);
     }
     holder.setUpdated(updated);
-    holder.setPreview(preview);
+    holder.setErrors(countErrors);
     return holder;
   }
 
