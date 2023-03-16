@@ -220,6 +220,7 @@ class ErrorServiceTest extends BaseTest {
         .getId();
 
       mockErrorsData(COMPLETED_WITH_ERRORS, operationId);
+
       if (nonNull(committedErrors) && committedErrors == 1) {
         executionContentRepository.save(BulkOperationExecutionContent.builder()
           .bulkOperationId(operationId)
@@ -232,6 +233,7 @@ class ErrorServiceTest extends BaseTest {
           .errorMessage("Invalid format")
           .build());
       }
+
       var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 10);
 
       assertThat(errors.getErrors(), hasSize(2));
