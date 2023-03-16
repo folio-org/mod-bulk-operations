@@ -10,5 +10,5 @@ import lombok.Data;
 public class UpdatedEntityHolder<T extends BulkOperationsEntity> {
   private T updated;
   boolean shouldBeUpdated;
-  private int errors;
+  private int errorsCount;
 }

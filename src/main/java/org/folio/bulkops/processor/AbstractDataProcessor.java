@@ -54,7 +54,7 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
       holder.setShouldBeUpdated(false);
     }
     holder.setUpdated(updated);
-    holder.setErrors(countErrors);
+    holder.setErrorsCount(countErrors);
     return holder;
   }
 
