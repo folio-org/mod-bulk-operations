@@ -12,6 +12,7 @@ import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -67,7 +68,7 @@ public class ErrorService {
   public Errors getErrorsPreviewByBulkOperationId(UUID bulkOperationId, int limit) {
     var bulkOperation = operationRepository.findById(bulkOperationId)
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
-    if (DATA_MODIFICATION == bulkOperation.getStatus()) {
+    if (DATA_MODIFICATION == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus() && noCommittedErrors(bulkOperation) ) {
       var errors = bulkEditClient.getErrorsPreview(bulkOperation.getDataExportJobId(), limit);
       return new Errors().errors(errors.getErrors().stream()
           .map(this::prepareInternalErrorRepresentation)
@@ -78,6 +79,10 @@ public class ErrorService {
     } else {
       throw new NotFoundException("Errors preview is not available");
     }
+  }
+
+  private boolean noCommittedErrors(BulkOperation bulkOperation) {
+    return Objects.isNull(bulkOperation.getCommittedNumOfErrors()) || bulkOperation.getCommittedNumOfErrors() == 0;
   }
 
   private Error prepareInternalErrorRepresentation(Error e) {

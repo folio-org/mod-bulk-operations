@@ -189,7 +189,7 @@ public class BulkOperationService {
       .build());
 
     var modifiedJsonFileName = operationId + "/json/modified-" + FilenameUtils.getName(operation.getLinkToMatchedRecordsJsonFile());
-    var modifiedCsvFileName = operationId + "/modified-preview-" + FilenameUtils.getName(operation.getLinkToMatchedRecordsCsvFile());
+    var modifiedCsvFileName = operationId + "/modified-" + FilenameUtils.getName(operation.getLinkToMatchedRecordsCsvFile());
 
     try (var readerForMatchedJsonFile = remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile());
          var writerForModifiedCsvFile = remoteFileSystemClient.writer(modifiedCsvFileName);
@@ -209,7 +209,6 @@ public class BulkOperationService {
       var iterator = objectMapper.readValues(parser, clazz);
 
       boolean isChangesPresented = false;
-      var committedNumOfErrors = 0;
       var processedNumOfRecords = 0;
 
       if(iterator.hasNext()) {
@@ -221,7 +220,7 @@ public class BulkOperationService {
         var modified = processUpdate(original, operation, ruleCollection, clazz);
 
         if (Objects.nonNull(modified)) {
-          sbc.write(modified.getPreview());
+          sbc.write(modified.getUpdated());
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
 
           if (modified.isShouldBeUpdated()) {
@@ -229,12 +228,10 @@ public class BulkOperationService {
               isChangesPresented = true;
             }
             writerForModifiedJsonFile.write(modifiedRecord);
-          } else {
-            committedNumOfErrors++;
           }
         }
 
-        operation.setCommittedNumOfErrors(committedNumOfErrors);
+        operation.setCommittedNumOfErrors(operation.getCommittedNumOfErrors() + modified.getErrors());
 
         processedNumOfRecords++;
 
