@@ -189,17 +189,17 @@ public class BulkOperationService {
       .build());
 
     var modifiedJsonFileName = operationId + "/json/modified-" + FilenameUtils.getName(operation.getLinkToMatchedRecordsJsonFile());
-    var modifiedCsvFileName = operationId + "/modified-" + FilenameUtils.getName(operation.getLinkToMatchedRecordsCsvFile());
+    var modifiedPreviewCsvFileName = operationId + "/modified-" + FilenameUtils.getName(operation.getLinkToMatchedRecordsCsvFile());
 
     try (var readerForMatchedJsonFile = remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile());
-         var writerForModifiedCsvFile = remoteFileSystemClient.writer(modifiedCsvFileName);
+         var writerForModifiedPreviewCsvFile = remoteFileSystemClient.writer(modifiedPreviewCsvFileName);
          var writerForModifiedJsonFile = remoteFileSystemClient.writer(modifiedJsonFileName)) {
 
       var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
 
       strategy.setType(clazz);
 
-      StatefulBeanToCsv<BulkOperationsEntity> sbc = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writerForModifiedCsvFile)
+      StatefulBeanToCsv<BulkOperationsEntity> sbc = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writerForModifiedPreviewCsvFile)
         .withSeparator(DEFAULT_SEPARATOR)
         .withApplyQuotesToAll(false)
         .withMappingStrategy(strategy)
@@ -212,7 +212,7 @@ public class BulkOperationService {
       var processedNumOfRecords = 0;
 
       if(iterator.hasNext()) {
-        operation.setLinkToModifiedRecordsCsvFile(modifiedCsvFileName);
+        operation.setLinkToModifiedRecordsCsvFile(modifiedPreviewCsvFileName);
       }
 
       while (iterator.hasNext()) {
@@ -220,7 +220,7 @@ public class BulkOperationService {
         var modified = processUpdate(original, operation, ruleCollection, clazz);
 
         if (Objects.nonNull(modified)) {
-          sbc.write(modified.getUpdated());
+          sbc.write(modified.getPreview());
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
 
           if (modified.isShouldBeUpdated()) {
