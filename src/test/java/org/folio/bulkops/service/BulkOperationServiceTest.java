@@ -393,7 +393,7 @@ class BulkOperationServiceTest extends BaseTest {
   @ParameterizedTest
   @EnumSource(value = ApproachType.class, names = {"IN_APP", "QUERY"}, mode = EnumSource.Mode.INCLUDE)
   @SneakyThrows
-  void shouldConfirmChangesForItemWhenValidationErrorAndOtherValidChangesExist (ApproachType approach) {
+  void shouldConfirmChangesForItemWhenValidationErrorAndOtherValidChangesExist(ApproachType approach) {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var pathToOrigin = "path/origin.json";
@@ -414,7 +414,7 @@ class BulkOperationServiceTest extends BaseTest {
           .processedNumOfRecords(0)
           .build()));
 
-      var locationRules = new BulkOperationRule()
+      var tempLocationRules = new BulkOperationRule()
         .ruleDetails(new BulkOperationRuleRuleDetails().
           option(UpdateOptionType.TEMPORARY_LOCATION)
           .actions(List.of(new Action()
@@ -432,7 +432,7 @@ class BulkOperationServiceTest extends BaseTest {
 
       when(ruleService.getRules(bulkOperationId))
         .thenReturn(new BulkOperationRuleCollection()
-          .bulkOperationRules(List.of(locationRules, statusRules))
+          .bulkOperationRules(List.of(tempLocationRules, statusRules))
           .totalRecords(2));
 
       when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
