@@ -360,8 +360,8 @@ public class BulkOperationService {
         operation.setEndTime(LocalDateTime.now());
         if (committedNumOfRecords > 0) {
           operation.setLinkToCommittedRecordsCsvFile(resultCsvFileName);
+          operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
         }
-        operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
         operation.setCommittedNumOfErrors((operation.getCommittedNumOfErrors() != null ? operation.getCommittedNumOfErrors() : 0) + committedNumOfErrors);
         operation.setCommittedNumOfRecords(committedNumOfRecords);
       } catch (Exception e) {
