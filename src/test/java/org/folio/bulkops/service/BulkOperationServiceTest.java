@@ -470,6 +470,7 @@ class BulkOperationServiceTest extends BaseTest {
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getLinkToModifiedRecordsCsvFile(), equalTo(expectedPathToModifiedCsvFile));
       assertThat(capturedBulkOperation.getCommittedNumOfErrors(), equalTo(1));
+      assertThat(capturedBulkOperation.getProcessedNumOfRecords(), equalTo(1));
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
     }
   }
