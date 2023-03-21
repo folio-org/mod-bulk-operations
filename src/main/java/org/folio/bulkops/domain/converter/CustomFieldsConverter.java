@@ -41,7 +41,7 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
         .filter(pair -> isNotEmpty(pair.getKey()))
         .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
     }
-    return null;
+    return Collections.EMPTY_MAP;
   }
 
   @Override

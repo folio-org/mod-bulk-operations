@@ -26,7 +26,7 @@ public class TagsConverter extends AbstractBeanField<String, Tags> {
       List<String> tagList = SpecialCharacterEscaper.restore(Arrays.asList(value.split(ARRAY_DELIMITER)));
       return tags.withTagList(tagList);
     }
-    return new Tags().withTagList(new ArrayList<>());
+    return null;
   }
 
   @Override
