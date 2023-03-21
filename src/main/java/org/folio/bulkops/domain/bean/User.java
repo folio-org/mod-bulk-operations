@@ -141,6 +141,10 @@ public class User extends BulkOperationsEntity {
     this.customFields = isNull(customFields) ? Collections.emptyMap() : customFields;
   }
 
+  public void setTags(Tags tags) {
+    this.tags = isNull(tags) ? new Tags().withTagList(Collections.emptyList()) : tags;
+  }
+
   @Override
   public String getIdentifier(IdentifierType identifierType) {
     return switch (identifierType) {
