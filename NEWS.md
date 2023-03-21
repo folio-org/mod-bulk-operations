@@ -1,5 +1,12 @@
 ## v2.0.0 - Unreleased
 
+## v1.0.3 - Released 2023/03/21
+This release contains fixes for processing bad data, updating folio-spring-base version and logging improvements
+
+### Bugs
+* [MODBULKOPS-85](https://issues.folio.org/browse/MODBULKOPS-85) - Expected errors are not populated for Holdings identifiers
+* [FOLSPRINGB-95](https://issues.folio.org/browse/FOLSPRINGB-95) - non-public beginFolioExecutionContext avoids wrong tenant/user
+
 ## v1.0.2 - Released 2023/03/10
 This release contains fixes for processing bad data and minor improvements
 

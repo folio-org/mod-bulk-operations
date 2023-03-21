@@ -246,7 +246,7 @@ public class HoldingsRecord extends BulkOperationsEntity {
 
   @Override
   public boolean equals(Object o) {
-    return EqualsBuilder.reflectionEquals(this, o, true, HoldingsRecord.class, "metadata");
+    return EqualsBuilder.reflectionEquals(this, o, true, HoldingsRecord.class, "metadata", "permanentLocation");
   }
 
   @Override

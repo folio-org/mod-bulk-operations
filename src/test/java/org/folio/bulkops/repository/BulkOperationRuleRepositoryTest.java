@@ -14,12 +14,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationRule;
 import org.folio.bulkops.domain.entity.BulkOperationRuleDetails;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -35,49 +35,59 @@ class BulkOperationRuleRepositoryTest extends BaseTest {
 
   @Test
   void shouldSaveEntity() {
-    var saved = repository.save(createEntity());
-    assertThat(saved.getId(), notNullValue());
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var saved = repository.save(createEntity());
+      assertThat(saved.getId(), notNullValue());
+    }
   }
 
   @Test
   void shouldFindEntityById() {
-    var created = repository.save(createEntity());
-    var retrieved = repository.findById(created.getId());
-    assertTrue(retrieved.isPresent() && created.getId().equals(retrieved.get().getId()));
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var created = repository.save(createEntity());
+      var retrieved = repository.findById(created.getId());
+      assertTrue(retrieved.isPresent() && created.getId().equals(retrieved.get().getId()));
+    }
   }
 
   @Test
   void shouldUpdateEntity() {
-    var created = repository.save(createEntity());
-    var updated = repository.save(created.withUpdateOption(TEMPORARY_LOAN_TYPE));
-    assertTrue(created.getId().equals(updated.getId()) && TEMPORARY_LOAN_TYPE.equals(updated.getUpdateOption()));
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var created = repository.save(createEntity());
+      var updated = repository.save(created.withUpdateOption(TEMPORARY_LOAN_TYPE));
+      assertTrue(created.getId().equals(updated.getId()) && TEMPORARY_LOAN_TYPE.equals(updated.getUpdateOption()));
+    }
   }
 
   @Test
   void shouldDeleteEntity() {
-    var created = repository.save(createEntity());
-    repository.deleteById(created.getId());
-    assertTrue(repository.findById(created.getId()).isEmpty());
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var created = repository.save(createEntity());
+      repository.deleteById(created.getId());
+      assertTrue(repository.findById(created.getId()).isEmpty());
+    }
   }
 
   @Test
   void shouldFetchRuleDetails() {
-    var created = repository.save(createEntity());
-    var details = BulkOperationRuleDetails.builder()
-      .ruleId(created.getId())
-      .updateAction(UpdateActionType.FIND_AND_REPLACE)
-      .initialValue("abc")
-      .updatedValue("def")
-      .build();
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var created = repository.save(createEntity());
+      var details = BulkOperationRuleDetails.builder()
+        .ruleId(created.getId())
+        .updateAction(UpdateActionType.FIND_AND_REPLACE)
+        .initialValue("abc")
+        .updatedValue("def")
+        .build();
 
-    ruleDetailsRepository.save(details);
+      ruleDetailsRepository.save(details);
 
-    var fetchedRule = repository.findById(created.getId());
+      var fetchedRule = repository.findById(created.getId());
 
-    assertTrue(fetchedRule.isPresent());
-    assertThat(fetchedRule.get().getRuleDetails(), hasSize(1));
-    var fetchedDetails = fetchedRule.get().getRuleDetails().get(0);
-    assertThat(details, equalTo(fetchedDetails));
+      assertTrue(fetchedRule.isPresent());
+      assertThat(fetchedRule.get().getRuleDetails(), hasSize(1));
+      var fetchedDetails = fetchedRule.get().getRuleDetails().get(0);
+      assertThat(details, equalTo(fetchedDetails));
+    }
   }
 
   private BulkOperationRule createEntity() {

@@ -11,12 +11,12 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.EnumMap;
 import java.util.Map;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.configs.kafka.KafkaService;
 import org.folio.bulkops.domain.bean.BatchStatus;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
@@ -24,14 +24,8 @@ import org.folio.bulkops.domain.bean.Progress;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 
 @Service
 @Log4j2
@@ -49,18 +43,11 @@ public class DataExportJobUpdateService {
     JOB_STATUSES.put(BatchStatus.ABANDONED, JobStatus.FAILED);
     JOB_STATUSES.put(BatchStatus.UNKNOWN, null);
   }
-
   private final BulkOperationRepository bulkOperationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
-  private final ObjectMapper objectMapper;
 
   @Transactional
-  @KafkaListener(
-      id = KafkaService.EVENT_LISTENER_ID,
-      containerFactory = "kafkaListenerContainerFactory",
-      topicPattern = "${application.kafka.topic-pattern}",
-      groupId = "${application.kafka.group-id}")
-  public void receiveJobExecutionUpdate(Job jobExecutionUpdate) {
+  public void handleReceivedJobExecutionUpdate(Job jobExecutionUpdate) {
     log.info("Received {}.", jobExecutionUpdate);
 
     var optionalBulkOperation = bulkOperationRepository.findByDataExportJobId(jobExecutionUpdate.getId());
@@ -99,7 +86,7 @@ public class DataExportJobUpdateService {
 
       var errorsUrl = jobUpdate.getFiles().get(1);
       if (StringUtils.isNotEmpty(errorsUrl)) {
-        try(var is = new URL(errorsUrl).openStream()) {
+        try (var is = new URL(errorsUrl).openStream()) {
           var linkToMatchingErrorsFile = remoteFileSystemClient.put(is, operation.getId() + "/" + FilenameUtils.getName(errorsUrl.split("\\?")[0]));
           operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
         }
@@ -111,7 +98,7 @@ public class DataExportJobUpdateService {
       Progress progress;
       if (QUERY == operation.getApproach()) {
         var value = remoteFileSystemClient.getNumOfLines(linkToMatchingRecordsFile) - 1;
-        progress =  new Progress()
+        progress = new Progress()
           .withErrors(0)
           .withSuccess(value)
           .withTotal(value)

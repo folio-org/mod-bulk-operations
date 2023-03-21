@@ -7,17 +7,28 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.HostConfig;
+import com.github.dockerjava.api.model.PortBinding;
+import com.github.dockerjava.api.model.Ports;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
+import java.util.stream.Collectors;
+import lombok.SneakyThrows;
+import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.CallNumberTypeClient;
 import org.folio.bulkops.client.ConfigurationClient;
@@ -51,9 +62,9 @@ import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.s3.client.S3ClientFactory;
 import org.folio.s3.client.S3ClientProperties;
 import org.folio.spring.DefaultFolioExecutionContext;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
-import org.folio.spring.scope.FolioExecutionScopeExecutionContextManager;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -74,19 +85,6 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.github.dockerjava.api.model.ExposedPort;
-import com.github.dockerjava.api.model.HostConfig;
-import com.github.dockerjava.api.model.PortBinding;
-import com.github.dockerjava.api.model.Ports;
-
-import lombok.SneakyThrows;
-import lombok.extern.log4j.Log4j2;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -173,6 +171,11 @@ public abstract class BaseTest {
   @Autowired
   public ObjectMapper objectMapper;
 
+  public final Map<String, Object> okapiHeaders = new HashMap<>();
+
+  public FolioExecutionContext folioExecutionContext;
+
+
   static {
     postgresDBContainer.start();
   }
@@ -200,17 +203,22 @@ public abstract class BaseTest {
 
   @BeforeEach
   void setUp() {
-    Map<String, Collection<String>> okapiHeaders = new LinkedHashMap<>();
-    okapiHeaders.put(XOkapiHeaders.TENANT, List.of(TENANT));
-    okapiHeaders.put(XOkapiHeaders.TOKEN, List.of(TOKEN));
-    okapiHeaders.put(XOkapiHeaders.USER_ID, List.of(UUID.randomUUID().toString()));
-    var defaultFolioExecutionContext = new DefaultFolioExecutionContext(folioModuleMetadata, okapiHeaders);
-    FolioExecutionScopeExecutionContextManager.beginFolioExecutionContext(defaultFolioExecutionContext);
+    okapiHeaders.clear();
+    okapiHeaders.put(XOkapiHeaders.TENANT, TENANT);
+    okapiHeaders.put(XOkapiHeaders.TOKEN, TOKEN);
+    okapiHeaders.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    var localHeaders =
+      okapiHeaders.entrySet()
+        .stream()
+        .filter(e -> e.getKey().startsWith(XOkapiHeaders.OKAPI_HEADERS_PREFIX))
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> (Collection<String>)List.of(String.valueOf(e.getValue()))));
+
+    folioExecutionContext = new DefaultFolioExecutionContext(folioModuleMetadata, localHeaders);
   }
 
   @AfterEach
   void eachTearDown() {
-    FolioExecutionScopeExecutionContextManager.endFolioExecutionContext();
   }
 
   @SneakyThrows
