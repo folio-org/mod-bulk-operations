@@ -6,6 +6,7 @@ import static org.folio.bulkops.util.Constants.DATE_TIME_PATTERN;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
@@ -19,7 +20,7 @@ public class DateTimeConverter extends AbstractBeanField<String, Date> {
   protected Date convert(String value) {
     if (isNotEmpty(value)) {
       LocalDateTime localDateTime = LocalDateTime.parse(value, DateTimeFormatter.ofPattern(DATE_TIME_PATTERN));
-      return java.sql.Timestamp.valueOf(localDateTime);
+      return Date.from(localDateTime.atZone(ZoneOffset.systemDefault()).toInstant());
     }
     return null;
   }

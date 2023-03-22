@@ -1,5 +1,6 @@
 package org.folio.bulkops.domain.bean;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.With;
+
+import static java.util.Objects.isNull;
 
 @Getter
 @Setter
@@ -133,6 +136,14 @@ public class User extends BulkOperationsEntity {
   @CsvCustomBindByName(column = "Custom fields", converter = CustomFieldsConverter.class)
   @CsvCustomBindByPosition(position = 24, converter = CustomFieldsConverter.class)
   private Map<String, Object> customFields = null;
+
+  public void setCustomFields(Map<String, Object> customFields) {
+    this.customFields = isNull(customFields) ? Collections.emptyMap() : customFields;
+  }
+
+  public void setTags(Tags tags) {
+    this.tags = isNull(tags) ? new Tags().withTagList(Collections.emptyList()) : tags;
+  }
 
   @Override
   public String getIdentifier(IdentifierType identifierType) {

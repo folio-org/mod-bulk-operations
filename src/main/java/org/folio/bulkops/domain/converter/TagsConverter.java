@@ -4,8 +4,8 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -26,7 +26,7 @@ public class TagsConverter extends AbstractBeanField<String, Tags> {
       List<String> tagList = SpecialCharacterEscaper.restore(Arrays.asList(value.split(ARRAY_DELIMITER)));
       return tags.withTagList(tagList);
     }
-    return new Tags().withTagList(new ArrayList<>());
+    return new Tags().withTagList(Collections.emptyList());
   }
 
   @Override
