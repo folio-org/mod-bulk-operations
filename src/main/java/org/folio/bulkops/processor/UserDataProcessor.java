@@ -62,6 +62,8 @@ public class UserDataProcessor extends AbstractDataProcessor<User> {
         } else if (isEmpty(action.getInitial()) || isEmpty(action.getUpdated())) {
           throw new RuleValidationException("Initial or updated value cannot be empty");
         }
+      } else {
+        throw new RuleValidationException(String.format("Rule option %s is not supported for user", option.getValue()));
       }
     };
   }
