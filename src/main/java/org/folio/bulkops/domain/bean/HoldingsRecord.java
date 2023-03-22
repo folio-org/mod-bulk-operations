@@ -13,7 +13,6 @@ import org.folio.bulkops.domain.converter.HoldingsStatementListConverter;
 import org.folio.bulkops.domain.converter.HoldingsStatisticalCodeListConverter;
 import org.folio.bulkops.domain.converter.HoldingsTypeConverter;
 import org.folio.bulkops.domain.converter.IllPolicyConverter;
-import org.folio.bulkops.domain.converter.InstanceConverter;
 import org.folio.bulkops.domain.converter.IntegerConverter;
 import org.folio.bulkops.domain.converter.ReceivingHistoryConverter;
 import org.folio.bulkops.domain.converter.SourceConverter;
@@ -68,9 +67,12 @@ public class HoldingsRecord extends BulkOperationsEntity {
   @CsvCustomBindByPosition(position = 4, converter = StringListConverter.class)
   private List<String> formerIds = null;
 
+  @JsonProperty("instanceTitle")
+  @CsvCustomBindByName(column = "Instance", converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 5, converter = StringConverter.class)
+  private String instanceTitle;
+
   @JsonProperty("instanceId")
-  @CsvCustomBindByName(column = "Instance", converter = InstanceConverter.class)
-  @CsvCustomBindByPosition(position = 5, converter = InstanceConverter.class)
   private String instanceId;
 
   @JsonProperty("permanentLocationId")

@@ -36,19 +36,6 @@ class HoldingsReferenceHelperTest extends BaseTest {
   private HoldingsReferenceHelper holdingsReferenceHelper;
 
   @Test
-  void testGetInstanceTitle() {
-    when(instanceClient.getById("id_1")).thenReturn(new BriefInstance().withTitle("title_1"));
-    var actual = holdingsReferenceHelper.getInstanceTitleById("id_1");
-    assertEquals("title_1", actual);
-
-    when(instanceClient.getById("id_2")).thenThrow(new NotFoundException("Not found"));
-    actual = holdingsReferenceHelper.getInstanceTitleById("id_2");
-    assertEquals("id_2", actual);
-
-    assertEquals(EMPTY, holdingsReferenceHelper.getInstanceTitleById(null));
-  }
-
-  @Test
   void testGetHoldingsType() {
     when(holdingsTypeClient.getById("id_1")).thenReturn(new HoldingsType().withName("name_1"));
     var actual = holdingsReferenceHelper.getHoldingsTypeNameById("id_1");
