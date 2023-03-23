@@ -42,7 +42,6 @@ import org.folio.bulkops.client.HoldingsNoteTypeClient;
 import org.folio.bulkops.client.HoldingsSourceClient;
 import org.folio.bulkops.client.HoldingsTypeClient;
 import org.folio.bulkops.client.IllPolicyClient;
-import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.ItemNoteTypeClient;
 import org.folio.bulkops.client.LoanTypeClient;
@@ -143,8 +142,6 @@ public abstract class BaseTest {
   public HoldingsSourceClient holdingsSourceClient;
   @MockBean
   public CallNumberTypeClient callNumberTypeClient;
-  @MockBean
-  public InstanceClient instanceClient;
   @MockBean
   public HoldingsTypeClient holdingsTypeClient;
   @MockBean

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
+import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.AddressType;
 import org.folio.bulkops.domain.bean.AddressTypeCollection;
@@ -77,6 +78,7 @@ import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 
+@Log4j2
 @ExtendWith(MockitoExtension.class)
 class OpenCSVConverterTest extends BaseTest {
 
@@ -130,7 +132,14 @@ class OpenCSVConverterTest extends BaseTest {
 
     /* compare original and restored beans */
     var result = list.get(0);
-    assertTrue(EqualsBuilder.reflectionEquals(bean, result, true, clazz, "metadata", "effectiveCallNumberComponents"));
+    var isEqual = EqualsBuilder.reflectionEquals(bean, result, true, clazz, "metadata", "effectiveCallNumberComponents", "instanceId");
+
+    if (!isEqual) {
+      log.error("Original: " + OBJECT_MAPPER.writeValueAsString(bean));
+      log.error("Result: " + OBJECT_MAPPER.writeValueAsString(result));
+    }
+
+    assertTrue(isEqual);
     assertThat(list, hasSize(1));
   }
 
@@ -326,7 +335,6 @@ class OpenCSVConverterTest extends BaseTest {
 
     // Holdings record
     when(holdingsTypeClient.getById("0c422f92-0f4d-4d32-8cbe-390ebc33a3e5")).thenReturn(new HoldingsType().withId("0c422f92-0f4d-4d32-8cbe-390ebc33a3e5").withName("Holdings type").withSource("Holdings source"));
-    when(instanceClient.getById("aca08922-a4ac-423e-8e40-065180222761")).thenReturn(new BriefInstance().withTitle("@Instance"));
     when(locationClient.getLocationById("fcd64ce1-6995-48f0-840e-89ffa2288371")).thenReturn(new ItemLocation().withId("fcd64ce1-6995-48f0-840e-89ffa2288371").withName("Main Library"));
     when(locationClient.getLocationById("b241764c-1466-4e1d-a028-1a3684a5da87")).thenReturn(new ItemLocation().withId("b241764c-1466-4e1d-a028-1a3684a5da87").withName("Popular Reading Collection"));
     when(callNumberTypeClient.getById("cd70562c-dd0b-42f6-aa80-ce803d24d4a1"))
