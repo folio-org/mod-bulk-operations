@@ -869,7 +869,6 @@ class BulkOperationServiceTest extends BaseTest {
       .thenReturn(new FileInputStream(path));
 
     when(groupClient.getGroupById(anyString())).thenReturn(new UserGroup().withGroup("Group"));
-    when(instanceClient.getById(anyString())).thenReturn(new BriefInstance().withTitle("Title"));
     when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
     when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
 

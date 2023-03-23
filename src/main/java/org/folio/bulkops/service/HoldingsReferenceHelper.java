@@ -13,10 +13,6 @@ public class HoldingsReferenceHelper implements InitializingBean {
 
   private final HoldingsReferenceService holdingsReferenceService;
 
-  public String getInstanceTitleById(String id) {
-    return holdingsReferenceService.getInstanceTitleById(id);
-  }
-
   public String getHoldingsTypeNameById(String id) {
     return holdingsReferenceService.getHoldingsTypeNameById(id);
   }
