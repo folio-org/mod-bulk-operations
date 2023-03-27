@@ -6,6 +6,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import static org.folio.bulkops.service.ItemReferenceService.BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE;
@@ -15,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -251,5 +253,21 @@ class ItemDataProcessorTest extends BaseTest {
       .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AVAILABLE)), rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.IN_TRANSIT.getValue())));
     assertNotNull(actual.getUpdated());
     assertFalse(actual.shouldBeUpdated);
+  }
+
+  @Test
+  void shouldNotClearSuppressFromDiscovery() {
+    var actual = processor.process(IDENTIFIER, new Item(), rules(rule(SUPPRESS_FROM_DISCOVERY, CLEAR_FIELD, null)));
+    assertNotNull(actual.getUpdated());
+    assertFalse(actual.shouldBeUpdated);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = { "true", "false" })
+  void shouldUpdateSuppressFromDiscovery(String updated) {
+    var actual = processor.process(IDENTIFIER, new Item(), rules(rule(SUPPRESS_FROM_DISCOVERY, REPLACE_WITH, updated)));
+    assertEquals(actual.getUpdated().getDiscoverySuppress(), Boolean.parseBoolean(updated));
+    assertNotNull(actual.getUpdated());
+    assertTrue(actual.shouldBeUpdated);
   }
 }

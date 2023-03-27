@@ -7,6 +7,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 
 import java.util.Date;
 import java.util.Objects;
@@ -39,6 +40,8 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         throw new RuleValidationException("Status field can not be cleared");
       } else if (CLEAR_FIELD == action.getType() && PERMANENT_LOAN_TYPE == option) {
         throw new RuleValidationException("Permanent loan type cannot be cleared");
+      } else if (CLEAR_FIELD == action.getType() && SUPPRESS_FROM_DISCOVERY == option) {
+        throw new RuleValidationException("Suppress from discovery flag cannot be cleared");
       } else if (REPLACE_WITH == action.getType() && isEmpty(action.getUpdated())) {
         throw new RuleValidationException("Loan type value cannot be empty for REPLACE_WITH option");
       } else if (REPLACE_WITH == action.getType() && option == STATUS && !item.getStatus()
@@ -73,6 +76,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         case STATUS -> item -> item.setStatus(new InventoryItemStatus()
           .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated()))
           .withDate(new Date()));
+        case SUPPRESS_FROM_DISCOVERY -> item -> item.setDiscoverySuppress(Boolean.parseBoolean(action.getUpdated()));
         default -> item -> {
           throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
         };

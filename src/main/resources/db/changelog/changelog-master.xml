@@ -9,4 +9,5 @@
   <include file="changes/31-01-2023_bulk_operation_table_upgrade.xml" relativeToChangelogFile="true"/>
   <include file="changes/10-02-2023_add_link_to_preview.xml" relativeToChangelogFile="true"/>
   <include file="changes/03-03-2023_add_hrid.xml" relativeToChangelogFile="true"/>
+  <include file="changes/24-03-2023_add_suppress_option_type.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
