@@ -10,7 +10,6 @@ import org.folio.bulkops.client.HoldingsNoteTypeClient;
 import org.folio.bulkops.client.HoldingsSourceClient;
 import org.folio.bulkops.client.HoldingsTypeClient;
 import org.folio.bulkops.client.IllPolicyClient;
-import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
@@ -28,7 +27,6 @@ import lombok.extern.log4j.Log4j2;
 public class HoldingsReferenceService {
   private static final String QUERY_PATTERN_NAME = "name==\"%s\"";
 
-  private final InstanceClient instanceClient;
   private final HoldingsClient holdingsClient;
   private final HoldingsTypeClient holdingsTypeClient;
   private final LocationClient locationClient;
@@ -41,17 +39,6 @@ public class HoldingsReferenceService {
   @Cacheable(cacheNames = "holdings")
   public HoldingsRecord getHoldingsRecordById(String id) {
     return holdingsClient.getHoldingById(id);
-  }
-
-  public String getInstanceTitleById(String id) {
-    try {
-      return isEmpty(id) ? EMPTY
-        : instanceClient.getById(id)
-          .getTitle();
-    } catch (NotFoundException e) {
-      log.error("Instance not found by id={}", id);
-      return id;
-    }
   }
 
   @Cacheable(cacheNames = "holdingsTypesNames")

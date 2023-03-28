@@ -1,5 +1,14 @@
 ## v2.0.0 - Unreleased
 
+## v1.0.4 - Released 2023/03/28
+This release contains minor performance improvements and bug fixes
+
+### Technical tasks
+* [MODBULKOPS-88](https://issues.folio.org/browse/MODBULKOPS-88) - instanceTitle converter rework
+
+### Bugs
+* [MODBULKOPS-67](https://issues.folio.org/browse/MODBULKOPS-67) - Item with status "Checked Out" or "Paged" is not edited if bulk edit includes editing by "Status" field
+
 ## v1.0.3 - Released 2023/03/21
 This release contains fixes for processing bad data, updating folio-spring-base version and logging improvements
 

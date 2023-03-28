@@ -116,6 +116,9 @@ class BulkOperationServiceTest extends BaseTest {
   @MockBean
   private ErrorService errorService;
 
+  @MockBean
+  private ItemReferenceService itemReferenceService;
+
   @Test
   @SneakyThrows
   void shouldUploadIdentifiers() {
@@ -383,6 +386,91 @@ class BulkOperationServiceTest extends BaseTest {
       Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getLinkToModifiedRecordsCsvFile(), equalTo(expectedPathToModifiedCsvFile));
+      assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ApproachType.class, names = {"IN_APP", "QUERY"}, mode = EnumSource.Mode.INCLUDE)
+  @SneakyThrows
+  void shouldConfirmChangesForItemWhenValidationErrorAndOtherValidChangesExist(ApproachType approach) {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var bulkOperationId = UUID.randomUUID();
+      var pathToOrigin = "path/origin.json";
+      var pathToModified = bulkOperationId + "/json/modified-origin.json";
+      var pathToOriginalCsv = bulkOperationId + "/origin.csv";
+      var pathToItemJson = "src/test/resources/files/item.json";
+
+      when(bulkOperationRepository.findById(any(UUID.class)))
+        .thenReturn(Optional.of(BulkOperation.builder()
+          .id(bulkOperationId)
+          .status(DATA_MODIFICATION)
+          .entityType(EntityType.ITEM)
+          .identifierType(IdentifierType.BARCODE)
+          .linkToMatchedRecordsJsonFile(pathToOrigin)
+          .linkToModifiedRecordsJsonFile("existing.csv")
+          .linkToModifiedRecordsCsvFile("existing.json")
+          .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
+          .processedNumOfRecords(0)
+          .build()));
+
+      var tempLocationRules = new BulkOperationRule()
+        .ruleDetails(new BulkOperationRuleRuleDetails().
+          option(UpdateOptionType.TEMPORARY_LOCATION)
+          .actions(List.of(new Action()
+            .type(UpdateActionType.REPLACE_WITH)
+            .updated("fcd51ce2-1111-48f0-840e-89ffa2288371"))));
+      var statusRules = new BulkOperationRule()
+        .ruleDetails(new BulkOperationRuleRuleDetails()
+          .option(UpdateOptionType.STATUS)
+          .actions(List.of(new Action()
+            .type(UpdateActionType.REPLACE_WITH)
+            .updated("Available"))));
+
+      when(itemReferenceService.getLocationById(any())).thenReturn(new ItemLocation()
+        .withId("fcd51ce2-1111-48f0-840e-89ffa2288371").withName("Annex"));
+
+      when(ruleService.getRules(bulkOperationId))
+        .thenReturn(new BulkOperationRuleCollection()
+          .bulkOperationRules(List.of(tempLocationRules, statusRules))
+          .totalRecords(2));
+
+      when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
+        .thenReturn(BulkOperationDataProcessing.builder()
+          .processedNumOfRecords(0)
+          .build());
+
+      when(remoteFileSystemClient.get(pathToOrigin))
+        .thenReturn(new FileInputStream(pathToItemJson));
+
+      when(remoteFileSystemClient.get(pathToModified))
+        .thenReturn(new FileInputStream(pathToItemJson));
+
+      when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
+
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(approach).step(EDIT));
+
+      var expectedPathToModifiedCsvFile = bulkOperationId + "/modified-origin.csv";
+      var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
+      var pathCaptor = ArgumentCaptor.forClass(String.class);
+
+      Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).put(streamCaptor.capture(), pathCaptor.capture()));
+      assertEquals(expectedPathToModifiedCsvFile, pathCaptor.getAllValues().get(1));
+
+      var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
+      Awaitility.await().untilAsserted(() -> verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));
+      var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(1);
+      assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(1));
+
+      assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));
+      assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
+
+      var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository).save(bulkOperationCaptor.capture()));
+      var capturedBulkOperation = bulkOperationCaptor.getValue();
+      assertThat(capturedBulkOperation.getLinkToModifiedRecordsCsvFile(), equalTo(expectedPathToModifiedCsvFile));
+      assertThat(capturedBulkOperation.getCommittedNumOfErrors(), equalTo(1));
+      assertThat(capturedBulkOperation.getProcessedNumOfRecords(), equalTo(1));
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
     }
   }
@@ -779,7 +867,6 @@ class BulkOperationServiceTest extends BaseTest {
       .thenReturn(new FileInputStream(path));
 
     when(groupClient.getGroupById(anyString())).thenReturn(new UserGroup().withGroup("Group"));
-    when(instanceClient.getById(anyString())).thenReturn(new BriefInstance().withTitle("Title"));
     when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
     when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
 

@@ -13,7 +13,10 @@ public class HoldingsUpdateProcessor implements UpdateProcessor<HoldingsRecord> 
 
   @Override
   public void updateRecord(HoldingsRecord holdingsRecord) {
-    holdingsClient.updateHoldingsRecord(holdingsRecord.withInstanceHrid(null).withItemBarcode(null), holdingsRecord.getId());
+    holdingsClient.updateHoldingsRecord(
+      holdingsRecord.withInstanceHrid(null).withItemBarcode(null).withInstanceTitle(null),
+      holdingsRecord.getId()
+    );
   }
 
   @Override
