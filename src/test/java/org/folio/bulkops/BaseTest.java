@@ -175,6 +175,7 @@ public abstract class BaseTest {
 
   static {
     postgresDBContainer.start();
+    setUpMinio();
   }
 
   public static class DockerPostgreDataSourceInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
@@ -189,9 +190,6 @@ public abstract class BaseTest {
 
   @BeforeAll
   static void beforeAll(@Autowired MockMvc mockMvc) {
-    if (isNull(s3)) {
-      setUpMinio();
-    }
     if (isNull(client)) {
       setUpClient();
     }
