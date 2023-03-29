@@ -508,22 +508,15 @@ public class BulkOperationService {
           operation.setDataExportJobId(job.getId());
           bulkOperationRepository.save(operation);
 
-          if (JobStatus.SCHEDULED.equals(job.getStatus())) {
-            if (QUERY != approach) {
-              uploadCsvFile(job.getId(), new FolioMultiPartFile(FilenameUtils.getName(operation.getLinkToTriggeringCsvFile()), "application/json", remoteFileSystemClient.get(operation.getLinkToTriggeringCsvFile())));
-              job = dataExportSpringClient.getJob(job.getId());
-            }
+          if (QUERY != approach) {
+            uploadCsvFile(job.getId(), new FolioMultiPartFile(FilenameUtils.getName(operation.getLinkToTriggeringCsvFile()), "application/json", remoteFileSystemClient.get(operation.getLinkToTriggeringCsvFile())));
+            job = dataExportSpringClient.getJob(job.getId());
+          }
 
-            if (JobStatus.FAILED.equals(job.getStatus())) {
-              errorMessage = "Data export job failed";
-            } else {
-              if (QUERY != approach && JobStatus.SCHEDULED.equals(job.getStatus())) {
-                bulkEditClient.startJob(job.getId());
-              }
-              operation.setStatus(RETRIEVING_RECORDS);
-            }
+          if (JobStatus.FAILED.equals(job.getStatus())) {
+            errorMessage = "Data export job failed";
           } else {
-            errorMessage = String.format("File uploading failed - invalid job status: %s (expected: SCHEDULED)", job.getStatus().getValue());
+            operation.setStatus(RETRIEVING_RECORDS);
           }
         }
       } else {
