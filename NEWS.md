@@ -1,5 +1,11 @@
 ## v2.0.0 - Unreleased
 
+## v1.0.5 - Released 2023/03/30
+This release contains minor improvements of retrieving records flow
+
+### Technical tasks
+* [MODBULKOPS-90](https://issues.folio.org/browse/MODBULKOPS-90) - Remove redundant data-export-worker call
+
 ## v1.0.4 - Released 2023/03/28
 This release contains minor performance improvements and bug fixes
 
