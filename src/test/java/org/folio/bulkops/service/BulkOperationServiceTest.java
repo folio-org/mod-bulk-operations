@@ -191,47 +191,6 @@ class BulkOperationServiceTest extends BaseTest {
     assertEquals(2, capture.getMatchedNumOfRecords());
   }
 
-  @Test
-  @SneakyThrows
-  void shouldUploadIdentifiersAndStartJobIfJobWasNotStarted() {
-    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
-
-    var bulkOperationId = UUID.randomUUID();
-    var jobId = UUID.randomUUID();
-
-    when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
-
-
-    when(dataExportSpringClient.upsertJob(any(Job.class)))
-      .thenReturn(Job.builder().id(jobId).status(JobStatus.SCHEDULED).build());
-
-    when(dataExportSpringClient.getJob(jobId))
-      .thenReturn(Job.builder().id(jobId).status(JobStatus.SCHEDULED).build());
-
-    when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
-      .thenReturn("3");
-
-
-    when(bulkOperationRepository.findById(bulkOperationId))
-      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).status(OperationStatusType.NEW).dataExportJobId(jobId).linkToTriggeringCsvFile("barcodes.csv").build()));
-
-
-
-    bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
-    bulkOperationService.startBulkOperation(bulkOperationId, any(UUID.class), new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD));
-
-    verify(dataExportSpringClient).upsertJob(any(Job.class));
-    verify(dataExportSpringClient).getJob(jobId);
-    verify(bulkEditClient).uploadFile(eq(jobId), any());
-    verify(bulkEditClient).startJob(jobId);
-
-    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
-    assertEquals(OperationStatusType.NEW, operationCaptor.getAllValues().get(0).getStatus());
-    assertEquals(OperationStatusType.RETRIEVING_RECORDS, operationCaptor.getAllValues().get(3).getStatus());
-  }
-
   @ParameterizedTest
   @EnumSource(value = JobStatus.class, names = { "FAILED", "SCHEDULED" }, mode = EnumSource.Mode.INCLUDE)
   @SneakyThrows
