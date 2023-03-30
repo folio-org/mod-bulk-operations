@@ -517,9 +517,6 @@ public class BulkOperationService {
             if (JobStatus.FAILED.equals(job.getStatus())) {
               errorMessage = "Data export job failed";
             } else {
-              if (QUERY != approach && JobStatus.SCHEDULED.equals(job.getStatus())) {
-                bulkEditClient.startJob(job.getId());
-              }
               operation.setStatus(RETRIEVING_RECORDS);
             }
           } else {
