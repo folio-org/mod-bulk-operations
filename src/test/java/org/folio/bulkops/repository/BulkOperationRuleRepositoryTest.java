@@ -4,7 +4,7 @@ import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.domain.dto.IdentifierType.BARCODE;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationType.UPDATE;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOAN_TYPE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -108,7 +108,7 @@ class BulkOperationRuleRepositoryTest extends BaseTest {
     return BulkOperationRule.builder()
       .bulkOperationId(bulkOperation.getId())
       .userId(UUID.randomUUID())
-      .updateOption(STATUS)
+      .updateOption(SUPPRESS_FROM_DISCOVERY)
       .build();
   }
 }

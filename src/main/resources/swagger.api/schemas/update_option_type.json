@@ -11,7 +11,8 @@
       "TEMPORARY_LOCATION",
       "PERMANENT_LOAN_TYPE",
       "TEMPORARY_LOAN_TYPE",
-      "STATUS"
+      "STATUS",
+      "SUPPRESS_FROM_DISCOVERY"
     ]
   }
 }
