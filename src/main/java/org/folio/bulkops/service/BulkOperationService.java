@@ -34,7 +34,7 @@ import java.util.concurrent.Executors;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.folio.bulkops.adapters.ModClientAdapterFactory;
+import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
@@ -108,7 +108,6 @@ public class BulkOperationService {
   private final ObjectMapper objectMapper;
   private final DataProcessorFactory dataProcessorFactory;
   private final UpdateProcessorFactory updateProcessorFactory;
-  private final ModClientAdapterFactory modClientAdapterFactory;
   private final ErrorService errorService;
 
   private static final int OPERATION_UPDATING_STEP = 100;
@@ -404,8 +403,7 @@ public class BulkOperationService {
   }
 
   private UnifiedTable buildPreviewFromCsvFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit) {
-    var adapter = modClientAdapterFactory.getModClientAdapter(clazz);
-    var table = adapter.getEmptyTableWithHeaders();
+    var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
     try (Reader reader = new InputStreamReader(remoteFileSystemClient.get(pathToFile))) {
       try (CSVReader csvReader = new CSVReader(reader)) {
         csvReader.skip(offset + 1);

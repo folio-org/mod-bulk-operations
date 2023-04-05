@@ -1,4 +1,4 @@
-package org.folio.bulkops.adapters;
+package org.folio.bulkops.util;
 
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -17,7 +17,7 @@ import java.util.TimeZone;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class BulkEditAdapterHelper {
+public class DateHelper {
   private static final DateFormat dateFormat;
 
   static {
