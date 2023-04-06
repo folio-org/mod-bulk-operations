@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static org.folio.bulkops.util.UnifiedTableHeaderBuilder.getHeaders;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
@@ -35,14 +36,12 @@ import java.util.UUID;
 import lombok.SneakyThrows;
 import org.awaitility.Awaitility;
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.adapters.HoldingUnifiedTableHeaderBuilder;
-import org.folio.bulkops.adapters.ItemUnifiedTableHeaderBuilder;
-import org.folio.bulkops.adapters.UserUnifiedTableHeaderBuilder;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.domain.bean.BriefInstance;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
+import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
@@ -835,11 +834,11 @@ class BulkOperationServiceTest extends BaseTest {
 
     assertThat(table.getRows(), hasSize(limit - offset));
     if (USER.equals(entityType)) {
-      assertThat(table.getHeader(), equalTo(UserUnifiedTableHeaderBuilder.UserHeaderBuilder.getHeaders()));
+      assertThat(table.getHeader(), equalTo(getHeaders(User.class)));
     } else if (EntityType.ITEM.equals(entityType)) {
-      assertThat(table.getHeader(), equalTo(ItemUnifiedTableHeaderBuilder.ItemHeaderBuilder.getHeaders()));
+      assertThat(table.getHeader(), equalTo(getHeaders(Item.class)));
     } else if (EntityType.HOLDINGS_RECORD.equals(entityType)) {
-      assertThat(table.getHeader(), equalTo(HoldingUnifiedTableHeaderBuilder.HoldingsHeaderBuilder.getHeaders()));
+      assertThat(table.getHeader(), equalTo(getHeaders(HoldingsRecord.class)));
     }
   }
 
