@@ -1,13 +1,12 @@
 package org.folio.bulkops.util;
 
-import static org.folio.bulkops.domain.dto.DataType.STRING;
-
 import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.CsvCustomBindByPosition;
 import com.opencsv.bean.CsvRecurse;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.bean.UnifiedTableCell;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 
@@ -31,11 +30,16 @@ public class UnifiedTableHeaderBuilder {
           .flatMap(List::stream),
         FieldUtils.getFieldsListWithAnnotation(clazz, CsvCustomBindByName.class).stream())
       .collect(Collectors.toMap(field -> field.getAnnotation(CsvCustomBindByPosition.class).position(),
-        field -> field.getAnnotation(CsvCustomBindByName.class).column(),
+        UnifiedTableHeaderBuilder::toUnifiedTableCell,
         (key1, key2) -> key1,
         TreeMap::new))
-      .values().stream()
-        .map(val -> new Cell().dataType(STRING).value(val).visible(true))
-        .toList();
+      .values().stream().toList();
+  }
+
+  private static Cell toUnifiedTableCell(Field field) {
+    return new Cell()
+      .dataType(field.getAnnotation(UnifiedTableCell.class).dataType())
+      .value(field.getAnnotation(CsvCustomBindByName.class).column())
+      .visible(field.getAnnotation(UnifiedTableCell.class).visible());
   }
 }
