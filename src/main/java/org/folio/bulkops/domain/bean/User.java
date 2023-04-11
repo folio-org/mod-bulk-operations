@@ -1,5 +1,8 @@
 package org.folio.bulkops.domain.bean;
 
+import static java.util.Objects.isNull;
+import static org.folio.bulkops.domain.dto.DataType.DATE_TIME;
+
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -34,7 +37,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.With;
 
-import static java.util.Objects.isNull;
 
 @Getter
 @Setter
@@ -48,42 +50,50 @@ public class User extends BulkOperationsEntity {
   @JsonProperty("username")
   @CsvCustomBindByName(column = "User name", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 0, converter = StringConverter.class)
+  @UnifiedTableCell
   private String username;
 
   @JsonProperty("id")
   @CsvCustomBindByName(column = "User id", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 1, converter = StringConverter.class)
+  @UnifiedTableCell(visible = false)
   private String id;
 
   @JsonProperty("externalSystemId")
   @CsvCustomBindByName(column = "External system id", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 2, converter = StringConverter.class)
+  @UnifiedTableCell(visible = false)
   private String externalSystemId;
 
   @JsonProperty("barcode")
   @CsvCustomBindByName(column = "Barcode", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 3, converter = StringConverter.class)
+  @UnifiedTableCell
   private String barcode;
 
   @JsonProperty("active")
   @CsvCustomBindByName(column = "Active", converter = BooleanConverter.class)
   @CsvCustomBindByPosition(position = 4, converter = BooleanConverter.class)
+  @UnifiedTableCell
   private Boolean active;
 
   @JsonProperty("type")
   @CsvCustomBindByName(column = "Type", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 5, converter = StringConverter.class)
+  @UnifiedTableCell(visible = false)
   private String type;
 
   @JsonProperty("patronGroup")
   @CsvCustomBindByName(column = "Patron group", converter = PatronGroupConverter.class)
   @CsvCustomBindByPosition(position = 6, converter = PatronGroupConverter.class)
+  @UnifiedTableCell
   private String patronGroup;
 
   @JsonProperty("departments")
   @Valid
   @CsvCustomBindByName(column = "Departments", converter = DepartmentsConverter.class)
   @CsvCustomBindByPosition(position = 7, converter = DepartmentsConverter.class)
+  @UnifiedTableCell(visible = false)
   private Set<UUID> departments = null;
 
   @JsonProperty("meta")
@@ -93,6 +103,7 @@ public class User extends BulkOperationsEntity {
   @Valid
   @CsvCustomBindByName(column = "Proxy for", converter = ProxyForConverter.class)
   @CsvCustomBindByPosition(position = 8, converter = ProxyForConverter.class)
+  @UnifiedTableCell(visible = false)
   private List<String> proxyFor = null;
 
   @JsonProperty("personal")
@@ -103,24 +114,28 @@ public class User extends BulkOperationsEntity {
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   @CsvCustomBindByName(column = "Enrollment date", converter = DateTimeConverter.class)
   @CsvCustomBindByPosition(position = 19, converter = DateTimeConverter.class)
+  @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date enrollmentDate;
 
   @JsonProperty("expirationDate")
   @CsvCustomBindByName(column = "Expiration date", converter = DateTimeConverter.class)
   @CsvCustomBindByPosition(position = 20, converter = DateTimeConverter.class)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date expirationDate;
 
   @JsonProperty("createdDate")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   @CsvCustomBindByName(column = "Created date", converter = DateTimeConverter.class)
   @CsvCustomBindByPosition(position = 21, converter = DateTimeConverter.class)
+  @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date createdDate;
 
   @JsonProperty("updatedDate")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   @CsvCustomBindByName(column = "Updated date", converter = DateTimeConverter.class)
   @CsvCustomBindByPosition(position = 22, converter = DateTimeConverter.class)
+  @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date updatedDate;
 
   @JsonProperty("metadata")
@@ -129,12 +144,14 @@ public class User extends BulkOperationsEntity {
   @JsonProperty("tags")
   @CsvCustomBindByName(column = "Tags", converter = TagsConverter.class)
   @CsvCustomBindByPosition(position = 23, converter = TagsConverter.class)
+  @UnifiedTableCell(visible = false)
   private Tags tags;
 
   @JsonProperty("customFields")
   @Valid
   @CsvCustomBindByName(column = "Custom fields", converter = CustomFieldsConverter.class)
   @CsvCustomBindByPosition(position = 24, converter = CustomFieldsConverter.class)
+  @UnifiedTableCell(visible = false)
   private Map<String, Object> customFields = null;
 
   public void setCustomFields(Map<String, Object> customFields) {
