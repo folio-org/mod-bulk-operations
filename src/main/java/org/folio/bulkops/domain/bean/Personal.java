@@ -72,7 +72,7 @@ public class Personal {
 
   @JsonProperty("dateOfBirth")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  @CsvCustomBindByName(column = "Date of birth", converter = DateTimeConverter.class)
+  @CsvCustomBindByName(column = "Date Of Birth", converter = DateTimeConverter.class)
   @CsvCustomBindByPosition(position = 16, converter = DateTimeConverter.class)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date dateOfBirth;
