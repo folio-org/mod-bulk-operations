@@ -126,7 +126,7 @@ public class User extends BulkOperationsEntity {
 
   @JsonProperty("createdDate")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  @CsvCustomBindByName(column = "Created date", converter = DateTimeConverter.class)
+  @CsvCustomBindByName(column = "Created Date", converter = DateTimeConverter.class)
   @CsvCustomBindByPosition(position = 21, converter = DateTimeConverter.class)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date createdDate;

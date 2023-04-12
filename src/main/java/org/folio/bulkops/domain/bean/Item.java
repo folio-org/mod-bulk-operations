@@ -74,13 +74,13 @@ public class Item extends BulkOperationsEntity {
 
   @JsonProperty("formerIds")
   @Valid
-  @CsvCustomBindByName(column = "Former ids", converter = StringListConverter.class)
+  @CsvCustomBindByName(column = "Former Ids", converter = StringListConverter.class)
   @CsvCustomBindByPosition(position = 4, converter = StringListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> formerIds = null;
 
   @JsonProperty("discoverySuppress")
-  @CsvCustomBindByName(column = "Discovery suppress", converter = BooleanConverter.class)
+  @CsvCustomBindByName(column = "Discovery Suppress", converter = BooleanConverter.class)
   @CsvCustomBindByPosition(position = 5, converter = BooleanConverter.class)
   @UnifiedTableCell(visible = false)
   private Boolean discoverySuppress;
@@ -328,7 +328,7 @@ public class Item extends BulkOperationsEntity {
   private List<String> statisticalCodeIds = null;
 
   @JsonProperty("purchaseOrderLineIdentifier")
-  @CsvCustomBindByName(column = "Purchase Order LineIdentifier", converter = StringConverter.class)
+  @CsvCustomBindByName(column = "Purchase Order Line Identifier", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 45, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String purchaseOrderLineIdentifier;
