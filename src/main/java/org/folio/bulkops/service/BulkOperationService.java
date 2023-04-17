@@ -143,7 +143,7 @@ public class BulkOperationService {
       }
       operation.setApproach(MANUAL);
     } else {
-      operation = bulkOperationRepository.save(new BulkOperation().toBuilder()
+      operation = bulkOperationRepository.save(BulkOperation.builder()
         .id(UUID.randomUUID())
         .entityType(entityType)
         .identifierType(identifierType)
@@ -357,7 +357,7 @@ public class BulkOperationService {
           operation.setLinkToCommittedRecordsCsvFile(resultCsvFileName);
           operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
         }
-        operation.setCommittedNumOfErrors((operation.getCommittedNumOfErrors() != null ? operation.getCommittedNumOfErrors() : 0) + committedNumOfErrors);
+        operation.setCommittedNumOfErrors(operation.getCommittedNumOfErrors() + committedNumOfErrors);
         operation.setCommittedNumOfRecords(committedNumOfRecords);
       } catch (Exception e) {
         execution = execution
@@ -426,7 +426,7 @@ public class BulkOperationService {
     var approach = bulkOperationStart.getApproach();
     BulkOperation operation;
     if (QUERY == bulkOperationStart.getApproach() && UPLOAD == step) {
-      operation = new BulkOperation().toBuilder()
+      operation = BulkOperation.builder()
         .id(bulkOperationId)
         .entityType(bulkOperationStart.getEntityType())
         .identifierType(bulkOperationStart.getEntityCustomIdentifierType())

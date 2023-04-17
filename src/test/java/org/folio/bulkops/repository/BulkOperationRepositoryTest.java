@@ -62,7 +62,7 @@ class BulkOperationRepositoryTest extends BaseTest {
   }
 
   private BulkOperation createEntity() {
-    return new BulkOperation().toBuilder()
+    return BulkOperation.builder()
       .id(UUID.randomUUID())
       .userId(UUID.randomUUID())
       .operationType(UPDATE)
