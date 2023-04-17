@@ -5,6 +5,7 @@ import static org.folio.bulkops.domain.dto.IdentifierType.BARCODE;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationType.UPDATE;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -25,6 +26,9 @@ class BulkOperationRepositoryTest extends BaseTest {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var saved = repository.save(createEntity());
       assertThat(saved.getId(), notNullValue());
+      // check if default values were set
+      assertThat(saved.getTotalNumOfRecords(), is(0));
+      assertThat(saved.getProcessedNumOfRecords(), is(0));
     }
   }
 
@@ -58,7 +62,7 @@ class BulkOperationRepositoryTest extends BaseTest {
   }
 
   private BulkOperation createEntity() {
-    return BulkOperation.builder()
+    return new BulkOperation().toBuilder()
       .id(UUID.randomUUID())
       .userId(UUID.randomUUID())
       .operationType(UPDATE)
@@ -66,8 +70,6 @@ class BulkOperationRepositoryTest extends BaseTest {
       .identifierType(BARCODE)
       .status(NEW)
       .dataExportJobId(UUID.randomUUID())
-      .totalNumOfRecords(10)
-      .processedNumOfRecords(0)
       .executionChunkSize(5)
       .startTime(LocalDateTime.now())
       .build();

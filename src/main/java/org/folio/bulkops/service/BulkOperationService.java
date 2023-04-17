@@ -143,7 +143,7 @@ public class BulkOperationService {
       }
       operation.setApproach(MANUAL);
     } else {
-      operation = bulkOperationRepository.save(BulkOperation.builder()
+      operation = bulkOperationRepository.save(new BulkOperation().toBuilder()
         .id(UUID.randomUUID())
         .entityType(entityType)
         .identifierType(identifierType)
@@ -426,7 +426,7 @@ public class BulkOperationService {
     var approach = bulkOperationStart.getApproach();
     BulkOperation operation;
     if (QUERY == bulkOperationStart.getApproach() && UPLOAD == step) {
-      operation = BulkOperation.builder()
+      operation = new BulkOperation().toBuilder()
         .id(bulkOperationId)
         .entityType(bulkOperationStart.getEntityType())
         .identifierType(bulkOperationStart.getEntityCustomIdentifierType())
