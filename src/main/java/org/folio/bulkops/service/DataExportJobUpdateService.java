@@ -59,9 +59,10 @@ public class DataExportJobUpdateService {
 
     var operation = optionalBulkOperation.get();
 
-    if (nonNull(jobExecutionUpdate.getProgress())) {
-      operation.setTotalNumOfRecords(jobExecutionUpdate.getProgress().getTotal());
-      operation.setProcessedNumOfRecords(jobExecutionUpdate.getProgress().getProcessed());
+    var progress = jobExecutionUpdate.getProgress();
+    if (nonNull(progress)) {
+      operation.setTotalNumOfRecords(isNull(progress.getTotal()) ? 0 : progress.getTotal());
+      operation.setProcessedNumOfRecords(isNull(progress.getProcessed()) ? 0 : progress.getProcessed());
     }
 
     var status = JOB_STATUSES.get(jobExecutionUpdate.getBatchStatus());
@@ -110,10 +111,12 @@ public class DataExportJobUpdateService {
       operation.setStatus(OperationStatusType.DATA_MODIFICATION);
       operation.setLinkToMatchedRecordsJsonFile(linkToOriginFile);
       operation.setLinkToMatchedRecordsCsvFile(linkToMatchingRecordsFile);
-      operation.setMatchedNumOfRecords(progress.getSuccess());
-      operation.setMatchedNumOfErrors(progress.getErrors());
-      operation.setTotalNumOfRecords(progress.getTotal());
-      operation.setProcessedNumOfRecords(progress.getProcessed());
+      if (nonNull(progress)) {
+        operation.setMatchedNumOfRecords(isNull(progress.getSuccess()) ? 0 : progress.getSuccess());
+        operation.setMatchedNumOfErrors(isNull(progress.getErrors()) ? 0 : progress.getErrors());
+        operation.setTotalNumOfRecords(isNull(progress.getTotal()) ? 0 : progress.getTotal());
+        operation.setProcessedNumOfRecords(isNull(progress.getProcessed()) ? 0 : progress.getProcessed());
+      }
       operation.setEndTime(LocalDateTime.ofInstant(jobUpdate.getEndTime().toInstant(), UTC_ZONE));
 
     } catch (Exception e) {
@@ -122,7 +125,7 @@ public class DataExportJobUpdateService {
       operation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);
       operation.setEndTime(LocalDateTime.now());
       if (ObjectUtils.isNotEmpty(jobUpdate.getProgress())) {
-        operation.setMatchedNumOfErrors(jobUpdate.getProgress().getErrors());
+        operation.setMatchedNumOfErrors(isNull(jobUpdate.getProgress().getErrors()) ? 0 : jobUpdate.getProgress().getErrors());
       }
     }
   }
