@@ -13,7 +13,11 @@ public class PatronGroupConverter extends AbstractBeanField<String, String> {
 
   @Override
   protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
-    return UserReferenceHelper.service().getPatronGroupIdByName(value);
+    try {
+      return UserReferenceHelper.service().getPatronGroupIdByName(value);
+    } catch (Exception e) {
+      throw new CsvConstraintViolationException(String.format("Patron Group was not found: %s", e.getMessage()));
+    }
   }
 
   @Override

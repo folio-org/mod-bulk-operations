@@ -52,6 +52,11 @@ public class ErrorService {
   private final BulkEditClient bulkEditClient;
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage) {
+    operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
+      int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors() == null ? 0 : bulkOperation.getCommittedNumOfErrors();
+      bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
+      operationRepository.save(bulkOperation);
+    });
     executionContentRepository.save(BulkOperationExecutionContent.builder()
         .identifier(identifier)
         .bulkOperationId(bulkOperationId)

@@ -25,12 +25,16 @@ public class DepartmentsConverter extends AbstractBeanField<String, Set<UUID>> {
   protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
     String[] departmentNames = value.split(ARRAY_DELIMITER);
     if (departmentNames.length > 0) {
-      return Arrays.stream(departmentNames).parallel()
-        .filter(StringUtils::isNotEmpty)
-        .map(SpecialCharacterEscaper::restore)
-        .map(name -> UserReferenceHelper.service().getDepartmentIdByName(name))
-        .map(UUID::fromString)
-        .collect(Collectors.toSet());
+      try {
+        return Arrays.stream(departmentNames).parallel()
+          .filter(StringUtils::isNotEmpty)
+          .map(SpecialCharacterEscaper::restore)
+          .map(name -> UserReferenceHelper.service().getDepartmentIdByName(name))
+          .map(UUID::fromString)
+          .collect(Collectors.toSet());
+      } catch (Exception e) {
+        throw new CsvConstraintViolationException(String.format("Departments were not found: %s", e.getMessage()));
+      }
     }
     return Collections.emptySet();
   }
