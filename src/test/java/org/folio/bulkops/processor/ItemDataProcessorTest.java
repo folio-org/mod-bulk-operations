@@ -33,6 +33,7 @@ import org.folio.bulkops.domain.bean.ModelConfiguration;
 import org.folio.bulkops.domain.bean.ResultInfo;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
+import org.folio.bulkops.service.ErrorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -47,6 +48,8 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Autowired
   DataProcessorFactory factory;
+  @MockBean
+  ErrorService errorService;
 
   private DataProcessor<Item> processor;
 

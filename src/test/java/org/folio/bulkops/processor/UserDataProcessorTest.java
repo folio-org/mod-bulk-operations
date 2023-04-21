@@ -23,6 +23,7 @@ import org.folio.bulkops.domain.bean.Personal;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
+import org.folio.bulkops.service.ErrorService;
 import org.folio.spring.exception.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,8 @@ class UserDataProcessorTest extends BaseTest {
 
   @Autowired
   DataProcessorFactory factory;
+  @MockBean
+  ErrorService errorService;
 
   private DataProcessor<User> processor;
 

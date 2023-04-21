@@ -21,6 +21,7 @@ import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
+import org.folio.bulkops.service.ErrorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,8 @@ class HoldingsDataProcessorTest extends BaseTest {
   public static final String IDENTIFIER = "678";
   @Autowired
   DataProcessorFactory factory;
+  @MockBean
+  ErrorService errorService;
 
   private DataProcessor<HoldingsRecord> processor;
 
