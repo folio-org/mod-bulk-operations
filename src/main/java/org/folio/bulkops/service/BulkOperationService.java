@@ -252,7 +252,7 @@ public class BulkOperationService {
       operation.setApproach(IN_APP);
       operation.setStatus(OperationStatusType.REVIEW_CHANGES);
       operation.setProcessedNumOfRecords(processedNumOfRecords);
-      operation.setCommittedNumOfErrors(bulkOperationRepository.findById(operation.getId()).get().getCommittedNumOfErrors());
+      bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
       bulkOperationRepository.save(operation);
     } catch (Exception e) {
       log.error(e);
@@ -372,7 +372,10 @@ public class BulkOperationService {
     if (!FAILED.equals(operation.getStatus())) {
       operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
     }
-    operation.setCommittedNumOfErrors(bulkOperationRepository.findById(operation.getId()).get().getCommittedNumOfErrors());
+    var operationOpt = bulkOperationRepository.findById(operation.getId());
+    if (operationOpt.isPresent()) {
+      operation.setCommittedNumOfErrors(operationOpt.get().getCommittedNumOfErrors());
+    }
     bulkOperationRepository.save(operation);
   }
 
@@ -575,7 +578,7 @@ public class BulkOperationService {
       operation.setProcessedNumOfRecords(processedNumOfRecords);
       operation.setStatus(REVIEW_CHANGES);
       operation.setLinkToModifiedRecordsJsonFile(linkToModifiedRecordsJsonFile);
-      operation.setCommittedNumOfErrors(bulkOperationRepository.findById(operation.getId()).get().getCommittedNumOfErrors());
+      bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
       bulkOperationRepository.save(operation);
     } catch (Exception e) {
       operation.setErrorMessage("Error applying changes: " + e.getCause());
