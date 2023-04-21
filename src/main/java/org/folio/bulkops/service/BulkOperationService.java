@@ -252,6 +252,7 @@ public class BulkOperationService {
       operation.setApproach(IN_APP);
       operation.setStatus(OperationStatusType.REVIEW_CHANGES);
       operation.setProcessedNumOfRecords(processedNumOfRecords);
+      operation.setCommittedNumOfErrors(bulkOperationRepository.findById(operation.getId()).get().getCommittedNumOfErrors());
       bulkOperationRepository.save(operation);
     } catch (Exception e) {
       log.error(e);
@@ -371,6 +372,7 @@ public class BulkOperationService {
     if (!FAILED.equals(operation.getStatus())) {
       operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
     }
+    operation.setCommittedNumOfErrors(bulkOperationRepository.findById(operation.getId()).get().getCommittedNumOfErrors());
     bulkOperationRepository.save(operation);
   }
 
@@ -573,8 +575,7 @@ public class BulkOperationService {
       operation.setProcessedNumOfRecords(processedNumOfRecords);
       operation.setStatus(REVIEW_CHANGES);
       operation.setLinkToModifiedRecordsJsonFile(linkToModifiedRecordsJsonFile);
-      int committedNumOfErrors =  bulkOperationRepository.findById(operation.getId()).get().getCommittedNumOfErrors();
-      operation.setCommittedNumOfErrors(committedNumOfErrors);
+      operation.setCommittedNumOfErrors(bulkOperationRepository.findById(operation.getId()).get().getCommittedNumOfErrors());
       bulkOperationRepository.save(operation);
     } catch (Exception e) {
       operation.setErrorMessage("Error applying changes: " + e.getCause());
