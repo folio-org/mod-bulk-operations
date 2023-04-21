@@ -71,6 +71,7 @@ import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.util.Utils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -573,7 +574,7 @@ public class BulkOperationService {
           bulkOperationRepository.save(operation);
         }
       }
-      csvToBean.getCapturedExceptions().forEach(e -> errorService.saveError(operation.getId(), getIdentifierForManualApproach(e.getLine(), operation.getIdentifierType()), e.getMessage()));
+      csvToBean.getCapturedExceptions().forEach(e -> errorService.saveError(operation.getId(), Utils.getIdentifierForManualApproach(e.getLine(), operation.getIdentifierType()), e.getMessage()));
       csvToBean.getCapturedExceptions().clear();
       operation.setProcessedNumOfRecords(processedNumOfRecords);
       operation.setStatus(REVIEW_CHANGES);
@@ -586,15 +587,6 @@ public class BulkOperationService {
 
       throw new ServerErrorException(e.getMessage());
     }
-  }
-
-  private String getIdentifierForManualApproach(String[] line, IdentifierType identifierType) {
-    return  switch (identifierType) {
-      case BARCODE -> line[3];
-      case EXTERNAL_SYSTEM_ID -> line[2];
-      case USER_NAME -> line[0];
-      default -> line[1];
-    };
   }
 
   private String uploadCsvFile(UUID dataExportJobId, MultipartFile file) throws BulkOperationException {

@@ -897,6 +897,27 @@ class BulkOperationServiceTest extends BaseTest {
     }
   }
 
+  @Test
+  public void clearOperationProcessing() {
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .build();
+
+    when(dataProcessingRepository.findByBulkOperationId(operationId))
+      .thenReturn(Optional.of(BulkOperationDataProcessing.builder()
+        .id(UUID.randomUUID())
+        .status(StatusType.ACTIVE)
+        .processedNumOfRecords(5)
+        .bulkOperationId(operationId)
+        .build()));
+
+    bulkOperationService.clearOperationProcessing(operation);
+
+    verify(dataProcessingRepository).deleteById(any(UUID.class));
+    verify(bulkOperationRepository).save(any(BulkOperation.class));
+  }
+
   private BulkOperation buildBulkOperation(String fileName, EntityType entityType, BulkOperationStep step) {
     return switch (step) {
       case UPLOAD -> BulkOperation.builder()

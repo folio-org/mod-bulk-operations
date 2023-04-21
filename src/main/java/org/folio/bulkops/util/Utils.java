@@ -13,6 +13,7 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
 
 import lombok.experimental.UtilityClass;
+import org.folio.bulkops.domain.dto.IdentifierType;
 
 @UtilityClass
 public class Utils {
@@ -30,5 +31,14 @@ public class Utils {
 
   public static String booleanToStringNullSafe(Boolean value) {
     return Objects.isNull(value) ? EMPTY : value.toString();
+  }
+
+  public static String getIdentifierForManualApproach(String[] line, IdentifierType identifierType) {
+    return  switch (identifierType) {
+      case BARCODE -> line[3];
+      case EXTERNAL_SYSTEM_ID -> line[2];
+      case USER_NAME -> line[0];
+      default -> line[1];
+    };
   }
 }
