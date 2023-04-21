@@ -898,7 +898,7 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   @Test
-  public void clearOperationProcessing() {
+  void clearOperationProcessing() {
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
       .id(operationId)

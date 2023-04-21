@@ -5,10 +5,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class UtilsTest {
+class UtilsTest {
 
   @Test
-  public void getIdentifierForManualApproach() {
+  void getIdentifierForManualApproach() {
     String[] line = {"username","id","external-system-id","barcode","","","","","","","","","","","","","","","","","",""};
 
     var barcode = Utils.getIdentifierForManualApproach(line, IdentifierType.BARCODE);
