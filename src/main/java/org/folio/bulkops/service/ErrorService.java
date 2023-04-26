@@ -53,7 +53,7 @@ public class ErrorService {
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage) {
     operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
-      int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors() == null ? 0 : bulkOperation.getCommittedNumOfErrors();
+      int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
       bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
       operationRepository.save(bulkOperation);
     });

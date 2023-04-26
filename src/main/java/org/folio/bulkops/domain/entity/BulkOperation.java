@@ -66,13 +66,13 @@ public class BulkOperation {
   private String linkToCommittedRecordsCsvFile;
   private String linkToCommittedRecordsErrorsCsvFile;
 
-  private Integer totalNumOfRecords = 0;
-  private Integer processedNumOfRecords = 0;
-  private Integer executionChunkSize = 0;
-  private Integer matchedNumOfRecords = 0;
-  private Integer committedNumOfRecords = 0;
-  private Integer matchedNumOfErrors = 0;
-  private Integer committedNumOfErrors = 0;
+  private int totalNumOfRecords;
+  private int processedNumOfRecords;
+  private int executionChunkSize;
+  private int matchedNumOfRecords;
+  private int committedNumOfRecords;
+  private int matchedNumOfErrors;
+  private int committedNumOfErrors;
   private LocalDateTime startTime;
   private LocalDateTime endTime;
   private String errorMessage;

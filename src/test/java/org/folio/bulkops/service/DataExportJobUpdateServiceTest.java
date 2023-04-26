@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -34,6 +35,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 class DataExportJobUpdateServiceTest extends BaseTest {
   @Autowired
   private DataExportJobUpdateReceiverService dataExportJobUpdateReceiverService;
+  @Autowired
+  private DataExportJobUpdateService dataExportJobUpdateService;
 
   @MockBean
   private BulkOperationRepository bulkOperationRepository;
@@ -153,5 +156,33 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     dataExportJobUpdateReceiverService.receiveJobExecutionUpdate(Job.builder().id(UUID.randomUUID()).build(), okapiHeaders);
 
     verify(bulkOperationRepository, times(0)).save(any(BulkOperation.class));
+  }
+
+  @Test
+  void shouldSetDefaultValuesIfProgressIsEmpty() {
+    var jobId = UUID.randomUUID();
+    when(bulkOperationRepository.findByDataExportJobId(jobId))
+      .thenReturn(Optional.of(BulkOperation.builder()
+        .id(UUID.randomUUID())
+        .build()));
+    when(remoteFileSystemClient.put(any(InputStream.class), anyString()))
+      .thenReturn("file.csv");
+
+    var jobUpdate = Job.builder()
+      .id(jobId)
+      .files(List.of("file:src/test/resources/files/users.csv", "file:src/test/resources/files/errors.csv", "file:src/test/resources/files/user.json"))
+      .batchStatus(BatchStatus.COMPLETED)
+      .progress(Progress.builder().build())
+      .build();
+
+    dataExportJobUpdateService.handleReceivedJobExecutionUpdate(jobUpdate);
+
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
+    var operation = operationCaptor.getAllValues().get(1);
+    assertEquals(0, operation.getTotalNumOfRecords());
+    assertEquals(0, operation.getProcessedNumOfRecords());
+    assertEquals(0, operation.getMatchedNumOfRecords());
+    assertEquals(0, operation.getMatchedNumOfErrors());
   }
 }
