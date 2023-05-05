@@ -71,6 +71,7 @@ import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.util.Utils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -228,7 +229,6 @@ public class BulkOperationService {
             }
             writerForModifiedJsonFile.write(modifiedRecord);
           }
-          operation.setCommittedNumOfErrors(operation.getCommittedNumOfErrors() + modified.getErrorsCount());
         }
 
         processedNumOfRecords++;
@@ -253,6 +253,7 @@ public class BulkOperationService {
       operation.setApproach(IN_APP);
       operation.setStatus(OperationStatusType.REVIEW_CHANGES);
       operation.setProcessedNumOfRecords(processedNumOfRecords);
+      bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
       bulkOperationRepository.save(operation);
     } catch (Exception e) {
       log.error(e);
@@ -321,7 +322,6 @@ public class BulkOperationService {
         strategy.setType(entityClass);
 
         int committedNumOfRecords = 0;
-        int committedNumOfErrors = 0;
         int processedNumOfRecords = 0;
 
         while (hasNextRecord(originalFileIterator, modifiedFileIterator)) {
@@ -340,10 +340,8 @@ public class BulkOperationService {
               .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
             committedNumOfRecords++;
           } catch (Exception e) {
-            committedNumOfErrors++;
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage());
           }
-
           if (processedNumOfRecords - execution.getProcessedRecords() > OPERATION_UPDATING_STEP) {
             execution.setProcessedRecords(processedNumOfRecords);
             executionRepository.save(execution);
@@ -357,7 +355,6 @@ public class BulkOperationService {
           operation.setLinkToCommittedRecordsCsvFile(resultCsvFileName);
           operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
         }
-        operation.setCommittedNumOfErrors(operation.getCommittedNumOfErrors() + committedNumOfErrors);
         operation.setCommittedNumOfRecords(committedNumOfRecords);
       } catch (Exception e) {
         execution = execution
@@ -375,6 +372,10 @@ public class BulkOperationService {
 
     if (!FAILED.equals(operation.getStatus())) {
       operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
+    }
+    var operationOpt = bulkOperationRepository.findById(operation.getId());
+    if (operationOpt.isPresent()) {
+      operation.setCommittedNumOfErrors(operationOpt.get().getCommittedNumOfErrors());
     }
     bulkOperationRepository.save(operation);
   }
@@ -546,6 +547,7 @@ public class BulkOperationService {
       CsvToBean<BulkOperationsEntity> csvToBean = new CsvToBeanBuilder<BulkOperationsEntity>(readerForModifiedCsvFile)
         .withType(clazz)
         .withSkipLines(1)
+        .withThrowExceptions(false)
         .build();
 
       var modifiedCsvFileIterator = csvToBean.iterator();
@@ -554,17 +556,14 @@ public class BulkOperationService {
       var entityType = resolveEntityClass(operation.getEntityType());
 
       var originalJsonFileIterator = objectMapper.readValues(parser, entityType);
-      var committedNumOfErrors = 0;
       var processedNumOfRecords = 0;
 
       while (originalJsonFileIterator.hasNext() && modifiedCsvFileIterator.hasNext()) {
         var originalEntity = originalJsonFileIterator.next();
         var modifiedEntity = modifiedCsvFileIterator.next();
-
         var modifiedEntityString = objectMapper.writeValueAsString(modifiedEntity) + (originalJsonFileIterator.hasNext() && modifiedCsvFileIterator.hasNext() ? LF : EMPTY);
 
         if (EqualsBuilder.reflectionEquals(originalEntity, modifiedEntity, true, entityType, "metadata", "createdDate", "updatedDate")) {
-          committedNumOfErrors++;
           errorService.saveError(bulkOperationId, originalEntity.getIdentifier(operation.getIdentifierType()), "No change in value required");
         } else {
           writerForModifiedJsonFile.write(modifiedEntityString);
@@ -575,12 +574,13 @@ public class BulkOperationService {
           bulkOperationRepository.save(operation);
         }
       }
-      operation.setCommittedNumOfErrors(committedNumOfErrors);
+      csvToBean.getCapturedExceptions().forEach(e -> errorService.saveError(operation.getId(), Utils.getIdentifierForManualApproach(e.getLine(), operation.getIdentifierType()), e.getMessage()));
+      csvToBean.getCapturedExceptions().clear();
       operation.setProcessedNumOfRecords(processedNumOfRecords);
       operation.setStatus(REVIEW_CHANGES);
       operation.setLinkToModifiedRecordsJsonFile(linkToModifiedRecordsJsonFile);
+      bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
       bulkOperationRepository.save(operation);
-
     } catch (Exception e) {
       operation.setErrorMessage("Error applying changes: " + e.getCause());
       bulkOperationRepository.save(operation);

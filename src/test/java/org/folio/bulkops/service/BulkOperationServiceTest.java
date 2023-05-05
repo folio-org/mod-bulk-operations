@@ -360,7 +360,8 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToOriginalCsv = bulkOperationId + "/origin.csv";
       var pathToItemJson = "src/test/resources/files/item.json";
 
-      when(bulkOperationRepository.findById(any(UUID.class)))
+
+      when(bulkOperationRepository.findById(bulkOperationId))
         .thenReturn(Optional.of(BulkOperation.builder()
           .id(bulkOperationId)
           .status(DATA_MODIFICATION)
@@ -371,15 +372,21 @@ class BulkOperationServiceTest extends BaseTest {
           .linkToModifiedRecordsCsvFile("existing.json")
           .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
           .processedNumOfRecords(0)
+          .committedNumOfErrors(0)
+          .build()), Optional.of(BulkOperation.builder()
+          .id(bulkOperationId)
+          .committedNumOfErrors(1)
           .build()));
 
       var tempLocationRules = new BulkOperationRule()
+        .bulkOperationId(bulkOperationId)
         .ruleDetails(new BulkOperationRuleRuleDetails().
           option(UpdateOptionType.TEMPORARY_LOCATION)
           .actions(List.of(new Action()
             .type(UpdateActionType.REPLACE_WITH)
             .updated("fcd51ce2-1111-48f0-840e-89ffa2288371"))));
       var statusRules = new BulkOperationRule()
+        .bulkOperationId(bulkOperationId)
         .ruleDetails(new BulkOperationRuleRuleDetails()
           .option(UpdateOptionType.STATUS)
           .actions(List.of(new Action()
@@ -423,6 +430,8 @@ class BulkOperationServiceTest extends BaseTest {
 
       assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));
       assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
+
+      verify(errorService).saveError(eq(bulkOperationId), eq("10101"), any(String.class));
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
       Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository).save(bulkOperationCaptor.capture()));
@@ -886,6 +895,27 @@ class BulkOperationServiceTest extends BaseTest {
     } else {
       assertThat(operation.getProcessedNumOfRecords(), equalTo(0));
     }
+  }
+
+  @Test
+  void clearOperationProcessing() {
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .build();
+
+    when(dataProcessingRepository.findByBulkOperationId(operationId))
+      .thenReturn(Optional.of(BulkOperationDataProcessing.builder()
+        .id(UUID.randomUUID())
+        .status(StatusType.ACTIVE)
+        .processedNumOfRecords(5)
+        .bulkOperationId(operationId)
+        .build()));
+
+    bulkOperationService.clearOperationProcessing(operation);
+
+    verify(dataProcessingRepository).deleteById(any(UUID.class));
+    verify(bulkOperationRepository).save(any(BulkOperation.class));
   }
 
   private BulkOperation buildBulkOperation(String fileName, EntityType entityType, BulkOperationStep step) {
