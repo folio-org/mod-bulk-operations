@@ -10,6 +10,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
+import com.opencsv.exceptions.CsvConstraintViolationException;
 import org.apache.commons.lang3.ObjectUtils;
 
 import com.opencsv.bean.AbstractBeanField;
@@ -17,10 +18,14 @@ import com.opencsv.bean.AbstractBeanField;
 
 public class DateTimeConverter extends AbstractBeanField<String, Date> {
   @Override
-  protected Date convert(String value) {
+  protected Date convert(String value) throws CsvConstraintViolationException {
     if (isNotEmpty(value)) {
-      LocalDateTime localDateTime = LocalDateTime.parse(value, DateTimeFormatter.ofPattern(DATE_TIME_PATTERN));
-      return Date.from(localDateTime.atZone(ZoneOffset.systemDefault()).toInstant());
+      try {
+        LocalDateTime localDateTime = LocalDateTime.parse(value, DateTimeFormatter.ofPattern(DATE_TIME_PATTERN));
+        return Date.from(localDateTime.atZone(ZoneOffset.systemDefault()).toInstant());
+      } catch (Exception e) {
+        throw new CsvConstraintViolationException(String.format("Incorrect datetime value: %s", value));
+      }
     }
     return null;
   }
