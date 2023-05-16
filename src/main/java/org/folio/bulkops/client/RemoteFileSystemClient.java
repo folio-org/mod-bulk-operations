@@ -18,7 +18,7 @@ public class RemoteFileSystemClient {
 
   public final FolioS3Client remoteFolioS3Client;
 
-  private final static int defaultCharBufferSize = 8192;
+  private final static int DEFAULT_CHAR_BUFFER_SIZE = 16384;
 
   public String put(InputStream newFile, String fileNameToBeUpdated) {
     return remoteFolioS3Client.write(fileNameToBeUpdated, newFile);
@@ -42,7 +42,7 @@ public class RemoteFileSystemClient {
   }
 
   public Writer writer(String path) {
-    return remoteFolioS3Client.getRemoteStorageWriter(path, defaultCharBufferSize);
+    return remoteFolioS3Client.getRemoteStorageWriter(path, DEFAULT_CHAR_BUFFER_SIZE);
   }
 
 }
