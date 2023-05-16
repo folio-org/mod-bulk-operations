@@ -15,5 +15,5 @@ public interface AddressTypeClient {
   @GetMapping(value = "/{typeId}", produces = MediaType.APPLICATION_JSON_VALUE)
   AddressType getAddressTypeById(@PathVariable String typeId);
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  AddressTypeCollection getAddressTypeByQuery(@RequestParam String query);
+  AddressTypeCollection getByQuery(@RequestParam String query);
 }

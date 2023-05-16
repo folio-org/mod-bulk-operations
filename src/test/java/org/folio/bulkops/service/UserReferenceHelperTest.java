@@ -3,6 +3,7 @@ package org.folio.bulkops.service;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.util.Utils.encode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
@@ -36,11 +37,11 @@ class UserReferenceHelperTest extends BaseTest {
     actual = userReferenceHelper.getAddressTypeDescById("id_2");
     assertEquals("id_2", actual);
 
-    when(addressTypeClient.getAddressTypeByQuery("desc==\"desc_1\"")).thenReturn(AddressTypeCollection.builder().addressTypes(singletonList(AddressType.builder().id("id_3").build())).build());
+    when(addressTypeClient.getByQuery(encode("desc==\"desc_1\""))).thenReturn(AddressTypeCollection.builder().addressTypes(singletonList(AddressType.builder().id("id_3").build())).build());
     actual = userReferenceHelper.getAddressTypeIdByDesc("desc_1");
     assertEquals("id_3", actual);
 
-    when(addressTypeClient.getAddressTypeByQuery("desc==\"desc_2\"")).thenReturn(AddressTypeCollection.builder().addressTypes(emptyList()).build());
+    when(addressTypeClient.getByQuery(encode("desc==\"desc_2\""))).thenReturn(AddressTypeCollection.builder().addressTypes(emptyList()).build());
     actual = userReferenceHelper.getAddressTypeIdByDesc("desc_2");
     assertEquals("desc_2", actual);
 
@@ -58,11 +59,11 @@ class UserReferenceHelperTest extends BaseTest {
     actual = userReferenceHelper.getDepartmentNameById("id_2");
     assertEquals("id_2", actual);
 
-    when(departmentClient.getDepartmentByQuery("name==\"name_2\"")).thenReturn(DepartmentCollection.builder().departments(singletonList(Department.builder().id("id_3").build())).build());
+    when(departmentClient.getByQuery(encode("name==\"name_2\""))).thenReturn(DepartmentCollection.builder().departments(singletonList(Department.builder().id("id_3").build())).build());
     actual = userReferenceHelper.getDepartmentIdByName("name_2");
     assertEquals("id_3", actual);
 
-    when(departmentClient.getDepartmentByQuery("name==\"name_3\"")).thenReturn(DepartmentCollection.builder().departments(emptyList()).build());
+    when(departmentClient.getByQuery(encode("name==\"name_3\""))).thenReturn(DepartmentCollection.builder().departments(emptyList()).build());
     actual = userReferenceHelper.getDepartmentIdByName("name_3");
     assertEquals("name_3", actual);
 
@@ -80,11 +81,11 @@ class UserReferenceHelperTest extends BaseTest {
     actual = userReferenceHelper.getPatronGroupNameById("id_2");
     assertEquals("id_2", actual);
 
-    when(groupClient.getGroupByQuery("group==\"name_2\"")).thenReturn(UserGroupCollection.builder().usergroups(singletonList(UserGroup.builder().id("id_3").build())).build());
+    when(groupClient.getByQuery(encode("group==\"name_2\""))).thenReturn(UserGroupCollection.builder().usergroups(singletonList(UserGroup.builder().id("id_3").build())).build());
     actual = userReferenceHelper.getPatronGroupIdByName("name_2");
     assertEquals("id_3", actual);
 
-    when(groupClient.getGroupByQuery("group==\"name_3\"")).thenReturn(UserGroupCollection.builder().usergroups(emptyList()).build());
+    when(groupClient.getByQuery(encode("group==\"name_3\""))).thenReturn(UserGroupCollection.builder().usergroups(emptyList()).build());
     actual = userReferenceHelper.getPatronGroupIdByName("name_3");
     assertEquals("name_3", actual);
 

@@ -12,5 +12,5 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface CustomFieldsClient {
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  CustomFieldCollection getCustomFieldsByQuery(@RequestHeader(value = "x-okapi-module-id") String moduleId, @RequestParam("query") String query);
+  CustomFieldCollection getByQuery(@RequestHeader(value = "x-okapi-module-id") String moduleId, @RequestParam("query") String query);
 }

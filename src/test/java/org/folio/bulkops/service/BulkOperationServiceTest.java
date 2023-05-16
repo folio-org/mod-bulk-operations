@@ -633,7 +633,7 @@ class BulkOperationServiceTest extends BaseTest {
       when(remoteFileSystemClient.get(pathToModifiedCsv))
         .thenReturn(new FileInputStream(pathToModifiedUserCsv));
 
-      when(groupClient.getGroupByQuery(String.format("group==\"%s\"", "staff"))).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup())));
+      when(groupClient.getByQuery(String.format("group==\"%s\"", "staff"))).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup())));
 
       when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
 

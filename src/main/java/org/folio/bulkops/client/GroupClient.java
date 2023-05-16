@@ -16,5 +16,5 @@ public interface GroupClient {
   UserGroup getGroupById(@PathVariable String groupId);
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  UserGroupCollection getGroupByQuery(@RequestParam String query);
+  UserGroupCollection getByQuery(@RequestParam String query);
 }

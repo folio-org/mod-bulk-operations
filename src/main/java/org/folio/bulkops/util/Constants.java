@@ -22,4 +22,13 @@ public class Constants {
 
   public static final String LINE_BREAK = "\n";
   public static final String LINE_BREAK_REPLACEMENT = "\\n";
+
+  public static final String QUERY_PATTERN_NAME = "name==\"%s\"";
+  public static final String BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE = "module==%s and configName==%s";
+  public static final String QUERY_PATTERN_CODE = "code==\"%s\"";
+  public static final String QUERY_PATTERN_USERNAME = "username==\"%s\"";
+  public static final String QUERY_PATTERN_DESC = "desc==\"%s\"";
+  public static final String QUERY_PATTERN_GROUP = "group==\"%s\"";
+  public static final String QUERY_PATTERN_REF_ID = "refId==\"%s\"";
+
 }
