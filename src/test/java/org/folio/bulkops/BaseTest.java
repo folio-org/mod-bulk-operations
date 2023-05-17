@@ -1,6 +1,7 @@
 package org.folio.bulkops;
 
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static org.folio.bulkops.processor.UserDataProcessor.DATE_TIME_FORMAT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -11,6 +12,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.github.dockerjava.api.model.ExposedPort;
+import com.github.dockerjava.api.model.HostConfig;
+import com.github.dockerjava.api.model.PortBinding;
+import com.github.dockerjava.api.model.Ports;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -82,56 +87,34 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@ContextConfiguration(initializers = BaseTest.Initializer.class)
+@ContextConfiguration(initializers = BaseTest.DockerPostgreDataSourceInitializer.class)
 @Testcontainers
 @AutoConfigureMockMvc
 @Log4j2
 @DirtiesContext(classMode= DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class BaseTest {
-  public static final String S3_ACCESS_KEY = "minio-access-key";
-  public static final String S3_SECRET_KEY = "minio-secret-key";
-  public static final int S3_PORT = 9000;
-  public static final String BUCKET = "test-bucket";
-  public static final String REGION = "us-west-2";
-  private static final String MINIO_ENDPOINT;
-
-  public static final PostgreSQLContainer<?> postgresDBContainer;
-  private static final GenericContainer<?> s3;
-  public static final RemoteFileSystemClient client;
-  static {
-    postgresDBContainer = new PostgreSQLContainer<>("postgres:12");
-    postgresDBContainer.start();
-    s3 = new GenericContainer<>("minio/minio:latest")
-        .withEnv("MINIO_ACCESS_KEY", S3_ACCESS_KEY)
-        .withEnv("MINIO_SECRET_KEY", S3_SECRET_KEY)
-        .withCommand("server /data")
-        .withExposedPorts(S3_PORT)
-        .waitingFor(new HttpWaitStrategy().forPath("/minio/health/ready")
-          .forPort(S3_PORT)
-          .withStartupTimeout(Duration.ofSeconds(10))
-        );
-    s3.start();
-    MINIO_ENDPOINT = format("http://%s:%s", s3.getHost(), s3.getFirstMappedPort());
-    client =
-        new RemoteFileSystemClient(S3ClientFactory.getS3Client(S3ClientProperties.builder()
-            .endpoint(MINIO_ENDPOINT)
-            .secretKey(S3_SECRET_KEY)
-            .accessKey(S3_ACCESS_KEY)
-            .bucket(BUCKET)
-            .awsSdk(false)
-            .region(REGION)
-            .build()));
-  }
+  public static PostgreSQLContainer<?> postgresDBContainer = new PostgreSQLContainer<>("postgres:13");
 
   public static LocalDateTimeDeserializer localDateTimeDeserializer = new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
 
+  public static RemoteFileSystemClient client;
   public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
     .registerModule(new JavaTimeModule().addDeserializer(LocalDateTime.class, localDateTimeDeserializer))
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 
+
   protected static final String TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkaWt1X2FkbWluIiwidXNlcl9pZCI6IjFkM2I1OGNiLTA3YjUtNWZjZC04YTJhLTNjZTA2YTBlYjkwZiIsImlhdCI6MTYxNjQyMDM5MywidGVuYW50IjoiZGlrdSJ9.2nvEYQBbJP1PewEgxixBWLHSX_eELiBEBpjufWiJZRs";
   protected static final String TENANT = "diku";
+
+  public static final String S3_ACCESS_KEY = "minio-access-key";
+  public static final String S3_SECRET_KEY = "minio-secret-key";
+  public static final int S3_PORT = 9000;
+  public static final String BUCKET = "test-bucket";
+  public static final String REGION = "us-west-2";
+  public static String minio_endpoint;
+
+  private static GenericContainer s3;
 
   @MockBean
   public HoldingsClient holdingsClient;
@@ -189,24 +172,29 @@ public abstract class BaseTest {
 
   public FolioExecutionContext folioExecutionContext;
 
-  public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+
+  static {
+    postgresDBContainer.start();
+  }
+
+  public static class DockerPostgreDataSourceInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
     @Override
     public void initialize(ConfigurableApplicationContext context) {
       TestPropertySourceUtils.addInlinedPropertiesToEnvironment(context,
         "spring.datasource.url=" + postgresDBContainer.getJdbcUrl(),
         "spring.datasource.username=" + postgresDBContainer.getUsername(),
-        "spring.datasource.password=" + postgresDBContainer.getPassword(),
-        "application.remote-files-storage.endpoint=" + MINIO_ENDPOINT,
-        "application.remote-files-storage.region=" + REGION,
-        "application.remote-files-storage.bucket=" + BUCKET,
-        "application.remote-files-storage.accessKey=" + S3_ACCESS_KEY,
-        "application.remote-files-storage.secretKey=" + S3_SECRET_KEY,
-        "application.remote-files-storage.awsSdk=false");
+        "spring.datasource.password=" + postgresDBContainer.getPassword());
     }
   }
 
   @BeforeAll
   static void beforeAll(@Autowired MockMvc mockMvc) {
+    if (isNull(s3)) {
+      setUpMinio();
+    }
+    if (isNull(client)) {
+      setUpClient();
+    }
     setUpTenant(mockMvc);
   }
 
@@ -252,6 +240,33 @@ public abstract class BaseTest {
   @SneakyThrows
   public static String asJsonString(Object value) {
     return OBJECT_MAPPER.writeValueAsString(value);
+  }
+
+  private static void setUpMinio() {
+    s3 = new GenericContainer<>("minio/minio:latest").withEnv("MINIO_ACCESS_KEY", S3_ACCESS_KEY)
+      .withEnv("MINIO_SECRET_KEY", S3_SECRET_KEY)
+      .withCommand("server /data")
+      .withExposedPorts(S3_PORT)
+      .withCreateContainerCmdModifier(cmd -> cmd.withHostConfig(
+        new HostConfig().withPortBindings(new PortBinding(Ports.Binding.bindPort(S3_PORT), new ExposedPort(S3_PORT)))))
+      .waitingFor(new HttpWaitStrategy().forPath("/minio/health/ready")
+        .forPort(S3_PORT)
+        .withStartupTimeout(Duration.ofSeconds(10))
+      );
+    s3.start();
+    minio_endpoint = format("http://%s:%s", s3.getHost(), s3.getFirstMappedPort());
+    log.info("minio container {} on {}", s3.isRunning() ? "is running" : "is not running", minio_endpoint);
+  }
+
+  private static void setUpClient() {
+    client = new RemoteFileSystemClient(S3ClientFactory.getS3Client(S3ClientProperties.builder()
+      .endpoint(minio_endpoint)
+      .secretKey(S3_SECRET_KEY)
+      .accessKey(S3_ACCESS_KEY)
+      .bucket(BUCKET)
+      .awsSdk(false)
+      .region(REGION)
+      .build()));
   }
 
   public static BulkOperationRuleCollection rules(BulkOperationRule... rules) {

@@ -72,8 +72,6 @@ import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.folio.s3.client.FolioS3Client;
-import org.folio.s3.client.RemoteStorageWriter;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -108,9 +106,6 @@ class BulkOperationServiceTest extends BaseTest {
 
   @MockBean
   private RemoteFileSystemClient remoteFileSystemClient;
-
-  @MockBean
-  private FolioS3Client remoteFolioS3Client;
 
   @MockBean
   private BulkOperationExecutionRepository executionRepository;
@@ -176,6 +171,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkOperationRepository.findById(operationId))
       .thenReturn(Optional.of(BulkOperation.builder().id(operationId).status(DATA_MODIFICATION).build()));
 
+    var jobId = UUID.randomUUID();
     when(remoteFileSystemClient.put(any(InputStream.class), eq(operationId + "/barcodes.csv")))
       .thenReturn("modified.csv");
 
@@ -287,7 +283,6 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToOrigin = "path/origin.json";
       var pathToModified = bulkOperationId + "/json/modified-origin.json";
       var pathToOriginalCsv = bulkOperationId + "/origin.csv";
-      var pathToModifiedCsv = bulkOperationId + "/modified-origin.csv";
       var pathToUserJson = "src/test/resources/files/user.json";
 
       when(bulkOperationRepository.findById(any(UUID.class)))
@@ -328,16 +323,14 @@ class BulkOperationServiceTest extends BaseTest {
       when(groupClient.getGroupById(newPatronGroupId)).thenReturn(new UserGroup().withGroup("original"));
       when(groupClient.getGroupById(originalPatronGroupId)).thenReturn(new UserGroup().withGroup("updated"));
 
-      when(remoteFileSystemClient.writer(pathToModified)).thenReturn(new RemoteStorageWriter(pathToModified, 8192, remoteFolioS3Client));
-      when(remoteFileSystemClient.writer(pathToModifiedCsv)).thenReturn(new RemoteStorageWriter(pathToModifiedCsv, 8192, remoteFolioS3Client));
+      when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(approach).step(EDIT));
 
       var expectedPathToModifiedCsvFile = bulkOperationId + "/modified-origin.csv";
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       var pathCaptor = ArgumentCaptor.forClass(String.class);
-      Awaitility.await().untilAsserted(() -> verify(remoteFolioS3Client, times(2)).write(pathCaptor.capture(), streamCaptor.capture()));
-
+      Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).put(streamCaptor.capture(), pathCaptor.capture()));
       assertThat(new String(streamCaptor.getAllValues().get(0).readAllBytes()), containsString(newPatronGroupId));
       assertEquals(expectedPathToModifiedCsvFile, pathCaptor.getAllValues().get(1));
 
@@ -365,8 +358,8 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToOrigin = "path/origin.json";
       var pathToModified = bulkOperationId + "/json/modified-origin.json";
       var pathToOriginalCsv = bulkOperationId + "/origin.csv";
-      var pathToModifiedCsv = bulkOperationId + "/modified-origin.csv";
       var pathToItemJson = "src/test/resources/files/item.json";
+
 
       when(bulkOperationRepository.findById(bulkOperationId))
         .thenReturn(Optional.of(BulkOperation.builder()
@@ -419,8 +412,7 @@ class BulkOperationServiceTest extends BaseTest {
       when(remoteFileSystemClient.get(pathToModified))
         .thenReturn(new FileInputStream(pathToItemJson));
 
-      when(remoteFileSystemClient.writer(pathToModified)).thenReturn(new RemoteStorageWriter(pathToModified, 8192, remoteFolioS3Client));
-      when(remoteFileSystemClient.writer(pathToModifiedCsv)).thenReturn(new RemoteStorageWriter(pathToModifiedCsv, 8192, remoteFolioS3Client));
+      when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(approach).step(EDIT));
 
@@ -428,7 +420,7 @@ class BulkOperationServiceTest extends BaseTest {
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       var pathCaptor = ArgumentCaptor.forClass(String.class);
 
-      Awaitility.await().untilAsserted(() -> verify(remoteFolioS3Client, times(2)).write(pathCaptor.capture(), streamCaptor.capture()));
+      Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).put(streamCaptor.capture(), pathCaptor.capture()));
       assertEquals(expectedPathToModifiedCsvFile, pathCaptor.getAllValues().get(1));
 
       var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
@@ -511,9 +503,7 @@ class BulkOperationServiceTest extends BaseTest {
       var bulkOperationId = UUID.randomUUID();
       var pathToOrigin = bulkOperationId + "/json/origin.json";
       var pathToModified = bulkOperationId + "/json/modified-origin.json";
-      var pathToModifiedResult = bulkOperationId + "/json/result-origin.json";
       var pathToModifiedCsv = bulkOperationId + "/modified-origin.csv";
-      var pathToModifiedCsvResult = bulkOperationId + "/result-modified-origin.csv";
       var pathToUserJson = "src/test/resources/files/user.json";
       var pathToModifiedUserJson = "src/test/resources/files/modified-user.json";
 
@@ -560,8 +550,7 @@ class BulkOperationServiceTest extends BaseTest {
 
       when(groupClient.getGroupById("cdd8a5c8-dce7-4d7f-859a-83754b36c740")).thenReturn(new UserGroup());
 
-      when(remoteFileSystemClient.writer(pathToModifiedResult)).thenReturn(new RemoteStorageWriter(pathToModifiedResult, 8192, remoteFolioS3Client));
-      when(remoteFileSystemClient.writer(pathToModifiedCsvResult)).thenReturn(new RemoteStorageWriter(pathToModifiedCsvResult, 8192, remoteFolioS3Client));
+      when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
 
       when(errorService.uploadErrorsToStorage(any(UUID.class))).thenReturn(linkToErrors);
 
@@ -571,7 +560,7 @@ class BulkOperationServiceTest extends BaseTest {
 
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       var pathCaptor = ArgumentCaptor.forClass(String.class);
-      Awaitility.await().untilAsserted(() -> verify(remoteFolioS3Client, times(2)).write(pathCaptor.capture(), streamCaptor.capture()));
+      Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).put(streamCaptor.capture(), pathCaptor.capture()));
       assertEquals(new String(streamCaptor.getAllValues().get(0).readAllBytes()),
         Files.readString(Path.of(pathToModifiedUserJson)).trim());
       assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().get(0));
@@ -622,10 +611,10 @@ class BulkOperationServiceTest extends BaseTest {
       var bulkOperationId = UUID.randomUUID();
       var pathToOrigin = bulkOperationId + "/json/origin.json";
       var pathToModifiedCsv = bulkOperationId + "/modified-origin.csv";
+      var pathToPreviewJson = bulkOperationId + "/json/preview-origin.json";
       var expectedPathToResultFile = bulkOperationId + "/json/modified-origin.json";
       var pathToUserJson = "src/test/resources/files/user.json";
       var pathToModifiedUserCsv = "src/test/resources/files/modified-user.csv";
-      var pathToTempFile = bulkOperationId + "/temp.txt";
 
       when(bulkOperationRepository.findById(any(UUID.class)))
         .thenReturn(Optional.of(BulkOperation.builder()
@@ -646,8 +635,7 @@ class BulkOperationServiceTest extends BaseTest {
 
       when(groupClient.getGroupByQuery(String.format("group==\"%s\"", "staff"))).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup())));
 
-      when(remoteFileSystemClient.writer(anyString()))
-        .thenReturn(new RemoteStorageWriter(pathToTempFile, 8192, remoteFolioS3Client));
+      when(remoteFileSystemClient.writer(any())).thenCallRealMethod();
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.MANUAL).step(EDIT));
 
@@ -721,7 +709,6 @@ class BulkOperationServiceTest extends BaseTest {
     var pathToModified = bulkOperationId + "/modified-origin.json";
     var pathToUserJson = "src/test/resources/files/user.json";
     var pathToModifiedUserJson = "src/test/resources/files/modified-user.json";
-    var pathToTempFile = bulkOperationId + "/temp.txt";
 
     var operation = BulkOperation.builder()
       .id(bulkOperationId)
@@ -749,7 +736,8 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(pathToModified))
       .thenReturn(new FileInputStream(pathToModifiedUserJson));
 
-    when(remoteFileSystemClient.writer(anyString())).thenReturn(new RemoteStorageWriter(pathToTempFile, 8192, remoteFolioS3Client));
+    when(remoteFileSystemClient.writer(any()))
+  .thenCallRealMethod();
 
     when(executionContentRepository.save(any(BulkOperationExecutionContent.class)))
       .thenReturn(BulkOperationExecutionContent.builder().build());
