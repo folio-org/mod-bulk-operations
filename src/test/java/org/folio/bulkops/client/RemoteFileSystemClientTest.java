@@ -3,6 +3,8 @@ package org.folio.bulkops.client;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
@@ -51,5 +53,8 @@ class RemoteFileSystemClientTest extends BaseTest {
     assertEquals(REGION, remoteRepositoryConfig.getRegion());
     assertEquals(S3_ACCESS_KEY, remoteRepositoryConfig.getAccessKey());
     assertEquals(S3_SECRET_KEY, remoteRepositoryConfig.getSecretKey());
+
+    // Check only port cause host could be different depending on environment.
+    assertTrue(remoteRepositoryConfig.getEndpoint().contains(String.valueOf(S3_PORT)));
   }
 }
