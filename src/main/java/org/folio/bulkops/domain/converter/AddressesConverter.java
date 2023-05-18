@@ -41,14 +41,10 @@ public  class AddressesConverter extends AbstractBeanField<String, List<Address>
   protected List<Address> convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
     String[] addresses = value.split(ITEM_DELIMITER_PATTERN);
     if (addresses.length > 0) {
-      try {
-        return Arrays.stream(addresses)
-          .filter(StringUtils::isNotEmpty)
-          .map(this::getAddressFromString)
-          .collect(Collectors.toList());
-      } catch (Exception e) {
-        throw new CsvConstraintViolationException(String.format("Addresses were not found: %s", e.getMessage()));
-      }
+      return Arrays.stream(addresses)
+        .filter(StringUtils::isNotEmpty)
+        .map(this::getAddressFromString)
+        .collect(Collectors.toList());
     }
     return Collections.emptyList();
   }

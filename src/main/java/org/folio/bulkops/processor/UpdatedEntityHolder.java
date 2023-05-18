@@ -11,4 +11,5 @@ public class UpdatedEntityHolder<T extends BulkOperationsEntity> {
   private T updated;
   private T preview;
   boolean shouldBeUpdated;
+  private int errorsCount;
 }

@@ -35,15 +35,11 @@ import com.opencsv.exceptions.CsvDataTypeMismatchException;
 public class CustomFieldsConverter extends AbstractBeanField<String, Map<String, Object>> {
   @Override
   protected Map<String, Object> convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
-    try {
-     if (isNotEmpty(value)) {
-       return Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
-         .map(this::restoreCustomFieldValue)
-         .filter(pair -> isNotEmpty(pair.getKey()))
-         .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
-     }
-    } catch (Exception e) {
-      throw new CsvConstraintViolationException(String.format("Error while created custom fields: %s", e.getMessage()));
+    if (isNotEmpty(value)) {
+      return Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
+        .map(this::restoreCustomFieldValue)
+        .filter(pair -> isNotEmpty(pair.getKey()))
+        .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
     }
     return Collections.emptyMap();
   }

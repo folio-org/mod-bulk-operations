@@ -54,10 +54,12 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
     }
     if (compare(updated, entity) && holder.shouldBeUpdated) {
       errorService.saveError(rules.getBulkOperationRules().get(0).getBulkOperationId(), identifier, "No change in value required");
+      countErrors++;
       holder.setShouldBeUpdated(false);
     }
     holder.setUpdated(updated);
     holder.setPreview(preview);
+    holder.setErrorsCount(countErrors);
     return holder;
   }
 
