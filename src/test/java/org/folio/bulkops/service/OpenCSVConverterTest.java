@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
+import static org.folio.bulkops.util.Utils.encode;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -23,7 +24,6 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.AddressType;
 import org.folio.bulkops.domain.bean.AddressTypeCollection;
-import org.folio.bulkops.domain.bean.BriefInstance;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.CallNumberType;
 import org.folio.bulkops.domain.bean.CallNumberTypeCollection;
@@ -265,20 +265,20 @@ class OpenCSVConverterTest extends BaseTest {
       .withId("4ac6b846-e184-4cdd-8101-68f4af97d103")
       .withName("Department"));
     when(addressTypeClient.getAddressTypeById(any())).thenReturn(new AddressType().withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880").withDesc("desc").withAddressType("work"));
-    when(groupClient.getGroupByQuery("group==\"staff\"")).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup().withId("503a81cd-6c26-400f-b620-14c08943697c").withGroup("staff"))));
-    when(departmentClient.getDepartmentByQuery("name==\"Department\"")).thenReturn(new DepartmentCollection()
+    when(groupClient.getByQuery(encode("group==\"staff\""))).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup().withId("503a81cd-6c26-400f-b620-14c08943697c").withGroup("staff"))));
+    when(departmentClient.getByQuery(encode("name==\"Department\""))).thenReturn(new DepartmentCollection()
       .withDepartments(List.of(new Department()
         .withId("4ac6b846-e184-4cdd-8101-68f4af97d103")
         .withName("Department"))));
-    when(addressTypeClient.getAddressTypeByQuery("desc==\"desc\"")).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880").withDesc("desc").withAddressType("work"))));
+    when(addressTypeClient.getByQuery(encode("desc==\"desc\""))).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880").withDesc("desc").withAddressType("work"))));
     when(okapiClient.getModuleIds(any(), any(), any())).thenReturn(JsonNodeFactory.instance.arrayNode().add(JsonNodeFactory.instance.objectNode().put("id", "USERS")));
-    when(customFieldsClient.getCustomFieldsByQuery(any(), eq("name==\"sierraCheckoutInformation\""))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
+    when(customFieldsClient.getByQuery(any(), eq(encode(("name==\"sierraCheckoutInformation\""))))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
       .withName("sierraCheckoutInformation")
       .withType(CustomFieldTypes.TEXTBOX_LONG)
       .withRefId("sierraCheckoutInformation")
       .withSelectField(new SelectField().withOptions(new SelectFieldOptions().withValues(List.of(new SelectFieldOption().withValue("10")))))
       .withTextField(new TextField().withFieldFormat(Format.TEXT)))));
-    when(customFieldsClient.getCustomFieldsByQuery(any(), eq("refId==\"sierraCheckoutInformation\""))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
+    when(customFieldsClient.getByQuery(any(), eq(encode("refId==\"sierraCheckoutInformation\"")))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
       .withName("sierraCheckoutInformation")
       .withType(CustomFieldTypes.TEXTBOX_LONG)
       .withRefId("sierraCheckoutInformation")
@@ -307,31 +307,31 @@ class OpenCSVConverterTest extends BaseTest {
     when(statisticalCodeClient.getById("c7a32c50-ea7c-43b7-87ab-d134c8371330")).thenReturn(new StatisticalCode()
       .withId("c7a32c50-ea7c-43b7-87ab-d134c8371330")
       .withCode("St@tistical-Code-2"));
-    when(callNumberTypeClient.getByQuery("name==\"Call-number@type\"")).thenReturn(new CallNumberTypeCollection()
+    when(callNumberTypeClient.getByQuery(encode("name==\"Call-number@type\""))).thenReturn(new CallNumberTypeCollection()
       .withCallNumberTypes(List.of((new CallNumberType()
         .withId("5ba6b62e-6858-490a-8102-5b1369873835")
         .withName("Call-number@type")
         .withSource("s@urce")))));
-    when(damagedStatusClient.getByQuery("name==\"@damaged/status\"")).thenReturn(new DamagedStatusCollection()
+    when(damagedStatusClient.getByQuery(encode("name==\"@damaged/status\""))).thenReturn(new DamagedStatusCollection()
       .withItemDamageStatuses(List.of(new DamagedStatus()
         .withId("54d1dd76-ea33-4bcb-955b-6b29df4f7930")
         .withName("@damaged/status")
         .withSource("-source-"))));
-    when(itemNoteTypeClient.getByQuery("name==\"Item@Note@NameX\"")).thenReturn(new NoteTypeCollection().withItemNoteTypes(List.of(new NoteType().withId("1dde7141-ec8a-4dae-9825-49ce14c728e7").withName("Item@Note@NameX"))));
-    when(itemNoteTypeClient.getByQuery("name==\"Item@Note@Name_2\"")).thenReturn(new NoteTypeCollection().withItemNoteTypes(List.of(new NoteType().withId("c3a539b9-9576-4e3a-b6de-d910200b2919").withName("Item@Note@Name_2"))));
-    when(materialTypeClient.getByQuery("name==\"microform\"")).thenReturn(new MaterialTypeCollection().withMtypes(List.of(new MaterialType().withId("fd6c6515-d470-4561-9c32-3e3290d4ca98").withName("microform"))));
-    when(loanTypeClient.getByQuery("name==\"Can circulate\"")).thenReturn(new LoanTypeCollection().withLoantypes(List.of(new LoanType().withId("2b94c631-fca9-4892-a730-03ee529ffe27").withName("Can circulate"))));
-    when(loanTypeClient.getByQuery("name==\"Reading room\"")).thenReturn(new LoanTypeCollection().withLoantypes(List.of(new LoanType().withId("2e48e713-17f3-4c13-a9f8-23845bb210a4").withName("Reading room"))));
-    when(statisticalCodeClient.getByQuery("code==\"St@tistical-Code#1\"")).thenReturn(new StatisticalCodeCollection()
+    when(itemNoteTypeClient.getByQuery(encode("name==\"Item@Note@NameX\""))).thenReturn(new NoteTypeCollection().withItemNoteTypes(List.of(new NoteType().withId("1dde7141-ec8a-4dae-9825-49ce14c728e7").withName("Item@Note@NameX"))));
+    when(itemNoteTypeClient.getByQuery(encode("name==\"Item@Note@Name_2\""))).thenReturn(new NoteTypeCollection().withItemNoteTypes(List.of(new NoteType().withId("c3a539b9-9576-4e3a-b6de-d910200b2919").withName("Item@Note@Name_2"))));
+    when(materialTypeClient.getByQuery(encode("name==\"microform\""))).thenReturn(new MaterialTypeCollection().withMtypes(List.of(new MaterialType().withId("fd6c6515-d470-4561-9c32-3e3290d4ca98").withName("microform"))));
+    when(loanTypeClient.getByQuery(encode("name==\"Can circulate\""))).thenReturn(new LoanTypeCollection().withLoantypes(List.of(new LoanType().withId("2b94c631-fca9-4892-a730-03ee529ffe27").withName("Can circulate"))));
+    when(loanTypeClient.getByQuery(encode("name==\"Reading room\""))).thenReturn(new LoanTypeCollection().withLoantypes(List.of(new LoanType().withId("2e48e713-17f3-4c13-a9f8-23845bb210a4").withName("Reading room"))));
+    when(statisticalCodeClient.getByQuery(encode("code==\"St@tistical-Code#1\""))).thenReturn(new StatisticalCodeCollection()
       .withStatisticalCodes(List.of(new StatisticalCode()
         .withId("1c622d0f-2e91-4c30-ba43-2750f9735f51")
         .withCode("St@tistical-Code#1"))));
-    when(statisticalCodeClient.getByQuery("code==\"St@tistical-Code-2\"")).thenReturn(new StatisticalCodeCollection()
+    when(statisticalCodeClient.getByQuery(encode("code==\"St@tistical-Code-2\""))).thenReturn(new StatisticalCodeCollection()
       .withStatisticalCodes(List.of(new StatisticalCode()
         .withId("c7a32c50-ea7c-43b7-87ab-d134c8371330")
         .withCode("St@tistical-Code-2"))));
-    when(locationClient.getLocationByQuery("name==\"Main Library\"")).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("fcd64ce1-6995-48f0-840e-89ffa2288371").withName("Main Library"))));
-    when(locationClient.getLocationByQuery("name==\"Popular Reading Collection\"")).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("b241764c-1466-4e1d-a028-1a3684a5da87").withName("Popular Reading Collection"))));
+    when(locationClient.getByQuery(encode("name==\"Main Library\""))).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("fcd64ce1-6995-48f0-840e-89ffa2288371").withName("Main Library"))));
+    when(locationClient.getByQuery(encode("name==\"Popular Reading Collection\""))).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("b241764c-1466-4e1d-a028-1a3684a5da87").withName("Popular Reading Collection"))));
 
     // Holdings record
     when(holdingsTypeClient.getById("0c422f92-0f4d-4d32-8cbe-390ebc33a3e5")).thenReturn(new HoldingsType().withId("0c422f92-0f4d-4d32-8cbe-390ebc33a3e5").withName("Holdings type").withSource("Holdings source"));
@@ -352,22 +352,22 @@ class OpenCSVConverterTest extends BaseTest {
       .withCode("ST2")
       .withName("St@tistical-Code-holding_2"));
     when(holdingsSourceClient.getById("f32d531e-df79-46b3-8932-cdd35f7a2264")).thenReturn(new HoldingsRecordsSource().withId("f32d531e-df79-46b3-8932-cdd35f7a2264").withName("Holdings@record@source"));
-    when(holdingsTypeClient.getByQuery("name==\"Holdings type\"")).thenReturn(new HoldingsTypeCollection().withHoldingsTypes(List.of(new HoldingsType().withId("0c422f92-0f4d-4d32-8cbe-390ebc33a3e5").withName("Holdings type").withSource("Holdings source"))));
-    when(locationClient.getLocationByQuery("name==\"Location#1\"")).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("fcd64ce1-6995-48f0-840e-89ffa2288371").withName("Location#1"))));
-    when(locationClient.getLocationByQuery("name==\"Location#2\"")).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("b241764c-1466-4e1d-a028-1a3684a5da87").withName("Popular Reading Collection"))));
-    when(callNumberTypeClient.getByQuery("name==\"Call-number@type_holding\"")).thenReturn(new CallNumberTypeCollection().withCallNumberTypes(List.of(new CallNumberType()
+    when(holdingsTypeClient.getByQuery(encode("name==\"Holdings type\""))).thenReturn(new HoldingsTypeCollection().withHoldingsTypes(List.of(new HoldingsType().withId("0c422f92-0f4d-4d32-8cbe-390ebc33a3e5").withName("Holdings type").withSource("Holdings source"))));
+    when(locationClient.getByQuery(encode("name==\"Location#1\""))).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("fcd64ce1-6995-48f0-840e-89ffa2288371").withName("Location#1"))));
+    when(locationClient.getByQuery(encode("name==\"Location#2\""))).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("b241764c-1466-4e1d-a028-1a3684a5da87").withName("Popular Reading Collection"))));
+    when(callNumberTypeClient.getByQuery(encode("name==\"Call-number@type_holding\""))).thenReturn(new CallNumberTypeCollection().withCallNumberTypes(List.of(new CallNumberType()
       .withId("cd70562c-dd0b-42f6-aa80-ce803d24d4a1")
       .withName("Call-number@type_holding")
       .withSource("s@urce-holding"))));
-    when(holdingsNoteTypeClient.getByQuery("name==\"Holding#Type#Name\"")).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(List.of(new HoldingsNoteType().withId("88914775-f677-4759-b57b-1a33b90b24e0").withName("Holding#Type#Name"))));
-    when(statisticalCodeClient.getByQuery("name==\"St@tistical-Code-holding_1\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(List.of(new StatisticalCode()
+    when(holdingsNoteTypeClient.getByQuery(encode("name==\"Holding#Type#Name\""))).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(List.of(new HoldingsNoteType().withId("88914775-f677-4759-b57b-1a33b90b24e0").withName("Holding#Type#Name"))));
+    when(statisticalCodeClient.getByQuery(encode("name==\"St@tistical-Code-holding_1\""))).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(List.of(new StatisticalCode()
       .withId("264c4f94-1538-43a3-8b40-bed68384b31b")
       .withCode("ST1")
       .withName("St@tistical-Code-holding_1"))));
-    when(statisticalCodeClient.getByQuery("name==\"St@tistical-Code-holding_2\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(List.of(new StatisticalCode()
+    when(statisticalCodeClient.getByQuery(encode("name==\"St@tistical-Code-holding_2\""))).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(List.of(new StatisticalCode()
       .withId("0868921a-4407-47c9-9b3e-db94644dbae7")
       .withCode("ST2")
       .withName("St@tistical-Code-holding_2"))));
-    when(holdingsSourceClient.getByQuery("name==\"Holdings@record@source\"")).thenReturn(new HoldingsRecordsSourceCollection().withHoldingsRecordsSources(List.of(new HoldingsRecordsSource().withId("f32d531e-df79-46b3-8932-cdd35f7a2264").withName("Holdings@record@source"))));
+    when(holdingsSourceClient.getByQuery(encode("name==\"Holdings@record@source\""))).thenReturn(new HoldingsRecordsSourceCollection().withHoldingsRecordsSources(List.of(new HoldingsRecordsSource().withId("f32d531e-df79-46b3-8932-cdd35f7a2264").withName("Holdings@record@source"))));
   }
 }

@@ -1,7 +1,10 @@
 package org.folio.bulkops.util;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -19,6 +22,10 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 public class Utils {
   public static Optional<String> ofEmptyString(String string) {
     return StringUtils.isNotEmpty(string) ? Optional.of(string) : Optional.empty();
+  }
+
+  public static String encode(String query) {
+    return isEmpty(query) ? EMPTY : "&query=" + URLEncoder.encode(query, StandardCharsets.UTF_8);
   }
 
   public static Class<? extends BulkOperationsEntity> resolveEntityClass(EntityType clazz) {

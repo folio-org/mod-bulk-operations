@@ -11,5 +11,5 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface ConfigurationClient {
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  ConfigurationCollection getConfigurations(@RequestParam("query") String query);
+  ConfigurationCollection getByQuery(@RequestParam("query") String query);
 }

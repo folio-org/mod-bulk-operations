@@ -4,6 +4,11 @@ import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_DESC;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_GROUP;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_REF_ID;
+import static org.folio.bulkops.util.Utils.encode;
 
 import java.net.URI;
 
@@ -42,7 +47,7 @@ public class UserReferenceService {
     if (isEmpty(desc)) {
       return null;
     } else {
-      var response = addressTypeClient.getAddressTypeByQuery(String.format("desc==\"%s\"", desc));
+      var response = addressTypeClient.getByQuery(encode(format(QUERY_PATTERN_DESC, desc)));
       if (response.getAddressTypes().isEmpty()) {
         var msg = format("Address type=%s not found", desc);
         log.error(msg);
@@ -67,7 +72,7 @@ public class UserReferenceService {
     if (isEmpty(name)) {
       return EMPTY;
     } else {
-      var response = departmentClient.getDepartmentByQuery(String.format("name==\"%s\"", name));
+      var response = departmentClient.getByQuery(encode(format(QUERY_PATTERN_NAME, name)));
       if (response.getDepartments().isEmpty()) {
         var msg = format("Department=%s not found", name);
         log.error(msg);
@@ -92,7 +97,7 @@ public class UserReferenceService {
     if (isEmpty(name)) {
       return EMPTY;
     }
-    var response = groupClient.getGroupByQuery(String.format("group==\"%s\"", name));
+    var response = groupClient.getByQuery(encode(format(QUERY_PATTERN_GROUP, name)));
     if (ObjectUtils.isEmpty(response) || ObjectUtils.isEmpty(response.getUsergroups())) {
       var msg = "Invalid patron group value: " + name;
       log.error(msg);
@@ -104,7 +109,7 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByName(String name)  {
-    var customFields = customFieldsClient.getCustomFieldsByQuery(getModuleId(MOD_USERS), String.format("name==\"%s\"", name));
+    var customFields = customFieldsClient.getByQuery(getModuleId(MOD_USERS), encode(format(QUERY_PATTERN_NAME, name)));
     if (customFields.getCustomFields().isEmpty()) {
       var msg = format("Custom field with name=%s not found", name);
       log.error(msg);
@@ -115,7 +120,7 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByRefId(String refId) {
-    var customFields = customFieldsClient.getCustomFieldsByQuery(getModuleId(MOD_USERS),String.format("refId==\"%s\"", refId));
+    var customFields = customFieldsClient.getByQuery(getModuleId(MOD_USERS), encode(format(QUERY_PATTERN_REF_ID, refId)));
     if (customFields.getCustomFields().isEmpty()) {
       var msg = format("Custom field with refId=%s not found", refId);
       log.error(msg);
