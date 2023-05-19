@@ -6,26 +6,20 @@ import java.io.InputStreamReader;
 import java.io.Writer;
 
 import org.folio.s3.client.FolioS3Client;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
-@Lazy
 @Component
 @RequiredArgsConstructor
 public class RemoteFileSystemClient {
 
-  public final FolioS3Client remoteFolioS3Client;
+  private static final int DEFAULT_CHAR_BUFFER_SIZE = 16384;
 
-  private final static int DEFAULT_CHAR_BUFFER_SIZE = 16384;
+  public final FolioS3Client remoteFolioS3Client;
 
   public String put(InputStream newFile, String fileNameToBeUpdated) {
     return remoteFolioS3Client.write(fileNameToBeUpdated, newFile);
-  }
-
-  public String upload(String path, String filename) {
-    return remoteFolioS3Client.upload(path, filename);
   }
 
   public int getNumOfLines(String file) {
