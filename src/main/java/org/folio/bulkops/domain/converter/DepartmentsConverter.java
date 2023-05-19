@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.service.UserReferenceHelper;
 
 import com.opencsv.bean.AbstractBeanField;
@@ -37,14 +38,20 @@ public class DepartmentsConverter extends AbstractBeanField<String, Set<UUID>> {
 
   @Override
   protected String convertToWrite(Object value) {
-    if (ObjectUtils.isNotEmpty(value)) {
-      return ((Set<UUID>) value).stream()
-        .filter(Objects::nonNull)
-        .map(id -> UserReferenceHelper.service().getDepartmentNameById(id.toString()))
-        .filter(StringUtils::isNotEmpty)
-        .map(SpecialCharacterEscaper::escape)
-        .collect(Collectors.joining(ARRAY_DELIMITER));
-    }
+    try {
+      if (ObjectUtils.isNotEmpty(value)) {
+        return ((Set<UUID>) value).stream()
+          .filter(Objects::nonNull)
+          .map(id -> UserReferenceHelper.service().getDepartmentNameById(id.toString()))
+          .filter(StringUtils::isNotEmpty)
+          .map(SpecialCharacterEscaper::escape)
+          .collect(Collectors.joining(ARRAY_DELIMITER));
+      }
+    } catch (Exception e) {
+      throw new ConverterException(this.getField(), value, e.getMessage());
+      }
     return EMPTY;
-  }
+
+    }
+
 }

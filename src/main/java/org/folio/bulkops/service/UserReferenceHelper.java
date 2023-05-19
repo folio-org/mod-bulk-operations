@@ -3,6 +3,7 @@ package org.folio.bulkops.service;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import org.folio.bulkops.domain.bean.CustomField;
+import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
@@ -34,12 +35,7 @@ public class UserReferenceHelper implements InitializingBean {
   }
 
   public String getDepartmentNameById(String id) {
-    try {
-      return userReferenceService.getDepartmentNameById(id);
-    } catch (NotFoundException e) {
-      log.error("Department was not found by id={}", id);
-      return id;
-    }
+    return userReferenceService.getDepartmentNameById(id);
   }
 
   public String getDepartmentIdByName(String name) {
