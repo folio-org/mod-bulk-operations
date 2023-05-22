@@ -25,7 +25,7 @@ public class Utils {
   }
 
   public static String encode(String query) {
-    return isEmpty(query) ? EMPTY : "query=" + URLEncoder.encode(query, StandardCharsets.UTF_8);
+    return isEmpty(query) ? EMPTY : URLEncoder.encode(query, StandardCharsets.UTF_8);
   }
 
   public static Class<? extends BulkOperationsEntity> resolveEntityClass(EntityType clazz) {
