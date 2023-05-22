@@ -41,7 +41,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     var actual = holdingsReferenceHelper.getHoldingsTypeNameById("id_1");
     assertEquals("name_1", actual);
 
-    when(holdingsTypeClient.getByQuery(encode("name==\"name_2\""))).thenReturn(new HoldingsTypeCollection().withHoldingsTypes(Collections.singletonList(new HoldingsType().withId("id_2"))));
+    when(holdingsTypeClient.getByQuery("name==\"name_2\"")).thenReturn(new HoldingsTypeCollection().withHoldingsTypes(Collections.singletonList(new HoldingsType().withId("id_2"))));
     actual = holdingsReferenceHelper.getHoldingsTypeIdByName("name_2");
     assertEquals("id_2", actual);
 
@@ -49,7 +49,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     actual = holdingsReferenceHelper.getHoldingsTypeNameById("id_3");
     assertEquals("id_3", actual);
 
-    when(holdingsTypeClient.getByQuery(encode("name==\"name_4\""))).thenReturn(new HoldingsTypeCollection().withHoldingsTypes(Collections.emptyList()));
+    when(holdingsTypeClient.getByQuery("name==\"name_4\"")).thenReturn(new HoldingsTypeCollection().withHoldingsTypes(Collections.emptyList()));
     actual = holdingsReferenceHelper.getHoldingsTypeIdByName("name_4");
     assertEquals("name_4", actual);
 
@@ -63,7 +63,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     var actual = holdingsReferenceHelper.getLocationNameById("id_1");
     assertEquals("name_1", actual);
 
-    when(locationClient.getByQuery(encode("name==\"name_2\""))).thenReturn(new ItemLocationCollection().withLocations(Collections.singletonList(new ItemLocation().withId("id_2"))));
+    when(locationClient.getByQuery("name==\"name_2\"")).thenReturn(new ItemLocationCollection().withLocations(Collections.singletonList(new ItemLocation().withId("id_2"))));
     actual = holdingsReferenceHelper.getLocationIdByName("name_2");
     assertEquals("id_2", actual);
 
@@ -71,7 +71,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     actual = holdingsReferenceHelper.getLocationNameById("id_3");
     assertEquals("id_3", actual);
 
-    when(locationClient.getByQuery(encode("name==\"name_4\""))).thenReturn(new ItemLocationCollection().withLocations(Collections.emptyList()));
+    when(locationClient.getByQuery("name==\"name_4\"")).thenReturn(new ItemLocationCollection().withLocations(Collections.emptyList()));
     actual = holdingsReferenceHelper.getLocationIdByName("name_4");
     assertEquals("name_4", actual);
 
@@ -85,7 +85,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     var actual = holdingsReferenceHelper.getCallNumberTypeNameById("id_1");
     assertEquals("name_1", actual);
 
-    when(callNumberTypeClient.getByQuery(encode("name==\"name_2\""))).thenReturn(new CallNumberTypeCollection().withCallNumberTypes(Collections.singletonList(new CallNumberType().withId("id_2"))));
+    when(callNumberTypeClient.getByQuery("name==\"name_2\"")).thenReturn(new CallNumberTypeCollection().withCallNumberTypes(Collections.singletonList(new CallNumberType().withId("id_2"))));
     actual = holdingsReferenceHelper.getCallNumberTypeIdByName("name_2");
     assertEquals("id_2", actual);
 
@@ -93,7 +93,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     actual = holdingsReferenceHelper.getCallNumberTypeNameById("id_3");
     assertEquals("id_3", actual);
 
-    when(callNumberTypeClient.getByQuery(encode("name==\"name_4\""))).thenReturn(new CallNumberTypeCollection().withCallNumberTypes(Collections.emptyList()));
+    when(callNumberTypeClient.getByQuery("name==\"name_4\"")).thenReturn(new CallNumberTypeCollection().withCallNumberTypes(Collections.emptyList()));
     actual = holdingsReferenceHelper.getCallNumberTypeIdByName("name_4");
     assertEquals("name_4", actual);
 
@@ -107,7 +107,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     var actual = holdingsReferenceHelper.getNoteTypeNameById("id_1");
     assertEquals("name_1", actual);
 
-    when(holdingsNoteTypeClient.getByQuery(encode("name==\"name_2\""))).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(Collections.singletonList(new HoldingsNoteType().withId("id_2"))));
+    when(holdingsNoteTypeClient.getByQuery("name==\"name_2\"")).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(Collections.singletonList(new HoldingsNoteType().withId("id_2"))));
     actual = holdingsReferenceHelper.getNoteTypeIdByName("name_2");
     assertEquals("id_2", actual);
 
@@ -115,7 +115,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     actual = holdingsReferenceHelper.getNoteTypeNameById("id_3");
     assertEquals("id_3", actual);
 
-    when(holdingsNoteTypeClient.getByQuery(encode("name==\"name_4\""))).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(Collections.emptyList()));
+    when(holdingsNoteTypeClient.getByQuery("name==\"name_4\"")).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(Collections.emptyList()));
     actual = holdingsReferenceHelper.getNoteTypeIdByName("name_4");
     assertEquals("name_4", actual);
 
@@ -129,7 +129,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     var actual = holdingsReferenceHelper.getIllPolicyNameById("id_1");
     assertEquals("name_1", actual);
 
-    when(illPolicyClient.getByQuery(encode("name==\"name_2\""))).thenReturn(new IllPolicyCollection().withIllPolicies(Collections.singletonList(new IllPolicy().withId("id_2"))));
+    when(illPolicyClient.getByQuery("name==\"name_2\"")).thenReturn(new IllPolicyCollection().withIllPolicies(Collections.singletonList(new IllPolicy().withId("id_2"))));
     actual = holdingsReferenceHelper.getIllPolicyIdByName("name_2");
     assertEquals("id_2", actual);
 
@@ -137,7 +137,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     actual = holdingsReferenceHelper.getIllPolicyNameById("id_3");
     assertEquals("id_3", actual);
 
-    when(illPolicyClient.getByQuery(encode("name==\"name_4\""))).thenReturn(new IllPolicyCollection().withIllPolicies(Collections.emptyList()));
+    when(illPolicyClient.getByQuery("name==\"name_4\"")).thenReturn(new IllPolicyCollection().withIllPolicies(Collections.emptyList()));
     actual = holdingsReferenceHelper.getIllPolicyIdByName("name_4");
     assertEquals("name_4", actual);
 
@@ -151,7 +151,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     var actual = holdingsReferenceHelper.getSourceNameById("id_1");
     assertEquals("name_1", actual);
 
-    when(holdingsSourceClient.getByQuery(encode("name==\"name_2\""))).thenReturn(new HoldingsRecordsSourceCollection().withHoldingsRecordsSources(Collections.singletonList(new HoldingsRecordsSource().withId("id_2"))));
+    when(holdingsSourceClient.getByQuery("name==\"name_2\"")).thenReturn(new HoldingsRecordsSourceCollection().withHoldingsRecordsSources(Collections.singletonList(new HoldingsRecordsSource().withId("id_2"))));
     actual = holdingsReferenceHelper.getSourceIdByName("name_2");
     assertEquals("id_2", actual);
 
@@ -159,7 +159,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     actual = holdingsReferenceHelper.getSourceNameById("id_3");
     assertEquals("id_3", actual);
 
-    when(holdingsSourceClient.getByQuery(encode("name==\"name_4\""))).thenReturn(new HoldingsRecordsSourceCollection().withHoldingsRecordsSources(Collections.emptyList()));
+    when(holdingsSourceClient.getByQuery("name==\"name_4\"")).thenReturn(new HoldingsRecordsSourceCollection().withHoldingsRecordsSources(Collections.emptyList()));
     actual = holdingsReferenceHelper.getSourceIdByName("name_4");
     assertEquals("name_4", actual);
 
@@ -172,7 +172,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     var actual = holdingsReferenceHelper.getStatisticalCodeNameById("id_1");
     assertEquals("name_1", actual);
 
-    when(statisticalCodeClient.getByQuery(encode("name==\"name_2\""))).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.singletonList(new StatisticalCode().withId("id_2"))));
+    when(statisticalCodeClient.getByQuery("name==\"name_2\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.singletonList(new StatisticalCode().withId("id_2"))));
     actual = holdingsReferenceHelper.getStatisticalCodeIdByName("name_2");
     assertEquals("id_2", actual);
 
@@ -180,7 +180,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     actual = holdingsReferenceHelper.getStatisticalCodeNameById("id_3");
     assertEquals("id_3", actual);
 
-    when(statisticalCodeClient.getByQuery(encode("name==\"name_4\""))).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.emptyList()));
+    when(statisticalCodeClient.getByQuery("name==\"name_4\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.emptyList()));
     actual = holdingsReferenceHelper.getStatisticalCodeIdByName("name_4");
     assertEquals("name_4", actual);
 

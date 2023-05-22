@@ -57,14 +57,14 @@ class ItemReferenceHelperTest extends BaseTest {
     var actual = itemReferenceHelper.getDamagedStatusNameById("id_1");
     assertEquals("name_1", actual);
 
-    when(damagedStatusClient.getByQuery(encode("name==\"name_2\""))).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.singletonList(new DamagedStatus().withId("id_2"))));
+    when(damagedStatusClient.getByQuery("name==\"name_2\"")).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.singletonList(new DamagedStatus().withId("id_2"))));
     actual = itemReferenceHelper.getDamagedStatusIdByName("name_2");
     assertEquals("id_2", actual);
 
     when(damagedStatusClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getDamagedStatusNameById("id_3"));
 
-    when(damagedStatusClient.getByQuery(encode("name==\"name_4\""))).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.emptyList()));
+    when(damagedStatusClient.getByQuery("name==\"name_4\"")).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.emptyList()));
     actual = itemReferenceHelper.getDamagedStatusIdByName("name_4");
     assertEquals("name_4", actual);
 
@@ -78,14 +78,14 @@ class ItemReferenceHelperTest extends BaseTest {
     var actual = itemReferenceHelper.getNoteTypeNameById("id_1");
     assertEquals("name_1", actual);
 
-    when(itemNoteTypeClient.getByQuery(encode("name==\"name_2\""))).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.singletonList(new NoteType().withId("id_2"))));
+    when(itemNoteTypeClient.getByQuery("name==\"name_2\"")).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.singletonList(new NoteType().withId("id_2"))));
     actual = itemReferenceHelper.getNoteTypeIdByName("name_2");
     assertEquals("id_2", actual);
 
     when(itemNoteTypeClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getNoteTypeNameById("id_3"));
 
-    when(itemNoteTypeClient.getByQuery(encode("name==\"name_4\""))).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.emptyList()));
+    when(itemNoteTypeClient.getByQuery("name==\"name_4\"")).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.emptyList()));
     actual = itemReferenceHelper.getNoteTypeIdByName("name_4");
     assertEquals("name_4", actual);
 
@@ -99,14 +99,14 @@ class ItemReferenceHelperTest extends BaseTest {
     var actual = itemReferenceHelper.getServicePointNameById("id_1");
     assertEquals("name_1", actual);
 
-    when(servicePointClient.getByQuery(encode("name==\"name_2\""), 1L)).thenReturn(new ServicePoints().withServicepoints(Collections.singletonList(new ServicePoint().withId("id_2"))));
+    when(servicePointClient.getByQuery("name==\"name_2\"", 1L)).thenReturn(new ServicePoints().withServicepoints(Collections.singletonList(new ServicePoint().withId("id_2"))));
     actual = itemReferenceHelper.getServicePointIdByName("name_2");
     assertEquals("id_2", actual);
 
     when(servicePointClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getServicePointNameById("id_3"));
 
-    when(servicePointClient.getByQuery(encode("name==\"name_4\""), 1L)).thenReturn(new ServicePoints().withServicepoints(Collections.emptyList()));
+    when(servicePointClient.getByQuery("name==\"name_4\"", 1L)).thenReturn(new ServicePoints().withServicepoints(Collections.emptyList()));
     actual = itemReferenceHelper.getServicePointIdByName("name_4");
     assertEquals("name_4", actual);
 
@@ -120,14 +120,14 @@ class ItemReferenceHelperTest extends BaseTest {
     var actual = itemReferenceHelper.getStatisticalCodeById("id_1");
     assertEquals("code_1", actual);
 
-    when(statisticalCodeClient.getByQuery(encode("code==\"code_2\""))).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.singletonList(new StatisticalCode().withId("id_2"))));
+    when(statisticalCodeClient.getByQuery("code==\"code_2\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.singletonList(new StatisticalCode().withId("id_2"))));
     actual = itemReferenceHelper.getStatisticalCodeIdByCode("code_2");
     assertEquals("id_2", actual);
 
     when(statisticalCodeClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getStatisticalCodeById("id_3"));
 
-    when(statisticalCodeClient.getByQuery(encode("code==\"code_4\""))).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.emptyList()));
+    when(statisticalCodeClient.getByQuery("code==\"code_4\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.emptyList()));
     actual = itemReferenceHelper.getStatisticalCodeIdByCode("code_4");
     assertEquals("code_4", actual);
 
@@ -141,14 +141,14 @@ class ItemReferenceHelperTest extends BaseTest {
     var actual = itemReferenceHelper.getUserNameById("id_1");
     assertEquals("name_1", actual);
 
-    when(userClient.getByQuery(encode("username==\"name_2\""), 1L)).thenReturn(new UserCollection().withUsers(Collections.singletonList(new User().withId("id_2"))));
+    when(userClient.getByQuery("username==\"name_2\"", 1L)).thenReturn(new UserCollection().withUsers(Collections.singletonList(new User().withId("id_2"))));
     actual = itemReferenceHelper.getUserIdByUserName("name_2");
     assertEquals("id_2", actual);
 
     when(userClient.getUserById("id_3")).thenThrow(new NotFoundException("Not found"));
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getUserNameById("id_3"));
 
-    when(userClient.getByQuery(encode("username==\"name_4\""), 1L)).thenReturn(new UserCollection().withUsers(Collections.emptyList()));
+    when(userClient.getByQuery("username==\"name_4\"", 1L)).thenReturn(new UserCollection().withUsers(Collections.emptyList()));
     actual = itemReferenceHelper.getUserIdByUserName("name_4");
     assertEquals("name_4", actual);
 
@@ -158,31 +158,31 @@ class ItemReferenceHelperTest extends BaseTest {
 
   @Test
   void testGetItemLocation() {
-    when(locationClient.getByQuery(encode("name==\"name_1\""))).thenReturn(new ItemLocationCollection().withLocations(Collections.singletonList(new ItemLocation().withId("id_1"))));
+    when(locationClient.getByQuery("name==\"name_1\"")).thenReturn(new ItemLocationCollection().withLocations(Collections.singletonList(new ItemLocation().withId("id_1"))));
     var actual = itemReferenceHelper.getLocationByName("name_1");
     assertEquals("id_1", actual.getId());
 
-    when(locationClient.getByQuery(encode("name==\"name_2\""))).thenThrow(new NotFoundException("Not found"));
+    when(locationClient.getByQuery("name==\"name_2\"")).thenThrow(new NotFoundException("Not found"));
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getLocationByName("name_2"));
   }
 
   @Test
   void testGetMaterialType() {
-    when(materialTypeClient.getByQuery(encode("name==\"name_1\""))).thenReturn(new MaterialTypeCollection().withMtypes(Collections.singletonList(new MaterialType().withId("id_1"))));
+    when(materialTypeClient.getByQuery("name==\"name_1\"")).thenReturn(new MaterialTypeCollection().withMtypes(Collections.singletonList(new MaterialType().withId("id_1"))));
     var actual = itemReferenceHelper.getMaterialTypeByName("name_1");
     assertEquals("id_1", actual.getId());
 
-    when(materialTypeClient.getByQuery(encode("name==\"name_2\""))).thenThrow(new NotFoundException("Not found"));
+    when(materialTypeClient.getByQuery("name==\"name_2\"")).thenThrow(new NotFoundException("Not found"));
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getMaterialTypeByName("name_2"));
   }
 
   @Test
   void testGetLoanType() {
-    when(loanTypeClient.getByQuery(encode("name==\"name_1\""))).thenReturn(new LoanTypeCollection().withLoantypes(Collections.singletonList(new LoanType().withId("id_1"))));
+    when(loanTypeClient.getByQuery("name==\"name_1\"")).thenReturn(new LoanTypeCollection().withLoantypes(Collections.singletonList(new LoanType().withId("id_1"))));
     var actual = itemReferenceHelper.getLoanTypeByName("name_1");
     assertEquals("id_1", actual.getId());
 
-    when(loanTypeClient.getByQuery(encode("name==\"name_2\""))).thenThrow(new NotFoundException("Not found"));
+    when(loanTypeClient.getByQuery("name==\"name_2\"")).thenThrow(new NotFoundException("Not found"));
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getLoanTypeByName("name_2"));
   }
 }
