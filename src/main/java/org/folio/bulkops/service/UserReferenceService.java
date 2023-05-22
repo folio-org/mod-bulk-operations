@@ -47,7 +47,7 @@ public class UserReferenceService {
     if (isEmpty(desc)) {
       return null;
     } else {
-      var response = addressTypeClient.getByQuery(encode(format(QUERY_PATTERN_DESC, desc)));
+      var response = addressTypeClient.getByQuery(format(QUERY_PATTERN_DESC, desc));
       if (response.getAddressTypes().isEmpty()) {
         var msg = format("Address type=%s not found", desc);
         log.error(msg);
@@ -72,7 +72,7 @@ public class UserReferenceService {
     if (isEmpty(name)) {
       return EMPTY;
     } else {
-      var response = departmentClient.getByQuery(encode(format(QUERY_PATTERN_NAME, name)));
+      var response = departmentClient.getByQuery(format(QUERY_PATTERN_NAME, name));
       if (response.getDepartments().isEmpty()) {
         var msg = format("Department=%s not found", name);
         log.error(msg);
@@ -97,7 +97,7 @@ public class UserReferenceService {
     if (isEmpty(name)) {
       return EMPTY;
     }
-    var response = groupClient.getByQuery(encode(format(QUERY_PATTERN_GROUP, name)));
+    var response = groupClient.getByQuery(format(QUERY_PATTERN_GROUP, name));
     if (ObjectUtils.isEmpty(response) || ObjectUtils.isEmpty(response.getUsergroups())) {
       var msg = "Invalid patron group value: " + name;
       log.error(msg);

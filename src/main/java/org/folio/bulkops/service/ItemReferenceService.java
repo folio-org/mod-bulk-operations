@@ -93,7 +93,7 @@ public class ItemReferenceService {
     if (isEmpty(name)) {
       return null;
     }
-    var response = damagedStatusClient.getByQuery(encode(format(QUERY_PATTERN_NAME, name)));
+    var response = damagedStatusClient.getByQuery(format(QUERY_PATTERN_NAME, name));
     if (response.getItemDamageStatuses().isEmpty()) {
       return name;
     }
@@ -115,7 +115,7 @@ public class ItemReferenceService {
     if (isEmpty(name)) {
       return null;
     }
-    var response = itemNoteTypeClient.getByQuery(encode(format(QUERY_PATTERN_NAME, name)));
+    var response = itemNoteTypeClient.getByQuery(format(QUERY_PATTERN_NAME, name));
     if (response.getItemNoteTypes().isEmpty()) {
       log.error("Note type was not found by name={}", name);
       return name;
@@ -138,7 +138,7 @@ public class ItemReferenceService {
     if (isEmpty(name)) {
       return null;
     }
-    var response = servicePointClient.getByQuery(encode(format(QUERY_PATTERN_NAME, name)), 1L);
+    var response = servicePointClient.getByQuery(format(QUERY_PATTERN_NAME, name), 1L);
     if (response.getServicepoints().isEmpty()) {
       log.error("Service point was not found by name={}", name);
       return name;
@@ -161,7 +161,7 @@ public class ItemReferenceService {
     if (isEmpty(code)) {
       return null;
     }
-    var response = statisticalCodeClient.getByQuery(encode(format(QUERY_PATTERN_CODE, code)));
+    var response = statisticalCodeClient.getByQuery(format(QUERY_PATTERN_CODE, code));
     if (response.getStatisticalCodes().isEmpty()) {
       log.error("Statistical code was not found by code={}", code);
       return code;
@@ -184,7 +184,7 @@ public class ItemReferenceService {
     if (isEmpty(name)) {
       return null;
     }
-    var response = userClient.getByQuery(encode(format(QUERY_PATTERN_USERNAME, name)), 1L);
+    var response = userClient.getByQuery(format(QUERY_PATTERN_USERNAME, name), 1L);
     if (response.getUsers().isEmpty()) {
       log.error("User was not found by name={}", name);
       return name;
@@ -201,7 +201,7 @@ public class ItemReferenceService {
     if (isEmpty(name)) {
       return null;
     }
-    var locations = locationClient.getByQuery(encode(format(QUERY_PATTERN_NAME, name)));
+    var locations = locationClient.getByQuery(format(QUERY_PATTERN_NAME, name));
     if (ObjectUtils.isEmpty(locations) || ObjectUtils.isEmpty(locations.getLocations())) {
       var msg = "Location not found by name=" + name;
       log.error(msg);
@@ -214,7 +214,7 @@ public class ItemReferenceService {
     if (isEmpty(name)) {
       return null;
     }
-    var types = materialTypeClient.getByQuery(encode(format(QUERY_PATTERN_NAME, name)));
+    var types = materialTypeClient.getByQuery(format(QUERY_PATTERN_NAME, name));
     if (types.getMtypes().isEmpty()) {
       log.error("Material type not found by name={}", name);
       throw new NotFoundException("Material type not found: " + name);
@@ -224,7 +224,7 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "loanTypes")
   public LoanTypeCollection getLoanTypesByName(String name) {
-    return loanTypeClient.getByQuery(encode((format(QUERY_PATTERN_NAME, name))));
+    return loanTypeClient.getByQuery((format(QUERY_PATTERN_NAME, name)));
   }
 
   @Cacheable(cacheNames = "loanTypes")
@@ -236,7 +236,7 @@ public class ItemReferenceService {
     if (isEmpty(name)) {
       return null;
     }
-    var loanTypes = loanTypeClient.getByQuery(encode(format(QUERY_PATTERN_NAME, name)));
+    var loanTypes = loanTypeClient.getByQuery(format(QUERY_PATTERN_NAME, name));
     if (loanTypes.getLoantypes().isEmpty()) {
       log.error("Loan type not found by name={}", name);
       throw new NotFoundException("Loan type not found: " + name);
