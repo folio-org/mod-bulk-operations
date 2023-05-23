@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.folio.bulkops.domain.converter.AddressesConverter;
-import org.folio.bulkops.domain.converter.DateTimeConverter;
+import org.folio.bulkops.domain.converter.DateWithoutTimeConverter;
 import org.folio.bulkops.domain.converter.StringConverter;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -72,8 +72,8 @@ public class Personal {
 
   @JsonProperty("dateOfBirth")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  @CsvCustomBindByName(column = "Date Of Birth", converter = DateTimeConverter.class)
-  @CsvCustomBindByPosition(position = 16, converter = DateTimeConverter.class)
+  @CsvCustomBindByName(column = "Date Of Birth", converter = DateWithoutTimeConverter.class)
+  @CsvCustomBindByPosition(position = 16, converter = DateWithoutTimeConverter.class)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date dateOfBirth;
 
