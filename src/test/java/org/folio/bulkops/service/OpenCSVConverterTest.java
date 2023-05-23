@@ -132,7 +132,12 @@ class OpenCSVConverterTest extends BaseTest {
 
     /* compare original and restored beans */
     var result = list.get(0);
-    var isEqual = EqualsBuilder.reflectionEquals(bean, result, true, clazz, "metadata", "effectiveCallNumberComponents", "instanceId");
+    var isEqual = EqualsBuilder.reflectionEquals(bean, result, true, clazz, "metadata", "effectiveCallNumberComponents", "instanceId", "personal");
+
+    if (clazz.equals(User.class)) {
+      var isEqualUserPersonal = EqualsBuilder.reflectionEquals(((User) bean).getPersonal(), ((User) result).getPersonal(), true, User.class, "dateOfBirth");
+      assertTrue(isEqualUserPersonal);
+    }
 
     if (!isEqual) {
       log.error("Original: " + OBJECT_MAPPER.writeValueAsString(bean));
