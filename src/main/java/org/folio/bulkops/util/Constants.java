@@ -14,6 +14,7 @@ public class Constants {
   public static final String UTC = "UTC";
   public static final ZoneId UTC_ZONE = ZoneId.of(UTC);
   public static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss.SSSX";
+  public static final String DATE_WITHOUT_TIME_PATTERN = "yyyy-MM-dd";
 
   public static final String ELECTRONIC_RELATIONSHIP_NAME_ID_DELIMITER = ARRAY_DELIMITER;
   public static final String ITEM_DELIMITER_PATTERN = "\\|";
