@@ -4,7 +4,6 @@ import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
@@ -33,12 +32,17 @@ import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 
 public class CustomFieldsConverter extends AbstractBeanField<String, Map<String, Object>> {
+
+  // Workaround for manual approach - extremely unlikely line as temporary delimiter
+  // of custom field values for internal processing
+  public static final String TEMPORARY_DELIMITER = "±#&";
+
   @Override
   protected Map<String, Object> convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
     try {
      if (isNotEmpty(value)) {
        return Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
-         .map(this::restoreCustomFieldValue)
+         .map(this::restoreCustomFieldFromString)
          .filter(pair -> isNotEmpty(pair.getKey()))
          .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
      }
@@ -51,28 +55,27 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
   @Override
   protected String convertToWrite(Object value) {
     if (ObjectUtils.isNotEmpty(value)) {
-      return customFieldsToString((Map<String, Object>) value);
+      return convertCustomFieldsToString((Map<String, Object>) value);
     }
     return EMPTY;
   }
 
-  private Pair<String, Object> restoreCustomFieldValue(String s) {
-    var valuePair = stringToPair(s);
-    var fieldName = valuePair.getKey();
-    var fieldValue = valuePair.getValue();
-    var customField = UserReferenceHelper.service().getCustomFieldByName(fieldName);
+  private Pair<String, Object> restoreCustomFieldFromString(String s) {
+    var pair = stringToPair(s.replace(";", TEMPORARY_DELIMITER));
+    var name = pair.getKey();
+    var value = pair.getValue();
+    var customField = UserReferenceHelper.service().getCustomFieldByName(name);
     if (ObjectUtils.isNotEmpty(customField) && ObjectUtils.isNotEmpty(customField.getType())) {
       return switch (customField.getType()) {
-        case SINGLE_CHECKBOX -> Pair.of(customField.getRefId(), Boolean.parseBoolean(fieldValue));
+        case SINGLE_CHECKBOX -> Pair.of(customField.getRefId(), Boolean.parseBoolean(value));
         case TEXTBOX_LONG, TEXTBOX_SHORT ->
-          Pair.of(customField.getRefId(), fieldValue.replace(LINE_BREAK_REPLACEMENT, LINE_BREAK));
+          Pair.of(customField.getRefId(), value.replace(LINE_BREAK_REPLACEMENT, LINE_BREAK));
         case SINGLE_SELECT_DROPDOWN, RADIO_BUTTON ->
-          Pair.of(customField.getRefId(), restoreValueId(customField, fieldValue));
-        case MULTI_SELECT_DROPDOWN -> Pair.of(customField.getRefId(), restoreValueIds(customField, fieldValue));
+          Pair.of(customField.getRefId(), restoreValueId(customField, value));
+        case MULTI_SELECT_DROPDOWN -> Pair.of(customField.getRefId(), restoreValueIds(customField, value));
       };
     }
     return Pair.of(EMPTY, new Object());
-
   }
 
   private Pair<String, String> stringToPair(String value) {
@@ -88,7 +91,7 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
   private List<String> restoreValueIds(CustomField customField, String values) {
     return isEmpty(values) ?
       Collections.emptyList() :
-      Arrays.stream(values.split(ARRAY_DELIMITER))
+      Arrays.stream(values.split(TEMPORARY_DELIMITER))
         .map(token -> restoreValueId(customField, token))
         .toList();
   }
@@ -105,7 +108,7 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
     }
   }
 
-  private String customFieldsToString(Map<String, Object> map) {
+  private String convertCustomFieldsToString(Map<String, Object> map) {
     return map.entrySet().stream()
       .map(this::customFieldToString)
       .filter(StringUtils::isNotEmpty)
@@ -116,15 +119,15 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
     var customField = UserReferenceHelper.service().getCustomFieldByRefId(entry.getKey());
     return switch (customField.getType()) {
       case TEXTBOX_LONG, TEXTBOX_SHORT, SINGLE_CHECKBOX ->
-        escape(customField.getName()) + KEY_VALUE_DELIMITER + (isNull(entry.getValue()) ? EMPTY : escape(entry.getValue().toString()));
+        customField.getName() + KEY_VALUE_DELIMITER + (isNull(entry.getValue()) ? EMPTY : entry.getValue().toString());
       case SINGLE_SELECT_DROPDOWN, RADIO_BUTTON ->
-        escape(customField.getName()) + KEY_VALUE_DELIMITER + (isNull(entry.getValue()) ? EMPTY : escape(extractValueById(customField, entry.getValue().toString())));
+        customField.getName() + KEY_VALUE_DELIMITER + (isNull(entry.getValue()) ? EMPTY : extractValueById(customField, entry.getValue().toString()));
       case MULTI_SELECT_DROPDOWN ->
-        escape(customField.getName()) + KEY_VALUE_DELIMITER +
+        customField.getName() + KEY_VALUE_DELIMITER +
           (entry.getValue() instanceof ArrayList<?> values ?
             values.stream()
               .filter(Objects::nonNull)
-              .map(v -> escape(extractValueById(customField, v.toString())))
+              .map(v -> extractValueById(customField, v.toString()))
               .filter(ObjectUtils::isNotEmpty)
               .collect(Collectors.joining(ARRAY_DELIMITER)) :
             EMPTY);

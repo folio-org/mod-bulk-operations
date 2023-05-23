@@ -25,7 +25,10 @@ public class Utils {
   }
 
   public static String encode(String query) {
-    return isEmpty(query) ? EMPTY : URLEncoder.encode(query, StandardCharsets.UTF_8);
+    return isEmpty(query) ? EMPTY : URLEncoder
+      .encode(query, StandardCharsets.UTF_8)
+      // Empty space encoding handling to support CQL query
+      .replace("+", "%20");
   }
 
   public static Class<? extends BulkOperationsEntity> resolveEntityClass(EntityType clazz) {
