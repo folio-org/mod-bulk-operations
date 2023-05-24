@@ -20,10 +20,10 @@ import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 
-public class DepartmentsConverter extends AbstractBeanField<String, Set<UUID>> {
+public class DepartmentsConverter extends BaseConverter<Set<UUID>> {
 
   @Override
-  protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
+  public Set<UUID> convertToObject(String value) {
     String[] departmentNames = value.split(ARRAY_DELIMITER);
     if (departmentNames.length > 0) {
       return Arrays.stream(departmentNames).parallel()
@@ -37,10 +37,10 @@ public class DepartmentsConverter extends AbstractBeanField<String, Set<UUID>> {
   }
 
   @Override
-  protected String convertToWrite(Object value) {
+  public String convertToString(Set<UUID> value) {
     try {
       if (ObjectUtils.isNotEmpty(value)) {
-        return ((Set<UUID>) value).stream()
+        return value.stream()
           .filter(Objects::nonNull)
           .map(id -> UserReferenceHelper.service().getDepartmentNameById(id.toString()))
           .filter(StringUtils::isNotEmpty)

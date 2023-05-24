@@ -14,13 +14,16 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -66,6 +69,7 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.bean.UserGroupCollection;
 import org.folio.bulkops.domain.converter.CustomMappingStrategy;
+import org.folio.bulkops.domain.converter.FailedHolder;
 import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.junit.jupiter.api.Assertions;
@@ -170,16 +174,7 @@ class OpenCSVConverterTest extends BaseTest {
         .withMappingStrategy(strategy)
         .build();
 
-      Map<Field, Object> defaults = new HashMap<>();
-      try {
-        sbc.write(bean);
-        csv = writer.toString();
-      } catch (ConverterException e) {
-        FieldUtils.writeDeclaredField(bean, e.getField().getName(), e.getValue(), true);
-        sbc.write(bean);
-        csv = writer.toString();
-      }
-
+      csv = process(sbc, writer, bean);
     } catch (Exception e) {
       Assertions.fail("Error parsing bean to CSV", e);
     }
@@ -198,6 +193,17 @@ class OpenCSVConverterTest extends BaseTest {
 
     /* no NPE expected */
     assertThat(list, hasSize(1));
+  }
+
+  @SneakyThrows
+  public String process(StatefulBeanToCsv<BulkOperationsEntity> sbc, Writer writer, BulkOperationsEntity bean ) {
+    try {
+      sbc.write(bean);
+      return writer.toString();
+    } catch (ConverterException e) {
+      FieldUtils.writeField(bean, e.getField().getName(), null, true);
+      return process(sbc, writer, bean);
+    }
   }
 
 
