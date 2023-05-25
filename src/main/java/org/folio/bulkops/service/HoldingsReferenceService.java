@@ -60,7 +60,7 @@ public class HoldingsReferenceService {
     if (isEmpty(name)) {
       return null;
     }
-    var holdingsTypes = holdingsTypeClient.getByQuery(format(QUERY_PATTERN_NAME, name));
+    var holdingsTypes = holdingsTypeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (holdingsTypes.getHoldingsTypes().isEmpty()) {
       log.error("Holdings type not found by name={}", name);
       return name;
@@ -84,7 +84,7 @@ public class HoldingsReferenceService {
     if (isEmpty(name)) {
       return null;
     }
-    var locations = locationClient.getByQuery(format(QUERY_PATTERN_NAME, name));
+    var locations = locationClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (locations.getLocations().isEmpty()) {
       log.error("Location not found by name={}", name);
       return name;
@@ -109,7 +109,7 @@ public class HoldingsReferenceService {
     if (isEmpty(name)) {
       return null;
     }
-    var callNumberTypes = callNumberTypeClient.getByQuery(format(QUERY_PATTERN_NAME, name));
+    var callNumberTypes = callNumberTypeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (callNumberTypes.getCallNumberTypes().isEmpty()) {
       log.error("Call number type not found by name={}", name);
       return name;
@@ -134,7 +134,7 @@ public class HoldingsReferenceService {
     if (isEmpty(name)) {
       return null;
     }
-    var noteTypes = holdingsNoteTypeClient.getByQuery(format(QUERY_PATTERN_NAME, name));
+    var noteTypes = holdingsNoteTypeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (noteTypes.getHoldingsNoteTypes().isEmpty()) {
       log.error("Note type not found by name={}", name);
       return name;
@@ -159,7 +159,7 @@ public class HoldingsReferenceService {
     if (isEmpty(name)) {
       return null;
     }
-    var illPolicies = illPolicyClient.getByQuery(format(QUERY_PATTERN_NAME, name));
+    var illPolicies = illPolicyClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (illPolicies.getIllPolicies().isEmpty()) {
       log.error("Ill policy not found by name={}", name);
       return name;
@@ -189,7 +189,7 @@ public class HoldingsReferenceService {
     if (isEmpty(name)) {
       return null;
     }
-    var sources = holdingsSourceClient.getByQuery(format(QUERY_PATTERN_NAME, name));
+    var sources = holdingsSourceClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (ObjectUtils.isEmpty(sources) || ObjectUtils.isEmpty(sources.getHoldingsRecordsSources())) {
       log.error("Source not found by name={}", name);
       return name;
@@ -211,7 +211,7 @@ public class HoldingsReferenceService {
 
   @Cacheable(cacheNames = "holdingsStatisticalCodes")
   public String getStatisticalCodeIdByName(String name) {
-    var statisticalCodes = statisticalCodeClient.getByQuery(format(QUERY_PATTERN_NAME, name));
+    var statisticalCodes = statisticalCodeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (statisticalCodes.getStatisticalCodes().isEmpty()) {
       log.error("Statistical code not found by name={}", name);
       return name;

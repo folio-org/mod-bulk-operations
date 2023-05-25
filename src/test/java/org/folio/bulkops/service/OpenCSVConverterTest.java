@@ -1,6 +1,9 @@
 package org.folio.bulkops.service;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
+import static java.lang.String.format;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_REF_ID;
 import static org.folio.bulkops.util.Utils.encode;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
@@ -277,13 +280,13 @@ class OpenCSVConverterTest extends BaseTest {
         .withName("Department"))));
     when(addressTypeClient.getByQuery("desc==\"desc\"")).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880").withDesc("desc").withAddressType("work"))));
     when(okapiClient.getModuleIds(any(), any(), any())).thenReturn(JsonNodeFactory.instance.arrayNode().add(JsonNodeFactory.instance.objectNode().put("id", "USERS")));
-    when(customFieldsClient.getByQuery(any(), eq(encode("name==\"sierraCheckoutInformation\"")))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
+    when(customFieldsClient.getByQuery(any(), eq(format(QUERY_PATTERN_NAME, encode("sierraCheckoutInformation"))))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
       .withName("sierraCheckoutInformation")
       .withType(CustomFieldTypes.TEXTBOX_LONG)
       .withRefId("sierraCheckoutInformation")
       .withSelectField(new SelectField().withOptions(new SelectFieldOptions().withValues(List.of(new SelectFieldOption().withValue("10")))))
       .withTextField(new TextField().withFieldFormat(Format.TEXT)))));
-    when(customFieldsClient.getByQuery(any(), eq(encode("refId==\"sierraCheckoutInformation\"")))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
+    when(customFieldsClient.getByQuery(any(), eq(format(QUERY_PATTERN_REF_ID, encode("sierraCheckoutInformation"))))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
       .withName("sierraCheckoutInformation")
       .withType(CustomFieldTypes.TEXTBOX_LONG)
       .withRefId("sierraCheckoutInformation")

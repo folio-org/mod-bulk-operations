@@ -65,12 +65,12 @@ class UserReferenceServiceTest {
   @Test
   void getAddressTypeIdByDescTest() {
     var expected = UUID.randomUUID().toString();
-    when(addressTypeClient.getByQuery("desc==\"*\"")).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId(expected))));
+    when(addressTypeClient.getByQuery("desc==" + encode("*"))).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId(expected))));
     var actual = userReferenceService.getAddressTypeIdByDesc("*");
-    verify(addressTypeClient).getByQuery("desc==\"*\"");
+    verify(addressTypeClient).getByQuery("desc==" + encode("*"));
     assertEquals(expected, actual);
 
-    when(addressTypeClient.getByQuery("desc==\"*\"")).thenReturn(new AddressTypeCollection());
+    when(addressTypeClient.getByQuery("desc==" + encode("*"))).thenReturn(new AddressTypeCollection());
     assertEquals(EMPTY, userReferenceService.getAddressTypeIdByDesc("*"));
   }
 
@@ -94,12 +94,12 @@ class UserReferenceServiceTest {
   @Test
   void getDepartmentIdByNameTest() {
     var expected = UUID.randomUUID().toString();
-    when(departmentClient.getByQuery("name==\"*\"")).thenReturn(new DepartmentCollection().withDepartments(List.of(new Department().withId(expected))));
+    when(departmentClient.getByQuery("name==" + encode("*"))).thenReturn(new DepartmentCollection().withDepartments(List.of(new Department().withId(expected))));
     var actual = userReferenceService.getDepartmentIdByName("*");
-    verify(departmentClient).getByQuery("name==\"*\"");
+    verify(departmentClient).getByQuery("name==" + encode("*"));
     assertEquals(expected, actual);
 
-    when(departmentClient.getByQuery("name==\"*\"")).thenReturn(new DepartmentCollection());
+    when(departmentClient.getByQuery("name==" + encode("*"))).thenReturn(new DepartmentCollection());
     assertEquals(EMPTY, userReferenceService.getDepartmentIdByName("*"));
   }
 
@@ -124,12 +124,12 @@ class UserReferenceServiceTest {
   @Test
   void getPatronGroupIdByNameTest() {
     var expected = UUID.randomUUID().toString();
-    when(groupClient.getByQuery("group==\"*\"")).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup().withId(expected))));
+    when(groupClient.getByQuery("group==" + encode("*"))).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup().withId(expected))));
     var actual = userReferenceService.getPatronGroupIdByName("*");
-    verify(groupClient).getByQuery("group==\"*\"");
+    verify(groupClient).getByQuery("group==" + encode("*"));
     assertEquals(expected, actual);
 
-    when(groupClient.getByQuery("group==\"*\"")).thenReturn(new UserGroupCollection().withUsergroups(new ArrayList<>()));
+    when(groupClient.getByQuery("group==" + encode("*"))).thenReturn(new UserGroupCollection().withUsergroups(new ArrayList<>()));
     assertEquals(EMPTY, userReferenceService.getPatronGroupIdByName("*"));
   }
 
@@ -143,9 +143,9 @@ class UserReferenceServiceTest {
   @Test
   void getCustomFieldByRefIdTest() {
     var customField = new CustomField().withRefId("refId").withName("name");
-    when(customFieldsClient.getByQuery(isA(String.class), eq(encode("refId==\"refId\""))))
+    when(customFieldsClient.getByQuery(isA(String.class), eq("refId==" + encode("refId"))))
       .thenReturn(new CustomFieldCollection().withCustomFields(List.of(customField)));
-    when(customFieldsClient.getByQuery(isA(String.class), eq(encode("refId==\"refId2\""))))
+    when(customFieldsClient.getByQuery(isA(String.class), eq("refId==" + encode("refId2"))))
       .thenReturn(new CustomFieldCollection().withCustomFields(List.of()));
     doReturn("module").when(userReferenceService).getModuleId(isA(String.class));
 
@@ -158,14 +158,14 @@ class UserReferenceServiceTest {
   @Test
   void getCustomFieldByNameTest() {
     var customField = new CustomField().withRefId("refId").withName("name");
-    when(customFieldsClient.getByQuery(isA(String.class), eq(encode("name==\"name\""))))
+    when(customFieldsClient.getByQuery(isA(String.class), eq("name==" + encode("name"))))
       .thenReturn(new CustomFieldCollection().withCustomFields(List.of(customField)));
     doReturn("module").when(userReferenceService).getModuleId(isA(String.class));
 
     var actual = userReferenceService.getCustomFieldByName("name");
     assertEquals(customField, actual);
 
-    when(customFieldsClient.getByQuery(isA(String.class), eq(encode("name==\"name\""))))
+    when(customFieldsClient.getByQuery(isA(String.class), eq("name==" + encode("name"))))
       .thenReturn(new CustomFieldCollection().withCustomFields(new ArrayList<>()));
     doReturn("module").when(userReferenceService).getModuleId(isA(String.class));
     assertNull(userReferenceService.getCustomFieldByName("name"));

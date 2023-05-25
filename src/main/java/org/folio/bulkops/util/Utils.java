@@ -24,11 +24,21 @@ public class Utils {
     return StringUtils.isNotEmpty(string) ? Optional.of(string) : Optional.empty();
   }
 
-  public static String encode(String query) {
-    return isEmpty(query) ? EMPTY : URLEncoder
-      .encode(query, StandardCharsets.UTF_8)
-      // Empty space encoding handling to support CQL query
-      .replace("+", "%20");
+  public static String encode(CharSequence s) {
+    if (s == null) {
+      return "\"\"";
+    }
+    var appendable = new StringBuilder(s.length() + 2);
+    appendable.append('"');
+    for (int i = 0; i < s.length(); i++) {
+      char c = s.charAt(i);
+      switch (c) {
+        case '\\', '*', '?', '^', '"' -> appendable.append('\\').append(c);
+        default -> appendable.append(c);
+      }
+    }
+    appendable.append('"');
+    return appendable.toString();
   }
 
   public static Class<? extends BulkOperationsEntity> resolveEntityClass(EntityType clazz) {
