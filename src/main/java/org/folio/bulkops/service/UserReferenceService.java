@@ -18,7 +18,6 @@ import org.folio.bulkops.client.CustomFieldsClient;
 import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.client.GroupClient;
 import org.folio.bulkops.client.OkapiClient;
-import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.cache.annotation.Cacheable;
@@ -37,7 +36,6 @@ public class UserReferenceService {
   private final AddressTypeClient addressTypeClient;
   private final DepartmentClient departmentClient;
   private final GroupClient groupClient;
-  private final UserClient userClient;
   private final CustomFieldsClient customFieldsClient;
   private final FolioExecutionContext folioExecutionContext;
   private final OkapiClient okapiClient;
@@ -47,7 +45,7 @@ public class UserReferenceService {
     if (isEmpty(desc)) {
       return null;
     } else {
-      var response = addressTypeClient.getByQuery(format(QUERY_PATTERN_DESC, desc));
+      var response = addressTypeClient.getByQuery(format(QUERY_PATTERN_DESC, encode(desc)));
       if (response.getAddressTypes().isEmpty()) {
         var msg = format("Address type=%s not found", desc);
         log.error(msg);
@@ -72,7 +70,7 @@ public class UserReferenceService {
     if (isEmpty(name)) {
       return EMPTY;
     } else {
-      var response = departmentClient.getByQuery(format(QUERY_PATTERN_NAME, name));
+      var response = departmentClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
       if (response.getDepartments().isEmpty()) {
         var msg = format("Department=%s not found", name);
         log.error(msg);
@@ -97,7 +95,7 @@ public class UserReferenceService {
     if (isEmpty(name)) {
       return EMPTY;
     }
-    var response = groupClient.getByQuery(format(QUERY_PATTERN_GROUP, name));
+    var response = groupClient.getByQuery(format(QUERY_PATTERN_GROUP, encode(name)));
     if (ObjectUtils.isEmpty(response) || ObjectUtils.isEmpty(response.getUsergroups())) {
       var msg = "Invalid patron group value: " + name;
       log.error(msg);
@@ -109,7 +107,7 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByName(String name)  {
-    var customFields = customFieldsClient.getByQuery(getModuleId(MOD_USERS), encode(format(QUERY_PATTERN_NAME, name)));
+    var customFields = customFieldsClient.getByQuery(getModuleId(MOD_USERS), format(QUERY_PATTERN_NAME, encode(name)));
     if (customFields.getCustomFields().isEmpty()) {
       var msg = format("Custom field with name=%s not found", name);
       log.error(msg);
@@ -120,7 +118,7 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByRefId(String refId) {
-    var customFields = customFieldsClient.getByQuery(getModuleId(MOD_USERS), encode(format(QUERY_PATTERN_REF_ID, refId)));
+    var customFields = customFieldsClient.getByQuery(getModuleId(MOD_USERS), format(QUERY_PATTERN_REF_ID, encode(refId)));
     if (customFields.getCustomFields().isEmpty()) {
       var msg = format("Custom field with refId=%s not found", refId);
       log.error(msg);

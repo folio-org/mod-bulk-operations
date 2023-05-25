@@ -1,22 +1,18 @@
 package org.folio.bulkops.util;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
-import java.util.Optional;
-
+import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
-
-import lombok.experimental.UtilityClass;
 import org.folio.bulkops.domain.dto.IdentifierType;
+
+import java.util.Objects;
+import java.util.Optional;
+
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 @UtilityClass
 public class Utils {
@@ -24,11 +20,21 @@ public class Utils {
     return StringUtils.isNotEmpty(string) ? Optional.of(string) : Optional.empty();
   }
 
-  public static String encode(String query) {
-    return isEmpty(query) ? EMPTY : URLEncoder
-      .encode(query, StandardCharsets.UTF_8)
-      // Empty space encoding handling to support CQL query
-      .replace("+", "%20");
+  public static String encode(CharSequence s) {
+    if (s == null) {
+      return "\"\"";
+    }
+    var appendable = new StringBuilder(s.length() + 2);
+    appendable.append('"');
+    for (int i = 0; i < s.length(); i++) {
+      char c = s.charAt(i);
+      switch (c) {
+        case '\\', '*', '?', '^', '"' -> appendable.append('\\').append(c);
+        default -> appendable.append(c);
+      }
+    }
+    appendable.append('"');
+    return appendable.toString();
   }
 
   public static Class<? extends BulkOperationsEntity> resolveEntityClass(EntityType clazz) {
