@@ -14,9 +14,4 @@ public class LoanTypeConverter extends BaseConverter<LoanType> {
   public String convertToString(LoanType object) {
     return object.getName();
   }
-
-  @Override
-  public LoanType getDefaultObjectValue() {
-    return null;
-  }
 }

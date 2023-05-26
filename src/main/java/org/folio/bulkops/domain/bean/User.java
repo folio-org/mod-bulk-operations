@@ -5,7 +5,6 @@ import static org.folio.bulkops.domain.dto.DataType.DATE_TIME;
 
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -15,7 +14,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.CustomFieldsConverter;
-import org.folio.bulkops.domain.converter.DateTimeConverter;
+import org.folio.bulkops.domain.converter.DateWithTimeConverter;
 import org.folio.bulkops.domain.converter.DepartmentsConverter;
 import org.folio.bulkops.domain.converter.PatronGroupConverter;
 import org.folio.bulkops.domain.converter.ProxyForConverter;
@@ -113,29 +112,29 @@ public class User extends BulkOperationsEntity {
 
   @JsonProperty("enrollmentDate")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  @CsvCustomBindByName(column = "Enrollment date", converter = DateTimeConverter.class)
-  @CsvCustomBindByPosition(position = 19, converter = DateTimeConverter.class)
+  @CsvCustomBindByName(column = "Enrollment date", converter = DateWithTimeConverter.class)
+  @CsvCustomBindByPosition(position = 19, converter = DateWithTimeConverter.class)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date enrollmentDate;
 
   @JsonProperty("expirationDate")
-  @CsvCustomBindByName(column = "Expiration date", converter = DateTimeConverter.class)
-  @CsvCustomBindByPosition(position = 20, converter = DateTimeConverter.class)
+  @CsvCustomBindByName(column = "Expiration date", converter = DateWithTimeConverter.class)
+  @CsvCustomBindByPosition(position = 20, converter = DateWithTimeConverter.class)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date expirationDate;
 
   @JsonProperty("createdDate")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  @CsvCustomBindByName(column = "Created Date", converter = DateTimeConverter.class)
-  @CsvCustomBindByPosition(position = 21, converter = DateTimeConverter.class)
+  @CsvCustomBindByName(column = "Created Date", converter = DateWithTimeConverter.class)
+  @CsvCustomBindByPosition(position = 21, converter = DateWithTimeConverter.class)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date createdDate;
 
   @JsonProperty("updatedDate")
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  @CsvCustomBindByName(column = "Updated date", converter = DateTimeConverter.class)
-  @CsvCustomBindByPosition(position = 22, converter = DateTimeConverter.class)
+  @CsvCustomBindByName(column = "Updated date", converter = DateWithTimeConverter.class)
+  @CsvCustomBindByPosition(position = 22, converter = DateWithTimeConverter.class)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date updatedDate;
 

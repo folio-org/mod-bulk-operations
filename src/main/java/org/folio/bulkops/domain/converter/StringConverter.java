@@ -13,9 +13,4 @@ public class StringConverter extends BaseConverter<String> {
   public String convertToString(String object) {
     return object;
   }
-
-  @Override
-  public String getDefaultObjectValue() {
-    return null;
-  }
 }

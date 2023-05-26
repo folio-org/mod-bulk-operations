@@ -1,11 +1,5 @@
 package org.folio.bulkops.service;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
-
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.AddressType;
 import org.folio.bulkops.domain.bean.AddressTypeCollection;
@@ -18,6 +12,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserReferenceHelperTest extends BaseTest {
@@ -34,7 +34,7 @@ class UserReferenceHelperTest extends BaseTest {
     when(addressTypeClient.getAddressTypeById("id_2")).thenThrow(new NotFoundException("not found"));
     assertThrows(NotFoundException.class, () -> userReferenceHelper.getAddressTypeById("id_2"));
 
-    when(addressTypeClient.getAddressTypeByQuery("desc==\"desc_1\"")).thenReturn(AddressTypeCollection.builder().addressTypes(singletonList(AddressType.builder().id("id_3").build())).build());
+    when(addressTypeClient.getByQuery("desc==\"desc_1\"")).thenReturn(AddressTypeCollection.builder().addressTypes(singletonList(AddressType.builder().id("id_3").build())).build());
     actual = userReferenceHelper.getAddressTypeByDesc("desc_1");
     assertEquals("id_3", actual.getId());
 
@@ -49,11 +49,11 @@ class UserReferenceHelperTest extends BaseTest {
     when(departmentClient.getDepartmentById("id_2")).thenThrow(new NotFoundException("not found"));
     assertThrows(NotFoundException.class, () -> userReferenceHelper.getDepartmentById("id_2"));
 
-    when(departmentClient.getDepartmentByQuery("name==\"name_2\"")).thenReturn(DepartmentCollection.builder().departments(singletonList(Department.builder().id("id_3").build())).build());
+    when(departmentClient.getByQuery("name==\"name_2\"")).thenReturn(DepartmentCollection.builder().departments(singletonList(Department.builder().id("id_3").build())).build());
     actual = userReferenceHelper.getDepartmentByName("name_2");
     assertEquals("id_3", actual.getId());
 
-    when(departmentClient.getDepartmentByQuery("name==\"name_3\"")).thenReturn(DepartmentCollection.builder().departments(emptyList()).build());
+    when(departmentClient.getByQuery("name==\"name_3\"")).thenReturn(DepartmentCollection.builder().departments(emptyList()).build());
     assertThrows(NotFoundException.class, () -> userReferenceHelper.getDepartmentByName("name_3"));
   }
 
@@ -66,11 +66,11 @@ class UserReferenceHelperTest extends BaseTest {
     when(groupClient.getGroupById("id_2")).thenThrow(new NotFoundException("not found"));
     assertThrows(NotFoundException.class, () -> userReferenceHelper.getPatronGroupNameById("id_2"));
 
-    when(groupClient.getGroupByQuery("group==\"name_2\"")).thenReturn(UserGroupCollection.builder().usergroups(singletonList(UserGroup.builder().id("id_3").build())).build());
+    when(groupClient.getByQuery("group==\"name_2\"")).thenReturn(UserGroupCollection.builder().usergroups(singletonList(UserGroup.builder().id("id_3").build())).build());
     actual = userReferenceHelper.getPatronGroupIdByName("name_2");
     assertEquals("id_3", actual);
 
-    when(groupClient.getGroupByQuery("group==\"name_3\"")).thenReturn(UserGroupCollection.builder().usergroups(emptyList()).build());
+    when(groupClient.getByQuery("group==\"name_3\"")).thenReturn(UserGroupCollection.builder().usergroups(emptyList()).build());
     assertThrows(NotFoundException.class, () -> userReferenceHelper.getPatronGroupIdByName("name_3"));
   }
 }

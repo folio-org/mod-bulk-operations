@@ -1,13 +1,13 @@
 package org.folio.bulkops.domain.converter;
 
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 
 public class StringListConverter extends BaseConverter<List<String>> {
 
@@ -23,10 +23,5 @@ public class StringListConverter extends BaseConverter<List<String>> {
       .filter(Objects::nonNull)
       .map(SpecialCharacterEscaper::escape)
       .collect(Collectors.joining(ARRAY_DELIMITER));
-  }
-
-  @Override
-  public List<String> getDefaultObjectValue() {
-    return null;
   }
 }

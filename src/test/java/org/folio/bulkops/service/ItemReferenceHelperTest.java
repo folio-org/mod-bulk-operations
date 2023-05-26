@@ -91,14 +91,14 @@ class ItemReferenceHelperTest extends BaseTest {
     var actual = itemReferenceHelper.getServicePointById("id_1");
     assertEquals("name_1", actual.getName());
 
-    when(servicePointClient.get("name==\"name_2\"", 1L)).thenReturn(new ServicePoints().withServicepoints(Collections.singletonList(new ServicePoint().withId("id_2"))));
+    when(servicePointClient.getByQuery("name==\"name_2\"", 1L)).thenReturn(new ServicePoints().withServicepoints(Collections.singletonList(new ServicePoint().withId("id_2"))));
     actual = itemReferenceHelper.getServicePointByName("name_2");
     assertEquals("id_2", actual.getId());
 
     when(servicePointClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getServicePointById("id_3"));
 
-    when(servicePointClient.get("name==\"name_4\"", 1L)).thenReturn(new ServicePoints().withServicepoints(Collections.emptyList()));
+    when(servicePointClient.getByQuery("name==\"name_4\"", 1L)).thenReturn(new ServicePoints().withServicepoints(Collections.emptyList()));
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getServicePointByName("name_4"));
   }
 
@@ -125,24 +125,24 @@ class ItemReferenceHelperTest extends BaseTest {
     var actual = itemReferenceHelper.getUserNameById("id_1");
     assertEquals("name_1", actual);
 
-    when(userClient.getUserByQuery("username==\"name_2\"", 1L)).thenReturn(new UserCollection().withUsers(Collections.singletonList(new User().withId("id_2"))));
+    when(userClient.getByQuery("username==\"name_2\"", 1L)).thenReturn(new UserCollection().withUsers(Collections.singletonList(new User().withId("id_2"))));
     actual = itemReferenceHelper.getUserIdByUserName("name_2");
     assertEquals("id_2", actual);
 
     when(userClient.getUserById("id_3")).thenThrow(new NotFoundException("Not found"));
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getUserNameById("id_3"));
 
-    when(userClient.getUserByQuery("username==\"name_4\"", 1L)).thenReturn(new UserCollection().withUsers(Collections.emptyList()));
+    when(userClient.getByQuery("username==\"name_4\"", 1L)).thenReturn(new UserCollection().withUsers(Collections.emptyList()));
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getUserIdByUserName("name_4"));
   }
 
   @Test
   void testGetItemLocation() {
-    when(locationClient.getLocationByQuery("name==\"name_1\"")).thenReturn(new ItemLocationCollection().withLocations(Collections.singletonList(new ItemLocation().withId("id_1"))));
+    when(locationClient.getByQuery("name==\"name_1\"")).thenReturn(new ItemLocationCollection().withLocations(Collections.singletonList(new ItemLocation().withId("id_1"))));
     var actual = itemReferenceHelper.getLocationByName("name_1");
     assertEquals("id_1", actual.getId());
 
-    when(locationClient.getLocationByQuery("name==\"name_2\"")).thenThrow(new NotFoundException("Not found"));
+    when(locationClient.getByQuery("name==\"name_2\"")).thenThrow(new NotFoundException("Not found"));
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getLocationByName("name_2"));
   }
 

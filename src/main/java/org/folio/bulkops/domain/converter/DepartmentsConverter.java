@@ -1,10 +1,7 @@
 package org.folio.bulkops.domain.converter;
 
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
-import org.folio.bulkops.exception.ConverterException;
-import org.folio.bulkops.service.UserReferenceHelper;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,8 +10,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import org.folio.bulkops.exception.ConverterException;
+import org.folio.bulkops.service.UserReferenceHelper;
 
 public class DepartmentsConverter extends BaseConverter<Set<UUID>> {
 
@@ -47,10 +47,5 @@ public class DepartmentsConverter extends BaseConverter<Set<UUID>> {
       throw new ConverterException(this.getField(), value, e.getMessage());
     }
     return EMPTY;
-  }
-
-  @Override
-  public Set<UUID> getDefaultObjectValue() {
-    return Collections.emptySet();
   }
 }

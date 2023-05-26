@@ -1,15 +1,14 @@
 package org.folio.bulkops.domain.converter;
 
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
-import org.folio.bulkops.service.ItemReferenceHelper;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import org.folio.bulkops.service.ItemReferenceHelper;
 
 public class ItemStatisticalCodeListConverter extends BaseConverter<List<String>> {
 
@@ -19,7 +18,7 @@ public class ItemStatisticalCodeListConverter extends BaseConverter<List<String>
       .map(SpecialCharacterEscaper::restore)
       .map(ItemReferenceHelper.service()::getStatisticalCodeIdByCode)
       .filter(Objects::nonNull)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   @Override
@@ -29,10 +28,5 @@ public class ItemStatisticalCodeListConverter extends BaseConverter<List<String>
       .map(ItemReferenceHelper.service()::getStatisticalCodeById)
       .map(SpecialCharacterEscaper::escape)
       .collect(Collectors.joining(ARRAY_DELIMITER));
-  }
-
-  @Override
-  public List<String> getDefaultObjectValue() {
-    return Collections.emptyList();
   }
 }

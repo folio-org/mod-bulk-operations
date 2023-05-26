@@ -1,16 +1,5 @@
 package org.folio.bulkops.domain.converter;
 
-import org.folio.bulkops.domain.bean.ItemNote;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
-import org.folio.bulkops.exception.EntityFormatException;
-import org.folio.bulkops.service.ItemReferenceHelper;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
@@ -18,6 +7,16 @@ import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
 import static org.folio.bulkops.util.Utils.booleanToStringNullSafe;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.folio.bulkops.domain.bean.ItemNote;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import org.folio.bulkops.exception.EntityFormatException;
+import org.folio.bulkops.service.ItemReferenceHelper;
 
 public class ItemNoteListConverter extends BaseConverter<List<ItemNote>> {
   private static final int NUMBER_OF_ITEM_NOTE_COMPONENTS = 3;
@@ -41,10 +40,6 @@ public class ItemNoteListConverter extends BaseConverter<List<ItemNote>> {
         escape(itemNote.getNote()),
         escape(booleanToStringNullSafe(itemNote.getStaffOnly()))))
       .collect(Collectors.joining(ITEM_DELIMITER));
-  }
-  @Override
-  public List<ItemNote> getDefaultObjectValue() {
-    return Collections.emptyList();
   }
 
   private ItemNote restoreItemNote(String s) {

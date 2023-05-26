@@ -14,9 +14,4 @@ public class MaterialTypeConverter extends BaseConverter<MaterialType> {
   public String convertToString(MaterialType object) {
     return object.getName();
   }
-
-  @Override
-  public MaterialType getDefaultObjectValue() {
-    return null;
-  }
 }

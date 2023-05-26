@@ -20,18 +20,18 @@ import java.util.List;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.util.Constants.BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_CODE;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_USERNAME;
 
 @Service
 @Log4j2
 @RequiredArgsConstructor
 public class ItemReferenceService {
-  public static final String BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE = "module==%s and configName==%s";
+
   public static final String MODULE_NAME = "BULKEDIT";
   public static final String STATUSES_CONFIG_NAME = "statuses";
-
-  private static final String QUERY_PATTERN_NAME = "name==\"%s\"";
-  private static final String QUERY_PATTERN_CODE = "code==\"%s\"";
-  private static final String QUERY_PATTERN_USERNAME = "username==\"%s\"";
 
   private final CallNumberTypeClient callNumberTypeClient;
   private final ConfigurationClient configurationClient;
@@ -103,7 +103,7 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "servicePointIds")
   public ServicePoint getServicePointByName(String name) {
-    var response = servicePointClient.get(String.format(QUERY_PATTERN_NAME, name), 1L);
+    var response = servicePointClient.getByQuery(String.format(QUERY_PATTERN_NAME, name), 1L);
     if (response.getServicepoints().isEmpty()) {
       throw new NotFoundException(format("Service point was not found by name=%s", name));
     }
@@ -139,7 +139,7 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "userIds")
   public String getUserIdByUserName(String name) {
-    var response = userClient.getUserByQuery(String.format(QUERY_PATTERN_USERNAME, name), 1L);
+    var response = userClient.getByQuery(String.format(QUERY_PATTERN_USERNAME, name), 1L);
     if (response.getUsers().isEmpty()) {
       throw new NotFoundException(format("User was not found by name=%s", name));
     }
@@ -156,7 +156,7 @@ public class ItemReferenceService {
   }
 
   public ItemLocation getLocationByName(String name) {
-    var locations = locationClient.getLocationByQuery(String.format(QUERY_PATTERN_NAME, name));
+    var locations = locationClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
     if (ObjectUtils.isEmpty(locations) || ObjectUtils.isEmpty(locations.getLocations())) {
       throw new NotFoundException(format("Location not found by name=%s", name));
     }
@@ -191,7 +191,7 @@ public class ItemReferenceService {
   @Cacheable(cacheNames = "statusMapping")
   public List<String> getAllowedStatuses(String statusName) {
     var configurations = configurationClient
-      .getConfigurations(String.format(BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE, MODULE_NAME, STATUSES_CONFIG_NAME));
+      .getByQuery(format(BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE, MODULE_NAME, STATUSES_CONFIG_NAME));
     if (configurations.getConfigs()
       .isEmpty()) {
       throw new NotFoundException("Statuses configuration was not found");
@@ -202,7 +202,7 @@ public class ItemReferenceService {
         .getValue(), new TypeReference<HashMap<String, List<String>>>() {});
       return statuses.getOrDefault(statusName, Collections.emptyList());
     } catch (JsonProcessingException e) {
-      throw new ConfigurationException(String.format("Error reading configuration, reason: %s", e.getMessage()));
+      throw new ConfigurationException(format("Error reading configuration, reason: %s", e.getMessage()));
     }
   }
 }

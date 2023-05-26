@@ -13,9 +13,4 @@ public class SourceConverter extends BaseConverter<String> {
   public String convertToString(String object) {
     return HoldingsReferenceHelper.service().getSourceById(object).getName();
   }
-
-  @Override
-  public String getDefaultObjectValue() {
-    return null;
-  }
 }

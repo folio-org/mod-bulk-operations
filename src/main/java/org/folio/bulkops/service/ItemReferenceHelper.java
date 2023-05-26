@@ -1,11 +1,14 @@
 package org.folio.bulkops.service;
 
-import org.folio.bulkops.domain.bean.*;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.stereotype.Service;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.domain.bean.DamagedStatus;
+import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.LoanType;
+import org.folio.bulkops.domain.bean.MaterialType;
+import org.folio.bulkops.domain.bean.ServicePoint;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.stereotype.Service;
 
 @Service
 @Log4j2

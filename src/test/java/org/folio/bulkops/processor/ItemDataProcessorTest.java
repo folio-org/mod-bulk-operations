@@ -9,9 +9,9 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
-import static org.folio.bulkops.service.ItemReferenceService.BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE;
 import static org.folio.bulkops.service.ItemReferenceService.MODULE_NAME;
 import static org.folio.bulkops.service.ItemReferenceService.STATUSES_CONFIG_NAME;
+import static org.folio.bulkops.util.Constants.BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -33,6 +33,7 @@ import org.folio.bulkops.domain.bean.ModelConfiguration;
 import org.folio.bulkops.domain.bean.ResultInfo;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
+import org.folio.bulkops.service.ErrorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -47,6 +48,8 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Autowired
   DataProcessorFactory factory;
+  @MockBean
+  ErrorService errorService;
 
   private DataProcessor<Item> processor;
 
@@ -60,7 +63,7 @@ class ItemDataProcessorTest extends BaseTest {
     if (isNull(processor)) {
       processor = factory.getProcessorFromFactory(Item.class);
     }
-    when(configurationClient.getConfigurations(String.format(BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE, MODULE_NAME, STATUSES_CONFIG_NAME)))
+    when(configurationClient.getByQuery(String.format(BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE, MODULE_NAME, STATUSES_CONFIG_NAME)))
       .thenReturn(
         new ConfigurationCollection()
           .withConfigs(List.of(new ModelConfiguration()

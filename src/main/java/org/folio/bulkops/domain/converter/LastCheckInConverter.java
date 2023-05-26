@@ -1,13 +1,13 @@
 package org.folio.bulkops.domain.converter;
 
-import org.folio.bulkops.domain.bean.LastCheckIn;
-import org.folio.bulkops.exception.EntityFormatException;
-import org.folio.bulkops.service.ItemReferenceHelper;
-
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+
+import org.folio.bulkops.domain.bean.LastCheckIn;
+import org.folio.bulkops.exception.EntityFormatException;
+import org.folio.bulkops.service.ItemReferenceHelper;
 
 public class LastCheckInConverter extends BaseConverter<LastCheckIn> {
   private static final int NUMBER_OF_LAST_CHECK_IN_COMPONENTS = 3;
@@ -34,10 +34,5 @@ public class LastCheckInConverter extends BaseConverter<LastCheckIn> {
       escape(ItemReferenceHelper.service().getServicePointById(object.getServicePointId()).getName()),
       escape(ItemReferenceHelper.service().getUserNameById(object.getStaffMemberId())),
       object.getDateTime());
-  }
-
-  @Override
-  public LastCheckIn getDefaultObjectValue() {
-    return null;
   }
 }

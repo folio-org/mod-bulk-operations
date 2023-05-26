@@ -11,9 +11,4 @@ public class IntegerConverter extends BaseConverter<Integer> {
   public String convertToString(Integer object) {
     return object.toString();
   }
-
-  @Override
-  public Integer getDefaultObjectValue() {
-    return null;
-  }
 }

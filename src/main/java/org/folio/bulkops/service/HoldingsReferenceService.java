@@ -3,20 +3,32 @@ package org.folio.bulkops.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
-import org.folio.bulkops.client.*;
-import org.folio.bulkops.domain.bean.*;
+import org.folio.bulkops.client.CallNumberTypeClient;
+import org.folio.bulkops.client.HoldingsClient;
+import org.folio.bulkops.client.HoldingsNoteTypeClient;
+import org.folio.bulkops.client.HoldingsSourceClient;
+import org.folio.bulkops.client.HoldingsTypeClient;
+import org.folio.bulkops.client.IllPolicyClient;
+import org.folio.bulkops.client.LocationClient;
+import org.folio.bulkops.client.StatisticalCodeClient;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
+import org.folio.bulkops.domain.bean.HoldingsType;
+import org.folio.bulkops.domain.bean.IllPolicy;
+import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
 public class HoldingsReferenceService {
-  private static final String QUERY_PATTERN_NAME = "name==\"%s\"";
 
   private final HoldingsClient holdingsClient;
   private final HoldingsTypeClient holdingsTypeClient;
@@ -60,7 +72,7 @@ public class HoldingsReferenceService {
   }
 
   public ItemLocation getLocationIdByName(String name) {
-    var locations = locationClient.getLocationByQuery(format(QUERY_PATTERN_NAME, name));
+    var locations = locationClient.getByQuery(format(QUERY_PATTERN_NAME, name));
     if (locations.getLocations().isEmpty()) {
       throw new NotFoundException(format("Location not found by name=%s", name));
     }

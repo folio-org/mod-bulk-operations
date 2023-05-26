@@ -1,12 +1,11 @@
 package org.folio.bulkops.domain.converter;
 
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 public class ProxyForConverter extends BaseConverter<List<String>> {
 
@@ -20,10 +19,5 @@ public class ProxyForConverter extends BaseConverter<List<String>> {
     return object.stream()
       .filter(Objects::nonNull)
       .collect(Collectors.joining(ARRAY_DELIMITER));
-  }
-
-  @Override
-  public List<String> getDefaultObjectValue() {
-    return Collections.emptyList();
   }
 }

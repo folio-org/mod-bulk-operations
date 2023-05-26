@@ -1,14 +1,14 @@
 package org.folio.bulkops.domain.converter;
 
-import org.folio.bulkops.domain.bean.EffectiveCallNumberComponents;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import static java.lang.String.join;
+import static org.apache.commons.lang3.StringUtils.SPACE;
+import static org.folio.bulkops.util.Utils.ofEmptyString;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.String.join;
-import static org.apache.commons.lang3.StringUtils.SPACE;
-import static org.folio.bulkops.util.Utils.ofEmptyString;
+import org.folio.bulkops.domain.bean.EffectiveCallNumberComponents;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 
 public class EffectiveCallNumberComponentsConverter extends BaseConverter<EffectiveCallNumberComponents> {
   @Override
@@ -23,10 +23,5 @@ public class EffectiveCallNumberComponentsConverter extends BaseConverter<Effect
     ofEmptyString(object.getCallNumber()).map(SpecialCharacterEscaper::escape).ifPresent(comps::add);
     ofEmptyString(object.getSuffix()).map(SpecialCharacterEscaper::escape).ifPresent(comps::add);
     return join(SPACE, comps);
-  }
-
-  @Override
-  public EffectiveCallNumberComponents getDefaultObjectValue() {
-    return null;
   }
 }

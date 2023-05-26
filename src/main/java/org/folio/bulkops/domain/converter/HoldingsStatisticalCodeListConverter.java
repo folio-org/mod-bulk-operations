@@ -1,15 +1,14 @@
 package org.folio.bulkops.domain.converter;
 
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
-import org.folio.bulkops.service.HoldingsReferenceHelper;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import org.folio.bulkops.service.HoldingsReferenceHelper;
 
 public class HoldingsStatisticalCodeListConverter extends BaseConverter<List<String>> {
 
@@ -29,10 +28,5 @@ public class HoldingsStatisticalCodeListConverter extends BaseConverter<List<Str
       .map(id -> HoldingsReferenceHelper.service().getStatisticalCodeById(id).getName())
       .map(SpecialCharacterEscaper::escape)
       .collect(Collectors.joining(ARRAY_DELIMITER));
-  }
-
-  @Override
-  public List<String> getDefaultObjectValue() {
-    return Collections.emptyList();
   }
 }

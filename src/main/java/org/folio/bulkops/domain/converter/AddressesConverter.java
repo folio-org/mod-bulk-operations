@@ -1,10 +1,12 @@
 package org.folio.bulkops.domain.converter;
 
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.folio.bulkops.domain.bean.Address;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
-import org.folio.bulkops.service.UserReferenceHelper;
+import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,13 +15,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.bean.Address;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import org.folio.bulkops.service.UserReferenceHelper;
 
 public  class AddressesConverter extends BaseConverter<List<Address>> {
 
@@ -37,10 +37,10 @@ public  class AddressesConverter extends BaseConverter<List<Address>> {
   public List<Address> convertToObject(String value) {
     String[] addresses = value.split(ITEM_DELIMITER_PATTERN);
     if (addresses.length > 0) {
-      return Arrays.stream(addresses)
-        .filter(StringUtils::isNotEmpty)
-        .map(this::getAddressFromString)
-        .collect(Collectors.toList());
+        return Arrays.stream(addresses)
+          .filter(StringUtils::isNotEmpty)
+          .map(this::getAddressFromString)
+          .collect(Collectors.toList());
     }
     return Collections.emptyList();
   }
@@ -55,11 +55,6 @@ public  class AddressesConverter extends BaseConverter<List<Address>> {
         .collect(Collectors.joining(ITEM_DELIMITER));
     }
     return EMPTY;
-  }
-
-  @Override
-  public List<Address> getDefaultObjectValue() {
-    return null;
   }
 
   private Address getAddressFromString(String stringAddress) {

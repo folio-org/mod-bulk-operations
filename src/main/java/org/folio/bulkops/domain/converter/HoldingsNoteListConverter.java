@@ -1,22 +1,21 @@
 package org.folio.bulkops.domain.converter;
 
-import org.apache.commons.lang3.ObjectUtils;
-import org.folio.bulkops.domain.bean.HoldingsNote;
-import org.folio.bulkops.exception.EntityFormatException;
-import org.folio.bulkops.service.HoldingsReferenceHelper;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
 import static org.folio.bulkops.util.Utils.booleanToStringNullSafe;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.ObjectUtils;
+import org.folio.bulkops.domain.bean.HoldingsNote;
+import org.folio.bulkops.exception.EntityFormatException;
+import org.folio.bulkops.service.HoldingsReferenceHelper;
 
 public class HoldingsNoteListConverter extends BaseConverter<List<HoldingsNote>> {
   private static final int NUMBER_OF_HOLDINGS_NOTE_ELEMENTS = 3;
@@ -41,11 +40,6 @@ public class HoldingsNoteListConverter extends BaseConverter<List<HoldingsNote>>
         escape(note.getNote()),
         booleanToStringNullSafe(note.getStaffOnly())))
       .collect(Collectors.joining(ITEM_DELIMITER));
-  }
-
-  @Override
-  public List<HoldingsNote> getDefaultObjectValue() {
-    return Collections.emptyList();
   }
 
   private HoldingsNote restoreHoldingsNote(String s) {

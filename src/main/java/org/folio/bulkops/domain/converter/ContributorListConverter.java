@@ -1,15 +1,14 @@
 package org.folio.bulkops.domain.converter;
 
-import org.folio.bulkops.domain.bean.ContributorName;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import org.folio.bulkops.domain.bean.ContributorName;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 
 public class ContributorListConverter extends BaseConverter<List<ContributorName>> {
 
@@ -28,10 +27,5 @@ public class ContributorListConverter extends BaseConverter<List<ContributorName
       .map(ContributorName::getName)
       .map(SpecialCharacterEscaper::escape)
       .collect(Collectors.joining(ARRAY_DELIMITER));
-  }
-
-  @Override
-  public List<ContributorName> getDefaultObjectValue() {
-    return Collections.emptyList();
   }
 }

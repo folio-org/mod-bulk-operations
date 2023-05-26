@@ -1,20 +1,5 @@
 package org.folio.bulkops.service;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.CustomFieldsClient;
 import org.folio.bulkops.client.DepartmentClient;
@@ -34,6 +19,20 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import static org.folio.bulkops.util.Utils.encode;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserReferenceServiceTest {
@@ -64,12 +63,12 @@ class UserReferenceServiceTest {
   @Test
   void getAddressTypeIdByDescTest() {
     var expected = UUID.randomUUID().toString();
-    when(addressTypeClient.getAddressTypeByQuery("desc==\"*\"")).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId(expected))));
+    when(addressTypeClient.getByQuery("desc==\"*\"")).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId(expected))));
     var actual = userReferenceService.getAddressTypeByDesc("*");
-    verify(addressTypeClient).getAddressTypeByQuery("desc==\"*\"");
+    verify(addressTypeClient).getByQuery("desc==\"*\"");
     assertEquals(expected, actual.getId());
 
-    when(addressTypeClient.getAddressTypeByQuery("desc==\"*\"")).thenReturn(new AddressTypeCollection());
+    when(addressTypeClient.getByQuery("desc==\"*\"")).thenReturn(new AddressTypeCollection());
     assertThrows(NotFoundException.class, () -> userReferenceService.getAddressTypeByDesc("*"));
   }
 
@@ -93,12 +92,12 @@ class UserReferenceServiceTest {
   @Test
   void getDepartmentIdByNameTest() {
     var expected = UUID.randomUUID().toString();
-    when(departmentClient.getDepartmentByQuery("name==\"*\"")).thenReturn(new DepartmentCollection().withDepartments(List.of(new Department().withId(expected))));
+    when(departmentClient.getByQuery("name==\"*\"")).thenReturn(new DepartmentCollection().withDepartments(List.of(new Department().withId(expected))));
     var actual = userReferenceService.getDepartmentByName("*");
-    verify(departmentClient).getDepartmentByQuery("name==\"*\"");
+    verify(departmentClient).getByQuery("name==\"*\"");
     assertEquals(expected, actual.getId());
 
-    when(departmentClient.getDepartmentByQuery("name==\"*\"")).thenReturn(new DepartmentCollection());
+    when(departmentClient.getByQuery("name==\"*\"")).thenReturn(new DepartmentCollection());
     assertThrows(NotFoundException.class, () -> userReferenceService.getDepartmentByName("*"));
   }
 
@@ -123,19 +122,19 @@ class UserReferenceServiceTest {
   @Test
   void getPatronGroupIdByNameTest() {
     var expected = UUID.randomUUID().toString();
-    when(groupClient.getGroupByQuery("group==\"*\"")).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup().withId(expected))));
+    when(groupClient.getByQuery("group==\"*\"")).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup().withId(expected))));
     var actual = userReferenceService.getPatronGroupIdByName("*");
-    verify(groupClient).getGroupByQuery("group==\"*\"");
+    verify(groupClient).getByQuery("group==\"*\"");
     assertEquals(expected, actual);
 
-    when(groupClient.getGroupByQuery("group==\"*\"")).thenReturn(new UserGroupCollection().withUsergroups(new ArrayList<>()));
+    when(groupClient.getByQuery("group==\"*\"")).thenReturn(new UserGroupCollection().withUsergroups(new ArrayList<>()));
     assertThrows(NotFoundException.class, () -> userReferenceService.getPatronGroupIdByName("*"));
   }
 
   @Test
   void getCustomFieldByRefIdTest() {
     var customField = new CustomField().withRefId("refId").withName("name");
-    when(customFieldsClient.getCustomFieldsByQuery(isA(String.class), eq("refId==\"refId\"")))
+    when(customFieldsClient.getByQuery(isA(String.class), eq(encode("refId==\"refId\""))))
       .thenReturn(new CustomFieldCollection().withCustomFields(List.of(customField)));
     doReturn("module").when(userReferenceService).getModuleId(isA(String.class));
 
@@ -146,14 +145,14 @@ class UserReferenceServiceTest {
   @Test
   void getCustomFieldByNameTest() {
     var customField = new CustomField().withRefId("refId").withName("name");
-    when(customFieldsClient.getCustomFieldsByQuery(isA(String.class), eq("name==\"name\"")))
+    when(customFieldsClient.getByQuery(isA(String.class), eq(encode("name==\"name\""))))
       .thenReturn(new CustomFieldCollection().withCustomFields(List.of(customField)));
     doReturn("module").when(userReferenceService).getModuleId(isA(String.class));
 
     var actual = userReferenceService.getCustomFieldByName("name");
     assertEquals(customField, actual);
 
-    when(customFieldsClient.getCustomFieldsByQuery(isA(String.class), eq("name==\"name\"")))
+    when(customFieldsClient.getByQuery(isA(String.class), eq(encode("name==\"name\""))))
       .thenReturn(new CustomFieldCollection().withCustomFields(new ArrayList<>()));
     doReturn("module").when(userReferenceService).getModuleId(isA(String.class));
     assertThrows(NotFoundException.class, () -> userReferenceService.getCustomFieldByName("name"));

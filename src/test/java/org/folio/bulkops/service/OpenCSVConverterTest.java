@@ -1,27 +1,13 @@
 package org.folio.bulkops.service;
 
-import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
-
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.bean.StatefulBeanToCsv;
+import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import lombok.SneakyThrows;
-import org.apache.commons.lang3.builder.EqualsBuilder;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.AddressType;
 import org.folio.bulkops.domain.bean.AddressTypeCollection;
@@ -75,11 +61,24 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
+
+import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
+import static org.folio.bulkops.util.Utils.encode;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 @Log4j2
 @ExtendWith(MockitoExtension.class)
@@ -89,9 +88,9 @@ class OpenCSVConverterTest extends BaseTest {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
-        Arguments.of(User.class)
-//        Arguments.of(Item.class),
-//        Arguments.of(HoldingsRecord.class)
+        Arguments.of(User.class),
+        Arguments.of(Item.class),
+        Arguments.of(HoldingsRecord.class)
       );
     }
   }
@@ -99,7 +98,6 @@ class OpenCSVConverterTest extends BaseTest {
   @ParameterizedTest
   @ArgumentsSource(BulkOperationEntityClassProvider.class)
   void shouldConvertEntity(Class<BulkOperationsEntity> clazz) throws IOException {
-
     initMocks();
 
     /* JSON -> Bean */
@@ -135,7 +133,12 @@ class OpenCSVConverterTest extends BaseTest {
 
     /* compare original and restored beans */
     var result = list.get(0);
-    var isEqual = EqualsBuilder.reflectionEquals(bean, result, true, clazz, "metadata", "effectiveCallNumberComponents", "instanceId");
+    var isEqual = EqualsBuilder.reflectionEquals(bean, result, true, clazz, "metadata", "effectiveCallNumberComponents", "instanceId", "personal");
+
+    if (clazz.equals(User.class)) {
+      var isEqualUserPersonal = EqualsBuilder.reflectionEquals(((User) bean).getPersonal(), ((User) result).getPersonal(), true, User.class, "dateOfBirth");
+      assertTrue(isEqualUserPersonal);
+    }
 
     if (!isEqual) {
       log.error("Original: " + OBJECT_MAPPER.writeValueAsString(bean));
@@ -177,15 +180,17 @@ class OpenCSVConverterTest extends BaseTest {
     try (Reader reader = new StringReader(csv)) {
       CsvToBean<BulkOperationsEntity> cb = new CsvToBeanBuilder<BulkOperationsEntity>(reader)
         .withType(clazz)
+        .withThrowExceptions(false)
         .withSkipLines(1)
         .build();
       list = cb.parse().stream().toList();
+      assertThat(cb.getCapturedExceptions(), hasSize(1));
     } catch (IOException e) {
       Assertions.fail("Error parsing CSV to bean", e);
     }
 
     /* no NPE expected */
-    assertThat(list, hasSize(1));
+    assertThat(list, hasSize(0));
   }
 
   @SneakyThrows
@@ -194,7 +199,6 @@ class OpenCSVConverterTest extends BaseTest {
       sbc.write(bean);
       return writer.toString();
     } catch (ConverterException e) {
-      FieldUtils.writeField(bean, e.getField().getName(), null, true);
       return process(sbc, writer, bean);
     }
   }
@@ -275,28 +279,27 @@ class OpenCSVConverterTest extends BaseTest {
   private void initMocks() {
     // User
     Mockito.reset(groupClient);
-    when(departmentClient.getDepartmentById("fae76e1a-3cf4-4640-8731-0d583ddaf571")).thenThrow(new NotFoundException("xx"));
-
+    when(departmentClient.getDepartmentById("fae76e1a-3cf4-4640-8731-0d583ddaf571")).thenThrow(new NotFoundException("Not found"));
     when(groupClient.getGroupById("503a81cd-6c26-400f-b620-14c08943697c")).thenReturn(
       new UserGroup().withId("503a81cd-6c26-400f-b620-14c08943697c").withGroup("staff"));
     when(departmentClient.getDepartmentById("4ac6b846-e184-4cdd-8101-68f4af97d103")).thenReturn(new Department()
       .withId("4ac6b846-e184-4cdd-8101-68f4af97d103")
       .withName("Department"));
     when(addressTypeClient.getAddressTypeById(any())).thenReturn(new AddressType().withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880").withDesc("desc").withAddressType("work"));
-    when(groupClient.getGroupByQuery("group==\"staff\"")).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup().withId("503a81cd-6c26-400f-b620-14c08943697c").withGroup("staff"))));
-    when(departmentClient.getDepartmentByQuery("name==\"Department\"")).thenReturn(new DepartmentCollection()
+    when(groupClient.getByQuery("group==\"staff\"")).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup().withId("503a81cd-6c26-400f-b620-14c08943697c").withGroup("staff"))));
+    when(departmentClient.getByQuery("name==\"Department\"")).thenReturn(new DepartmentCollection()
       .withDepartments(List.of(new Department()
         .withId("4ac6b846-e184-4cdd-8101-68f4af97d103")
         .withName("Department"))));
-    when(addressTypeClient.getAddressTypeByQuery("desc==\"desc\"")).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880").withDesc("desc").withAddressType("work"))));
+    when(addressTypeClient.getByQuery("desc==\"desc\"")).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880").withDesc("desc").withAddressType("work"))));
     when(okapiClient.getModuleIds(any(), any(), any())).thenReturn(JsonNodeFactory.instance.arrayNode().add(JsonNodeFactory.instance.objectNode().put("id", "USERS")));
-    when(customFieldsClient.getCustomFieldsByQuery(any(), eq("name==\"sierraCheckoutInformation\""))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
+    when(customFieldsClient.getByQuery(any(), eq(encode("name==\"sierraCheckoutInformation\"")))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
       .withName("sierraCheckoutInformation")
       .withType(CustomFieldTypes.TEXTBOX_LONG)
       .withRefId("sierraCheckoutInformation")
       .withSelectField(new SelectField().withOptions(new SelectFieldOptions().withValues(List.of(new SelectFieldOption().withValue("10")))))
       .withTextField(new TextField().withFieldFormat(Format.TEXT)))));
-    when(customFieldsClient.getCustomFieldsByQuery(any(), eq("refId==\"sierraCheckoutInformation\""))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
+    when(customFieldsClient.getByQuery(any(), eq(encode("refId==\"sierraCheckoutInformation\"")))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
       .withName("sierraCheckoutInformation")
       .withType(CustomFieldTypes.TEXTBOX_LONG)
       .withRefId("sierraCheckoutInformation")
@@ -348,8 +351,9 @@ class OpenCSVConverterTest extends BaseTest {
       .withStatisticalCodes(List.of(new StatisticalCode()
         .withId("c7a32c50-ea7c-43b7-87ab-d134c8371330")
         .withCode("St@tistical-Code-2"))));
-    when(locationClient.getLocationByQuery("name==\"Main Library\"")).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("fcd64ce1-6995-48f0-840e-89ffa2288371").withName("Main Library"))));
-    when(locationClient.getLocationByQuery("name==\"Popular Reading Collection\"")).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("b241764c-1466-4e1d-a028-1a3684a5da87").withName("Popular Reading Collection"))));
+    when(locationClient.getByQuery("name==\"Main Library\"")).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("fcd64ce1-6995-48f0-840e-89ffa2288371").withName("Main Library"))));
+    when(locationClient.getByQuery("name==\"Popular Reading Collection\"")).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("b241764c-1466-4e1d-a028-1a3684a5da87").withName("Popular Reading Collection"))));
+    when(damagedStatusClient.getById("bd563d7a-42be-4b2d-bf77-97896e0c1dde")).thenThrow(new NotFoundException("No found"));
 
     // Holdings record
     when(holdingsTypeClient.getById("0c422f92-0f4d-4d32-8cbe-390ebc33a3e5")).thenReturn(new HoldingsType().withId("0c422f92-0f4d-4d32-8cbe-390ebc33a3e5").withName("Holdings type").withSource("Holdings source"));
@@ -371,8 +375,8 @@ class OpenCSVConverterTest extends BaseTest {
       .withName("St@tistical-Code-holding_2"));
     when(holdingsSourceClient.getById("f32d531e-df79-46b3-8932-cdd35f7a2264")).thenReturn(new HoldingsRecordsSource().withId("f32d531e-df79-46b3-8932-cdd35f7a2264").withName("Holdings@record@source"));
     when(holdingsTypeClient.getByQuery("name==\"Holdings type\"")).thenReturn(new HoldingsTypeCollection().withHoldingsTypes(List.of(new HoldingsType().withId("0c422f92-0f4d-4d32-8cbe-390ebc33a3e5").withName("Holdings type").withSource("Holdings source"))));
-    when(locationClient.getLocationByQuery("name==\"Location#1\"")).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("fcd64ce1-6995-48f0-840e-89ffa2288371").withName("Location#1"))));
-    when(locationClient.getLocationByQuery("name==\"Location#2\"")).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("b241764c-1466-4e1d-a028-1a3684a5da87").withName("Popular Reading Collection"))));
+    when(locationClient.getByQuery("name==\"Location#1\"")).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("fcd64ce1-6995-48f0-840e-89ffa2288371").withName("Location#1"))));
+    when(locationClient.getByQuery("name==\"Location#2\"")).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("b241764c-1466-4e1d-a028-1a3684a5da87").withName("Popular Reading Collection"))));
     when(callNumberTypeClient.getByQuery("name==\"Call-number@type_holding\"")).thenReturn(new CallNumberTypeCollection().withCallNumberTypes(List.of(new CallNumberType()
       .withId("cd70562c-dd0b-42f6-aa80-ce803d24d4a1")
       .withName("Call-number@type_holding")
@@ -387,5 +391,7 @@ class OpenCSVConverterTest extends BaseTest {
       .withCode("ST2")
       .withName("St@tistical-Code-holding_2"))));
     when(holdingsSourceClient.getByQuery("name==\"Holdings@record@source\"")).thenReturn(new HoldingsRecordsSourceCollection().withHoldingsRecordsSources(List.of(new HoldingsRecordsSource().withId("f32d531e-df79-46b3-8932-cdd35f7a2264").withName("Holdings@record@source"))));
+    when(holdingsSourceClient.getById("a06889ff-d178-4dc8-815a-06f7f97bf975")).thenThrow(new NotFoundException("Not found"));
+
   }
 }

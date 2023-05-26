@@ -1,19 +1,19 @@
 package org.folio.bulkops.domain.converter;
 
-import org.folio.bulkops.domain.bean.HoldingsStatement;
-import org.folio.bulkops.exception.EntityFormatException;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.folio.bulkops.domain.bean.HoldingsStatement;
+import org.folio.bulkops.exception.EntityFormatException;
 
 public class HoldingsStatementListConverter extends BaseConverter<List<HoldingsStatement>> {
   private static final int NUMBER_OF_HOLDINGS_STATEMENT_ELEMENTS = 3;
@@ -26,7 +26,7 @@ public class HoldingsStatementListConverter extends BaseConverter<List<HoldingsS
     return Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
       .map(this::restoreHoldingsStatement)
       .filter(Objects::nonNull)
-      .collect(Collectors.toList());
+      .toList();
   }
 
   @Override
@@ -39,11 +39,6 @@ public class HoldingsStatementListConverter extends BaseConverter<List<HoldingsS
           escape(statement.getNote()),
           escape(statement.getStaffNote())))
       .collect(Collectors.joining(ITEM_DELIMITER));
-  }
-
-  @Override
-  public List<HoldingsStatement> getDefaultObjectValue() {
-    return null;
   }
 
   private HoldingsStatement restoreHoldingsStatement(String statementString) {

@@ -14,9 +14,4 @@ public class ItemLocationConverter extends BaseConverter<ItemLocation> {
   public String convertToString(ItemLocation object) {
     return object.getName();
   }
-
-  @Override
-  public ItemLocation getDefaultObjectValue() {
-    return null;
-  }
 }

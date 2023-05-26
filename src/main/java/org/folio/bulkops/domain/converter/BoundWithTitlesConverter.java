@@ -1,17 +1,17 @@
 package org.folio.bulkops.domain.converter;
 
-import org.folio.bulkops.domain.bean.Title;
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
+import org.folio.bulkops.domain.bean.Title;
 
 public class BoundWithTitlesConverter extends BaseConverter<List<Title>> {
 
@@ -26,11 +26,6 @@ public class BoundWithTitlesConverter extends BaseConverter<List<Title>> {
       .filter(Objects::nonNull)
       .map(this::titleToString)
       .collect(Collectors.joining(ITEM_DELIMITER));
-  }
-
-  @Override
-  public List<Title> getDefaultObjectValue() {
-    return Collections.emptyList();
   }
 
   private String titleToString(Title title) {

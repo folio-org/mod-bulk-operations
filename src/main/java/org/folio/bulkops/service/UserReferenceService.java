@@ -1,9 +1,7 @@
 package org.folio.bulkops.service;
 
-import static java.lang.String.format;
-
-import java.net.URI;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.CustomFieldsClient;
@@ -19,8 +17,14 @@ import org.folio.spring.FolioExecutionContext;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import java.net.URI;
+
+import static java.lang.String.format;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_DESC;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_GROUP;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_REF_ID;
+import static org.folio.bulkops.util.Utils.encode;
 
 @Service
 @RequiredArgsConstructor
@@ -39,11 +43,11 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "addressTypeIds")
   public AddressType getAddressTypeByDesc(String desc) {
-      var response = addressTypeClient.getAddressTypeByQuery(String.format("desc==\"%s\"", desc));
-      if (response.getAddressTypes().isEmpty()) {
-        throw new NotFoundException(format("Address type=%s not found", desc));
-      }
-      return response.getAddressTypes().get(0);
+    var response = addressTypeClient.getByQuery(String.format(QUERY_PATTERN_DESC, desc));
+    if (response.getAddressTypes().isEmpty()) {
+      throw new NotFoundException(format("Address type=%s not found", desc));
+    }
+    return response.getAddressTypes().get(0);
   }
 
   @Cacheable(cacheNames = "addressTypeDesc")
@@ -66,11 +70,11 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "departmentIds")
   public Department getDepartmentByName(String name) {
-      var response = departmentClient.getDepartmentByQuery(String.format("name==\"%s\"", name));
-      if (response.getDepartments().isEmpty()) {
-        throw new NotFoundException(format("Department=%s not found", name));
-      }
-      return response.getDepartments().get(0);
+    var response = departmentClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
+    if (response.getDepartments().isEmpty()) {
+      throw new NotFoundException(format("Department=%s not found", name));
+    }
+    return response.getDepartments().get(0);
   }
 
   @Cacheable(cacheNames = "patronGroups")
@@ -89,7 +93,7 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "patronGroupIds")
   public String getPatronGroupIdByName(String name) {
-    var response = groupClient.getGroupByQuery(String.format("group==\"%s\"", name));
+    var response = groupClient.getByQuery(String.format(QUERY_PATTERN_GROUP, name));
     if (ObjectUtils.isEmpty(response) || ObjectUtils.isEmpty(response.getUsergroups())) {
       throw new NotFoundException(format("Invalid patron group value: %s", name));
     }
@@ -99,7 +103,7 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByName(String name)  {
-    var customFields = customFieldsClient.getCustomFieldsByQuery(getModuleId(MOD_USERS), String.format("name==\"%s\"", name));
+    var customFields = customFieldsClient.getByQuery(getModuleId(MOD_USERS), encode(format(QUERY_PATTERN_NAME, name)));
     if (customFields.getCustomFields().isEmpty()) {
       throw new NotFoundException(format("Custom field with name=%s not found", name));
     }
@@ -108,7 +112,7 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByRefId(String refId) {
-    var customFields = customFieldsClient.getCustomFieldsByQuery(getModuleId(MOD_USERS),String.format("refId==\"%s\"", refId));
+    var customFields = customFieldsClient.getByQuery(getModuleId(MOD_USERS), encode(format(QUERY_PATTERN_REF_ID, refId)));
     if (customFields.getCustomFields().isEmpty()) {
       throw new NotFoundException(format("Custom field with refId=%s not found", refId));
     }

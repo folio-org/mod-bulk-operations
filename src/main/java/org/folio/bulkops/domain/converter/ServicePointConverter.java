@@ -14,9 +14,4 @@ public class ServicePointConverter extends BaseConverter<String> {
   public String convertToString(String object) {
     return ItemReferenceHelper.service().getServicePointById(object).getName();
   }
-
-  @Override
-  public String getDefaultObjectValue() {
-    return null;
-  }
 }
