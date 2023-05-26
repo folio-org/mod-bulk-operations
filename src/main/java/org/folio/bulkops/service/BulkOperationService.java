@@ -133,7 +133,9 @@ public class BulkOperationService {
           operation.setLinkToModifiedRecordsCsvFile(linkToThePreviewFile);
 
           var numOfLines = remoteFileSystemClient.getNumOfLines(linkToThePreviewFile) - 1;
-          operation.setTotalNumOfRecords(numOfLines);
+          if (operation.getTotalNumOfRecords() == 0) {
+            operation.setTotalNumOfRecords(numOfLines);
+          }
           operation.setProcessedNumOfRecords(numOfLines);
           operation.setMatchedNumOfRecords(numOfLines);
 
@@ -285,6 +287,8 @@ public class BulkOperationService {
     var operationId = operation.getId();
     operation.setCommittedNumOfRecords(0);
     operation.setStatus(OperationStatusType.APPLY_CHANGES);
+    operation.setTotalNumOfRecords(operation.getMatchedNumOfRecords());
+
     operation = bulkOperationRepository.save(operation);
 
     if (StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsJsonFile())) {
