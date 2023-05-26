@@ -1,45 +1,34 @@
 package org.folio.bulkops.domain.converter;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import org.folio.bulkops.domain.bean.Tags;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.ObjectUtils;
-import org.folio.bulkops.domain.bean.Tags;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
+public class TagsConverter extends BaseConverter<Tags> {
 
-public class TagsConverter extends AbstractBeanField<String, Tags> {
   @Override
-  protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
-    if (isNotEmpty(value)) {
-      Tags tags = new Tags();
-      List<String> tagList = SpecialCharacterEscaper.restore(Arrays.asList(value.split(ARRAY_DELIMITER)));
-      return tags.withTagList(tagList);
-    }
-    return new Tags().withTagList(Collections.emptyList());
+  public Tags convertToObject(String value) {
+    Tags tags = new Tags();
+    List<String> tagList = SpecialCharacterEscaper.restore(Arrays.asList(value.split(ARRAY_DELIMITER)));
+    return tags.withTagList(tagList);
   }
 
   @Override
-  protected String convertToWrite(Object value) {
-    if (ObjectUtils.isNotEmpty(value)) {
-      var tags = (Tags) value;
-      return Objects.isNull(tags.getTagList()) ?
-        EMPTY :
-        tags.getTagList().stream()
-          .filter(Objects::nonNull)
-          .map(SpecialCharacterEscaper::escape)
-          .collect(Collectors.joining(ARRAY_DELIMITER));
-    }
-    return EMPTY;
+  public String convertToString(Tags object) {
+    return object.getTagList().stream()
+      .filter(Objects::nonNull)
+      .map(SpecialCharacterEscaper::escape)
+      .collect(Collectors.joining(ARRAY_DELIMITER));
+  }
+
+  @Override
+  public Tags getDefaultObjectValue() {
+    return null;
   }
 }

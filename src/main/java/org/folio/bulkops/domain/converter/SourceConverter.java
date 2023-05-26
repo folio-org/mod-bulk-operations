@@ -1,22 +1,21 @@
 package org.folio.bulkops.domain.converter;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-
-import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.service.HoldingsReferenceHelper;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
+public class SourceConverter extends BaseConverter<String> {
 
-public class SourceConverter extends AbstractBeanField<String, String> {
   @Override
-  protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
-    return HoldingsReferenceHelper.service().getSourceIdByName(value);
+  public String convertToObject(String value) {
+    return HoldingsReferenceHelper.service().getSourceByName(value).getId();
   }
 
   @Override
-  protected String convertToWrite(Object value) {
-    return ObjectUtils.isNotEmpty(value) ? HoldingsReferenceHelper.service().getSourceNameById(value.toString()) : EMPTY;
+  public String convertToString(String object) {
+    return HoldingsReferenceHelper.service().getSourceById(object).getName();
+  }
+
+  @Override
+  public String getDefaultObjectValue() {
+    return null;
   }
 }

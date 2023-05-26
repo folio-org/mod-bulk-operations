@@ -1,9 +1,6 @@
 package org.folio.bulkops.service;
 
 import static java.lang.String.format;
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.net.URI;
 
@@ -14,7 +11,10 @@ import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.client.GroupClient;
 import org.folio.bulkops.client.OkapiClient;
 import org.folio.bulkops.client.UserClient;
+import org.folio.bulkops.domain.bean.AddressType;
 import org.folio.bulkops.domain.bean.CustomField;
+import org.folio.bulkops.domain.bean.Department;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -38,43 +38,39 @@ public class UserReferenceService {
   private final OkapiClient okapiClient;
 
   @Cacheable(cacheNames = "addressTypeIds")
-  public String getAddressTypeIdByDesc(String desc) {
-    if (isEmpty(desc)) {
-      return null;
-    } else {
+  public AddressType getAddressTypeByDesc(String desc) {
       var response = addressTypeClient.getAddressTypeByQuery(String.format("desc==\"%s\"", desc));
       if (response.getAddressTypes().isEmpty()) {
-        var msg = format("Address type=%s not found", desc);
-        log.error(msg);
-        return EMPTY;
+        throw new NotFoundException(format("Address type=%s not found", desc));
       }
-      return response.getAddressTypes().get(0).getId();
-    }
+      return response.getAddressTypes().get(0);
   }
 
   @Cacheable(cacheNames = "addressTypeDesc")
-  public String getAddressTypeDescById(String id) {
-      return isNull(id) ? EMPTY : addressTypeClient.getAddressTypeById(id).getDesc();
+  public AddressType getAddressTypeById(String id) {
+    try {
+      return addressTypeClient.getAddressTypeById(id);
+    } catch (Exception e) {
+      throw new NotFoundException(format("Address type was not found by id=%s", id));
+    }
   }
 
   @Cacheable(cacheNames = "departmentNames")
-  public String getDepartmentNameById(String id) {
-    return isNull(id) ? EMPTY : departmentClient.getDepartmentById(id).getName();
+  public Department getDepartmentById(String id) {
+    try {
+      return departmentClient.getDepartmentById(id);
+    } catch (Exception e) {
+      throw new NotFoundException(format("Department was not found by id=%s", id));
+    }
   }
 
   @Cacheable(cacheNames = "departmentIds")
-  public String getDepartmentIdByName(String name) {
-    if (isEmpty(name)) {
-      return EMPTY;
-    } else {
+  public Department getDepartmentByName(String name) {
       var response = departmentClient.getDepartmentByQuery(String.format("name==\"%s\"", name));
       if (response.getDepartments().isEmpty()) {
-        var msg = format("Department=%s not found", name);
-        log.error(msg);
-        return EMPTY;
+        throw new NotFoundException(format("Department=%s not found", name));
       }
-      return response.getDepartments().get(0).getId();
-    }
+      return response.getDepartments().get(0);
   }
 
   @Cacheable(cacheNames = "patronGroups")
@@ -84,19 +80,18 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "patronGroupNames")
   public String getPatronGroupNameById(String id) {
-      return isNull(id) ? EMPTY : groupClient.getGroupById(id).getGroup();
+    try {
+      return groupClient.getGroupById(id).getGroup();
+    } catch (Exception e) {
+      throw new NotFoundException(format("Patron group was not found by id=%s", id));
+    }
   }
 
   @Cacheable(cacheNames = "patronGroupIds")
   public String getPatronGroupIdByName(String name) {
-    if (isEmpty(name)) {
-      return EMPTY;
-    }
     var response = groupClient.getGroupByQuery(String.format("group==\"%s\"", name));
     if (ObjectUtils.isEmpty(response) || ObjectUtils.isEmpty(response.getUsergroups())) {
-      var msg = "Invalid patron group value: " + name;
-      log.error(msg);
-      return EMPTY;
+      throw new NotFoundException(format("Invalid patron group value: %s", name));
     }
     return response.getUsergroups().get(0).getId();
   }
@@ -106,9 +101,7 @@ public class UserReferenceService {
   public CustomField getCustomFieldByName(String name)  {
     var customFields = customFieldsClient.getCustomFieldsByQuery(getModuleId(MOD_USERS), String.format("name==\"%s\"", name));
     if (customFields.getCustomFields().isEmpty()) {
-      var msg = format("Custom field with name=%s not found", name);
-      log.error(msg);
-      return null;
+      throw new NotFoundException(format("Custom field with name=%s not found", name));
     }
     return customFields.getCustomFields().get(0);
   }
@@ -117,9 +110,7 @@ public class UserReferenceService {
   public CustomField getCustomFieldByRefId(String refId) {
     var customFields = customFieldsClient.getCustomFieldsByQuery(getModuleId(MOD_USERS),String.format("refId==\"%s\"", refId));
     if (customFields.getCustomFields().isEmpty()) {
-      var msg = format("Custom field with refId=%s not found", refId);
-      log.error(msg);
-      return new CustomField();
+      throw new NotFoundException(format("Custom field with refId=%s not found", refId));
     }
     return customFields.getCustomFields().get(0);
   }
@@ -131,8 +122,6 @@ public class UserReferenceService {
     if (!moduleNamesJson.isEmpty()) {
       return moduleNamesJson.get(0).get("id").asText();
     }
-    var msg = "Module id not found for name: " + moduleName;
-    log.error(msg);
-    return EMPTY;
+    throw new NotFoundException(format("Module id not found for name: %s", moduleName));
   }
 }

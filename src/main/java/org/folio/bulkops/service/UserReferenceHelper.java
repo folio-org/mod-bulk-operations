@@ -1,15 +1,12 @@
 package org.folio.bulkops.service;
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-
-import org.folio.bulkops.domain.bean.CustomField;
-import org.folio.bulkops.exception.ConverterException;
-import org.folio.bulkops.exception.NotFoundException;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.stereotype.Service;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.domain.bean.AddressType;
+import org.folio.bulkops.domain.bean.CustomField;
+import org.folio.bulkops.domain.bean.Department;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -17,50 +14,28 @@ import lombok.extern.log4j.Log4j2;
 public class UserReferenceHelper implements InitializingBean {
   private final UserReferenceService userReferenceService;
 
-  public String getAddressTypeIdByDesc(String desc) {
-    if (isEmpty(desc)) {
-      return null;
-    }
-    var res = userReferenceService.getAddressTypeIdByDesc(desc);
-    return isEmpty(res) ? desc : res;
+  public AddressType getAddressTypeByDesc(String desc) {
+    return userReferenceService.getAddressTypeByDesc(desc);
   }
 
-  public String getAddressTypeDescById(String id) {
-    try {
-      return userReferenceService.getAddressTypeDescById(id);
-    } catch (NotFoundException e) {
-      log.error("Address type was not found by id={}", id);
-      return id;
-    }
+  public AddressType getAddressTypeById(String id) {
+    return userReferenceService.getAddressTypeById(id);
   }
 
-  public String getDepartmentNameById(String id) {
-    return userReferenceService.getDepartmentNameById(id);
+  public Department getDepartmentById(String id) {
+    return userReferenceService.getDepartmentById(id);
   }
 
-  public String getDepartmentIdByName(String name) {
-    if (isEmpty(name)) {
-      return null;
-    }
-    var res = userReferenceService.getDepartmentIdByName(name);
-    return isEmpty(res) ? name : res;
+  public Department getDepartmentByName(String name) {
+    return userReferenceService.getDepartmentByName(name);
   }
 
   public String getPatronGroupNameById(String id) {
-    try {
-      return userReferenceService.getPatronGroupNameById(id);
-    } catch (NotFoundException e) {
-      log.error("Patron group was not found by id=", id);
-      return id;
-    }
+    return userReferenceService.getPatronGroupNameById(id);
   }
 
   public String getPatronGroupIdByName(String name) {
-    if (isEmpty(name)) {
-      return null;
-    }
-    var res = userReferenceService.getPatronGroupIdByName(name);
-    return isEmpty(res) ? name : res;
+    return userReferenceService.getPatronGroupIdByName(name);
   }
 
   public CustomField getCustomFieldByRefId(String refId) {

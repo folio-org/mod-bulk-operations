@@ -1,15 +1,10 @@
 package org.folio.bulkops.domain.converter;
 
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.util.DateHelper.dateFromString;
-import static org.folio.bulkops.util.DateHelper.dateToString;
-import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
-import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
+import org.folio.bulkops.domain.bean.CirculationNote;
+import org.folio.bulkops.domain.bean.Personal;
+import org.folio.bulkops.domain.bean.Source;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import org.folio.bulkops.exception.EntityFormatException;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,17 +12,18 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.folio.bulkops.domain.bean.CirculationNote;
-import org.folio.bulkops.domain.bean.Personal;
-import org.folio.bulkops.domain.bean.Source;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
-import org.folio.bulkops.exception.EntityFormatException;
+import static org.apache.commons.lang3.ObjectUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
+import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
+import static org.folio.bulkops.util.DateHelper.dateFromString;
+import static org.folio.bulkops.util.DateHelper.dateToString;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-
-public class CirculationNoteListConverter extends AbstractBeanField<String, List<CirculationNote>> {
+public class CirculationNoteListConverter extends BaseConverter<List<CirculationNote>> {
   private static final int NUMBER_OF_CIRCULATION_NOTE_COMPONENTS = 8;
   private static final int CIRC_NOTE_ID_INDEX = 0;
   private static final int CIRC_NOTE_TYPE_INDEX = 1;
@@ -39,22 +35,24 @@ public class CirculationNoteListConverter extends AbstractBeanField<String, List
   private static final int CIRC_NOTE_DATE_OFFSET = 1;
 
   @Override
-  protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
-    return isEmpty(value) ? Collections.emptyList() :
-      Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
-        .map(this::restoreCirculationNote)
-        .filter(Objects::nonNull)
-        .toList();
+  public List<CirculationNote> convertToObject(String value) {
+    return Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
+      .map(this::restoreCirculationNote)
+      .filter(Objects::nonNull)
+      .toList();
   }
 
   @Override
-  protected String convertToWrite(Object value) {
-    return isEmpty(value) ?
-      EMPTY :
-      ((List<CirculationNote>) value).stream()
-        .filter(Objects::nonNull)
-        .map(this::circulationNotesToString)
-        .collect(Collectors.joining(ITEM_DELIMITER));
+  public String convertToString(List<CirculationNote> object) {
+    return object.stream()
+      .filter(Objects::nonNull)
+      .map(this::circulationNotesToString)
+      .collect(Collectors.joining(ITEM_DELIMITER));
+  }
+
+  @Override
+  public List<CirculationNote> getDefaultObjectValue() {
+    return Collections.emptyList();
   }
 
   private CirculationNote restoreCirculationNote(String s) {

@@ -1,5 +1,21 @@
 package org.folio.bulkops.domain.converter;
 
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.folio.bulkops.domain.bean.CustomField;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import org.folio.bulkops.exception.EntityFormatException;
+import org.folio.bulkops.service.UserReferenceHelper;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -12,44 +28,24 @@ import static org.folio.bulkops.util.Constants.KEY_VALUE_DELIMITER;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
 import static org.folio.bulkops.util.Constants.LINE_BREAK_REPLACEMENT;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
+public class CustomFieldsConverter extends BaseConverter<Map<String, Object>> {
 
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.folio.bulkops.domain.bean.CustomField;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
-import org.folio.bulkops.exception.EntityFormatException;
-import org.folio.bulkops.service.UserReferenceHelper;
-
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-
-public class CustomFieldsConverter extends AbstractBeanField<String, Map<String, Object>> {
   @Override
-  protected Map<String, Object> convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
-    if (isNotEmpty(value)) {
-      return Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
-        .map(this::restoreCustomFieldValue)
-        .filter(pair -> isNotEmpty(pair.getKey()))
-        .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
-    }
-    return Collections.emptyMap();
+  public Map<String, Object> convertToObject(String value) {
+    return Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
+      .map(this::restoreCustomFieldValue)
+      .filter(pair -> isNotEmpty(pair.getKey()))
+      .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
   }
 
   @Override
-  protected String convertToWrite(Object value) {
-    if (ObjectUtils.isNotEmpty(value)) {
-      return customFieldsToString((Map<String, Object>) value);
-    }
-    return EMPTY;
+  public String convertToString(Map<String, Object> object) {
+    return customFieldsToString(object);
+  }
+
+  @Override
+  public Map<String, Object> getDefaultObjectValue() {
+    return null;
   }
 
   private Pair<String, Object> restoreCustomFieldValue(String s) {

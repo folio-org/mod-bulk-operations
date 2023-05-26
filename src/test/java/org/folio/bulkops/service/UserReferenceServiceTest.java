@@ -53,58 +53,58 @@ class UserReferenceServiceTest {
   @Test
   void getAddressTypeDescByIdTest() {
     when(addressTypeClient.getAddressTypeById("id")).thenReturn(new AddressType().withDesc("type"));
-    var actual = userReferenceService.getAddressTypeDescById("id");
+    var actual = userReferenceService.getAddressTypeById("id");
     verify(addressTypeClient).getAddressTypeById("id");
-    assertEquals("type", actual);
+    assertEquals("type", actual.getDesc());
 
     when(addressTypeClient.getAddressTypeById("id")).thenThrow(NotFoundException.class);
-    assertThrows(NotFoundException.class, () -> userReferenceService.getAddressTypeDescById("id"));
+    assertThrows(NotFoundException.class, () -> userReferenceService.getAddressTypeById("id"));
   }
 
   @Test
   void getAddressTypeIdByDescTest() {
     var expected = UUID.randomUUID().toString();
     when(addressTypeClient.getAddressTypeByQuery("desc==\"*\"")).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId(expected))));
-    var actual = userReferenceService.getAddressTypeIdByDesc("*");
+    var actual = userReferenceService.getAddressTypeByDesc("*");
     verify(addressTypeClient).getAddressTypeByQuery("desc==\"*\"");
-    assertEquals(expected, actual);
+    assertEquals(expected, actual.getId());
 
     when(addressTypeClient.getAddressTypeByQuery("desc==\"*\"")).thenReturn(new AddressTypeCollection());
-    assertEquals(EMPTY, userReferenceService.getAddressTypeIdByDesc("*"));
+    assertThrows(NotFoundException.class, () -> userReferenceService.getAddressTypeByDesc("*"));
   }
 
   @Test
   void getAddressTypeDescByIdIfNullTest() {
-    userReferenceService.getAddressTypeDescById(null);
+    userReferenceService.getAddressTypeById(null);
     verify(addressTypeClient, times(0)).getAddressTypeById(isA(String.class));
   }
 
   @Test
   void getDepartmentNameByIdTest() {
     when(departmentClient.getDepartmentById("id")).thenReturn(new Department().withName("departmentName"));
-    var actual = userReferenceService.getDepartmentNameById("id");
+    var actual = userReferenceService.getDepartmentById("id");
     verify(departmentClient).getDepartmentById("id");
-    assertEquals("departmentName", actual);
+    assertEquals("departmentName", actual.getName());
 
     when(departmentClient.getDepartmentById("id")).thenThrow(NotFoundException.class);
-    assertThrows(NotFoundException.class, () -> userReferenceService.getDepartmentNameById("id"));
+    assertThrows(NotFoundException.class, () -> userReferenceService.getDepartmentById("id"));
   }
 
   @Test
   void getDepartmentIdByNameTest() {
     var expected = UUID.randomUUID().toString();
     when(departmentClient.getDepartmentByQuery("name==\"*\"")).thenReturn(new DepartmentCollection().withDepartments(List.of(new Department().withId(expected))));
-    var actual = userReferenceService.getDepartmentIdByName("*");
+    var actual = userReferenceService.getDepartmentByName("*");
     verify(departmentClient).getDepartmentByQuery("name==\"*\"");
-    assertEquals(expected, actual);
+    assertEquals(expected, actual.getId());
 
     when(departmentClient.getDepartmentByQuery("name==\"*\"")).thenReturn(new DepartmentCollection());
-    assertEquals(EMPTY, userReferenceService.getDepartmentIdByName("*"));
+    assertThrows(NotFoundException.class, () -> userReferenceService.getDepartmentByName("*"));
   }
 
   @Test
   void getDepartmentNameByIdIfNullTest() {
-    userReferenceService.getDepartmentNameById(null);
+    userReferenceService.getDepartmentById(null);
 
     verify(departmentClient, times(0)).getDepartmentById(isA(String.class));
   }
@@ -129,14 +129,7 @@ class UserReferenceServiceTest {
     assertEquals(expected, actual);
 
     when(groupClient.getGroupByQuery("group==\"*\"")).thenReturn(new UserGroupCollection().withUsergroups(new ArrayList<>()));
-    assertEquals(EMPTY, userReferenceService.getPatronGroupIdByName("*"));
-  }
-
-  @Test
-  void getPatronGroupNameByIdIfNullTest() {
-    userReferenceService.getPatronGroupNameById(null);
-
-    verify(groupClient, times(0)).getGroupById(isA(String.class));
+    assertThrows(NotFoundException.class, () -> userReferenceService.getPatronGroupIdByName("*"));
   }
 
   @Test
@@ -144,14 +137,10 @@ class UserReferenceServiceTest {
     var customField = new CustomField().withRefId("refId").withName("name");
     when(customFieldsClient.getCustomFieldsByQuery(isA(String.class), eq("refId==\"refId\"")))
       .thenReturn(new CustomFieldCollection().withCustomFields(List.of(customField)));
-    when(customFieldsClient.getCustomFieldsByQuery(isA(String.class), eq("refId==\"refId2\"")))
-      .thenReturn(new CustomFieldCollection().withCustomFields(List.of()));
     doReturn("module").when(userReferenceService).getModuleId(isA(String.class));
 
     var actual = userReferenceService.getCustomFieldByRefId("refId");
     assertEquals(customField, actual);
-
-    assertEquals(new CustomField(), userReferenceService.getCustomFieldByRefId("refId2"));
   }
 
   @Test
@@ -167,6 +156,6 @@ class UserReferenceServiceTest {
     when(customFieldsClient.getCustomFieldsByQuery(isA(String.class), eq("name==\"name\"")))
       .thenReturn(new CustomFieldCollection().withCustomFields(new ArrayList<>()));
     doReturn("module").when(userReferenceService).getModuleId(isA(String.class));
-    assertNull(userReferenceService.getCustomFieldByName("name"));
+    assertThrows(NotFoundException.class, () -> userReferenceService.getCustomFieldByName("name"));
   }
 }

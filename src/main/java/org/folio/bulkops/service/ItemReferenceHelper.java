@@ -1,8 +1,6 @@
 package org.folio.bulkops.service;
 
-import org.folio.bulkops.domain.bean.ItemLocation;
-import org.folio.bulkops.domain.bean.LoanType;
-import org.folio.bulkops.domain.bean.MaterialType;
+import org.folio.bulkops.domain.bean.*;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
@@ -19,12 +17,12 @@ public class ItemReferenceHelper implements InitializingBean {
     return itemReferenceService.getCallNumberTypeNameById(callNumberTypeId);
   }
 
-  public String getDamagedStatusNameById(String damagedStatusId) {
-    return itemReferenceService.getDamagedStatusNameById(damagedStatusId);
+  public DamagedStatus getDamagedStatusById(String damagedStatusId) {
+    return itemReferenceService.getDamagedStatusById(damagedStatusId);
   }
 
-  public String getDamagedStatusIdByName(String name) {
-    return itemReferenceService.getDamagedStatusIdByName(name);
+  public DamagedStatus getDamagedStatusByName(String name) {
+    return itemReferenceService.getDamagedStatusByName(name);
   }
 
   public String getNoteTypeNameById(String noteTypeId) {
@@ -35,12 +33,12 @@ public class ItemReferenceHelper implements InitializingBean {
     return itemReferenceService.getNoteTypeIdByName(name);
   }
 
-  public String getServicePointNameById(String servicePointId) {
-    return itemReferenceService.getServicePointNameById(servicePointId);
+  public ServicePoint getServicePointById(String servicePointId) {
+    return itemReferenceService.getServicePointById(servicePointId);
   }
 
-  public String getServicePointIdByName(String name) {
-    return itemReferenceService.getServicePointIdByName(name);
+  public ServicePoint getServicePointByName(String name) {
+    return itemReferenceService.getServicePointByName(name);
   }
 
   public String getStatisticalCodeById(String statisticalCodeId) {

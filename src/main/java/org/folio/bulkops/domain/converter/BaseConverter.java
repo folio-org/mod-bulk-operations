@@ -11,21 +11,20 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
   @Override
   protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
-    if ("default".equals(value)) {
-      return null;
+    if (EMPTY.equals(value)) {
+      return getDefaultObjectValue();
     }
     try {
       return convertToObject(value);
     } catch (ConverterException e) {
-      System.out.println();
-      return value;
+      throw new ConverterException(this.getField(), value, e.getMessage());
     }
   }
 
   @Override
   protected String convertToWrite(Object object) {
     if (ObjectUtils.isEmpty(object)) {
-      return "default";
+      return EMPTY;
     }
     try {
       return convertToString((T) object);
@@ -37,4 +36,6 @@ public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
   public abstract T convertToObject(String value);
 
   public abstract String convertToString(T object);
+
+  public abstract T getDefaultObjectValue();
 }

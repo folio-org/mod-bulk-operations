@@ -1,12 +1,10 @@
 package org.folio.bulkops.domain.converter;
 
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.bean.Address;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import org.folio.bulkops.service.UserReferenceHelper;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,17 +13,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.folio.bulkops.domain.bean.Address;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
-import org.folio.bulkops.service.UserReferenceHelper;
+import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-
-public  class AddressesConverter extends AbstractBeanField<String, List<Address>> {
+public  class AddressesConverter extends BaseConverter<List<Address>> {
 
   private static final int ADDRESS_ID = 0;
   private static final int ADDRESS_COUNTRY_ID = 1;
@@ -38,7 +34,7 @@ public  class AddressesConverter extends AbstractBeanField<String, List<Address>
   private static final int ADDRESS_TYPE = 8;
 
   @Override
-  protected List<Address> convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
+  public List<Address> convertToObject(String value) {
     String[] addresses = value.split(ITEM_DELIMITER_PATTERN);
     if (addresses.length > 0) {
       return Arrays.stream(addresses)
@@ -50,16 +46,20 @@ public  class AddressesConverter extends AbstractBeanField<String, List<Address>
   }
 
   @Override
-  protected String convertToWrite(Object value) {
-    var addresses = (List<Address>) value;
-    if (ObjectUtils.isNotEmpty(addresses)) {
-      return addresses.stream()
+  public String convertToString(List<Address> object) {
+    if (ObjectUtils.isNotEmpty(object)) {
+      return object.stream()
         .filter(Objects::nonNull)
         .map(this::toCsvString)
         .filter(StringUtils::isNotEmpty)
         .collect(Collectors.joining(ITEM_DELIMITER));
     }
     return EMPTY;
+  }
+
+  @Override
+  public List<Address> getDefaultObjectValue() {
+    return null;
   }
 
   private Address getAddressFromString(String stringAddress) {
@@ -73,7 +73,7 @@ public  class AddressesConverter extends AbstractBeanField<String, List<Address>
                   .region(convertToNullableString(fields.get(ADDRESS_REGION)))
                     .postalCode(convertToNullableString(fields.get(ADDRESS_POSTAL_CODE)))
                       .primaryAddress(convertToNullableBoolean(fields.get(ADDRESS_PRIMARY_ADDRESS)))
-                        .addressTypeId(convertToNullableString(UserReferenceHelper.service().getAddressTypeIdByDesc(fields.get(ADDRESS_TYPE))))
+                        .addressTypeId(convertToNullableString(UserReferenceHelper.service().getAddressTypeByDesc(fields.get(ADDRESS_TYPE)).getId()))
                           .build();
   }
 
@@ -87,7 +87,7 @@ public  class AddressesConverter extends AbstractBeanField<String, List<Address>
     data.add(isEmpty(address.getRegion()) ? EMPTY : address.getRegion());
     data.add(isEmpty(address.getPostalCode()) ? EMPTY : address.getPostalCode());
     data.add(isNull(address.getPrimaryAddress()) ? EMPTY : address.getPrimaryAddress().toString());
-    data.add(UserReferenceHelper.service().getAddressTypeDescById(address.getAddressTypeId()));
+    data.add(UserReferenceHelper.service().getAddressTypeById(address.getAddressTypeId()).getDesc());
     return String.join(ARRAY_DELIMITER, escape(data));
   }
 

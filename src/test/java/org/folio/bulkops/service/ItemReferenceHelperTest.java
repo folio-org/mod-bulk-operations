@@ -2,7 +2,6 @@ package org.folio.bulkops.service;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
@@ -26,7 +25,7 @@ import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.bulkops.domain.bean.StatisticalCodeCollection;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserCollection;
-import org.folio.spring.exception.NotFoundException;
+import org.folio.bulkops.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -53,22 +52,19 @@ class ItemReferenceHelperTest extends BaseTest {
   @Test
   void testGetDamagedStatus() {
     when(damagedStatusClient.getById("id_1")).thenReturn(new DamagedStatus().withName("name_1"));
-    var actual = itemReferenceHelper.getDamagedStatusNameById("id_1");
-    assertEquals("name_1", actual);
+    var actual = itemReferenceHelper.getDamagedStatusById("id_1");
+    assertEquals("name_1", actual.getName());
 
     when(damagedStatusClient.getByQuery("name==\"name_2\"")).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.singletonList(new DamagedStatus().withId("id_2"))));
-    actual = itemReferenceHelper.getDamagedStatusIdByName("name_2");
-    assertEquals("id_2", actual);
+    actual = itemReferenceHelper.getDamagedStatusByName("name_2");
+    assertEquals("id_2", actual.getId());
 
     when(damagedStatusClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getDamagedStatusNameById("id_3"));
+    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getDamagedStatusById("id_3"));
 
-    when(damagedStatusClient.getByQuery("name==\"name_4\"")).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.emptyList()));
-    actual = itemReferenceHelper.getDamagedStatusIdByName("name_4");
-    assertEquals("name_4", actual);
-
-    assertEquals(EMPTY, itemReferenceHelper.getDamagedStatusNameById(null));
-    assertNull(itemReferenceHelper.getDamagedStatusIdByName(EMPTY));
+    when(damagedStatusClient.getByQuery("name==\"name_4\"")).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.singletonList(new DamagedStatus().withName("name_4"))));
+    actual = itemReferenceHelper.getDamagedStatusByName("name_4");
+    assertEquals("name_4", actual.getName());
   }
 
   @Test
@@ -85,32 +81,25 @@ class ItemReferenceHelperTest extends BaseTest {
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getNoteTypeNameById("id_3"));
 
     when(itemNoteTypeClient.getByQuery("name==\"name_4\"")).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.emptyList()));
-    actual = itemReferenceHelper.getNoteTypeIdByName("name_4");
-    assertEquals("name_4", actual);
+    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getNoteTypeIdByName("name_4"));
 
-    assertEquals(EMPTY, itemReferenceHelper.getNoteTypeNameById(null));
-    assertNull(itemReferenceHelper.getNoteTypeIdByName(EMPTY));
   }
 
   @Test
   void testGetServicePoint() {
     when(servicePointClient.getById("id_1")).thenReturn(new ServicePoint().withName("name_1"));
-    var actual = itemReferenceHelper.getServicePointNameById("id_1");
-    assertEquals("name_1", actual);
+    var actual = itemReferenceHelper.getServicePointById("id_1");
+    assertEquals("name_1", actual.getName());
 
     when(servicePointClient.get("name==\"name_2\"", 1L)).thenReturn(new ServicePoints().withServicepoints(Collections.singletonList(new ServicePoint().withId("id_2"))));
-    actual = itemReferenceHelper.getServicePointIdByName("name_2");
-    assertEquals("id_2", actual);
+    actual = itemReferenceHelper.getServicePointByName("name_2");
+    assertEquals("id_2", actual.getId());
 
     when(servicePointClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getServicePointNameById("id_3"));
+    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getServicePointById("id_3"));
 
     when(servicePointClient.get("name==\"name_4\"", 1L)).thenReturn(new ServicePoints().withServicepoints(Collections.emptyList()));
-    actual = itemReferenceHelper.getServicePointIdByName("name_4");
-    assertEquals("name_4", actual);
-
-    assertEquals(EMPTY, itemReferenceHelper.getServicePointNameById(null));
-    assertNull(itemReferenceHelper.getServicePointIdByName(EMPTY));
+    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getServicePointByName("name_4"));
   }
 
   @Test
@@ -127,11 +116,7 @@ class ItemReferenceHelperTest extends BaseTest {
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getStatisticalCodeById("id_3"));
 
     when(statisticalCodeClient.getByQuery("code==\"code_4\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.emptyList()));
-    actual = itemReferenceHelper.getStatisticalCodeIdByCode("code_4");
-    assertEquals("code_4", actual);
-
-    assertEquals(EMPTY, itemReferenceHelper.getStatisticalCodeById(null));
-    assertNull(itemReferenceHelper.getDamagedStatusIdByName(EMPTY));
+    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getStatisticalCodeIdByCode("code_4"));
   }
 
   @Test
@@ -148,11 +133,7 @@ class ItemReferenceHelperTest extends BaseTest {
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getUserNameById("id_3"));
 
     when(userClient.getUserByQuery("username==\"name_4\"", 1L)).thenReturn(new UserCollection().withUsers(Collections.emptyList()));
-    actual = itemReferenceHelper.getUserIdByUserName("name_4");
-    assertEquals("name_4", actual);
-
-    assertEquals(EMPTY, itemReferenceHelper.getUserNameById(null));
-    assertNull(itemReferenceHelper.getUserIdByUserName(EMPTY));
+    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getUserIdByUserName("name_4"));
   }
 
   @Test
