@@ -72,6 +72,9 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
+import static java.lang.String.format;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_REF_ID;
 import static org.folio.bulkops.util.Utils.encode;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;

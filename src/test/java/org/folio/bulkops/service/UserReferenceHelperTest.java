@@ -1,5 +1,11 @@
 package org.folio.bulkops.service;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
+
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.AddressType;
 import org.folio.bulkops.domain.bean.AddressTypeCollection;
@@ -12,12 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserReferenceHelperTest extends BaseTest {
@@ -60,17 +60,14 @@ class UserReferenceHelperTest extends BaseTest {
   @Test
   void testGetPatronGroup() {
     when (groupClient.getGroupById("id_1")).thenReturn(UserGroup.builder().group("name_1").build());
-    var actual = userReferenceHelper.getPatronGroupNameById("id_1");
-    assertEquals("name_1", actual);
+    var actual = userReferenceHelper.getPatronGroupById("id_1");
+    assertEquals("name_1", actual.getGroup());
 
     when(groupClient.getGroupById("id_2")).thenThrow(new NotFoundException("not found"));
-    assertThrows(NotFoundException.class, () -> userReferenceHelper.getPatronGroupNameById("id_2"));
+    assertThrows(NotFoundException.class, () -> userReferenceHelper.getPatronGroupById("id_2"));
 
     when(groupClient.getByQuery("group==\"name_2\"")).thenReturn(UserGroupCollection.builder().usergroups(singletonList(UserGroup.builder().id("id_3").build())).build());
-    actual = userReferenceHelper.getPatronGroupIdByName("name_2");
-    assertEquals("id_3", actual);
-
-    when(groupClient.getByQuery("group==\"name_3\"")).thenReturn(UserGroupCollection.builder().usergroups(emptyList()).build());
-    assertThrows(NotFoundException.class, () -> userReferenceHelper.getPatronGroupIdByName("name_3"));
+    actual = userReferenceHelper.getPatronGroupByName("name_2");
+    assertEquals("id_3", actual.getId());
   }
 }

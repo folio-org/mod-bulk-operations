@@ -1,22 +1,5 @@
 package org.folio.bulkops.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.ObjectUtils;
-import org.folio.bulkops.client.*;
-import org.folio.bulkops.domain.bean.*;
-import org.folio.bulkops.exception.ConfigurationException;
-import org.folio.bulkops.exception.NotFoundException;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-
 import static java.lang.String.format;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -24,6 +7,39 @@ import static org.folio.bulkops.util.Constants.BULK_EDIT_CONFIGURATIONS_QUERY_TE
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_CODE;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_USERNAME;
+import static org.folio.bulkops.util.Utils.encode;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+
+import org.apache.commons.lang3.ObjectUtils;
+import org.folio.bulkops.client.CallNumberTypeClient;
+import org.folio.bulkops.client.ConfigurationClient;
+import org.folio.bulkops.client.DamagedStatusClient;
+import org.folio.bulkops.client.ItemNoteTypeClient;
+import org.folio.bulkops.client.LoanTypeClient;
+import org.folio.bulkops.client.LocationClient;
+import org.folio.bulkops.client.MaterialTypeClient;
+import org.folio.bulkops.client.ServicePointClient;
+import org.folio.bulkops.client.StatisticalCodeClient;
+import org.folio.bulkops.client.UserClient;
+import org.folio.bulkops.domain.bean.DamagedStatus;
+import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.LoanType;
+import org.folio.bulkops.domain.bean.MaterialType;
+import org.folio.bulkops.domain.bean.ServicePoint;
+import org.folio.bulkops.exception.ConfigurationException;
+import org.folio.bulkops.exception.NotFoundException;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Service
 @Log4j2
@@ -66,7 +82,7 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "damagedStatusIds")
   public DamagedStatus getDamagedStatusByName(String name) {
-    var response = damagedStatusClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
+    var response = damagedStatusClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     if (response.getItemDamageStatuses().isEmpty()) {
       throw new NotFoundException(format("Damaged status was not found by name=%s", name));
     }
@@ -84,7 +100,7 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "noteTypeIds")
   public String getNoteTypeIdByName(String name) {
-    var response = itemNoteTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
+    var response = itemNoteTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     if (response.getItemNoteTypes().isEmpty()) {
       throw new NotFoundException(format("Note type was not found by name=%s", name));
     }
@@ -102,7 +118,7 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "servicePointIds")
   public ServicePoint getServicePointByName(String name) {
-    var response = servicePointClient.getByQuery(String.format(QUERY_PATTERN_NAME, name), 1L);
+    var response = servicePointClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1L);
     if (response.getServicepoints().isEmpty()) {
       throw new NotFoundException(format("Service point was not found by name=%s", name));
     }
@@ -120,7 +136,7 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "statisticalCodeIds")
   public String getStatisticalCodeIdByCode(String code) {
-    var response = statisticalCodeClient.getByQuery(String.format(QUERY_PATTERN_CODE, code));
+    var response = statisticalCodeClient.getByQuery(String.format(QUERY_PATTERN_CODE, encode(code)));
     if (response.getStatisticalCodes().isEmpty()) {
       throw new NotFoundException(format("Statistical code was not found by code=%s", code));
     }
@@ -138,7 +154,7 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "userIds")
   public String getUserIdByUserName(String name) {
-    var response = userClient.getByQuery(String.format(QUERY_PATTERN_USERNAME, name), 1L);
+    var response = userClient.getByQuery(String.format(QUERY_PATTERN_USERNAME, encode(name)), 1L);
     if (response.getUsers().isEmpty()) {
       throw new NotFoundException(format("User was not found by name=%s", name));
     }
@@ -155,7 +171,7 @@ public class ItemReferenceService {
   }
 
   public ItemLocation getLocationByName(String name) {
-    var locations = locationClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
+    var locations = locationClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     if (ObjectUtils.isEmpty(locations) || ObjectUtils.isEmpty(locations.getLocations())) {
       throw new NotFoundException(format("Location not found by name=%s", name));
     }
@@ -163,7 +179,7 @@ public class ItemReferenceService {
   }
 
   public MaterialType getMaterialTypeByName(String name) {
-    var types = materialTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
+    var types = materialTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     if (types.getMtypes().isEmpty()) {
       throw new NotFoundException(format("Material type not found by name=%s", name));
     }
@@ -180,7 +196,7 @@ public class ItemReferenceService {
   }
 
   public LoanType getLoanTypeByName(String name) {
-    var loanTypes = loanTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
+    var loanTypes = loanTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     if (loanTypes.getLoantypes().isEmpty()) {
       throw new NotFoundException(format("Loan type not found by name=%s", name));
     }

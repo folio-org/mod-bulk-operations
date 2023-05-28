@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.util.Utils.encode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
@@ -55,14 +56,14 @@ class ItemReferenceHelperTest extends BaseTest {
     var actual = itemReferenceHelper.getDamagedStatusById("id_1");
     assertEquals("name_1", actual.getName());
 
-    when(damagedStatusClient.getByQuery("name==\"name_2\"")).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.singletonList(new DamagedStatus().withId("id_2"))));
+    when(damagedStatusClient.getByQuery("name==" + encode("name_2"))).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.singletonList(new DamagedStatus().withId("id_2"))));
     actual = itemReferenceHelper.getDamagedStatusByName("name_2");
     assertEquals("id_2", actual.getId());
 
     when(damagedStatusClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getDamagedStatusById("id_3"));
 
-    when(damagedStatusClient.getByQuery("name==\"name_4\"")).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.singletonList(new DamagedStatus().withName("name_4"))));
+    when(damagedStatusClient.getByQuery("name==" + encode("name_4"))).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.singletonList(new DamagedStatus().withName("name_4"))));
     actual = itemReferenceHelper.getDamagedStatusByName("name_4");
     assertEquals("name_4", actual.getName());
   }

@@ -1,12 +1,14 @@
 package org.folio.bulkops.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.AddressType;
 import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.bean.Department;
+import org.folio.bulkops.domain.bean.UserGroup;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Service
 @RequiredArgsConstructor
@@ -30,12 +32,12 @@ public class UserReferenceHelper implements InitializingBean {
     return userReferenceService.getDepartmentByName(name);
   }
 
-  public String getPatronGroupNameById(String id) {
-    return userReferenceService.getPatronGroupNameById(id);
+  public UserGroup getPatronGroupById(String id) {
+    return userReferenceService.getPatronGroupById(id);
   }
 
-  public String getPatronGroupIdByName(String name) {
-    return userReferenceService.getPatronGroupIdByName(name);
+  public UserGroup getPatronGroupByName(String name) {
+    return userReferenceService.getPatronGroupByName(name);
   }
 
   public CustomField getCustomFieldByRefId(String refId) {

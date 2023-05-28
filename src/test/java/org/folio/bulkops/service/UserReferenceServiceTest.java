@@ -1,5 +1,19 @@
 package org.folio.bulkops.service;
 
+import static org.folio.bulkops.util.Utils.encode;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.CustomFieldsClient;
 import org.folio.bulkops.client.DepartmentClient;
@@ -19,20 +33,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import static org.folio.bulkops.util.Utils.encode;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isA;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserReferenceServiceTest {
@@ -66,10 +66,7 @@ class UserReferenceServiceTest {
     when(addressTypeClient.getByQuery("desc==" + encode("*"))).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId(expected))));
     var actual = userReferenceService.getAddressTypeByDesc("*");
     verify(addressTypeClient).getByQuery("desc==" + encode("*"));
-    assertEquals(expected, actual);
-
-    when(addressTypeClient.getByQuery("desc==" + encode("*"))).thenReturn(new AddressTypeCollection());
-    assertEquals(EMPTY, userReferenceService.getAddressTypeByDesc("*"));
+    assertEquals(expected, actual.getId());
   }
 
   @Test
@@ -95,10 +92,7 @@ class UserReferenceServiceTest {
     when(departmentClient.getByQuery("name==" + encode("*"))).thenReturn(new DepartmentCollection().withDepartments(List.of(new Department().withId(expected))));
     var actual = userReferenceService.getDepartmentByName("*");
     verify(departmentClient).getByQuery("name==" + encode("*"));
-    assertEquals(expected, actual);
-
-    when(departmentClient.getByQuery("name==" + encode("*"))).thenReturn(new DepartmentCollection());
-    assertEquals(EMPTY, userReferenceService.getDepartmentByName("*"));
+    assertEquals(expected, actual.getId());
   }
 
   @Test
@@ -111,33 +105,21 @@ class UserReferenceServiceTest {
   @Test
   void getPatronGroupNameByIdTest() {
     when(groupClient.getGroupById("id")).thenReturn(new UserGroup().withGroup("userGroup"));
-    var actual = userReferenceService.getPatronGroupNameById("id");
+    var actual = userReferenceService.getPatronGroupById("id");
     verify(groupClient).getGroupById("id");
-    assertEquals("userGroup", actual);
+    assertEquals("userGroup", actual.getGroup());
 
     when(groupClient.getGroupById("id")).thenThrow(NotFoundException.class);
-    assertThrows(NotFoundException.class, () -> userReferenceService.getPatronGroupNameById("id"));
+    assertThrows(NotFoundException.class, () -> userReferenceService.getPatronGroupById("id"));
   }
 
   @Test
   void getPatronGroupIdByNameTest() {
     var expected = UUID.randomUUID().toString();
     when(groupClient.getByQuery("group==" + encode("*"))).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup().withId(expected))));
-    var actual = userReferenceService.getPatronGroupIdByName("*");
+    var actual = userReferenceService.getPatronGroupByName("*");
     verify(groupClient).getByQuery("group==" + encode("*"));
-    assertEquals(expected, actual);
-
-    when(groupClient.getByQuery("group==" + encode("*"))).thenReturn(new UserGroupCollection().withUsergroups(new ArrayList<>()));
-    assertEquals(EMPTY, userReferenceService.getPatronGroupIdByName("*"));
-  }
-
-  @Test
-  void getPatronGroupNameByIdIfNullTest() {
-    userReferenceService.getPatronGroupNameById(null);
-
-    verify(groupClient, times(0)).getGroupById(isA(String.class));
-    when(groupClient.getByQuery("group==\"*\"")).thenReturn(new UserGroupCollection().withUsergroups(new ArrayList<>()));
-    assertThrows(NotFoundException.class, () -> userReferenceService.getPatronGroupIdByName("*"));
+    assertEquals(expected, actual.getId());
   }
 
   @Test

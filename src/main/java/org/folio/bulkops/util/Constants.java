@@ -30,5 +30,6 @@ public class Constants {
   public static final String QUERY_PATTERN_DESC = "desc==%s";
   public static final String QUERY_PATTERN_GROUP = "group==%s";
   public static final String QUERY_PATTERN_REF_ID = "refId==%s";
+  public static final String FIELD_ERROR_MESSAGE_PATTERN = "Field \"%s\" : %s";
 
 }

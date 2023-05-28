@@ -1,30 +1,31 @@
 package org.folio.bulkops.service;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.ObjectUtils;
-import org.folio.bulkops.client.AddressTypeClient;
-import org.folio.bulkops.client.CustomFieldsClient;
-import org.folio.bulkops.client.DepartmentClient;
-import org.folio.bulkops.client.GroupClient;
-import org.folio.bulkops.client.OkapiClient;
-import org.folio.bulkops.client.UserClient;
-import org.folio.bulkops.domain.bean.AddressType;
-import org.folio.bulkops.domain.bean.CustomField;
-import org.folio.bulkops.domain.bean.Department;
-import org.folio.bulkops.exception.NotFoundException;
-import org.folio.spring.FolioExecutionContext;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-
-import java.net.URI;
-
 import static java.lang.String.format;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_DESC;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_GROUP;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_REF_ID;
 import static org.folio.bulkops.util.Utils.encode;
+
+import java.net.URI;
+
+import org.apache.commons.lang3.ObjectUtils;
+import org.folio.bulkops.client.AddressTypeClient;
+import org.folio.bulkops.client.CustomFieldsClient;
+import org.folio.bulkops.client.DepartmentClient;
+import org.folio.bulkops.client.GroupClient;
+import org.folio.bulkops.client.OkapiClient;
+import org.folio.bulkops.domain.bean.AddressType;
+import org.folio.bulkops.domain.bean.CustomField;
+import org.folio.bulkops.domain.bean.Department;
+import org.folio.bulkops.domain.bean.UserGroup;
+import org.folio.bulkops.exception.NotFoundException;
+import org.folio.spring.FolioExecutionContext;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 
 @Service
 @RequiredArgsConstructor
@@ -42,7 +43,7 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "addressTypeIds")
   public AddressType getAddressTypeByDesc(String desc) {
-    var response = addressTypeClient.getByQuery(String.format(QUERY_PATTERN_DESC, desc));
+    var response = addressTypeClient.getByQuery(String.format(QUERY_PATTERN_DESC, encode(desc)));
     if (response.getAddressTypes().isEmpty()) {
       throw new NotFoundException(format("Address type=%s not found", desc));
     }
@@ -69,34 +70,29 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "departmentIds")
   public Department getDepartmentByName(String name) {
-    var response = departmentClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
+    var response = departmentClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     if (response.getDepartments().isEmpty()) {
       throw new NotFoundException(format("Department=%s not found", name));
     }
     return response.getDepartments().get(0);
   }
 
-  @Cacheable(cacheNames = "patronGroups")
-  public String getPatronGroupById(String id) {
-    return groupClient.getGroupById(id).getGroup();
-  }
-
   @Cacheable(cacheNames = "patronGroupNames")
-  public String getPatronGroupNameById(String id) {
+  public UserGroup getPatronGroupById(String id) {
     try {
-      return groupClient.getGroupById(id).getGroup();
+      return groupClient.getGroupById(id);
     } catch (Exception e) {
       throw new NotFoundException(format("Patron group was not found by id=%s", id));
     }
   }
 
   @Cacheable(cacheNames = "patronGroupIds")
-  public String getPatronGroupIdByName(String name) {
-    var response = groupClient.getByQuery(String.format(QUERY_PATTERN_GROUP, name));
+  public UserGroup getPatronGroupByName(String name) {
+    var response = groupClient.getByQuery(String.format(QUERY_PATTERN_GROUP, encode(name)));
     if (ObjectUtils.isEmpty(response) || ObjectUtils.isEmpty(response.getUsergroups())) {
       throw new NotFoundException(format("Invalid patron group value: %s", name));
     }
-    return response.getUsergroups().get(0).getId();
+    return response.getUsergroups().get(0);
   }
 
 

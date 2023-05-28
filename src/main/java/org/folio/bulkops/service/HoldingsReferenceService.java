@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
+import static org.folio.bulkops.util.Utils.encode;
 
 @Service
 @RequiredArgsConstructor
@@ -55,7 +56,7 @@ public class HoldingsReferenceService {
 
   @Cacheable(cacheNames = "holdingsTypeIds")
   public HoldingsType getHoldingsTypeByName(String name) {
-    var holdingsTypes = holdingsTypeClient.getByQuery(format(QUERY_PATTERN_NAME, name));
+    var holdingsTypes = holdingsTypeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (holdingsTypes.getHoldingsTypes().isEmpty()) {
       throw new NotFoundException(format("Holdings type not found by name=%s", name));
     }
@@ -72,7 +73,7 @@ public class HoldingsReferenceService {
   }
 
   public ItemLocation getLocationIdByName(String name) {
-    var locations = locationClient.getByQuery(format(QUERY_PATTERN_NAME, name));
+    var locations = locationClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (locations.getLocations().isEmpty()) {
       throw new NotFoundException(format("Location not found by name=%s", name));
     }
@@ -90,7 +91,7 @@ public class HoldingsReferenceService {
 
   @Cacheable(cacheNames = "holdingsCallNumberTypes")
   public String getCallNumberTypeIdByName(String name) {
-    var callNumberTypes = callNumberTypeClient.getByQuery(format(QUERY_PATTERN_NAME, name));
+    var callNumberTypes = callNumberTypeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (callNumberTypes.getCallNumberTypes().isEmpty()) {
       throw new NotFoundException(format("Call number type not found by name=%s", name));
     }
@@ -108,7 +109,7 @@ public class HoldingsReferenceService {
 
   @Cacheable(cacheNames = "holdingsNoteTypes")
   public String getNoteTypeIdByName(String name) {
-    var noteTypes = holdingsNoteTypeClient.getByQuery(format(QUERY_PATTERN_NAME, name));
+    var noteTypes = holdingsNoteTypeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (noteTypes.getHoldingsNoteTypes().isEmpty()) {
       throw new NotFoundException(format("Note type not found by name=%s", name));
     }
@@ -147,7 +148,7 @@ public class HoldingsReferenceService {
 
   @Cacheable(cacheNames = "holdingsSources")
   public HoldingsRecordsSource getSourceByName(String name) {
-    var sources = holdingsSourceClient.getByQuery(format(QUERY_PATTERN_NAME, name));
+    var sources = holdingsSourceClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (ObjectUtils.isEmpty(sources) || ObjectUtils.isEmpty(sources.getHoldingsRecordsSources())) {
       throw new NotFoundException(format("Source not found by name=%s", name));
     }
@@ -165,7 +166,7 @@ public class HoldingsReferenceService {
 
   @Cacheable(cacheNames = "holdingsStatisticalCodes")
   public StatisticalCode getStatisticalCodeByName(String name) {
-    var statisticalCodes = statisticalCodeClient.getByQuery(format(QUERY_PATTERN_NAME, name));
+    var statisticalCodes = statisticalCodeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (statisticalCodes.getStatisticalCodes().isEmpty()) {
       throw new NotFoundException(format("Statistical code not found by name=%s", name));
     }
