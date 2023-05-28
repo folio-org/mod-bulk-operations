@@ -129,7 +129,7 @@ public class HoldingsReferenceService {
     if (isEmpty(name)) {
       return null;
     }
-    var illPolicies = illPolicyClient.getByQuery(format(QUERY_PATTERN_NAME, name));
+    var illPolicies = illPolicyClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (illPolicies.getIllPolicies().isEmpty()) {
       throw new NotFoundException(format("Ill policy not found by name=%s", name));
     }

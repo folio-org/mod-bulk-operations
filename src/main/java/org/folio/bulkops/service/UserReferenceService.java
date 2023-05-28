@@ -36,7 +36,6 @@ public class UserReferenceService {
   private final AddressTypeClient addressTypeClient;
   private final DepartmentClient departmentClient;
   private final GroupClient groupClient;
-  private final UserClient userClient;
   private final CustomFieldsClient customFieldsClient;
   private final FolioExecutionContext folioExecutionContext;
   private final OkapiClient okapiClient;
@@ -103,7 +102,7 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByName(String name)  {
-    var customFields = customFieldsClient.getByQuery(getModuleId(MOD_USERS), encode(format(QUERY_PATTERN_NAME, name)));
+    var customFields = customFieldsClient.getByQuery(getModuleId(MOD_USERS), format(QUERY_PATTERN_NAME, encode(name)));
     if (customFields.getCustomFields().isEmpty()) {
       throw new NotFoundException(format("Custom field with name=%s not found", name));
     }
@@ -112,7 +111,7 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByRefId(String refId) {
-    var customFields = customFieldsClient.getByQuery(getModuleId(MOD_USERS), encode(format(QUERY_PATTERN_REF_ID, refId)));
+    var customFields = customFieldsClient.getByQuery(getModuleId(MOD_USERS), format(QUERY_PATTERN_REF_ID, encode(refId)));
     if (customFields.getCustomFields().isEmpty()) {
       throw new NotFoundException(format("Custom field with refId=%s not found", refId));
     }

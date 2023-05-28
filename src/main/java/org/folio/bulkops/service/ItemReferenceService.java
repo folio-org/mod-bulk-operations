@@ -42,7 +42,6 @@ public class ItemReferenceService {
   private final UserClient userClient;
   private final LocationClient locationClient;
   private final MaterialTypeClient materialTypeClient;
-  private final ItemClient itemClient;
   private final LoanTypeClient loanTypeClient;
 
   private final ObjectMapper objectMapper;
