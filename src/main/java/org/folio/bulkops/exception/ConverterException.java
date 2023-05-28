@@ -11,7 +11,7 @@ import java.lang.reflect.Field;
 @AllArgsConstructor
 @Data
 public class ConverterException extends CsvRuntimeException {
-  private Field field;
-  private Object value;
-  private String message;
+  private final transient Field field;
+  private final transient Object value;
+  private final String message;
 }
