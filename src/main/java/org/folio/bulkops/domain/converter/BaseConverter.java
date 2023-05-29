@@ -36,7 +36,8 @@ public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
 
   @Override
   protected synchronized String convertToWrite(Object object) {
-    if (ObjectUtils.isEmpty(object)) {
+    if (ObjectUtils.isEmpty(object)
+      || (object.getClass() == Tags.class && ObjectUtils.isEmpty(((Tags) object).getTagList()))) {
       return EMPTY;
     }
     if (failed) {
