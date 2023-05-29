@@ -102,7 +102,7 @@ public class UserReferenceService {
     if (customFields.getCustomFields().isEmpty()) {
       throw new NotFoundException(format("Custom field with name=%s not found", name));
     }
-    return customFields.getCustomFields().get(0);
+    return customFields.getCustomFields().stream().filter(cf -> cf.getName().equals(name)).toList().get(0);
   }
 
   @Cacheable(cacheNames = "customFields")
@@ -111,7 +111,7 @@ public class UserReferenceService {
     if (customFields.getCustomFields().isEmpty()) {
       throw new NotFoundException(format("Custom field with refId=%s not found", refId));
     }
-    return customFields.getCustomFields().get(0);
+    return customFields.getCustomFields().stream().filter(cf -> cf.getRefId().equals(refId)).toList().get(0);
   }
 
   @Cacheable(cacheNames = "moduleIds")
