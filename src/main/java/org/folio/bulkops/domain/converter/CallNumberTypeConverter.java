@@ -1,23 +1,16 @@
 package org.folio.bulkops.domain.converter;
 
-import static com.github.jknack.handlebars.internal.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-
 import org.folio.bulkops.service.HoldingsReferenceHelper;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-
-public class CallNumberTypeConverter extends AbstractBeanField<String, String> {
+public class CallNumberTypeConverter extends BaseConverter<String> {
 
   @Override
-  protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
+  public String convertToObject(String value) {
     return HoldingsReferenceHelper.service().getCallNumberTypeIdByName(value);
   }
 
   @Override
-  protected String convertToWrite(Object value) {
-    return isEmpty(value) ? EMPTY : HoldingsReferenceHelper.service().getCallNumberTypeNameById(value.toString());
+  public String convertToString(String object) {
+    return HoldingsReferenceHelper.service().getCallNumberTypeNameById(object);
   }
 }

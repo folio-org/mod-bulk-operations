@@ -2,10 +2,8 @@ package org.folio.bulkops.service;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.util.Utils.encode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import org.folio.bulkops.BaseTest;
@@ -30,66 +28,46 @@ class UserReferenceHelperTest extends BaseTest {
   @Test
   void testGetAddressType() {
     when (addressTypeClient.getAddressTypeById("id_1")).thenReturn(AddressType.builder().desc("desc").build());
-    var actual = userReferenceHelper.getAddressTypeDescById("id_1");
-    assertEquals("desc", actual);
+    var actual = userReferenceHelper.getAddressTypeById("id_1");
+    assertEquals("desc", actual.getDesc());
 
     when(addressTypeClient.getAddressTypeById("id_2")).thenThrow(new NotFoundException("not found"));
-    actual = userReferenceHelper.getAddressTypeDescById("id_2");
-    assertEquals("id_2", actual);
+    assertThrows(NotFoundException.class, () -> userReferenceHelper.getAddressTypeById("id_2"));
 
     when(addressTypeClient.getByQuery("desc==\"desc_1\"")).thenReturn(AddressTypeCollection.builder().addressTypes(singletonList(AddressType.builder().id("id_3").build())).build());
-    actual = userReferenceHelper.getAddressTypeIdByDesc("desc_1");
-    assertEquals("id_3", actual);
+    actual = userReferenceHelper.getAddressTypeByDesc("desc_1");
+    assertEquals("id_3", actual.getId());
 
-    when(addressTypeClient.getByQuery("desc==\"desc_2\"")).thenReturn(AddressTypeCollection.builder().addressTypes(emptyList()).build());
-    actual = userReferenceHelper.getAddressTypeIdByDesc("desc_2");
-    assertEquals("desc_2", actual);
-
-    assertEquals(EMPTY, userReferenceHelper.getAddressTypeDescById(null));
-    assertNull(userReferenceHelper.getAddressTypeIdByDesc(EMPTY));
   }
 
   @Test
   void testGetDepartment() {
     when (departmentClient.getDepartmentById("id_1")).thenReturn(Department.builder().name("name_1").build());
-    var actual = userReferenceHelper.getDepartmentNameById("id_1");
-    assertEquals("name_1", actual);
+    var actual = userReferenceHelper.getDepartmentById("id_1");
+    assertEquals("name_1", actual.getName());
 
     when(departmentClient.getDepartmentById("id_2")).thenThrow(new NotFoundException("not found"));
-    actual = userReferenceHelper.getDepartmentNameById("id_2");
-    assertEquals("id_2", actual);
+    assertThrows(NotFoundException.class, () -> userReferenceHelper.getDepartmentById("id_2"));
 
     when(departmentClient.getByQuery("name==\"name_2\"")).thenReturn(DepartmentCollection.builder().departments(singletonList(Department.builder().id("id_3").build())).build());
-    actual = userReferenceHelper.getDepartmentIdByName("name_2");
-    assertEquals("id_3", actual);
+    actual = userReferenceHelper.getDepartmentByName("name_2");
+    assertEquals("id_3", actual.getId());
 
     when(departmentClient.getByQuery("name==\"name_3\"")).thenReturn(DepartmentCollection.builder().departments(emptyList()).build());
-    actual = userReferenceHelper.getDepartmentIdByName("name_3");
-    assertEquals("name_3", actual);
-
-    assertEquals(EMPTY, userReferenceHelper.getDepartmentNameById(null));
-    assertNull(userReferenceHelper.getDepartmentIdByName(EMPTY));
+    assertThrows(NotFoundException.class, () -> userReferenceHelper.getDepartmentByName("name_3"));
   }
 
   @Test
   void testGetPatronGroup() {
     when (groupClient.getGroupById("id_1")).thenReturn(UserGroup.builder().group("name_1").build());
-    var actual = userReferenceHelper.getPatronGroupNameById("id_1");
-    assertEquals("name_1", actual);
+    var actual = userReferenceHelper.getPatronGroupById("id_1");
+    assertEquals("name_1", actual.getGroup());
 
     when(groupClient.getGroupById("id_2")).thenThrow(new NotFoundException("not found"));
-    actual = userReferenceHelper.getPatronGroupNameById("id_2");
-    assertEquals("id_2", actual);
+    assertThrows(NotFoundException.class, () -> userReferenceHelper.getPatronGroupById("id_2"));
 
     when(groupClient.getByQuery("group==\"name_2\"")).thenReturn(UserGroupCollection.builder().usergroups(singletonList(UserGroup.builder().id("id_3").build())).build());
-    actual = userReferenceHelper.getPatronGroupIdByName("name_2");
-    assertEquals("id_3", actual);
-
-    when(groupClient.getByQuery("group==\"name_3\"")).thenReturn(UserGroupCollection.builder().usergroups(emptyList()).build());
-    actual = userReferenceHelper.getPatronGroupIdByName("name_3");
-    assertEquals("name_3", actual);
-
-    assertEquals(EMPTY, userReferenceHelper.getPatronGroupNameById(null));
-    assertNull(userReferenceHelper.getPatronGroupIdByName(EMPTY));
+    actual = userReferenceHelper.getPatronGroupByName("name_2");
+    assertEquals("id_3", actual.getId());
   }
 }

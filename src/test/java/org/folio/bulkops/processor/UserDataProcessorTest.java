@@ -1,5 +1,21 @@
 package org.folio.bulkops.processor;
 
+import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.bean.Personal;
+import org.folio.bulkops.domain.bean.User;
+import org.folio.bulkops.domain.bean.UserGroup;
+import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
+import org.folio.bulkops.service.ErrorService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.UUID;
+
 import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
@@ -13,22 +29,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
-
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.UUID;
-
-import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.domain.bean.Personal;
-import org.folio.bulkops.domain.bean.User;
-import org.folio.bulkops.domain.bean.UserGroup;
-import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
-import org.folio.bulkops.service.ErrorService;
-import org.folio.spring.exception.NotFoundException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
 class UserDataProcessorTest extends BaseTest {
 
@@ -57,16 +57,6 @@ class UserDataProcessorTest extends BaseTest {
       rule(EXPIRATION_DATE, REPLACE_WITH, null),
       rule(EXPIRATION_DATE, REPLACE_WITH, "1234-43")
     ));
-
-    assertNotNull(actual.getUpdated());
-    assertFalse(actual.shouldBeUpdated);
-
-    var patronGroup = UUID.randomUUID().toString();
-    when(groupClient.getGroupById(patronGroup)).thenThrow(new NotFoundException("Not found"));
-    actual = processor.process(IDENTIFIER, new User(), rules(
-      rule(PATRON_GROUP, FIND, null),
-      rule(PATRON_GROUP, REPLACE_WITH, null),
-      rule(PATRON_GROUP, REPLACE_WITH, patronGroup)));
 
     assertNotNull(actual.getUpdated());
     assertFalse(actual.shouldBeUpdated);

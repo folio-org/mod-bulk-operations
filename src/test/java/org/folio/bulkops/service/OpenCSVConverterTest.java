@@ -1,29 +1,13 @@
 package org.folio.bulkops.service;
 
-import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
-import static java.lang.String.format;
-import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
-import static org.folio.bulkops.util.Constants.QUERY_PATTERN_REF_ID;
-import static org.folio.bulkops.util.Utils.encode;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Stream;
-
-import org.apache.commons.lang3.builder.EqualsBuilder;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.bean.StatefulBeanToCsv;
+import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.AddressType;
 import org.folio.bulkops.domain.bean.AddressTypeCollection;
@@ -65,6 +49,8 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.bean.UserGroupCollection;
 import org.folio.bulkops.domain.converter.CustomMappingStrategy;
+import org.folio.bulkops.exception.ConverterException;
+import org.folio.bulkops.exception.NotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -75,11 +61,27 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
+
+import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
+import static java.lang.String.format;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_REF_ID;
+import static org.folio.bulkops.util.Utils.encode;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
 
 @Log4j2
 @ExtendWith(MockitoExtension.class)
@@ -99,7 +101,6 @@ class OpenCSVConverterTest extends BaseTest {
   @ParameterizedTest
   @ArgumentsSource(BulkOperationEntityClassProvider.class)
   void shouldConvertEntity(Class<BulkOperationsEntity> clazz) throws IOException {
-
     initMocks();
 
     /* JSON -> Bean */
@@ -168,10 +169,11 @@ class OpenCSVConverterTest extends BaseTest {
       StatefulBeanToCsv<BulkOperationsEntity> sbc = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writer)
         .withSeparator(DEFAULT_SEPARATOR)
         .withApplyQuotesToAll(false)
+        .withThrowExceptions(true)
         .withMappingStrategy(strategy)
         .build();
-      sbc.write(bean);
-      csv = writer.toString();
+
+      csv = process(sbc, writer, bean);
     } catch (Exception e) {
       Assertions.fail("Error parsing bean to CSV", e);
     }
@@ -181,16 +183,29 @@ class OpenCSVConverterTest extends BaseTest {
     try (Reader reader = new StringReader(csv)) {
       CsvToBean<BulkOperationsEntity> cb = new CsvToBeanBuilder<BulkOperationsEntity>(reader)
         .withType(clazz)
+        .withThrowExceptions(false)
         .withSkipLines(1)
         .build();
       list = cb.parse().stream().toList();
+      assertThat(cb.getCapturedExceptions(), hasSize(1));
     } catch (IOException e) {
       Assertions.fail("Error parsing CSV to bean", e);
     }
 
     /* no NPE expected */
-    assertThat(list, hasSize(1));
+    assertThat(list, hasSize(0));
   }
+
+  @SneakyThrows
+  public String process(StatefulBeanToCsv<BulkOperationsEntity> sbc, Writer writer, BulkOperationsEntity bean ) {
+    try {
+      sbc.write(bean);
+      return writer.toString();
+    } catch (ConverterException e) {
+      return process(sbc, writer, bean);
+    }
+  }
+
 
   @ParameterizedTest
   @ArgumentsSource(BulkOperationEntityClassProvider.class)
@@ -267,6 +282,7 @@ class OpenCSVConverterTest extends BaseTest {
   private void initMocks() {
     // User
     Mockito.reset(groupClient);
+    when(departmentClient.getDepartmentById("fae76e1a-3cf4-4640-8731-0d583ddaf571")).thenThrow(new NotFoundException("Not found"));
     when(groupClient.getGroupById("503a81cd-6c26-400f-b620-14c08943697c")).thenReturn(
       new UserGroup().withId("503a81cd-6c26-400f-b620-14c08943697c").withGroup("staff"));
     when(departmentClient.getDepartmentById("4ac6b846-e184-4cdd-8101-68f4af97d103")).thenReturn(new Department()
@@ -340,6 +356,7 @@ class OpenCSVConverterTest extends BaseTest {
         .withCode("St@tistical-Code-2"))));
     when(locationClient.getByQuery("name==\"Main Library\"")).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("fcd64ce1-6995-48f0-840e-89ffa2288371").withName("Main Library"))));
     when(locationClient.getByQuery("name==\"Popular Reading Collection\"")).thenReturn(new ItemLocationCollection().withLocations(List.of(new ItemLocation().withId("b241764c-1466-4e1d-a028-1a3684a5da87").withName("Popular Reading Collection"))));
+    when(damagedStatusClient.getById("bd563d7a-42be-4b2d-bf77-97896e0c1dde")).thenThrow(new NotFoundException("No found"));
 
     // Holdings record
     when(holdingsTypeClient.getById("0c422f92-0f4d-4d32-8cbe-390ebc33a3e5")).thenReturn(new HoldingsType().withId("0c422f92-0f4d-4d32-8cbe-390ebc33a3e5").withName("Holdings type").withSource("Holdings source"));
@@ -377,5 +394,7 @@ class OpenCSVConverterTest extends BaseTest {
       .withCode("ST2")
       .withName("St@tistical-Code-holding_2"))));
     when(holdingsSourceClient.getByQuery("name==\"Holdings@record@source\"")).thenReturn(new HoldingsRecordsSourceCollection().withHoldingsRecordsSources(List.of(new HoldingsRecordsSource().withId("f32d531e-df79-46b3-8932-cdd35f7a2264").withName("Holdings@record@source"))));
+    when(holdingsSourceClient.getById("a06889ff-d178-4dc8-815a-06f7f97bf975")).thenThrow(new NotFoundException("Not found"));
+
   }
 }

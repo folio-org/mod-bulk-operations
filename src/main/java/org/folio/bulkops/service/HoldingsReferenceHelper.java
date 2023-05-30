@@ -1,10 +1,10 @@
 package org.folio.bulkops.service;
 
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.stereotype.Component;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.domain.bean.*;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -13,19 +13,19 @@ public class HoldingsReferenceHelper implements InitializingBean {
 
   private final HoldingsReferenceService holdingsReferenceService;
 
-  public String getHoldingsTypeNameById(String id) {
-    return holdingsReferenceService.getHoldingsTypeNameById(id);
+  public HoldingsType getHoldingsTypeById(String id) {
+    return holdingsReferenceService.getHoldingsTypeById(id);
   }
 
-  public String getHoldingsTypeIdByName(String name) {
-    return holdingsReferenceService.getHoldingsTypeIdByName(name);
+  public HoldingsType getHoldingsTypeByName(String name) {
+    return holdingsReferenceService.getHoldingsTypeByName(name);
   }
 
-  public String getLocationNameById(String id) {
-    return holdingsReferenceService.getLocationNameById(id);
+  public ItemLocation getLocationById(String id) {
+    return holdingsReferenceService.getLocationById(id);
   }
 
-  public String getLocationIdByName(String name) {
+  public ItemLocation getLocationByName(String name) {
     return holdingsReferenceService.getLocationIdByName(name);
   }
 
@@ -45,34 +45,34 @@ public class HoldingsReferenceHelper implements InitializingBean {
     return holdingsReferenceService.getNoteTypeIdByName(name);
   }
 
-  public String getIllPolicyNameById(String id) {
-    return holdingsReferenceService.getIllPolicyNameById(id);
+  public IllPolicy getIllPolicyNameById(String id) {
+    return holdingsReferenceService.getIllPolicyById(id);
   }
 
-  public String getIllPolicyIdByName(String name) {
-    return holdingsReferenceService.getIllPolicyIdByName(name);
+  public IllPolicy getIllPolicyByName(String name) {
+    return holdingsReferenceService.getIllPolicyByName(name);
   }
 
-  public String getSourceNameById(String id) {
-    return holdingsReferenceService.getSourceNameById(id);
+  public HoldingsRecordsSource getSourceById(String id) {
+    return holdingsReferenceService.getSourceById(id);
   }
 
-  public String getSourceIdByName(String name) {
-    return holdingsReferenceService.getSourceIdByName(name);
+  public HoldingsRecordsSource getSourceByName(String name) {
+    return holdingsReferenceService.getSourceByName(name);
   }
 
-  public String getStatisticalCodeNameById(String id) {
-    return holdingsReferenceService.getStatisticalCodeNameById(id);
+  public StatisticalCode getStatisticalCodeById(String id) {
+    return holdingsReferenceService.getStatisticalCodeById(id);
   }
 
-  public String getStatisticalCodeIdByName(String name) {
-    return holdingsReferenceService.getStatisticalCodeIdByName(name);
+  public StatisticalCode getStatisticalCodeByName(String name) {
+    return holdingsReferenceService.getStatisticalCodeByName(name);
   }
 
   private static HoldingsReferenceHelper service;
 
   @Override
-  public void afterPropertiesSet() throws Exception {
+  public void afterPropertiesSet() {
     service = this;
   }
 

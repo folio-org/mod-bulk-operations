@@ -1,24 +1,17 @@
 package org.folio.bulkops.domain.converter;
 
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-
-import org.folio.bulkops.domain.bean.IllPolicy;
 import org.folio.bulkops.service.ItemReferenceHelper;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
+public class ServicePointConverter extends BaseConverter<String> {
 
-public class ServicePointConverter extends AbstractBeanField<String, IllPolicy> {
 
   @Override
-  protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
-    return ItemReferenceHelper.service().getServicePointIdByName(value);
+  public String convertToObject(String value) {
+    return ItemReferenceHelper.service().getServicePointByName(value).getId();
   }
 
   @Override
-  protected String convertToWrite(Object value) {
-    return isEmpty(value) ? EMPTY : ItemReferenceHelper.service().getServicePointNameById(value.toString());
+  public String convertToString(String object) {
+    return ItemReferenceHelper.service().getServicePointById(object).getName();
   }
 }
