@@ -10,8 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.CustomFieldsConverter;
 import org.folio.bulkops.domain.converter.DateWithTimeConverter;
@@ -32,6 +30,7 @@ import com.opencsv.bean.CsvRecurse;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -45,6 +44,7 @@ import lombok.With;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("user")
+@EqualsAndHashCode(exclude = {"metadata"})
 public class User implements BulkOperationsEntity {
 
   @JsonProperty("username")
@@ -94,7 +94,7 @@ public class User implements BulkOperationsEntity {
   @CsvCustomBindByName(column = "Departments", converter = DepartmentsConverter.class)
   @CsvCustomBindByPosition(position = 7, converter = DepartmentsConverter.class)
   @UnifiedTableCell(visible = false)
-  private Set<UUID> departments = null;
+  private Set<UUID> departments;
 
   @JsonProperty("meta")
   private Object meta;
@@ -104,14 +104,13 @@ public class User implements BulkOperationsEntity {
   @CsvCustomBindByName(column = "Proxy for", converter = ProxyForConverter.class)
   @CsvCustomBindByPosition(position = 8, converter = ProxyForConverter.class)
   @UnifiedTableCell(visible = false)
-  private List<String> proxyFor = null;
+  private List<String> proxyFor;
 
   @JsonProperty("personal")
   @CsvRecurse
   private Personal personal;
 
   @JsonProperty("enrollmentDate")
-  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   @CsvCustomBindByName(column = "Enrollment date", converter = DateWithTimeConverter.class)
   @CsvCustomBindByPosition(position = 19, converter = DateWithTimeConverter.class)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
@@ -152,7 +151,7 @@ public class User implements BulkOperationsEntity {
   @CsvCustomBindByName(column = "Custom fields", converter = CustomFieldsConverter.class)
   @CsvCustomBindByPosition(position = 24, converter = CustomFieldsConverter.class)
   @UnifiedTableCell(visible = false)
-  private Map<String, Object> customFields = null;
+  private Map<String, Object> customFields;
 
   public void setCustomFields(Map<String, Object> customFields) {
     this.customFields = isNull(customFields) ? Collections.emptyMap() : customFields;
@@ -170,15 +169,5 @@ public class User implements BulkOperationsEntity {
       case USER_NAME -> username;
       default -> id;
     };
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    return EqualsBuilder.reflectionEquals(this, o, true, User.class, "metadata");
-  }
-
-  @Override
-  public int hashCode() {
-    return HashCodeBuilder.reflectionHashCode(this, "metadata");
   }
 }

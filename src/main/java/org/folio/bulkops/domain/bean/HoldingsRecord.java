@@ -2,8 +2,6 @@ package org.folio.bulkops.domain.bean;
 
 import java.util.List;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.CallNumberTypeConverter;
 import org.folio.bulkops.domain.converter.ElectronicAccessListConverter;
@@ -30,6 +28,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.With;
 
@@ -39,6 +38,7 @@ import lombok.With;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("holdingsRecord")
+@EqualsAndHashCode(exclude = {"metadata", "instanceId"})
 public class HoldingsRecord implements BulkOperationsEntity {
 
   @JsonProperty("id")
@@ -274,20 +274,10 @@ public class HoldingsRecord implements BulkOperationsEntity {
   @Override
   public String getIdentifier(IdentifierType identifierType) {
     return switch (identifierType) {
-      case HRID -> hrid;
-      case INSTANCE_HRID -> instanceHrid;
-      case ITEM_BARCODE -> itemBarcode;
-      default -> id;
+    case HRID -> hrid;
+    case INSTANCE_HRID -> instanceHrid;
+    case ITEM_BARCODE -> itemBarcode;
+    default -> id;
     };
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    return EqualsBuilder.reflectionEquals(this, o, true, HoldingsRecord.class, "metadata", "permanentLocation");
-  }
-
-  @Override
-  public int hashCode() {
-    return HashCodeBuilder.reflectionHashCode(this, "metadata");
   }
 }

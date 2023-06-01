@@ -1,12 +1,11 @@
 package org.folio.bulkops.domain.bean;
 
+import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.util.List;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.BoundWithTitlesConverter;
 import org.folio.bulkops.domain.converter.CallNumberTypeConverter;
@@ -38,6 +37,7 @@ import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.With;
 
@@ -47,6 +47,7 @@ import lombok.With;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("item")
+@EqualsAndHashCode(exclude = {"metadata"})
 public class Item implements BulkOperationsEntity {
   @JsonProperty("id")
   @CsvCustomBindByName(column = "Item id", converter = StringConverter.class)
@@ -77,7 +78,7 @@ public class Item implements BulkOperationsEntity {
   @CsvCustomBindByName(column = "Former Ids", converter = StringListConverter.class)
   @CsvCustomBindByPosition(position = 4, converter = StringListConverter.class)
   @UnifiedTableCell(visible = false)
-  private List<String> formerIds = null;
+  private List<String> formerIds;
 
   @JsonProperty("discoverySuppress")
   @CsvCustomBindByName(column = "Discovery Suppress", converter = BooleanConverter.class)
@@ -96,7 +97,7 @@ public class Item implements BulkOperationsEntity {
   @CsvCustomBindByName(column = "Contributor Names", converter = ContributorListConverter.class)
   @CsvCustomBindByPosition(position = 7, converter = ContributorListConverter.class)
   @UnifiedTableCell(visible = false)
-  private List<ContributorName> contributorNames = null;
+  private List<ContributorName> contributorNames;
 
   @JsonProperty("callNumber")
   @CsvCustomBindByName(column = "Call Number", converter = StringConverter.class)
@@ -175,7 +176,7 @@ public class Item implements BulkOperationsEntity {
   @CsvCustomBindByName(column = "Year Caption", converter = StringListConverter.class)
   @CsvCustomBindByPosition(position = 20, converter = StringListConverter.class)
   @UnifiedTableCell(visible = false)
-  private List<String> yearCaption = null;
+  private List<String> yearCaption;
 
   @JsonProperty("itemIdentifier")
   @CsvCustomBindByName(column = "Item Identifier", converter = StringConverter.class)
@@ -236,21 +237,21 @@ public class Item implements BulkOperationsEntity {
   @CsvCustomBindByName(column = "Administrative Notes", converter = StringListConverter.class)
   @CsvCustomBindByPosition(position = 30, converter = StringListConverter.class)
   @UnifiedTableCell(visible = false)
-  private List<String> administrativeNotes = null;
+  private List<String> administrativeNotes;
 
   @JsonProperty("notes")
   @Valid
   @CsvCustomBindByName(column = "Notes", converter = ItemNoteListConverter.class)
   @CsvCustomBindByPosition(position = 31, converter = ItemNoteListConverter.class)
   @UnifiedTableCell(visible = false)
-  private List<ItemNote> notes = null;
+  private List<ItemNote> notes;
 
   @JsonProperty("circulationNotes")
   @Valid
   @CsvCustomBindByName(column = "Circulation Notes", converter = CirculationNoteListConverter.class)
   @CsvCustomBindByPosition(position = 32, converter = CirculationNoteListConverter.class)
   @UnifiedTableCell(visible = false)
-  private List<CirculationNote> circulationNotes = null;
+  private List<CirculationNote> circulationNotes;
 
   @JsonProperty("status")
   @CsvCustomBindByName(column = "Status", converter = ItemStatusConverter.class)
@@ -275,7 +276,7 @@ public class Item implements BulkOperationsEntity {
   @CsvCustomBindByName(column = "Bound With Titles", converter = BoundWithTitlesConverter.class)
   @CsvCustomBindByPosition(position = 36, converter = BoundWithTitlesConverter.class)
   @UnifiedTableCell(visible = false)
-  private List<Title> boundWithTitles = null;
+  private List<Title> boundWithTitles = emptyList();
 
   @JsonProperty("permanentLoanType")
   @CsvCustomBindByName(column = "Permanent Loan Type", converter = LoanTypeConverter.class)
@@ -312,7 +313,7 @@ public class Item implements BulkOperationsEntity {
   @CsvCustomBindByName(column = "Electronic Access", converter = ElectronicAccessListConverter.class)
   @CsvCustomBindByPosition(position = 42, converter = ElectronicAccessListConverter.class)
   @UnifiedTableCell(visible = false)
-  private List<ElectronicAccess> electronicAccess = null;
+  private List<ElectronicAccess> electronicAccess;
 
   @JsonProperty("inTransitDestinationServicePointId")
   @CsvCustomBindByName(column = "In Transit Destination Service Point", converter = ServicePointConverter.class)
@@ -325,7 +326,7 @@ public class Item implements BulkOperationsEntity {
   @CsvCustomBindByName(column = "Statistical Codes", converter = ItemStatisticalCodeListConverter.class)
   @CsvCustomBindByPosition(position = 44, converter = ItemStatisticalCodeListConverter.class)
   @UnifiedTableCell(visible = false)
-  private List<String> statisticalCodeIds = null;
+  private List<String> statisticalCodeIds;
 
   @JsonProperty("purchaseOrderLineIdentifier")
   @CsvCustomBindByName(column = "Purchase Order Line Identifier", converter = StringConverter.class)
@@ -349,24 +350,14 @@ public class Item implements BulkOperationsEntity {
   private LastCheckIn lastCheckIn;
 
   @Override
-  public boolean equals(Object o) {
-    return EqualsBuilder.reflectionEquals(this, o, true, Item.class, "metadata", "publicNote");
-  }
-
-  @Override
-  public int hashCode() {
-    return HashCodeBuilder.reflectionHashCode(this, "metadata", "publicNote");
-  }
-
-  @Override
   public String getIdentifier(IdentifierType identifierType) {
     return switch (identifierType) {
-      case BARCODE -> barcode;
-      case HOLDINGS_RECORD_ID -> holdingsRecordId;
-      case HRID -> hrid;
-      case FORMER_IDS -> isNull(formerIds) ? EMPTY : String.join(",", formerIds);
-      case ACCESSION_NUMBER -> accessionNumber;
-      default -> id;
+    case BARCODE -> barcode;
+    case HOLDINGS_RECORD_ID -> holdingsRecordId;
+    case HRID -> hrid;
+    case FORMER_IDS -> isNull(formerIds) ? EMPTY : String.join(",", formerIds);
+    case ACCESSION_NUMBER -> accessionNumber;
+    default -> id;
     };
   }
 }
