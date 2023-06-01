@@ -13,41 +13,38 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.service.UserReferenceHelper;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-
-public class DepartmentsConverter extends AbstractBeanField<String, Set<UUID>> {
+public class DepartmentsConverter extends BaseConverter<Set<UUID>> {
 
   @Override
-  protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
+  public Set<UUID> convertToObject(String value) {
     String[] departmentNames = value.split(ARRAY_DELIMITER);
     if (departmentNames.length > 0) {
-      try {
-        return Arrays.stream(departmentNames).parallel()
-          .filter(StringUtils::isNotEmpty)
-          .map(SpecialCharacterEscaper::restore)
-          .map(name -> UserReferenceHelper.service().getDepartmentIdByName(name))
-          .map(UUID::fromString)
-          .collect(Collectors.toSet());
-      } catch (Exception e) {
-        throw new CsvConstraintViolationException(String.format("Departments were not found: %s", e.getMessage()));
-      }
+      return Arrays.stream(departmentNames).parallel()
+        .filter(StringUtils::isNotEmpty)
+        .map(SpecialCharacterEscaper::restore)
+        .map(name -> UserReferenceHelper.service().getDepartmentByName(name))
+        .map(d -> UUID.fromString(d.getId()))
+        .collect(Collectors.toSet());
     }
     return Collections.emptySet();
   }
 
   @Override
-  protected String convertToWrite(Object value) {
-    if (ObjectUtils.isNotEmpty(value)) {
-      return ((Set<UUID>) value).stream()
-        .filter(Objects::nonNull)
-        .map(id -> UserReferenceHelper.service().getDepartmentNameById(id.toString()))
-        .filter(StringUtils::isNotEmpty)
-        .map(SpecialCharacterEscaper::escape)
-        .collect(Collectors.joining(ARRAY_DELIMITER));
+  public String convertToString(Set<UUID> value) {
+    try {
+      if (ObjectUtils.isNotEmpty(value)) {
+        return value.stream()
+          .filter(Objects::nonNull)
+          .map(id -> UserReferenceHelper.service().getDepartmentById(id.toString()))
+          .filter(ObjectUtils::isNotEmpty)
+          .map(v -> SpecialCharacterEscaper.escape(v.getName()))
+          .collect(Collectors.joining(ARRAY_DELIMITER));
+      }
+    } catch (Exception e) {
+      throw new ConverterException(this.getField(), value, e.getMessage());
     }
     return EMPTY;
   }

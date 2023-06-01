@@ -27,37 +27,23 @@ import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.exception.EntityFormatException;
 import org.folio.bulkops.service.UserReferenceHelper;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-
-public class CustomFieldsConverter extends AbstractBeanField<String, Map<String, Object>> {
+public class CustomFieldsConverter extends BaseConverter<Map<String, Object>> {
 
   // Workaround for manual approach - extremely unlikely line as temporary delimiter
   // of custom field values for internal processing
   public static final String TEMPORARY_DELIMITER = "±#&";
 
   @Override
-  protected Map<String, Object> convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
-    try {
-     if (isNotEmpty(value)) {
-       return Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
-         .map(this::restoreCustomFieldFromString)
-         .filter(pair -> isNotEmpty(pair.getKey()))
-         .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
-     }
-    } catch (Exception e) {
-      throw new CsvConstraintViolationException(String.format("Error while created custom fields: %s", e.getMessage()));
-    }
-    return Collections.emptyMap();
+  public Map<String, Object> convertToObject(String value) {
+    return Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
+      .map(this::restoreCustomFieldFromString)
+      .filter(pair -> isNotEmpty(pair.getKey()))
+      .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
   }
 
   @Override
-  protected String convertToWrite(Object value) {
-    if (ObjectUtils.isNotEmpty(value)) {
-      return convertCustomFieldsToString((Map<String, Object>) value);
-    }
-    return EMPTY;
+  public String convertToString(Map<String, Object> object) {
+    return convertCustomFieldsToString(object);
   }
 
   private Pair<String, Object> restoreCustomFieldFromString(String s) {
@@ -83,7 +69,7 @@ public class CustomFieldsConverter extends AbstractBeanField<String, Map<String,
     if (tokens.length == 2) {
       return Pair.of(SpecialCharacterEscaper.restore(tokens[0]), SpecialCharacterEscaper.restore(tokens[1]));
     } else {
-      var msg = "Invalid key/value pair: " + value;
+      var msg = "Invalid key/value pair for custom field: " + value;
       throw new EntityFormatException(msg);
     }
   }

@@ -48,12 +48,6 @@ public class UserDataProcessor extends AbstractDataProcessor<User> {
               String.format("Action %s cannot be applied to Patron group. The only REPLACE_WITH is supported.", action.getType()));
         } else if (isEmpty(action.getUpdated())) {
           throw new RuleValidationException("Updated value cannot be null or empty");
-        } else {
-          try {
-            userReferenceService.getPatronGroupById(action.getUpdated());
-          } catch (Exception e) {
-            throw new RuleValidationException(String.format("Patron group %s doesn't exist", action.getUpdated()));
-          }
         }
       } else if (EMAIL_ADDRESS == option) {
         if (FIND_AND_REPLACE != action.getType()) {

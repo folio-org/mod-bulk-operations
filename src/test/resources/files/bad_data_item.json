@@ -4,6 +4,7 @@
   "contributorNames" : [ null ],
   "formerIds" : [ null ],
   "discoverySuppress" : null,
+  "itemDamagedStatusId" : "bd563d7a-42be-4b2d-bf77-97896e0c1dde",
   "notes" : [ {
       "itemNoteTypeId" : "1dde7141-ec8a-4dae-9825-49ce14c728e7",
       "note" : "copy note",

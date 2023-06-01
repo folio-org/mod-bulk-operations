@@ -1,11 +1,8 @@
 package org.folio.bulkops.domain.converter;
 
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -14,29 +11,21 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.service.ElectronicAccessHelper;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-
-public class ElectronicAccessListConverter extends AbstractBeanField<String, List<ElectronicAccess>> {
+public class ElectronicAccessListConverter extends BaseConverter<List<ElectronicAccess>> {
 
   @Override
-  protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
-    return isEmpty(value) ?
-      Collections.emptyList() :
-      Arrays.stream(value.split("\\|"))
-        .map(ElectronicAccessHelper.service()::restoreElectronicAccessItem)
-        .filter(ObjectUtils::isNotEmpty)
-        .collect(Collectors.toList());
+  public List<ElectronicAccess> convertToObject(String value) {
+    return Arrays.stream(value.split("\\|"))
+      .map(ElectronicAccessHelper.service()::restoreElectronicAccessItem)
+      .filter(ObjectUtils::isNotEmpty)
+      .toList();
   }
 
   @Override
-  protected String convertToWrite(Object value) {
-    return isEmpty(value) ?
-      EMPTY :
-      ((List<ElectronicAccess>) value).stream()
-        .filter(Objects::nonNull)
-        .map(ElectronicAccessHelper.service()::electronicAccessToString)
-        .collect(Collectors.joining(ITEM_DELIMITER));
+  public String convertToString(List<ElectronicAccess> object) {
+    return object.stream()
+      .filter(Objects::nonNull)
+      .map(ElectronicAccessHelper.service()::electronicAccessToString)
+      .collect(Collectors.joining(ITEM_DELIMITER));
   }
 }

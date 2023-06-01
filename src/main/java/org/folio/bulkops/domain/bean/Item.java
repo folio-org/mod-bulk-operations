@@ -47,7 +47,7 @@ import lombok.With;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("item")
-public class Item extends BulkOperationsEntity {
+public class Item implements BulkOperationsEntity {
   @JsonProperty("id")
   @CsvCustomBindByName(column = "Item id", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 0, converter = StringConverter.class)

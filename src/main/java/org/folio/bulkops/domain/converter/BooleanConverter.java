@@ -1,26 +1,19 @@
 package org.folio.bulkops.domain.converter;
 
-import org.apache.commons.lang3.ObjectUtils;
+import static java.lang.String.format;
 
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-
-public class BooleanConverter extends AbstractBeanField<String, Boolean> {
+public class BooleanConverter extends BaseConverter<Boolean> {
 
   @Override
-  protected Object convert(String value) throws CsvDataTypeMismatchException, CsvConstraintViolationException {
+  public Boolean convertToObject(String value)  {
     if (value.matches("true") || value.matches("false")) {
       return Boolean.parseBoolean(value);
     }
-    return null;
+    throw new IllegalArgumentException(format("Invalid boolean value: %s", value));
   }
 
   @Override
-  protected String convertToWrite(Object value) {
-    if (ObjectUtils.isNotEmpty(value)) {
-      return ((Boolean) value).toString();
-    }
-    return null;
+  public String convertToString(Boolean object) {
+    return object.toString();
   }
 }
