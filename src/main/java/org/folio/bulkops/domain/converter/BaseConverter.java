@@ -30,14 +30,11 @@ public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
       var type = this.getField().getType();
       if (type == Tags.class) {
         return new Tags().withTagList(emptyList());
-      }
-      if (type == List.class) {
+      } else if (type == List.class) {
         return emptyList();
-      }
-      if (type == Set.class) {
+      } else if (type == Set.class) {
         return emptySet();
-      }
-      if (type == Map.class) {
+      } else if (type == Map.class) {
         return emptyMap();
       }
       return null;

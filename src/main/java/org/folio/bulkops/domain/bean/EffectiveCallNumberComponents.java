@@ -14,7 +14,6 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@EqualsAndHashCode
 public class EffectiveCallNumberComponents {
   @JsonProperty("callNumber")
   private String callNumber;
