@@ -1,10 +1,15 @@
 package org.folio.bulkops.domain.converter;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
 
-import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -22,8 +27,15 @@ public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
   @Override
   protected synchronized Object convert(String value) throws CsvConstraintViolationException {
     if (StringUtils.isEmpty(value) || StringUtils.isBlank(value)) {
-      if (this.getField().getType() == Tags.class) {
-        return new Tags().withTagList(Collections.emptyList());
+      var type = this.getField().getType();
+      if (type == Tags.class) {
+        return new Tags().withTagList(emptyList());
+      } else if (type == List.class) {
+        return emptyList();
+      } else if (type == Set.class) {
+        return emptySet();
+      } else if (type == Map.class) {
+        return emptyMap();
       }
       return null;
     }

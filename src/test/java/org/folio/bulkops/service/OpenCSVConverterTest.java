@@ -5,6 +5,7 @@ import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import com.opencsv.enums.CSVReaderNullFieldIndicator;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -103,10 +104,10 @@ class OpenCSVConverterTest extends BaseTest {
   void shouldConvertEntity(Class<BulkOperationsEntity> clazz) throws IOException {
     initMocks();
 
-    /* JSON -> Bean */
+    /* JSON -> Object */
     var bean = objectMapper.readValue(new FileInputStream(getPathToSample(clazz)), clazz);
 
-    /* Bean -> CSV */
+    /* Object -> CSV */
     var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
     String csv = null;
     strategy.setType(clazz);
@@ -122,7 +123,7 @@ class OpenCSVConverterTest extends BaseTest {
       Assertions.fail("Error parsing bean to CSV", e);
     }
 
-    /* CSV -> Bean */
+    /* CSV -> Object */
     List<BulkOperationsEntity> list = new ArrayList<>();
     try (Reader reader = new StringReader(csv)) {
       CsvToBean<BulkOperationsEntity> cb = new CsvToBeanBuilder<BulkOperationsEntity>(reader)
@@ -136,12 +137,7 @@ class OpenCSVConverterTest extends BaseTest {
 
     /* compare original and restored beans */
     var result = list.get(0);
-    var isEqual = EqualsBuilder.reflectionEquals(bean, result, true, clazz, "metadata", "effectiveCallNumberComponents", "instanceId", "personal");
-
-    if (clazz.equals(User.class)) {
-      var isEqualUserPersonal = EqualsBuilder.reflectionEquals(((User) bean).getPersonal(), ((User) result).getPersonal(), true, User.class, "dateOfBirth");
-      assertTrue(isEqualUserPersonal);
-    }
+    var isEqual = (clazz.equals(Item.class)) ? EqualsBuilder.reflectionEquals(bean, result, true, clazz, "metadata", "effectiveCallNumberComponents") : bean.equals(result);
 
     if (!isEqual) {
       log.error("Original: " + OBJECT_MAPPER.writeValueAsString(bean));

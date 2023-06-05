@@ -10,12 +10,10 @@ import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.Address;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
@@ -36,25 +34,19 @@ public  class AddressesConverter extends BaseConverter<List<Address>> {
   @Override
   public List<Address> convertToObject(String value) {
     String[] addresses = value.split(ITEM_DELIMITER_PATTERN);
-    if (addresses.length > 0) {
         return Arrays.stream(addresses)
           .filter(StringUtils::isNotEmpty)
           .map(this::getAddressFromString)
-          .collect(Collectors.toList());
-    }
-    return Collections.emptyList();
+          .toList();
   }
 
   @Override
   public String convertToString(List<Address> object) {
-    if (ObjectUtils.isNotEmpty(object)) {
       return object.stream()
         .filter(Objects::nonNull)
         .map(this::toCsvString)
         .filter(StringUtils::isNotEmpty)
         .collect(Collectors.joining(ITEM_DELIMITER));
-    }
-    return EMPTY;
   }
 
   private Address getAddressFromString(String stringAddress) {

@@ -82,7 +82,7 @@ public class Personal {
   @CsvCustomBindByName(column = "Addresses", converter = AddressesConverter.class)
   @CsvCustomBindByPosition(position = 17, converter = AddressesConverter.class)
   @UnifiedTableCell(visible = false)
-  private List<Address> addresses = null;
+  private List<Address> addresses;
 
   @JsonProperty("preferredContactTypeId")
   @CsvCustomBindByName(column = "Preferred contact type id", converter = StringConverter.class)

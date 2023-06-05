@@ -1,6 +1,7 @@
 package org.folio.bulkops.util;
 
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 import lombok.experimental.UtilityClass;
 
@@ -14,11 +15,13 @@ public class Constants {
   public static final String UTC = "UTC";
   public static final ZoneId UTC_ZONE = ZoneId.of(UTC);
   public static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss.SSSX";
+  public static final DateTimeFormatter DATE_WITH_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_TIME_PATTERN);
   public static final String DATE_WITHOUT_TIME_PATTERN = "yyyy-MM-dd";
+  public static final DateTimeFormatter DATE_WITHOUT_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_WITHOUT_TIME_PATTERN);
+
 
   public static final String ITEM_DELIMITER_PATTERN = "\\|";
   public static final String KEY_VALUE_DELIMITER = ":";
-
 
   public static final String LINE_BREAK = "\n";
   public static final String LINE_BREAK_REPLACEMENT = "\\n";
