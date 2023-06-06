@@ -38,7 +38,7 @@ import lombok.With;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("holdingsRecord")
-@EqualsAndHashCode(exclude = {"metadata", "instanceId"})
+@EqualsAndHashCode(exclude = {"metadata", "instanceId", "permanentLocation"})
 public class HoldingsRecord implements BulkOperationsEntity {
 
   @JsonProperty("id")
