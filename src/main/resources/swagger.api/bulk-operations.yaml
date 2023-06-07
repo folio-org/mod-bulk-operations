@@ -401,4 +401,3 @@ components:
         record:
           type: object
           description: Example response
-
