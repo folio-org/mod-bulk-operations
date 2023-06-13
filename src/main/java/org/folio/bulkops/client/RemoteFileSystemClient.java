@@ -63,7 +63,7 @@ public class RemoteFileSystemClient {
     public RemoteStorageWriter(String path) {
       try {
         this.path = path;
-        tmp = Files.createTempFile(FilenameUtils.getName(path), FilenameUtils.getExtension(path));
+        tmp = Files.createTempFile(FilenameUtils.getName(path), FilenameUtils.getExtension(path)); //NOSONAR
       } catch (IOException e) {
         throw new ServerErrorException("Files buffer cannot be created due to error: ", e);
       }
