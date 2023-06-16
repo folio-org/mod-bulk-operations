@@ -3,6 +3,7 @@ package org.folio.bulkops.processor;
 import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
@@ -22,6 +23,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.ConfigurationCollection;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
@@ -31,6 +33,7 @@ import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.ModelConfiguration;
 import org.folio.bulkops.domain.bean.ResultInfo;
+import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.service.ErrorService;
@@ -38,6 +41,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -266,10 +270,9 @@ class ItemDataProcessorTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = { "true", "false" })
-  void shouldUpdateSuppressFromDiscovery(String updated) {
-    var actual = processor.process(IDENTIFIER, new Item(), rules(rule(SUPPRESS_FROM_DISCOVERY, REPLACE_WITH, updated)));
-    assertEquals(actual.getUpdated().getDiscoverySuppress(), Boolean.parseBoolean(updated));
+  @EnumSource(value = UpdateActionType.class,names = {"SET_TO_FALSE", "SET_TO_TRUE"})
+  void shouldUpdateSuppressFromDiscovery(UpdateActionType type) {
+    var actual = processor.process(IDENTIFIER, new Item(), rules(rule(SUPPRESS_FROM_DISCOVERY, type, StringUtils.EMPTY)));
     assertNotNull(actual.getUpdated());
     assertTrue(actual.shouldBeUpdated);
   }

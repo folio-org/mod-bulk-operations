@@ -5,6 +5,8 @@ import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
@@ -76,11 +78,14 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         case STATUS -> item -> item.setStatus(new InventoryItemStatus()
           .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated()))
           .withDate(new Date()));
-        case SUPPRESS_FROM_DISCOVERY -> item -> item.setDiscoverySuppress(Boolean.parseBoolean(action.getUpdated()));
         default -> item -> {
           throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
         };
       };
+    } else if (SET_TO_TRUE == action.getType()) {
+      if (option == SUPPRESS_FROM_DISCOVERY) return item -> item.setDiscoverySuppress(true);
+    } else if (SET_TO_FALSE== action.getType()) {
+      if (option == SUPPRESS_FROM_DISCOVERY) return item -> item.setDiscoverySuppress(false);
     } else if (CLEAR_FIELD == action.getType()) {
       return switch (option) {
         case PERMANENT_LOCATION -> item -> {
