@@ -9,7 +9,9 @@
       "FIND",
       "FIND_AND_REMOVE_THESE",
       "REPLACE_WITH",
-      "FIND_AND_REPLACE"
+      "FIND_AND_REPLACE",
+      "SET_TO_TRUE",
+      "SET_TO_FALSE"
     ]
   }
 }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+
+  <changeSet id="16-06-2023_add_set_true_action_type" author="firebird">
+    <sqlFile path="changes/16-06-2023_add_set_true_action_type.sql" relativeToChangelogFile="true" />
+  </changeSet>
+
+</databaseChangeLog>
