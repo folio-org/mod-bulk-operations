@@ -129,8 +129,8 @@ public class ErrorService {
       var errorsString = contents.stream()
         .map(content -> String.join(Constants.COMMA_DELIMETER, content.getIdentifier(), content.getErrorMessage()))
         .collect(Collectors.joining(LF));
-      var errorsFileName = LocalDate.now().format(ISO_LOCAL_DATE) + operationRepository.findById(bulkOperationId)
-        .map(BulkOperation::getLinkToMatchedRecordsCsvFile)
+      var errorsFileName = LocalDate.now() + operationRepository.findById(bulkOperationId)
+        .map(BulkOperation::getLinkToTriggeringCsvFile)
         .map(FilenameUtils::getName)
         .map(fileName -> "-Errors-" + fileName)
         .orElse("-Errors.csv");
