@@ -1,5 +1,11 @@
 ## v2.0.0 - Unreleased
 
+## v1.0.6 - Released 2023/06/13
+This release contains Spring Boot upgrade to 3.0.7
+
+### Bugs
+* [MODBULKOPS-109](https://issues.folio.org/browse/MODBULKOPS-109) - Spring Boot 3.0.7 fixing vulns for Orchid
+
 ## v1.0.5 - Released 2023/03/30
 This release contains minor improvements of retrieving records flow
 
