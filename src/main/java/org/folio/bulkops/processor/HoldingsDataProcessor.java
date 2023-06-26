@@ -18,6 +18,7 @@ import java.util.regex.Pattern;
 import org.folio.bulkops.client.HoldingsSourceClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.NotFoundException;
@@ -95,14 +96,22 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
         holding.setTemporaryLocationId(null);
         holding.setEffectiveLocationId(holding.getPermanentLocationId());
       };
-    } else if (SET_TO_TRUE == action.getType() || SET_TO_TRUE_INCLUDING_ITEMS == action.getType()) {
-      if (option == SUPPRESS_FROM_DISCOVERY) return holding -> holding.setDiscoverySuppress(true);
-    } else if (SET_TO_FALSE == action.getType() || SET_TO_FALSE_INCLUDING_ITEMS == action.getType()) {
-      if (option == SUPPRESS_FROM_DISCOVERY) return holding -> holding.setDiscoverySuppress(false);
+    } else if (isSetDiscoverySuppressTrue(action.getType(), option)) {
+      return holding -> holding.setDiscoverySuppress(true);
+    } else if (isSetDiscoverySuppressFalse(action.getType(), option)) {
+      return holding -> holding.setDiscoverySuppress(false);
     }
     return holding -> {
       throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
     };
+  }
+
+  private boolean isSetDiscoverySuppressTrue(UpdateActionType actionType, UpdateOptionType optionType) {
+    return (actionType == SET_TO_TRUE || actionType == SET_TO_TRUE_INCLUDING_ITEMS) && optionType == SUPPRESS_FROM_DISCOVERY;
+  }
+
+  private boolean isSetDiscoverySuppressFalse(UpdateActionType actionType, UpdateOptionType optionType) {
+    return (actionType == SET_TO_FALSE || actionType == SET_TO_FALSE_INCLUDING_ITEMS) && optionType == SUPPRESS_FROM_DISCOVERY;
   }
 
   @Override

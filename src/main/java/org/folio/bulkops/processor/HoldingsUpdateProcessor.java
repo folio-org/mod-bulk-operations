@@ -18,7 +18,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOV
 @RequiredArgsConstructor
 public class HoldingsUpdateProcessor implements UpdateProcessor<HoldingsRecord> {
 
-  private static String GET_ITEMS_BY_HOLDING_ID_QUERY = "query=holdingsRecordId=%s";
+  private static final String GET_ITEMS_BY_HOLDING_ID_QUERY = "query=holdingsRecordId=%s";
 
   private final HoldingsClient holdingsClient;
   private final ItemClient itemClient;
