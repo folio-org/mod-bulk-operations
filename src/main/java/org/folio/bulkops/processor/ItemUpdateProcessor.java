@@ -6,13 +6,15 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 public class ItemUpdateProcessor implements UpdateProcessor<Item> {
   private final ItemClient itemClient;
 
   @Override
-  public void updateRecord(Item item) {
+  public void updateRecord(Item item, UUID operationId) {
     itemClient.updateItem(item, item.getId());
   }
 
