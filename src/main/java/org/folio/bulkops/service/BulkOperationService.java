@@ -26,6 +26,7 @@ import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
@@ -117,6 +118,10 @@ public class BulkOperationService {
   private final ErrorService errorService;
 
   private static final int OPERATION_UPDATING_STEP = 100;
+  private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
+  private static final String PREVIEW_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-%s.csv";
+  private static final String CHANGED_JSON_PATH_TEMPLATE = "%s/json/%s-Changed-Records-%s.json";
+  private static final String CHANGED_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-%s.csv";
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -195,8 +200,9 @@ public class BulkOperationService {
       .processedNumOfRecords(0)
       .build());
 
-    var modifiedJsonFileName = operationId + "/json/modified-" + FilenameUtils.getName(operation.getLinkToMatchedRecordsJsonFile());
-    var modifiedPreviewCsvFileName = operationId + "/modified-" + FilenameUtils.getName(operation.getLinkToMatchedRecordsCsvFile());
+    var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
+    var modifiedJsonFileName = String.format(PREVIEW_JSON_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
+    var modifiedPreviewCsvFileName = String.format(PREVIEW_CSV_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
 
     try (var readerForMatchedJsonFile = remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile());
          var writerForModifiedPreviewCsvFile = remoteFileSystemClient.writer(modifiedPreviewCsvFileName);
@@ -315,8 +321,9 @@ public class BulkOperationService {
         .status(StatusType.ACTIVE)
         .build());
 
-      var resultJsonFileName = operation.getId() + "/json/result-" + FilenameUtils.getName(operation.getLinkToMatchedRecordsJsonFile());
-      var resultCsvFileName = operation.getId() + "/result-" + FilenameUtils.getName(operation.getLinkToMatchedRecordsCsvFile());
+      var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
+      var resultJsonFileName = String.format(CHANGED_JSON_PATH_TEMPLATE, operation.getId(), LocalDate.now(), triggeringFileName);
+      var resultCsvFileName = String.format(CHANGED_CSV_PATH_TEMPLATE, operation.getId(), LocalDate.now(), triggeringFileName);
 
       try (var originalFileReader = new InputStreamReader(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile()));
            var modifiedFileReader = new InputStreamReader(remoteFileSystemClient.get(operation.getLinkToModifiedRecordsJsonFile()));
@@ -556,7 +563,7 @@ public class BulkOperationService {
     var bulkOperationId = operation.getId();
     var linkToMatchedRecordsJsonFile = operation.getLinkToMatchedRecordsJsonFile();
     var linkToModifiedRecordsCsvFile = operation.getLinkToModifiedRecordsCsvFile();
-    var linkToModifiedRecordsJsonFile = bulkOperationId + "/json/modified-" + FilenameUtils.getName(linkToMatchedRecordsJsonFile);
+    var linkToModifiedRecordsJsonFile = String.format(PREVIEW_JSON_PATH_TEMPLATE, bulkOperationId, LocalDate.now(), FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile()));
     try (Reader readerForMatchedJsonFile = new InputStreamReader(remoteFileSystemClient.get(linkToMatchedRecordsJsonFile));
          Reader readerForModifiedCsvFile = new InputStreamReader(remoteFileSystemClient.get(linkToModifiedRecordsCsvFile));
          Writer writerForModifiedJsonFile = remoteFileSystemClient.writer(linkToModifiedRecordsJsonFile)) {
