@@ -4,7 +4,10 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
@@ -75,37 +78,31 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
         throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
       };
     }
-    switch (action.getType()) {
-      case REPLACE_WITH:
-        return holding -> {
-          var locationId = action.getUpdated();
-          if (PERMANENT_LOCATION == option) {
-            holding.setPermanentLocation(itemReferenceService.getLocationById(locationId));
-            holding.setPermanentLocationId(locationId);
-            holding.setEffectiveLocationId(isEmpty(holding.getTemporaryLocationId()) ? locationId : holding.getTemporaryLocationId());
-          } else {
-            holding.setTemporaryLocationId(locationId);
-            holding.setEffectiveLocationId(locationId);
-          }
-        };
-      case CLEAR_FIELD:
-        return holding -> {
-          holding.setTemporaryLocationId(null);
-          holding.setEffectiveLocationId(holding.getPermanentLocationId());
-        };
-      case SET_TO_TRUE:
-        if (option == SUPPRESS_FROM_DISCOVERY) return holding -> holding.setDiscoverySuppress(true);
-      case SET_TO_TRUE_INCLUDING_ITEMS:
-        if (option == SUPPRESS_FROM_DISCOVERY) return holding -> holding.setDiscoverySuppress(true);
-      case SET_TO_FALSE:
-        if (option == SUPPRESS_FROM_DISCOVERY) return holding -> holding.setDiscoverySuppress(false);
-      case SET_TO_FALSE_INCLUDING_ITEMS:
-        if (option == SUPPRESS_FROM_DISCOVERY) return holding -> holding.setDiscoverySuppress(false);
-      default:
-        return holding -> {
-          throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
-        };
+    if (REPLACE_WITH == action.getType()) {
+      return holding -> {
+        var locationId = action.getUpdated();
+        if (PERMANENT_LOCATION == option) {
+          holding.setPermanentLocation(itemReferenceService.getLocationById(locationId));
+          holding.setPermanentLocationId(locationId);
+          holding.setEffectiveLocationId(isEmpty(holding.getTemporaryLocationId()) ? locationId : holding.getTemporaryLocationId());
+        } else {
+          holding.setTemporaryLocationId(locationId);
+          holding.setEffectiveLocationId(locationId);
+        }
+      };
+    } else if (CLEAR_FIELD == action.getType()) {
+      return holding -> {
+        holding.setTemporaryLocationId(null);
+        holding.setEffectiveLocationId(holding.getPermanentLocationId());
+      };
+    } else if (SET_TO_TRUE == action.getType() || SET_TO_TRUE_INCLUDING_ITEMS == action.getType()) {
+      if (option == SUPPRESS_FROM_DISCOVERY) return holding -> holding.setDiscoverySuppress(true);
+    } else if (SET_TO_FALSE == action.getType() || SET_TO_FALSE_INCLUDING_ITEMS == action.getType()) {
+      if (option == SUPPRESS_FROM_DISCOVERY) return holding -> holding.setDiscoverySuppress(false);
     }
+    return holding -> {
+      throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
+    };
   }
 
   @Override
