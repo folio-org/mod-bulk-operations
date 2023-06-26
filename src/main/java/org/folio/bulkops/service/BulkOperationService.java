@@ -432,9 +432,10 @@ public class BulkOperationService {
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
     try (Reader reader = new InputStreamReader(remoteFileSystemClient.get(pathToFile))) {
       try (CSVReader csvReader = new CSVReader(reader)) {
-        csvReader.skip(offset + 1);
+        var recordsToSkip = offset + 1;
+        csvReader.skip(recordsToSkip);
         String[] line;
-        while ((line = csvReader.readNext()) != null && csvReader.getLinesRead() < limit + 2) {
+        while ((line = csvReader.readNext()) != null && csvReader.getRecordsRead() <= limit + recordsToSkip) {
           var row = new Row();
           row.setRow(Arrays.stream(line).toList());
           table.addRowsItem(row);

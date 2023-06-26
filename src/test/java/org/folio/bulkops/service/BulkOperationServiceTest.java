@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.util.UnifiedTableHeaderBuilder.getHeaders;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
@@ -873,6 +874,29 @@ class BulkOperationServiceTest extends BaseTest {
     } else if (EntityType.HOLDINGS_RECORD.equals(entityType)) {
       assertThat(table.getHeader(), equalTo(getHeaders(HoldingsRecord.class)));
     }
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldReturnPreviewWithCorrectNumberOfRecordsWhenRecordsContainLineBreaks() {
+    var path = "src/test/resources/files/items_preview_line_breaks.csv";
+    var operationId = UUID.randomUUID();
+    var offset = 1;
+    var limit = 10;
+
+    var bulkOperation = buildBulkOperation("items_preview_line_breaks.csv", ITEM, COMMIT);
+    bulkOperation.setId(operationId);
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(bulkOperation));
+
+    when(remoteFileSystemClient.get(anyString()))
+      .thenReturn(new FileInputStream(path));
+
+    when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
+
+    var table = bulkOperationService.getPreview(bulkOperation, COMMIT, offset, limit);
+
+    assertThat(table.getRows(), hasSize(limit));
   }
 
   @ParameterizedTest
