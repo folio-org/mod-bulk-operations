@@ -8,6 +8,8 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOV
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,6 +28,7 @@ import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
+import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.RuleService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +41,8 @@ class UpdateProcessorTest extends BaseTest {
   private RuleService ruleService;
   @SpyBean
   private ItemClient itemClient;
+  @SpyBean
+  private ErrorService errorService;
   @Autowired
   private HoldingsUpdateProcessor holdingsUpdateProcessor;
   @Autowired
@@ -56,6 +61,45 @@ class UpdateProcessorTest extends BaseTest {
     holdingsUpdateProcessor.updateRecord(holdingsRecord,"identifier", UUID.randomUUID());
 
     verify(holdingsClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
+  }
+
+  @Test
+  void shouldUpdateHoldingsAndItemsIfErrorUpdatingItemWhenIncludingItemsAction() {
+    var holdingsRecord = new HoldingsRecord()
+      .withId(UUID.randomUUID().toString())
+      .withInstanceId(UUID.randomUUID().toString())
+      .withDiscoverySuppress(true)
+      .withPermanentLocation(new ItemLocation().withId(UUID.randomUUID().toString()));
+    var item = new Item()
+      .withId(UUID.randomUUID().toString())
+      .withDiscoverySuppress(false);
+    var item2 = new Item()
+      .withId(UUID.randomUUID().toString())
+      .withDiscoverySuppress(false);
+    var itemsCollection = new ItemCollection().withItems(List.of(item, item2));
+
+    var ruleDetails = new BulkOperationRuleRuleDetails();
+    ruleDetails.setOption(SUPPRESS_FROM_DISCOVERY);
+    var action = new Action();
+    action.setType(SET_TO_TRUE_INCLUDING_ITEMS);
+    ruleDetails.setActions(List.of(action));
+    var rule = new BulkOperationRule();
+    rule.setRuleDetails(ruleDetails);
+    var bulkOperationRuleCollection = new BulkOperationRuleCollection();
+    bulkOperationRuleCollection.setBulkOperationRules(List.of(rule));
+
+    when(ruleService.getRules(isA(UUID.class))).thenReturn(bulkOperationRuleCollection);
+    when(itemClient.getByQuery(isA(String.class))).thenReturn(itemsCollection);
+    doThrow(new RuntimeException("error")).when(itemClient).updateItem(item2, item2.getId());
+    doNothing().when(errorService).saveError(isA(UUID.class), isA(String.class), isA(String.class));
+
+    holdingsUpdateProcessor.updateRecord(holdingsRecord,"identifier", UUID.randomUUID());
+
+    verify(holdingsClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
+    verify(itemClient).updateItem(item, item.getId());
+    verify(errorService).saveError(isA(UUID.class), isA(String.class), isA(String.class));
+
+    assertTrue(item.getDiscoverySuppress());
   }
 
   @Test
@@ -81,7 +125,7 @@ class UpdateProcessorTest extends BaseTest {
     bulkOperationRuleCollection.setBulkOperationRules(List.of(rule));
 
     when(ruleService.getRules(isA(UUID.class))).thenReturn(bulkOperationRuleCollection);
-    when (itemClient.getByQuery(isA(String.class))).thenReturn(itemsCollection);
+    when(itemClient.getByQuery(isA(String.class))).thenReturn(itemsCollection);
 
     holdingsUpdateProcessor.updateRecord(holdingsRecord,"identifier", UUID.randomUUID());
 
@@ -146,7 +190,7 @@ class UpdateProcessorTest extends BaseTest {
     bulkOperationRuleCollection.setBulkOperationRules(List.of(rule));
 
     when(ruleService.getRules(isA(UUID.class))).thenReturn(bulkOperationRuleCollection);
-    when (itemClient.getByQuery(isA(String.class))).thenReturn(itemsCollection);
+    when(itemClient.getByQuery(isA(String.class))).thenReturn(itemsCollection);
 
     holdingsUpdateProcessor.updateRecord(holdingsRecord,"identifier", UUID.randomUUID());
 
