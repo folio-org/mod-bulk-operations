@@ -19,14 +19,14 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOV
 @RequiredArgsConstructor
 public class HoldingsUpdateProcessor implements UpdateProcessor<HoldingsRecord> {
 
-  private static final String GET_ITEMS_BY_HOLDING_ID_QUERY = "query=holdingsRecordId=%s";
+  private static final String GET_ITEMS_BY_HOLDING_ID_QUERY = "holdingsRecordId=%s";
 
   private final HoldingsClient holdingsClient;
   private final ItemClient itemClient;
   private final RuleService ruleService;
   private final ErrorService errorService;
 
-    @Override
+  @Override
   public void updateRecord(HoldingsRecord holdingsRecord, String identifier, UUID operationId) {
     var ruleCollection = ruleService.getRules(operationId);
     holdingsClient.updateHoldingsRecord(
@@ -34,7 +34,7 @@ public class HoldingsUpdateProcessor implements UpdateProcessor<HoldingsRecord> 
       holdingsRecord.getId()
     );
     if (isNeedToUpdateItemsDiscoverySupressValue(ruleCollection)) {
-      var items = itemClient.getByQuery(String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsRecord.getId()), 0, 1000000)
+      var items = itemClient.getByQuery(String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsRecord.getId()))
         .getItems();
       items.forEach(item -> {
         item.setDiscoverySuppress(holdingsRecord.getDiscoverySuppress());
