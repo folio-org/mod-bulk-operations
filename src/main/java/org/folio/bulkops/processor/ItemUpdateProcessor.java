@@ -14,7 +14,7 @@ public class ItemUpdateProcessor implements UpdateProcessor<Item> {
   private final ItemClient itemClient;
 
   @Override
-  public void updateRecord(Item item, UUID operationId) {
+  public void updateRecord(Item item, String identifier, UUID operationId) {
     itemClient.updateItem(item, item.getId());
   }
 

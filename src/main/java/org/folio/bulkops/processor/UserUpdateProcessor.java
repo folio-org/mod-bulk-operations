@@ -14,7 +14,7 @@ public class UserUpdateProcessor implements UpdateProcessor<User> {
   private final UserClient userClient;
 
   @Override
-  public void updateRecord(User user, UUID operationId) {
+  public void updateRecord(User user, String identifier, UUID operationId) {
     userClient.updateUser(user, user.getId());
   }
 

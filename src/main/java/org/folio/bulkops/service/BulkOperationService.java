@@ -405,7 +405,7 @@ public class BulkOperationService {
         .bulkOperationId(operation.getId())
         .build();
         executionContent.setIdentifier(modified.getIdentifier(operation.getIdentifierType()));
-        updater.updateRecord(modified, operation.getId());
+        updater.updateRecord(modified, original.getIdentifier(operation.getIdentifierType()), operation.getId());
         executionContentRepository.save(executionContent.withState(StateType.PROCESSED));
         return modified;
     }

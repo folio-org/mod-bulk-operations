@@ -5,6 +5,7 @@ import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.UpdateActionType;
+import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.RuleService;
 import org.springframework.stereotype.Component;
 
@@ -23,9 +24,10 @@ public class HoldingsUpdateProcessor implements UpdateProcessor<HoldingsRecord> 
   private final HoldingsClient holdingsClient;
   private final ItemClient itemClient;
   private final RuleService ruleService;
+  private final ErrorService errorService;
 
-  @Override
-  public void updateRecord(HoldingsRecord holdingsRecord, UUID operationId) {
+    @Override
+  public void updateRecord(HoldingsRecord holdingsRecord, String identifier, UUID operationId) {
     var ruleCollection = ruleService.getRules(operationId);
     holdingsClient.updateHoldingsRecord(
       holdingsRecord.withInstanceHrid(null).withItemBarcode(null).withInstanceTitle(null),
@@ -36,7 +38,11 @@ public class HoldingsUpdateProcessor implements UpdateProcessor<HoldingsRecord> 
         .getItems();
       items.forEach(item -> {
         item.setDiscoverySuppress(holdingsRecord.getDiscoverySuppress());
-        itemClient.updateItem(item, item.getId());
+        try {
+          itemClient.updateItem(item, item.getId());
+        } catch (Exception e) {
+          errorService.saveError(operationId, identifier, e.getMessage());
+        }
       });
     }
   }

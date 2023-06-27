@@ -36,7 +36,7 @@ class UpdateProcessorTest extends BaseTest {
         .withPermanentLocation(new ItemLocation().withId(UUID.randomUUID().toString()));
 
     when(ruleService.getRules(isA(UUID.class))).thenReturn(new BulkOperationRuleCollection());
-    holdingsUpdateProcessor.updateRecord(holdingsRecord, UUID.randomUUID());
+    holdingsUpdateProcessor.updateRecord(holdingsRecord,"identifier", UUID.randomUUID());
 
     verify(holdingsClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
   }
@@ -47,7 +47,7 @@ class UpdateProcessorTest extends BaseTest {
       .withId(UUID.randomUUID().toString())
       .withHoldingsRecordId(UUID.randomUUID().toString());
 
-    itemUpdateProcessor.updateRecord(item, UUID.randomUUID());
+    itemUpdateProcessor.updateRecord(item, "identifier", UUID.randomUUID());
 
     verify(itemClient).updateItem(item, item.getId());
   }
@@ -59,7 +59,7 @@ class UpdateProcessorTest extends BaseTest {
         .withPatronGroup(UUID.randomUUID().toString())
         .withUsername("sample_user");
 
-    userUpdateProcessor.updateRecord(user, UUID.randomUUID());
+    userUpdateProcessor.updateRecord(user, "identifier",  UUID.randomUUID());
 
     verify(userClient).updateUser(user, user.getId());
   }
