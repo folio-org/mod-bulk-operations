@@ -4,21 +4,29 @@ import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDING_ITEMS;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.EMAIL_ADDRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.UUID;
 
+import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.service.ErrorService;
@@ -228,5 +236,24 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     assertNotNull(actual.getUpdated());
     assertFalse(actual.shouldBeUpdated);
+  }
+
+  @Test
+  @SneakyThrows
+  void testUpdaterForSuppressFromDiscoveryOption() {
+    var holdingsRecord = new HoldingsRecord()
+      .withId(UUID.randomUUID().toString())
+      .withDiscoverySuppress(false);
+
+    var processor = new HoldingsDataProcessor(null, null, null);
+
+    processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_TRUE)).apply(holdingsRecord);
+    assertTrue(holdingsRecord.getDiscoverySuppress());
+    processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_FALSE)).apply(holdingsRecord);
+    assertFalse(holdingsRecord.getDiscoverySuppress());
+    processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_TRUE_INCLUDING_ITEMS)).apply(holdingsRecord);
+    assertTrue(holdingsRecord.getDiscoverySuppress());
+    processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_FALSE_INCLUDING_ITEMS)).apply(holdingsRecord);
+    assertFalse(holdingsRecord.getDiscoverySuppress());
   }
 }
