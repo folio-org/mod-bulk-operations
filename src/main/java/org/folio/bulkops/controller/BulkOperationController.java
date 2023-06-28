@@ -8,6 +8,8 @@ import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR
 import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -127,7 +129,8 @@ public class BulkOperationController implements BulkOperationsApi {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentLength(content.length);
-        headers.setContentDispositionFormData(FileUtils.filename(path), FileUtils.filename(path));
+        var decodedPath = URLDecoder.decode(path, StandardCharsets.UTF_8);
+        headers.setContentDispositionFormData(FileUtils.filename(decodedPath), FileUtils.filename(decodedPath));
         return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(content));
       } catch (IOException e) {
         log.error(e);
