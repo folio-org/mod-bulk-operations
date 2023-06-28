@@ -37,7 +37,7 @@ public class HoldingsUpdateProcessor implements UpdateProcessor<HoldingsRecord> 
       var items = itemClient.getByQuery(String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsRecord.getId()))
         .getItems();
       items.forEach(item -> {
-        if (item.getDiscoverySuppress() != holdingsRecord.getDiscoverySuppress()) {
+        if (item.getDiscoverySuppress() == null || !item.getDiscoverySuppress().equals(holdingsRecord.getDiscoverySuppress())) {
           item.setDiscoverySuppress(holdingsRecord.getDiscoverySuppress());
           try {
             itemClient.updateItem(item, item.getId());
