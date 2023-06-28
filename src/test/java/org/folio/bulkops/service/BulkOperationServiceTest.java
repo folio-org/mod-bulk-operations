@@ -177,12 +177,13 @@ class BulkOperationServiceTest extends BaseTest {
       .thenReturn(BulkOperation.builder().id(operationId).build());
 
     when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(BulkOperation.builder().id(operationId).status(DATA_MODIFICATION).build()));
+      .thenReturn(Optional.of(BulkOperation.builder().id(operationId).linkToTriggeringCsvFile("path/barcodes.csv").status(DATA_MODIFICATION).build()));
 
-    when(remoteFileSystemClient.put(any(InputStream.class), eq(operationId + "/barcodes.csv")))
-      .thenReturn("modified.csv");
+    var linkToPreviewFile = operationId + "/" + LocalDate.now() + "-Updates-Preview-barcodes.csv";
+    when(remoteFileSystemClient.put(any(InputStream.class), eq(linkToPreviewFile)))
+      .thenReturn(linkToPreviewFile);
 
-    when(remoteFileSystemClient.getNumOfLines("modified.csv"))
+    when(remoteFileSystemClient.getNumOfLines(linkToPreviewFile))
       .thenReturn(3);
 
     bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, true, operationId, UUID.randomUUID(), file);
