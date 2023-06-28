@@ -81,7 +81,7 @@ class ErrorServiceTest extends BaseTest {
 
       bulkOperationId = bulkOperationRepository.save(BulkOperation.builder()
         .id(UUID.randomUUID())
-        .linkToMatchedRecordsCsvFile("some/path/records.csv")
+        .linkToTriggeringCsvFile("some/path/records.csv")
         .build()).getId();
     }
   }
@@ -126,7 +126,7 @@ class ErrorServiceTest extends BaseTest {
       errorService.saveError(bulkOperationId, "123", "Error message 123");
       errorService.saveError(bulkOperationId, "456", "Error message 456");
 
-      var expectedFileName = bulkOperationId + "/" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + "-Errors-records.csv";
+      var expectedFileName = bulkOperationId + "/" + LocalDate.now() + "-Errors-records.csv";
       when(remoteFileSystemClient.put(any(), eq(expectedFileName))).thenReturn(expectedFileName);
 
       var result = errorService.uploadErrorsToStorage(bulkOperationId);

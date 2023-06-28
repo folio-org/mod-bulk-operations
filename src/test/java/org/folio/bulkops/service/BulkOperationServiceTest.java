@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.util.UnifiedTableHeaderBuilder.getHeaders;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
@@ -31,6 +32,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -285,10 +287,11 @@ class BulkOperationServiceTest extends BaseTest {
       var bulkOperationId = UUID.randomUUID();
       var originalPatronGroupId = "3684a786-6671-4268-8ed0-9db82ebca60b";
       var newPatronGroupId = "56c86552-20ec-41d1-964a-5a2be46969e5";
+      var pathToTriggering = "/some/path/identifiers.csv";
       var pathToOrigin = "path/origin.json";
-      var pathToModified = bulkOperationId + "/json/modified-origin.json";
+      var pathToModified = bulkOperationId + "/json/" + LocalDate.now() + "-Updates-Preview-identifiers.json";
       var pathToOriginalCsv = bulkOperationId + "/origin.csv";
-      var pathToModifiedCsv = bulkOperationId + "/modified-origin.csv";
+      var pathToModifiedCsv = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-identifiers.csv";
       var pathToUserJson = "src/test/resources/files/user.json";
 
       when(bulkOperationRepository.findById(any(UUID.class)))
@@ -297,6 +300,7 @@ class BulkOperationServiceTest extends BaseTest {
           .status(DATA_MODIFICATION)
           .entityType(EntityType.USER)
           .identifierType(IdentifierType.BARCODE)
+          .linkToTriggeringCsvFile(pathToTriggering)
           .linkToMatchedRecordsJsonFile(pathToOrigin)
           .linkToModifiedRecordsJsonFile("existing.csv")
           .linkToModifiedRecordsCsvFile("existing.json")
@@ -334,7 +338,7 @@ class BulkOperationServiceTest extends BaseTest {
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(approach).step(EDIT));
 
-      var expectedPathToModifiedCsvFile = bulkOperationId + "/modified-origin.csv";
+      var expectedPathToModifiedCsvFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-identifiers.csv";
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       var pathCaptor = ArgumentCaptor.forClass(String.class);
       Awaitility.await().untilAsserted(() -> verify(remoteFolioS3Client, times(2)).write(pathCaptor.capture(), streamCaptor.capture()));
@@ -362,10 +366,11 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldConfirmChangesForItemWhenValidationErrorAndOtherValidChangesExist(ApproachType approach) throws FileNotFoundException {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
+      var pathToTriggering = "/some/path/identifiers.csv";
       var pathToOrigin = "path/origin.json";
-      var pathToModified = bulkOperationId + "/json/modified-origin.json";
+      var pathToModified = bulkOperationId + "/json/" + LocalDate.now() + "-Updates-Preview-identifiers.json";
       var pathToOriginalCsv = bulkOperationId + "/origin.csv";
-      var pathToModifiedCsv = bulkOperationId + "/modified-origin.csv";
+      var pathToModifiedCsv = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-identifiers.csv";
       var pathToItemJson = "src/test/resources/files/item.json";
 
       when(bulkOperationRepository.findById(bulkOperationId))
@@ -374,6 +379,7 @@ class BulkOperationServiceTest extends BaseTest {
           .status(DATA_MODIFICATION)
           .entityType(EntityType.ITEM)
           .identifierType(IdentifierType.BARCODE)
+          .linkToTriggeringCsvFile(pathToTriggering)
           .linkToMatchedRecordsJsonFile(pathToOrigin)
           .linkToModifiedRecordsJsonFile("existing.csv")
           .linkToModifiedRecordsCsvFile("existing.json")
@@ -424,7 +430,7 @@ class BulkOperationServiceTest extends BaseTest {
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(approach).step(EDIT));
 
-      var expectedPathToModifiedCsvFile = bulkOperationId + "/modified-origin.csv";
+      var expectedPathToModifiedCsvFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-identifiers.csv";
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       var pathCaptor = ArgumentCaptor.forClass(String.class);
 
@@ -509,11 +515,12 @@ class BulkOperationServiceTest extends BaseTest {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
 
       var bulkOperationId = UUID.randomUUID();
+      var pathToTriggering = "/some/path/identifiers.csv";
       var pathToOrigin = bulkOperationId + "/json/origin.json";
       var pathToModified = bulkOperationId + "/json/modified-origin.json";
-      var pathToModifiedResult = bulkOperationId + "/json/result-origin.json";
+      var pathToModifiedResult = bulkOperationId + "/json/" + LocalDate.now() + "-Changed-Records-identifiers.json";
       var pathToModifiedCsv = bulkOperationId + "/modified-origin.csv";
-      var pathToModifiedCsvResult = bulkOperationId + "/result-modified-origin.csv";
+      var pathToModifiedCsvResult = bulkOperationId + "/" + LocalDate.now() + "-Changed-Records-identifiers.csv";
       var pathToUserJson = "src/test/resources/files/user.json";
       var pathToModifiedUserJson = "src/test/resources/files/modified-user.json";
 
@@ -523,6 +530,7 @@ class BulkOperationServiceTest extends BaseTest {
           .entityType(USER)
           .status(REVIEW_CHANGES)
           .identifierType(IdentifierType.BARCODE)
+          .linkToTriggeringCsvFile(pathToTriggering)
           .linkToMatchedRecordsJsonFile(pathToOrigin)
           .linkToMatchedRecordsCsvFile(pathToModifiedCsv)
           .linkToModifiedRecordsJsonFile(pathToModified)
@@ -534,6 +542,7 @@ class BulkOperationServiceTest extends BaseTest {
           .id(bulkOperationId)
           .entityType(USER)
           .identifierType(IdentifierType.BARCODE)
+          .linkToTriggeringCsvFile(pathToTriggering)
           .linkToMatchedRecordsJsonFile(pathToOrigin)
           .linkToMatchedRecordsCsvFile(pathToModifiedCsv)
           .linkToModifiedRecordsJsonFile(pathToModified)
@@ -551,7 +560,7 @@ class BulkOperationServiceTest extends BaseTest {
       when(remoteFileSystemClient.get(pathToModified))
         .thenReturn(new FileInputStream(pathToModifiedUserJson));
 
-      var expectedPathToResultFile = bulkOperationId + "/json/result-origin.json";
+      var expectedPathToResultFile = bulkOperationId + "/json/" + LocalDate.now() + "-Changed-Records-identifiers.json";
       when(remoteFileSystemClient.get(expectedPathToResultFile))
         .thenReturn(new FileInputStream(pathToModifiedUserJson));
 
@@ -620,9 +629,10 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldApplyChanges() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
+      var pathToTriggering = "/some/path/identifiers.csv";
       var pathToOrigin = bulkOperationId + "/json/origin.json";
       var pathToModifiedCsv = bulkOperationId + "/modified-origin.csv";
-      var expectedPathToResultFile = bulkOperationId + "/json/modified-origin.json";
+      var expectedPathToResultFile = bulkOperationId + "/json/" + LocalDate.now() + "-Updates-Preview-identifiers.json";
       var pathToUserJson = "src/test/resources/files/user.json";
       var pathToModifiedUserCsv = "src/test/resources/files/modified-user.csv";
       var pathToTempFile = bulkOperationId + "/temp.txt";
@@ -633,6 +643,7 @@ class BulkOperationServiceTest extends BaseTest {
           .entityType(USER)
           .status(DATA_MODIFICATION)
           .identifierType(IdentifierType.BARCODE)
+          .linkToTriggeringCsvFile(pathToTriggering)
           .linkToMatchedRecordsJsonFile(pathToOrigin)
           .linkToModifiedRecordsCsvFile(pathToModifiedCsv)
           .processedNumOfRecords(0)
@@ -663,6 +674,7 @@ class BulkOperationServiceTest extends BaseTest {
   @SneakyThrows
   void shouldNotUpdateIfEntitiesAreEqual() {
     var bulkOperationId = UUID.randomUUID();
+    var pathToTriggering = "/some/path/identifiers.csv";
     var pathToOrigin = bulkOperationId + "/origin.json";
     var pathToOriginCsv = bulkOperationId + "/origin.csv";
     var pathToModified = bulkOperationId + "/modified-origin.json";
@@ -672,6 +684,7 @@ class BulkOperationServiceTest extends BaseTest {
       .id(bulkOperationId)
       .entityType(USER)
       .identifierType(IdentifierType.BARCODE)
+      .linkToTriggeringCsvFile(pathToTriggering)
       .linkToMatchedRecordsJsonFile(pathToOrigin)
       .linkToMatchedRecordsCsvFile(pathToOriginCsv)
       .linkToModifiedRecordsJsonFile(pathToModified)
@@ -703,8 +716,8 @@ class BulkOperationServiceTest extends BaseTest {
 
     Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), anyString()));
 
-    var expectedPathToResultFile = bulkOperationId + "/json/result-origin.json";
-    var expectedPathToResultCsvFile = bulkOperationId + "/result-origin.csv";
+    var expectedPathToResultFile = bulkOperationId + "/json/" + LocalDate.now() + "-Changed-Records-identifiers.json";
+    var expectedPathToResultCsvFile = bulkOperationId + "/" + LocalDate.now() + "-Changed-Records-identifiers.csv";
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).writer(pathCaptor.capture()));
     assertEquals(expectedPathToResultCsvFile, pathCaptor.getAllValues().get(0));
@@ -861,6 +874,29 @@ class BulkOperationServiceTest extends BaseTest {
     } else if (EntityType.HOLDINGS_RECORD.equals(entityType)) {
       assertThat(table.getHeader(), equalTo(getHeaders(HoldingsRecord.class)));
     }
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldReturnPreviewWithCorrectNumberOfRecordsWhenRecordsContainLineBreaks() {
+    var path = "src/test/resources/files/items_preview_line_breaks.csv";
+    var operationId = UUID.randomUUID();
+    var offset = 1;
+    var limit = 10;
+
+    var bulkOperation = buildBulkOperation("items_preview_line_breaks.csv", ITEM, COMMIT);
+    bulkOperation.setId(operationId);
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(bulkOperation));
+
+    when(remoteFileSystemClient.get(anyString()))
+      .thenReturn(new FileInputStream(path));
+
+    when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
+
+    var table = bulkOperationService.getPreview(bulkOperation, COMMIT, offset, limit);
+
+    assertThat(table.getRows(), hasSize(limit));
   }
 
   @ParameterizedTest

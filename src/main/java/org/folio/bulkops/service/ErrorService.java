@@ -1,6 +1,5 @@
 package org.folio.bulkops.service;
 
-import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
@@ -129,8 +128,8 @@ public class ErrorService {
       var errorsString = contents.stream()
         .map(content -> String.join(Constants.COMMA_DELIMETER, content.getIdentifier(), content.getErrorMessage()))
         .collect(Collectors.joining(LF));
-      var errorsFileName = LocalDate.now().format(ISO_LOCAL_DATE) + operationRepository.findById(bulkOperationId)
-        .map(BulkOperation::getLinkToMatchedRecordsCsvFile)
+      var errorsFileName = LocalDate.now() + operationRepository.findById(bulkOperationId)
+        .map(BulkOperation::getLinkToTriggeringCsvFile)
         .map(FilenameUtils::getName)
         .map(fileName -> "-Errors-" + fileName)
         .orElse("-Errors.csv");
