@@ -139,7 +139,7 @@ public class BulkOperationService {
           .orElseThrow(() -> new NotFoundException("Bulk operation was not found by id=" + operationId));
 
         try {
-          var linkToThePreviewFile = remoteFileSystemClient.put(multipartFile.getInputStream(), operation.getId() + "/" + multipartFile.getOriginalFilename());
+          var linkToThePreviewFile = remoteFileSystemClient.put(multipartFile.getInputStream(), String.format(PREVIEW_CSV_PATH_TEMPLATE, operation.getId(), LocalDate.now(), FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile())));
           operation.setLinkToModifiedRecordsCsvFile(linkToThePreviewFile);
 
           var numOfLines = remoteFileSystemClient.getNumOfLines(linkToThePreviewFile) - 1;
