@@ -13,4 +13,5 @@
   <include file="changes/17-04-2023_bulk_operation_default_values.xml" relativeToChangelogFile="true"/>
   <include file="changes/16-06-2023_add_set_false_action_type.xml" relativeToChangelogFile="true"/>
   <include file="changes/16-06-2023_add_set_true_action_type.xml" relativeToChangelogFile="true"/>
+  <include file="changes/20-06-2023_set_to_true_and_false_including_items_action_types.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

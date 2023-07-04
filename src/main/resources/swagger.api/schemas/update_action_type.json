@@ -11,7 +11,9 @@
       "REPLACE_WITH",
       "FIND_AND_REPLACE",
       "SET_TO_TRUE",
-      "SET_TO_FALSE"
+      "SET_TO_FALSE",
+      "SET_TO_TRUE_INCLUDING_ITEMS",
+      "SET_TO_FALSE_INCLUDING_ITEMS"
     ]
   }
 }
