@@ -2,14 +2,19 @@ package org.folio.bulkops.processor;
 
 import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
+import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STUFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
-import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_IN_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_OUT_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
+import static org.folio.bulkops.processor.ItemDataProcessor.ITEM_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.service.ItemReferenceService.MODULE_NAME;
 import static org.folio.bulkops.service.ItemReferenceService.STATUSES_CONFIG_NAME;
 import static org.folio.bulkops.util.Constants.BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE;
@@ -25,14 +30,18 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.bean.CirculationNote;
 import org.folio.bulkops.domain.bean.ConfigurationCollection;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.InventoryItemStatus;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.ModelConfiguration;
 import org.folio.bulkops.domain.bean.ResultInfo;
+import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
@@ -275,5 +284,75 @@ class ItemDataProcessorTest extends BaseTest {
     var actual = processor.process(IDENTIFIER, new Item(), rules(rule(SUPPRESS_FROM_DISCOVERY, type, StringUtils.EMPTY)));
     assertNotNull(actual.getUpdated());
     assertTrue(actual.shouldBeUpdated);
+  }
+
+  @Test
+  @SneakyThrows
+  void testUpdateMarkAsStaffOnlyForItemNotes() {
+    var itemNote = new ItemNote().withItemNoteTypeId("typeId").withStaffOnly(false);
+    var item = new Item().withNotes(List.of(itemNote));
+    var parameter = new Parameter();
+    parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId");
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(ITEM_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(item);
+
+    assertTrue(item.getNotes().get(0).getStaffOnly());
+  }
+
+  @Test
+  @SneakyThrows
+  void testUpdateRemoveMarkAsStaffOnlyForItemNotes() {
+    var itemNote = new ItemNote().withItemNoteTypeId("typeId").withStaffOnly(true);
+    var item = new Item().withNotes(List.of(itemNote));
+    var parameter = new Parameter();
+    parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId");
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(ITEM_NOTE, new Action().type(REMOVE_MARK_AS_STUFF_ONLY).parameters(List.of(parameter))).apply(item);
+
+    assertFalse(item.getNotes().get(0).getStaffOnly());
+  }
+
+  @Test
+  @SneakyThrows
+  void testUpdateMarkAsStaffOnlyForCirculationNotes() {
+    var circulationNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN).withStaffOnly(false);
+    var item = new Item().withCirculationNotes(List.of(circulationNote));
+    var parameter = new Parameter();
+    parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId");
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(CHECK_IN_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(item);
+    assertTrue(item.getCirculationNotes().get(0).getStaffOnly());
+
+    circulationNote.setStaffOnly(false);
+    circulationNote.setNoteType(CirculationNote.NoteTypeEnum.OUT);
+
+    processor.updater(CHECK_OUT_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(item);
+    assertTrue(item.getCirculationNotes().get(0).getStaffOnly());
+  }
+
+  @Test
+  @SneakyThrows
+  void testUpdateRemoveMarkAsStaffOnlyForCirculationNotes() {
+    var circulationNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN).withStaffOnly(false);
+   var item = new Item().withCirculationNotes(List.of(circulationNote));
+    var parameter = new Parameter();
+    parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId");
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_MARK_AS_STUFF_ONLY).parameters(List.of(parameter))).apply(item);
+   assertFalse(item.getCirculationNotes().get(0).getStaffOnly());
+
+    circulationNote.setStaffOnly(true);
+    circulationNote.setNoteType(CirculationNote.NoteTypeEnum.OUT);
+
+    processor.updater(CHECK_OUT_NOTE, new Action().type(REMOVE_MARK_AS_STUFF_ONLY).parameters(List.of(parameter))).apply(item);
+    assertFalse(item.getCirculationNotes().get(0).getStaffOnly());
   }
 }

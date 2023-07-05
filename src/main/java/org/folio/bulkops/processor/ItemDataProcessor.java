@@ -4,9 +4,14 @@ import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
+import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STUFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_IN_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_OUT_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
@@ -14,6 +19,8 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOV
 import java.util.Date;
 import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.bean.CirculationNote;
 import org.folio.bulkops.domain.bean.InventoryItemStatus;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
@@ -32,6 +39,9 @@ import lombok.extern.log4j.Log4j2;
 @Component
 @AllArgsConstructor
 public class ItemDataProcessor extends AbstractDataProcessor<Item> {
+
+  public static final String ITEM_NOTE_TYPE_ID_KEY = "itemNoteTypeId";
+
   private final HoldingsReferenceService holdingsReferenceService;
   private final ItemReferenceService itemReferenceService;
 
@@ -84,8 +94,37 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
       };
     } else if (SET_TO_TRUE == action.getType()) {
       if (option == SUPPRESS_FROM_DISCOVERY) return item -> item.setDiscoverySuppress(true);
-    } else if (SET_TO_FALSE== action.getType()) {
+    } else if (SET_TO_FALSE == action.getType()) {
       if (option == SUPPRESS_FROM_DISCOVERY) return item -> item.setDiscoverySuppress(false);
+    } else if (MARK_AS_STAFF_ONLY == action.getType() || REMOVE_MARK_AS_STUFF_ONLY == action.getType()) {
+      var markAsStaffValue = action.getType() == MARK_AS_STAFF_ONLY;
+      if (option == CHECK_IN_NOTE) {
+        return item -> { if (item.getCirculationNotes() != null) {
+          item.getCirculationNotes().forEach(circulationNote -> {
+            if (circulationNote.getNoteType() == CirculationNote.NoteTypeEnum.IN)
+              circulationNote.setStaffOnly(markAsStaffValue);
+          });
+        }};
+      } else if (option == CHECK_OUT_NOTE) {
+        return item -> { if (item.getCirculationNotes() != null) {
+          item.getCirculationNotes().forEach(circulationNote -> {
+            if (circulationNote.getNoteType() == CirculationNote.NoteTypeEnum.OUT)
+              circulationNote.setStaffOnly(markAsStaffValue);
+          });
+        }};
+      } else if (option == ITEM_NOTE) {
+        return item -> action.getParameters()
+          .stream().filter(p -> StringUtils.equals(p.getKey(), ITEM_NOTE_TYPE_ID_KEY))
+          .findFirst().ifPresent(p -> {
+            var itemNoteTypeId = p.getValue();
+            if (item.getNotes() != null) {
+              item.getNotes().forEach(itemNote -> {
+                if (StringUtils.equals(itemNoteTypeId, itemNote.getItemNoteTypeId())) {
+                  itemNote.setStaffOnly(markAsStaffValue);
+                }
+              });
+            }});
+      }
     } else if (CLEAR_FIELD == action.getType()) {
       return switch (option) {
         case PERMANENT_LOCATION -> item -> {
