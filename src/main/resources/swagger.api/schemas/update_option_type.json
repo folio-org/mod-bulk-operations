@@ -12,7 +12,16 @@
       "PERMANENT_LOAN_TYPE",
       "TEMPORARY_LOAN_TYPE",
       "STATUS",
-      "SUPPRESS_FROM_DISCOVERY"
+      "SUPPRESS_FROM_DISCOVERY",
+      "ACTION_NOTE",
+      "BINDING_NOTE",
+      "CHECK_IN_NOTE",
+      "CHECK_OUT_NOTE",
+      "COPY_NOTE",
+      "ELECTRONIC_BOOKPLATE",
+      "NOTE",
+      "PROVENANCE",
+      "REPRODUCTION"
     ]
   }
 }

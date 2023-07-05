@@ -14,4 +14,6 @@
   <include file="changes/16-06-2023_add_set_false_action_type.xml" relativeToChangelogFile="true"/>
   <include file="changes/16-06-2023_add_set_true_action_type.xml" relativeToChangelogFile="true"/>
   <include file="changes/20-06-2023_set_to_true_and_false_including_items_action_types.xml" relativeToChangelogFile="true"/>
+  <include file="changes/04-07-2023_add_mark_and_remove_as_staff_only_action_types.xml" relativeToChangelogFile="true"/>
+  <include file="changes/04-07-2023_add_notes_options_types.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
