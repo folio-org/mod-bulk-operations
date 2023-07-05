@@ -13,15 +13,10 @@
       "TEMPORARY_LOAN_TYPE",
       "STATUS",
       "SUPPRESS_FROM_DISCOVERY",
-      "ACTION_NOTE",
-      "BINDING_NOTE",
+      "ITEM_NOTE",
+      "ADMINISTRATIVE_NOTE",
       "CHECK_IN_NOTE",
-      "CHECK_OUT_NOTE",
-      "COPY_NOTE",
-      "ELECTRONIC_BOOKPLATE",
-      "NOTE",
-      "PROVENANCE",
-      "REPRODUCTION"
+      "CHECK_OUT_NOTE"
     ]
   }
 }
