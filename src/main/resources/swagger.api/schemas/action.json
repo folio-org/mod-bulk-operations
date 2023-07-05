@@ -15,6 +15,11 @@
       "updated": {
         "description": "Updated value",
         "type": "string"
+      },
+      "parameters": {
+        "type": "object",
+        "description": "Additional parameters for actions",
+        "$ref": "parameters.json"
       }
     },
     "required": [
