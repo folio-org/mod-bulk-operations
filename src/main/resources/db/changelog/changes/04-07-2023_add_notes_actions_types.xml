@@ -7,7 +7,7 @@
 
 
   <changeSet id="24-03-2023_add_suppress_option_type.sql" author="firebird">
-    <sqlFile path="changes/04-07-2023_add_mark_and_remove_as_staff_only_action_types.sql" relativeToChangelogFile="true" />
+    <sqlFile path="changes/04-07-2023_add_notes_actions_types.sql" relativeToChangelogFile="true" />
   </changeSet>
 
 </databaseChangeLog>

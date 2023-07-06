@@ -3,8 +3,10 @@ package org.folio.bulkops.processor;
 import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STUFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_IN_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_OUT_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
@@ -340,7 +342,7 @@ class ItemDataProcessorTest extends BaseTest {
   @SneakyThrows
   void testUpdateRemoveMarkAsStaffOnlyForCirculationNotes() {
     var circulationNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN).withStaffOnly(false);
-   var item = new Item().withCirculationNotes(List.of(circulationNote));
+    var item = new Item().withCirculationNotes(List.of(circulationNote));
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
@@ -354,5 +356,50 @@ class ItemDataProcessorTest extends BaseTest {
 
     processor.updater(CHECK_OUT_NOTE, new Action().type(REMOVE_MARK_AS_STUFF_ONLY).parameters(List.of(parameter))).apply(item);
     assertFalse(item.getCirculationNotes().get(0).getStaffOnly());
+  }
+
+  @Test
+  @SneakyThrows
+  void testRemoveAdministrativeNotes() {
+    var administrativeNote = "administrative note";
+    var item = new Item().withAdministrativeNotes(List.of(administrativeNote));
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(REMOVE_ALL)).apply(item);
+    assertTrue(item.getAdministrativeNotes().isEmpty());
+  }
+
+  @Test
+  @SneakyThrows
+  void testRemoveCirculationNotes() {
+    var checkInNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN);
+    var checkOutNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.OUT);
+    var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_ALL)).apply(item);
+    assertEquals(1, item.getCirculationNotes().size());
+    assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
+
+    item.setCirculationNotes(List.of(checkInNote, checkOutNote));
+    processor.updater(CHECK_OUT_NOTE, new Action().type(REMOVE_ALL)).apply(item);
+    assertEquals(1, item.getCirculationNotes().size());
+    assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
+  }
+
+  @Test
+  @SneakyThrows
+  void testRemoveItemNotes() {
+    var itemNote1 = new ItemNote().withItemNoteTypeId("typeId1");
+    var itemNote2 = new ItemNote().withItemNoteTypeId("typeId2");
+    var item = new Item().withNotes(List.of(itemNote1, itemNote2));
+    var parameter = new Parameter();
+    parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId1");
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(ITEM_NOTE, new Action().type(REMOVE_ALL).parameters(List.of(parameter))).apply(item);
+    assertEquals(1, item.getNotes().size());
+    assertEquals("typeId2", item.getNotes().get(0).getItemNoteTypeId());
   }
 }
