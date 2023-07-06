@@ -30,6 +30,7 @@ import org.folio.bulkops.mapper.BulkOperationMapper;
 import org.folio.bulkops.rest.resource.BulkOperationsApi;
 import org.folio.bulkops.service.BulkOperationService;
 import org.folio.bulkops.service.ErrorService;
+import org.folio.bulkops.service.LogFilesService;
 import org.folio.bulkops.service.RuleService;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
@@ -55,6 +56,7 @@ public class BulkOperationController implements BulkOperationsApi {
   private final ErrorService errorService;
   private final RuleService ruleService;
   private final RemoteFileSystemClient remoteFileSystemClient;
+  private final LogFilesService logFilesService;
 
   @Override
   public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(String query, Integer offset, Integer limit) {
@@ -137,5 +139,11 @@ public class BulkOperationController implements BulkOperationsApi {
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
+  }
+
+  @Override
+  public ResponseEntity<Void> cleanUpLogFiles() {
+    logFilesService.clearLogFiles();
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 }

@@ -181,7 +181,25 @@
           "pathPattern": "/_/tenant/{id}"
         }
       ]
-    }  ],
+    },
+    {
+      "id": "_timer",
+      "version": "1.0",
+      "interfaceType": "system",
+      "handlers": [
+        {
+          "methods": [
+            "POST"
+          ],
+          "pathPattern": "/bulk-operations/clean-up-log-files",
+          "modulePermissions": [
+          ],
+          "unit": "day",
+          "delay": "1"
+        }
+      ]
+    }
+  ],
   "permissionSets": [
     {
       "permissionName" : "bulk-operations.item.upload.post",
