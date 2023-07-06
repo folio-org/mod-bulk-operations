@@ -1,6 +1,7 @@
 package org.folio.bulkops.processor;
 
 import static java.util.Objects.isNull;
+import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
@@ -27,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -401,5 +403,66 @@ class ItemDataProcessorTest extends BaseTest {
     processor.updater(ITEM_NOTE, new Action().type(REMOVE_ALL).parameters(List.of(parameter))).apply(item);
     assertEquals(1, item.getNotes().size());
     assertEquals("typeId2", item.getNotes().get(0).getItemNoteTypeId());
+  }
+
+  @Test
+  @SneakyThrows
+  void testAddAdministrativeNotes() {
+    var administrativeNote1 = "administrative note";
+    var administrativeNote2 = "administrative note 2";
+    var item = new Item();
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote1)).apply(item);
+    assertEquals(1, item.getAdministrativeNotes().size());
+    assertEquals(administrativeNote1, item.getAdministrativeNotes().get(0));
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote2)).apply(item);
+    assertEquals(2, item.getAdministrativeNotes().size());
+  }
+
+  @Test
+  @SneakyThrows
+  void testAddCirculationNotes() {
+    var checkInNote = "checkInNote";
+    var checkOutNote = "checkOutNote";
+    var item = new Item();
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(CHECK_IN_NOTE, new Action().type(ADD_TO_EXISTING).updated(checkInNote)).apply(item);
+    assertEquals(1, item.getCirculationNotes().size());
+    assertEquals(checkInNote, item.getCirculationNotes().get(0).getNote());
+    assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
+
+    processor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING).updated(checkOutNote)).apply(item);
+    assertEquals(2, item.getCirculationNotes().size());
+    assertEquals(checkOutNote, item.getCirculationNotes().get(1).getNote());
+    assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(1).getNoteType());
+  }
+
+  @Test
+  @SneakyThrows
+  void testAddItemNotes() {
+    var itemNote1 = "itemNote1";
+    var itemNote2 = "itemNote2";
+    var item = new Item();
+    var parameter = new Parameter();
+    parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId1");
+
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(itemNote1)).apply(item);
+
+    assertEquals(1, item.getNotes().size());
+    assertEquals("typeId1", item.getNotes().get(0).getItemNoteTypeId());
+    assertEquals(itemNote1, item.getNotes().get(0).getNote());
+
+    parameter.setValue("typeId2");
+    processor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(itemNote2)).apply(item);
+
+    assertEquals(2, item.getNotes().size());
+    assertEquals("typeId2", item.getNotes().get(1).getItemNoteTypeId());
+    assertEquals(itemNote2, item.getNotes().get(1).getNote());
   }
 }

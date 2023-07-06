@@ -3,6 +3,7 @@ package org.folio.bulkops.processor;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
@@ -27,6 +28,7 @@ import org.folio.bulkops.domain.bean.CirculationNote;
 import org.folio.bulkops.domain.bean.InventoryItemStatus;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.BulkOperationException;
@@ -120,8 +122,8 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
       } else if (option == ITEM_NOTE) {
         return item -> action.getParameters()
           .stream().filter(p -> StringUtils.equals(p.getKey(), ITEM_NOTE_TYPE_ID_KEY))
-          .findFirst().ifPresent(p -> {
-            var itemNoteTypeId = p.getValue();
+          .findFirst().ifPresent(parameter -> {
+            var itemNoteTypeId = parameter.getValue();
             if (item.getNotes() != null) {
               item.getNotes().forEach(itemNote -> {
                 if (StringUtils.equals(itemNoteTypeId, itemNote.getItemNoteTypeId())) {
@@ -150,12 +152,48 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
       } else if (option == ITEM_NOTE) {
         return item -> action.getParameters()
           .stream().filter(p -> StringUtils.equals(p.getKey(), ITEM_NOTE_TYPE_ID_KEY))
-          .findFirst().ifPresent(p -> {
-            var itemNoteTypeId = p.getValue();
+          .findFirst().ifPresent(parameter -> {
+            var itemNoteTypeId = parameter.getValue();
             if (item.getNotes() != null) {
               var notes = item.getNotes().stream().filter(note -> !StringUtils.equals(note.getItemNoteTypeId(), itemNoteTypeId)).toList();
               item.setNotes(notes);
             }});
+      }
+    } else if (ADD_TO_EXISTING == action.getType()) {
+      if (option == ADMINISTRATIVE_NOTE) {
+        return item -> {
+          var notes = item.getAdministrativeNotes();
+          if (notes == null) {
+            notes = new ArrayList<>();
+            item.setAdministrativeNotes(notes);
+          }
+          notes.add(action.getUpdated());
+
+        };
+      } else if (option == CHECK_IN_NOTE || option == CHECK_OUT_NOTE) {
+        var type = option == CHECK_IN_NOTE ? CirculationNote.NoteTypeEnum.IN : CirculationNote.NoteTypeEnum.OUT;
+        return item -> {
+          var circulationNotes = item.getCirculationNotes();
+          var circulationNote = new CirculationNote().withNoteType(type)
+            .withNote(action.getUpdated());
+          if (circulationNotes == null) {
+            circulationNotes = new ArrayList<>();
+            item.setCirculationNotes(circulationNotes);
+          }
+          circulationNotes.add(circulationNote);
+        };
+      } else if (option == ITEM_NOTE) {
+        return item -> action.getParameters()
+          .stream().filter(p -> StringUtils.equals(p.getKey(), ITEM_NOTE_TYPE_ID_KEY))
+          .findFirst().ifPresent(parameter -> {
+            var note = new ItemNote().withItemNoteTypeId(parameter.getValue()).withNote(action.getUpdated());
+            var notes = item.getNotes();
+            if (notes == null) {
+              notes = new ArrayList<>();
+              item.setNotes(notes);
+            }
+            notes.add(note);
+          });
       }
     } else if (CLEAR_FIELD == action.getType()) {
       return switch (option) {
