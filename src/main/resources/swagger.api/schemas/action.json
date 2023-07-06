@@ -17,9 +17,11 @@
         "type": "string"
       },
       "parameters": {
-        "type": "object",
-        "description": "Additional parameters for actions",
-        "$ref": "parameters.json"
+        "type": "array",
+        "items": {
+          "$ref": "action_parameter.json#/Parameter"
+        },
+        "minItems": 1
       }
     },
     "required": [
