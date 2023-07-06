@@ -143,6 +143,7 @@ public class BulkOperationController implements BulkOperationsApi {
 
   @Override
   public ResponseEntity<Void> cleanUpLogFiles() {
+    log.info("Cleaning up log files...");
     logFilesService.clearLogFiles();
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
