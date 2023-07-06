@@ -41,7 +41,7 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class ErrorService {
-  private static final String POSTFIX_ERROR_MESSAGE_NON_NULL = " AND errorMessage<>null";
+  private static final String POSTFIX_ERROR_MESSAGE_NON_NULL = " AND errorMessage<null";
   public static final String IDENTIFIER = "IDENTIFIER";
   private final BulkOperationRepository operationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
