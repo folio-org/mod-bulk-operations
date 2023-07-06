@@ -151,7 +151,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
           }};
       } else if (option == ITEM_NOTE) {
         return item -> action.getParameters()
-          .stream().filter(p -> StringUtils.equals(p.getKey(), ITEM_NOTE_TYPE_ID_KEY))
+          .stream().filter(parameter -> StringUtils.equals(parameter.getKey(), ITEM_NOTE_TYPE_ID_KEY))
           .findFirst().ifPresent(parameter -> {
             var itemNoteTypeId = parameter.getValue();
             if (item.getNotes() != null) {
@@ -162,13 +162,12 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
     } else if (ADD_TO_EXISTING == action.getType()) {
       if (option == ADMINISTRATIVE_NOTE) {
         return item -> {
-          var notes = item.getAdministrativeNotes();
-          if (notes == null) {
-            notes = new ArrayList<>();
-            item.setAdministrativeNotes(notes);
+          var administrativeNotes = item.getAdministrativeNotes();
+          if (administrativeNotes == null) {
+            administrativeNotes = new ArrayList<>();
+            item.setAdministrativeNotes(administrativeNotes);
           }
-          notes.add(action.getUpdated());
-
+          administrativeNotes.add(action.getUpdated());
         };
       } else if (option == CHECK_IN_NOTE || option == CHECK_OUT_NOTE) {
         var type = option == CHECK_IN_NOTE ? CirculationNote.NoteTypeEnum.IN : CirculationNote.NoteTypeEnum.OUT;
@@ -184,7 +183,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         };
       } else if (option == ITEM_NOTE) {
         return item -> action.getParameters()
-          .stream().filter(p -> StringUtils.equals(p.getKey(), ITEM_NOTE_TYPE_ID_KEY))
+          .stream().filter(parameter -> StringUtils.equals(parameter.getKey(), ITEM_NOTE_TYPE_ID_KEY))
           .findFirst().ifPresent(parameter -> {
             var note = new ItemNote().withItemNoteTypeId(parameter.getValue()).withNote(action.getUpdated());
             var notes = item.getNotes();
