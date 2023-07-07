@@ -465,4 +465,51 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals("typeId2", item.getNotes().get(1).getItemNoteTypeId());
     assertEquals(itemNote2, item.getNotes().get(1).getNote());
   }
+
+  @Test
+  void testClone() {
+    var processor = new ItemDataProcessor(null, null);
+    var administrativeNotes = new ArrayList<String>();
+    administrativeNotes.add("note1");
+    var item1 = new Item().withId("id")
+      .withAdministrativeNotes(administrativeNotes)
+      .withCirculationNotes(new ArrayList<>())
+      .withNotes(new ArrayList<>());
+
+    var item2 = processor.clone(item1);
+    assertTrue(processor.compare(item1, item2));
+
+    item2.getAdministrativeNotes().add("note2");
+    assertFalse(processor.compare(item1, item2));
+    item1.setAdministrativeNotes(null);
+
+    var checkInNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN);
+    var checkOutNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.OUT);
+    item1.getCirculationNotes().add(checkInNote);
+
+    item2 = processor.clone(item1);
+    assertTrue(processor.compare(item1, item2));
+
+    item2.getCirculationNotes().get(0).setNoteType(CirculationNote.NoteTypeEnum.OUT);
+    assertFalse(processor.compare(item1, item2));
+
+    item2.getCirculationNotes().add(checkOutNote);
+    assertFalse(processor.compare(item1, item2));
+
+    item1.setCirculationNotes(null);
+
+    var itemNote1 = new ItemNote().withItemNoteTypeId("typeId").withStaffOnly(true);
+    var itemNote2 = new ItemNote().withItemNoteTypeId("typeId").withStaffOnly(false);
+    item1.getNotes().add(itemNote1);
+
+    item2 = processor.clone(item1);
+    assertTrue(processor.compare(item1, item2));
+
+    item2.getNotes().get(0).setStaffOnly(false);
+    assertFalse(processor.compare(item1, item2));
+
+    item2.getNotes().add(itemNote2);
+
+    assertFalse(processor.compare(item1, item2));
+  }
 }

@@ -22,6 +22,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOV
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.CirculationNote;
@@ -216,8 +217,21 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
 
   @Override
   public Item clone(Item entity) {
-    return entity.toBuilder()
+    var clone = entity.toBuilder()
       .build();
+    if (entity.getAdministrativeNotes() != null) {
+      var administrativeNotes = new ArrayList<>(entity.getAdministrativeNotes());
+      clone.setAdministrativeNotes(administrativeNotes);
+    }
+    if (entity.getCirculationNotes() != null) {
+      var circNotes = entity.getCirculationNotes().stream().map(circulationNote -> circulationNote.toBuilder().build()).toList();
+      clone.setCirculationNotes(new ArrayList<>(circNotes));
+    }
+    if (entity.getNotes() != null) {
+      var itemNotes = entity.getNotes().stream().map(itemNote -> itemNote.toBuilder().build()).toList();
+      clone.setNotes(new ArrayList<>(itemNotes));
+    }
+    return clone;
   }
 
   @Override
