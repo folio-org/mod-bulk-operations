@@ -194,7 +194,7 @@
           "pathPattern": "/bulk-operations/clean-up-log-files",
           "modulePermissions": [
           ],
-          "unit": "day",
+          "unit": "minute",
           "delay": "1"
         }
       ]
