@@ -368,6 +368,20 @@ paths:
               schema:
                 type: string
                 example: Internal server error
+  /bulk-operations/clean-up-log-files:
+    post:
+      description: Removed all files older than 30 days
+      operationId: cleanUpLogFiles
+      responses:
+        '201':
+          description: No content
+        '500':
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Internal server error
 components:
   schemas:
     bulkOperationCollection:
