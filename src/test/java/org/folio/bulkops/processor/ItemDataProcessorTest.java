@@ -3,6 +3,7 @@ package org.folio.bulkops.processor;
 import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STUFF_ONLY;
@@ -464,6 +465,20 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(2, item.getNotes().size());
     assertEquals("typeId2", item.getNotes().get(1).getItemNoteTypeId());
     assertEquals(itemNote2, item.getNotes().get(1).getNote());
+  }
+
+  @Test
+  @SneakyThrows
+  void testFindAndRemoveForAdministrativeNotes() {
+    var administrativeNote1 = "administrative note";
+    var administrativeNote2 = "administrative note 2";
+    var item = new Item().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note 2")).apply(item);
+
+    assertEquals(1, item.getAdministrativeNotes().size());
+    assertEquals(administrativeNote1, item.getAdministrativeNotes().get(0));
   }
 
   @Test

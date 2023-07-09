@@ -5,6 +5,7 @@ import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STUFF_ONLY;
@@ -22,7 +23,6 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOV
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.CirculationNote;
@@ -193,6 +193,33 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
               item.setNotes(notes);
             }
             notes.add(note);
+          });
+      }
+    } else if (FIND_AND_REMOVE_THESE == action.getType()) {
+      if (option == ADMINISTRATIVE_NOTE) {
+        return item -> {
+          if (item.getAdministrativeNotes() != null) {
+            var administrativeNotes = item.getAdministrativeNotes().stream()
+              .filter(administrativeNote -> !StringUtils.contains(administrativeNote, action.getInitial())).toList();
+            item.setAdministrativeNotes(administrativeNotes);
+          }};
+      } else if (option == CHECK_IN_NOTE || option == CHECK_OUT_NOTE) {
+        return item -> {
+          if (item.getCirculationNotes() != null) {
+            var circulationNotes = item.getCirculationNotes().stream()
+              .filter(circulationNote -> !StringUtils.contains(circulationNote.getNote(), action.getInitial())).toList();
+            item.setCirculationNotes(circulationNotes);
+          }};
+      } else if (option == ITEM_NOTE) {
+        return item -> action.getParameters()
+          .stream().filter(parameter -> StringUtils.equals(parameter.getKey(), ITEM_NOTE_TYPE_ID_KEY))
+          .findFirst().ifPresent(parameter -> {
+            if (item.getNotes() != null) {
+              var itemNotes = item.getNotes().stream()
+                .filter(note -> !(StringUtils.equals(note.getItemNoteTypeId(), parameter.getValue())
+                  && StringUtils.contains(note.getNote(), action.getInitial()))).toList();
+              item.setNotes(itemNotes);
+            }
           });
       }
     } else if (CLEAR_FIELD == action.getType()) {
