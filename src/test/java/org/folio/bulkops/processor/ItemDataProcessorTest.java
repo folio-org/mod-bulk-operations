@@ -7,7 +7,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THES
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
-import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STUFF_ONLY;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_IN_NOTE;
@@ -317,7 +317,7 @@ class ItemDataProcessorTest extends BaseTest {
     parameter.setValue("typeId");
     var processor = new ItemDataProcessor(null, null);
 
-    processor.updater(ITEM_NOTE, new Action().type(REMOVE_MARK_AS_STUFF_ONLY).parameters(List.of(parameter))).apply(item);
+    processor.updater(ITEM_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(item);
 
     assertFalse(item.getNotes().get(0).getStaffOnly());
   }
@@ -352,13 +352,13 @@ class ItemDataProcessorTest extends BaseTest {
     parameter.setValue("typeId");
     var processor = new ItemDataProcessor(null, null);
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_MARK_AS_STUFF_ONLY).parameters(List.of(parameter))).apply(item);
+    processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(item);
    assertFalse(item.getCirculationNotes().get(0).getStaffOnly());
 
     circulationNote.setStaffOnly(true);
     circulationNote.setNoteType(CirculationNote.NoteTypeEnum.OUT);
 
-    processor.updater(CHECK_OUT_NOTE, new Action().type(REMOVE_MARK_AS_STUFF_ONLY).parameters(List.of(parameter))).apply(item);
+    processor.updater(CHECK_OUT_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(item);
     assertFalse(item.getCirculationNotes().get(0).getStaffOnly());
   }
 

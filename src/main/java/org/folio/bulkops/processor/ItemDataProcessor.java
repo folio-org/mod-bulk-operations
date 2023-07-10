@@ -9,7 +9,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THES
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
-import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STUFF_ONLY;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
@@ -103,7 +103,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
       if (option == SUPPRESS_FROM_DISCOVERY) return item -> item.setDiscoverySuppress(true);
     } else if (SET_TO_FALSE == action.getType()) {
       if (option == SUPPRESS_FROM_DISCOVERY) return item -> item.setDiscoverySuppress(false);
-    } else if (MARK_AS_STAFF_ONLY == action.getType() || REMOVE_MARK_AS_STUFF_ONLY == action.getType()) {
+    } else if (MARK_AS_STAFF_ONLY == action.getType() || REMOVE_MARK_AS_STAFF_ONLY == action.getType()) {
       var markAsStaffValue = action.getType() == MARK_AS_STAFF_ONLY;
       if (option == CHECK_IN_NOTE) {
         return item -> {
