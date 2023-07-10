@@ -200,14 +200,14 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         return item -> {
           if (item.getAdministrativeNotes() != null) {
             var administrativeNotes = item.getAdministrativeNotes().stream()
-              .filter(administrativeNote -> !StringUtils.contains(administrativeNote, action.getInitial())).toList();
+              .filter(administrativeNote -> !StringUtils.equals(administrativeNote, action.getInitial())).toList();
             item.setAdministrativeNotes(administrativeNotes);
           }};
       } else if (option == CHECK_IN_NOTE || option == CHECK_OUT_NOTE) {
         return item -> {
           if (item.getCirculationNotes() != null) {
             var circulationNotes = item.getCirculationNotes().stream()
-              .filter(circulationNote -> !StringUtils.contains(circulationNote.getNote(), action.getInitial())).toList();
+              .filter(circulationNote -> !StringUtils.equals(circulationNote.getNote(), action.getInitial())).toList();
             item.setCirculationNotes(circulationNotes);
           }};
       } else if (option == ITEM_NOTE) {
@@ -217,7 +217,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
             if (item.getNotes() != null) {
               var itemNotes = item.getNotes().stream()
                 .filter(note -> !(StringUtils.equals(note.getItemNoteTypeId(), parameter.getValue())
-                  && StringUtils.contains(note.getNote(), action.getInitial()))).toList();
+                  && StringUtils.equals(note.getNote(), action.getInitial()))).toList();
               item.setNotes(itemNotes);
             }
           });
