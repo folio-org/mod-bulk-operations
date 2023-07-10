@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STUFF_ONLY;
@@ -219,6 +220,40 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
                 .filter(note -> !(StringUtils.equals(note.getItemNoteTypeId(), parameter.getValue())
                   && StringUtils.equals(note.getNote(), action.getInitial()))).toList();
               item.setNotes(itemNotes);
+            }
+          });
+      }
+    } else if (FIND_AND_REPLACE == action.getType()) {
+      if (option == ADMINISTRATIVE_NOTE) {
+        return item -> {
+          if (item.getAdministrativeNotes() != null) {
+            var administrativeNotes = item.getAdministrativeNotes().stream()
+              .map(administrativeNote -> {
+                if (StringUtils.equals(administrativeNote, action.getInitial())) {
+                  return action.getUpdated();
+                }
+                return administrativeNote;
+              }).toList();
+            item.setAdministrativeNotes(administrativeNotes);
+          }
+        };
+      } else if (option == CHECK_IN_NOTE || option == CHECK_OUT_NOTE) {
+        return item -> {
+          if (item.getCirculationNotes() != null) {
+            item.getCirculationNotes().forEach(circulationNote -> {
+              if (StringUtils.equals(circulationNote.getNote(), action.getInitial())) circulationNote.setNote(action.getUpdated());
+            });
+          }
+        };
+      } else if (option == ITEM_NOTE) {
+        return item -> action.getParameters()
+          .stream().filter(parameter -> StringUtils.equals(parameter.getKey(), ITEM_NOTE_TYPE_ID_KEY))
+          .findFirst().ifPresent(parameter -> {
+            if (item.getNotes() != null) {
+              item.getNotes().forEach(itemNote -> {
+                if (StringUtils.equals(itemNote.getItemNoteTypeId(), parameter.getValue())
+                  && StringUtils.equals(itemNote.getNote(), action.getInitial())) itemNote.setNote(action.getUpdated());
+              });
             }
           });
       }

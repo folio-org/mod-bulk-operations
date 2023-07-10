@@ -4,6 +4,7 @@ import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STUFF_ONLY;
@@ -478,7 +479,7 @@ class ItemDataProcessorTest extends BaseTest {
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("administrative note")).apply(item);
     assertEquals(2, item.getAdministrativeNotes().size());
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("administrative note 2")).apply(item);
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial(administrativeNote2)).apply(item);
     assertEquals(1, item.getAdministrativeNotes().size());
     assertEquals(administrativeNote1, item.getAdministrativeNotes().get(0));
   }
@@ -523,6 +524,57 @@ class ItemDataProcessorTest extends BaseTest {
     processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("itemNote2")
       .parameters(List.of(parameter))).apply(item);
     assertEquals(1, item.getNotes().size());
+  }
+
+  @Test
+  @SneakyThrows
+  void testFindAndReplaceForAdministrativeNotes() {
+    var administrativeNote1 = "administrative note 1";
+    var administrativeNote2 = "administrative note 2";
+    var administrativeNote3 = "administrative note 3";
+    var item = new Item().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REPLACE)
+      .initial(administrativeNote1).updated(administrativeNote3)).apply(item);
+    assertEquals(2, item.getAdministrativeNotes().size());
+    assertEquals(administrativeNote3, item.getAdministrativeNotes().get(0));
+    assertEquals(administrativeNote2, item.getAdministrativeNotes().get(1));
+  }
+
+  @Test
+  @SneakyThrows
+  void testFindAndReplaceForCirculationNotes() {
+    var checkInNote = new CirculationNote()
+      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("in");
+    var checkOutNote = new CirculationNote()
+      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("out");
+    var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
+      .initial("in").updated("check in")).apply(item);
+    assertEquals(2, item.getCirculationNotes().size());
+    assertEquals("check in", item.getCirculationNotes().get(0).getNote());
+    assertEquals("out", item.getCirculationNotes().get(1).getNote());
+  }
+
+  @Test
+  @SneakyThrows
+  void testFindAndReplaceForItemNotes() {
+    var itemNote1 = new ItemNote().withItemNoteTypeId("typeId1").withNote("itemNote1");
+    var itemNote2 = new ItemNote().withItemNoteTypeId("typeId2").withNote("itemNote1");
+    var parameter = new Parameter();
+    parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId1");
+    var item = new Item().withNotes(List.of(itemNote1, itemNote2));
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REPLACE).parameters(List.of(parameter))
+      .initial("itemNote1").updated("itemNote3")).apply(item);
+
+    assertEquals("itemNote3", item.getNotes().get(0).getNote());
+    assertEquals("itemNote1", item.getNotes().get(1).getNote());
   }
 
   @Test
