@@ -2,12 +2,14 @@ package org.folio.bulkops.processor;
 
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
+import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
@@ -23,7 +25,9 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOV
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.CirculationNote;
@@ -48,6 +52,10 @@ import lombok.extern.log4j.Log4j2;
 public class ItemDataProcessor extends AbstractDataProcessor<Item> {
 
   public static final String ITEM_NOTE_TYPE_ID_KEY = "ITEM_NOTE_TYPE_ID_KEY";
+  public static final String ADMINISTRATIVE_NOTE_TYPE = ADMINISTRATIVE_NOTE.getValue();
+  public static final String CHECK_IN_NOTE_TYPE = CHECK_IN_NOTE.getValue();
+  public static final String CHECK_OUT_NOTE_TYPE = CHECK_OUT_NOTE.getValue();
+  private static final List<String> NOTES_TYPES_TO_UPDATE = List.of(ADMINISTRATIVE_NOTE_TYPE, CHECK_IN_NOTE_TYPE, CHECK_OUT_NOTE_TYPE);
 
   private final HoldingsReferenceService holdingsReferenceService;
   private final ItemReferenceService itemReferenceService;
@@ -176,7 +184,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         return item -> {
           var circulationNotes = item.getCirculationNotes();
           var circulationNote = new CirculationNote().withNoteType(type)
-            .withNote(action.getUpdated());
+            .withNote(action.getUpdated()).withStaffOnly(false);
           if (circulationNotes == null) {
             circulationNotes = new ArrayList<>();
             item.setCirculationNotes(circulationNotes);
@@ -257,6 +265,18 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
             }
           });
       }
+    } else if (CHANGE_TYPE == action.getType()) {
+      if (option == ADMINISTRATIVE_NOTE) {
+        return item -> {
+          var noteTypeToUse = action.getUpdated();
+          changeNoteTypeForAdministrativeNotes(item, noteTypeToUse);
+        };
+      } else if (option == CHECK_IN_NOTE || option == CHECK_OUT_NOTE) {
+        return item -> {
+          var noteTypeToUse = action.getUpdated();
+          changeNoteTypeForCirculationNotes(item, noteTypeToUse, option);
+        };
+      }
     } else if (CLEAR_FIELD == action.getType()) {
       return switch (option) {
         case PERMANENT_LOCATION -> item -> {
@@ -313,6 +333,47 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
       return itemReferenceService.getLocationById(holdingsEffectiveLocationId);
     } else {
       return isNull(item.getTemporaryLocation()) ? item.getPermanentLocation() : item.getTemporaryLocation();
+    }
+  }
+
+  private void changeNoteTypeForAdministrativeNotes(Item item, String noteTypeToUse) {
+    if (item.getAdministrativeNotes() != null) {
+      if (item.getCirculationNotes() == null) item.setCirculationNotes(new ArrayList<>());
+      if (item.getNotes() == null) item.setNotes(new ArrayList<>());
+      item.getAdministrativeNotes().forEach(administrativeNote -> {
+          if (NOTES_TYPES_TO_UPDATE.contains(noteTypeToUse)) {
+            if (CHECK_IN_NOTE_TYPE.equals(noteTypeToUse)) item.getCirculationNotes().add(new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN).withNote(administrativeNote).withStaffOnly(false));
+            if (CHECK_OUT_NOTE_TYPE.equals(noteTypeToUse)) item.getCirculationNotes().add(new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote(administrativeNote).withStaffOnly(false));
+          } else {
+            item.getNotes().add(new ItemNote().withItemNoteTypeId(noteTypeToUse).withNote(administrativeNote));
+          }
+      });
+      item.setAdministrativeNotes(new ArrayList<>());
+    }
+  }
+
+  private void changeNoteTypeForCirculationNotes(Item item, String noteTypeToUse, UpdateOptionType optionType) {
+    if (item.getCirculationNotes() != null) {
+      CirculationNote.NoteTypeEnum typeForChange = optionType == CHECK_IN_NOTE ? CirculationNote.NoteTypeEnum.IN : CirculationNote.NoteTypeEnum.OUT;
+      if (CHECK_OUT_NOTE_TYPE.equals(noteTypeToUse) || CHECK_IN_NOTE_TYPE.equals(noteTypeToUse)) {
+        var useType = typeForChange == CirculationNote.NoteTypeEnum.IN ? CirculationNote.NoteTypeEnum.OUT : CirculationNote.NoteTypeEnum.IN;
+        item.getCirculationNotes().forEach(note -> note.setNoteType(useType));
+      } else {
+        var circNotesWithoutTypeForChange = item.getCirculationNotes().stream().filter(circulationNote -> circulationNote.getNoteType() != typeForChange).collect(toCollection(ArrayList::new));
+        var circNotesWithTypeForChange = item.getCirculationNotes().stream().filter(circulationNote -> circulationNote.getNoteType() == typeForChange).toList();
+        if (!circNotesWithTypeForChange.isEmpty()) {
+          if (item.getAdministrativeNotes() == null) item.setAdministrativeNotes(new ArrayList<>());
+          if (item.getNotes() == null) item.setNotes(new ArrayList<>());
+          circNotesWithTypeForChange.forEach(note -> {
+            if (ADMINISTRATIVE_NOTE_TYPE.equals(noteTypeToUse)) {
+              item.getAdministrativeNotes().add(note.getNote());
+            } else {
+              item.getNotes().add(new ItemNote().withItemNoteTypeId(noteTypeToUse).withNote(note.getNote()));
+            }
+          });
+          item.setCirculationNotes(circNotesWithoutTypeForChange);
+        }
+      }
     }
   }
 }

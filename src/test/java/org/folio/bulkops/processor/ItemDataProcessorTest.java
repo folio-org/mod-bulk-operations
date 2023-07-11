@@ -2,6 +2,7 @@ package org.folio.bulkops.processor;
 
 import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
+import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
@@ -19,6 +20,9 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
+import static org.folio.bulkops.processor.ItemDataProcessor.ADMINISTRATIVE_NOTE_TYPE;
+import static org.folio.bulkops.processor.ItemDataProcessor.CHECK_IN_NOTE_TYPE;
+import static org.folio.bulkops.processor.ItemDataProcessor.CHECK_OUT_NOTE_TYPE;
 import static org.folio.bulkops.processor.ItemDataProcessor.ITEM_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.service.ItemReferenceService.MODULE_NAME;
 import static org.folio.bulkops.service.ItemReferenceService.STATUSES_CONFIG_NAME;
@@ -576,6 +580,79 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals("itemNote3", item.getNotes().get(0).getNote());
     assertEquals("itemNote1", item.getNotes().get(1).getNote());
   }
+
+  @Test
+  @SneakyThrows
+  void testChangeTypeForAdministrativeNotes() {
+    var administrativeNote = "note";
+    var item = new Item().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote)));
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
+      .updated(CHECK_IN_NOTE_TYPE)).apply(item);
+    assertEquals(0, item.getAdministrativeNotes().size());
+    assertEquals(1, item.getCirculationNotes().size());
+    assertEquals("note", item.getCirculationNotes().get(0).getNote());
+    assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
+
+    item.setCirculationNotes(null);
+    item.setAdministrativeNotes(List.of(administrativeNote));
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
+      .updated(CHECK_OUT_NOTE_TYPE)).apply(item);
+    assertEquals(0, item.getAdministrativeNotes().size());
+    assertEquals(1, item.getCirculationNotes().size());
+    assertEquals("note", item.getCirculationNotes().get(0).getNote());
+    assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
+
+    item.setCirculationNotes(null);
+    item.setAdministrativeNotes(List.of(administrativeNote));
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
+      .updated("typeId")).apply(item);
+
+    assertEquals(0, item.getAdministrativeNotes().size());
+    assertEquals(1, item.getNotes().size());
+    assertEquals("note", item.getNotes().get(0).getNote());
+    assertEquals("typeId", item.getNotes().get(0).getItemNoteTypeId());
+  }
+
+  @Test
+  @SneakyThrows
+  void testChangeNoteTypeForCirculationNotes() {
+    var checkInNote = new CirculationNote()
+      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note");
+    var checkOutNote = new CirculationNote()
+      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note 2");
+    var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(CHECK_IN_NOTE, new Action().type(CHANGE_TYPE)
+      .updated(CHECK_OUT_NOTE_TYPE)).apply(item);
+    assertEquals(2, item.getCirculationNotes().size());
+    assertEquals("note", item.getCirculationNotes().get(0).getNote());
+    assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
+
+    checkInNote.setNoteType(CirculationNote.NoteTypeEnum.IN);
+
+    processor.updater(CHECK_IN_NOTE, new Action().type(CHANGE_TYPE)
+      .updated(ADMINISTRATIVE_NOTE_TYPE)).apply(item);
+    assertEquals(1, item.getCirculationNotes().size());
+    assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
+    assertEquals(1, item.getAdministrativeNotes().size());
+    assertEquals("note", item.getAdministrativeNotes().get(0));
+
+    item.setAdministrativeNotes(null);
+    item.setCirculationNotes(List.of(checkInNote, checkOutNote));
+
+    processor.updater(CHECK_IN_NOTE, new Action().type(CHANGE_TYPE)
+      .updated("typeId")).apply(item);
+    assertEquals(1, item.getCirculationNotes().size());
+    assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
+    assertEquals(1, item.getNotes().size());
+    assertEquals("note", item.getNotes().get(0).getNote());
+    assertEquals("typeId", item.getNotes().get(0).getItemNoteTypeId());
+ }
 
   @Test
   void testClone() {

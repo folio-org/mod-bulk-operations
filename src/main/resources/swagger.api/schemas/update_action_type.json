@@ -16,7 +16,8 @@
       "SET_TO_FALSE_INCLUDING_ITEMS",
       "MARK_AS_STAFF_ONLY",
       "REMOVE_MARK_AS_STAFF_ONLY",
-      "REMOVE_ALL"
+      "REMOVE_ALL",
+      "CHANGE_TYPE"
     ]
   }
 }
