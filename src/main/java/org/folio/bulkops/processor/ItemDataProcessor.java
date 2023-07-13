@@ -388,8 +388,8 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
 
   private void changeNoteTypeForItemNotes(Item item, String noteTypeToUse, String noteTypeId) {
     if (item.getNotes() != null) {
-      var notesWithoutTypeForChange = item.getNotes().stream().filter(note -> note.getItemNoteTypeId() != noteTypeId).collect(toCollection(ArrayList::new));
-      var notesWithTypeForChange = item.getNotes().stream().filter(note -> note.getItemNoteTypeId() == noteTypeId).toList();
+      var notesWithoutTypeForChange = item.getNotes().stream().filter(note -> !StringUtils.equals(note.getItemNoteTypeId(), noteTypeId)).collect(toCollection(ArrayList::new));
+      var notesWithTypeForChange = item.getNotes().stream().filter(note -> StringUtils.equals(note.getItemNoteTypeId(), noteTypeId)).toList();
       if (!notesWithTypeForChange.isEmpty()) {
         if (item.getAdministrativeNotes() == null) item.setAdministrativeNotes(new ArrayList<>());
         if (item.getCirculationNotes() == null) item.setCirculationNotes(new ArrayList<>());
