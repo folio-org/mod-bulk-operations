@@ -388,18 +388,25 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
 
   private void changeNoteTypeForItemNotes(Item item, String noteTypeToUse, String noteTypeId) {
     if (item.getNotes() != null) {
-      var notesWithoutTypeForChange = item.getNotes().stream().filter(note -> !StringUtils.equals(note.getItemNoteTypeId(), noteTypeId)).collect(toCollection(ArrayList::new));
       var notesWithTypeForChange = item.getNotes().stream().filter(note -> StringUtils.equals(note.getItemNoteTypeId(), noteTypeId)).toList();
-      if (!notesWithTypeForChange.isEmpty()) {
-        if (item.getAdministrativeNotes() == null) item.setAdministrativeNotes(new ArrayList<>());
-        if (item.getCirculationNotes() == null) item.setCirculationNotes(new ArrayList<>());
-        notesWithTypeForChange.forEach(note -> {
-          if (CHECK_IN_NOTE_TYPE.equals(noteTypeToUse)) item.getCirculationNotes().add(new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN).withNote(note.getNote()).withStaffOnly(false));
-          if (CHECK_OUT_NOTE_TYPE.equals(noteTypeToUse)) item.getCirculationNotes().add(new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote(note.getNote()).withStaffOnly(false));
-          if (ADMINISTRATIVE_NOTE_TYPE.equals(noteTypeToUse)) item.getAdministrativeNotes().add(note.getNote());
-        });
-        item.setNotes(notesWithoutTypeForChange);
+      if (NOTES_TYPES_TO_UPDATE.contains(noteTypeToUse)) {
+        if (!notesWithTypeForChange.isEmpty()) {
+          var notesWithoutTypeForChange = item.getNotes().stream().filter(note -> !StringUtils.equals(note.getItemNoteTypeId(), noteTypeId)).collect(toCollection(ArrayList::new));
+          if (item.getAdministrativeNotes() == null) item.setAdministrativeNotes(new ArrayList<>());
+          if (item.getCirculationNotes() == null) item.setCirculationNotes(new ArrayList<>());
+          notesWithTypeForChange.forEach(note -> {
+            if (CHECK_IN_NOTE_TYPE.equals(noteTypeToUse))
+              item.getCirculationNotes().add(new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN).withNote(note.getNote()).withStaffOnly(false));
+            if (CHECK_OUT_NOTE_TYPE.equals(noteTypeToUse))
+              item.getCirculationNotes().add(new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote(note.getNote()).withStaffOnly(false));
+            if (ADMINISTRATIVE_NOTE_TYPE.equals(noteTypeToUse)) item.getAdministrativeNotes().add(note.getNote());
+          });
+          item.setNotes(notesWithoutTypeForChange);
+        }
+      } else {
+        notesWithTypeForChange.forEach(note -> note.setItemNoteTypeId(noteTypeToUse));
       }
     }
   }
 }
+

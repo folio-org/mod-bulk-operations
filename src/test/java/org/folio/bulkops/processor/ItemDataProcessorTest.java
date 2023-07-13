@@ -691,6 +691,17 @@ class ItemDataProcessorTest extends BaseTest {
    assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
    assertEquals(1, item.getNotes().size());
    assertEquals("itemNote2", item.getNotes().get(0).getNote());
+
+   item.setCirculationNotes(null);
+   item.setNotes(List.of(itemNote1, itemNote2));
+
+   processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated("typeId3").parameters(List.of(parameter))).apply(item);
+   assertEquals(2, item.getNotes().size());
+   assertEquals("itemNote1", item.getNotes().get(0).getNote());
+   assertEquals("typeId3", item.getNotes().get(0).getItemNoteTypeId());
+   assertEquals("itemNote2", item.getNotes().get(1).getNote());
+   assertEquals("typeId2", item.getNotes().get(1).getItemNoteTypeId());
+
  }
 
   @Test
