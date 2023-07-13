@@ -654,6 +654,45 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals("typeId", item.getNotes().get(0).getItemNoteTypeId());
  }
 
+ @Test
+ @SneakyThrows
+ void testChangeNoteTypeForItemNotes() {
+   var itemNote1 = new ItemNote().withItemNoteTypeId("typeId1").withNote("itemNote1");
+   var itemNote2 = new ItemNote().withItemNoteTypeId("typeId2").withNote("itemNote2");
+   var parameter = new Parameter();
+   parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
+   parameter.setValue("typeId1");
+   var item = new Item().withNotes(List.of(itemNote1, itemNote2));
+   var processor = new ItemDataProcessor(null, null);
+
+   processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(ADMINISTRATIVE_NOTE_TYPE).parameters(List.of(parameter))).apply(item);
+
+   assertEquals(1, item.getAdministrativeNotes().size());
+   assertEquals("itemNote1", item.getAdministrativeNotes().get(0));
+   assertEquals(1, item.getNotes().size());
+   assertEquals("itemNote2", item.getNotes().get(0).getNote());
+
+   item.setAdministrativeNotes(null);
+   item.setNotes(List.of(itemNote1, itemNote2));
+
+   processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(CHECK_IN_NOTE_TYPE).parameters(List.of(parameter))).apply(item);
+   assertEquals(1, item.getCirculationNotes().size());
+   assertEquals("itemNote1", item.getCirculationNotes().get(0).getNote());
+   assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
+   assertEquals(1, item.getNotes().size());
+   assertEquals("itemNote2", item.getNotes().get(0).getNote());
+
+   item.setCirculationNotes(null);
+   item.setNotes(List.of(itemNote1, itemNote2));
+
+   processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(CHECK_OUT_NOTE_TYPE).parameters(List.of(parameter))).apply(item);
+   assertEquals(1, item.getCirculationNotes().size());
+   assertEquals("itemNote1", item.getCirculationNotes().get(0).getNote());
+   assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
+   assertEquals(1, item.getNotes().size());
+   assertEquals("itemNote2", item.getNotes().get(0).getNote());
+ }
+
   @Test
   void testClone() {
     var processor = new ItemDataProcessor(null, null);

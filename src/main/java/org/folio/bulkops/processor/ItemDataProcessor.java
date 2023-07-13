@@ -276,6 +276,15 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
           var noteTypeToUse = action.getUpdated();
           changeNoteTypeForCirculationNotes(item, noteTypeToUse, option);
         };
+      } else if (option == ITEM_NOTE) {
+        return item -> {
+          action.getParameters()
+            .stream().filter(parameter -> StringUtils.equals(parameter.getKey(), ITEM_NOTE_TYPE_ID_KEY))
+            .findFirst().ifPresent(parameter -> {
+              var noteTypeToUse = action.getUpdated();
+              changeNoteTypeForItemNotes(item, noteTypeToUse, parameter.getValue());
+            });
+        };
       }
     } else if (CLEAR_FIELD == action.getType()) {
       return switch (option) {
@@ -373,6 +382,23 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
           });
           item.setCirculationNotes(circNotesWithoutTypeForChange);
         }
+      }
+    }
+  }
+
+  private void changeNoteTypeForItemNotes(Item item, String noteTypeToUse, String noteTypeId) {
+    if (item.getNotes() != null) {
+      var notesWithoutTypeForChange = item.getNotes().stream().filter(note -> note.getItemNoteTypeId() != noteTypeId).collect(toCollection(ArrayList::new));
+      var notesWithTypeForChange = item.getNotes().stream().filter(note -> note.getItemNoteTypeId() == noteTypeId).toList();
+      if (!notesWithTypeForChange.isEmpty()) {
+        if (item.getAdministrativeNotes() == null) item.setAdministrativeNotes(new ArrayList<>());
+        if (item.getCirculationNotes() == null) item.setCirculationNotes(new ArrayList<>());
+        notesWithTypeForChange.forEach(note -> {
+          if (CHECK_IN_NOTE_TYPE.equals(noteTypeToUse)) item.getCirculationNotes().add(new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN).withNote(note.getNote()).withStaffOnly(false));
+          if (CHECK_OUT_NOTE_TYPE.equals(noteTypeToUse)) item.getCirculationNotes().add(new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote(note.getNote()).withStaffOnly(false));
+          if (ADMINISTRATIVE_NOTE_TYPE.equals(noteTypeToUse)) item.getAdministrativeNotes().add(note.getNote());
+        });
+        item.setNotes(notesWithoutTypeForChange);
       }
     }
   }
