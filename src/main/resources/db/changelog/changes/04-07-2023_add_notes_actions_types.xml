@@ -6,7 +6,7 @@
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
 
-  <changeSet id="04-07-2023_add_notes_actions_types" author="firebird">
+  <changeSet id="13-07-2023_add_notes_actions_types" author="firebird">
     <sqlFile path="changes/04-07-2023_add_notes_actions_types.sql" relativeToChangelogFile="true" />
   </changeSet>
 
