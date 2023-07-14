@@ -358,7 +358,7 @@ class ItemDataProcessorTest extends BaseTest {
     var processor = new ItemDataProcessor(null, null);
 
     processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(item);
-   assertFalse(item.getCirculationNotes().get(0).getStaffOnly());
+    assertFalse(item.getCirculationNotes().get(0).getStaffOnly());
 
     circulationNote.setStaffOnly(true);
     circulationNote.setNoteType(CirculationNote.NoteTypeEnum.OUT);

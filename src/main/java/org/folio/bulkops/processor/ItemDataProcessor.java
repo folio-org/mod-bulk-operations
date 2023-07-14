@@ -185,7 +185,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         return item -> {
           var circulationNotes = item.getCirculationNotes();
           var circulationNote = new CirculationNote().withNoteType(type)
-            .withNote(action.getUpdated()).withStaffOnly(false).withId(UUID.randomUUID().toString());
+            .withNote(action.getUpdated()).withStaffOnly(false);
           if (circulationNotes == null) {
             circulationNotes = new ArrayList<>();
             item.setCirculationNotes(circulationNotes);
@@ -295,7 +295,6 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
             var circNotesToDuplicate = item.getCirculationNotes().stream().filter(circNote -> circNote.getNoteType() != circNoteTypeToDuplicate).toList();
             circNotesToDuplicate.forEach(circNote -> {
               var createdNote = circNote.toBuilder().build();
-              if (StringUtils.isNotEmpty(createdNote.getId())) createdNote.setId(UUID.randomUUID().toString());
               createdNote.setNoteType(circNoteTypeToDuplicate);
               item.getCirculationNotes().add(createdNote);
             });
