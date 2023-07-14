@@ -295,6 +295,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
             var circNotesToDuplicate = item.getCirculationNotes().stream().filter(circNote -> circNote.getNoteType() != circNoteTypeToDuplicate).toList();
             circNotesToDuplicate.forEach(circNote -> {
               var createdNote = circNote.toBuilder().build();
+              if (StringUtils.isNotEmpty(createdNote.getId())) createdNote.setId(null);
               createdNote.setNoteType(circNoteTypeToDuplicate);
               item.getCirculationNotes().add(createdNote);
             });
