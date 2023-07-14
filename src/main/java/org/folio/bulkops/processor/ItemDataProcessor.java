@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
+import static org.folio.bulkops.domain.dto.UpdateActionType.DUPLICATE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
@@ -27,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.CirculationNote;
@@ -184,7 +185,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         return item -> {
           var circulationNotes = item.getCirculationNotes();
           var circulationNote = new CirculationNote().withNoteType(type)
-            .withNote(action.getUpdated()).withStaffOnly(false);
+            .withNote(action.getUpdated()).withStaffOnly(false).withId(UUID.randomUUID().toString());
           if (circulationNotes == null) {
             circulationNotes = new ArrayList<>();
             item.setCirculationNotes(circulationNotes);
@@ -277,15 +278,30 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
           changeNoteTypeForCirculationNotes(item, noteTypeToUse, option);
         };
       } else if (option == ITEM_NOTE) {
-        return item -> {
+        return item ->
           action.getParameters()
             .stream().filter(parameter -> StringUtils.equals(parameter.getKey(), ITEM_NOTE_TYPE_ID_KEY))
             .findFirst().ifPresent(parameter -> {
               var noteTypeToUse = action.getUpdated();
               changeNoteTypeForItemNotes(item, noteTypeToUse, parameter.getValue());
             });
-        };
       }
+    } else if (DUPLICATE == action.getType()) {
+      return item -> {
+        if (option == CHECK_IN_NOTE || option == CHECK_OUT_NOTE) {
+          var noteTypeToUse = action.getUpdated();
+          if (item.getCirculationNotes() != null) {
+            var circNoteTypeToDuplicate = CHECK_OUT_NOTE_TYPE.equals(noteTypeToUse) ? CirculationNote.NoteTypeEnum.OUT : CirculationNote.NoteTypeEnum.IN;
+            var circNotesToDuplicate = item.getCirculationNotes().stream().filter(circNote -> circNote.getNoteType() != circNoteTypeToDuplicate).toList();
+            circNotesToDuplicate.forEach(circNote -> {
+              var createdNote = circNote.toBuilder().build();
+              if (StringUtils.isNotEmpty(createdNote.getId())) createdNote.setId(UUID.randomUUID().toString());
+              createdNote.setNoteType(circNoteTypeToDuplicate);
+              item.getCirculationNotes().add(createdNote);
+            });
+          }
+        }
+      };
     } else if (CLEAR_FIELD == action.getType()) {
       return switch (option) {
         case PERMANENT_LOCATION -> item -> {
