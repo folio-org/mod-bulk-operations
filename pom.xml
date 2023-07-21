@@ -41,6 +41,8 @@
     <folio-s3-client.version>1.1.0-SNAPSHOT</folio-s3-client.version>
     <opencsv.version>5.7.1</opencsv.version>
     <feign-jackson.version>12.1</feign-jackson.version>
+    <aws-sdk-java.version>2.19.2</aws-sdk-java.version>
+    <hypersistence-utils-hibernate-60.version>3.5.0</hypersistence-utils-hibernate-60.version>
     <!-- Test dependencies versions -->
     <testcontainer.version>1.17.6</testcontainer.version>
     <wiremock.version>2.35.0</wiremock.version>
@@ -155,12 +157,12 @@
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>aws-sdk-java</artifactId>
-      <version>2.19.2</version>
+      <version>${aws-sdk-java.version}</version>
     </dependency>
     <dependency>
       <groupId>io.hypersistence</groupId>
       <artifactId>hypersistence-utils-hibernate-60</artifactId>
-      <version>3.5.0</version>
+      <version>${hypersistence-utils-hibernate-60.version}</version>
     </dependency>
     <!-- Test dependencies -->
     <dependency>
