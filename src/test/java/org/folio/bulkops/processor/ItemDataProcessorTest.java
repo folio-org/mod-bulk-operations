@@ -551,17 +551,29 @@ class ItemDataProcessorTest extends BaseTest {
   @SneakyThrows
   void testFindAndReplaceForCirculationNotes() {
     var checkInNote = new CirculationNote()
-      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("in");
+      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note");
     var checkOutNote = new CirculationNote()
-      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("out");
+      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note");
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
     var processor = new ItemDataProcessor(null, null);
 
     processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
-      .initial("in").updated("check in")).apply(item);
+      .initial("note").updated("note 2")).apply(item);
     assertEquals(2, item.getCirculationNotes().size());
-    assertEquals("check in", item.getCirculationNotes().get(0).getNote());
-    assertEquals("out", item.getCirculationNotes().get(1).getNote());
+    assertEquals("note 2", item.getCirculationNotes().get(0).getNote());
+    assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
+    assertEquals("note", item.getCirculationNotes().get(1).getNote());
+    assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(1).getNoteType());
+
+    checkInNote.setNote("note");
+
+    processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REPLACE)
+      .initial("note").updated("note 2")).apply(item);
+    assertEquals(2, item.getCirculationNotes().size());
+    assertEquals("note", item.getCirculationNotes().get(0).getNote());
+    assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
+    assertEquals("note 2", item.getCirculationNotes().get(1).getNote());
+    assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(1).getNoteType());
   }
 
   @Test

@@ -246,10 +246,12 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
           }
         };
       } else if (option == CHECK_IN_NOTE || option == CHECK_OUT_NOTE) {
+        var type = option == CHECK_IN_NOTE ? CirculationNote.NoteTypeEnum.IN : CirculationNote.NoteTypeEnum.OUT;
         return item -> {
           if (item.getCirculationNotes() != null) {
             item.getCirculationNotes().forEach(circulationNote -> {
-              if (StringUtils.equals(circulationNote.getNote(), action.getInitial())) circulationNote.setNote(action.getUpdated());
+              if (StringUtils.equals(circulationNote.getNote(), action.getInitial()) && type == circulationNote.getNoteType())
+                circulationNote.setNote(action.getUpdated());
             });
           }
         };
