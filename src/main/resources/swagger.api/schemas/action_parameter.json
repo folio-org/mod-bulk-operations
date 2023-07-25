@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Parameter for action",
+  "Parameter": {
+    "description": "Parameter for action",
+    "type": "object",
+    "properties": {
+      "key" : {
+        "description": "Key of parameter",
+        "type": "string"
+      },
+      "value": {
+        "description": "Value of parameter",
+        "type": "string"
+      }
+    },
+    "required": [
+      "key", "value"
+    ],
+    "additionalProperties": false
+  }
+}

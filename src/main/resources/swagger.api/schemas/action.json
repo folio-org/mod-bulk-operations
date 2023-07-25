@@ -15,6 +15,13 @@
       "updated": {
         "description": "Updated value",
         "type": "string"
+      },
+      "parameters": {
+        "type": "array",
+        "items": {
+          "$ref": "action_parameter.json#/Parameter"
+        },
+        "minItems": 1
       }
     },
     "required": [
