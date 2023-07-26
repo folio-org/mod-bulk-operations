@@ -493,19 +493,24 @@ class ItemDataProcessorTest extends BaseTest {
   @SneakyThrows
   void testFindAndRemoveForCirculationNotes() {
     var checkInNote = new CirculationNote()
-      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("check in");
+      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("circ note");
     var checkOutNote = new CirculationNote()
-      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("check out");
+      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("circ note");
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
     var processor = new ItemDataProcessor(null, null);
 
-    processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("check")).apply(item);
+    processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note")).apply(item);
     assertEquals(2, item.getCirculationNotes().size());
-    processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("check out")).apply(item);
+    processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("circ note")).apply(item);
     assertEquals(1, item.getCirculationNotes().size());
-    assertEquals("check in", item.getCirculationNotes().get(0).getNote());
-    processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("check in")).apply(item);
-    assertEquals(0, item.getCirculationNotes().size());
+    assertEquals("circ note", item.getCirculationNotes().get(0).getNote());
+    assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
+
+    item.setCirculationNotes(List.of(checkInNote, checkOutNote));
+    processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("circ note")).apply(item);
+    assertEquals(1, item.getCirculationNotes().size());
+    assertEquals("circ note", item.getCirculationNotes().get(0).getNote());
+    assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
   }
 
   @Test
