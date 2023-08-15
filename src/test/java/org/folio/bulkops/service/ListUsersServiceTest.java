@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.Mockito.when;
 
-public class ListUsersServiceTest extends BaseTest {
+class ListUsersServiceTest extends BaseTest {
 
   @MockBean
   private JpaCqlRepository<BulkOperation, UUID> bulkOperationCqlRepository;
@@ -77,8 +77,8 @@ public class ListUsersServiceTest extends BaseTest {
       var offset = 0;
 
       var listUsers = listUsersService.getListUsers(query, offset, limit);
-      assertEquals(listUsers.getUsers().size(), 2);
-      assertEquals(listUsers.getTotalRecords(), 2);
+      assertEquals(2, listUsers.getUsers().size());
+      assertEquals(2, listUsers.getTotalRecords());
       assertNotEquals(listUsers.getUsers().get(0).getId(), listUsers.getUsers().get(1).getId());
     }
   }

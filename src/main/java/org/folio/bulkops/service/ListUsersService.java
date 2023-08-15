@@ -24,7 +24,7 @@ public class ListUsersService {
       Objects.isNull(limit) ? Integer.MAX_VALUE : limit));
     var distinctUsers = allBulkOperations.stream().map(op -> userClient.getUserById(op.getUserId().toString())).collect(Collectors.toSet());
     var usersToReturn = distinctUsers.stream().map(user -> new org.folio.bulkops.domain.dto.User().id(UUID.fromString(user.getId()))
-      .firstName(user.getPersonal().getFirstName()).lastName(user.getPersonal().getLastName())).collect(Collectors.toList());
+      .firstName(user.getPersonal().getFirstName()).lastName(user.getPersonal().getLastName())).toList();
     return new Users().users(usersToReturn).totalRecords(distinctUsers.size());
   }
 }
