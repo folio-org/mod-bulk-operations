@@ -1,18 +1,7 @@
 package org.folio.bulkops.controller;
 
-import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
-
-import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Objects;
-import java.util.UUID;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.codehaus.plexus.util.FileUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.dto.BulkOperationCollection;
@@ -25,11 +14,13 @@ import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.UnifiedTable;
+import org.folio.bulkops.domain.dto.Users;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.mapper.BulkOperationMapper;
 import org.folio.bulkops.rest.resource.BulkOperationsApi;
 import org.folio.bulkops.service.BulkOperationService;
 import org.folio.bulkops.service.ErrorService;
+import org.folio.bulkops.service.ListUsersService;
 import org.folio.bulkops.service.LogFilesService;
 import org.folio.bulkops.service.RuleService;
 import org.folio.spring.cql.JpaCqlRepository;
@@ -43,8 +34,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
+import java.util.UUID;
+
+import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 
 @RestController
 @RequiredArgsConstructor
@@ -57,6 +58,7 @@ public class BulkOperationController implements BulkOperationsApi {
   private final RuleService ruleService;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final LogFilesService logFilesService;
+  private final ListUsersService listUsersService;
 
   @Override
   public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(String query, Integer offset, Integer limit) {
@@ -146,5 +148,10 @@ public class BulkOperationController implements BulkOperationsApi {
     log.info("Cleaning up log files...");
     logFilesService.clearLogFiles();
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
+  @Override
+  public ResponseEntity<Users> getListUsers(String query, Integer offset, Integer limit) {
+    return new ResponseEntity<>(listUsersService.getListUsers(query, offset, limit), HttpStatus.OK);
   }
 }

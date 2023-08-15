@@ -159,6 +159,13 @@
           "permissionsRequired": [ "bulk-operations.download.item.get" ],
           "modulePermissions": [
           ]
+        },
+        {
+          "methods": [ "GET" ],
+          "pathPattern": "/bulk-operations/list-users",
+          "permissionsRequired": ["bulk-operations.list-users.collection.get"],
+          "modulePermissions": [
+          ]
         }
       ]
     },
@@ -252,6 +259,11 @@
       "description" : "Download Bulk Operation Files By Id"
     },
     {
+      "permissionName": "bulk-operations.list-users.collection.get",
+      "displayName" : "get distinct list of users who ran bulk edit",
+      "description" : "All users who ran bulk edit"
+    },
+    {
       "permissionName" : "bulk-operations.all",
       "displayName" : "bulk-operations all",
       "description" : "All permissions for bulk-operations module",
@@ -265,7 +277,8 @@
         "bulk-operations.item.errors.download.get",
         "bulk-operations.item.get",
         "bulk-operations.collection.get",
-        "bulk-operations.download.item.get"
+        "bulk-operations.download.item.get",
+        "bulk-operations.list-users.collection.get"
       ]
     }
   ],
