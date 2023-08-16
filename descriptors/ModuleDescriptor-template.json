@@ -165,6 +165,7 @@
           "pathPattern": "/bulk-operations/list-users",
           "permissionsRequired": ["bulk-operations.list-users.collection.get"],
           "modulePermissions": [
+            "users.item.get"
           ]
         }
       ]
