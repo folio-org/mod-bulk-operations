@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -31,7 +32,7 @@ public class ElectronicAccessService {
 
   public String electronicAccessToString(ElectronicAccess access) {
     return String.join(ARRAY_DELIMITER,
-      escape(access.getUri()),
+      escape(isNull(access.getUri()) ? EMPTY : access.getUri()),
       escape(isEmpty(access.getLinkText()) ? EMPTY : access.getLinkText()),
       escape(isEmpty(access.getMaterialsSpecification()) ? EMPTY : access.getMaterialsSpecification()),
       escape(isEmpty(access.getPublicNote()) ? EMPTY : access.getPublicNote()),
@@ -53,8 +54,9 @@ public class ElectronicAccessService {
     if (isNotEmpty(s)) {
       var tokens = s.split(ARRAY_DELIMITER, -1);
       if (NUMBER_OF_ELECTRONIC_ACCESS_COMPONENTS == tokens.length) {
+        var uri = restore(tokens[ELECTRONIC_ACCESS_URI_INDEX]);
         return ElectronicAccess.builder()
-          .uri(restore(tokens[ELECTRONIC_ACCESS_URI_INDEX]))
+          .uri(isNull(uri) ? EMPTY : uri)
           .linkText(restore(tokens[ELECTRONIC_ACCESS_LINK_TEXT_INDEX]))
           .materialsSpecification(restore(tokens[ELECTRONIC_ACCESS_MATERIAL_SPECIFICATION_INDEX]))
           .publicNote(restore(tokens[ELECTRONIC_ACCESS_PUBLIC_NOTE_INDEX]))
