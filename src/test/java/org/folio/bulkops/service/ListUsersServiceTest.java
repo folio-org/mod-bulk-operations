@@ -13,6 +13,7 @@ import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 
 import java.util.List;
@@ -47,8 +48,7 @@ class ListUsersServiceTest extends BaseTest {
         .thenReturn(new UserCollection().withUsers(List.of(new User().withId(userIdRepeated.toString()).withPersonal(new Personal().withFirstName("Test repeated")
           .withLastName("Test last name repeated")))));
 
-      when(bulkOperationCqlRepository.findByCQL("(entityType==\"USER\")", OffsetRequest.of(0, 100)))
-        .thenReturn(new PageImpl<>(List.of(BulkOperation.builder()
+      final Page<BulkOperation> page = new PageImpl<>(List.of(BulkOperation.builder()
           .id(operationIdUnique)
           .status(OperationStatusType.COMPLETED)
           .totalNumOfRecords(10)
@@ -56,28 +56,38 @@ class ListUsersServiceTest extends BaseTest {
           .entityType(EntityType.USER)
           .userId(userIdUnique)
           .build(),
-          BulkOperation.builder()
-            .id(operationIdRepeated1)
-            .status(OperationStatusType.COMPLETED)
-            .totalNumOfRecords(10)
-            .processedNumOfRecords(10)
-            .entityType(EntityType.USER)
-            .userId(userIdRepeated)
-            .build(),
-          BulkOperation.builder()
-            .id(operationIdRepeated2)
-            .status(OperationStatusType.COMPLETED)
-            .totalNumOfRecords(10)
-            .processedNumOfRecords(10)
-            .entityType(EntityType.USER)
-            .userId(userIdRepeated)
-            .build())));
+        BulkOperation.builder()
+          .id(operationIdRepeated1)
+          .status(OperationStatusType.COMPLETED)
+          .totalNumOfRecords(10)
+          .processedNumOfRecords(10)
+          .entityType(EntityType.USER)
+          .userId(userIdRepeated)
+          .build(),
+        BulkOperation.builder()
+          .id(operationIdRepeated2)
+          .status(OperationStatusType.COMPLETED)
+          .totalNumOfRecords(10)
+          .processedNumOfRecords(10)
+          .entityType(EntityType.USER)
+          .userId(userIdRepeated)
+          .build()));
+
+      when(bulkOperationCqlRepository.findByCQL("(entityType==\"USER\")", OffsetRequest.of(0, 100)))
+        .thenReturn(page);
+      when(bulkOperationCqlRepository.findByCQL("(entityType==\"USER\")", OffsetRequest.of(0, Integer.MAX_VALUE)))
+        .thenReturn(page);
 
       var query = "(entityType==\"USER\")";
-      var limit = 100;
-      var offset = 0;
+      Integer limit = 100;
+      Integer offset = 0;
 
       var listUsers = listUsersService.getListUsers(query, offset, limit);
+      assertEquals(2, listUsers.getUsers().size());
+      assertEquals(2, listUsers.getTotalRecords());
+      assertNotEquals(listUsers.getUsers().get(0).getId(), listUsers.getUsers().get(1).getId());
+
+      listUsers = listUsersService.getListUsers(query, null, null);
       assertEquals(2, listUsers.getUsers().size());
       assertEquals(2, listUsers.getTotalRecords());
       assertNotEquals(listUsers.getUsers().get(0).getId(), listUsers.getUsers().get(1).getId());
