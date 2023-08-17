@@ -3,6 +3,7 @@ package org.folio.bulkops.service;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.Personal;
 import org.folio.bulkops.domain.bean.User;
+import org.folio.bulkops.domain.bean.UserCollection;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -39,12 +40,12 @@ class ListUsersServiceTest extends BaseTest {
 
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
 
-      when(userClient.getUserById(userIdUnique.toString()))
-        .thenReturn(new User().withId(userIdUnique.toString()).withPersonal(new Personal().withFirstName("Test unique")
-          .withLastName("Test last name unique")));
-      when(userClient.getUserById(userIdRepeated.toString()))
-        .thenReturn(new User().withId(userIdRepeated.toString()).withPersonal(new Personal().withFirstName("Test repeated")
-          .withLastName("Test last name repeated")));
+      when(userClient.getByQuery("id==" + userIdUnique, 1))
+        .thenReturn(new UserCollection().withUsers(List.of(new User().withId(userIdUnique.toString()).withPersonal(new Personal().withFirstName("Test unique")
+          .withLastName("Test last name unique")))));
+      when(userClient.getByQuery("id==" + userIdRepeated, 1))
+        .thenReturn(new UserCollection().withUsers(List.of(new User().withId(userIdRepeated.toString()).withPersonal(new Personal().withFirstName("Test repeated")
+          .withLastName("Test last name repeated")))));
 
       when(bulkOperationCqlRepository.findByCQL("(entityType==\"USER\")", OffsetRequest.of(0, 100)))
         .thenReturn(new PageImpl<>(List.of(BulkOperation.builder()
