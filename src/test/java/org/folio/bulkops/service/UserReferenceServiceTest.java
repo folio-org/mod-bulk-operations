@@ -61,11 +61,11 @@ class UserReferenceServiceTest {
   }
 
   @Test
-  void getAddressTypeIdByDescTest() {
+  void getAddressTypeIdByAddressTypeValueTest() {
     var expected = UUID.randomUUID().toString();
-    when(addressTypeClient.getByQuery("desc==" + encode("*"))).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId(expected))));
+    when(addressTypeClient.getByQuery("addressType==" + encode("*"))).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId(expected))));
     var actual = userReferenceService.getAddressTypeByAddressTypeValue("*");
-    verify(addressTypeClient).getByQuery("desc==" + encode("*"));
+    verify(addressTypeClient).getByQuery("addressType==" + encode("*"));
     assertEquals(expected, actual.getId());
   }
 
