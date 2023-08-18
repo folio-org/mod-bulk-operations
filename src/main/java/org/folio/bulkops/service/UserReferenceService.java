@@ -1,10 +1,7 @@
 package org.folio.bulkops.service;
 
 import static java.lang.String.format;
-import static org.folio.bulkops.util.Constants.QUERY_PATTERN_DESC;
-import static org.folio.bulkops.util.Constants.QUERY_PATTERN_GROUP;
-import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
-import static org.folio.bulkops.util.Constants.QUERY_PATTERN_REF_ID;
+import static org.folio.bulkops.util.Constants.*;
 import static org.folio.bulkops.util.Utils.encode;
 
 import java.net.URI;
@@ -42,10 +39,10 @@ public class UserReferenceService {
   private final OkapiClient okapiClient;
 
   @Cacheable(cacheNames = "addressTypeIds")
-  public AddressType getAddressTypeByDesc(String desc) {
-    var response = addressTypeClient.getByQuery(String.format(QUERY_PATTERN_DESC, encode(desc)));
+  public AddressType getAddressTypeByAddressTypeValue(String addressTypeValue) {
+    var response = addressTypeClient.getByQuery(String.format(QUERY_PATTERN_ADDRESS_TYPE, encode(addressTypeValue)));
     if (response.getAddressTypes().isEmpty()) {
-      throw new NotFoundException(format("Address type=%s not found", desc));
+      throw new NotFoundException(format("Address type=%s not found", addressTypeValue));
     }
     return response.getAddressTypes().get(0);
   }

@@ -64,7 +64,7 @@ class UserReferenceServiceTest {
   void getAddressTypeIdByDescTest() {
     var expected = UUID.randomUUID().toString();
     when(addressTypeClient.getByQuery("desc==" + encode("*"))).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId(expected))));
-    var actual = userReferenceService.getAddressTypeByDesc("*");
+    var actual = userReferenceService.getAddressTypeByAddressTypeValue("*");
     verify(addressTypeClient).getByQuery("desc==" + encode("*"));
     assertEquals(expected, actual.getId());
   }

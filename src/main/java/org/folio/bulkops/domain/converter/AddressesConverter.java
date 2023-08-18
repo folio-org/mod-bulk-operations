@@ -60,7 +60,7 @@ public  class AddressesConverter extends BaseConverter<List<Address>> {
                   .region(convertToNullableString(fields.get(ADDRESS_REGION)))
                     .postalCode(convertToNullableString(fields.get(ADDRESS_POSTAL_CODE)))
                       .primaryAddress(convertToNullableBoolean(fields.get(ADDRESS_PRIMARY_ADDRESS)))
-                        .addressTypeId(convertToNullableString(UserReferenceHelper.service().getAddressTypeByDesc(fields.get(ADDRESS_TYPE)).getId()))
+                        .addressTypeId(convertToNullableString(UserReferenceHelper.service().getAddressTypeByAddressTypeValue(fields.get(ADDRESS_TYPE)).getId()))
                           .build();
   }
 
