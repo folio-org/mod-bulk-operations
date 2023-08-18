@@ -1,7 +1,10 @@
 package org.folio.bulkops.service;
 
 import static java.lang.String.format;
-import static org.folio.bulkops.util.Constants.*;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_ADDRESS_TYPE;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_GROUP;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_REF_ID;
 import static org.folio.bulkops.util.Utils.encode;
 
 import java.net.URI;
