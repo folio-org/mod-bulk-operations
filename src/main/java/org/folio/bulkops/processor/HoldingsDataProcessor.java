@@ -4,7 +4,12 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDING_ITEMS;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 
 import java.util.Objects;
@@ -13,6 +18,7 @@ import java.util.regex.Pattern;
 import org.folio.bulkops.client.HoldingsSourceClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.NotFoundException;
@@ -68,34 +74,44 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
   }
 
   public Updater<HoldingsRecord> updater(UpdateOptionType option, Action action) {
-    if (PERMANENT_LOCATION != option && TEMPORARY_LOCATION != option) {
+    if (PERMANENT_LOCATION != option && TEMPORARY_LOCATION != option && SUPPRESS_FROM_DISCOVERY != option) {
       return holding -> {
         throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
       };
     }
-    switch (action.getType()) {
-      case REPLACE_WITH:
-        return holding -> {
-          var locationId = action.getUpdated();
-          if (PERMANENT_LOCATION == option) {
-            holding.setPermanentLocation(itemReferenceService.getLocationById(locationId));
-            holding.setPermanentLocationId(locationId);
-            holding.setEffectiveLocationId(isEmpty(holding.getTemporaryLocationId()) ? locationId : holding.getTemporaryLocationId());
-          } else {
-            holding.setTemporaryLocationId(locationId);
-            holding.setEffectiveLocationId(locationId);
-          }
-        };
-      case CLEAR_FIELD:
-        return holding -> {
-          holding.setTemporaryLocationId(null);
-          holding.setEffectiveLocationId(holding.getPermanentLocationId());
-        };
-      default:
-        return holding -> {
-          throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
-        };
+    if (REPLACE_WITH == action.getType()) {
+      return holding -> {
+        var locationId = action.getUpdated();
+        if (PERMANENT_LOCATION == option) {
+          holding.setPermanentLocation(itemReferenceService.getLocationById(locationId));
+          holding.setPermanentLocationId(locationId);
+          holding.setEffectiveLocationId(isEmpty(holding.getTemporaryLocationId()) ? locationId : holding.getTemporaryLocationId());
+        } else {
+          holding.setTemporaryLocationId(locationId);
+          holding.setEffectiveLocationId(locationId);
+        }
+      };
+    } else if (CLEAR_FIELD == action.getType()) {
+      return holding -> {
+        holding.setTemporaryLocationId(null);
+        holding.setEffectiveLocationId(holding.getPermanentLocationId());
+      };
+    } else if (isSetDiscoverySuppressTrue(action.getType(), option)) {
+      return holding -> holding.setDiscoverySuppress(true);
+    } else if (isSetDiscoverySuppressFalse(action.getType(), option)) {
+      return holding -> holding.setDiscoverySuppress(false);
     }
+    return holding -> {
+      throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
+    };
+  }
+
+  private boolean isSetDiscoverySuppressTrue(UpdateActionType actionType, UpdateOptionType optionType) {
+    return (actionType == SET_TO_TRUE || actionType == SET_TO_TRUE_INCLUDING_ITEMS) && optionType == SUPPRESS_FROM_DISCOVERY;
+  }
+
+  private boolean isSetDiscoverySuppressFalse(UpdateActionType actionType, UpdateOptionType optionType) {
+    return (actionType == SET_TO_FALSE || actionType == SET_TO_FALSE_INCLUDING_ITEMS) && optionType == SUPPRESS_FROM_DISCOVERY;
   }
 
   @Override

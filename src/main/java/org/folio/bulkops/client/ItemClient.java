@@ -17,6 +17,6 @@ public interface ItemClient {
   void updateItem(@RequestBody Item item, @PathVariable String itemId);
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  ItemCollection getByQuery(@RequestParam("query") String query, @RequestParam long offset, @RequestParam long limit);
+  ItemCollection getByQuery(@RequestParam("query") String query);
 
 }
