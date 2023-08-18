@@ -16,8 +16,8 @@ import lombok.extern.log4j.Log4j2;
 public class UserReferenceHelper implements InitializingBean {
   private final UserReferenceService userReferenceService;
 
-  public AddressType getAddressTypeByDesc(String desc) {
-    return userReferenceService.getAddressTypeByDesc(desc);
+  public AddressType getAddressTypeByAddressTypeValue(String addressTypeValue) {
+    return userReferenceService.getAddressTypeByAddressTypeValue(addressTypeValue);
   }
 
   public AddressType getAddressTypeById(String id) {
