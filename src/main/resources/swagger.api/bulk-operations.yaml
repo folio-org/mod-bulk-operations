@@ -382,6 +382,43 @@ paths:
               schema:
                 type: string
                 example: Internal server error
+  /bulk-operations/list-users:
+    get:
+      description: Get a list of users
+      operationId: getListUsers
+      parameters:
+        - in: query
+          name: query
+          required: true
+          schema:
+            type: string
+          description: Request query
+        - in: query
+          name: offset
+          required: false
+          schema:
+            type: integer
+          description: Query offset
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+          description: Query limit
+      responses:
+        '200':
+          description: Collection of users
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/users"
+        '500':
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Internal server error
 components:
   schemas:
     bulkOperationCollection:
@@ -409,6 +446,8 @@ components:
       format: uuid
     errors:
       $ref: 'schemas/errors.json'
+    users:
+      $ref: 'schemas/users.json'
     searchResult:
       type: object
       properties:
