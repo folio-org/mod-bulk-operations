@@ -219,7 +219,6 @@ public class BulkOperationService {
 
       var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), clazz);
 
-      boolean isChangesPresented = false;
       var processedNumOfRecords = 0;
 
       if(iterator.hasNext()) {
@@ -234,13 +233,7 @@ public class BulkOperationService {
           // Prepare CSV for download and preview
           process(operationId, operation.getIdentifierType(), sbc, writerForModifiedPreviewCsvFile, modified.getPreview());
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
-
-          if (modified.isShouldBeUpdated()) {
-            if (!isChangesPresented) {
-              isChangesPresented = true;
-            }
-            writerForModifiedJsonFile.write(modifiedRecord);
-          }
+          writerForModifiedJsonFile.write(modifiedRecord);
         }
 
         processedNumOfRecords++;
@@ -254,10 +247,7 @@ public class BulkOperationService {
           dataProcessingRepository.save(dataProcessing);
         }
       }
-
-      if (isChangesPresented) {
-        operation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
-      }
+      operation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
 
       dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
       dataProcessingRepository.save(dataProcessing);
@@ -416,6 +406,7 @@ public class BulkOperationService {
         executionContentRepository.save(executionContent.withState(StateType.PROCESSED));
         return modified;
     }
+    errorService.saveError(operation.getId(), original.getIdentifier(operation.getIdentifierType()), "No change in value required");
     return original;
   }
 
@@ -561,11 +552,9 @@ public class BulkOperationService {
   public void apply(BulkOperation operation) {
     operation.setProcessedNumOfRecords(0);
     var bulkOperationId = operation.getId();
-    var linkToMatchedRecordsJsonFile = operation.getLinkToMatchedRecordsJsonFile();
     var linkToModifiedRecordsCsvFile = operation.getLinkToModifiedRecordsCsvFile();
     var linkToModifiedRecordsJsonFile = String.format(PREVIEW_JSON_PATH_TEMPLATE, bulkOperationId, LocalDate.now(), FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile()));
-    try (Reader readerForMatchedJsonFile = new InputStreamReader(remoteFileSystemClient.get(linkToMatchedRecordsJsonFile));
-         Reader readerForModifiedCsvFile = new InputStreamReader(remoteFileSystemClient.get(linkToModifiedRecordsCsvFile));
+    try (Reader readerForModifiedCsvFile = new InputStreamReader(remoteFileSystemClient.get(linkToModifiedRecordsCsvFile));
          Writer writerForModifiedJsonFile = remoteFileSystemClient.writer(linkToModifiedRecordsJsonFile)) {
 
       var clazz = resolveEntityClass(operation.getEntityType());
@@ -578,22 +567,13 @@ public class BulkOperationService {
 
       var modifiedCsvFileIterator = csvToBean.iterator();
 
-      var parser = new JsonFactory().createParser(readerForMatchedJsonFile);
-      var entityType = resolveEntityClass(operation.getEntityType());
-
-      var originalJsonFileIterator = objectMapper.readValues(parser, entityType);
       var processedNumOfRecords = 0;
 
-      while (originalJsonFileIterator.hasNext() && modifiedCsvFileIterator.hasNext()) {
-        var originalEntity = originalJsonFileIterator.next();
+      while (modifiedCsvFileIterator.hasNext()) {
         var modifiedEntity = modifiedCsvFileIterator.next();
-        var modifiedEntityString = objectMapper.writeValueAsString(modifiedEntity) + (originalJsonFileIterator.hasNext() && modifiedCsvFileIterator.hasNext() ? LF : EMPTY);
+        var modifiedEntityString = objectMapper.writeValueAsString(modifiedEntity) + (modifiedCsvFileIterator.hasNext() ? LF : EMPTY);
 
-        if (originalEntity.equals(modifiedEntity)) {
-          errorService.saveError(bulkOperationId, originalEntity.getIdentifier(operation.getIdentifierType()), "No change in value required");
-        } else {
-          writerForModifiedJsonFile.write(modifiedEntityString);
-        }
+        writerForModifiedJsonFile.write(modifiedEntityString);
         processedNumOfRecords++;
         if (processedNumOfRecords - operation.getProcessedNumOfRecords() > OPERATION_UPDATING_STEP) {
           operation.setProcessedNumOfRecords(processedNumOfRecords);
