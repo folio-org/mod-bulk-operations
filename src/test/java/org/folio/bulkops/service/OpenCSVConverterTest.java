@@ -136,18 +136,12 @@ class OpenCSVConverterTest extends BaseTest {
       Assertions.fail("Error parsing CSV to bean", e);
     }
 
+    assertThat(list, hasSize(1));
     /* compare original and restored beans */
     var result = list.get(0);
-    var isEqual = (clazz.equals(Item.class)) ? EqualsBuilder.reflectionEquals(bean, result, true, clazz, "metadata", "effectiveCallNumberComponents") : bean.equals(result);
 
     assertEquals(bean, result);
-    if (!isEqual) {
-      log.error("Original: " + OBJECT_MAPPER.writeValueAsString(bean));
-      log.error("Result: " + OBJECT_MAPPER.writeValueAsString(result));
-    }
 
-    assertTrue(isEqual);
-    assertThat(list, hasSize(1));
   }
 
   @ParameterizedTest
