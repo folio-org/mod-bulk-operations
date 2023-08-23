@@ -291,6 +291,7 @@ class OpenCSVConverterTest extends BaseTest {
         .withId("4ac6b846-e184-4cdd-8101-68f4af97d103")
         .withName("Department"))));
     when(addressTypeClient.getByQuery("desc==\"desc\"")).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880").withDesc("desc").withAddressType("work"))));
+    when(addressTypeClient.getByQuery("addressType==\"work\"")).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880").withDesc("desc").withAddressType("work"))));
     when(okapiClient.getModuleIds(any(), any(), any())).thenReturn(JsonNodeFactory.instance.arrayNode().add(JsonNodeFactory.instance.objectNode().put("id", "USERS")));
     when(customFieldsClient.getByQuery(any(), eq(format(QUERY_PATTERN_NAME, encode("sierraCheckoutInformation"))))).thenReturn(new CustomFieldCollection().withCustomFields(List.of(new CustomField()
       .withName("sierraCheckoutInformation")
