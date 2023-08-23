@@ -61,6 +61,7 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.ConverterException;
@@ -437,7 +438,9 @@ public class BulkOperationService {
         String[] line;
         while ((line = csvReader.readNext()) != null && csvReader.getRecordsRead() <= limit + recordsToSkip) {
           var row = new Row();
-          row.setRow(Arrays.stream(line).toList());
+          row.setRow(Arrays.stream(line)
+            .map(SpecialCharacterEscaper::restore)
+            .toList());
           table.addRowsItem(row);
         }
       }
