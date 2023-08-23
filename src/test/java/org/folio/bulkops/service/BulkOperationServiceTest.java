@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
+import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.UnifiedTableHeaderBuilder.getHeaders;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
@@ -30,6 +31,7 @@ import static org.testcontainers.shaded.org.hamcrest.Matchers.notNullValue;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -679,7 +681,7 @@ class BulkOperationServiceTest extends BaseTest {
     var pathToOrigin = bulkOperationId + "/origin.json";
     var pathToOriginCsv = bulkOperationId + "/origin.csv";
     var pathToModified = bulkOperationId + "/modified-origin.json";
-    var pathToUserJson = "src/test/resources/files/user.json";
+    var pathToUserJson = "src/test/resources/files/user2.json";
 
     var operation = BulkOperation.builder()
       .id(bulkOperationId)
@@ -708,6 +710,13 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(pathToModified))
       .thenReturn(new FileInputStream(pathToUserJson));
 
+    var expectedPathToResultFile = bulkOperationId + "/json/" + LocalDate.now() + "-Changed-Records-identifiers.json";
+    var expectedPathToResultCsvFile = bulkOperationId + "/" + LocalDate.now() + "-Changed-Records-identifiers.csv";
+    when(remoteFileSystemClient.writer(expectedPathToResultFile))
+      .thenReturn(new StringWriter());
+    when(remoteFileSystemClient.writer(expectedPathToResultCsvFile))
+      .thenReturn(new StringWriter());
+
     when(executionContentRepository.save(any(BulkOperationExecutionContent.class)))
       .thenReturn(BulkOperationExecutionContent.builder().build());
 
@@ -715,10 +724,8 @@ class BulkOperationServiceTest extends BaseTest {
 
     verify(userClient, times(0)).updateUser(any(User.class), anyString());
 
-    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), anyString()));
+    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), eq(MSG_NO_CHANGE_REQUIRED)));
 
-    var expectedPathToResultFile = bulkOperationId + "/json/" + LocalDate.now() + "-Changed-Records-identifiers.json";
-    var expectedPathToResultCsvFile = bulkOperationId + "/" + LocalDate.now() + "-Changed-Records-identifiers.csv";
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).writer(pathCaptor.capture()));
     assertEquals(expectedPathToResultCsvFile, pathCaptor.getAllValues().get(0));

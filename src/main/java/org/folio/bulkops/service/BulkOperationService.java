@@ -20,6 +20,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
+import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
 
@@ -336,7 +337,6 @@ public class BulkOperationService {
 
         strategy.setType(entityClass);
 
-        int committedNumOfRecords = 0;
         int processedNumOfRecords = 0;
 
         while (hasNextRecord(originalFileIterator, modifiedFileIterator)) {
@@ -353,7 +353,6 @@ public class BulkOperationService {
             execution = execution
               .withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
               .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
-            committedNumOfRecords++;
           } catch (Exception e) {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage());
           }
@@ -364,13 +363,12 @@ public class BulkOperationService {
         }
 
         execution.setProcessedRecords(processedNumOfRecords);
-        operation.setProcessedNumOfRecords(committedNumOfRecords);
+        operation.setProcessedNumOfRecords(operation.getCommittedNumOfRecords());
         operation.setEndTime(LocalDateTime.now());
-        if (committedNumOfRecords > 0) {
+        if (operation.getCommittedNumOfRecords() > 0) {
           operation.setLinkToCommittedRecordsCsvFile(resultCsvFileName);
           operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
         }
-        operation.setCommittedNumOfRecords(committedNumOfRecords);
       } catch (Exception e) {
         execution = execution
           .withStatus(StatusType.FAILED)
@@ -396,18 +394,19 @@ public class BulkOperationService {
   }
 
   private BulkOperationsEntity updateEntityIfNeeded(BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation, Class<? extends BulkOperationsEntity> entityClass) {
-    if (!original.equals(modified)) {
-      var updater = updateProcessorFactory.getProcessorFromFactory(entityClass);
-      var executionContent = BulkOperationExecutionContent.builder()
-        .bulkOperationId(operation.getId())
-        .build();
-        executionContent.setIdentifier(modified.getIdentifier(operation.getIdentifierType()));
-        updater.updateRecord(modified, original.getIdentifier(operation.getIdentifierType()), operation.getId());
-        executionContentRepository.save(executionContent.withState(StateType.PROCESSED));
-        return modified;
+    if (original.hashCode() == modified.hashCode() && original.equals(modified)) {
+      errorService.saveError(operation.getId(), original.getIdentifier(operation.getIdentifierType()), MSG_NO_CHANGE_REQUIRED);
+      return original;
     }
-    errorService.saveError(operation.getId(), original.getIdentifier(operation.getIdentifierType()), "No change in value required");
-    return original;
+    var updater = updateProcessorFactory.getProcessorFromFactory(entityClass);
+    var executionContent = BulkOperationExecutionContent.builder()
+      .bulkOperationId(operation.getId())
+      .build();
+      executionContent.setIdentifier(modified.getIdentifier(operation.getIdentifierType()));
+      updater.updateRecord(modified, original.getIdentifier(operation.getIdentifierType()), operation.getId());
+      executionContentRepository.save(executionContent.withState(StateType.PROCESSED));
+      operation.setCommittedNumOfRecords(operation.getCommittedNumOfRecords() + 1);
+      return modified;
   }
 
   public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset, int limit) {
