@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -34,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.SneakyThrows;
@@ -63,6 +65,7 @@ import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
+import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -875,6 +878,11 @@ class BulkOperationServiceTest extends BaseTest {
     } else if (EntityType.HOLDINGS_RECORD.equals(entityType)) {
       assertThat(table.getHeader(), equalTo(getHeaders(HoldingsRecord.class)));
     }
+    assertTrue(table.getRows().stream()
+      .map(Row::getRow)
+      .flatMap(List::stream)
+      .filter(Objects::nonNull)
+      .noneMatch(s -> s.contains("%3A") || s.contains("%3B") || s.contains("%7C")));
   }
 
   @Test
