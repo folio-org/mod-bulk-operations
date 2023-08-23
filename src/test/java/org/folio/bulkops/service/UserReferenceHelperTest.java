@@ -27,15 +27,16 @@ class UserReferenceHelperTest extends BaseTest {
 
   @Test
   void testGetAddressType() {
-    when (addressTypeClient.getAddressTypeById("id_1")).thenReturn(AddressType.builder().desc("desc").build());
+    when (addressTypeClient.getAddressTypeById("id_1")).thenReturn(AddressType.builder().desc("desc").addressType("addressType").build());
     var actual = userReferenceHelper.getAddressTypeById("id_1");
     assertEquals("desc", actual.getDesc());
+    assertEquals("addressType", actual.getAddressType());
 
     when(addressTypeClient.getAddressTypeById("id_2")).thenThrow(new NotFoundException("not found"));
     assertThrows(NotFoundException.class, () -> userReferenceHelper.getAddressTypeById("id_2"));
 
-    when(addressTypeClient.getByQuery("desc==\"desc_1\"")).thenReturn(AddressTypeCollection.builder().addressTypes(singletonList(AddressType.builder().id("id_3").build())).build());
-    actual = userReferenceHelper.getAddressTypeByDesc("desc_1");
+    when(addressTypeClient.getByQuery("addressType==\"at_1\"")).thenReturn(AddressTypeCollection.builder().addressTypes(singletonList(AddressType.builder().id("id_3").build())).build());
+    actual = userReferenceHelper.getAddressTypeByAddressTypeValue("at_1");
     assertEquals("id_3", actual.getId());
 
   }

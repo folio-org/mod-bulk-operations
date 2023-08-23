@@ -135,6 +135,6 @@ public class ErrorService {
         .orElse("-Errors.csv");
       return remoteFileSystemClient.put(new ByteArrayInputStream(errorsString.getBytes()), bulkOperationId + "/" + errorsFileName);
     }
-    return EMPTY;
+    return null;
   }
 }

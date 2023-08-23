@@ -11,6 +11,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -61,12 +63,18 @@ class UserReferenceServiceTest {
   }
 
   @Test
-  void getAddressTypeIdByDescTest() {
+  void getAddressTypeIdByAddressTypeValueTest() {
     var expected = UUID.randomUUID().toString();
-    when(addressTypeClient.getByQuery("desc==" + encode("*"))).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId(expected))));
-    var actual = userReferenceService.getAddressTypeByDesc("*");
-    verify(addressTypeClient).getByQuery("desc==" + encode("*"));
+    when(addressTypeClient.getByQuery("addressType==" + encode("*"))).thenReturn(new AddressTypeCollection().withAddressTypes(List.of(new AddressType().withId(expected))));
+    var actual = userReferenceService.getAddressTypeByAddressTypeValue("*");
+    verify(addressTypeClient).getByQuery("addressType==" + encode("*"));
     assertEquals(expected, actual.getId());
+  }
+
+  @Test
+  void getAddressTypeIdByAddressTypeValueNotFoundTest() {
+    when(addressTypeClient.getByQuery("addressType==" + encode("at_1"))).thenReturn(new AddressTypeCollection().withAddressTypes(Collections.emptyList()));
+    assertThrows(NotFoundException.class, () -> userReferenceService.getAddressTypeByAddressTypeValue("at_1"));
   }
 
   @Test

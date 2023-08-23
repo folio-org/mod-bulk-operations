@@ -60,7 +60,7 @@ public  class AddressesConverter extends BaseConverter<List<Address>> {
                   .region(convertToNullableString(fields.get(ADDRESS_REGION)))
                     .postalCode(convertToNullableString(fields.get(ADDRESS_POSTAL_CODE)))
                       .primaryAddress(convertToNullableBoolean(fields.get(ADDRESS_PRIMARY_ADDRESS)))
-                        .addressTypeId(convertToNullableString(UserReferenceHelper.service().getAddressTypeByDesc(fields.get(ADDRESS_TYPE)).getId()))
+                        .addressTypeId(convertToNullableString(UserReferenceHelper.service().getAddressTypeByAddressTypeValue(fields.get(ADDRESS_TYPE)).getId()))
                           .build();
   }
 
@@ -74,7 +74,7 @@ public  class AddressesConverter extends BaseConverter<List<Address>> {
     data.add(isEmpty(address.getRegion()) ? EMPTY : address.getRegion());
     data.add(isEmpty(address.getPostalCode()) ? EMPTY : address.getPostalCode());
     data.add(isNull(address.getPrimaryAddress()) ? EMPTY : address.getPrimaryAddress().toString());
-    data.add(UserReferenceHelper.service().getAddressTypeById(address.getAddressTypeId()).getDesc());
+    data.add(UserReferenceHelper.service().getAddressTypeById(address.getAddressTypeId()).getAddressType());
     return String.join(ARRAY_DELIMITER, escape(data));
   }
 
