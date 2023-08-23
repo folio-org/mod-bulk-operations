@@ -36,7 +36,7 @@ class ElectronicAccessServiceTest extends BaseTest {
       .build());
 
     if (isNull(uri)) {
-      assertEquals("null;;;;;", actual);
+      assertEquals(";;;;;", actual);
     } else {
       assertEquals("uri;text;specification;note;name;id", actual);
     }
@@ -51,7 +51,7 @@ class ElectronicAccessServiceTest extends BaseTest {
       .build());
 
     if (isNull(uri)) {
-      assertEquals("null;;;;;", actual);
+      assertEquals(";;;;;", actual);
     } else {
       assertEquals("uri;text;specification;note;;id", actual);
     }
