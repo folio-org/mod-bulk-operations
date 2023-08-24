@@ -1,7 +1,12 @@
 package org.folio.bulkops.service;
 
+import static java.lang.String.format;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.io.FilenameUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -9,15 +14,14 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-
-import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
 public class LogFilesService {
-
+  public static final String CSV_PATH_TEMPLATE = "%s/%s.csv";
+  public static final String JSON_PATH_TEMPLATE = "%s/json/%s.json";
   private static final int MIN_DAYS_TO_CLEAR_LOG_FILES = 30;
 
   private final RemoteFileSystemClient remoteFileSystemClient;
@@ -79,5 +83,15 @@ public class LogFilesService {
       remoteFileSystemClient.remove(bulkOperation.getLinkToPreviewRecordsJsonFile());
       bulkOperation.setLinkToPreviewRecordsJsonFile(null);
     }
+  }
+
+  public void deleteFileByOperationIdAndName(UUID operationId, String fileName) {
+    var baseName = FilenameUtils.getBaseName(fileName);
+    var csvPath = format(CSV_PATH_TEMPLATE, operationId, baseName);
+    var jsonPath = format(JSON_PATH_TEMPLATE, operationId, baseName);
+    remoteFileSystemClient.remove(csvPath);
+    log.info("Deleted: {}", csvPath);
+    remoteFileSystemClient.remove(jsonPath);
+    log.info("Deleted: {}", jsonPath);
   }
 }
