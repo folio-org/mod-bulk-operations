@@ -167,6 +167,12 @@
           "modulePermissions": [
             "users.collection.get"
           ]
+        },
+        {
+          "methods": [ "DELETE" ],
+          "pathPattern": "/bulk-operations/{operationId}/files/{fileName}",
+          "permissionsRequired": ["bulk-operations.files.item.delete"],
+          "modulePermissions": [ ]
         }
       ]
     },
@@ -265,6 +271,11 @@
       "description" : "All users who ran bulk edit"
     },
     {
+      "permissionName": "bulk-operations.files.item.delete",
+      "displayName" : "delete file by operation id and file name",
+      "description" : "Delete file by operation id and file name"
+    },
+    {
       "permissionName" : "bulk-operations.all",
       "displayName" : "bulk-operations all",
       "description" : "All permissions for bulk-operations module",
@@ -279,7 +290,8 @@
         "bulk-operations.item.get",
         "bulk-operations.collection.get",
         "bulk-operations.download.item.get",
-        "bulk-operations.list-users.collection.get"
+        "bulk-operations.list-users.collection.get",
+        "bulk-operations.files.item.delete"
       ]
     }
   ],
