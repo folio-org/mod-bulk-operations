@@ -9,8 +9,10 @@ import static org.folio.bulkops.domain.dto.OperationType.UPDATE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -19,6 +21,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
+
+import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.Personal;
@@ -28,6 +32,7 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.BulkOperationService;
 import org.folio.bulkops.service.ListUsersService;
+import org.folio.bulkops.service.LogFilesService;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -45,6 +50,9 @@ class BulkOperationControllerTest extends BaseTest {
 
   @MockBean
   private ListUsersService listUsersService;
+
+  @MockBean
+  private LogFilesService logFilesService;
 
   @Autowired
   private BulkOperationRepository bulkOperationRepository;
@@ -136,5 +144,16 @@ class BulkOperationControllerTest extends BaseTest {
           assertThat(listUsers.getJSONArray("users").length() == 2);
         });
     }
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldReturnNoContentOnFileDeletionByOperationIdAndFileName() {
+    doNothing().when(logFilesService).deleteFileByOperationIdAndName(any(UUID.class), anyString());
+
+    mockMvc.perform(delete(String.format("/bulk-operations/%s/files/file.csv", UUID.randomUUID()))
+        .headers(defaultHeaders())
+        .contentType(APPLICATION_JSON))
+      .andExpect(status().isNoContent());
   }
 }

@@ -419,6 +419,33 @@ paths:
               schema:
                 type: string
                 example: Internal server error
+  /bulk-operations/{operationId}/files/{fileName}:
+    delete:
+      description: Delete file by name and bulk operation id
+      operationId: deleteFileByNameAndOperationId
+      parameters:
+        - in: path
+          name: operationId
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+          description: UUID of the Bulk Operation
+        - in: path
+          name: fileName
+          required: true
+          schema:
+            type: string
+          description: File name
+      responses:
+        '204':
+          description: File deleted successfully
+        '500':
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Internal server error
 components:
   schemas:
     bulkOperationCollection:

@@ -1,20 +1,26 @@
 package org.folio.bulkops.service;
 
+import static org.folio.bulkops.service.LogFilesService.CSV_PATH_TEMPLATE;
+import static org.folio.bulkops.service.LogFilesService.JSON_PATH_TEMPLATE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.s3.exception.S3ClientException;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 class LogFilesServiceTest extends BaseTest {
 
@@ -88,6 +94,21 @@ class LogFilesServiceTest extends BaseTest {
       verifyAllFilesRemoved(oldOperation);
       verifyAllFilesPresent(nonOldOperation);
     }
+  }
+
+  @Test
+  void shouldRemoveCsvAndJsonFilesFromStorageByOperationIdAndFileName() {
+    var operationId = UUID.randomUUID();
+    var csvPath = String.format(CSV_PATH_TEMPLATE, operationId, "file");
+    var jsonPath = String.format(JSON_PATH_TEMPLATE, operationId, "file");
+
+    client.put(IOUtils.toInputStream("csv content", StandardCharsets.UTF_8), csvPath);
+    client.put(IOUtils.toInputStream("json content", StandardCharsets.UTF_8), jsonPath);
+
+    logFilesService.deleteFileByOperationIdAndName(operationId, "file.csv");
+
+    assertThrows(S3ClientException.class, () -> client.get(csvPath));
+    assertThrows(S3ClientException.class, () -> client.get(jsonPath));
   }
 
   private void verifyAllFilesRemoved(BulkOperation operation) {
