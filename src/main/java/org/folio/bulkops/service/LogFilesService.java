@@ -89,9 +89,7 @@ public class LogFilesService {
     var baseName = FilenameUtils.getBaseName(fileName);
     var csvPath = format(CSV_PATH_TEMPLATE, operationId, baseName);
     var jsonPath = format(JSON_PATH_TEMPLATE, operationId, baseName);
-    remoteFileSystemClient.remove(csvPath);
-    log.info("Deleted: {}", csvPath);
-    remoteFileSystemClient.remove(jsonPath);
-    log.info("Deleted: {}", jsonPath);
+    remoteFileSystemClient.remove(csvPath, jsonPath);
+    log.info("Deleted: {}, {}", csvPath, jsonPath);
   }
 }

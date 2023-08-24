@@ -35,6 +35,10 @@ public class RemoteFileSystemClient {
     remoteFolioS3Client.remove(filename);
   }
 
+  public void remove(String... paths) {
+    remoteFolioS3Client.remove(paths);
+  }
+
   public Writer writer(String path) {
     return remoteFolioS3Client.getRemoteStorageWriter(path, DEFAULT_CHAR_BUFFER_SIZE);
   }
