@@ -11,6 +11,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_IN_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_OUT_NOTE;
@@ -294,7 +295,8 @@ class ItemDataProcessorTest extends BaseTest {
   void shouldUpdateSuppressFromDiscovery(UpdateActionType type) {
     var actual = processor.process(IDENTIFIER, new Item(), rules(rule(SUPPRESS_FROM_DISCOVERY, type, StringUtils.EMPTY)));
     assertNotNull(actual.getUpdated());
-    assertTrue(actual.shouldBeUpdated);
+    var expectedDiscoverySuppress = SET_TO_TRUE.equals(type);
+    assertEquals(expectedDiscoverySuppress, actual.getUpdated().getDiscoverySuppress());
   }
 
   @Test
