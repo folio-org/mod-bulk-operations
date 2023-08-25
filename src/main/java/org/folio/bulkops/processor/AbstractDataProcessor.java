@@ -24,37 +24,25 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
     var holder = UpdatedEntityHolder.builder().build();
     var updated = clone(entity);
     var preview = clone(entity);
-    var countActions = 0;
-    var countErrors = 0;
     for (BulkOperationRule rule : rules.getBulkOperationRules()) {
       var details = rule.getRuleDetails();
       var option = details.getOption();
       for (Action action : details.getActions()) {
-        countActions++;
         try {
           try {
             validator(entity).validate(option, action);
           } catch (Exception e) {
             errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
-            countErrors++;
             updater(option, action).apply(preview);
             continue;
           }
           updater(option, action).apply(updated);
           updater(option, action).apply(preview);
         } catch (Exception e) {
-          countErrors++;
           log.error(String.format("%s id=%s, error: %s", updated.getClass().getSimpleName(), "id", e.getMessage()));
           errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
         }
       }
-    }
-    if (countErrors < countActions) {
-      holder.setShouldBeUpdated(true);
-    }
-    if (compare(updated, entity) && holder.shouldBeUpdated) {
-      errorService.saveError(rules.getBulkOperationRules().get(0).getBulkOperationId(), identifier, "No change in value required");
-      holder.setShouldBeUpdated(false);
     }
     holder.setUpdated(updated);
     holder.setPreview(preview);
