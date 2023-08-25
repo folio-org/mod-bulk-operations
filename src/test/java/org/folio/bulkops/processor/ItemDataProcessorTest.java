@@ -58,6 +58,8 @@ import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.service.ErrorService;
+import org.folio.bulkops.service.HoldingsReferenceService;
+import org.folio.bulkops.service.ItemReferenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -75,6 +77,10 @@ class ItemDataProcessorTest extends BaseTest {
   DataProcessorFactory factory;
   @MockBean
   ErrorService errorService;
+  @MockBean
+  private HoldingsReferenceService holdingsReferenceService;
+  @MockBean
+  private ItemReferenceService itemReferenceService;
 
   private DataProcessor<Item> processor;
 
@@ -112,7 +118,14 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Test
   void testClearItemLocationAndLoanType() {
+    var holdingsId = UUID.randomUUID().toString();
+    var locationId = UUID.randomUUID().toString();
+    when(holdingsReferenceService.getHoldingsRecordById(holdingsId))
+      .thenReturn(new HoldingsRecord().withPermanentLocationId(locationId));
+    when(itemReferenceService.getLocationById(locationId))
+      .thenReturn(new ItemLocation().withId(locationId));
     var item = new Item()
+      .withHoldingsRecordId(holdingsId)
       .withPermanentLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Permanent location"))
       .withTemporaryLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Temporary location"))
       .withPermanentLoanType(new LoanType().withId(UUID.randomUUID().toString()).withName("Permanent loan type"));

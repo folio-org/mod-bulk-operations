@@ -7,6 +7,7 @@ import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.service.ErrorService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -29,15 +30,11 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
       var option = details.getOption();
       for (Action action : details.getActions()) {
         try {
-          try {
-            validator(entity).validate(option, action);
-          } catch (Exception e) {
-            errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
-            updater(option, action).apply(preview);
-            continue;
-          }
-          updater(option, action).apply(updated);
           updater(option, action).apply(preview);
+          validator(entity).validate(option, action);
+          updater(option, action).apply(updated);
+        } catch (RuleValidationException e) {
+          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
         } catch (Exception e) {
           log.error(String.format("%s id=%s, error: %s", updated.getClass().getSimpleName(), "id", e.getMessage()));
           errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
