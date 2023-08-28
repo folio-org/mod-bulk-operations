@@ -79,6 +79,7 @@ import static org.folio.bulkops.util.Constants.QUERY_PATTERN_REF_ID;
 import static org.folio.bulkops.util.Utils.encode;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -135,17 +136,12 @@ class OpenCSVConverterTest extends BaseTest {
       Assertions.fail("Error parsing CSV to bean", e);
     }
 
+    assertThat(list, hasSize(1));
     /* compare original and restored beans */
     var result = list.get(0);
-    var isEqual = (clazz.equals(Item.class)) ? EqualsBuilder.reflectionEquals(bean, result, true, clazz, "metadata", "effectiveCallNumberComponents") : bean.equals(result);
 
-    if (!isEqual) {
-      log.error("Original: " + OBJECT_MAPPER.writeValueAsString(bean));
-      log.error("Result: " + OBJECT_MAPPER.writeValueAsString(result));
-    }
+    assertEquals(bean, result);
 
-    assertTrue(isEqual);
-    assertThat(list, hasSize(1));
   }
 
   @ParameterizedTest
