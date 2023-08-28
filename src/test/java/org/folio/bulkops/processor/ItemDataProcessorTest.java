@@ -1,6 +1,8 @@
 package org.folio.bulkops.processor;
 
 import static java.util.Objects.isNull;
+import static org.folio.bulkops.domain.bean.InventoryItemStatus.NameEnum.AVAILABLE;
+import static org.folio.bulkops.domain.bean.InventoryItemStatus.NameEnum.MISSING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
@@ -26,9 +28,6 @@ import static org.folio.bulkops.processor.ItemDataProcessor.ADMINISTRATIVE_NOTE_
 import static org.folio.bulkops.processor.ItemDataProcessor.CHECK_IN_NOTE_TYPE;
 import static org.folio.bulkops.processor.ItemDataProcessor.CHECK_OUT_NOTE_TYPE;
 import static org.folio.bulkops.processor.ItemDataProcessor.ITEM_NOTE_TYPE_ID_KEY;
-import static org.folio.bulkops.service.ItemReferenceService.MODULE_NAME;
-import static org.folio.bulkops.service.ItemReferenceService.STATUSES_CONFIG_NAME;
-import static org.folio.bulkops.util.Constants.BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -37,21 +36,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.CirculationNote;
-import org.folio.bulkops.domain.bean.ConfigurationCollection;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.InventoryItemStatus;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.bean.LoanType;
-import org.folio.bulkops.domain.bean.ModelConfiguration;
-import org.folio.bulkops.domain.bean.ResultInfo;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateActionType;
@@ -94,19 +91,8 @@ class ItemDataProcessorTest extends BaseTest {
     if (isNull(processor)) {
       processor = factory.getProcessorFromFactory(Item.class);
     }
-    when(configurationClient.getByQuery(String.format(BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE, MODULE_NAME, STATUSES_CONFIG_NAME)))
-      .thenReturn(
-        new ConfigurationCollection()
-          .withConfigs(List.of(new ModelConfiguration()
-            .withId("6e2fcd41-3d6e-40e7-871d-4ae2bd494a59")
-            .withModule("BULKEDIT")
-            .withConfigName("statuses")
-            .with_default(true)
-            .withEnabled(true)
-            .withValue("{\"Available\":[\"Missing\"],\"Missing\":[\"Withdrawn\"]}")))
-          .withTotalRecords(1)
-          .withResultInfo(new ResultInfo()
-            .withTotalRecords(1)));
+    when(itemReferenceService.getAllowedStatuses(AVAILABLE.getValue()))
+      .thenReturn(Collections.singletonList(MISSING.getValue()));
   }
 
   @Test
@@ -152,8 +138,8 @@ class ItemDataProcessorTest extends BaseTest {
       .withId(updatedLoanTypeId)
       .withName("New loan type");
 
-    when(locationClient.getLocationById(updatedLocationId)).thenReturn(updatedLocation);
-    when(loanTypeClient.getLoanTypeById(updatedLoanTypeId)).thenReturn(updatedLoanType);
+    when(itemReferenceService.getLocationById(updatedLocationId)).thenReturn(updatedLocation);
+    when(itemReferenceService.getLoanTypeById(updatedLoanTypeId)).thenReturn(updatedLoanType);
 
     var item = new Item()
       .withPermanentLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Permanent location"))
@@ -205,8 +191,8 @@ class ItemDataProcessorTest extends BaseTest {
     var holdingsLocationId = UUID.randomUUID().toString();
     var holdingsLocation = ItemLocation.builder().id(holdingsLocationId).name("Holdings' location").build();
 
-    when(holdingsClient.getHoldingById(holdingsId)).thenReturn(new HoldingsRecord().withPermanentLocationId(holdingsLocationId));
-    when(locationClient.getLocationById(holdingsLocationId)).thenReturn(holdingsLocation);
+    when(holdingsReferenceService.getHoldingsRecordById(holdingsId)).thenReturn(new HoldingsRecord().withPermanentLocationId(holdingsLocationId));
+    when(itemReferenceService.getLocationById(holdingsLocationId)).thenReturn(holdingsLocation);
 
     var item = new Item()
       .withHoldingsRecordId(holdingsId)
@@ -237,7 +223,8 @@ class ItemDataProcessorTest extends BaseTest {
       .temporaryLocation(isNull(temporaryLocation) ? null : ItemLocation.builder().id(UUID.randomUUID().toString()).name("temporary").build())
       .build();
 
-    when(locationClient.getLocationById(newLocationId)).thenReturn(newLocation);
+    when(itemReferenceService.getLocationById(newLocationId))
+      .thenReturn(newLocation);
 
     var rules = rules(rule(optionType, REPLACE_WITH, newLocationId));
 
@@ -274,7 +261,7 @@ class ItemDataProcessorTest extends BaseTest {
   @Test
   void testUpdateAllowedItemStatus() {
     var item = new Item()
-      .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AVAILABLE));
+      .withStatus(new InventoryItemStatus().withName(AVAILABLE));
 
     var rules = rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.MISSING.getValue()));
     var result = processor.process(IDENTIFIER, item, rules);
@@ -291,7 +278,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertFalse(actual.shouldBeUpdated);
 
     actual = processor.process(IDENTIFIER, new Item()
-      .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AVAILABLE)), rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.IN_TRANSIT.getValue())));
+      .withStatus(new InventoryItemStatus().withName(AVAILABLE)), rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.IN_TRANSIT.getValue())));
     assertNotNull(actual.getUpdated());
     assertFalse(actual.shouldBeUpdated);
   }
