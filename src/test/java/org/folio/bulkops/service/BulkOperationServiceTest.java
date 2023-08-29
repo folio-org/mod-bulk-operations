@@ -41,6 +41,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Awaitility;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.BulkEditClient;
@@ -715,10 +716,13 @@ class BulkOperationServiceTest extends BaseTest {
 
     var expectedPathToResultFile = bulkOperationId + "/json/" + LocalDate.now() + "-Changed-Records-identifiers.json";
     var expectedPathToResultCsvFile = bulkOperationId + "/" + LocalDate.now() + "-Changed-Records-identifiers.csv";
+
+    var jsonWriter = new StringWriter();
     when(remoteFileSystemClient.writer(expectedPathToResultFile))
-      .thenReturn(new StringWriter());
+      .thenReturn(jsonWriter);
+    var csvWriter = new StringWriter();
     when(remoteFileSystemClient.writer(expectedPathToResultCsvFile))
-      .thenReturn(new StringWriter());
+      .thenReturn(csvWriter);
 
     when(executionContentRepository.save(any(BulkOperationExecutionContent.class)))
       .thenReturn(BulkOperationExecutionContent.builder().build());
@@ -734,6 +738,8 @@ class BulkOperationServiceTest extends BaseTest {
     assertEquals(expectedPathToResultCsvFile, pathCaptor.getAllValues().get(0));
     assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().get(1));
     assertNull(operation.getLinkToCommittedRecordsCsvFile());
+    assertEquals(StringUtils.EMPTY, jsonWriter.toString());
+    assertEquals(StringUtils.EMPTY, csvWriter.toString());
   }
 
   @Test

@@ -348,9 +348,11 @@ public class BulkOperationService {
 
           try {
             var result = updateEntityIfNeeded(original, modified, operation, entityClass);
-            var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
-            writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
-            sbc.write(result);
+            if (result != original) {
+              var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
+              writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
+              sbc.write(result);
+            }
             execution = execution
               .withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
               .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
