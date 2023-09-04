@@ -131,7 +131,7 @@ public class ErrorService {
       var errorsFileName = LocalDate.now() + operationRepository.findById(bulkOperationId)
         .map(BulkOperation::getLinkToTriggeringCsvFile)
         .map(FilenameUtils::getName)
-        .map(fileName -> "-Errors-" + fileName)
+        .map(fileName -> "-Committing-changes-Errors-" + fileName)
         .orElse("-Errors.csv");
       return remoteFileSystemClient.put(new ByteArrayInputStream(errorsString.getBytes()), bulkOperationId + "/" + errorsFileName);
     }
