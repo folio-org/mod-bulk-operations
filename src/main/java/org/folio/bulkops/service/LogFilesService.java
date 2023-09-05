@@ -43,25 +43,11 @@ public class LogFilesService {
   }
 
   private void removeFiles(BulkOperation bulkOperation) {
-    if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsJsonFile())) {
-      remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsJsonFile());
-      bulkOperation.setLinkToModifiedRecordsJsonFile(null);
-    }
-    if (isNotEmpty(bulkOperation.getLinkToTriggeringCsvFile())) {
-      remoteFileSystemClient.remove(bulkOperation.getLinkToTriggeringCsvFile());
-      bulkOperation.setLinkToTriggeringCsvFile(null);
-    }
-    if (isNotEmpty(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile())) {
-      remoteFileSystemClient.remove(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile());
-      bulkOperation.setLinkToMatchedRecordsErrorsCsvFile(null);
-    }
+    removeTriggeringAndMatchedRecordsFiles(bulkOperation);
+    removeModifiedFiles(bulkOperation);
     if (isNotEmpty(bulkOperation.getLinkToCommittedRecordsJsonFile())) {
       remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsJsonFile());
       bulkOperation.setLinkToCommittedRecordsJsonFile(null);
-    }
-    if (isNotEmpty(bulkOperation.getLinkToMatchedRecordsCsvFile())) {
-      remoteFileSystemClient.remove(bulkOperation.getLinkToMatchedRecordsCsvFile());
-      bulkOperation.setLinkToMatchedRecordsCsvFile(null);
     }
     if (isNotEmpty(bulkOperation.getLinkToCommittedRecordsErrorsCsvFile())) {
       remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsErrorsCsvFile());
@@ -70,14 +56,6 @@ public class LogFilesService {
     if (isNotEmpty(bulkOperation.getLinkToCommittedRecordsCsvFile())) {
       remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsCsvFile());
       bulkOperation.setLinkToCommittedRecordsCsvFile(null);
-    }
-    if (isNotEmpty(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
-      remoteFileSystemClient.remove(bulkOperation.getLinkToMatchedRecordsJsonFile());
-      bulkOperation.setLinkToMatchedRecordsJsonFile(null);
-    }
-    if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsCsvFile())) {
-      remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsCsvFile());
-      bulkOperation.setLinkToModifiedRecordsCsvFile(null);
     }
     if (isNotEmpty(bulkOperation.getLinkToPreviewRecordsJsonFile())) {
       remoteFileSystemClient.remove(bulkOperation.getLinkToPreviewRecordsJsonFile());
@@ -91,5 +69,35 @@ public class LogFilesService {
     var jsonPath = format(JSON_PATH_TEMPLATE, operationId, baseName);
     remoteFileSystemClient.remove(csvPath, jsonPath);
     log.info("Deleted: {}, {}", csvPath, jsonPath);
+  }
+
+  public void removeTriggeringAndMatchedRecordsFiles(BulkOperation bulkOperation) {
+    if (isNotEmpty(bulkOperation.getLinkToTriggeringCsvFile())) {
+      remoteFileSystemClient.remove(bulkOperation.getLinkToTriggeringCsvFile());
+      bulkOperation.setLinkToTriggeringCsvFile(null);
+    }
+    if (isNotEmpty(bulkOperation.getLinkToMatchedRecordsCsvFile())) {
+      remoteFileSystemClient.remove(bulkOperation.getLinkToMatchedRecordsCsvFile());
+      bulkOperation.setLinkToMatchedRecordsCsvFile(null);
+    }
+    if (isNotEmpty(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
+      remoteFileSystemClient.remove(bulkOperation.getLinkToMatchedRecordsJsonFile());
+      bulkOperation.setLinkToMatchedRecordsJsonFile(null);
+    }
+    if (isNotEmpty(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile())) {
+      remoteFileSystemClient.remove(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile());
+      bulkOperation.setLinkToMatchedRecordsErrorsCsvFile(null);
+    }
+  }
+
+  public void removeModifiedFiles(BulkOperation bulkOperation) {
+    if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsJsonFile())) {
+      remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsJsonFile());
+      bulkOperation.setLinkToModifiedRecordsJsonFile(null);
+    }
+    if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsCsvFile())) {
+      remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsCsvFile());
+      bulkOperation.setLinkToModifiedRecordsCsvFile(null);
+    }
   }
 }
