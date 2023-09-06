@@ -656,7 +656,7 @@ public class BulkOperationService {
     var operation = getBulkOperationOrThrow(operationId);
     if (Set.of(NEW, RETRIEVING_RECORDS, SAVING_RECORDS_LOCALLY).contains(operation.getStatus())) {
       logFilesService.removeTriggeringAndMatchedRecordsFiles(operation);
-    } else if (DATA_MODIFICATION.equals(operation.getStatus()) && MANUAL.equals(operation.getApproach())) {
+    } else if (Set.of(DATA_MODIFICATION, REVIEW_CHANGES).contains(operation.getStatus()) && MANUAL.equals(operation.getApproach())) {
       logFilesService.removeModifiedFiles(operation);
     } else {
       throw new IllegalOperationStateException(String.format("Operation with status %s cannot be cancelled", operation.getStatus()));

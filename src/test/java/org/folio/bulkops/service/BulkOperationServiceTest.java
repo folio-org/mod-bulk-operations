@@ -1016,8 +1016,9 @@ class BulkOperationServiceTest extends BaseTest {
     verify(remoteFileSystemClient).remove(linkToMatchedErrorsCsv);
   }
 
-  @Test
-  void shouldRemoveModifiedRecordsFilesOnCancel() {
+  @ParameterizedTest
+  @EnumSource(value = OperationStatusType.class, names = {"DATA_MODIFICATION", "REVIEW_CHANGES"})
+  void shouldRemoveModifiedRecordsFilesOnCancel(OperationStatusType type) {
     var operationId = UUID.randomUUID();
     var linkToModifiedCsv = "modified.csv";
     var linkToModifiedJson = "modified.json";
@@ -1025,7 +1026,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkOperationRepository.findById(operationId))
       .thenReturn(Optional.of(BulkOperation.builder()
         .id(operationId)
-        .status(DATA_MODIFICATION)
+        .status(type)
         .approach(ApproachType.MANUAL)
         .linkToModifiedRecordsCsvFile(linkToModifiedCsv)
         .linkToModifiedRecordsJsonFile(linkToModifiedJson)
@@ -1038,7 +1039,7 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class, names = {"NEW", "RETRIEVING_RECORDS", "SAVING_RECORDS_LOCALLY", "DATA_MODIFICATION"}, mode = EnumSource.Mode.EXCLUDE)
+  @EnumSource(value = OperationStatusType.class, names = {"NEW", "RETRIEVING_RECORDS", "SAVING_RECORDS_LOCALLY", "DATA_MODIFICATION", "REVIEW_CHANGES"}, mode = EnumSource.Mode.EXCLUDE)
   void shouldThrowExceptionOnInvalidStatusForCancel(OperationStatusType type) {
     var operationId = UUID.randomUUID();
 
