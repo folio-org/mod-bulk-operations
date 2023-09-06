@@ -175,7 +175,7 @@
           "modulePermissions": [ ]
         },
         {
-          "methods": [ "DELETE" ],
+          "methods": [ "POST" ],
           "pathPattern": "/bulk-operations/{operationId}/cancel",
           "permissionsRequired": ["bulk-operations.item.cancel.post"],
           "modulePermissions": [ ]
