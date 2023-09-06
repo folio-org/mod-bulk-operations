@@ -76,6 +76,7 @@ import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.BadRequestException;
+import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
@@ -986,6 +987,68 @@ class BulkOperationServiceTest extends BaseTest {
 
     verify(dataProcessingRepository).deleteById(any(UUID.class));
     verify(bulkOperationRepository).save(any(BulkOperation.class));
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = OperationStatusType.class, names = {"NEW", "RETRIEVING_RECORDS", "SAVING_RECORDS_LOCALLY"})
+  void shouldRemoveTriggeringAndMatchedRecordsFilesOnCancel(OperationStatusType type) {
+    var operationId = UUID.randomUUID();
+    var linkToTriggeringCsv = "identifiers.csv";
+    var linkToMatchedCsv = "matched.csv";
+    var linkToMatchedJson = "matched.json";
+    var linkToMatchedErrorsCsv = "matched-errors.csv";
+
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(BulkOperation.builder()
+        .id(operationId)
+        .linkToTriggeringCsvFile(linkToTriggeringCsv)
+        .linkToMatchedRecordsCsvFile(linkToMatchedCsv)
+        .linkToMatchedRecordsJsonFile(linkToMatchedJson)
+        .linkToMatchedRecordsErrorsCsvFile(linkToMatchedErrorsCsv)
+        .status(type)
+        .build()));
+
+    bulkOperationService.cancelOperationById(operationId);
+
+    verify(remoteFileSystemClient).remove(linkToTriggeringCsv);
+    verify(remoteFileSystemClient).remove(linkToMatchedCsv);
+    verify(remoteFileSystemClient).remove(linkToMatchedJson);
+    verify(remoteFileSystemClient).remove(linkToMatchedErrorsCsv);
+  }
+
+  @Test
+  void shouldRemoveModifiedRecordsFilesOnCancel() {
+    var operationId = UUID.randomUUID();
+    var linkToModifiedCsv = "modified.csv";
+    var linkToModifiedJson = "modified.json";
+
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(BulkOperation.builder()
+        .id(operationId)
+        .status(DATA_MODIFICATION)
+        .approach(ApproachType.MANUAL)
+        .linkToModifiedRecordsCsvFile(linkToModifiedCsv)
+        .linkToModifiedRecordsJsonFile(linkToModifiedJson)
+        .build()));
+
+    bulkOperationService.cancelOperationById(operationId);
+
+    verify(remoteFileSystemClient).remove(linkToModifiedCsv);
+    verify(remoteFileSystemClient).remove(linkToModifiedJson);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = OperationStatusType.class, names = {"NEW", "RETRIEVING_RECORDS", "SAVING_RECORDS_LOCALLY", "DATA_MODIFICATION"}, mode = EnumSource.Mode.EXCLUDE)
+  void shouldThrowExceptionOnInvalidStatusForCancel(OperationStatusType type) {
+    var operationId = UUID.randomUUID();
+
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(BulkOperation.builder()
+        .id(operationId)
+        .status(type)
+        .build()));
+
+    assertThrows(IllegalOperationStateException.class, () -> bulkOperationService.cancelOperationById(operationId));
   }
 
   private BulkOperation buildBulkOperation(String fileName, EntityType entityType, BulkOperationStep step) {
