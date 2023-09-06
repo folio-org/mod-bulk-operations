@@ -6,6 +6,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
+import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
@@ -51,6 +52,9 @@ public class ErrorService {
   private final BulkEditClient bulkEditClient;
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage) {
+    if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
+      return;
+    }
     operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
       int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
       bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
@@ -131,7 +135,7 @@ public class ErrorService {
       var errorsFileName = LocalDate.now() + operationRepository.findById(bulkOperationId)
         .map(BulkOperation::getLinkToTriggeringCsvFile)
         .map(FilenameUtils::getName)
-        .map(fileName -> "-Errors-" + fileName)
+        .map(fileName -> "-Committing-changes-Errors-" + fileName)
         .orElse("-Errors.csv");
       return remoteFileSystemClient.put(new ByteArrayInputStream(errorsString.getBytes()), bulkOperationId + "/" + errorsFileName);
     }
