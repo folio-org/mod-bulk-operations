@@ -19,6 +19,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
@@ -31,11 +32,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
@@ -118,6 +119,7 @@ public class BulkOperationService {
   private final DataProcessorFactory dataProcessorFactory;
   private final UpdateProcessorFactory updateProcessorFactory;
   private final ErrorService errorService;
+  private final LogFilesService logFilesService;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
@@ -481,7 +483,7 @@ public class BulkOperationService {
         if (MANUAL == approach) {
           executor.execute(getRunnableWithCurrentFolioContext(() -> apply(operation)));
         } else {
-          clear(operation);
+          logFilesService.removeModifiedFiles(operation);
           executor.execute(getRunnableWithCurrentFolioContext(() -> confirm(operation)));
         }
         return operation;
@@ -497,17 +499,6 @@ public class BulkOperationService {
       }
     } else {
       throw new IllegalOperationStateException("Bulk operation cannot be started, reason: invalid state: " + operation.getStatus());
-    }
-  }
-
-  private void clear(BulkOperation operation) {
-    if (isNotEmpty(operation.getLinkToModifiedRecordsJsonFile())) {
-      remoteFileSystemClient.remove(operation.getLinkToModifiedRecordsJsonFile());
-      operation.setLinkToModifiedRecordsJsonFile(null);
-    }
-    if (isNotEmpty(operation.getLinkToModifiedRecordsCsvFile())) {
-      remoteFileSystemClient.remove(operation.getLinkToModifiedRecordsCsvFile());
-      operation.setLinkToModifiedRecordsCsvFile(null);
     }
   }
 
@@ -648,5 +639,17 @@ public class BulkOperationService {
 
   private boolean hasNextRecord(MappingIterator<? extends BulkOperationsEntity> originalFileIterator, MappingIterator<? extends BulkOperationsEntity> modifiedFileIterator) {
     return originalFileIterator.hasNext() && modifiedFileIterator.hasNext();
+  }
+
+  public void cancelOperationById(UUID operationId) {
+    var operation = getBulkOperationOrThrow(operationId);
+    if (Set.of(NEW, RETRIEVING_RECORDS, SAVING_RECORDS_LOCALLY).contains(operation.getStatus())) {
+      logFilesService.removeTriggeringAndMatchedRecordsFiles(operation);
+    } else if (Set.of(DATA_MODIFICATION, REVIEW_CHANGES).contains(operation.getStatus()) && MANUAL.equals(operation.getApproach())) {
+      logFilesService.removeModifiedFiles(operation);
+    } else {
+      throw new IllegalOperationStateException(String.format("Operation with status %s cannot be cancelled", operation.getStatus()));
+    }
+    bulkOperationRepository.save(operation);
   }
 }

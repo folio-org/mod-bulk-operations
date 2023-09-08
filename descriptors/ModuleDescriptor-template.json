@@ -173,6 +173,12 @@
           "pathPattern": "/bulk-operations/{operationId}/files/{fileName}",
           "permissionsRequired": ["bulk-operations.files.item.delete"],
           "modulePermissions": [ ]
+        },
+        {
+          "methods": [ "POST" ],
+          "pathPattern": "/bulk-operations/{operationId}/cancel",
+          "permissionsRequired": ["bulk-operations.item.cancel.post"],
+          "modulePermissions": [ ]
         }
       ]
     },
@@ -276,6 +282,11 @@
       "description" : "Delete file by operation id and file name"
     },
     {
+      "permissionName": "bulk-operations.item.cancel.post",
+      "displayName" : "cancel operation by id",
+      "description" : "Cancel operation by id"
+    },
+    {
       "permissionName" : "bulk-operations.all",
       "displayName" : "bulk-operations all",
       "description" : "All permissions for bulk-operations module",
@@ -291,7 +302,8 @@
         "bulk-operations.collection.get",
         "bulk-operations.download.item.get",
         "bulk-operations.list-users.collection.get",
-        "bulk-operations.files.item.delete"
+        "bulk-operations.files.item.delete",
+        "bulk-operations.item.cancel.post"
       ]
     }
   ],
