@@ -483,7 +483,7 @@ public class BulkOperationService {
         if (MANUAL == approach) {
           executor.execute(getRunnableWithCurrentFolioContext(() -> apply(operation)));
         } else {
-          clear(operation);
+          logFilesService.removeModifiedFiles(operation);
           executor.execute(getRunnableWithCurrentFolioContext(() -> confirm(operation)));
         }
         return operation;
@@ -499,17 +499,6 @@ public class BulkOperationService {
       }
     } else {
       throw new IllegalOperationStateException("Bulk operation cannot be started, reason: invalid state: " + operation.getStatus());
-    }
-  }
-
-  private void clear(BulkOperation operation) {
-    if (isNotEmpty(operation.getLinkToModifiedRecordsJsonFile())) {
-      remoteFileSystemClient.remove(operation.getLinkToModifiedRecordsJsonFile());
-      operation.setLinkToModifiedRecordsJsonFile(null);
-    }
-    if (isNotEmpty(operation.getLinkToModifiedRecordsCsvFile())) {
-      remoteFileSystemClient.remove(operation.getLinkToModifiedRecordsCsvFile());
-      operation.setLinkToModifiedRecordsCsvFile(null);
     }
   }
 

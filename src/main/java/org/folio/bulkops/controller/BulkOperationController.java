@@ -157,14 +157,14 @@ public class BulkOperationController implements BulkOperationsApi {
 
   @Override
   public ResponseEntity<Void> deleteFileByNameAndOperationId(UUID operationId, String fileName) {
-    log.debug("Deleting file {} for bulk operation id={}", fileName, operationId);
+    log.info("Deleting file {} for bulk operation id={}", fileName, operationId);
     logFilesService.deleteFileByOperationIdAndName(operationId, fileName);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 
   @Override
   public ResponseEntity<Void> cancelOperationById(UUID operationId) {
-    log.debug("Cancelling bulk operation id={}", operationId);
+    log.info("Cancelling bulk operation id={}", operationId);
     bulkOperationService.cancelOperationById(operationId);
     return new ResponseEntity<>(HttpStatus.OK);
   }

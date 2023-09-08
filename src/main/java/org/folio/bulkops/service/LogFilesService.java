@@ -72,6 +72,7 @@ public class LogFilesService {
   }
 
   public void removeTriggeringAndMatchedRecordsFiles(BulkOperation bulkOperation) {
+    log.info("Attempting to delete triggering and matched records files...");
     if (isNotEmpty(bulkOperation.getLinkToTriggeringCsvFile())) {
       remoteFileSystemClient.remove(bulkOperation.getLinkToTriggeringCsvFile());
       bulkOperation.setLinkToTriggeringCsvFile(null);
@@ -91,6 +92,7 @@ public class LogFilesService {
   }
 
   public void removeModifiedFiles(BulkOperation bulkOperation) {
+    log.info("Attempting to delete modified records files...");
     if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsJsonFile())) {
       remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsJsonFile());
       bulkOperation.setLinkToModifiedRecordsJsonFile(null);
