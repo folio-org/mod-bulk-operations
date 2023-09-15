@@ -70,4 +70,37 @@ public class ItemNoteTableUpdaterTest {
     assertEquals("value3", actualRow2.getRow().get(ITEM_NOTE_POSITION + 1));
     assertEquals("circulation notes", actualRow1.getRow().get(circulationNotesPositionAfterShifting));
   }
+
+  @Test
+  void extendTableWithItemNotesTypesIfItemNotesEmptyTest() {
+    int administrativeNotesPosition = 30;
+    int circulationNotesPosition = 32;
+    int circulationNotesPositionAfterShifting = 31;
+
+    var itemNoteTableUpdater = new ItemNoteTableUpdater();
+    var itemLastFieldPosition = 47;
+    var itemFieldsSize = itemLastFieldPosition + 1;
+    var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Item.class);
+    var row = new ArrayList<String>();
+    IntStream.range(0, itemFieldsSize).forEach(i -> row.add(StringUtils.EMPTY));
+    row.set(ITEM_NOTE_POSITION, "");
+    row.set(administrativeNotesPosition, "administrative notes");
+    row.set(circulationNotesPosition, "circulation notes");
+    var rowItem = new Row();
+    rowItem.setRow(row);
+    table.addRowsItem(rowItem);
+
+    itemNoteTableUpdater.extendTableWithItemNotesTypes(table);
+
+    var headers = table.getHeader();
+    int expectedSize = itemFieldsSize - 1;
+    assertEquals(expectedSize, headers.size());
+
+    var actualRow = table.getRows().get(0);
+
+    assertEquals(expectedSize, actualRow.getRow().size());
+
+    assertEquals("administrative notes", actualRow.getRow().get(administrativeNotesPosition));
+    assertEquals("circulation notes", actualRow.getRow().get(circulationNotesPositionAfterShifting));
+  }
 }
