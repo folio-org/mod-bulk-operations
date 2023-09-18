@@ -24,7 +24,7 @@ public class ListUsersService {
   private final UserClient userClient;
 
   public Users getListUsers(String query, Integer offset, Integer limit) {
-    var allBulkOperations = bulkOperationCqlRepository.findByCQL(query, OffsetRequest.of(Objects.isNull(offset) ? 0 : offset,
+    var allBulkOperations = bulkOperationCqlRepository.findByCql(query, OffsetRequest.of(Objects.isNull(offset) ? 0 : offset,
       Objects.isNull(limit) ? Integer.MAX_VALUE : limit));
     var distinctUsers = allBulkOperations.stream().map(op -> userClient.getByQuery(format(QUERY, op.getUserId().toString()), 1).getUsers())
       .filter(users -> !users.isEmpty()).map(users -> users.get(0)).collect(Collectors.toSet());
