@@ -62,7 +62,7 @@ public class BulkOperationController implements BulkOperationsApi {
 
   @Override
   public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(String query, Integer offset, Integer limit) {
-    var page = bulkOperationCqlRepository.findByCQL(query, OffsetRequest.of(Objects.isNull(offset) ? 0 : offset, Objects.isNull(limit) ? Integer.MAX_VALUE : limit));
+    var page = bulkOperationCqlRepository.findByCql(query, OffsetRequest.of(Objects.isNull(offset) ? 0 : offset, Objects.isNull(limit) ? Integer.MAX_VALUE : limit));
     return new ResponseEntity<>(new BulkOperationCollection().bulkOperations(bulkOperationMapper.mapToDtoList(page.toList())).totalRecords((int) page.getTotalElements()), HttpStatus.OK);
   }
 

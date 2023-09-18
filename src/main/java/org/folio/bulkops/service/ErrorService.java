@@ -123,11 +123,11 @@ public class ErrorService {
   }
 
   public Page<BulkOperationExecutionContent> getErrorsByCql(String cql, int offset, int limit) {
-    return executionContentCqlRepository.findByCQL(cql.contains("errorMessage") ? cql : cql + POSTFIX_ERROR_MESSAGE_NON_NULL, OffsetRequest.of(offset, limit));
+    return executionContentCqlRepository.findByCql(cql.contains("errorMessage") ? cql : cql + POSTFIX_ERROR_MESSAGE_NON_NULL, OffsetRequest.of(offset, limit));
   }
 
   public String uploadErrorsToStorage(UUID bulkOperationId) {
-    var contents = executionContentCqlRepository.findByCQL("bulkOperationId==" + bulkOperationId + POSTFIX_ERROR_MESSAGE_NON_NULL, OffsetRequest.of(0, Integer.MAX_VALUE));
+    var contents = executionContentCqlRepository.findByCql("bulkOperationId==" + bulkOperationId + POSTFIX_ERROR_MESSAGE_NON_NULL, OffsetRequest.of(0, Integer.MAX_VALUE));
     if (!contents.isEmpty()) {
       var errorsString = contents.stream()
         .map(content -> String.join(Constants.COMMA_DELIMETER, content.getIdentifier(), content.getErrorMessage()))
