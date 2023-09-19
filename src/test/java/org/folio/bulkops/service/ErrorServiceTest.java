@@ -98,7 +98,7 @@ class ErrorServiceTest extends BaseTest {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       errorService.saveError(bulkOperationId, "123", "Error message");
 
-      var result = executionContentCqlRepository.findByCQL("bulkOperationId==" + bulkOperationId, OffsetRequest.of(0, 10));
+      var result = executionContentCqlRepository.findByCql("bulkOperationId==" + bulkOperationId, OffsetRequest.of(0, 10));
 
       assertThat(result.toList(), hasSize(1));
       var content = result.iterator().next();
