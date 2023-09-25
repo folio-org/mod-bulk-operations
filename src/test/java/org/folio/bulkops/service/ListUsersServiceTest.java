@@ -73,9 +73,9 @@ class ListUsersServiceTest extends BaseTest {
           .userId(userIdRepeated)
           .build()));
 
-      when(bulkOperationCqlRepository.findByCQL("(entityType==\"USER\")", OffsetRequest.of(0, 100)))
+      when(bulkOperationCqlRepository.findByCql("(entityType==\"USER\")", OffsetRequest.of(0, 100)))
         .thenReturn(page);
-      when(bulkOperationCqlRepository.findByCQL("(entityType==\"USER\")", OffsetRequest.of(0, Integer.MAX_VALUE)))
+      when(bulkOperationCqlRepository.findByCql("(entityType==\"USER\")", OffsetRequest.of(0, Integer.MAX_VALUE)))
         .thenReturn(page);
 
       var query = "(entityType==\"USER\")";
