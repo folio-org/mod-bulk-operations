@@ -30,8 +30,10 @@ public class LogFilesService {
   public void clearLogFiles() {
     final var back30days = LocalDateTime.now(ZoneId.of("UTC")).minusDays(MIN_DAYS_TO_CLEAR_LOG_FILES);
     var bulkOperations = bulkOperationRepository.findAll();
-    var oldOperations = bulkOperations.stream().filter(bulkOperation -> !bulkOperation.isExpired()
-      && nonNull(bulkOperation.getEndTime()) && bulkOperation.getEndTime().isBefore(back30days)).toList();
+    var oldOperations = bulkOperations.stream().filter(bulkOperation -> {
+      var time = nonNull(bulkOperation.getEndTime()) ? bulkOperation.getEndTime() : bulkOperation.getStartTime();
+      return !bulkOperation.isExpired() && nonNull(time) && time.isBefore(back30days);
+    }).toList();
     log.info("Found {} old bulk operations to clear files.", oldOperations.size());
     oldOperations.forEach(bulkOperation -> {
       bulkOperation.setExpired(true);
