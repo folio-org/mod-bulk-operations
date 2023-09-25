@@ -17,7 +17,7 @@
       "default": "true"
     },
     "ignoreTranslation": {
-      "description": "Column required translation",
+      "description": "Ignore translation",
       "type": "boolean",
       "default": "false"
     }
