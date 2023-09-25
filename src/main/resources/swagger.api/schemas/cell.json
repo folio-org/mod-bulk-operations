@@ -15,6 +15,11 @@
       "description": "Column visibility",
       "type": "boolean",
       "default": "true"
+    },
+    "ignoreTranslation": {
+      "description": "Column required translation",
+      "type": "boolean",
+      "default": "false"
     }
   },
   "additionalProperties": false,

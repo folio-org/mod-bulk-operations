@@ -33,7 +33,7 @@ public class ItemNoteTableUpdater {
         var noteType = notesFields[0];
         if (!notesPosition.containsKey(noteType)) {
           headers.add(positionToInsert, new Cell().dataType(headerToRemove.getDataType())
-            .visible(headerToRemove.getVisible()).value(noteType));
+            .visible(headerToRemove.getVisible()).value(noteType).ignoreTranslation(true));
           notesPosition.put(noteType, positionToInsert++);
         }
       }
