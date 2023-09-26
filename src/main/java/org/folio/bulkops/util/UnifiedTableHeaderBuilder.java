@@ -11,6 +11,7 @@ import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -23,7 +24,7 @@ public class UnifiedTableHeaderBuilder {
   }
 
   public static List<Cell> getHeaders(Class<? extends BulkOperationsEntity> clazz) {
-    return Stream.concat(
+    return new ArrayList<>(Stream.concat(
         FieldUtils.getFieldsListWithAnnotation(clazz, CsvRecurse.class).stream()
           .map(Field::getType)
           .map(aClass -> FieldUtils.getFieldsListWithAnnotation(aClass, CsvCustomBindByName.class))
@@ -33,7 +34,7 @@ public class UnifiedTableHeaderBuilder {
         UnifiedTableHeaderBuilder::toUnifiedTableCell,
         (key1, key2) -> key1,
         TreeMap::new))
-      .values().stream().toList();
+      .values());
   }
 
   private static Cell toUnifiedTableCell(Field field) {
