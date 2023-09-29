@@ -12,11 +12,14 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.EMAIL_ADDRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.UUID;
@@ -27,11 +30,16 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.service.ErrorService;
+import org.folio.bulkops.service.HoldingsReferenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -255,5 +263,47 @@ class HoldingsDataProcessorTest extends BaseTest {
     assertTrue(holdingsRecord.getDiscoverySuppress());
     processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_FALSE_INCLUDING_ITEMS)).apply(holdingsRecord);
     assertFalse(holdingsRecord.getDiscoverySuppress());
+  }
+
+  @ParameterizedTest
+  @CsvSource({",SET_TO_FALSE_INCLUDING_ITEMS",
+    "false,SET_TO_FALSE_INCLUDING_ITEMS",
+    "true,SET_TO_TRUE_INCLUDING_ITEMS"})
+  void shouldThrowExceptionOnValidationSetDiscoverySuppressedWhenNoChangesRequired(Boolean suppressed, UpdateActionType actionType) {
+    var holdingsRecord = HoldingsRecord.builder()
+      .sourceId(FOLIO_SOURCE_ID)
+      .discoverySuppress(suppressed)
+      .build();
+    var holdingReferenceService = mock(HoldingsReferenceService.class);
+    when(holdingReferenceService.getSourceById(FOLIO_SOURCE_ID)).thenReturn(
+      new HoldingsRecordsSource()
+        .withName("FOLIO")
+        .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
+    var processor = new HoldingsDataProcessor(null, holdingReferenceService, null);
+    var validator = processor.validator(holdingsRecord);
+    var action = new Action().type(actionType);
+
+    assertThrows(RuleValidationException.class, () -> validator.validate(SUPPRESS_FROM_DISCOVERY, action));
+  }
+
+  @ParameterizedTest
+  @CsvSource({",SET_TO_TRUE_INCLUDING_ITEMS",
+    "false,SET_TO_TRUE_INCLUDING_ITEMS",
+    "true,SET_TO_FALSE_INCLUDING_ITEMS"})
+  void shouldPassValidationOnSetDiscoverySuppressedWhenChangesAreRequired(Boolean suppressed, UpdateActionType actionType) {
+    var holdingsRecord = HoldingsRecord.builder()
+      .sourceId(FOLIO_SOURCE_ID)
+      .discoverySuppress(suppressed)
+      .build();
+    var holdingReferenceService = mock(HoldingsReferenceService.class);
+    when(holdingReferenceService.getSourceById(FOLIO_SOURCE_ID)).thenReturn(
+      new HoldingsRecordsSource()
+        .withName("FOLIO")
+        .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
+    var processor = new HoldingsDataProcessor(null, holdingReferenceService, null);
+    var validator = processor.validator(holdingsRecord);
+    var action = new Action().type(actionType);
+
+    assertDoesNotThrow(() -> validator.validate(SUPPRESS_FROM_DISCOVERY, action));
   }
 }
