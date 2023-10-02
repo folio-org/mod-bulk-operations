@@ -6,7 +6,6 @@ import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
@@ -30,6 +29,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
@@ -45,6 +45,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExportType;
 import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
+import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.bean.StateType;
@@ -120,6 +121,7 @@ public class BulkOperationService {
   private final UpdateProcessorFactory updateProcessorFactory;
   private final ErrorService errorService;
   private final LogFilesService logFilesService;
+  private final ItemNoteTableUpdater itemNoteTableUpdater;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
@@ -432,15 +434,15 @@ public class BulkOperationService {
         String[] line;
         while ((line = csvReader.readNext()) != null && csvReader.getRecordsRead() <= limit + recordsToSkip) {
           var row = new Row();
-          row.setRow(Arrays.stream(line)
-            .map(SpecialCharacterEscaper::restore)
-            .toList());
+          row.setRow(new ArrayList<>(Arrays.asList(line)));
           table.addRowsItem(row);
         }
       }
+      if (clazz == Item.class) itemNoteTableUpdater.extendTableWithItemNotesTypes(table);
+      table.getRows().forEach(row -> row.setRow(SpecialCharacterEscaper.restore(row.getRow())));
       return table;
     } catch (Exception e) {
-      log.error(e);
+      log.error(e.getMessage());
     }
     return table;
   }
