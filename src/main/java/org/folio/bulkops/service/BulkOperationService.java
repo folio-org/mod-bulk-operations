@@ -364,9 +364,7 @@ public class BulkOperationService {
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
               sbc.write(result);
             }
-            if (modified instanceof HoldingsRecord holdingsRecord) {
-              updateItemsIfNeeded(operation, holdingsRecord);
-            }
+            updateItemsIfRequired(operation, modified);
             execution = execution
               .withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
               .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
@@ -426,20 +424,22 @@ public class BulkOperationService {
       return modified;
   }
 
-  private void updateItemsIfNeeded(BulkOperation operation, HoldingsRecord holdingsRecord) {
-    var ruleCollection = ruleService.getRules(operation.getId());
-    if (shouldUpdateItemsDiscoverySuppressed(ruleCollection)) {
-      var items = itemClient.getByQuery(String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsRecord.getId())).getItems();
-      items.forEach(item -> {
-        if (!item.getDiscoverySuppress().equals(holdingsRecord.getDiscoverySuppress())) {
-          item.setDiscoverySuppress(holdingsRecord.getDiscoverySuppress());
-          try {
-            itemClient.updateItem(item, item.getId());
-          } catch (Exception e) {
-            errorService.saveError(operation.getId(), holdingsRecord.getIdentifier(operation.getIdentifierType()), e.getMessage());
+  private void updateItemsIfRequired(BulkOperation operation, BulkOperationsEntity entity) {
+    if (entity instanceof HoldingsRecord holdingsRecord) {
+      var ruleCollection = ruleService.getRules(operation.getId());
+      if (shouldUpdateItemsDiscoverySuppressed(ruleCollection)) {
+        var items = itemClient.getByQuery(String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsRecord.getId())).getItems();
+        items.forEach(item -> {
+          if (!item.getDiscoverySuppress().equals(holdingsRecord.getDiscoverySuppress())) {
+            item.setDiscoverySuppress(holdingsRecord.getDiscoverySuppress());
+            try {
+              itemClient.updateItem(item, item.getId());
+            } catch (Exception e) {
+              errorService.saveError(operation.getId(), holdingsRecord.getIdentifier(operation.getIdentifierType()), e.getMessage());
+            }
           }
-        }
-      });
+        });
+      }
     }
   }
 
