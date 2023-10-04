@@ -73,7 +73,7 @@ public class HoldingsRecord implements BulkOperationsEntity {
   private List<String> formerIds = null;
 
   @JsonProperty("instanceTitle")
-  @CsvCustomBindByName(column = "Instance", converter = StringConverter.class)
+  @CsvCustomBindByName(column = "Instance (Title, Publisher, Publication date)", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 5, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String instanceTitle;
