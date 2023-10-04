@@ -1,5 +1,6 @@
 package org.folio.bulkops.domain.bean;
 
+import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -359,5 +360,9 @@ public class Item implements BulkOperationsEntity {
     case ACCESSION_NUMBER -> accessionNumber;
     default -> id;
     };
+  }
+
+  public Boolean getDiscoverySuppress() {
+    return isNull(discoverySuppress) ? FALSE : discoverySuppress;
   }
 }

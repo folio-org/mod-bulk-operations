@@ -1,5 +1,8 @@
 package org.folio.bulkops.domain.bean;
 
+import static java.lang.Boolean.FALSE;
+import static java.util.Objects.isNull;
+
 import java.util.List;
 
 import org.folio.bulkops.domain.converter.BooleanConverter;
@@ -73,7 +76,7 @@ public class HoldingsRecord implements BulkOperationsEntity {
   private List<String> formerIds = null;
 
   @JsonProperty("instanceTitle")
-  @CsvCustomBindByName(column = "Instance", converter = StringConverter.class)
+  @CsvCustomBindByName(column = "Instance (Title, Publisher, Publication date)", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 5, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String instanceTitle;
@@ -279,5 +282,9 @@ public class HoldingsRecord implements BulkOperationsEntity {
     case ITEM_BARCODE -> itemBarcode;
     default -> id;
     };
+  }
+
+  public Boolean getDiscoverySuppress() {
+    return isNull(discoverySuppress) ? FALSE : discoverySuppress;
   }
 }
