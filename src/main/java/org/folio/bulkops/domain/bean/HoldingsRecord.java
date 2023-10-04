@@ -1,5 +1,8 @@
 package org.folio.bulkops.domain.bean;
 
+import static java.lang.Boolean.FALSE;
+import static java.util.Objects.isNull;
+
 import java.util.List;
 
 import org.folio.bulkops.domain.converter.BooleanConverter;
@@ -279,5 +282,9 @@ public class HoldingsRecord implements BulkOperationsEntity {
     case ITEM_BARCODE -> itemBarcode;
     default -> id;
     };
+  }
+
+  public Boolean getDiscoverySuppress() {
+    return isNull(discoverySuppress) ? FALSE : discoverySuppress;
   }
 }
