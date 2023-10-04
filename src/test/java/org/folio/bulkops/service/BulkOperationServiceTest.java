@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.UnifiedTableHeaderBuilder.getHeaders;
@@ -18,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -29,6 +31,7 @@ import static org.testcontainers.shaded.org.hamcrest.Matchers.hasSize;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.is;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.notNullValue;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -50,6 +53,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
@@ -1053,6 +1057,63 @@ class BulkOperationServiceTest extends BaseTest {
         .build()));
 
     assertThrows(IllegalOperationStateException.class, () -> bulkOperationService.cancelOperationById(operationId));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldUpdateItemsWhenCommittingHoldingsRecordDiscoverySuppressed() {
+    var triggeringFileName = "identifiers.csv";
+    var matchedRecordsJsonFileName = "matched.json";
+    var modifiedRecordsJsonFileName = "modified.json";
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .linkToTriggeringCsvFile(triggeringFileName)
+      .linkToMatchedRecordsJsonFile(matchedRecordsJsonFileName)
+      .linkToModifiedRecordsJsonFile(modifiedRecordsJsonFileName)
+      .entityType(HOLDINGS_RECORD)
+      .identifierType(IdentifierType.ID)
+      .build();
+    var holdingsId = UUID.randomUUID().toString();
+    var originalHoldingsString = objectMapper.writeValueAsString(HoldingsRecord.builder()
+        .id(holdingsId)
+      .discoverySuppress(true).build());
+    var modifiedHoldingsString = objectMapper.writeValueAsString(HoldingsRecord.builder()
+        .id(holdingsId)
+      .discoverySuppress(true).build());
+    when(bulkOperationRepository.save(any()))
+      .thenReturn(operation);
+    when(remoteFileSystemClient.get(matchedRecordsJsonFileName))
+      .thenReturn(new ByteArrayInputStream(originalHoldingsString.getBytes()));
+    when(remoteFileSystemClient.get(modifiedRecordsJsonFileName))
+      .thenReturn(new ByteArrayInputStream(modifiedHoldingsString.getBytes()));
+    when(remoteFileSystemClient.writer(anyString()))
+      .thenReturn(new StringWriter());
+    doNothing().when(errorService).saveError(any(), any(), any());
+    when(ruleService.getRules(operationId))
+      .thenReturn(new BulkOperationRuleCollection()
+        .bulkOperationRules(List.of(new BulkOperationRule()
+          .ruleDetails(new BulkOperationRuleRuleDetails()
+            .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
+            .actions(List.of(new Action().type(UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS)))))));
+    when(itemClient.getByQuery(anyString()))
+      .thenReturn(ItemCollection.builder()
+        .items(List.of(
+          Item.builder()
+            .id(UUID.randomUUID().toString())
+            .discoverySuppress(true)
+            .build(),
+          Item.builder()
+            .id(UUID.randomUUID().toString())
+            .discoverySuppress(false)
+            .build()))
+        .build());
+    when(executionRepository.save(any()))
+      .thenReturn(new BulkOperationExecution());
+
+    bulkOperationService.commit(operation);
+
+    verify(itemClient).updateItem(any(), anyString());
   }
 
   private BulkOperation buildBulkOperation(String fileName, EntityType entityType, BulkOperationStep step) {
