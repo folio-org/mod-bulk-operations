@@ -43,8 +43,6 @@ public enum TestEntity {
         .personal(new Personal())
         .enrollmentDate(new Date())
         .expirationDate(new Date())
-        .createdDate(new Date())
-        .updatedDate(new Date())
         .tags(new Tags())
         .customFields(Map.of())
         .build();
