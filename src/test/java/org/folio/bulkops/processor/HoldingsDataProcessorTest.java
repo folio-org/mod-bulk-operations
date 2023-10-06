@@ -253,7 +253,7 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withId(UUID.randomUUID().toString())
       .withDiscoverySuppress(false);
 
-    var processor = new HoldingsDataProcessor(null, null, null);
+    var processor = new HoldingsDataProcessor(null, null);
 
     processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_TRUE)).apply(holdingsRecord);
     assertTrue(holdingsRecord.getDiscoverySuppress());
@@ -263,47 +263,5 @@ class HoldingsDataProcessorTest extends BaseTest {
     assertTrue(holdingsRecord.getDiscoverySuppress());
     processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_FALSE_INCLUDING_ITEMS)).apply(holdingsRecord);
     assertFalse(holdingsRecord.getDiscoverySuppress());
-  }
-
-  @ParameterizedTest
-  @CsvSource({",SET_TO_FALSE_INCLUDING_ITEMS",
-    "false,SET_TO_FALSE_INCLUDING_ITEMS",
-    "true,SET_TO_TRUE_INCLUDING_ITEMS"})
-  void shouldThrowExceptionOnValidationSetDiscoverySuppressedWhenNoChangesRequired(Boolean suppressed, UpdateActionType actionType) {
-    var holdingsRecord = HoldingsRecord.builder()
-      .sourceId(FOLIO_SOURCE_ID)
-      .discoverySuppress(suppressed)
-      .build();
-    var holdingReferenceService = mock(HoldingsReferenceService.class);
-    when(holdingReferenceService.getSourceById(FOLIO_SOURCE_ID)).thenReturn(
-      new HoldingsRecordsSource()
-        .withName("FOLIO")
-        .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
-    var processor = new HoldingsDataProcessor(null, holdingReferenceService, null);
-    var validator = processor.validator(holdingsRecord);
-    var action = new Action().type(actionType);
-
-    assertThrows(RuleValidationException.class, () -> validator.validate(SUPPRESS_FROM_DISCOVERY, action));
-  }
-
-  @ParameterizedTest
-  @CsvSource({",SET_TO_TRUE_INCLUDING_ITEMS",
-    "false,SET_TO_TRUE_INCLUDING_ITEMS",
-    "true,SET_TO_FALSE_INCLUDING_ITEMS"})
-  void shouldPassValidationOnSetDiscoverySuppressedWhenChangesAreRequired(Boolean suppressed, UpdateActionType actionType) {
-    var holdingsRecord = HoldingsRecord.builder()
-      .sourceId(FOLIO_SOURCE_ID)
-      .discoverySuppress(suppressed)
-      .build();
-    var holdingReferenceService = mock(HoldingsReferenceService.class);
-    when(holdingReferenceService.getSourceById(FOLIO_SOURCE_ID)).thenReturn(
-      new HoldingsRecordsSource()
-        .withName("FOLIO")
-        .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
-    var processor = new HoldingsDataProcessor(null, holdingReferenceService, null);
-    var validator = processor.validator(holdingsRecord);
-    var action = new Action().type(actionType);
-
-    assertDoesNotThrow(() -> validator.validate(SUPPRESS_FROM_DISCOVERY, action));
   }
 }

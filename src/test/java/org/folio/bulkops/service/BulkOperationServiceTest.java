@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
@@ -1059,9 +1060,10 @@ class BulkOperationServiceTest extends BaseTest {
     assertThrows(IllegalOperationStateException.class, () -> bulkOperationService.cancelOperationById(operationId));
   }
 
-  @Test
+  @ParameterizedTest
+  @EnumSource(DiscoverySuppressTestData.class)
   @SneakyThrows
-  void shouldUpdateItemsWhenCommittingHoldingsRecordDiscoverySuppressed() {
+  void shouldUpdateItemsWhenCommittingHoldingsRecordDiscoverySuppressed(DiscoverySuppressTestData testData) {
     var triggeringFileName = "identifiers.csv";
     var matchedRecordsJsonFileName = "matched.json";
     var modifiedRecordsJsonFileName = "modified.json";
@@ -1077,10 +1079,10 @@ class BulkOperationServiceTest extends BaseTest {
     var holdingsId = UUID.randomUUID().toString();
     var originalHoldingsString = objectMapper.writeValueAsString(HoldingsRecord.builder()
         .id(holdingsId)
-      .discoverySuppress(true).build());
+      .discoverySuppress(testData.originalHoldingsDiscoverySuppress).build());
     var modifiedHoldingsString = objectMapper.writeValueAsString(HoldingsRecord.builder()
         .id(holdingsId)
-      .discoverySuppress(true).build());
+      .discoverySuppress(testData.modifiedHoldingsDiscoverySuppress).build());
     when(bulkOperationRepository.save(any()))
       .thenReturn(operation);
     when(remoteFileSystemClient.get(matchedRecordsJsonFileName))
@@ -1095,17 +1097,17 @@ class BulkOperationServiceTest extends BaseTest {
         .bulkOperationRules(List.of(new BulkOperationRule()
           .ruleDetails(new BulkOperationRuleRuleDetails()
             .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
-            .actions(List.of(new Action().type(UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS)))))));
+            .actions(List.of(new Action().type(testData.actionType)))))));
     when(itemClient.getByQuery(anyString()))
       .thenReturn(ItemCollection.builder()
         .items(List.of(
           Item.builder()
             .id(UUID.randomUUID().toString())
-            .discoverySuppress(true)
+            .discoverySuppress(testData.item1DiscoverySuppress)
             .build(),
           Item.builder()
             .id(UUID.randomUUID().toString())
-            .discoverySuppress(false)
+            .discoverySuppress(testData.item2DiscoverySuppress)
             .build()))
         .build());
     when(executionRepository.save(any()))
@@ -1113,7 +1115,12 @@ class BulkOperationServiceTest extends BaseTest {
 
     bulkOperationService.commit(operation);
 
-    verify(itemClient).updateItem(any(), anyString());
+    if (testData.expectedNumOfItemUpdates > 0) {
+      verify(itemClient, times(testData.expectedNumOfItemUpdates)).updateItem(any(), anyString());
+    }
+    if (nonNull(testData.expectedErrorMessage)) {
+      verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage));
+    }
   }
 
   private BulkOperation buildBulkOperation(String fileName, EntityType entityType, BulkOperationStep step) {
