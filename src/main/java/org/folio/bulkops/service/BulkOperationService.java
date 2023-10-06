@@ -1,8 +1,10 @@
 package org.folio.bulkops.service;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
+import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -23,6 +25,8 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDI
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
+import static org.folio.bulkops.util.Constants.MSG_HOLDING_NO_CHANGE_REQUIRED_SUPPRESSED_ITEMS_UPDATED;
+import static org.folio.bulkops.util.Constants.MSG_HOLDING_NO_CHANGE_REQUIRED_UNSUPPRESSED_ITEMS_UPDATED;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
@@ -34,6 +38,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -57,7 +63,9 @@ import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.converter.CustomMappingStrategy;
 import org.folio.bulkops.domain.dto.ApproachType;
+import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -364,7 +372,6 @@ public class BulkOperationService {
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
               sbc.write(result);
             }
-            updateItemsIfRequired(operation, modified);
             execution = execution
               .withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
               .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
@@ -410,7 +417,13 @@ public class BulkOperationService {
 
   private BulkOperationsEntity updateEntityIfNeeded(BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation, Class<? extends BulkOperationsEntity> entityClass) {
     if (original.hashCode() == modified.hashCode() && original.equals(modified)) {
-      errorService.saveError(operation.getId(), original.getIdentifier(operation.getIdentifierType()), MSG_NO_CHANGE_REQUIRED);
+      var errorMessage = MSG_NO_CHANGE_REQUIRED;
+      if (modified instanceof HoldingsRecord holdingsRecord && updateItemsIfRequired(operation, holdingsRecord)) {
+        errorMessage = TRUE.equals(holdingsRecord.getDiscoverySuppress()) ?
+          MSG_HOLDING_NO_CHANGE_REQUIRED_UNSUPPRESSED_ITEMS_UPDATED :
+          MSG_HOLDING_NO_CHANGE_REQUIRED_SUPPRESSED_ITEMS_UPDATED;
+      }
+      errorService.saveError(operation.getId(), original.getIdentifier(operation.getIdentifierType()), errorMessage);
       return original;
     }
     var updater = updateProcessorFactory.getProcessorFromFactory(entityClass);
@@ -419,38 +432,42 @@ public class BulkOperationService {
       .build();
       executionContent.setIdentifier(modified.getIdentifier(operation.getIdentifierType()));
       updater.updateRecord(modified, original.getIdentifier(operation.getIdentifierType()), operation.getId());
+      if (modified instanceof HoldingsRecord holdingsRecord) {
+        updateItemsIfRequired(operation, holdingsRecord);
+      }
       executionContentRepository.save(executionContent.withState(StateType.PROCESSED));
       operation.setCommittedNumOfRecords(operation.getCommittedNumOfRecords() + 1);
       return modified;
   }
 
-  private void updateItemsIfRequired(BulkOperation operation, BulkOperationsEntity entity) {
-    if (entity instanceof HoldingsRecord holdingsRecord) {
-      var ruleCollection = ruleService.getRules(operation.getId());
-      if (shouldUpdateItemsDiscoverySuppressed(ruleCollection)) {
-        var items = itemClient.getByQuery(String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsRecord.getId())).getItems();
-        items.forEach(item -> {
-          if (!item.getDiscoverySuppress().equals(holdingsRecord.getDiscoverySuppress())) {
-            item.setDiscoverySuppress(holdingsRecord.getDiscoverySuppress());
-            try {
-              itemClient.updateItem(item, item.getId());
-            } catch (Exception e) {
-              errorService.saveError(operation.getId(), holdingsRecord.getIdentifier(operation.getIdentifierType()), e.getMessage());
-            }
-          }
-        });
-      }
+  private boolean updateItemsIfRequired(BulkOperation operation, HoldingsRecord holdingsRecord) {
+    var items = getItemsWithOppositeDiscoverySuppress(operation, holdingsRecord);
+    if (isNotEmpty(items)) {
+      items.forEach(item -> updateProcessorFactory.getProcessorFromFactory(Item.class)
+        .updateRecord(item.withDiscoverySuppress(holdingsRecord.getDiscoverySuppress()),
+          holdingsRecord.getIdentifier(operation.getIdentifierType()), operation.getId()));
+      return true;
     }
+    return false;
   }
 
-  private boolean shouldUpdateItemsDiscoverySuppressed(BulkOperationRuleCollection ruleCollection) {
-    return ruleCollection.getBulkOperationRules().stream().anyMatch(rule -> {
-      var ruleDetails = rule.getRuleDetails();
-      var option = ruleDetails.getOption();
-      if (option != SUPPRESS_FROM_DISCOVERY) return false;
-      return ruleDetails.getActions().stream().anyMatch(action -> action.getType() == SET_TO_TRUE_INCLUDING_ITEMS ||
-        action.getType() == SET_TO_FALSE_INCLUDING_ITEMS);
-    });
+  private List<Item> getItemsWithOppositeDiscoverySuppress(BulkOperation operation, HoldingsRecord holdingsRecord) {
+    var ruleCollection = ruleService.getRules(operation.getId());
+    if (isDiscoverySuppressUpdate(ruleCollection)) {
+      return itemClient.getByQuery(String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsRecord.getId())).getItems().stream()
+        .filter(item -> !Objects.equals(item.getDiscoverySuppress(), holdingsRecord.getDiscoverySuppress()))
+        .toList();
+    }
+    return Collections.emptyList();
+  }
+
+  private boolean isDiscoverySuppressUpdate(BulkOperationRuleCollection bulkOperationRuleCollection) {
+    return bulkOperationRuleCollection.getBulkOperationRules().stream()
+      .map(BulkOperationRule::getRuleDetails)
+      .filter(ruleDetails -> SUPPRESS_FROM_DISCOVERY.equals(ruleDetails.getOption()))
+      .map(BulkOperationRuleRuleDetails::getActions)
+      .flatMap(List::stream)
+      .anyMatch(action -> Set.of(SET_TO_TRUE_INCLUDING_ITEMS, SET_TO_FALSE_INCLUDING_ITEMS).contains(action.getType()));
   }
 
   public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset, int limit) {

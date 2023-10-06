@@ -1,9 +1,6 @@
 package org.folio.bulkops.processor;
 
-import static java.lang.Boolean.FALSE;
-import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
-import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
@@ -18,7 +15,6 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-import org.folio.bulkops.client.HoldingsSourceClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.UpdateActionType;
@@ -41,7 +37,6 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
 
   private final ItemReferenceService itemReferenceService;
   private final HoldingsReferenceService holdingsReferenceService;
-  private final HoldingsSourceClient holdingsSourceClient;
 
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -72,14 +67,6 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
       }
       if (PERMANENT_LOCATION == option && CLEAR_FIELD == action.getType()) {
         throw new RuleValidationException("Permanent location cannot be cleared");
-      }
-      if (SUPPRESS_FROM_DISCOVERY.equals(option)) {
-        if (SET_TO_TRUE_INCLUDING_ITEMS.equals(action.getType()) && TRUE.equals(entity.getDiscoverySuppress())) {
-          throw new RuleValidationException("No change in value for holdings record required, associated unsuppressed item(s) have been updated.");
-        } else if (SET_TO_FALSE_INCLUDING_ITEMS.equals(action.getType()) &&
-          (isNull(entity.getDiscoverySuppress()) || FALSE.equals(entity.getDiscoverySuppress()))) {
-          throw new RuleValidationException("No change in value for holdings record required, associated suppressed item(s) have been updated.");
-        }
       }
     };
   }
