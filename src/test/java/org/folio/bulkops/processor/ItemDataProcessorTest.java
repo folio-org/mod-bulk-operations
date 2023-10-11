@@ -400,6 +400,35 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Test
   @SneakyThrows
+  void testRemoveCheckInNoteAndAddCheckOutNoteOfTheSameNoteType() {
+    var checkInNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN);
+    var item = new Item().withCirculationNotes(List.of(checkInNote));
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_ALL)).apply(item);
+    processor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING)).apply(item);
+    assertEquals(1, item.getCirculationNotes().size());
+    assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
+  }
+
+  @Test
+  @SneakyThrows
+  void testRemoveItemNoteAndAddItemNoteOfTheSameNoteType() {
+    var actionNote = new ItemNote().withItemNoteTypeId("typeId1").withNote("Action note");
+    var item = new Item().withNotes(List.of(actionNote));
+    var parameter = new Parameter();
+    parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId1");
+    var processor = new ItemDataProcessor(null, null);
+
+    processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).parameters(List.of(parameter)).initial("Action note")).apply(item);
+    processor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter))).apply(item);
+    assertEquals(1, item.getNotes().size());
+    assertEquals("typeId1", item.getNotes().get(0).getItemNoteTypeId());
+  }
+
+  @Test
+  @SneakyThrows
   void testRemoveItemNotes() {
     var itemNote1 = new ItemNote().withItemNoteTypeId("typeId1");
     var itemNote2 = new ItemNote().withItemNoteTypeId("typeId2");

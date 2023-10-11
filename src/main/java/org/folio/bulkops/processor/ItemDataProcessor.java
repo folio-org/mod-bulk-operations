@@ -187,8 +187,10 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
             .withNote(action.getUpdated()).withStaffOnly(false);
           if (circulationNotes == null) {
             circulationNotes = new ArrayList<>();
-            item.setCirculationNotes(circulationNotes);
+          } else {
+            circulationNotes = new ArrayList<>(circulationNotes);
           }
+          item.setCirculationNotes(circulationNotes);
           circulationNotes.add(circulationNote);
         };
       } else if (option == ITEM_NOTE) {
@@ -199,8 +201,10 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
             var notes = item.getNotes();
             if (notes == null) {
               notes = new ArrayList<>();
-              item.setNotes(notes);
+            } else {
+              notes = new ArrayList<>(notes);
             }
+            item.setNotes(notes);
             notes.add(note);
           });
       }
