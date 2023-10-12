@@ -34,6 +34,56 @@ This release of the mod-bulk operations includes file storage optimization, edit
 * [MODBULKOPS-57](https://issues.folio.org/browse/MODBULKOPS-57) - Empty "File with updated records" is included in the list of files for downloading when no records have been successfully changed
 * [MODBULKOPS-52](https://issues.folio.org/browse/MODBULKOPS-52) - Name of downloaded file from "Logs" tab does not adhere to the naming standard
 
+## v1.0.6 - Released 2023/06/16
+This release contains Spring Boot upgrade to 3.0.7
+
+### Bugs
+* [MODBULKOPS-109](https://issues.folio.org/browse/MODBULKOPS-109) - Spring Boot 3.0.7 fixing vulns for Orchid
+
+## v1.0.5 - Released 2023/03/30
+This release contains minor improvements of retrieving records flow
+
+### Technical tasks
+* [MODBULKOPS-90](https://issues.folio.org/browse/MODBULKOPS-90) - Remove redundant data-export-worker call
+
+## v1.0.4 - Released 2023/03/28
+This release contains minor performance improvements and bug fixes
+
+### Technical tasks
+* [MODBULKOPS-88](https://issues.folio.org/browse/MODBULKOPS-88) - instanceTitle converter rework
+
+### Bugs
+* [MODBULKOPS-67](https://issues.folio.org/browse/MODBULKOPS-67) - Item with status "Checked Out" or "Paged" is not edited if bulk edit includes editing by "Status" field
+
+## v1.0.3 - Released 2023/03/21
+This release contains fixes for processing bad data, updating folio-spring-base version and logging improvements
+
+### Bugs
+* [MODBULKOPS-85](https://issues.folio.org/browse/MODBULKOPS-85) - Expected errors are not populated for Holdings identifiers
+* [FOLSPRINGB-95](https://issues.folio.org/browse/FOLSPRINGB-95) - non-public beginFolioExecutionContext avoids wrong tenant/user
+
+## v1.0.2 - Released 2023/03/10
+This release contains fixes for processing bad data and minor improvements
+
+### Technical tasks
+* [MODBULKOPS-50](https://issues.folio.org/browse/MODBULKOPS-50) - TD: csv <-> object conversion unit test.
+
+### Tech debts
+* [MODBULKOPS-71](https://issues.folio.org/browse/MODBULKOPS-71) - Handle bad data gracefully.
+
+### Bugs
+* [MODBULKOPS-61](https://issues.folio.org/browse/MODBULKOPS-61) - Reported "Completed" status instead of "Completed with errors"
+* [MODBULKOPS-30](https://issues.folio.org/browse/MODBULKOPS-30) - Provide human readable id for bulk edit jobs.
+
+## v1.0.1 - Released 2023/03/03
+This release includes infrastructural changes (memory settings, Prometheus integration, increasing upload file size, performance optimization) and bug-fixes.
+
+### Stories
+* [RANCHER-621](https://issues.folio.org/browse/RANCHER-621) - Add config file for Prometheus.
+
+### Bugs
+* [MODEXPW-375](https://issues.folio.org/browse/MODEXPW-375) - Job runs by user not the one who created the job.
+
 ## v1.0.0 - Released 2023/02/24
 The initial release of the mod-bulk operations functionality (refactored version of mod-bulk-operations).
 
