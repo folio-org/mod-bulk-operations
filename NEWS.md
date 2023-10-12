@@ -1,7 +1,7 @@
 ## v2.0.0 - Unreleased
 
 ## v1.1.0 - Released 2023/10/12
-This release of the mod-bulk operations includes file storage optimization, editing for items notes, supression status, bugs fixes.
+This release includes file storage optimization, editing for items notes, suppression status, bugs fixes.
 
 ### Technical tasks
 * [MODBULKOPS-156](https://issues.folio.org/browse/MODBULKOPS-156) - mod-bulk-operations: spring upgrade
