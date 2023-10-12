@@ -20,7 +20,6 @@ This release includes file storage optimization, editing for items notes, suppre
 * [MODBULKOPS-127](https://issues.folio.org/browse/MODBULKOPS-127) - Add endpoint to get distinct list of users on Logs tab
 * [MODBULKOPS-126](https://issues.folio.org/browse/MODBULKOPS-126) - Apply to item records when item suppression status differs from holding record
 * [MODBULKOPS-113](https://issues.folio.org/browse/MODBULKOPS-113) - Handling system updated fields in csv approach
-* [MODBULKOPS-105](https://issues.folio.org/browse/MODBULKOPS-105) - Migrate to folio-spring-support v7.0.0
 * [MODBULKOPS-102](https://issues.folio.org/browse/MODBULKOPS-102) - Suppress from discovery holdings records in bulk
 * [MODBULKOPS-101](https://issues.folio.org/browse/MODBULKOPS-101) - Supported bulk edit action for item notes
 * [MODBULKOPS-98](https://issues.folio.org/browse/MODBULKOPS-98) - Previews reflect fewer records if the record has a field with line breaks
