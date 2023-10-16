@@ -7,7 +7,7 @@
 
 
   <changeSet id="16-06-2023_add_set_false_action_type" author="firebird">
-    <sqlFile path="changes/16-06-2023_add_set_false_action_type.sql" relativeToChangelogFile="true" />
+    <sqlFile path="16-06-2023_add_set_false_action_type.sql" relativeToChangelogFile="true" />
   </changeSet>
 
 </databaseChangeLog>

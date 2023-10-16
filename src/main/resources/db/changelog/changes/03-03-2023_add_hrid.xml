@@ -7,7 +7,7 @@
 
 
   <changeSet id="03-03-2023_add_hrid" author="firebird">
-    <sqlFile path="changes/03-03-2023_add_hrid.sql" relativeToChangelogFile="true" />
+    <sqlFile path="03-03-2023_add_hrid.sql" relativeToChangelogFile="true" />
   </changeSet>
 
 </databaseChangeLog>
