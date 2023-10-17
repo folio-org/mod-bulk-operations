@@ -7,7 +7,7 @@
 
 
   <changeSet id="04-07-2023_add_notes_options_types" author="firebird">
-    <sqlFile path="changes/04-07-2023_add_notes_options_types.sql" relativeToChangelogFile="true" />
+    <sqlFile path="04-07-2023_add_notes_options_types.sql" relativeToChangelogFile="true" />
   </changeSet>
 
 </databaseChangeLog>

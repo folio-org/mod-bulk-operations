@@ -7,7 +7,7 @@
 
 
   <changeSet id="10-02-2023_add_link_to_preview" author="firebird">
-    <sqlFile path="changes/10-02-2023_add_link_to_preview.sql" relativeToChangelogFile="true" />
+    <sqlFile path="10-02-2023_add_link_to_preview.sql" relativeToChangelogFile="true" />
   </changeSet>
 
 </databaseChangeLog>

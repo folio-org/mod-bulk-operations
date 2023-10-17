@@ -7,7 +7,7 @@
 
 
   <changeSet id="06-07-2023_add_parameters_to_bulk_operation_rules_details" author="firebird">
-    <sqlFile path="changes/06-07-2023_add_parameters_to_bulk_operation_rules_details.sql" relativeToChangelogFile="true" />
+    <sqlFile path="06-07-2023_add_parameters_to_bulk_operation_rules_details.sql" relativeToChangelogFile="true" />
   </changeSet>
 
 </databaseChangeLog>

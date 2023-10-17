@@ -7,7 +7,7 @@
 
 
   <changeSet id="06_07_2023_update_bulk_operation_add_expired" author="firebird">
-    <sqlFile path="changes/06_07_2023_update_bulk_operation_add_expired.sql" relativeToChangelogFile="true" />
+    <sqlFile path="06_07_2023_update_bulk_operation_add_expired.sql" relativeToChangelogFile="true" />
   </changeSet>
 
 </databaseChangeLog>

@@ -7,7 +7,7 @@
 
 
   <changeSet id="17-04-2023_bulk_operation_default_values" author="firebird">
-    <sqlFile path="changes/17-04-2023_bulk_operation_default_values.sql" relativeToChangelogFile="true" />
+    <sqlFile path="17-04-2023_bulk_operation_default_values.sql" relativeToChangelogFile="true" />
   </changeSet>
 
 </databaseChangeLog>
