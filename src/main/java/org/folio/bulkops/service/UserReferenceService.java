@@ -18,6 +18,7 @@ import org.folio.bulkops.client.OkapiClient;
 import org.folio.bulkops.domain.bean.AddressType;
 import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.bean.Department;
+import org.folio.bulkops.domain.bean.PreferredContactType;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.spring.FolioExecutionContext;
@@ -119,5 +120,13 @@ public class UserReferenceService {
       return moduleNamesJson.get(0).get("id").asText();
     }
     throw new NotFoundException(format("Module id not found for name: %s", moduleName));
+  }
+
+  public PreferredContactType getPreferredContactTypeById(String id) {
+    var contactType = PreferredContactType.getById(id);
+    if (contactType.isPresent()) {
+      return contactType.get();
+    }
+    throw new NotFoundException(format("Invalid Preferred contact value: %s", id));
   }
 }
