@@ -1,6 +1,10 @@
 package org.folio.bulkops.service;
 
-import org.folio.bulkops.domain.bean.*;
+import org.folio.bulkops.domain.bean.AddressType;
+import org.folio.bulkops.domain.bean.CustomField;
+import org.folio.bulkops.domain.bean.Department;
+import org.folio.bulkops.domain.bean.PreferredContactType;
+import org.folio.bulkops.domain.bean.UserGroup;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
