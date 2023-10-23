@@ -5,11 +5,12 @@ import org.folio.bulkops.domain.bean.Department;
 import org.folio.bulkops.domain.bean.DepartmentCollection;
 import org.junit.jupiter.api.Test;
 
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 import static java.util.Collections.singletonList;
-import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.mockito.Mockito.when;
 
 class DepartmentsConverterTest extends BaseTest {
@@ -24,6 +25,6 @@ class DepartmentsConverterTest extends BaseTest {
         .departments(singletonList(Department.builder().id(uuid2.toString()).build())).build());
     DepartmentsConverter converter = new DepartmentsConverter();
     var actual = converter.convertToObject("dep1;dep2");
-    assertIterableEquals(Set.of(uuid1, uuid2), actual);
+    assertThat(actual, containsInAnyOrder(List.of(uuid1, uuid2).toArray()));
   }
 }
