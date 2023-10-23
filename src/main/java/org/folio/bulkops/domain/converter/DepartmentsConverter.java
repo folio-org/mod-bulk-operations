@@ -22,7 +22,7 @@ public class DepartmentsConverter extends BaseConverter<Set<UUID>> {
   public Set<UUID> convertToObject(String value) {
     String[] departmentNames = value.split(ARRAY_DELIMITER);
     if (departmentNames.length > 0) {
-      return Arrays.stream(departmentNames)
+      return Arrays.stream(departmentNames).parallel()
         .filter(StringUtils::isNotEmpty)
         .map(SpecialCharacterEscaper::restore)
         .map(name -> UserReferenceHelper.service().getDepartmentByName(name))
