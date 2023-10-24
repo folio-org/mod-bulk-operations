@@ -3,43 +3,48 @@ package org.folio.bulkops.processor;
 import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
+import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.EMAIL_ADDRESS;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDING_NOTE_TYPE_ID_KEY;
+import static org.folio.bulkops.processor.ItemDataProcessor.ITEM_NOTE_TYPE_ID_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.UUID;
 
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
+import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.dto.Action;
-import org.folio.bulkops.domain.dto.UpdateActionType;
+import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.exception.NotFoundException;
-import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.service.ErrorService;
-import org.folio.bulkops.service.HoldingsReferenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -253,7 +258,7 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withId(UUID.randomUUID().toString())
       .withDiscoverySuppress(false);
 
-    var processor = new HoldingsDataProcessor(null, null);
+    var processor = new HoldingsDataProcessor(null, null, null);
 
     processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_TRUE)).apply(holdingsRecord);
     assertTrue(holdingsRecord.getDiscoverySuppress());
@@ -263,5 +268,104 @@ class HoldingsDataProcessorTest extends BaseTest {
     assertTrue(holdingsRecord.getDiscoverySuppress());
     processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_FALSE_INCLUDING_ITEMS)).apply(holdingsRecord);
     assertFalse(holdingsRecord.getDiscoverySuppress());
+  }
+
+  @Test
+  @SneakyThrows
+  void testUpdateMarkAsStaffOnlyForHoldingsNotes() {
+    var holdingsNote = new HoldingsNote().withHoldingsNoteTypeId("typeId").withStaffOnly(false);
+    var  holding= new HoldingsRecord().withNotes(List.of(holdingsNote));
+    var parameter = new Parameter();
+    parameter.setKey(HOLDING_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId");
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+
+    processor.updater(HOLDINGS_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(holding);
+
+    assertTrue(holding.getNotes().get(0).getStaffOnly());
+  }
+
+  @Test
+  @SneakyThrows
+  void testUpdateRemoveMarkAsStaffOnlyForHoldingsNotes() {
+    var holdingsNote = new HoldingsNote().withHoldingsNoteTypeId("typeId").withStaffOnly(true);
+    var  holding= new HoldingsRecord().withNotes(List.of(holdingsNote));
+    var parameter = new Parameter();
+    parameter.setKey(HOLDING_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId");
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+
+    processor.updater(HOLDINGS_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(holding);
+
+    assertFalse(holding.getNotes().get(0).getStaffOnly());
+  }
+
+  @Test
+  @SneakyThrows
+  void testRemoveAdministrativeNotes() {
+    var administrativeNote = "administrative note";
+    var holding =  new HoldingsRecord().withAdministrativeNotes(List.of(administrativeNote));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(REMOVE_ALL)).apply(holding);
+    assertTrue(holding.getAdministrativeNotes().isEmpty());
+  }
+
+  @Test
+  @SneakyThrows
+  void testRemoveHoldingsNotes() {
+    var note1 = new HoldingsNote().withHoldingsNoteTypeId("typeId1");
+    var note2 = new HoldingsNote().withHoldingsNoteTypeId("typeId2");
+    var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
+    var parameter = new Parameter();
+    parameter.setKey(HOLDING_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId1");
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+
+    processor.updater(HOLDINGS_NOTE, new Action().type(REMOVE_ALL).parameters(List.of(parameter))).apply(holding);
+    assertEquals(1, holding.getNotes().size());
+    assertEquals("typeId2", holding.getNotes().get(0).getHoldingsNoteTypeId());
+  }
+
+  @Test
+  @SneakyThrows
+  void testAddAdministrativeNotes() {
+    var administrativeNote1 = "administrative note";
+    var administrativeNote2 = "administrative note 2";
+    var holding = new HoldingsRecord();
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote1)).apply(holding);
+    assertEquals(1, holding.getAdministrativeNotes().size());
+    assertEquals(administrativeNote1, holding.getAdministrativeNotes().get(0));
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote2)).apply(holding);
+    assertEquals(2, holding.getAdministrativeNotes().size());
+  }
+
+  @Test
+  @SneakyThrows
+  void testAddHoldingsNotes() {
+    var note1 = "note1";
+    var note2 = "note2";
+    var holding = new HoldingsRecord();
+    var parameter = new Parameter();
+    parameter.setKey(HOLDING_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId1");
+
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+
+    processor.updater(HOLDINGS_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(note1)).apply(holding);
+
+    assertEquals(1, holding.getNotes().size());
+    assertEquals("typeId1", holding.getNotes().get(0).getHoldingsNoteTypeId());
+    assertEquals(note1, holding.getNotes().get(0).getNote());
+
+    parameter.setValue("typeId2");
+    processor.updater(HOLDINGS_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(note2)).apply(holding);
+
+    assertEquals(2, holding.getNotes().size());
+    assertEquals("typeId2", holding.getNotes().get(1).getHoldingsNoteTypeId());
+    assertEquals(note2, holding.getNotes().get(1).getNote());
   }
 }

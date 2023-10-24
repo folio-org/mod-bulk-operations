@@ -2,16 +2,22 @@ package org.folio.bulkops.processor;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
+import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
+import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -37,6 +43,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
 
   private final ItemReferenceService itemReferenceService;
   private final HoldingsReferenceService holdingsReferenceService;
+  private final HoldingsNotesUpdater holdingsNotesUpdater;
 
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -72,11 +79,6 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
   }
 
   public Updater<HoldingsRecord> updater(UpdateOptionType option, Action action) {
-    if (PERMANENT_LOCATION != option && TEMPORARY_LOCATION != option && SUPPRESS_FROM_DISCOVERY != option) {
-      return holding -> {
-        throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
-      };
-    }
     if (REPLACE_WITH == action.getType()) {
       return holding -> {
         var locationId = action.getUpdated();
@@ -98,6 +100,21 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
       return holding -> holding.setDiscoverySuppress(true);
     } else if (isSetDiscoverySuppressFalse(action.getType(), option)) {
       return holding -> holding.setDiscoverySuppress(false);
+    } else if (MARK_AS_STAFF_ONLY == action.getType() || REMOVE_MARK_AS_STAFF_ONLY == action.getType()){
+      var markAsStaffValue = action.getType() == MARK_AS_STAFF_ONLY;
+      return holding -> holdingsNotesUpdater.setMarkAsStaffForNotesByTypeId(holding.getNotes(), action.getParameters(), markAsStaffValue);
+    } else if (REMOVE_ALL == action.getType()) {
+      if (option == ADMINISTRATIVE_NOTE) {
+        return holding -> holding.setAdministrativeNotes(new ArrayList<>());
+      } else if (option == HOLDINGS_NOTE) {
+        return holding -> holding.setNotes(holdingsNotesUpdater.removeNotesByTypeId(holding.getNotes(), action.getParameters()));
+      }
+    } else if (ADD_TO_EXISTING == action.getType()) {
+      if (option == ADMINISTRATIVE_NOTE) {
+        return holding -> holding.setAdministrativeNotes(holdingsNotesUpdater.addToAdministrativeNotes(action.getUpdated(), holding.getAdministrativeNotes()));
+      } else if (option == HOLDINGS_NOTE) {
+        return holding -> holding.setNotes(holdingsNotesUpdater.addToHoldingsNotesByTypeId(holding.getNotes(), action.getParameters(), action.getUpdated()));
+      }
     }
     return holding -> {
       throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
@@ -114,7 +131,16 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
 
   @Override
   public HoldingsRecord clone(HoldingsRecord entity) {
-    return entity.toBuilder().build();
+    var clone = entity.toBuilder().build();
+    if (entity.getAdministrativeNotes() != null) {
+      var administrativeNotes = new ArrayList<>(entity.getAdministrativeNotes());
+      clone.setAdministrativeNotes(administrativeNotes);
+    }
+    if (entity.getNotes() != null) {
+      var holdingsNotes = entity.getNotes().stream().map(note -> note.toBuilder().build()).toList();
+      clone.setNotes(new ArrayList<>(holdingsNotes));
+    }
+    return clone;
   }
 
   @Override
