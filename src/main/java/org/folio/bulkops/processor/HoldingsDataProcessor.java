@@ -113,7 +113,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
       if (option == ADMINISTRATIVE_NOTE) {
         return holding -> holding.setAdministrativeNotes(holdingsNotesUpdater.addToAdministrativeNotes(action.getUpdated(), holding.getAdministrativeNotes()));
       } else if (option == HOLDINGS_NOTE) {
-        return holding -> holding.setNotes(holdingsNotesUpdater.addToHoldingsNotesByTypeId(holding.getNotes(), action.getParameters(), action.getUpdated()));
+        return holding -> holding.setNotes(holdingsNotesUpdater.addToNotesByTypeId(holding.getNotes(), action.getParameters(), action.getUpdated()));
       }
     }
     return holding -> {

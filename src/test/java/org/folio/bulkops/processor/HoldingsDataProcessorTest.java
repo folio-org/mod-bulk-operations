@@ -17,7 +17,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
-import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDING_NOTE_TYPE_ID_KEY;
+import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDINGS_NOTE_TYPE_ID_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -273,7 +273,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var holdingsNote = new HoldingsNote().withHoldingsNoteTypeId("typeId").withStaffOnly(false);
     var  holding= new HoldingsRecord().withNotes(List.of(holdingsNote));
     var parameter = new Parameter();
-    parameter.setKey(HOLDING_NOTE_TYPE_ID_KEY);
+    parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
 
@@ -288,7 +288,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var holdingsNote = new HoldingsNote().withHoldingsNoteTypeId("typeId").withStaffOnly(true);
     var  holding= new HoldingsRecord().withNotes(List.of(holdingsNote));
     var parameter = new Parameter();
-    parameter.setKey(HOLDING_NOTE_TYPE_ID_KEY);
+    parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
 
@@ -315,7 +315,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var note2 = new HoldingsNote().withHoldingsNoteTypeId("typeId2");
     var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
     var parameter = new Parameter();
-    parameter.setKey(HOLDING_NOTE_TYPE_ID_KEY);
+    parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
 
@@ -347,7 +347,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var note2 = "note2";
     var holding = new HoldingsRecord();
     var parameter = new Parameter();
-    parameter.setKey(HOLDING_NOTE_TYPE_ID_KEY);
+    parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
 
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());

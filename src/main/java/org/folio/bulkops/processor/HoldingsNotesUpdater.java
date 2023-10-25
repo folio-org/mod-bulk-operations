@@ -11,10 +11,10 @@ import java.util.List;
 
 @Component
 public class HoldingsNotesUpdater {
-  public static final String HOLDING_NOTE_TYPE_ID_KEY = "HOLDING_NOTE_TYPE_ID_KEY";
+  public static final String HOLDINGS_NOTE_TYPE_ID_KEY = "HOLDINGS_NOTE_TYPE_ID_KEY";
 
   public void setMarkAsStaffForNotesByTypeId(List<HoldingsNote> notes, List<Parameter> parameters, boolean markAsStaffValue) {
-    parameters.stream().filter(p -> StringUtils.equals(p.getKey(), HOLDING_NOTE_TYPE_ID_KEY)).findFirst()
+    parameters.stream().filter(p -> StringUtils.equals(p.getKey(), HOLDINGS_NOTE_TYPE_ID_KEY)).findFirst()
       .ifPresent(parameter -> {
         var typeId = parameter.getValue();
         if (notes != null) {
@@ -27,7 +27,7 @@ public class HoldingsNotesUpdater {
   }
 
   public List<HoldingsNote> removeNotesByTypeId(List<HoldingsNote> notes, List<Parameter> parameters) {
-    var typeIdParameterOptional = parameters.stream().filter(parameter -> StringUtils.equals(parameter.getKey(), HOLDING_NOTE_TYPE_ID_KEY)).findFirst();
+    var typeIdParameterOptional = parameters.stream().filter(parameter -> StringUtils.equals(parameter.getKey(), HOLDINGS_NOTE_TYPE_ID_KEY)).findFirst();
     if (typeIdParameterOptional.isPresent()) {
       var typeId = typeIdParameterOptional.get().getValue();
       if (notes != null) {
@@ -45,8 +45,8 @@ public class HoldingsNotesUpdater {
     return administrativeNotes;
   }
 
-  public List<HoldingsNote> addToHoldingsNotesByTypeId(List<HoldingsNote> notes, List<Parameter> parameters, String noteValue) {
-    var typeIdParameterOptional = parameters.stream().filter(parameter -> StringUtils.equals(parameter.getKey(), HOLDING_NOTE_TYPE_ID_KEY)).findFirst();
+  public List<HoldingsNote> addToNotesByTypeId(List<HoldingsNote> notes, List<Parameter> parameters, String noteValue) {
+    var typeIdParameterOptional = parameters.stream().filter(parameter -> StringUtils.equals(parameter.getKey(), HOLDINGS_NOTE_TYPE_ID_KEY)).findFirst();
     if (typeIdParameterOptional.isPresent()) {
       var note = new HoldingsNote().withHoldingsNoteTypeId(typeIdParameterOptional.get().getValue()).withNote(noteValue);
       if (notes == null) {
