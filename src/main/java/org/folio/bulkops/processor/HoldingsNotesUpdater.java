@@ -7,6 +7,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import static java.util.stream.Collectors.toCollection;
 
 
 @Component
@@ -27,7 +30,7 @@ public class HoldingsNotesUpdater {
   }
 
   public List<HoldingsNote> removeNotesByTypeId(List<HoldingsNote> notes, List<Parameter> parameters) {
-    var typeIdParameterOptional = parameters.stream().filter(parameter -> StringUtils.equals(parameter.getKey(), HOLDINGS_NOTE_TYPE_ID_KEY)).findFirst();
+    var typeIdParameterOptional = getTypeIdParameterOptional(parameters);
     if (typeIdParameterOptional.isPresent()) {
       var typeId = typeIdParameterOptional.get().getValue();
       if (notes != null) {
@@ -46,7 +49,7 @@ public class HoldingsNotesUpdater {
   }
 
   public List<HoldingsNote> addToNotesByTypeId(List<HoldingsNote> notes, List<Parameter> parameters, String noteValue) {
-    var typeIdParameterOptional = parameters.stream().filter(parameter -> StringUtils.equals(parameter.getKey(), HOLDINGS_NOTE_TYPE_ID_KEY)).findFirst();
+    var typeIdParameterOptional = getTypeIdParameterOptional(parameters);
     if (typeIdParameterOptional.isPresent()) {
       var note = new HoldingsNote().withHoldingsNoteTypeId(typeIdParameterOptional.get().getValue()).withNote(noteValue);
       if (notes == null) {
@@ -55,6 +58,29 @@ public class HoldingsNotesUpdater {
       notes.add(note);
     }
     return notes;
+  }
+
+  public List<String> findAndRemoveAdministrativeNote(String administrativeNoteToRemove, List<String> administrativeNotes) {
+    if (administrativeNotes != null) {
+      administrativeNotes = administrativeNotes.stream()
+        .filter(administrativeNote -> !StringUtils.equals(administrativeNote, administrativeNoteToRemove))
+        .collect(toCollection(ArrayList::new));
+    }
+    return administrativeNotes;
+  }
+
+  public List<HoldingsNote> findAndRemoveNoteByValueAndTypeId(String noteToRemove, List<HoldingsNote> notes, List<Parameter> parameters) {
+    var typeIdParameterOptional = getTypeIdParameterOptional(parameters);
+    if (typeIdParameterOptional.isPresent() && notes != null) {
+      notes = notes.stream().filter(note -> !(StringUtils.equals(note.getHoldingsNoteTypeId(), typeIdParameterOptional.get().getValue())
+              && StringUtils.equals(note.getNote(), noteToRemove))).collect(toCollection(ArrayList::new));
+    }
+    return notes;
+  }
+
+
+  private Optional<Parameter> getTypeIdParameterOptional(List<Parameter> parameters) {
+    return parameters.stream().filter(parameter -> StringUtils.equals(parameter.getKey(), HOLDINGS_NOTE_TYPE_ID_KEY)).findFirst();
   }
 
 }
