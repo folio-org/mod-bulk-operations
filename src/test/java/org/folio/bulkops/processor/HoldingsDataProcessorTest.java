@@ -14,12 +14,10 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDIN
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.EMAIL_ADDRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDING_NOTE_TYPE_ID_KEY;
-import static org.folio.bulkops.processor.ItemDataProcessor.ITEM_NOTE_TYPE_ID_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -27,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,9 +34,7 @@ import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
-import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
-import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.exception.NotFoundException;
@@ -367,5 +364,37 @@ class HoldingsDataProcessorTest extends BaseTest {
     assertEquals(2, holding.getNotes().size());
     assertEquals("typeId2", holding.getNotes().get(1).getHoldingsNoteTypeId());
     assertEquals(note2, holding.getNotes().get(1).getNote());
+  }
+
+  @Test
+  @SneakyThrows
+  void testClone() {
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+    var administrativeNotes = new ArrayList<String>();
+    administrativeNotes.add("note1");
+    var holding1 = new HoldingsRecord().withId("id")
+      .withAdministrativeNotes(administrativeNotes)
+      .withNotes(new ArrayList<>());
+
+    var holding2 = processor.clone(holding1);
+    assertTrue(processor.compare(holding1, holding2));
+
+    holding2.getAdministrativeNotes().add("note2");
+    assertFalse(processor.compare(holding1, holding2));
+    holding1.setAdministrativeNotes(null);
+
+    var note1 = new HoldingsNote().withHoldingsNoteTypeId("typeId").withStaffOnly(true);
+    var note2 = new HoldingsNote().withHoldingsNoteTypeId("typeId").withStaffOnly(false);
+    holding1.getNotes().add(note1);
+
+    holding2 = processor.clone(holding1);
+    assertTrue(processor.compare(holding1, holding2));
+
+    holding2.getNotes().get(0).setStaffOnly(false);
+    assertFalse(processor.compare(holding1, holding2));
+
+    holding2.getNotes().add(note2);
+
+    assertFalse(processor.compare(holding1, holding2));
   }
 }
