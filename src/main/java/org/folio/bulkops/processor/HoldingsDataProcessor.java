@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STAFF_ONLY;
@@ -106,7 +107,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
       return holding -> holdingsNotesUpdater.setMarkAsStaffForNotesByTypeId(holding.getNotes(), action.getParameters(), markAsStaffValue);
     } else if (REMOVE_ALL == action.getType()) {
       if (option == ADMINISTRATIVE_NOTE) {
-        return holding -> holding.setAdministrativeNotes(new ArrayList<>());
+        return holding -> holding.setAdministrativeNotes(holdingsNotesUpdater.removeAdministrativeNotes());
       } else if (option == HOLDINGS_NOTE) {
         return holding -> holding.setNotes(holdingsNotesUpdater.removeNotesByTypeId(holding.getNotes(), action.getParameters()));
       }
@@ -121,6 +122,12 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
         return holding -> holding.setAdministrativeNotes(holdingsNotesUpdater.findAndRemoveAdministrativeNote(action.getInitial(), holding.getAdministrativeNotes()));
       } else if (option == HOLDINGS_NOTE) {
         return holding -> holding.setNotes(holdingsNotesUpdater.findAndRemoveNoteByValueAndTypeId(action.getInitial(), holding.getNotes(), action.getParameters()));
+      }
+    } else if (FIND_AND_REPLACE == action.getType()) {
+      if (option == ADMINISTRATIVE_NOTE) {
+        return holding -> holding.setAdministrativeNotes(holdingsNotesUpdater.findAndReplaceAdministrativeNote(action, holding.getAdministrativeNotes()));
+      } else if (option == HOLDINGS_NOTE) {
+        return holding -> holdingsNotesUpdater.findAndReplaceNoteByValueAndTypeId(action, holding.getNotes());
       }
     }
     return holding -> {

@@ -2,6 +2,7 @@ package org.folio.bulkops.processor;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.HoldingsNote;
+import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +28,10 @@ public class HoldingsNotesUpdater {
             }
           });
         }});
+  }
+
+  public List<String> removeAdministrativeNotes() {
+    return new ArrayList<>();
   }
 
   public List<HoldingsNote> removeNotesByTypeId(List<HoldingsNote> notes, List<Parameter> parameters) {
@@ -78,6 +83,27 @@ public class HoldingsNotesUpdater {
     return notes;
   }
 
+  public List<String> findAndReplaceAdministrativeNote(Action action, List<String> administrativeNotes) {
+    if (administrativeNotes != null) {
+      administrativeNotes = administrativeNotes.stream().map(administrativeNote -> {
+        if (StringUtils.equals(administrativeNote, action.getInitial())) {
+          return action.getUpdated();
+        }
+        return administrativeNote;
+      }).collect(toCollection(ArrayList::new));
+    }
+    return administrativeNotes;
+  }
+
+  public void findAndReplaceNoteByValueAndTypeId(Action action, List<HoldingsNote> notes) {
+    var typeIdParameterOptional = getTypeIdParameterOptional(action.getParameters());
+    if (typeIdParameterOptional.isPresent() && notes != null) {
+      notes.forEach(note -> {
+        if (StringUtils.equals(note.getHoldingsNoteTypeId(), typeIdParameterOptional.get().getValue())
+              && StringUtils.equals(note.getNote(), action.getInitial())) note.setNote(action.getUpdated());
+      });
+    }
+  }
 
   private Optional<Parameter> getTypeIdParameterOptional(List<Parameter> parameters) {
     return parameters.stream().filter(parameter -> StringUtils.equals(parameter.getKey(), HOLDINGS_NOTE_TYPE_ID_KEY)).findFirst();

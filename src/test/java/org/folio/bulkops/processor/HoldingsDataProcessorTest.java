@@ -4,6 +4,7 @@ import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STAFF_ONLY;
@@ -35,9 +36,7 @@ import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
-import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
-import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.exception.NotFoundException;
@@ -406,6 +405,40 @@ class HoldingsDataProcessorTest extends BaseTest {
     processor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note2")
       .parameters(List.of(parameter))).apply(holding);
     assertEquals(1, holding.getNotes().size());
+  }
+
+  @Test
+  @SneakyThrows
+  void testFindAndReplaceForAdministrativeNotes() {
+    var administrativeNote1 = "administrative note 1";
+    var administrativeNote2 = "administrative note 2";
+    var administrativeNote3 = "administrative note 3";
+    var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REPLACE)
+      .initial(administrativeNote1).updated(administrativeNote3)).apply(holding);
+    assertEquals(2, holding.getAdministrativeNotes().size());
+    assertEquals(administrativeNote3, holding.getAdministrativeNotes().get(0));
+    assertEquals(administrativeNote2, holding.getAdministrativeNotes().get(1));
+  }
+
+  @Test
+  @SneakyThrows
+  void testFindAndReplaceForHoldingNotes() {
+    var note1 = new HoldingsNote().withHoldingsNoteTypeId("typeId1").withNote("note1");
+    var note2 = new HoldingsNote().withHoldingsNoteTypeId("typeId2").withNote("note1");
+    var parameter = new Parameter();
+    parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId1");
+    var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+
+    processor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REPLACE).parameters(List.of(parameter))
+      .initial("note1").updated("note3")).apply(holding);
+
+    assertEquals("note3", holding.getNotes().get(0).getNote());
+    assertEquals("note1", holding.getNotes().get(1).getNote());
   }
 
   @Test
