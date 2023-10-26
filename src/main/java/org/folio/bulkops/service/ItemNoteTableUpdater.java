@@ -35,6 +35,7 @@ public class ItemNoteTableUpdater {
   public void extendTableWithItemNotesTypes(UnifiedTable unifiedTable) {
     var noteTypeNames = itemReferenceService.getAllItemNoteTypes().stream()
       .map(NoteType::getName)
+      .sorted()
       .toList();
 
     extendHeadersWithItemNoteTypeNames(unifiedTable.getHeader(), noteTypeNames);

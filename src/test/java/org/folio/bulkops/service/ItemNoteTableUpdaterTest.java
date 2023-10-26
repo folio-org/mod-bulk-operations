@@ -31,8 +31,9 @@ import java.util.stream.Collectors;
 @ExtendWith(MockitoExtension.class)
 class ItemNoteTableUpdaterTest {
   private static final int ACTION_NOTE_POSITION = ITEM_NOTE_POSITION;
-  private static final int NOTE_POSITION = ITEM_NOTE_POSITION + 1;
-  private static final int BINDING_POSITION = ITEM_NOTE_POSITION + 2;
+  private static final int BINDING_POSITION = ITEM_NOTE_POSITION + 1;
+  private static final int NOTE_POSITION = ITEM_NOTE_POSITION + 2;
+
   @Mock
   private ItemReferenceService itemReferenceService;
   @InjectMocks
