@@ -103,7 +103,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
       return holding -> holding.setDiscoverySuppress(true);
     } else if (isSetDiscoverySuppressFalse(action.getType(), option)) {
       return holding -> holding.setDiscoverySuppress(false);
-    } else if (MARK_AS_STAFF_ONLY == action.getType() || REMOVE_MARK_AS_STAFF_ONLY == action.getType()){
+    } else if ((MARK_AS_STAFF_ONLY == action.getType() || REMOVE_MARK_AS_STAFF_ONLY == action.getType()) && option == HOLDINGS_NOTE){
       var markAsStaffValue = action.getType() == MARK_AS_STAFF_ONLY;
       return holding -> holdingsNotesUpdater.setMarkAsStaffForNotesByTypeId(holding.getNotes(), action.getParameters(), markAsStaffValue);
     } else if (REMOVE_ALL == action.getType()) {
