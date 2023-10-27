@@ -57,7 +57,8 @@ public class HoldingsNotesUpdater {
   public List<HoldingsNote> addToNotesByTypeId(List<HoldingsNote> notes, List<Parameter> parameters, String noteValue) {
     var typeIdParameterOptional = getTypeIdParameterOptional(parameters);
     if (typeIdParameterOptional.isPresent()) {
-      var note = new HoldingsNote().withHoldingsNoteTypeId(typeIdParameterOptional.get().getValue()).withNote(noteValue);
+      var note = new HoldingsNote().withHoldingsNoteTypeId(typeIdParameterOptional.get().getValue())
+        .withNote(noteValue).withStaffOnly(false);
       if (notes == null) {
         notes = new ArrayList<>();
       }
@@ -110,7 +111,7 @@ public class HoldingsNotesUpdater {
     if (holding.getAdministrativeNotes() != null) {
       if (holding.getNotes() == null) holding.setNotes(new ArrayList<>());
       holding.getAdministrativeNotes().forEach(administrativeNote ->
-        holding.getNotes().add(new HoldingsNote().withHoldingsNoteTypeId(action.getUpdated()).withNote(administrativeNote)));
+        holding.getNotes().add(new HoldingsNote().withHoldingsNoteTypeId(action.getUpdated()).withNote(administrativeNote).withStaffOnly(false)));
       holding.setAdministrativeNotes(new ArrayList<>());
     }
   }
