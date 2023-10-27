@@ -38,4 +38,5 @@ public class Constants {
   public static final String MSG_NO_CHANGE_REQUIRED = "No change in value required";
   public static final String MSG_HOLDING_NO_CHANGE_REQUIRED_UNSUPPRESSED_ITEMS_UPDATED = "No change in value for holdings record required, associated unsuppressed item(s) have been updated.";
   public static final String MSG_HOLDING_NO_CHANGE_REQUIRED_SUPPRESSED_ITEMS_UPDATED = "No change in value for holdings record required, associated suppressed item(s) have been updated.";
+  public static final String STAFF_ONLY = "(staff only)";
 }
