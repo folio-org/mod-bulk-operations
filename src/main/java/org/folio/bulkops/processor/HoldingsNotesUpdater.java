@@ -2,6 +2,7 @@ package org.folio.bulkops.processor;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.HoldingsNote;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.springframework.stereotype.Component;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.util.stream.Collectors.toCollection;
-
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 
 @Component
 public class HoldingsNotesUpdater {
@@ -102,6 +103,33 @@ public class HoldingsNotesUpdater {
         if (StringUtils.equals(note.getHoldingsNoteTypeId(), typeIdParameterOptional.get().getValue())
               && StringUtils.equals(note.getNote(), action.getInitial())) note.setNote(action.getUpdated());
       });
+    }
+  }
+
+  public void changeNoteTypeForAdministrativeNotes(HoldingsRecord holding, Action action) {
+    if (holding.getAdministrativeNotes() != null) {
+      if (holding.getNotes() == null) holding.setNotes(new ArrayList<>());
+      holding.getAdministrativeNotes().forEach(administrativeNote ->
+        holding.getNotes().add(new HoldingsNote().withHoldingsNoteTypeId(action.getUpdated()).withNote(administrativeNote)));
+      holding.setAdministrativeNotes(new ArrayList<>());
+    }
+  }
+
+  public void changeNoteTypeForHoldingsNote(HoldingsRecord holding, Action action) {
+    var typeIdParameterOptional = getTypeIdParameterOptional(action.getParameters());
+    if (typeIdParameterOptional.isPresent()) {
+      var typeId  = typeIdParameterOptional.get().getValue();
+      var notesWithTypeForChange = holding.getNotes().stream()
+        .filter(note -> StringUtils.equals(note.getHoldingsNoteTypeId(), typeId)).toList();
+      if (notesWithTypeForChange.isEmpty()) return;
+      if (ADMINISTRATIVE_NOTE.getValue().equals(action.getUpdated())) {
+        if (holding.getAdministrativeNotes() == null) holding.setAdministrativeNotes(new ArrayList<>());
+        var notesWithoutTypeForChange = holding.getNotes().stream().filter(note -> !StringUtils.equals(note.getHoldingsNoteTypeId(), typeId)).collect(toCollection(ArrayList::new));
+        notesWithTypeForChange.forEach(note -> holding.getAdministrativeNotes().add(note.getNote()));
+        holding.setNotes(notesWithoutTypeForChange);
+      } else {
+        notesWithTypeForChange.forEach(note -> note.setHoldingsNoteTypeId(action.getUpdated()));
+      }
     }
   }
 

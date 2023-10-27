@@ -2,6 +2,7 @@ package org.folio.bulkops.processor;
 
 import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
+import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
@@ -20,6 +21,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDINGS_NOTE_TYPE_ID_KEY;
+import static org.folio.bulkops.processor.ItemDataProcessor.ADMINISTRATIVE_NOTE_TYPE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -439,6 +441,49 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     assertEquals("note3", holding.getNotes().get(0).getNote());
     assertEquals("note1", holding.getNotes().get(1).getNote());
+  }
+
+  @Test
+  @SneakyThrows
+  void testChangeTypeForAdministrativeNotes() {
+    var administrativeNote = "note";
+    var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote)));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
+      .updated("typeId")).apply(holding);
+    assertEquals(0, holding.getAdministrativeNotes().size());
+    assertEquals("note", holding.getNotes().get(0).getNote());
+    assertEquals("typeId", holding.getNotes().get(0).getHoldingsNoteTypeId());
+  }
+
+  @Test
+  @SneakyThrows
+  void testChangeNoteTypeForHoldingsNotes() {
+    var note1 = new HoldingsNote().withHoldingsNoteTypeId("typeId1").withNote("note1");
+    var note2 =  new HoldingsNote().withHoldingsNoteTypeId("typeId2").withNote("note2");
+    var parameter = new Parameter();
+    parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId1");
+    var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+
+    processor.updater(HOLDINGS_NOTE, new Action().type(CHANGE_TYPE).updated(ADMINISTRATIVE_NOTE_TYPE).parameters(List.of(parameter))).apply(holding);
+
+    assertEquals(1, holding.getAdministrativeNotes().size());
+    assertEquals("note1", holding.getAdministrativeNotes().get(0));
+    assertEquals(1, holding.getNotes().size());
+    assertEquals("note2", holding.getNotes().get(0).getNote());
+
+    holding.setAdministrativeNotes(null);
+    holding.setNotes(List.of(note1, note2));
+
+    processor.updater(HOLDINGS_NOTE, new Action().type(CHANGE_TYPE).updated("typeId3").parameters(List.of(parameter))).apply(holding);
+    assertEquals(2, holding.getNotes().size());
+    assertEquals("note1", holding.getNotes().get(0).getNote());
+    assertEquals("typeId3", holding.getNotes().get(0).getHoldingsNoteTypeId());
+    assertEquals("note2", holding.getNotes().get(1).getNote());
+    assertEquals("typeId2", holding.getNotes().get(1).getHoldingsNoteTypeId());
   }
 
   @Test

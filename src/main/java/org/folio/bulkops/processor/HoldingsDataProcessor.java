@@ -3,6 +3,7 @@ package org.folio.bulkops.processor;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
+import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
@@ -128,6 +129,12 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
         return holding -> holding.setAdministrativeNotes(holdingsNotesUpdater.findAndReplaceAdministrativeNote(action, holding.getAdministrativeNotes()));
       } else if (option == HOLDINGS_NOTE) {
         return holding -> holdingsNotesUpdater.findAndReplaceNoteByValueAndTypeId(action, holding.getNotes());
+      }
+    } else if (CHANGE_TYPE == action.getType()) {
+      if (option == ADMINISTRATIVE_NOTE) {
+        return holding -> holdingsNotesUpdater.changeNoteTypeForAdministrativeNotes(holding, action);
+      } else if (option == HOLDINGS_NOTE) {
+        return holding -> holdingsNotesUpdater.changeNoteTypeForHoldingsNote(holding, action);
       }
     }
     return holding -> {
