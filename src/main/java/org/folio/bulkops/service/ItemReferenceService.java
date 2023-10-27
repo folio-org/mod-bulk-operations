@@ -28,6 +28,7 @@ import org.folio.bulkops.domain.bean.DamagedStatus;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.MaterialType;
+import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.bean.ServicePoint;
 import org.folio.bulkops.exception.ConfigurationException;
 import org.folio.bulkops.exception.NotFoundException;
@@ -48,6 +49,7 @@ public class ItemReferenceService {
 
   public static final String MODULE_NAME = "BULKEDIT";
   public static final String STATUSES_CONFIG_NAME = "statuses";
+  public static final String QUERY_ALL_RECORDS = "cql.allRecords=1";
 
   private final CallNumberTypeClient callNumberTypeClient;
   private final ConfigurationClient configurationClient;
@@ -219,5 +221,10 @@ public class ItemReferenceService {
     } catch (JsonProcessingException e) {
       throw new ConfigurationException(format("Error reading configuration, reason: %s", e.getMessage()));
     }
+  }
+
+  @Cacheable(cacheNames = "itemNoteTypes")
+  public List<NoteType> getAllItemNoteTypes() {
+    return itemNoteTypeClient.getByQuery(QUERY_ALL_RECORDS).getItemNoteTypes();
   }
 }
