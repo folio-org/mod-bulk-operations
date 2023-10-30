@@ -24,10 +24,10 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
-import static org.folio.bulkops.processor.ItemDataProcessor.ADMINISTRATIVE_NOTE_TYPE;
-import static org.folio.bulkops.processor.ItemDataProcessor.CHECK_IN_NOTE_TYPE;
-import static org.folio.bulkops.processor.ItemDataProcessor.CHECK_OUT_NOTE_TYPE;
-import static org.folio.bulkops.processor.ItemDataProcessor.ITEM_NOTE_TYPE_ID_KEY;
+import static org.folio.bulkops.processor.ItemsNotesUpdater.ADMINISTRATIVE_NOTE_TYPE;
+import static org.folio.bulkops.processor.ItemsNotesUpdater.CHECK_IN_NOTE_TYPE;
+import static org.folio.bulkops.processor.ItemsNotesUpdater.CHECK_OUT_NOTE_TYPE;
+import static org.folio.bulkops.processor.ItemsNotesUpdater.ITEM_NOTE_TYPE_ID_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -307,7 +307,7 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ITEM_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(item);
 
@@ -322,7 +322,7 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ITEM_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(item);
 
@@ -337,7 +337,7 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(CHECK_IN_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(item);
     assertTrue(item.getCirculationNotes().get(0).getStaffOnly());
@@ -357,7 +357,7 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(item);
     assertFalse(item.getCirculationNotes().get(0).getStaffOnly());
@@ -374,7 +374,7 @@ class ItemDataProcessorTest extends BaseTest {
   void testRemoveAdministrativeNotes() {
     var administrativeNote = "administrative note";
     var item = new Item().withAdministrativeNotes(List.of(administrativeNote));
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(REMOVE_ALL)).apply(item);
     assertTrue(item.getAdministrativeNotes().isEmpty());
@@ -386,7 +386,7 @@ class ItemDataProcessorTest extends BaseTest {
     var checkInNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN);
     var checkOutNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.OUT);
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_ALL)).apply(item);
     assertEquals(1, item.getCirculationNotes().size());
@@ -403,7 +403,7 @@ class ItemDataProcessorTest extends BaseTest {
   void testRemoveCheckInNoteAndAddCheckOutNoteOfTheSameNoteType() {
     var checkInNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN);
     var item = new Item().withCirculationNotes(List.of(checkInNote));
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_ALL)).apply(item);
     processor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING)).apply(item);
@@ -419,7 +419,7 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).parameters(List.of(parameter)).initial("Action note")).apply(item);
     processor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter))).apply(item);
@@ -436,7 +436,7 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ITEM_NOTE, new Action().type(REMOVE_ALL).parameters(List.of(parameter))).apply(item);
     assertEquals(1, item.getNotes().size());
@@ -449,7 +449,7 @@ class ItemDataProcessorTest extends BaseTest {
     var administrativeNote1 = "administrative note";
     var administrativeNote2 = "administrative note 2";
     var item = new Item();
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote1)).apply(item);
     assertEquals(1, item.getAdministrativeNotes().size());
@@ -465,7 +465,7 @@ class ItemDataProcessorTest extends BaseTest {
     var checkInNote = "checkInNote";
     var checkOutNote = "checkOutNote";
     var item = new Item();
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(CHECK_IN_NOTE, new Action().type(ADD_TO_EXISTING).updated(checkInNote)).apply(item);
     assertEquals(1, item.getCirculationNotes().size());
@@ -488,7 +488,7 @@ class ItemDataProcessorTest extends BaseTest {
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
 
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(itemNote1)).apply(item);
 
@@ -510,7 +510,7 @@ class ItemDataProcessorTest extends BaseTest {
     var administrativeNote1 = "administrative note 1";
     var administrativeNote2 = "administrative note 2";
     var item = new Item().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("administrative note")).apply(item);
     assertEquals(2, item.getAdministrativeNotes().size());
@@ -528,7 +528,7 @@ class ItemDataProcessorTest extends BaseTest {
     var checkOutNote = new CirculationNote()
       .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("circ note");
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note")).apply(item);
     assertEquals(2, item.getCirculationNotes().size());
@@ -554,7 +554,7 @@ class ItemDataProcessorTest extends BaseTest {
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
     var item = new Item().withNotes(List.of(itemNote1, itemNote2, itemNote3));
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("itemNote")
       .parameters(List.of(parameter))).apply(item);
@@ -574,7 +574,7 @@ class ItemDataProcessorTest extends BaseTest {
     var administrativeNote2 = "administrative note 2";
     var administrativeNote3 = "administrative note 3";
     var item = new Item().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REPLACE)
       .initial(administrativeNote1).updated(administrativeNote3)).apply(item);
@@ -591,7 +591,7 @@ class ItemDataProcessorTest extends BaseTest {
     var checkOutNote = new CirculationNote()
       .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note");
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
       .initial("note").updated("note 2")).apply(item);
@@ -621,7 +621,7 @@ class ItemDataProcessorTest extends BaseTest {
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
     var item = new Item().withNotes(List.of(itemNote1, itemNote2));
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REPLACE).parameters(List.of(parameter))
       .initial("itemNote1").updated("itemNote3")).apply(item);
@@ -635,7 +635,7 @@ class ItemDataProcessorTest extends BaseTest {
   void testChangeTypeForAdministrativeNotes() {
     var administrativeNote = "note";
     var item = new Item().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote)));
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
       .updated(CHECK_IN_NOTE_TYPE)).apply(item);
@@ -674,7 +674,7 @@ class ItemDataProcessorTest extends BaseTest {
     var checkOutNote = new CirculationNote()
       .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note 2");
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(CHECK_IN_NOTE, new Action().type(CHANGE_TYPE)
       .updated(CHECK_OUT_NOTE_TYPE)).apply(item);
@@ -712,7 +712,7 @@ class ItemDataProcessorTest extends BaseTest {
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
     var item = new Item().withNotes(List.of(itemNote1, itemNote2));
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(ADMINISTRATIVE_NOTE_TYPE).parameters(List.of(parameter))).apply(item);
 
@@ -760,7 +760,7 @@ class ItemDataProcessorTest extends BaseTest {
     var checkOutNote = new CirculationNote().withId(UUID.randomUUID().toString())
       .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note 2");
     var item = new Item().withCirculationNotes(new ArrayList<>(List.of(checkInNote, checkOutNote)));
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(CHECK_IN_NOTE, new Action().type(DUPLICATE).updated(CHECK_OUT_NOTE_TYPE)).apply(item);
     assertEquals(3, item.getCirculationNotes().size());
@@ -784,7 +784,7 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Test
   void testClone() {
-    var processor = new ItemDataProcessor(null, null);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
     var administrativeNotes = new ArrayList<String>();
     administrativeNotes.add("note1");
     var item1 = new Item().withId("id")

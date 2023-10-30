@@ -2,21 +2,12 @@ package org.folio.bulkops.processor;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
-import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
-import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
-import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
-import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
-import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
-import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 
@@ -103,40 +94,9 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
       return holding -> holding.setDiscoverySuppress(true);
     } else if (isSetDiscoverySuppressFalse(action.getType(), option)) {
       return holding -> holding.setDiscoverySuppress(false);
-    } else if ((MARK_AS_STAFF_ONLY == action.getType() || REMOVE_MARK_AS_STAFF_ONLY == action.getType()) && option == HOLDINGS_NOTE){
-      var markAsStaffValue = action.getType() == MARK_AS_STAFF_ONLY;
-      return holding -> holdingsNotesUpdater.setMarkAsStaffForNotesByTypeId(holding.getNotes(), action.getParameters(), markAsStaffValue);
-    } else if (REMOVE_ALL == action.getType()) {
-      if (option == ADMINISTRATIVE_NOTE) {
-        return holding -> holding.setAdministrativeNotes(holdingsNotesUpdater.removeAdministrativeNotes());
-      } else if (option == HOLDINGS_NOTE) {
-        return holding -> holding.setNotes(holdingsNotesUpdater.removeNotesByTypeId(holding.getNotes(), action.getParameters()));
-      }
-    } else if (ADD_TO_EXISTING == action.getType()) {
-      if (option == ADMINISTRATIVE_NOTE) {
-        return holding -> holding.setAdministrativeNotes(holdingsNotesUpdater.addToAdministrativeNotes(action.getUpdated(), holding.getAdministrativeNotes()));
-      } else if (option == HOLDINGS_NOTE) {
-        return holding -> holding.setNotes(holdingsNotesUpdater.addToNotesByTypeId(holding.getNotes(), action.getParameters(), action.getUpdated()));
-      }
-    } else if (FIND_AND_REMOVE_THESE == action.getType()) {
-      if (option == ADMINISTRATIVE_NOTE) {
-        return holding -> holding.setAdministrativeNotes(holdingsNotesUpdater.findAndRemoveAdministrativeNote(action.getInitial(), holding.getAdministrativeNotes()));
-      } else if (option == HOLDINGS_NOTE) {
-        return holding -> holding.setNotes(holdingsNotesUpdater.findAndRemoveNoteByValueAndTypeId(action.getInitial(), holding.getNotes(), action.getParameters()));
-      }
-    } else if (FIND_AND_REPLACE == action.getType()) {
-      if (option == ADMINISTRATIVE_NOTE) {
-        return holding -> holding.setAdministrativeNotes(holdingsNotesUpdater.findAndReplaceAdministrativeNote(action, holding.getAdministrativeNotes()));
-      } else if (option == HOLDINGS_NOTE) {
-        return holding -> holdingsNotesUpdater.findAndReplaceNoteByValueAndTypeId(action, holding.getNotes());
-      }
-    } else if (CHANGE_TYPE == action.getType()) {
-      if (option == ADMINISTRATIVE_NOTE) {
-        return holding -> holdingsNotesUpdater.changeNoteTypeForAdministrativeNotes(holding, action);
-      } else if (option == HOLDINGS_NOTE) {
-        return holding -> holdingsNotesUpdater.changeNoteTypeForHoldingsNote(holding, action);
-      }
     }
+    var notesUpdaterOptional = holdingsNotesUpdater.updateNotes(action, option);
+    if (notesUpdaterOptional.isPresent()) return notesUpdaterOptional.get();
     return holding -> {
       throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
     };

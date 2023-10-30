@@ -21,7 +21,6 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDINGS_NOTE_TYPE_ID_KEY;
-import static org.folio.bulkops.processor.ItemDataProcessor.ADMINISTRATIVE_NOTE_TYPE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -279,7 +278,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(HOLDINGS_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(holding);
 
@@ -294,7 +293,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(HOLDINGS_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(holding);
 
@@ -306,7 +305,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void testRemoveAdministrativeNotes() {
     var administrativeNote = "administrative note";
     var holding =  new HoldingsRecord().withAdministrativeNotes(List.of(administrativeNote));
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(REMOVE_ALL)).apply(holding);
     assertTrue(holding.getAdministrativeNotes().isEmpty());
@@ -321,7 +320,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(HOLDINGS_NOTE, new Action().type(REMOVE_ALL).parameters(List.of(parameter))).apply(holding);
     assertEquals(1, holding.getNotes().size());
@@ -334,7 +333,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var administrativeNote1 = "administrative note";
     var administrativeNote2 = "administrative note 2";
     var holding = new HoldingsRecord();
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote1)).apply(holding);
     assertEquals(1, holding.getAdministrativeNotes().size());
@@ -354,7 +353,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
 
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(HOLDINGS_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(note1)).apply(holding);
 
@@ -376,7 +375,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var administrativeNote1 = "administrative note 1";
     var administrativeNote2 = "administrative note 2";
     var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("administrative note")).apply(holding);
     assertEquals(2, holding.getAdministrativeNotes().size());
@@ -396,7 +395,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
     var holding = new HoldingsRecord().withNotes(List.of(note1, note2, note3));
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note")
       .parameters(List.of(parameter))).apply(holding);
@@ -416,7 +415,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var administrativeNote2 = "administrative note 2";
     var administrativeNote3 = "administrative note 3";
     var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REPLACE)
       .initial(administrativeNote1).updated(administrativeNote3)).apply(holding);
@@ -434,7 +433,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
     var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REPLACE).parameters(List.of(parameter))
       .initial("note1").updated("note3")).apply(holding);
@@ -448,7 +447,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void testChangeTypeForAdministrativeNotes() {
     var administrativeNote = "note";
     var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote)));
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
       .updated("typeId")).apply(holding);
@@ -466,9 +465,9 @@ class HoldingsDataProcessorTest extends BaseTest {
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
     var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(HOLDINGS_NOTE, new Action().type(CHANGE_TYPE).updated(ADMINISTRATIVE_NOTE_TYPE).parameters(List.of(parameter))).apply(holding);
+    processor.updater(HOLDINGS_NOTE, new Action().type(CHANGE_TYPE).updated(ADMINISTRATIVE_NOTE.getValue()).parameters(List.of(parameter))).apply(holding);
 
     assertEquals(1, holding.getAdministrativeNotes().size());
     assertEquals("note1", holding.getAdministrativeNotes().get(0));
@@ -489,7 +488,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   @Test
   @SneakyThrows
   void testClone() {
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater());
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
     var administrativeNotes = new ArrayList<String>();
     administrativeNotes.add("note1");
     var holding1 = new HoldingsRecord().withId("id")
