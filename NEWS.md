@@ -1,5 +1,13 @@
 ## v2.0.0 - Unreleased
 
+## v1.1.1 - Released 2023/10/31
+This release includes bugs fixes for editing users and items.
+
+### Bugs
+* [MODBULKOPS-151](https://issues.folio.org/browse/MODBULKOPS-151) - Columns for all item note types
+* [MODBULKOPS-148](https://issues.folio.org/browse/MODBULKOPS-148) - Bulk edit (Local) is not done for the User with multiple departments associated
+* [MODBULKOPS-78](https://issues.folio.org/browse/MODBULKOPS-78) - Bulk editing Users records with an invalid data via CSV approach
+
 ## v1.1.0 - Released 2023/10/12
 This release includes file storage optimization, editing for items notes, suppression status, bugs fixes.
 
