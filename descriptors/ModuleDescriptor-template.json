@@ -32,6 +32,7 @@
             "okapi.proxy.tenants.modules.list",
             "inventory-storage.item-damaged-statuses.item.get",
             "inventory-storage.item-note-types.item.get",
+            "inventory-storage.item-note-types.collection.get",
             "inventory-storage.service-points.item.get",
             "users.item.get",
             "inventory-storage.instances.item.get",
