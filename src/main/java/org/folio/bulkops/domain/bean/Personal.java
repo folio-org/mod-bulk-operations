@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.folio.bulkops.domain.converter.AddressesConverter;
 import org.folio.bulkops.domain.converter.DateWithoutTimeConverter;
+import org.folio.bulkops.domain.converter.PreferredContactTypeIdConverter;
 import org.folio.bulkops.domain.converter.StringConverter;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -85,8 +86,8 @@ public class Personal {
   private List<Address> addresses;
 
   @JsonProperty("preferredContactTypeId")
-  @CsvCustomBindByName(column = "Preferred contact type id", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 18, converter = StringConverter.class)
+  @CsvCustomBindByName(column = "Preferred contact type id", converter = PreferredContactTypeIdConverter.class)
+  @CsvCustomBindByPosition(position = 18, converter = PreferredContactTypeIdConverter.class)
   @UnifiedTableCell(visible = false)
   private String preferredContactTypeId;
 }
