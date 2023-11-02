@@ -454,7 +454,7 @@ public class BulkOperationService {
   private List<Item> getItemsWithOppositeDiscoverySuppress(BulkOperation operation, HoldingsRecord holdingsRecord) {
     var ruleCollection = ruleService.getRules(operation.getId());
     if (isDiscoverySuppressUpdate(ruleCollection)) {
-      return itemClient.getByQuery(String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsRecord.getId()), 100_000_000).getItems().stream()
+      return itemClient.getByQuery(String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsRecord.getId()), Integer.MAX_VALUE).getItems().stream()
         .filter(item -> !Objects.equals(item.getDiscoverySuppress(), holdingsRecord.getDiscoverySuppress()))
         .toList();
     }
