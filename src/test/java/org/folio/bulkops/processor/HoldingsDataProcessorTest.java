@@ -2,44 +2,49 @@ package org.folio.bulkops.processor;
 
 import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
+import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.EMAIL_ADDRESS;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDINGS_NOTE_TYPE_ID_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.dto.Action;
-import org.folio.bulkops.domain.dto.UpdateActionType;
+import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.exception.NotFoundException;
-import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.service.ErrorService;
-import org.folio.bulkops.service.HoldingsReferenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -253,7 +258,7 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withId(UUID.randomUUID().toString())
       .withDiscoverySuppress(false);
 
-    var processor = new HoldingsDataProcessor(null, null);
+    var processor = new HoldingsDataProcessor(null, null, null);
 
     processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_TRUE)).apply(holdingsRecord);
     assertTrue(holdingsRecord.getDiscoverySuppress());
@@ -263,5 +268,252 @@ class HoldingsDataProcessorTest extends BaseTest {
     assertTrue(holdingsRecord.getDiscoverySuppress());
     processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_FALSE_INCLUDING_ITEMS)).apply(holdingsRecord);
     assertFalse(holdingsRecord.getDiscoverySuppress());
+  }
+
+  @Test
+  @SneakyThrows
+  void testUpdateMarkAsStaffOnlyForHoldingsNotes() {
+    var holdingsNote = new HoldingsNote().withHoldingsNoteTypeId("typeId").withStaffOnly(false);
+    var  holding= new HoldingsRecord().withNotes(List.of(holdingsNote));
+    var parameter = new Parameter();
+    parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId");
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+
+    processor.updater(HOLDINGS_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(holding);
+
+    assertTrue(holding.getNotes().get(0).getStaffOnly());
+  }
+
+  @Test
+  @SneakyThrows
+  void testUpdateRemoveMarkAsStaffOnlyForHoldingsNotes() {
+    var holdingsNote = new HoldingsNote().withHoldingsNoteTypeId("typeId").withStaffOnly(true);
+    var  holding= new HoldingsRecord().withNotes(List.of(holdingsNote));
+    var parameter = new Parameter();
+    parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId");
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+
+    processor.updater(HOLDINGS_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(holding);
+
+    assertFalse(holding.getNotes().get(0).getStaffOnly());
+  }
+
+  @Test
+  @SneakyThrows
+  void testRemoveAdministrativeNotes() {
+    var administrativeNote = "administrative note";
+    var holding =  new HoldingsRecord().withAdministrativeNotes(List.of(administrativeNote));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(REMOVE_ALL)).apply(holding);
+    assertTrue(holding.getAdministrativeNotes().isEmpty());
+  }
+
+  @Test
+  @SneakyThrows
+  void testRemoveHoldingsNotes() {
+    var note1 = new HoldingsNote().withHoldingsNoteTypeId("typeId1");
+    var note2 = new HoldingsNote().withHoldingsNoteTypeId("typeId2");
+    var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
+    var parameter = new Parameter();
+    parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId1");
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+
+    processor.updater(HOLDINGS_NOTE, new Action().type(REMOVE_ALL).parameters(List.of(parameter))).apply(holding);
+    assertEquals(1, holding.getNotes().size());
+    assertEquals("typeId2", holding.getNotes().get(0).getHoldingsNoteTypeId());
+  }
+
+  @Test
+  @SneakyThrows
+  void testAddAdministrativeNotes() {
+    var administrativeNote1 = "administrative note";
+    var administrativeNote2 = "administrative note 2";
+    var holding = new HoldingsRecord();
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote1)).apply(holding);
+    assertEquals(1, holding.getAdministrativeNotes().size());
+    assertEquals(administrativeNote1, holding.getAdministrativeNotes().get(0));
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote2)).apply(holding);
+    assertEquals(2, holding.getAdministrativeNotes().size());
+  }
+
+  @Test
+  @SneakyThrows
+  void testAddHoldingsNotes() {
+    var note1 = "note1";
+    var note2 = "note2";
+    var holding = new HoldingsRecord();
+    var parameter = new Parameter();
+    parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId1");
+
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+
+    processor.updater(HOLDINGS_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(note1)).apply(holding);
+
+    assertEquals(1, holding.getNotes().size());
+    assertEquals("typeId1", holding.getNotes().get(0).getHoldingsNoteTypeId());
+    assertEquals(note1, holding.getNotes().get(0).getNote());
+
+    parameter.setValue("typeId2");
+    processor.updater(HOLDINGS_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(note2)).apply(holding);
+
+    assertEquals(2, holding.getNotes().size());
+    assertEquals("typeId2", holding.getNotes().get(1).getHoldingsNoteTypeId());
+    assertEquals(note2, holding.getNotes().get(1).getNote());
+  }
+
+  @Test
+  @SneakyThrows
+  void testFindAndRemoveForAdministrativeNotes() {
+    var administrativeNote1 = "administrative note 1";
+    var administrativeNote2 = "administrative note 2";
+    var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("administrative note")).apply(holding);
+    assertEquals(2, holding.getAdministrativeNotes().size());
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial(administrativeNote2)).apply(holding);
+    assertEquals(1, holding.getAdministrativeNotes().size());
+    assertEquals(administrativeNote1, holding.getAdministrativeNotes().get(0));
+  }
+
+  @Test
+  @SneakyThrows
+  void testFindAndRemoveHoldingsNotes() {
+    var note1 = new HoldingsNote().withHoldingsNoteTypeId("typeId1").withNote("note1");
+    var note2 = new HoldingsNote().withHoldingsNoteTypeId("typeId1").withNote("note2");
+    var note3 = new HoldingsNote().withHoldingsNoteTypeId("typeId3").withNote("note1");
+    var parameter = new Parameter();
+    parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId1");
+    var holding = new HoldingsRecord().withNotes(List.of(note1, note2, note3));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+
+    processor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note")
+      .parameters(List.of(parameter))).apply(holding);
+    assertEquals(3, holding.getNotes().size());
+    processor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note1")
+      .parameters(List.of(parameter))).apply(holding);
+    assertEquals(2, holding.getNotes().size());
+    processor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note2")
+      .parameters(List.of(parameter))).apply(holding);
+    assertEquals(1, holding.getNotes().size());
+  }
+
+  @Test
+  @SneakyThrows
+  void testFindAndReplaceForAdministrativeNotes() {
+    var administrativeNote1 = "administrative note 1";
+    var administrativeNote2 = "administrative note 2";
+    var administrativeNote3 = "administrative note 3";
+    var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REPLACE)
+      .initial(administrativeNote1).updated(administrativeNote3)).apply(holding);
+    assertEquals(2, holding.getAdministrativeNotes().size());
+    assertEquals(administrativeNote3, holding.getAdministrativeNotes().get(0));
+    assertEquals(administrativeNote2, holding.getAdministrativeNotes().get(1));
+  }
+
+  @Test
+  @SneakyThrows
+  void testFindAndReplaceForHoldingNotes() {
+    var note1 = new HoldingsNote().withHoldingsNoteTypeId("typeId1").withNote("note1");
+    var note2 = new HoldingsNote().withHoldingsNoteTypeId("typeId2").withNote("note1");
+    var parameter = new Parameter();
+    parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId1");
+    var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+
+    processor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REPLACE).parameters(List.of(parameter))
+      .initial("note1").updated("note3")).apply(holding);
+
+    assertEquals("note3", holding.getNotes().get(0).getNote());
+    assertEquals("note1", holding.getNotes().get(1).getNote());
+  }
+
+  @Test
+  @SneakyThrows
+  void testChangeTypeForAdministrativeNotes() {
+    var administrativeNote = "note";
+    var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote)));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
+      .updated("typeId")).apply(holding);
+    assertEquals(0, holding.getAdministrativeNotes().size());
+    assertEquals("note", holding.getNotes().get(0).getNote());
+    assertEquals("typeId", holding.getNotes().get(0).getHoldingsNoteTypeId());
+  }
+
+  @Test
+  @SneakyThrows
+  void testChangeNoteTypeForHoldingsNotes() {
+    var note1 = new HoldingsNote().withHoldingsNoteTypeId("typeId1").withNote("note1");
+    var note2 =  new HoldingsNote().withHoldingsNoteTypeId("typeId2").withNote("note2");
+    var parameter = new Parameter();
+    parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
+    parameter.setValue("typeId1");
+    var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+
+    processor.updater(HOLDINGS_NOTE, new Action().type(CHANGE_TYPE).updated(ADMINISTRATIVE_NOTE.getValue()).parameters(List.of(parameter))).apply(holding);
+
+    assertEquals(1, holding.getAdministrativeNotes().size());
+    assertEquals("note1", holding.getAdministrativeNotes().get(0));
+    assertEquals(1, holding.getNotes().size());
+    assertEquals("note2", holding.getNotes().get(0).getNote());
+
+    holding.setAdministrativeNotes(null);
+    holding.setNotes(List.of(note1, note2));
+
+    processor.updater(HOLDINGS_NOTE, new Action().type(CHANGE_TYPE).updated("typeId3").parameters(List.of(parameter))).apply(holding);
+    assertEquals(2, holding.getNotes().size());
+    assertEquals("note1", holding.getNotes().get(0).getNote());
+    assertEquals("typeId3", holding.getNotes().get(0).getHoldingsNoteTypeId());
+    assertEquals("note2", holding.getNotes().get(1).getNote());
+    assertEquals("typeId2", holding.getNotes().get(1).getHoldingsNoteTypeId());
+  }
+
+  @Test
+  @SneakyThrows
+  void testClone() {
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+    var administrativeNotes = new ArrayList<String>();
+    administrativeNotes.add("note1");
+    var holding1 = new HoldingsRecord().withId("id")
+      .withAdministrativeNotes(administrativeNotes)
+      .withNotes(new ArrayList<>());
+
+    var holding2 = processor.clone(holding1);
+    assertTrue(processor.compare(holding1, holding2));
+
+    holding2.getAdministrativeNotes().add("note2");
+    assertFalse(processor.compare(holding1, holding2));
+    holding1.setAdministrativeNotes(null);
+
+    var note1 = new HoldingsNote().withHoldingsNoteTypeId("typeId").withStaffOnly(true);
+    var note2 = new HoldingsNote().withHoldingsNoteTypeId("typeId").withStaffOnly(false);
+    holding1.getNotes().add(note1);
+
+    holding2 = processor.clone(holding1);
+    assertTrue(processor.compare(holding1, holding2));
+
+    holding2.getNotes().get(0).setStaffOnly(false);
+    assertFalse(processor.compare(holding1, holding2));
+
+    holding2.getNotes().add(note2);
+
+    assertFalse(processor.compare(holding1, holding2));
   }
 }

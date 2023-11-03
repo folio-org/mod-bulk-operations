@@ -10,8 +10,8 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -37,6 +37,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
 
   private final ItemReferenceService itemReferenceService;
   private final HoldingsReferenceService holdingsReferenceService;
+  private final HoldingsNotesUpdater holdingsNotesUpdater;
 
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -72,11 +73,6 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
   }
 
   public Updater<HoldingsRecord> updater(UpdateOptionType option, Action action) {
-    if (PERMANENT_LOCATION != option && TEMPORARY_LOCATION != option && SUPPRESS_FROM_DISCOVERY != option) {
-      return holding -> {
-        throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
-      };
-    }
     if (REPLACE_WITH == action.getType()) {
       return holding -> {
         var locationId = action.getUpdated();
@@ -99,6 +95,8 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
     } else if (isSetDiscoverySuppressFalse(action.getType(), option)) {
       return holding -> holding.setDiscoverySuppress(false);
     }
+    var notesUpdaterOptional = holdingsNotesUpdater.updateNotes(action, option);
+    if (notesUpdaterOptional.isPresent()) return notesUpdaterOptional.get();
     return holding -> {
       throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
     };
@@ -114,7 +112,16 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
 
   @Override
   public HoldingsRecord clone(HoldingsRecord entity) {
-    return entity.toBuilder().build();
+    var clone = entity.toBuilder().build();
+    if (entity.getAdministrativeNotes() != null) {
+      var administrativeNotes = new ArrayList<>(entity.getAdministrativeNotes());
+      clone.setAdministrativeNotes(administrativeNotes);
+    }
+    if (entity.getNotes() != null) {
+      var holdingsNotes = entity.getNotes().stream().map(note -> note.toBuilder().build()).toList();
+      clone.setNotes(new ArrayList<>(holdingsNotes));
+    }
+    return clone;
   }
 
   @Override

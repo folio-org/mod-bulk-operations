@@ -16,7 +16,8 @@
       "ITEM_NOTE",
       "ADMINISTRATIVE_NOTE",
       "CHECK_IN_NOTE",
-      "CHECK_OUT_NOTE"
+      "CHECK_OUT_NOTE",
+      "HOLDINGS_NOTE"
     ]
   }
 }
