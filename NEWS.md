@@ -1,5 +1,8 @@
 ## v2.0.0 - Unreleased
 
+## v1.1.3 - Released 2023/11/08
+This release includes only folio-s3-client version update.
+
 ## v1.1.2 - Released 2023/11/08
 This release includes bugs fixes and update folio-s3-client.
 
