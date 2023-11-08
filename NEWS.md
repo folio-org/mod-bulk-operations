@@ -1,5 +1,11 @@
 ## v2.0.0 - Unreleased
 
+## v1.1.2 - Released 2023/11/08
+This release includes bugs fixes and update folio-s3-client.
+
+### Bugs
+* [MODBULKOPS-166](https://issues.folio.org/browse/MODBULKOPS-166) - Suppress Holdings from discovery: changes are applied to no more than 10 associated Items
+
 ## v1.1.1 - Released 2023/10/31
 This release includes bugs fixes for editing users and items.
 
