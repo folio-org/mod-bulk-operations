@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.Constants.BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE;
+import static org.folio.bulkops.util.Constants.QUERY_ALL_RECORDS;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_CODE;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_USERNAME;
@@ -49,7 +50,6 @@ public class ItemReferenceService {
 
   public static final String MODULE_NAME = "BULKEDIT";
   public static final String STATUSES_CONFIG_NAME = "statuses";
-  public static final String QUERY_ALL_RECORDS = "cql.allRecords=1";
 
   private final CallNumberTypeClient callNumberTypeClient;
   private final ConfigurationClient configurationClient;

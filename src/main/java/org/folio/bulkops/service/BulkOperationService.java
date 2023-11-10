@@ -134,7 +134,7 @@ public class BulkOperationService {
   private final UpdateProcessorFactory updateProcessorFactory;
   private final ErrorService errorService;
   private final LogFilesService logFilesService;
-  private final ItemNoteTableUpdater itemNoteTableUpdater;
+  private final NoteTableUpdater noteTableUpdater;
   private final ItemClient itemClient;
 
   private static final int OPERATION_UPDATING_STEP = 100;
@@ -492,7 +492,8 @@ public class BulkOperationService {
           table.addRowsItem(row);
         }
       }
-      if (clazz == Item.class) itemNoteTableUpdater.extendTableWithItemNotesTypes(table);
+      if (clazz == Item.class) noteTableUpdater.extendTableWithItemNotesTypes(table);
+      if (clazz == HoldingsRecord.class) noteTableUpdater.extendTableWithHoldingsNotesTypes(table);
       table.getRows().forEach(row -> row.setRow(SpecialCharacterEscaper.restore(row.getRow())));
       return table;
     } catch (Exception e) {

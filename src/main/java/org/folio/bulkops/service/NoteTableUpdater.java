@@ -5,12 +5,14 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
 import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.STAFF_ONLY;
 
 import lombok.RequiredArgsConstructor;
+import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.Row;
@@ -23,7 +25,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class ItemNoteTableUpdater {
+public class NoteTableUpdater {
   private static final int NON_EXISTING_POSITION = -1;
   private static final int NUMBER_OF_NOTE_FIELDS = 3;
   private static final int NOTE_TYPE_POS = 0;
@@ -31,6 +33,17 @@ public class ItemNoteTableUpdater {
   private static final int STAFF_ONLY_FLAG_POS = 2;
 
   private final ItemReferenceService itemReferenceService;
+  private final HoldingsReferenceService holdingsReferenceService;
+
+  public void extendTableWithHoldingsNotesTypes(UnifiedTable unifiedTable) {
+    var noteTypeNames = holdingsReferenceService.getAllHoldingsNoteTypes().stream()
+      .map(HoldingsNoteType::getName)
+      .sorted()
+      .toList();
+
+    extendHeadersWithItemNoteTypeNames(HOLDINGS_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames);
+    unifiedTable.getRows().forEach(row -> extendRowWithNotesData(HOLDINGS_NOTE_POSITION, row, noteTypeNames));
+  }
 
   public void extendTableWithItemNotesTypes(UnifiedTable unifiedTable) {
     var noteTypeNames = itemReferenceService.getAllItemNoteTypes().stream()
@@ -38,12 +51,12 @@ public class ItemNoteTableUpdater {
       .sorted()
       .toList();
 
-    extendHeadersWithItemNoteTypeNames(unifiedTable.getHeader(), noteTypeNames);
-    unifiedTable.getRows().forEach(row -> extendRowWithNotesData(row, noteTypeNames));
+    extendHeadersWithItemNoteTypeNames(ITEM_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames);
+    unifiedTable.getRows().forEach(row -> extendRowWithNotesData(ITEM_NOTE_POSITION, row, noteTypeNames));
   }
 
-  private void extendHeadersWithItemNoteTypeNames(List<Cell> headers, List<String> noteTypeNames) {
-    var headerToReplace = headers.get(ITEM_NOTE_POSITION);
+  private void extendHeadersWithItemNoteTypeNames(int notesInitialPosition, List<Cell> headers, List<String> noteTypeNames) {
+    var headerToReplace = headers.get(notesInitialPosition);
     var cellsToInsert = noteTypeNames.stream()
       .map(name -> new Cell()
         .value(name)
@@ -51,14 +64,14 @@ public class ItemNoteTableUpdater {
         .dataType(headerToReplace.getDataType())
         .ignoreTranslation(true))
       .toList();
-    headers.remove(ITEM_NOTE_POSITION);
-    headers.addAll(ITEM_NOTE_POSITION, cellsToInsert);
+    headers.remove(notesInitialPosition);
+    headers.addAll(notesInitialPosition, cellsToInsert);
   }
 
-  private void extendRowWithNotesData(Row row, List<String> noteTypeNames) {
+  private void extendRowWithNotesData(int notesInitialPosition, Row row, List<String> noteTypeNames) {
     var notesArray = new String[noteTypeNames.size()];
     var rowList = row.getRow();
-    var notesString = rowList.get(ITEM_NOTE_POSITION);
+    var notesString = rowList.get(notesInitialPosition);
     if (isNotEmpty(notesString)) {
       for (var note : notesString.split(ITEM_DELIMITER_PATTERN)) {
         var noteFields = note.split(ARRAY_DELIMITER);
@@ -72,8 +85,8 @@ public class ItemNoteTableUpdater {
         }
       }
     }
-    rowList.remove(ITEM_NOTE_POSITION);
-    rowList.addAll(ITEM_NOTE_POSITION, Arrays.asList(notesArray));
+    rowList.remove(notesInitialPosition);
+    rowList.addAll(notesInitialPosition, Arrays.asList(notesArray));
     row.setRow(rowList);
   }
 }
