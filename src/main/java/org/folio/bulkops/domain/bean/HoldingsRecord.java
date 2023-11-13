@@ -42,7 +42,7 @@ import lombok.With;
 @AllArgsConstructor
 @JsonTypeName("holdingsRecord")
 @EqualsAndHashCode(exclude = {"metadata", "instanceId", "permanentLocation", "effectiveLocationId", "illPolicy", "instanceHrid", "itemBarcode"})
-public class HoldingsRecord implements BulkOperationsEntity {
+public class HoldingsRecord implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("id")
   @CsvCustomBindByName(column = "Holdings record id", converter = StringConverter.class)
