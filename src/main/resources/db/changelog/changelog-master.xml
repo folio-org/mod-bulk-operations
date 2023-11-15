@@ -19,4 +19,5 @@
   <include file="changes/06-07-2023_add_parameters_to_bulk_operation_rules_details.xml" relativeToChangelogFile="true"/>
   <include file="changes/06_07_2023_update_bulk_operation_add_expired.xml" relativeToChangelogFile="true"/>
   <include file="changes/25-10-2023_add_notes_options_types_for_holdings.xml" relativeToChangelogFile="true"/>
+  <include file="changes/08-11-2023_add_electronic_access_options_types.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
