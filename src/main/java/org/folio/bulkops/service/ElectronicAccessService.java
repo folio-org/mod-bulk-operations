@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -10,6 +11,7 @@ import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 import org.folio.bulkops.client.ElectronicAccessRelationshipClient;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
+import org.folio.bulkops.domain.bean.ElectronicAccessRelationship;
 import org.folio.bulkops.exception.EntityFormatException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.cache.annotation.Cacheable;
@@ -47,6 +49,15 @@ public class ElectronicAccessService {
     } catch (NotFoundException e) {
       log.error("Electronic access relationship not found by id={}", id);
       return ARRAY_DELIMITER + id;
+    }
+  }
+
+  @Cacheable(cacheNames = "electronicAccessRelationships")
+  public ElectronicAccessRelationship getRelationshipById(String id) {
+    try {
+      return relationshipClient.getById(id);
+    } catch (Exception e) {
+      throw new NotFoundException(format("URL relationship was not found by id=%s", id));
     }
   }
 

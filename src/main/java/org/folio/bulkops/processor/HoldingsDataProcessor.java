@@ -8,11 +8,18 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_LINK_TEXT;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_MATERIALS_SPECIFIED;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_URI;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_URL_PUBLIC_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_URL_RELATIONSHIP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.folio.bulkops.domain.bean.HoldingsRecord;
@@ -22,6 +29,7 @@ import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.RuleValidationException;
+import org.folio.bulkops.service.ElectronicAccessService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
 import org.springframework.stereotype.Component;
@@ -38,6 +46,8 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
   private final ItemReferenceService itemReferenceService;
   private final HoldingsReferenceService holdingsReferenceService;
   private final HoldingsNotesUpdater holdingsNotesUpdater;
+  private final ElectronicAccessUpdaterFactory electronicAccessUpdaterFactory;
+  private final ElectronicAccessService electronicAccessService;
 
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -53,18 +63,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
         log.error("Holdings source was not found by id={}", entity.getSourceId());
       }
       if (REPLACE_WITH == action.getType()) {
-        var locationId = action.getUpdated();
-        if (isEmpty(locationId)) {
-          throw new RuleValidationException("Location id cannot be empty");
-        }
-        if (!UUID_REGEX.matcher(locationId).matches()) {
-          throw new RuleValidationException("Location id has invalid format: %s" + locationId);
-        }
-        try {
-          itemReferenceService.getLocationById(locationId);
-        } catch (Exception e) {
-          throw new RuleValidationException(format("Location %s doesn't exist", locationId));
-        }
+        validateReplacement(option, action);
       }
       if (PERMANENT_LOCATION == option && CLEAR_FIELD == action.getType()) {
         throw new RuleValidationException("Permanent location cannot be cleared");
@@ -73,7 +72,9 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
   }
 
   public Updater<HoldingsRecord> updater(UpdateOptionType option, Action action) {
-    if (REPLACE_WITH == action.getType()) {
+    if (isElectronicAccessUpdate(option)) {
+      return (Updater<HoldingsRecord>) electronicAccessUpdaterFactory.updater(option, action);
+    } else if (REPLACE_WITH == action.getType()) {
       return holding -> {
         var locationId = action.getUpdated();
         if (PERMANENT_LOCATION == option) {
@@ -100,6 +101,46 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
     return holding -> {
       throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
     };
+  }
+
+  private void validateReplacement(UpdateOptionType option, Action action) throws RuleValidationException {
+    if (isIdValue(option)) {
+      var newId = action.getUpdated();
+      if (isEmpty(newId)) {
+        throw new RuleValidationException("Id value cannot be empty");
+      }
+      if (!UUID_REGEX.matcher(action.getUpdated()).matches()) {
+        throw new RuleValidationException("UUID has invalid format: %s" + newId);
+      }
+
+      if (Set.of(PERMANENT_LOCATION, TEMPORARY_LOCATION).contains(option)) {
+        try {
+          itemReferenceService.getLocationById(newId);
+        } catch (Exception e) {
+          throw new RuleValidationException(format("Location %s doesn't exist", newId));
+        }
+      } else if (ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option)) {
+        try {
+          electronicAccessService.getRelationshipNameAndIdById(newId);
+        } catch (Exception e) {
+          throw new RuleValidationException(format("URL relationship %s doesn't exist", newId));
+        }
+      }
+    }
+  }
+
+  private boolean isIdValue(UpdateOptionType option) {
+    return Set.of(PERMANENT_LOCATION,
+      TEMPORARY_LOCATION,
+      ELECTRONIC_ACCESS_URL_RELATIONSHIP).contains(option);
+  }
+
+  private boolean isElectronicAccessUpdate(UpdateOptionType option) {
+    return Set.of(ELECTRONIC_ACCESS_URL_RELATIONSHIP,
+      ELECTRONIC_ACCESS_URI,
+      ELECTRONIC_ACCESS_LINK_TEXT,
+      ELECTRONIC_ACCESS_MATERIALS_SPECIFIED,
+      ELECTRONIC_ACCESS_URL_PUBLIC_NOTE).contains(option);
   }
 
   private boolean isSetDiscoverySuppressTrue(UpdateActionType actionType, UpdateOptionType optionType) {

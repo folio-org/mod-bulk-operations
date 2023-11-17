@@ -1,6 +1,7 @@
 package org.folio.bulkops.processor;
 
 import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
@@ -15,6 +16,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDI
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_URL_RELATIONSHIP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.EMAIL_ADDRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
@@ -25,7 +27,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -34,17 +39,26 @@ import java.util.UUID;
 
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.Parameter;
+import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
+import org.folio.bulkops.service.ElectronicAccessService;
 import org.folio.bulkops.service.ErrorService;
+import org.folio.bulkops.service.HoldingsReferenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -59,6 +73,8 @@ class HoldingsDataProcessorTest extends BaseTest {
   DataProcessorFactory factory;
   @MockBean
   ErrorService errorService;
+  @MockBean
+  ElectronicAccessService electronicAccessService;
 
   private DataProcessor<HoldingsRecord> processor;
 
@@ -258,7 +274,7 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withId(UUID.randomUUID().toString())
       .withDiscoverySuppress(false);
 
-    var processor = new HoldingsDataProcessor(null, null, null);
+    var processor = new HoldingsDataProcessor(null, null, null, null, null);
 
     processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_TRUE)).apply(holdingsRecord);
     assertTrue(holdingsRecord.getDiscoverySuppress());
@@ -278,7 +294,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(HOLDINGS_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(holding);
 
@@ -293,7 +309,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(HOLDINGS_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(holding);
 
@@ -305,7 +321,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void testRemoveAdministrativeNotes() {
     var administrativeNote = "administrative note";
     var holding =  new HoldingsRecord().withAdministrativeNotes(List.of(administrativeNote));
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(REMOVE_ALL)).apply(holding);
     assertTrue(holding.getAdministrativeNotes().isEmpty());
@@ -320,7 +336,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(HOLDINGS_NOTE, new Action().type(REMOVE_ALL).parameters(List.of(parameter))).apply(holding);
     assertEquals(1, holding.getNotes().size());
@@ -333,7 +349,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var administrativeNote1 = "administrative note";
     var administrativeNote2 = "administrative note 2";
     var holding = new HoldingsRecord();
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote1)).apply(holding);
     assertEquals(1, holding.getAdministrativeNotes().size());
@@ -353,7 +369,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
 
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(HOLDINGS_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(note1)).apply(holding);
 
@@ -375,7 +391,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var administrativeNote1 = "administrative note 1";
     var administrativeNote2 = "administrative note 2";
     var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("administrative note")).apply(holding);
     assertEquals(2, holding.getAdministrativeNotes().size());
@@ -395,7 +411,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
     var holding = new HoldingsRecord().withNotes(List.of(note1, note2, note3));
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note")
       .parameters(List.of(parameter))).apply(holding);
@@ -415,7 +431,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var administrativeNote2 = "administrative note 2";
     var administrativeNote3 = "administrative note 3";
     var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REPLACE)
       .initial(administrativeNote1).updated(administrativeNote3)).apply(holding);
@@ -433,7 +449,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
     var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REPLACE).parameters(List.of(parameter))
       .initial("note1").updated("note3")).apply(holding);
@@ -447,7 +463,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void testChangeTypeForAdministrativeNotes() {
     var administrativeNote = "note";
     var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote)));
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
       .updated("typeId")).apply(holding);
@@ -465,7 +481,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
     var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(HOLDINGS_NOTE, new Action().type(CHANGE_TYPE).updated(ADMINISTRATIVE_NOTE.getValue()).parameters(List.of(parameter))).apply(holding);
 
@@ -488,7 +504,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   @Test
   @SneakyThrows
   void testClone() {
-    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()));
+    var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
     var administrativeNotes = new ArrayList<String>();
     administrativeNotes.add("note1");
     var holding1 = new HoldingsRecord().withId("id")
@@ -516,4 +532,182 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     assertFalse(processor.compare(holding1, holding2));
   }
+
+  @ParameterizedTest
+  @NullSource
+  @ValueSource(strings = { "invalid-uuid", "aa76d5d9-4c0f-4895-84f4-56d3266941d1" })
+  void shouldNotUpdateInvalidElectronicAccessUrlRelationship(String id) {
+    doThrow(new NotFoundException("not found")).when(electronicAccessService).getRelationshipById("aa76d5d9-4c0f-4895-84f4-56d3266941d1");
+    var holdingsReferenceService = mock(HoldingsReferenceService.class);
+    when(holdingsReferenceService.getSourceById(MARC_SOURCE_ID)).thenReturn(new HoldingsRecordsSource().withName("MARC"));
+    var processor = new HoldingsDataProcessor(null, holdingsReferenceService, null, null, electronicAccessService);
+
+    var holdingsRecord = new HoldingsRecord().withSourceId(MARC_SOURCE_ID);
+    var action = new Action().type(REPLACE_WITH).updated(id);
+
+    assertThrows(RuleValidationException.class, () -> processor.validator(holdingsRecord).validate(ELECTRONIC_ACCESS_URL_RELATIONSHIP, action));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "ELECTRONIC_ACCESS_URL_RELATIONSHIP",
+    "ELECTRONIC_ACCESS_URI",
+    "ELECTRONIC_ACCESS_LINK_TEXT",
+    "ELECTRONIC_ACCESS_MATERIALS_SPECIFIED",
+    "ELECTRONIC_ACCESS_URL_PUBLIC_NOTE"
+  })
+  @SneakyThrows
+  void shouldClearElectronicAccessFields(UpdateOptionType option) {
+    var holdingsRecord = buildHoldingsWithElectronicAccess();
+
+    var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
+    var action = new Action().type(CLEAR_FIELD);
+
+    processor.updater(option, action).apply(holdingsRecord);
+
+    var electronicAccess = holdingsRecord.getElectronicAccess().get(0);
+    switch (option) {
+      case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> assertNull(electronicAccess.getRelationshipId());
+      case ELECTRONIC_ACCESS_URI -> assertEquals(EMPTY, electronicAccess.getUri());
+      case ELECTRONIC_ACCESS_LINK_TEXT -> assertNull(electronicAccess.getLinkText());
+      case ELECTRONIC_ACCESS_MATERIALS_SPECIFIED -> assertNull(electronicAccess.getMaterialsSpecification());
+      case ELECTRONIC_ACCESS_URL_PUBLIC_NOTE -> assertNull(electronicAccess.getPublicNote());
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+      ELECTRONIC_ACCESS_URL_RELATIONSHIP    | 2510A1D1-A61C-4378-8886-B831004F018E
+      ELECTRONIC_ACCESS_URI                 | http://example.org
+      ELECTRONIC_ACCESS_LINK_TEXT           | link text
+      ELECTRONIC_ACCESS_MATERIALS_SPECIFIED | materials
+      ELECTRONIC_ACCESS_URL_PUBLIC_NOTE     | public note
+    """, delimiter = '|')
+  @SneakyThrows
+  void shouldFindAndClearExactlyMatchedElectronicAccessFields(UpdateOptionType option, String value) {
+    var holdingsRecord = buildHoldingsWithElectronicAccess();
+
+    var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
+    var action = new Action().type(FIND_AND_REMOVE_THESE).initial(value);
+
+    processor.updater(option, action).apply(holdingsRecord);
+
+    var modified = holdingsRecord.getElectronicAccess().get(0);
+    var unmodified = holdingsRecord.getElectronicAccess().get(1);
+    var initialElectronicAccess = buildHoldingsWithElectronicAccess().getElectronicAccess().get(1);
+
+    switch (option) {
+      case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> {
+        assertNull(modified.getRelationshipId());
+        assertEquals(initialElectronicAccess.getRelationshipId(), unmodified.getRelationshipId());
+      }
+      case ELECTRONIC_ACCESS_URI -> {
+        assertEquals(EMPTY, modified.getUri());
+        assertEquals(initialElectronicAccess.getUri(), unmodified.getUri());
+      }
+      case ELECTRONIC_ACCESS_LINK_TEXT -> {
+        assertNull(modified.getLinkText());
+        assertEquals(initialElectronicAccess.getLinkText(), unmodified.getLinkText());
+      }
+      case ELECTRONIC_ACCESS_MATERIALS_SPECIFIED -> {
+        assertNull(modified.getMaterialsSpecification());
+        assertEquals(initialElectronicAccess.getMaterialsSpecification(), unmodified.getMaterialsSpecification());
+      }
+      case ELECTRONIC_ACCESS_URL_PUBLIC_NOTE -> {
+        assertNull(modified.getPublicNote());
+        assertEquals(initialElectronicAccess.getPublicNote(), unmodified.getPublicNote());
+      }
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+      ELECTRONIC_ACCESS_URL_RELATIONSHIP    | fc34ddc0-0cfc-40b3-8e1a-bade16b33e5b
+      ELECTRONIC_ACCESS_URI                 | http://replaced.org
+      ELECTRONIC_ACCESS_LINK_TEXT           | new link text
+      ELECTRONIC_ACCESS_MATERIALS_SPECIFIED | new materials
+      ELECTRONIC_ACCESS_URL_PUBLIC_NOTE     | new note
+    """, delimiter = '|')
+  @SneakyThrows
+  void shouldReplaceElectronicAccessFields(UpdateOptionType option, String newValue) {
+    var holdingsRecord = buildHoldingsWithElectronicAccess();
+
+    var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
+    var action = new Action().type(REPLACE_WITH).updated(newValue);
+
+    processor.updater(option, action).apply(holdingsRecord);
+
+    var electronicAccess = holdingsRecord.getElectronicAccess().get(0);
+    switch (option) {
+      case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> assertEquals(newValue, electronicAccess.getRelationshipId());
+      case ELECTRONIC_ACCESS_URI -> assertEquals(newValue, electronicAccess.getUri());
+      case ELECTRONIC_ACCESS_LINK_TEXT -> assertEquals(newValue, electronicAccess.getLinkText());
+      case ELECTRONIC_ACCESS_MATERIALS_SPECIFIED -> assertEquals(newValue, electronicAccess.getMaterialsSpecification());
+      case ELECTRONIC_ACCESS_URL_PUBLIC_NOTE -> assertEquals(newValue, electronicAccess.getPublicNote());
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+      ELECTRONIC_ACCESS_URL_RELATIONSHIP    | 2510a1d1-a61c-4378-8886-b831004f018e  | a6398566-f6cb-4916-96a9-5d3353e06d58
+      ELECTRONIC_ACCESS_URI                 | http://example.org                    | http://modified.org
+      ELECTRONIC_ACCESS_LINK_TEXT           | link text                             | new link text
+      ELECTRONIC_ACCESS_MATERIALS_SPECIFIED | materials                             | new materials
+      ELECTRONIC_ACCESS_URL_PUBLIC_NOTE     | public note                           | new public note
+    """, delimiter = '|')
+  @SneakyThrows
+  void shouldFindAndReplaceExactlyMatchedElectronicAccessFields(UpdateOptionType option, String initial, String updated) {
+    var holdingsRecord = buildHoldingsWithElectronicAccess();
+
+    var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
+    var action = new Action().type(FIND_AND_REPLACE).initial(initial).updated(updated);
+
+    processor.updater(option, action).apply(holdingsRecord);
+
+    var modified = holdingsRecord.getElectronicAccess().get(0);
+    var unmodified = holdingsRecord.getElectronicAccess().get(1);
+    var initialElectronicAccess = buildHoldingsWithElectronicAccess().getElectronicAccess().get(1);
+
+    switch (option) {
+      case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> {
+        assertEquals(updated, modified.getRelationshipId());
+        assertEquals(initialElectronicAccess.getRelationshipId(), unmodified.getRelationshipId());
+      }
+      case ELECTRONIC_ACCESS_URI -> {
+        assertEquals(updated, modified.getUri());
+        assertEquals(initialElectronicAccess.getUri(), unmodified.getUri());
+      }
+      case ELECTRONIC_ACCESS_LINK_TEXT -> {
+        assertEquals(updated, modified.getLinkText());
+        assertEquals(initialElectronicAccess.getLinkText(), unmodified.getLinkText());
+      }
+      case ELECTRONIC_ACCESS_MATERIALS_SPECIFIED -> {
+        assertEquals(updated, modified.getMaterialsSpecification());
+        assertEquals(initialElectronicAccess.getMaterialsSpecification(), unmodified.getMaterialsSpecification());
+      }
+      case ELECTRONIC_ACCESS_URL_PUBLIC_NOTE -> {
+        assertEquals(updated, modified.getPublicNote());
+        assertEquals(initialElectronicAccess.getPublicNote(), unmodified.getPublicNote());
+      }
+    }
+  }
+
+  private HoldingsRecord buildHoldingsWithElectronicAccess() {
+    return HoldingsRecord.builder()
+      .electronicAccess(List.of(
+        ElectronicAccess.builder()
+          .relationshipId("2510a1d1-a61c-4378-8886-b831004f018e")
+          .uri("http://example.org")
+          .linkText("link text")
+          .materialsSpecification("materials")
+          .publicNote("public note").build(),
+        ElectronicAccess.builder()
+          .relationshipId("3510a1d1-a61c-4378-8886-b831004f018e")
+          .uri("http://example2.org")
+          .linkText("Link text")
+          .materialsSpecification("Materials")
+          .publicNote("note").build()
+      )).build();
+  }
 }
+
