@@ -141,7 +141,7 @@ class BulkOperationServiceTest extends BaseTest {
   private ItemReferenceService itemReferenceService;
 
   @MockBean
-  private ItemNoteTableUpdater itemNoteTableUpdater;
+  private NoteTableUpdater noteTableUpdater;
 
   @Test
   @SneakyThrows

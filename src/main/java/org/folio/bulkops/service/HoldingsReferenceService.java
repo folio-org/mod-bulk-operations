@@ -11,6 +11,7 @@ import org.folio.bulkops.client.HoldingsTypeClient;
 import org.folio.bulkops.client.IllPolicyClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
+import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.HoldingsType;
@@ -21,8 +22,11 @@ import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.bulkops.util.Constants.QUERY_ALL_RECORDS;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Utils.encode;
 
@@ -171,5 +175,10 @@ public class HoldingsReferenceService {
       throw new NotFoundException(format("Statistical code not found by name=%s", name));
     }
     return statisticalCodes.getStatisticalCodes().get(0);
+  }
+
+  @Cacheable(cacheNames = "holdingsNoteTypes")
+  public List<HoldingsNoteType> getAllHoldingsNoteTypes() {
+    return holdingsNoteTypeClient.getByQuery(QUERY_ALL_RECORDS).getHoldingsNoteTypes();
   }
 }

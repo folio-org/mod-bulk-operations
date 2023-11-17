@@ -37,6 +37,7 @@
             "users.item.get",
             "inventory-storage.instances.item.get",
             "inventory-storage.holdings-types.item.get",
+            "inventory-storage.holdings-note-types.collection.get",
             "inventory-storage.locations.item.get",
             "inventory-storage.call-number-types.item.get",
             "inventory-storage.electronic-access-relationships.item.get",
