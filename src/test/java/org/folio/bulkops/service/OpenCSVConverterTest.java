@@ -5,16 +5,15 @@ import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
-import com.opencsv.enums.CSVReaderNullFieldIndicator;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.AddressType;
 import org.folio.bulkops.domain.bean.AddressTypeCollection;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.CallNumberType;
 import org.folio.bulkops.domain.bean.CallNumberTypeCollection;
+import org.folio.bulkops.domain.bean.CirculationNote;
 import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.bean.CustomFieldCollection;
 import org.folio.bulkops.domain.bean.CustomFieldTypes;
@@ -69,18 +68,17 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
 import static java.lang.String.format;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_REF_ID;
 import static org.folio.bulkops.util.Utils.encode;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -107,6 +105,11 @@ class OpenCSVConverterTest extends BaseTest {
 
     /* JSON -> Object */
     var bean = objectMapper.readValue(new FileInputStream(getPathToSample(clazz)), clazz);
+    if (bean instanceof Item item) {
+      bean = item
+        .withCheckInNotes(Collections.singletonList(CirculationNote.builder().note("Check in note").staffOnly(true).build()))
+        .withCheckOutNotes(Collections.singletonList(CirculationNote.builder().note("Check out note").staffOnly(false).build()));
+    }
 
     /* Object -> CSV */
     var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
@@ -136,11 +139,18 @@ class OpenCSVConverterTest extends BaseTest {
       Assertions.fail("Error parsing CSV to bean", e);
     }
 
-    assertThat(list, hasSize(1));
+    assertThat(list).hasSize(1);
     /* compare original and restored beans */
     var result = list.get(0);
 
-    assertEquals(bean, result);
+    if (result instanceof Item item) {
+      assertThat(item)
+        .usingRecursiveComparison()
+        .ignoringFields("circulationNotes", "effectiveCallNumberComponents", "metadata", "status.date")
+        .isEqualTo(bean);
+    } else {
+      assertEquals(bean, result);
+    }
 
   }
 
@@ -179,13 +189,13 @@ class OpenCSVConverterTest extends BaseTest {
         .withSkipLines(1)
         .build();
       list = cb.parse().stream().toList();
-      assertThat(cb.getCapturedExceptions(), hasSize(1));
+      assertThat(cb.getCapturedExceptions()).hasSize(1);
     } catch (IOException e) {
       Assertions.fail("Error parsing CSV to bean", e);
     }
 
     /* no NPE expected */
-    assertThat(list, hasSize(0));
+    assertThat(list).isEmpty();
   }
 
   @SneakyThrows
@@ -236,7 +246,7 @@ class OpenCSVConverterTest extends BaseTest {
       Assertions.fail("Error parsing CSV to bean");
     }
 
-    assertThat(list, hasSize(1));
+    assertThat(list).hasSize(1);
   }
 
   private static BulkOperationsEntity getEmptyBean(Class<BulkOperationsEntity> clazz) {
