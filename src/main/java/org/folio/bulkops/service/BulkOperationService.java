@@ -1,6 +1,5 @@
 package org.folio.bulkops.service;
 
-import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
@@ -61,7 +60,7 @@ import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
-import org.folio.bulkops.domain.converter.CustomMappingStrategy;
+import org.folio.bulkops.domain.converter.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -103,8 +102,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReader;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
@@ -229,14 +226,7 @@ public class BulkOperationService {
          var writerForModifiedPreviewCsvFile = remoteFileSystemClient.writer(modifiedPreviewCsvFileName);
          var writerForModifiedJsonFile = remoteFileSystemClient.writer(modifiedJsonFileName)) {
 
-      var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
-      strategy.setType(clazz);
-
-      StatefulBeanToCsv<BulkOperationsEntity> sbc = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writerForModifiedPreviewCsvFile)
-        .withSeparator(DEFAULT_SEPARATOR)
-        .withApplyQuotesToAll(false)
-        .withMappingStrategy(strategy)
-        .build();
+      var csvWriter = new BulkOperationsEntityCsvWriter(writerForModifiedPreviewCsvFile, clazz);
 
       var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), clazz);
 
@@ -252,7 +242,7 @@ public class BulkOperationService {
 
         if (Objects.nonNull(modified)) {
           // Prepare CSV for download and preview
-          process(operationId, operation.getIdentifierType(), sbc, writerForModifiedPreviewCsvFile, modified.getPreview());
+          process(operationId, operation.getIdentifierType(), csvWriter, modified.getPreview());
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
           writerForModifiedJsonFile.write(modifiedRecord);
         }
@@ -290,13 +280,12 @@ public class BulkOperationService {
     }
   }
 
-  public String process(UUID operationId, IdentifierType identifierType, StatefulBeanToCsv<BulkOperationsEntity> sbc, Writer writer, BulkOperationsEntity bean ) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException, IllegalAccessException {
+  public void process(UUID operationId, IdentifierType identifierType, BulkOperationsEntityCsvWriter csvWriter, BulkOperationsEntity bean ) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException, IllegalAccessException {
     try {
-      sbc.write(bean);
-      return writer.toString();
+      csvWriter.write(bean);
     } catch (ConverterException e) {
       errorService.saveError(operationId, bean.getIdentifier(identifierType), format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()));
-      return process(operationId, identifierType, sbc, writer, bean);
+      process(operationId, identifierType, csvWriter, bean);
     }
   }
 
@@ -347,15 +336,7 @@ public class BulkOperationService {
         var modifiedFileParser = new JsonFactory().createParser(modifiedFileReader);
         var modifiedFileIterator = objectMapper.readValues(modifiedFileParser, entityClass);
 
-        var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
-
-        StatefulBeanToCsv<BulkOperationsEntity> sbc = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writerForResultCsvFile)
-          .withSeparator(DEFAULT_SEPARATOR)
-          .withApplyQuotesToAll(false)
-          .withMappingStrategy(strategy)
-          .build();
-
-        strategy.setType(entityClass);
+        var csvWriter = new BulkOperationsEntityCsvWriter(writerForResultCsvFile, entityClass);
 
         int processedNumOfRecords = 0;
 
@@ -370,7 +351,7 @@ public class BulkOperationService {
             if (result != original) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
-              sbc.write(result);
+              csvWriter.write(result);
             }
             execution = execution
               .withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)

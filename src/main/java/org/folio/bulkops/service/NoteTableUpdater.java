@@ -2,12 +2,13 @@ package org.folio.bulkops.service;
 
 import static java.lang.Boolean.TRUE;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.STAFF_ONLY;
 
@@ -78,9 +79,9 @@ public class NoteTableUpdater {
         if (noteFields.length == NUMBER_OF_NOTE_FIELDS) {
           var position = noteTypeNames.indexOf(noteFields[NOTE_TYPE_POS]);
           if (position != NON_EXISTING_POSITION) {
-            var staffOnlyPostfix = TRUE.equals(Boolean.parseBoolean(noteFields[STAFF_ONLY_FLAG_POS])) ? STAFF_ONLY : EMPTY;
+            var staffOnlyPostfix = TRUE.equals(Boolean.parseBoolean(noteFields[STAFF_ONLY_FLAG_POS])) ? SPACE + STAFF_ONLY : EMPTY;
             var value = noteFields[NOTE_VALUE_POS] + staffOnlyPostfix;
-            notesArray[position] = isEmpty(notesArray[position]) ? value : String.join(ITEM_DELIMITER, notesArray[position], value);
+            notesArray[position] = isEmpty(notesArray[position]) ? value : String.join(ITEM_DELIMITER_SPACED, notesArray[position], value);
           }
         }
       }
