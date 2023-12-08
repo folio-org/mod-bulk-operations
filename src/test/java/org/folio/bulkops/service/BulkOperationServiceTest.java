@@ -3,6 +3,8 @@ package org.folio.bulkops.service;
 import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
+import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTE;
+import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTES;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.UnifiedTableHeaderBuilder.getHeaders;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
@@ -1144,8 +1146,8 @@ class BulkOperationServiceTest extends BaseTest {
 
   private List<Cell> renameAdministrativeNotesHeader(List<Cell> headers) {
     headers.forEach(cell -> {
-      if ("Administrative Notes".equalsIgnoreCase(cell.getValue())) {
-        cell.setValue("Administrative note");
+      if (ADMINISTRATIVE_NOTES.equalsIgnoreCase(cell.getValue())) {
+        cell.setValue(ADMINISTRATIVE_NOTE);
       }
     });
     return headers;
