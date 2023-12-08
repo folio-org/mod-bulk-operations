@@ -473,14 +473,27 @@ public class BulkOperationService {
           table.addRowsItem(row);
         }
       }
-      if (clazz == Item.class) noteTableUpdater.extendTableWithItemNotesTypes(table);
-      if (clazz == HoldingsRecord.class) noteTableUpdater.extendTableWithHoldingsNotesTypes(table);
+      processNoteFields(table, clazz);
       table.getRows().forEach(row -> row.setRow(SpecialCharacterEscaper.restore(row.getRow())));
       return table;
     } catch (Exception e) {
       log.error(e.getMessage());
     }
     return table;
+  }
+
+  private void processNoteFields(UnifiedTable table, Class<? extends BulkOperationsEntity> clazz) {
+    table.getHeader().forEach(cell -> {
+      if ("Administrative Notes".equalsIgnoreCase(cell.getValue())) {
+        cell.setValue("Administrative note");
+      }
+    });
+    if (clazz == Item.class) {
+      noteTableUpdater.extendTableWithItemNotesTypes(table);
+    }
+    if (clazz == HoldingsRecord.class) {
+      noteTableUpdater.extendTableWithHoldingsNotesTypes(table);
+    }
   }
 
   public BulkOperation startBulkOperation(UUID bulkOperationId, UUID xOkapiUserId, BulkOperationStart bulkOperationStart) {
