@@ -23,6 +23,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -39,6 +40,7 @@ public class NoteTableUpdater {
   public void extendTableWithHoldingsNotesTypes(UnifiedTable unifiedTable) {
     var noteTypeNames = holdingsReferenceService.getAllHoldingsNoteTypes().stream()
       .map(HoldingsNoteType::getName)
+      .map(this::concatNotePostfixIfRequired)
       .sorted()
       .toList();
 
@@ -49,11 +51,18 @@ public class NoteTableUpdater {
   public void extendTableWithItemNotesTypes(UnifiedTable unifiedTable) {
     var noteTypeNames = itemReferenceService.getAllItemNoteTypes().stream()
       .map(NoteType::getName)
+      .map(this::concatNotePostfixIfRequired)
       .sorted()
       .toList();
 
     extendHeadersWithItemNoteTypeNames(ITEM_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames);
     unifiedTable.getRows().forEach(row -> extendRowWithNotesData(ITEM_NOTE_POSITION, row, noteTypeNames));
+  }
+
+  private String concatNotePostfixIfRequired(String noteTypeName) {
+    return Set.of("Binding", "Electronic bookplate", "Provenance", "Reproduction").contains(noteTypeName) ?
+      noteTypeName + " note" :
+      noteTypeName;
   }
 
   private void extendHeadersWithItemNoteTypeNames(int notesInitialPosition, List<Cell> headers, List<String> noteTypeNames) {

@@ -3,6 +3,8 @@ package org.folio.bulkops.service;
 import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
+import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTE;
+import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTES;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.UnifiedTableHeaderBuilder.getHeaders;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
@@ -71,6 +73,7 @@ import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
+import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
@@ -897,9 +900,9 @@ class BulkOperationServiceTest extends BaseTest {
     if (USER.equals(entityType)) {
       assertThat(table.getHeader(), equalTo(getHeaders(User.class)));
     } else if (EntityType.ITEM.equals(entityType)) {
-      assertThat(table.getHeader(), equalTo(getHeaders(Item.class)));
+      assertThat(table.getHeader(), equalTo(renameAdministrativeNotesHeader(getHeaders(Item.class))));
     } else if (EntityType.HOLDINGS_RECORD.equals(entityType)) {
-      assertThat(table.getHeader(), equalTo(getHeaders(HoldingsRecord.class)));
+      assertThat(table.getHeader(), equalTo(renameAdministrativeNotesHeader(getHeaders(HoldingsRecord.class))));
     }
     assertTrue(table.getRows().stream()
       .map(Row::getRow)
@@ -1139,5 +1142,14 @@ class BulkOperationServiceTest extends BaseTest {
         .linkToCommittedRecordsCsvFile(fileName)
         .build();
     };
+  }
+
+  private List<Cell> renameAdministrativeNotesHeader(List<Cell> headers) {
+    headers.forEach(cell -> {
+      if (ADMINISTRATIVE_NOTES.equalsIgnoreCase(cell.getValue())) {
+        cell.setValue(ADMINISTRATIVE_NOTE);
+      }
+    });
+    return headers;
   }
 }
