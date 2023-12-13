@@ -392,6 +392,8 @@ public class BulkOperationService {
           operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
         }
       } catch (Exception e) {
+        log.error(e);
+
         execution = execution
           .withStatus(StatusType.FAILED)
           .withEndTime(LocalDateTime.now());
