@@ -1,51 +1,17 @@
 package org.folio.bulkops.service;
 
-import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
-import static java.lang.Boolean.TRUE;
-import static java.lang.String.format;
-import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.LF;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
-import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
-import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
-import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
-import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
-import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
-import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
-import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
-import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
-import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
-import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
-import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
-import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDING_ITEMS;
-import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
-import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
-import static org.folio.bulkops.util.Constants.MSG_HOLDING_NO_CHANGE_REQUIRED_SUPPRESSED_ITEMS_UPDATED;
-import static org.folio.bulkops.util.Constants.MSG_HOLDING_NO_CHANGE_REQUIRED_UNSUPPRESSED_ITEMS_UPDATED;
-import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
-import static org.folio.bulkops.util.Utils.resolveEntityClass;
-import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
-
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.Writer;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.opencsv.CSVReader;
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.bean.StatefulBeanToCsv;
+import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
@@ -97,19 +63,51 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opencsv.CSVReader;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.bean.StatefulBeanToCsv;
-import com.opencsv.bean.StatefulBeanToCsvBuilder;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.Writer;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
+import static java.lang.Boolean.TRUE;
+import static java.lang.String.format;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.LF;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
+import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
+import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
+import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
+import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
+import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
+import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
+import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDING_ITEMS;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
+import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
+import static org.folio.bulkops.util.Constants.MSG_HOLDING_NO_CHANGE_REQUIRED_SUPPRESSED_ITEMS_UPDATED;
+import static org.folio.bulkops.util.Constants.MSG_HOLDING_NO_CHANGE_REQUIRED_UNSUPPRESSED_ITEMS_UPDATED;
+import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
+import static org.folio.bulkops.util.Utils.resolveEntityClass;
+import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
 
 @Service
 @Log4j2
@@ -360,8 +358,11 @@ public class BulkOperationService {
         int processedNumOfRecords = 0;
 
         while (hasNextRecord(originalFileIterator, modifiedFileIterator)) {
+log.info("->PerformanceCheck: before: originalFileIterator.next()");
           var original = originalFileIterator.next();
+log.info("->PerformanceCheck: before: modifiedFileIterator.next()");
           var modified = modifiedFileIterator.next();
+log.info("->PerformanceCheck: after: modifiedFileIterator.next()");
 
           processedNumOfRecords++;
 
@@ -392,8 +393,7 @@ public class BulkOperationService {
           operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
         }
       } catch (Exception e) {
-        e.printStackTrace();
-        log.error(e);
+        log.error(e.getMessage(), e);
 
         execution = execution
           .withStatus(StatusType.FAILED)
@@ -434,9 +434,13 @@ public class BulkOperationService {
       .bulkOperationId(operation.getId())
       .build();
       executionContent.setIdentifier(modified.getIdentifier(operation.getIdentifierType()));
+log.info("->PerformanceCheck: before: updater.updateRecord(...)");
       updater.updateRecord(modified, original.getIdentifier(operation.getIdentifierType()), operation.getId());
+log.info("->PerformanceCheck: after: updater.updateRecord(...)");
       if (modified instanceof HoldingsRecord holdingsRecord) {
+log.info("->PerformanceCheck: before: updateItemsIfRequired(...)");
         updateItemsIfRequired(operation, holdingsRecord);
+log.info("->PerformanceCheck: after: updateItemsIfRequired(...)");
       }
       executionContentRepository.save(executionContent.withState(StateType.PROCESSED));
       operation.setCommittedNumOfRecords(operation.getCommittedNumOfRecords() + 1);
