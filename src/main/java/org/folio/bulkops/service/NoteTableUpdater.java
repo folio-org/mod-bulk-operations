@@ -51,11 +51,12 @@ public class NoteTableUpdater {
   public void extendTableWithItemNotesTypes(UnifiedTable unifiedTable) {
     var noteTypeNames = itemReferenceService.getAllItemNoteTypes().stream()
       .map(NoteType::getName)
-      .map(this::concatNotePostfixIfRequired)
       .sorted()
       .toList();
 
-    extendHeadersWithItemNoteTypeNames(ITEM_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames);
+    var noteTypeNamesWithPostfix = noteTypeNames.stream().map(this::concatNotePostfixIfRequired).toList();
+
+    extendHeadersWithItemNoteTypeNames(ITEM_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNamesWithPostfix);
     unifiedTable.getRows().forEach(row -> extendRowWithNotesData(ITEM_NOTE_POSITION, row, noteTypeNames));
   }
 
