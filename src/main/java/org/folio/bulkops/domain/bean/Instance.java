@@ -173,24 +173,10 @@ public class Instance implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private List<String> publicationRange;
 
-  @JsonIgnore
-  @CsvCustomBindByName(column = "ISBN", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 22, converter = StringConverter.class)
-  @UnifiedTableCell
-  private String isbn;
-
-  @JsonIgnore
-  @CsvCustomBindByName(column = "ISSN", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 23, converter = StringConverter.class)
-  @UnifiedTableCell
-  private String issn;
-
   @Override
   public String getIdentifier(IdentifierType identifierType) {
     return switch (identifierType) {
       case HRID -> hrid;
-      case ISBN -> isbn;
-      case ISSN -> issn;
       default -> id;
     };
   }
