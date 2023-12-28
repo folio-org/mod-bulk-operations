@@ -1,6 +1,5 @@
 package org.folio.bulkops.domain.bean;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.opencsv.bean.CsvCustomBindByName;

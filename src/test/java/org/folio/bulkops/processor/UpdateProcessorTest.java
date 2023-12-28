@@ -9,6 +9,7 @@ import java.util.UUID;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.User;
@@ -34,6 +35,8 @@ class UpdateProcessorTest extends BaseTest {
   private ItemUpdateProcessor itemUpdateProcessor;
   @Autowired
   private UserUpdateProcessor userUpdateProcessor;
+  @Autowired
+  private InstanceUpdateProcessor instanceUpdateProcessor;
 
   @Test
   void shouldUpdateHoldingsRecord() {
@@ -69,5 +72,17 @@ class UpdateProcessorTest extends BaseTest {
     userUpdateProcessor.updateRecord(user, "identifier",  UUID.randomUUID());
 
     verify(userClient).updateUser(user, user.getId());
+  }
+
+  @Test
+  void shouldUpdateInstance() {
+    var instance = Instance.builder()
+      .id(UUID.randomUUID().toString())
+      .title("Title")
+      .build();
+
+    instanceUpdateProcessor.updateRecord(instance, "identifier", UUID.randomUUID());
+
+    verify(instanceStorageClient).updateInstance(instance, instance.getId());
   }
 }
