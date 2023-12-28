@@ -122,7 +122,17 @@
             "users.collection.get",
             "usergroups.item.get",
             "usergroups.collection.get",
-            "user-settings.custom-fields.collection.get"
+            "user-settings.custom-fields.collection.get",
+            "inventory-storage.instance-statuses.collection.get",
+            "inventory-storage.instance-statuses.item.get",
+            "inventory-storage.modes-of-issuance.collection.get",
+            "inventory-storage.modes-of-issuance.item.get",
+            "inventory-storage.instance-types.collection.get",
+            "inventory-storage.instance-types.item.get",
+            "inventory-storage.nature-of-content-terms.collection.get",
+            "inventory-storage.nature-of-content-terms.item.get",
+            "inventory-storage.instance-formats.collection.get",
+            "inventory-storage.instance-formats.item.get"
           ]
         },
         {
@@ -385,6 +395,26 @@
     {
       "id": "data-export-spring",
       "version": "1.0"
+    },
+    {
+      "id": "instance-statuses",
+      "version": "1.0"
+    },
+    {
+      "id": "modes-of-issuance",
+      "version": "1.1"
+    },
+    {
+      "id": "instance-types",
+      "version": "2.0"
+    },
+    {
+      "id": "nature-of-content-terms",
+      "version": "1.0"
+    },
+    {
+      "id": "instance-formats",
+      "version": "2.0"
     }
   ],
   "launchDescriptor": {

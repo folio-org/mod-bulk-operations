@@ -20,4 +20,5 @@
   <include file="changes/06_07_2023_update_bulk_operation_add_expired.xml" relativeToChangelogFile="true"/>
   <include file="changes/25-10-2023_add_notes_options_types_for_holdings.xml" relativeToChangelogFile="true"/>
   <include file="changes/08-11-2023_add_electronic_access_options_types.xml" relativeToChangelogFile="true"/>
+  <include file="changes/27-12-2023_add_types_for_instance.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

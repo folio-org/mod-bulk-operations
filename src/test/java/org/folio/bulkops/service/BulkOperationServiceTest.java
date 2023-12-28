@@ -874,7 +874,10 @@ class BulkOperationServiceTest extends BaseTest {
     "items_preview.csv,ITEM,COMMIT",
     "holdings_preview.csv,HOLDINGS_RECORD,UPLOAD",
     "holdings_preview.csv,HOLDINGS_RECORD,EDIT",
-    "holdings_preview.csv,HOLDINGS_RECORD,COMMIT"}, delimiter = ',')
+    "holdings_preview.csv,HOLDINGS_RECORD,COMMIT",
+    "instances_preview.csv,INSTANCE,UPLOAD",
+    "instances_preview.csv,INSTANCE,EDIT",
+    "instances_preview.csv,INSTANCE,COMMIT"}, delimiter = ',')
   @SneakyThrows
   void shouldReturnPreviewIfAvailable(String fileName, EntityType entityType, BulkOperationStep step) {
     var path = "src/test/resources/files/" + fileName;

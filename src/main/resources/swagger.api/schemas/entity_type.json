@@ -6,7 +6,8 @@
     "enum": [
       "USER",
       "ITEM",
-      "HOLDINGS_RECORD"
+      "HOLDINGS_RECORD",
+      "INSTANCE"
     ]
   }
 }
