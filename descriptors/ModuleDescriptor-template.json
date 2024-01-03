@@ -132,7 +132,8 @@
             "inventory-storage.nature-of-content-terms.collection.get",
             "inventory-storage.nature-of-content-terms.item.get",
             "inventory-storage.instance-formats.collection.get",
-            "inventory-storage.instance-formats.item.get"
+            "inventory-storage.instance-formats.item.get",
+            "inventory-storage.instances.item.put"
           ]
         },
         {
