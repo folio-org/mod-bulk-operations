@@ -37,11 +37,17 @@ import org.folio.bulkops.client.HoldingsNoteTypeClient;
 import org.folio.bulkops.client.HoldingsSourceClient;
 import org.folio.bulkops.client.HoldingsTypeClient;
 import org.folio.bulkops.client.IllPolicyClient;
+import org.folio.bulkops.client.InstanceFormatsClient;
+import org.folio.bulkops.client.InstanceStatusesClient;
+import org.folio.bulkops.client.InstanceStorageClient;
+import org.folio.bulkops.client.InstanceTypesClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.ItemNoteTypeClient;
 import org.folio.bulkops.client.LoanTypeClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.MaterialTypeClient;
+import org.folio.bulkops.client.ModesOfIssuanceClient;
+import org.folio.bulkops.client.NatureOfContentTermsClient;
 import org.folio.bulkops.client.OkapiClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.ServicePointClient;
@@ -178,6 +184,18 @@ public abstract class BaseTest {
   public MaterialTypeClient materialTypeClient;
   @MockBean
   public ElectronicAccessRelationshipClient relationshipClient;
+  @MockBean
+  public InstanceStatusesClient instanceStatusesClient;
+  @MockBean
+  public ModesOfIssuanceClient modesOfIssuanceClient;
+  @MockBean
+  public InstanceTypesClient instanceTypesClient;
+  @MockBean
+  public NatureOfContentTermsClient natureOfContentTermsClient;
+  @MockBean
+  public InstanceFormatsClient instanceFormatsClient;
+  @MockBean
+  public InstanceStorageClient instanceStorageClient;
 
   @Autowired
   protected MockMvc mockMvc;

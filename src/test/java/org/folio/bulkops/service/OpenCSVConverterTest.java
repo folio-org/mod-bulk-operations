@@ -30,6 +30,13 @@ import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSourceCollection;
 import org.folio.bulkops.domain.bean.HoldingsType;
 import org.folio.bulkops.domain.bean.HoldingsTypeCollection;
+import org.folio.bulkops.domain.bean.Instance;
+import org.folio.bulkops.domain.bean.InstanceFormat;
+import org.folio.bulkops.domain.bean.InstanceFormats;
+import org.folio.bulkops.domain.bean.InstanceStatus;
+import org.folio.bulkops.domain.bean.InstanceStatuses;
+import org.folio.bulkops.domain.bean.InstanceType;
+import org.folio.bulkops.domain.bean.InstanceTypes;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.ItemLocationCollection;
@@ -37,6 +44,10 @@ import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.LoanTypeCollection;
 import org.folio.bulkops.domain.bean.MaterialType;
 import org.folio.bulkops.domain.bean.MaterialTypeCollection;
+import org.folio.bulkops.domain.bean.ModeOfIssuance;
+import org.folio.bulkops.domain.bean.ModesOfIssuance;
+import org.folio.bulkops.domain.bean.NatureOfContentTerm;
+import org.folio.bulkops.domain.bean.NatureOfContentTerms;
 import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.bean.NoteTypeCollection;
 import org.folio.bulkops.domain.bean.SelectField;
@@ -93,7 +104,8 @@ class OpenCSVConverterTest extends BaseTest {
       return Stream.of(
         Arguments.of(User.class),
         Arguments.of(Item.class),
-        Arguments.of(HoldingsRecord.class)
+        Arguments.of(HoldingsRecord.class),
+        Arguments.of(Instance.class)
       );
     }
   }
@@ -255,8 +267,10 @@ class OpenCSVConverterTest extends BaseTest {
       bean = new User();
     } else if (clazz.equals(Item.class)) {
       bean = new Item().withVersion(1);
-    } else {
+    } else if (clazz.equals(HoldingsRecord.class)) {
       bean = new HoldingsRecord().withVersion(2);
+    } else {
+      bean = new Instance();
     }
     return bean;
   }
@@ -266,8 +280,10 @@ class OpenCSVConverterTest extends BaseTest {
       return "src/test/resources/files/complete_user.json";
     } else if (clazz.equals(Item.class)) {
       return "src/test/resources/files/complete_item.json";
-    } else {
+    } else if (clazz.equals(HoldingsRecord.class)) {
       return "src/test/resources/files/complete_holding_record.json";
+    } else {
+      return "src/test/resources/files/instance.json";
     }
   }
 
@@ -276,8 +292,10 @@ class OpenCSVConverterTest extends BaseTest {
       return "src/test/resources/files/bad_data_user.json";
     } else if (clazz.equals(Item.class)) {
       return "src/test/resources/files/bad_data_item.json";
-    } else {
+    } else if (clazz.equals(HoldingsRecord.class)) {
       return "src/test/resources/files/bad_data_holding_record.json";
+    } else {
+      return "src/test/resources/files/bad_data_instance.json";
     }
   }
 
@@ -399,5 +417,40 @@ class OpenCSVConverterTest extends BaseTest {
     when(holdingsSourceClient.getByQuery("name==\"Holdings@record@source\"")).thenReturn(new HoldingsRecordsSourceCollection().withHoldingsRecordsSources(List.of(new HoldingsRecordsSource().withId("f32d531e-df79-46b3-8932-cdd35f7a2264").withName("Holdings@record@source"))));
     when(holdingsSourceClient.getById("a06889ff-d178-4dc8-815a-06f7f97bf975")).thenThrow(new NotFoundException("Not found"));
 
+    // Instance
+    var instanceStatus = InstanceStatus.builder().id("2a340d34-6b70-443a-bb1b-1b8d1c65d862").name("Other").build();
+    when(instanceStatusesClient.getById("2a340d34-6b70-443a-bb1b-1b8d1c65d862")).thenReturn(instanceStatus);
+    when(instanceStatusesClient.getByQuery("name==\"Other\"", 1)).thenReturn(InstanceStatuses.builder()
+      .statuses(Collections.singletonList(instanceStatus))
+      .totalRecords(1)
+      .build());
+
+    var modeOfIssuance = ModeOfIssuance.builder().id("068b5344-e2a6-40df-9186-1829e13cd344").name("serial").build();
+    when(modesOfIssuanceClient.getById("068b5344-e2a6-40df-9186-1829e13cd344")).thenReturn(modeOfIssuance);
+    when(modesOfIssuanceClient.getByQuery("name==\"serial\"", 1)).thenReturn(ModesOfIssuance.builder()
+      .modes(Collections.singletonList(modeOfIssuance))
+      .totalRecords(1)
+      .build());
+
+    var instanceType = InstanceType.builder().id("6312d172-f0cf-40f6-b27d-9fa8feaf332f").name("text").build();
+    when(instanceTypesClient.getById("6312d172-f0cf-40f6-b27d-9fa8feaf332f")).thenReturn(instanceType);
+    when(instanceTypesClient.getByQuery("name==\"text\"", 1)).thenReturn(InstanceTypes.builder()
+      .types(Collections.singletonList(instanceType))
+      .totalRecords(1)
+      .build());
+
+    var natureOfContentTerm = NatureOfContentTerm.builder().id("44cd89f3-2e76-469f-a955-cc57cb9e0395").name("textbook").build();
+    when(natureOfContentTermsClient.getById("44cd89f3-2e76-469f-a955-cc57cb9e0395")).thenReturn(natureOfContentTerm);
+    when(natureOfContentTermsClient.getByQuery("name==\"textbook\"", 1)).thenReturn(NatureOfContentTerms.builder()
+      .terms(Collections.singletonList(natureOfContentTerm))
+      .totalRecords(1)
+      .build());
+
+    var instanceFormat = InstanceFormat.builder().id("fe1b9adb-e0cf-4e05-905f-ce9986279404").name("computer -- other").build();
+    when(instanceFormatsClient.getById("fe1b9adb-e0cf-4e05-905f-ce9986279404")).thenReturn(instanceFormat);
+    when(instanceFormatsClient.getByQuery("name==\"computer -- other\"", 1)).thenReturn(InstanceFormats.builder()
+      .formats(Collections.singletonList(instanceFormat))
+      .totalRecords(1)
+      .build());
   }
 }

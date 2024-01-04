@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ public class UpdateProcessorFactory {
   private UpdateProcessor<User> userUpdateProcessor;
   private UpdateProcessor<Item> itemUpdateProcessor;
   private UpdateProcessor<HoldingsRecord> holdingsUpdateProcessor;
+  private UpdateProcessor<Instance> instanceUpdateProcessor;
 
   @Autowired
   private List<UpdateProcessor<? extends BulkOperationsEntity>> processors;
