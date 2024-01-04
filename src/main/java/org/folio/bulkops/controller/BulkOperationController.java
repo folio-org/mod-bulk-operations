@@ -22,6 +22,7 @@ import org.folio.bulkops.service.BulkOperationService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.ListUsersService;
 import org.folio.bulkops.service.LogFilesService;
+import org.folio.bulkops.service.PreviewService;
 import org.folio.bulkops.service.RuleService;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
@@ -52,6 +53,7 @@ import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 @Log4j2
 public class BulkOperationController implements BulkOperationsApi {
   private final BulkOperationService bulkOperationService;
+  private final PreviewService previewService;
   private final BulkOperationMapper bulkOperationMapper;
   private final JpaCqlRepository<BulkOperation, UUID> bulkOperationCqlRepository;
   private final ErrorService errorService;
@@ -74,7 +76,7 @@ public class BulkOperationController implements BulkOperationsApi {
   @Override
   public ResponseEntity<UnifiedTable> getPreviewByOperationId(UUID operationId, BulkOperationStep step, Integer limit, Integer offset) {
     var bulkOperation = bulkOperationService.getBulkOperationOrThrow(operationId);
-    return new ResponseEntity<>(bulkOperationService.getPreview(bulkOperation, step, 0, limit), HttpStatus.OK);
+    return new ResponseEntity<>(previewService.getPreview(bulkOperation, step, 0, limit), HttpStatus.OK);
   }
 
   @Override

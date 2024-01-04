@@ -72,13 +72,11 @@ import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
-import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.ConverterException;
@@ -451,37 +449,6 @@ public class BulkOperationService {
       .map(BulkOperationRuleRuleDetails::getActions)
       .flatMap(List::stream)
       .anyMatch(action -> Set.of(SET_TO_TRUE_INCLUDING_ITEMS, SET_TO_FALSE_INCLUDING_ITEMS).contains(action.getType()));
-  }
-
-  public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset, int limit) {
-      var entityClass = resolveEntityClass(operation.getEntityType());
-      return switch (step) {
-        case UPLOAD -> buildPreviewFromCsvFile(operation.getLinkToMatchedRecordsCsvFile(), entityClass, offset, limit);
-        case EDIT -> buildPreviewFromCsvFile(operation.getLinkToModifiedRecordsCsvFile(), entityClass, offset, limit);
-        case COMMIT -> buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), entityClass, offset, limit);
-      };
-  }
-
-  private UnifiedTable buildPreviewFromCsvFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit) {
-    var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
-    try (Reader reader = new InputStreamReader(remoteFileSystemClient.get(pathToFile))) {
-      try (CSVReader csvReader = new CSVReader(reader)) {
-        var recordsToSkip = offset + 1;
-        csvReader.skip(recordsToSkip);
-        String[] line;
-        while ((line = csvReader.readNext()) != null && csvReader.getRecordsRead() <= limit + recordsToSkip) {
-          var row = new Row();
-          row.setRow(new ArrayList<>(Arrays.asList(line)));
-          table.addRowsItem(row);
-        }
-      }
-      processNoteFields(table, clazz);
-      table.getRows().forEach(row -> row.setRow(SpecialCharacterEscaper.restore(row.getRow())));
-      return table;
-    } catch (Exception e) {
-      log.error(e.getMessage());
-    }
-    return table;
   }
 
   private void processNoteFields(UnifiedTable table, Class<? extends BulkOperationsEntity> clazz) {
