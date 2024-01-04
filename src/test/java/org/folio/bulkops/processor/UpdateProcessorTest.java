@@ -11,7 +11,6 @@ import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
-import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.service.ErrorService;
@@ -42,8 +41,7 @@ class UpdateProcessorTest extends BaseTest {
   void shouldUpdateHoldingsRecord() {
     var holdingsRecord = new HoldingsRecord()
         .withId(UUID.randomUUID().toString())
-        .withInstanceId(UUID.randomUUID().toString())
-        .withPermanentLocation(new ItemLocation().withId(UUID.randomUUID().toString()));
+        .withInstanceId(UUID.randomUUID().toString());
 
     when(ruleService.getRules(isA(UUID.class))).thenReturn(new BulkOperationRuleCollection());
     holdingsUpdateProcessor.updateRecord(holdingsRecord,"identifier", UUID.randomUUID());

@@ -78,7 +78,6 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
       return holding -> {
         var locationId = action.getUpdated();
         if (PERMANENT_LOCATION == option) {
-          holding.setPermanentLocation(itemReferenceService.getLocationById(locationId));
           holding.setPermanentLocationId(locationId);
           holding.setEffectiveLocationId(isEmpty(holding.getTemporaryLocationId()) ? locationId : holding.getTemporaryLocationId());
         } else {
