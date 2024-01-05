@@ -4,7 +4,7 @@ import static java.lang.String.format;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.STAFF_SUPPRESS;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -24,19 +24,19 @@ public class InstanceDataProcessor extends AbstractDataProcessor<Instance> {
   @Override
   public Validator<UpdateOptionType, Action> validator(Instance instance) {
     return (option, action) -> {
-      if (CLEAR_FIELD.equals(action.getType()) && SUPPRESS_FROM_DISCOVERY.equals(option)) {
-        throw new RuleValidationException("Suppress from discovery flag cannot be cleared");
+      if (CLEAR_FIELD.equals(action.getType()) && STAFF_SUPPRESS.equals(option)) {
+        throw new RuleValidationException("Staff suppress flag cannot be cleared");
       }
     };
   }
 
   @Override
   public Updater<Instance> updater(UpdateOptionType option, Action action) {
-    if (SUPPRESS_FROM_DISCOVERY.equals(option)) {
+    if (STAFF_SUPPRESS.equals(option)) {
       if (SET_TO_TRUE.equals(action.getType())) {
-        return instance -> instance.setDiscoverySuppress(true);
+        return instance -> instance.setStaffSuppress(true);
       } else if (SET_TO_FALSE.equals(action.getType())) {
-        return instance -> instance.setDiscoverySuppress(false);
+        return instance -> instance.setStaffSuppress(false);
       }
     }
     return item -> {
