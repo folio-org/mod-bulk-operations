@@ -104,7 +104,7 @@ public class InstanceReferenceService {
     try {
       return isEmpty(id) ? EMPTY : instanceFormatsClient.getById(id).getName();
     } catch (Exception e) {
-      throw new NotFoundException(format("Nature of content term was not found by id=%s", id));
+      throw new NotFoundException(format("Instance format was not found by id=%s", id));
     }
   }
 
@@ -112,7 +112,7 @@ public class InstanceReferenceService {
   public String getInstanceFormatIdByName(String name) {
     var response = instanceFormatsClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (response.getFormats().isEmpty()) {
-      throw new NotFoundException(format("Nature of content term was not found by name=%s", name));
+      throw new NotFoundException(format("Instance format was not found by name=%s", name));
     }
     return response.getFormats().get(0).getId();
   }
