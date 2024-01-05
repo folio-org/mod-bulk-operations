@@ -17,5 +17,20 @@ public class ContributorName {
 
   @JsonProperty("name")
   private String name;
+
+  @JsonProperty("contributorTypeId")
+  private String contributorTypeId;
+
+  @JsonProperty("contributorTypeText")
+  private String contributorTypeText;
+
+  @JsonProperty("contributorNameTypeId")
+  private String contributorNameTypeId;
+
+  @JsonProperty("authorityId")
+  private String authorityId;
+
+  @JsonProperty("primary")
+  private Boolean primary;
 }
 
