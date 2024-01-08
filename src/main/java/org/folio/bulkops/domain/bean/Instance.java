@@ -180,6 +180,8 @@ public class Instance implements BulkOperationsEntity {
   private List<Identifier> identifiers;
   @JsonProperty("subjects")
   private List<Subject> subjects;
+  @JsonProperty("classifications")
+  private List<Classification> classifications;
   @JsonProperty("publication")
   private List<Publication> publications;
   @JsonProperty("publicationPeriod")
