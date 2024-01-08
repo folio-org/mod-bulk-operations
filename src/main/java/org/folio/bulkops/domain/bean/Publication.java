@@ -1,0 +1,27 @@
+package org.folio.bulkops.domain.bean;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.With;
+
+@Data
+@With
+@Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
+public class Publication {
+  @JsonProperty("publisher")
+  private String publisher;
+
+  @JsonProperty("place")
+  private String place;
+
+  @JsonProperty("dateOfPublication")
+  private String dateOfPublication;
+
+  @JsonProperty("role")
+  private String role;
+}
