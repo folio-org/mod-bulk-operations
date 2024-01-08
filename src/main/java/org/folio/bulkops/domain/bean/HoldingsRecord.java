@@ -90,9 +90,6 @@ public class HoldingsRecord implements BulkOperationsEntity, ElectronicAccessEnt
   @UnifiedTableCell
   private String permanentLocationId;
 
-  @JsonProperty("permanentLocation")
-  private ItemLocation permanentLocation;
-
   @JsonProperty("temporaryLocationId")
   @CsvCustomBindByName(column = "Temporary location", converter = HoldingsLocationConverter.class)
   @CsvCustomBindByPosition(position = 7, converter = HoldingsLocationConverter.class)

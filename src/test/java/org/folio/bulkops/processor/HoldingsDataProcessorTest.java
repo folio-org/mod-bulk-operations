@@ -106,9 +106,6 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withName("New location");
 
     var holding = new HoldingsRecord()
-      .withPermanentLocation(new ItemLocation()
-        .withId(permanentLocationId)
-        .withName("Permanent Location"))
       .withSourceId(FOLIO_SOURCE_ID)
       .withPermanentLocationId(permanentLocationId)
       .withTemporaryLocationId(temporaryLocationId)
@@ -130,7 +127,6 @@ class HoldingsDataProcessorTest extends BaseTest {
     var permanentLocationUpdatingResult = processor.process(IDENTIFIER, holding, rules(rule(PERMANENT_LOCATION, REPLACE_WITH, updatedLocationId)));
 
     assertNotNull(permanentLocationUpdatingResult);
-    assertEquals(updatedLocation, permanentLocationUpdatingResult.getUpdated().getPermanentLocation());
     assertEquals(updatedLocationId, permanentLocationUpdatingResult.getUpdated().getPermanentLocationId());
     assertEquals(temporaryLocationId, permanentLocationUpdatingResult.getUpdated().getEffectiveLocationId());
   }
@@ -154,9 +150,6 @@ class HoldingsDataProcessorTest extends BaseTest {
     var unknownSourceId = UUID.randomUUID().toString();
 
     var holding = new HoldingsRecord()
-      .withPermanentLocation(new ItemLocation()
-        .withId(permanentLocationId)
-        .withName("Permanent Location"))
       .withSourceId(unknownSourceId)
       .withPermanentLocationId(permanentLocationId)
       .withTemporaryLocationId(temporaryLocationId)
@@ -177,9 +170,6 @@ class HoldingsDataProcessorTest extends BaseTest {
     var temporaryLocationId = "c8d27cb7-a86b-45f7-b6f4-1604fb467660";
 
     var holding = new HoldingsRecord()
-      .withPermanentLocation(new ItemLocation()
-        .withId(permanentLocationId)
-        .withName("Permanent Location"))
       .withSourceId(FOLIO_SOURCE_ID)
       .withPermanentLocationId(permanentLocationId)
       .withTemporaryLocationId(temporaryLocationId)
