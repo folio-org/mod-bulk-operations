@@ -22,7 +22,6 @@ public class InstanceFormatListConverter extends BaseConverter<List<String>> {
       Collections.emptyList() :
       Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
         .map(String::trim)
-        .map(SpecialCharacterEscaper::restore)
         .map(InstanceReferenceHelper.service()::getInstanceFormatIdByName)
         .toList();
   }
@@ -32,7 +31,6 @@ public class InstanceFormatListConverter extends BaseConverter<List<String>> {
     return object.stream()
       .filter(Objects::nonNull)
       .map(InstanceReferenceHelper.service()::getInstanceFormatNameById)
-      .map(SpecialCharacterEscaper::escape)
       .collect(Collectors.joining(ITEM_DELIMITER_SPACED));
   }
 }

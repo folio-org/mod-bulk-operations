@@ -9,7 +9,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.folio.bulkops.domain.bean.ContributorName;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 
 public class ContributorListConverter extends BaseConverter<List<ContributorName>> {
 
@@ -17,7 +16,6 @@ public class ContributorListConverter extends BaseConverter<List<ContributorName
   public List<ContributorName> convertToObject(String value) {
     return Arrays.stream(value.split(ARRAY_DELIMITER))
       .map(String::trim)
-      .map(SpecialCharacterEscaper::restore)
       .map(new ContributorName()::withName)
       .toList();
   }
@@ -27,7 +25,6 @@ public class ContributorListConverter extends BaseConverter<List<ContributorName
     return object.stream()
       .filter(Objects::nonNull)
       .map(ContributorName::getName)
-      .map(SpecialCharacterEscaper::escape)
       .collect(Collectors.joining(ARRAY_DELIMITER_SPACED));
   }
 }
