@@ -10,6 +10,7 @@ public class Constants {
 
   public static final String COMMA_DELIMETER = ",";
   public static final String ARRAY_DELIMITER = ";";
+  public static final String ARRAY_DELIMITER_SPACED = "; ";
   public static final String ITEM_DELIMITER = "|";
   public static final String ITEM_DELIMITER_SPACED = " | ";
   public static final String NEW_LINE_SEPARATOR = "\n";
