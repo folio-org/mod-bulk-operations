@@ -355,12 +355,14 @@ public class BulkOperationService {
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
               csvWriter.write(result);
             }
-            execution = execution
-              .withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
-              .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
+          } catch (ConverterException converterException) {
+            log.error("Record {}, field: {}, converter exception: {}", original.getIdentifier(operation.getIdentifierType()), converterException.getField().getName(), converterException.getMessage());
           } catch (Exception e) {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage());
           }
+          execution = execution
+            .withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
+            .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
           if (processedNumOfRecords - execution.getProcessedRecords() > OPERATION_UPDATING_STEP) {
             execution.setProcessedRecords(processedNumOfRecords);
             executionRepository.save(execution);
