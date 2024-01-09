@@ -11,11 +11,6 @@
           "pathPattern": "/bulk-operations/upload",
           "permissionsRequired": [ "bulk-operations.item.upload.post" ],
           "modulePermissions": [
-            "inventory-storage.instance-statuses.item.get",
-            "inventory-storage.modes-of-issuance.item.get",
-            "inventory-storage.instance-types.item.get",
-            "inventory-storage.nature-of-content-terms.item.get",
-            "inventory-storage.instance-formats.item.get"
           ]
         },
         {
