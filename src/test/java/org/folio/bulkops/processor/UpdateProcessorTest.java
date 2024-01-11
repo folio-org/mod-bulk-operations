@@ -128,10 +128,10 @@ class UpdateProcessorTest extends BaseTest {
 
   @ParameterizedTest
   @CsvSource(textBlock = """
-    SET_TO_TRUE_INCLUDING_ITEMS   | false
-    SET_TO_FALSE_INCLUDING_ITEMS  | false
-    SET_TO_TRUE_INCLUDING_ITEMS   | true
-    SET_TO_FALSE_INCLUDING_ITEMS  | true
+    SET_TO_TRUE   | false
+    SET_TO_FALSE  | false
+    SET_TO_TRUE   | true
+    SET_TO_FALSE  | true
     """, delimiter = '|')
   void holdings_shouldUpdateAssociatedItemsDiscoverySuppress(UpdateActionType actionType, boolean notChanged) {
     var holdingsId = UUID.randomUUID().toString();
@@ -148,7 +148,11 @@ class UpdateProcessorTest extends BaseTest {
 
     var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
       .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
-      .actions(Collections.singletonList(new Action().type(actionType))));
+      .actions(Collections.singletonList(new Action()
+        .type(actionType)
+        .parameters(Collections.singletonList(new Parameter()
+          .key(APPLY_TO_ITEMS)
+          .value("true"))))));
     when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()
       .bulkOperationRules(Collections.singletonList(rule))
       .totalRecords(1));
