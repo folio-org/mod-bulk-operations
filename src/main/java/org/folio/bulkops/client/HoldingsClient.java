@@ -22,6 +22,6 @@ public interface HoldingsClient {
   void updateHoldingsRecord(@RequestBody HoldingsRecord holdingsRecord, @PathVariable String holdingsId);
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  HoldingsRecordCollection getByQuery(@RequestParam String query, @RequestParam long offset, @RequestParam long limit);
+  HoldingsRecordCollection getByQuery(@RequestParam String query, @RequestParam long limit);
 
 }

@@ -1,21 +1,49 @@
 package org.folio.bulkops.processor;
 
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
+import static org.folio.bulkops.util.Constants.APPLY_TO_HOLDINGS;
+import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
+import static org.folio.bulkops.util.Constants.GET_HOLDINGS_BY_INSTANCE_ID_QUERY;
+import static org.folio.bulkops.util.Constants.GET_ITEMS_BY_HOLDING_ID_QUERY;
+import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.ItemClient;
+import org.folio.bulkops.client.SRSRecordsClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.HoldingsRecordCollection;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.bean.User;
+import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
+import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.dto.Parameter;
+import org.folio.bulkops.domain.dto.UpdateActionType;
+import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
+import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.RuleService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -28,6 +56,12 @@ class UpdateProcessorTest extends BaseTest {
   private ItemClient itemClient;
   @SpyBean
   private ErrorService errorService;
+  @MockBean
+  private BulkOperationExecutionContentRepository executionContentRepository;
+  @MockBean
+  private BulkOperationRepository bulkOperationRepository;
+  @MockBean
+  private SRSRecordsClient srsRecordsClient;
   @Autowired
   private HoldingsUpdateProcessor holdingsUpdateProcessor;
   @Autowired
@@ -44,10 +78,99 @@ class UpdateProcessorTest extends BaseTest {
         .withInstanceId(UUID.randomUUID().toString());
 
     when(ruleService.getRules(isA(UUID.class))).thenReturn(new BulkOperationRuleCollection());
-    holdingsUpdateProcessor.updateRecord(holdingsRecord,"identifier", UUID.randomUUID());
+    holdingsUpdateProcessor.updateRecord(holdingsRecord);
 
     verify(holdingsClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
   }
+
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+    SET_TO_TRUE   | false
+    SET_TO_FALSE  | false
+    SET_TO_TRUE   | true
+    SET_TO_FALSE  | true
+    """, delimiter = '|')
+  void holdings_shouldNotUpdateAssociatedItemsDiscoverySuppress(UpdateActionType actionType, boolean notChanged) {
+    var holdingsId = UUID.randomUUID().toString();
+    var holdingsRecord = HoldingsRecord.builder()
+      .id(holdingsId)
+      .discoverySuppress(true)
+      .build();
+
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+
+    var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
+      .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
+      .actions(Collections.singletonList(new Action().type(actionType))));
+    when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()
+      .bulkOperationRules(Collections.singletonList(rule))
+      .totalRecords(1));
+    var expectedQuery = String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsId);
+    when(itemClient.getByQuery(expectedQuery, Integer.MAX_VALUE)).thenReturn(ItemCollection.builder()
+      .items(List.of(Item.builder().discoverySuppress(true).build(),
+        Item.builder().discoverySuppress(false).build()))
+      .build());
+
+    holdingsUpdateProcessor.updateAssociatedRecords(holdingsRecord, operation, notChanged);
+
+    verify(itemClient, times(0)).updateItem(any(Item.class), anyString());
+
+    if (notChanged) {
+      verify(errorService).saveError(any(UUID.class), anyString(), eq(MSG_NO_CHANGE_REQUIRED));
+    } else {
+      verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString());
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+    SET_TO_TRUE_INCLUDING_ITEMS   | false
+    SET_TO_FALSE_INCLUDING_ITEMS  | false
+    SET_TO_TRUE_INCLUDING_ITEMS   | true
+    SET_TO_FALSE_INCLUDING_ITEMS  | true
+    """, delimiter = '|')
+  void holdings_shouldUpdateAssociatedItemsDiscoverySuppress(UpdateActionType actionType, boolean notChanged) {
+    var holdingsId = UUID.randomUUID().toString();
+    var holdingsRecord = HoldingsRecord.builder()
+      .id(holdingsId)
+      .discoverySuppress(SET_TO_TRUE_INCLUDING_ITEMS.equals(actionType))
+      .build();
+
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+
+    var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
+      .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
+      .actions(Collections.singletonList(new Action().type(actionType))));
+    when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()
+      .bulkOperationRules(Collections.singletonList(rule))
+      .totalRecords(1));
+    var expectedQuery = String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsId);
+    when(itemClient.getByQuery(expectedQuery, Integer.MAX_VALUE)).thenReturn(ItemCollection.builder()
+      .items(List.of(Item.builder().id(UUID.randomUUID().toString()).discoverySuppress(true).build(),
+        Item.builder().id(UUID.randomUUID().toString()).discoverySuppress(false).build()))
+      .build());
+
+    holdingsUpdateProcessor.updateAssociatedRecords(holdingsRecord, operation, notChanged);
+
+    verify(itemClient, times(1)).updateItem(any(Item.class), anyString());
+
+    if (notChanged) {
+      var errorMessage = String.format("No change in value for holdings record required, associated %s item(s) have been updated.",
+        SET_TO_TRUE_INCLUDING_ITEMS.equals(actionType) ? "unsuppressed" : "suppressed");
+      verify(errorService).saveError(any(UUID.class), anyString(), eq(errorMessage));
+    } else {
+      verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString());
+    }
+  }
+
 
   @Test
   void shouldUpdateItem() {
@@ -55,7 +178,7 @@ class UpdateProcessorTest extends BaseTest {
       .withId(UUID.randomUUID().toString())
       .withHoldingsRecordId(UUID.randomUUID().toString());
 
-    itemUpdateProcessor.updateRecord(item, "identifier", UUID.randomUUID());
+    itemUpdateProcessor.updateRecord(item);
 
     verify(itemClient).updateItem(item, item.getId());
   }
@@ -67,7 +190,7 @@ class UpdateProcessorTest extends BaseTest {
         .withPatronGroup(UUID.randomUUID().toString())
         .withUsername("sample_user");
 
-    userUpdateProcessor.updateRecord(user, "identifier",  UUID.randomUUID());
+    userUpdateProcessor.updateRecord(user);
 
     verify(userClient).updateUser(user, user.getId());
   }
@@ -79,8 +202,144 @@ class UpdateProcessorTest extends BaseTest {
       .title("Title")
       .build();
 
-    instanceUpdateProcessor.updateRecord(instance, "identifier", UUID.randomUUID());
+    instanceUpdateProcessor.updateRecord(instance);
 
     verify(instanceStorageClient).updateInstance(instance, instance.getId());
+  }
+
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+    SET_TO_TRUE   | MARC
+    SET_TO_FALSE  | MARC
+    SET_TO_TRUE   | FOLIO
+    SET_TO_FALSE  | FOLIO
+    """, delimiter = '|')
+  void instance_testUpdateUnderlyingSRSRecordsDiscoverySuppress(UpdateActionType actionType, String source) {
+    var instanceId = UUID.randomUUID().toString();
+    var instance = Instance.builder()
+      .id(instanceId)
+      .source(source)
+      .discoverySuppress(SET_TO_TRUE.equals(actionType))
+      .build();
+
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+
+    var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
+      .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
+      .actions(Collections.singletonList(new Action().type(actionType))));
+    when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()
+      .bulkOperationRules(Collections.singletonList(rule))
+      .totalRecords(1));
+
+    instanceUpdateProcessor.updateAssociatedRecords(instance, operation, true);
+
+    verify(srsRecordsClient, times("MARC".equals(source) ? 1 : 0)).setSuppressFromDiscovery(anyString(), eq("INSTANCE"), eq(instance.getDiscoverySuppress()));
+
+    if ("MARC".equals(instance.getSource())) {
+      var errorMessage = String.format("No change in value for instance required, %s associated records have been updated.",
+        SET_TO_TRUE.equals(actionType) ? "unsuppressed" : "suppressed");
+      verify(errorService).saveError(any(UUID.class), anyString(), eq(errorMessage));
+    } else {
+      verify(errorService).saveError(any(UUID.class), anyString(), eq(MSG_NO_CHANGE_REQUIRED));
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+    SET_TO_TRUE   | true
+    SET_TO_FALSE  | true
+    SET_TO_TRUE   | false
+    SET_TO_FALSE  | false
+    """, delimiter = '|')
+  void instance_testUpdateUnderlyingHoldingsDiscoverySuppress(UpdateActionType actionType, boolean applyToHoldings) {
+    var instanceId = UUID.randomUUID().toString();
+    var instance = Instance.builder()
+      .id(instanceId)
+      .source("FOLIO")
+      .discoverySuppress(SET_TO_TRUE.equals(actionType))
+      .build();
+
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+
+    var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
+      .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
+      .actions(Collections.singletonList(new Action()
+        .type(actionType)
+        .parameters(Collections.singletonList(new Parameter()
+          .key(APPLY_TO_HOLDINGS)
+          .value(Boolean.toString(applyToHoldings)))))));
+    when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()
+      .bulkOperationRules(Collections.singletonList(rule))
+      .totalRecords(1));
+
+    when(holdingsClient.getByQuery(String.format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE))
+      .thenReturn(HoldingsRecordCollection.builder()
+        .holdingsRecords(List.of(HoldingsRecord.builder().id(UUID.randomUUID().toString()).discoverySuppress(true).build(),
+          HoldingsRecord.builder().id(UUID.randomUUID().toString()).discoverySuppress(false).build()))
+        .totalRecords(2)
+        .build());
+
+    instanceUpdateProcessor.updateAssociatedRecords(instance, operation, false);
+
+    verify(holdingsClient, times(applyToHoldings ? 1 : 0)).updateHoldingsRecord(any(HoldingsRecord.class), anyString());
+  }
+
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+    SET_TO_TRUE   | true
+    SET_TO_FALSE  | true
+    SET_TO_TRUE   | false
+    SET_TO_FALSE  | false
+    """, delimiter = '|')
+  void instance_testUpdateUnderlyingItemsDiscoverySuppress(UpdateActionType actionType, boolean applyToItems) {
+    var instanceId = UUID.randomUUID().toString();
+    var instance = Instance.builder()
+      .id(instanceId)
+      .source("FOLIO")
+      .discoverySuppress(SET_TO_TRUE.equals(actionType))
+      .build();
+
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+
+    var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
+      .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
+      .actions(Collections.singletonList(new Action()
+        .type(actionType)
+        .parameters(Collections.singletonList(new Parameter()
+          .key(APPLY_TO_ITEMS)
+          .value(Boolean.toString(applyToItems)))))));
+    when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()
+      .bulkOperationRules(Collections.singletonList(rule))
+      .totalRecords(1));
+
+    var holdingsId = UUID.randomUUID().toString();
+    when(holdingsClient.getByQuery(String.format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE))
+      .thenReturn(HoldingsRecordCollection.builder()
+        .holdingsRecords(Collections.singletonList(HoldingsRecord.builder().id(holdingsId).discoverySuppress(true).build()))
+        .totalRecords(1)
+        .build());
+
+    when(itemClient.getByQuery(String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsId), Integer.MAX_VALUE))
+      .thenReturn(ItemCollection.builder()
+        .items(List.of(Item.builder().id(UUID.randomUUID().toString()).discoverySuppress(true).build(),
+          Item.builder().id(UUID.randomUUID().toString()).discoverySuppress(false).build()))
+        .totalRecords(2)
+        .build());
+
+    instanceUpdateProcessor.updateAssociatedRecords(instance, operation, false);
+
+    verify(itemClient, times(applyToItems ? 1 : 0)).updateItem(any(Item.class), anyString());
   }
 }

@@ -133,7 +133,8 @@
             "inventory-storage.nature-of-content-terms.item.get",
             "inventory-storage.instance-formats.collection.get",
             "inventory-storage.instance-formats.item.get",
-            "inventory-storage.instances.item.put"
+            "inventory-storage.instances.item.put",
+            "source-storage.records.update"
           ]
         },
         {
@@ -416,6 +417,10 @@
     {
       "id": "instance-formats",
       "version": "2.0"
+    },
+    {
+      "id": "source-storage-records",
+      "version": "3.1"
     }
   ],
   "launchDescriptor": {
