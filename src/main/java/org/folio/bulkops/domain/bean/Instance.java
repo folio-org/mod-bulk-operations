@@ -198,11 +198,17 @@ public class Instance implements BulkOperationsEntity {
   private String statusUpdatedDate;
   @JsonProperty("tags")
   private Tags tags;
+  @JsonProperty("ISBN")
+  private String isbn;
+  @JsonProperty("ISSN")
+  private String issn;
 
   @Override
   public String getIdentifier(IdentifierType identifierType) {
     return switch (identifierType) {
       case HRID -> hrid;
+      case ISBN -> isbn;
+      case ISSN -> issn;
       default -> id;
     };
   }

@@ -46,4 +46,8 @@ public class Constants {
   public static final String STAFF_ONLY = "(staff only)";
   public static final String ADMINISTRATIVE_NOTES = "Administrative Notes";
   public static final String ADMINISTRATIVE_NOTE = "Administrative Note";
+  public static final String GET_ITEMS_BY_HOLDING_ID_QUERY = "holdingsRecordId==%s";
+  public static final String GET_HOLDINGS_BY_INSTANCE_ID_QUERY = "instanceId==%s";
+  public static final String APPLY_TO_HOLDINGS = "APPLY_TO_HOLDINGS";
+  public static final String APPLY_TO_ITEMS = "APPLY_TO_ITEMS";
 }

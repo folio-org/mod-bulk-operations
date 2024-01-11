@@ -1,9 +1,7 @@
 package org.folio.bulkops.service;
 
-import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -20,15 +18,9 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
-import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDING_ITEMS;
-import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTES;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
-import static org.folio.bulkops.util.Constants.MSG_HOLDING_NO_CHANGE_REQUIRED_SUPPRESSED_ITEMS_UPDATED;
-import static org.folio.bulkops.util.Constants.MSG_HOLDING_NO_CHANGE_REQUIRED_UNSUPPRESSED_ITEMS_UPDATED;
-import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
 
@@ -39,8 +31,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -51,7 +41,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
-import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExportType;
@@ -60,13 +49,10 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
-import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.converter.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.domain.dto.ApproachType;
-import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
-import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -77,7 +63,6 @@ import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
-import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.BulkOperationException;
@@ -86,10 +71,8 @@ import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.processor.DataProcessorFactory;
-import org.folio.bulkops.processor.UpdateProcessorFactory;
 import org.folio.bulkops.processor.UpdatedEntityHolder;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
-import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
@@ -126,22 +109,19 @@ public class BulkOperationService {
   private final RuleService ruleService;
   private final BulkOperationDataProcessingRepository dataProcessingRepository;
   private final BulkOperationExecutionRepository executionRepository;
-  private final BulkOperationExecutionContentRepository executionContentRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final ObjectMapper objectMapper;
   private final DataProcessorFactory dataProcessorFactory;
-  private final UpdateProcessorFactory updateProcessorFactory;
   private final ErrorService errorService;
   private final LogFilesService logFilesService;
   private final NoteTableUpdater noteTableUpdater;
-  private final ItemClient itemClient;
+  private final RecordUpdateService recordUpdateService;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
   private static final String PREVIEW_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-%s.csv";
   private static final String CHANGED_JSON_PATH_TEMPLATE = "%s/json/%s-Changed-Records-%s.json";
   private static final String CHANGED_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-%s.csv";
-  private static final String GET_ITEMS_BY_HOLDING_ID_QUERY = "holdingsRecordId=%s";
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -349,7 +329,7 @@ public class BulkOperationService {
           processedNumOfRecords++;
 
           try {
-            var result = updateEntityIfNeeded(original, modified, operation, entityClass);
+            var result = recordUpdateService.updateEntity(original, modified, operation);
             if (result != original) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
@@ -398,61 +378,6 @@ public class BulkOperationService {
       operation.setCommittedNumOfErrors(operationOpt.get().getCommittedNumOfErrors());
     }
     bulkOperationRepository.save(operation);
-  }
-
-  private BulkOperationsEntity updateEntityIfNeeded(BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation, Class<? extends BulkOperationsEntity> entityClass) {
-    if (original.hashCode() == modified.hashCode() && original.equals(modified)) {
-      var errorMessage = MSG_NO_CHANGE_REQUIRED;
-      if (modified instanceof HoldingsRecord holdingsRecord && updateItemsIfRequired(operation, holdingsRecord)) {
-        errorMessage = TRUE.equals(holdingsRecord.getDiscoverySuppress()) ?
-          MSG_HOLDING_NO_CHANGE_REQUIRED_UNSUPPRESSED_ITEMS_UPDATED :
-          MSG_HOLDING_NO_CHANGE_REQUIRED_SUPPRESSED_ITEMS_UPDATED;
-      }
-      errorService.saveError(operation.getId(), original.getIdentifier(operation.getIdentifierType()), errorMessage);
-      return original;
-    }
-    var updater = updateProcessorFactory.getProcessorFromFactory(entityClass);
-    var executionContent = BulkOperationExecutionContent.builder()
-      .bulkOperationId(operation.getId())
-      .build();
-      executionContent.setIdentifier(modified.getIdentifier(operation.getIdentifierType()));
-      updater.updateRecord(modified, original.getIdentifier(operation.getIdentifierType()), operation.getId());
-      if (modified instanceof HoldingsRecord holdingsRecord) {
-        updateItemsIfRequired(operation, holdingsRecord);
-      }
-      executionContentRepository.save(executionContent.withState(StateType.PROCESSED));
-      operation.setCommittedNumOfRecords(operation.getCommittedNumOfRecords() + 1);
-      return modified;
-  }
-
-  private boolean updateItemsIfRequired(BulkOperation operation, HoldingsRecord holdingsRecord) {
-    var items = getItemsWithOppositeDiscoverySuppress(operation, holdingsRecord);
-    if (isNotEmpty(items)) {
-      items.forEach(item -> updateProcessorFactory.getProcessorFromFactory(Item.class)
-        .updateRecord(item.withDiscoverySuppress(holdingsRecord.getDiscoverySuppress()),
-          holdingsRecord.getIdentifier(operation.getIdentifierType()), operation.getId()));
-      return true;
-    }
-    return false;
-  }
-
-  private List<Item> getItemsWithOppositeDiscoverySuppress(BulkOperation operation, HoldingsRecord holdingsRecord) {
-    var ruleCollection = ruleService.getRules(operation.getId());
-    if (isDiscoverySuppressUpdate(ruleCollection)) {
-      return itemClient.getByQuery(String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsRecord.getId()), Integer.MAX_VALUE).getItems().stream()
-        .filter(item -> !Objects.equals(item.getDiscoverySuppress(), holdingsRecord.getDiscoverySuppress()))
-        .toList();
-    }
-    return Collections.emptyList();
-  }
-
-  private boolean isDiscoverySuppressUpdate(BulkOperationRuleCollection bulkOperationRuleCollection) {
-    return bulkOperationRuleCollection.getBulkOperationRules().stream()
-      .map(BulkOperationRule::getRuleDetails)
-      .filter(ruleDetails -> SUPPRESS_FROM_DISCOVERY.equals(ruleDetails.getOption()))
-      .map(BulkOperationRuleRuleDetails::getActions)
-      .flatMap(List::stream)
-      .anyMatch(action -> Set.of(SET_TO_TRUE_INCLUDING_ITEMS, SET_TO_FALSE_INCLUDING_ITEMS).contains(action.getType()));
   }
 
   public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset, int limit) {
