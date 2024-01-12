@@ -18,8 +18,6 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
-import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTE;
-import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTES;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
@@ -29,8 +27,6 @@ import java.io.Reader;
 import java.io.Writer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -45,8 +41,6 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExportType;
 import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
-import org.folio.bulkops.domain.bean.HoldingsRecord;
-import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.bean.StatusType;
@@ -61,7 +55,6 @@ import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.ConverterException;
@@ -374,51 +367,6 @@ public class BulkOperationService {
       operation.setCommittedNumOfErrors(operationOpt.get().getCommittedNumOfErrors());
     }
     bulkOperationRepository.save(operation);
-  }
-
-  public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset, int limit) {
-      var entityClass = resolveEntityClass(operation.getEntityType());
-      return switch (step) {
-        case UPLOAD -> buildPreviewFromCsvFile(operation.getLinkToMatchedRecordsCsvFile(), entityClass, offset, limit);
-        case EDIT -> buildPreviewFromCsvFile(operation.getLinkToModifiedRecordsCsvFile(), entityClass, offset, limit);
-        case COMMIT -> buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), entityClass, offset, limit);
-      };
-  }
-
-  private UnifiedTable buildPreviewFromCsvFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit) {
-    var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
-    try (Reader reader = new InputStreamReader(remoteFileSystemClient.get(pathToFile))) {
-      try (CSVReader csvReader = new CSVReader(reader)) {
-        var recordsToSkip = offset + 1;
-        csvReader.skip(recordsToSkip);
-        String[] line;
-        while ((line = csvReader.readNext()) != null && csvReader.getRecordsRead() <= limit + recordsToSkip) {
-          var row = new Row();
-          row.setRow(new ArrayList<>(Arrays.asList(line)));
-          table.addRowsItem(row);
-        }
-      }
-      processNoteFields(table, clazz);
-      table.getRows().forEach(row -> row.setRow(SpecialCharacterEscaper.restore(row.getRow())));
-      return table;
-    } catch (Exception e) {
-      log.error(e.getMessage());
-    }
-    return table;
-  }
-
-  private void processNoteFields(UnifiedTable table, Class<? extends BulkOperationsEntity> clazz) {
-    table.getHeader().forEach(cell -> {
-      if (ADMINISTRATIVE_NOTES.equalsIgnoreCase(cell.getValue())) {
-        cell.setValue(ADMINISTRATIVE_NOTE);
-      }
-    });
-    if (clazz == Item.class) {
-      noteTableUpdater.extendTableWithItemNotesTypes(table);
-    }
-    if (clazz == HoldingsRecord.class) {
-      noteTableUpdater.extendTableWithHoldingsNotesTypes(table);
-    }
   }
 
   public BulkOperation startBulkOperation(UUID bulkOperationId, UUID xOkapiUserId, BulkOperationStart bulkOperationStart) {
