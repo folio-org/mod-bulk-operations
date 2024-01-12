@@ -4,7 +4,7 @@ import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.STAFF_SUPPRESS;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -43,22 +43,22 @@ class InstanceDataProcessorTest extends BaseTest {
   }
 
   @Test
-  void testSetDiscoverySuppressToTrue() {
-    var actual = processor.process(IDENTIFIER, new Instance(), rules(rule(SUPPRESS_FROM_DISCOVERY, SET_TO_TRUE, null)));
+  void testSetStaffSuppressToTrue() {
+    var actual = processor.process(IDENTIFIER, new Instance(), rules(rule(STAFF_SUPPRESS, SET_TO_TRUE, null)));
     assertNotNull(actual.getUpdated());
-    assertTrue(actual.getUpdated().getDiscoverySuppress());
+    assertTrue(actual.getUpdated().getStaffSuppress());
   }
 
   @Test
-  void testSetDiscoverySuppressToFalse() {
-    var actual = processor.process(IDENTIFIER, new Instance(), rules(rule(SUPPRESS_FROM_DISCOVERY, SET_TO_FALSE, null)));
+  void testSetStaffSuppressToFalse() {
+    var actual = processor.process(IDENTIFIER, new Instance(), rules(rule(STAFF_SUPPRESS, SET_TO_FALSE, null)));
     assertNotNull(actual.getUpdated());
-    assertFalse(actual.getUpdated().getDiscoverySuppress());
+    assertFalse(actual.getUpdated().getStaffSuppress());
   }
 
   @Test
   void shouldNotUpdateInstanceWhenActionIsInvalid() {
-    var actual = processor.process(IDENTIFIER, new Instance().withDiscoverySuppress(true), rules(rule(SUPPRESS_FROM_DISCOVERY, CLEAR_FIELD, null)));
+    var actual = processor.process(IDENTIFIER, new Instance().withDiscoverySuppress(true), rules(rule(STAFF_SUPPRESS, CLEAR_FIELD, null)));
     assertTrue(actual.getUpdated().getDiscoverySuppress());
     verify(errorService).saveError(any(UUID.class), eq(IDENTIFIER), anyString());
   }

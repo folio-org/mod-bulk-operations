@@ -172,10 +172,43 @@ public class Instance implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private List<String> publicationRange;
 
+  @JsonProperty("matchKey")
+  private String matchKey;
+  @JsonProperty("alternativeTitles")
+  private List<AlternativeTitle> alternativeTitles;
+  @JsonProperty("identifiers")
+  private List<Identifier> identifiers;
+  @JsonProperty("subjects")
+  private List<Subject> subjects;
+  @JsonProperty("classifications")
+  private List<Classification> classifications;
+  @JsonProperty("publication")
+  private List<Publication> publications;
+  @JsonProperty("publicationPeriod")
+  private PublicationPeriod publicationPeriod;
+  @JsonProperty("electronicAccess")
+  private List<ElectronicAccess> electronicAccesses;
+  @JsonProperty("notes")
+  private List<InstanceNote> instanceNotes;
+  @JsonProperty("statisticalCodeIds")
+  private List<String> statisticalCodeIds;
+  @JsonProperty("sourceRecordFormat")
+  private String sourceRecordFormat;
+  @JsonProperty("statusUpdatedDate")
+  private String statusUpdatedDate;
+  @JsonProperty("tags")
+  private Tags tags;
+  @JsonProperty("ISBN")
+  private String isbn;
+  @JsonProperty("ISSN")
+  private String issn;
+
   @Override
   public String getIdentifier(IdentifierType identifierType) {
     return switch (identifierType) {
       case HRID -> hrid;
+      case ISBN -> isbn;
+      case ISSN -> issn;
       default -> id;
     };
   }
