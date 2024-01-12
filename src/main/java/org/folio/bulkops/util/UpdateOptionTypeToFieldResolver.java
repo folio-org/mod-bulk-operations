@@ -21,19 +21,22 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 
 public class UpdateOptionTypeToFieldResolver {
 
   private UpdateOptionTypeToFieldResolver() {
   }
 
-  public static List<String> getFieldsByUpdateOptionTypes(List<UpdateOptionType> options) {
-    return options.stream().map(UpdateOptionTypeToFieldResolver::getFieldByUpdateOptionType).toList();
+  public static Set<String> getFieldsByUpdateOptionTypes(List<UpdateOptionType> options) {
+    return options.stream().map(UpdateOptionTypeToFieldResolver::getFieldByUpdateOptionType).collect(Collectors.toSet());
   }
 
-  private static String getFieldByUpdateOptionType(UpdateOptionType type) {
+  public static String getFieldByUpdateOptionType(UpdateOptionType type) {
     if (PATRON_GROUP == type) {
       return "Patron group";
     } else if (EXPIRATION_DATE == type) {
@@ -55,7 +58,7 @@ public class UpdateOptionTypeToFieldResolver {
     } else if (ITEM_NOTE == type) {
       return "Notes";
     } else if (ADMINISTRATIVE_NOTE == type) {
-      return "Administrative notes";
+      return "Administrative Notes";
     } else if (CHECK_IN_NOTE == type) {
       return "Check In Notes";
     } else if (CHECK_OUT_NOTE == type) {

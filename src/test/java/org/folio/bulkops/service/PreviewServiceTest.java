@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static java.util.Collections.emptySet;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
@@ -7,6 +8,9 @@ import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTES;
+import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
+import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
+import static org.folio.bulkops.util.Constants.QUERY_ALL_RECORDS;
 import static org.folio.bulkops.util.UnifiedTableHeaderBuilder.getHeaders;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -21,21 +25,22 @@ import java.io.FileInputStream;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.bean.HoldingsNoteType;
+import org.folio.bulkops.domain.bean.HoldingsNoteTypeCollection;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.NoteType;
+import org.folio.bulkops.domain.bean.NoteTypeCollection;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
-import org.folio.bulkops.domain.dto.Action;
-import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
-import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
-import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -60,7 +65,7 @@ public class PreviewServiceTest extends BaseTest {
   private RemoteFileSystemClient remoteFileSystemClient;
   @MockBean
   private RuleService ruleService;
-  @MockBean
+  @Autowired
   private NoteTableUpdater noteTableUpdater;
 
   @ParameterizedTest
@@ -92,34 +97,16 @@ public class PreviewServiceTest extends BaseTest {
     when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
     when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
 
+    when(itemNoteTypeClient.getByQuery(QUERY_ALL_RECORDS)).thenReturn(new NoteTypeCollection().withItemNoteTypes(List.of(new NoteType().withName("Binding"), new NoteType().withName("Provenance"), new NoteType().withName("Reproduction"))));
+    when(holdingsNoteTypeClient.getByQuery(QUERY_ALL_RECORDS)).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(List.of(new HoldingsNoteType().withName("Binding"), new HoldingsNoteType().withName("Provenance"), new HoldingsNoteType().withName("Reproduction"))));
 
-    if (USER.equals(entityType)) {
-      when(ruleService.getRules(any(UUID.class))).thenReturn(new BulkOperationRuleCollection().bulkOperationRules(
-        List.of(new BulkOperationRule().ruleDetails(
-          new BulkOperationRuleRuleDetails()
-            .option(UpdateOptionType.EMAIL_ADDRESS)
-            .actions(List.of(new Action().type(UpdateActionType.REPLACE_WITH).updated("new_mail@mail.net")))
-        ))
-      ));
-    } else if (ITEM.equals(entityType)) {
-      when(ruleService.getRules(any(UUID.class))).thenReturn(new BulkOperationRuleCollection().bulkOperationRules(
-        List.of(new BulkOperationRule().ruleDetails(
-          new BulkOperationRuleRuleDetails()
-            .option(UpdateOptionType.STATUS)
-            .actions(List.of(new Action().type(UpdateActionType.REPLACE_WITH).updated("new_status")))
-        ))
-      ));
-    } else if (HOLDINGS_RECORD.equals(entityType)) {
-      when(ruleService.getRules(any(UUID.class))).thenReturn(new BulkOperationRuleCollection().bulkOperationRules(
-        List.of(new BulkOperationRule().ruleDetails(
-          new BulkOperationRuleRuleDetails()
-            .option(UpdateOptionType.ELECTRONIC_ACCESS_LINK_TEXT)
-            .actions(List.of(new Action().type(UpdateActionType.REPLACE_WITH).updated("new_text")))
-        ))
-      ));
-    }
+    when(itemNoteTypeClient.getById("0e40884c-3523-4c6d-8187-d578e3d2794e")).thenReturn(new NoteType().withName("Binding"));
+    when(itemNoteTypeClient.getById("f3ae3823-d096-4c65-8734-0c1efd2ffea8")).thenReturn(new NoteType().withName("Provenance"));
+    when(holdingsNoteTypeClient.getById("e19eabab-a85c-4aef-a7b2-33bd9acef24e")).thenReturn(new HoldingsNoteType().withName("Reproduction"));
 
 
+    var bulkOperationRuleCollection = objectMapper.readValue(new FileInputStream(getPathToContentUpdateRequest(entityType)), BulkOperationRuleCollection.class);
+    when(ruleService.getRules(any(UUID.class))).thenReturn(bulkOperationRuleCollection);
 
     var table = previewService.getPreview(bulkOperation, step, offset, limit);
 
@@ -127,24 +114,29 @@ public class PreviewServiceTest extends BaseTest {
     if (USER.equals(entityType)) {
       if (step == EDIT) {
         assertThat(table.getHeader(), equalTo(
-          getHeaders(User.class, UpdateOptionTypeToFieldResolver.getFieldsByUpdateOptionTypes(List.of(UpdateOptionType.EMAIL_ADDRESS)))));
+          getHeaders(User.class, UpdateOptionTypeToFieldResolver.getFieldsByUpdateOptionTypes(List.of(UpdateOptionType.EMAIL_ADDRESS, UpdateOptionType.EXPIRATION_DATE)))));
       } else {
         assertThat(table.getHeader(), equalTo(getHeaders(User.class)));
       }
     } else if (org.folio.bulkops.domain.dto.EntityType.ITEM.equals(entityType)) {
       if (step == EDIT) {
-        assertThat(table.getHeader(), equalTo(renameAdministrativeNotesHeader(
-          getHeaders(Item.class, UpdateOptionTypeToFieldResolver.getFieldsByUpdateOptionTypes(List.of(UpdateOptionType.STATUS))))));
+        var headers = getHeaders(Item.class, Set.of("Binding","Status","Check Out Notes","Provenance","Check In Notes","Administrative Notes"));
+        noteTableUpdater.extendHeadersWithItemNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Provenance", "Reproduction"), Set.of("Binding","Status","Check Out Notes","Provenance","Check In Notes","Administrative Notes"));
+        assertThat(table.getHeader(), equalTo(headers));
       } else {
-        assertThat(table.getHeader(), equalTo(renameAdministrativeNotesHeader(getHeaders(Item.class))));
+        var headers = getHeaders(Item.class);
+        noteTableUpdater.extendHeadersWithItemNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Provenance", "Reproduction"), emptySet());
+        assertThat(table.getHeader(), equalTo(headers));
       }
     } else if (org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD.equals(entityType)) {
       if (step == EDIT) {
-        assertThat(table.getHeader(), equalTo(renameAdministrativeNotesHeader(
-          getHeaders(HoldingsRecord.class, UpdateOptionTypeToFieldResolver.getFieldsByUpdateOptionTypes(List.of(UpdateOptionType.ELECTRONIC_ACCESS_LINK_TEXT))))));
-
+        var headers = getHeaders(HoldingsRecord.class, Set.of("Reproduction","Discovery Suppress","Electronic access","Administrative Notes"));
+        noteTableUpdater.extendHeadersWithItemNoteTypeNames(HOLDINGS_NOTE_POSITION, headers , List.of("Binding", "Provenance", "Reproduction"), Set.of("Reproduction","Discovery Suppress","Electronic access","Administrative Notes"));
+        assertThat(table.getHeader(), equalTo(headers));
       } else {
-        assertThat(table.getHeader(), equalTo(renameAdministrativeNotesHeader(getHeaders(HoldingsRecord.class))));
+        var headers = getHeaders(HoldingsRecord.class);
+        noteTableUpdater.extendHeadersWithItemNoteTypeNames(HOLDINGS_NOTE_POSITION, headers , List.of("Binding", "Provenance", "Reproduction"), emptySet());
+        assertThat(table.getHeader(), equalTo(headers));
       }
     }
     assertTrue(table.getRows().stream()
@@ -197,5 +189,17 @@ public class PreviewServiceTest extends BaseTest {
       }
     });
     return headers;
+  }
+
+  private String getPathToContentUpdateRequest(org.folio.bulkops.domain.dto.EntityType entityType) {
+    if (USER == entityType) {
+      return "src/test/resources/files/rules/content_update_users.json";
+    } else if (ITEM == entityType) {
+      return "src/test/resources/files/rules/content_update_items.json";
+    } else if (HOLDINGS_RECORD == entityType) {
+      return "src/test/resources/files/rules/content_update_holdings.json";
+    } else {
+      throw new IllegalArgumentException("Sample not found for entity type: " + entityType);
+    }
   }
 }

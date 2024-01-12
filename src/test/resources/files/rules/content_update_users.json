@@ -1,0 +1,30 @@
+{
+  "bulkOperationRules": [
+    {
+      "bulkOperationId": "b1adbb80-051b-46e5-b375-38a4d0b25abf",
+      "rule_details": {
+        "option": "EXPIRATION_DATE",
+        "actions": [
+          {
+            "type": "REPLACE_WITH",
+            "updated": "2024-01-31T23:59:59.000Z"
+          }
+        ]
+      }
+    },
+    {
+      "bulkOperationId": "b1adbb80-051b-46e5-b375-38a4d0b25abf",
+      "rule_details": {
+        "option": "EMAIL_ADDRESS",
+        "actions": [
+          {
+            "type": "FIND_AND_REPLACE",
+            "initial": "test@test.test",
+            "updated": "com@com.com"
+          }
+        ]
+      }
+    }
+  ],
+  "totalRecords": 1
+}

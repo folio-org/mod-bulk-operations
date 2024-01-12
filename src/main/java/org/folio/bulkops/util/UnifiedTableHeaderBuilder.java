@@ -3,6 +3,7 @@ package org.folio.bulkops.util;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -19,13 +20,17 @@ import com.opencsv.bean.CsvRecurse;
 
 import lombok.experimental.UtilityClass;
 
+import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTE;
+import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTES;
+import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
+
 @UtilityClass
 public class UnifiedTableHeaderBuilder {
   public static UnifiedTable getEmptyTableWithHeaders(Class<? extends BulkOperationsEntity> clazz) {
     return new UnifiedTable().header(getHeaders(clazz));
   }
 
-  public static UnifiedTable getEmptyTableWithHeaders(Class<? extends BulkOperationsEntity> clazz, List<String> forceVisibleList) {
+  public static UnifiedTable getEmptyTableWithHeaders(Class<? extends BulkOperationsEntity> clazz, Set<String> forceVisibleList) {
     return new UnifiedTable().header(getHeaders(clazz, forceVisibleList));
   }
 
@@ -43,7 +48,7 @@ public class UnifiedTableHeaderBuilder {
       .values());
   }
 
-  public static List<Cell> getHeaders(Class<? extends BulkOperationsEntity> clazz, List<String> forceVisibleList) {
+  public static List<Cell> getHeaders(Class<? extends BulkOperationsEntity> clazz, Set<String> forceVisibleList) {
     return new ArrayList<>(Stream.concat(
         FieldUtils.getFieldsListWithAnnotation(clazz, CsvRecurse.class).stream()
           .map(Field::getType)
@@ -72,14 +77,14 @@ public class UnifiedTableHeaderBuilder {
   /**
    * Returns cell for unified table representation
    * @param field field of {@link BulkOperationsEntity}
-   * @param forcedVisible list of fields that should be force visible
+   * @param forcedVisible set of fields that should be force visible
    * @return {@link Cell} with calculated property forceVisible based on forcedVisible list
    */
-  private static Cell toUnifiedTableCell(Field field, List<String> forcedVisible) {
+  private static Cell toUnifiedTableCell(Field field, Set<String> forcedVisible) {
     var column = field.getAnnotation(CsvCustomBindByName.class).column();
     return new Cell()
       .dataType(field.getAnnotation(UnifiedTableCell.class).dataType())
-      .value(column)
+      .value(ADMINISTRATIVE_NOTES.equalsIgnoreCase(column) ? ADMINISTRATIVE_NOTE : column)
       .visible(field.getAnnotation(UnifiedTableCell.class).visible())
       .forceVisible(forcedVisible.contains(column));
   }

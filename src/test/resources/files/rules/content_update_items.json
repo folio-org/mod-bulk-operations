@@ -1,0 +1,89 @@
+{
+  "bulkOperationRules": [
+    {
+      "bulkOperationId": "83d29417-c18b-497c-8cac-9f6467af34c1",
+      "rule_details": {
+        "option": "ADMINISTRATIVE_NOTE",
+        "actions": [
+          {
+            "type": "CHANGE_TYPE",
+            "updated": "CHECK_IN_NOTE"
+          }
+        ]
+      }
+    },
+    {
+      "bulkOperationId": "83d29417-c18b-497c-8cac-9f6467af34c1",
+      "rule_details": {
+        "option": "CHECK_IN_NOTE",
+        "actions": [
+          {
+            "type": "DUPLICATE",
+            "updated": "CHECK_OUT_NOTE"
+          }
+        ]
+      }
+    },
+    {
+      "bulkOperationId": "83d29417-c18b-497c-8cac-9f6467af34c1",
+      "rule_details": {
+        "option": "CHECK_OUT_NOTE",
+        "actions": [
+          {
+            "type": "CHANGE_TYPE",
+            "updated": "0e40884c-3523-4c6d-8187-d578e3d2794e"
+          }
+        ]
+      }
+    },
+    {
+      "bulkOperationId": "83d29417-c18b-497c-8cac-9f6467af34c1",
+      "rule_details": {
+        "option": "ITEM_NOTE",
+        "actions": [
+          {
+            "type": "CHANGE_TYPE",
+            "updated": "ADMINISTRATIVE_NOTE",
+            "parameters": [
+              {
+                "key": "ITEM_NOTE_TYPE_ID_KEY",
+                "value": "87c450be-2033-41fb-80ba-dd2409883681"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "bulkOperationId": "83d29417-c18b-497c-8cac-9f6467af34c1",
+      "rule_details": {
+        "option": "ITEM_NOTE",
+        "actions": [
+          {
+            "type": "CHANGE_TYPE",
+            "updated": "f3ae3823-d096-4c65-8734-0c1efd2ffea8",
+            "parameters": [
+              {
+                "key": "ITEM_NOTE_TYPE_ID_KEY",
+                "value": "c3a539b9-9576-4e3a-b6de-d910200b2919"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "bulkOperationId": "83d29417-c18b-497c-8cac-9f6467af34c1",
+      "rule_details": {
+        "option": "STATUS",
+        "actions": [
+          {
+            "type": "REPLACE_WITH",
+            "updated": "Missing"
+          }
+        ]
+      }
+    }
+  ],
+  "totalRecords": 1
+}

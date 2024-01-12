@@ -23,8 +23,6 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LO
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
-import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTE;
-import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTES;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.Constants.MSG_HOLDING_NO_CHANGE_REQUIRED_SUPPRESSED_ITEMS_UPDATED;
 import static org.folio.bulkops.util.Constants.MSG_HOLDING_NO_CHANGE_REQUIRED_UNSUPPRESSED_ITEMS_UPDATED;
@@ -37,8 +35,6 @@ import java.io.Reader;
 import java.io.Writer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -72,7 +68,6 @@ import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
-import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
@@ -129,7 +124,6 @@ public class BulkOperationService {
   private final UpdateProcessorFactory updateProcessorFactory;
   private final ErrorService errorService;
   private final LogFilesService logFilesService;
-  private final NoteTableUpdater noteTableUpdater;
   private final ItemClient itemClient;
 
   private static final int OPERATION_UPDATING_STEP = 100;
@@ -447,20 +441,6 @@ public class BulkOperationService {
       .map(BulkOperationRuleRuleDetails::getActions)
       .flatMap(List::stream)
       .anyMatch(action -> Set.of(SET_TO_TRUE_INCLUDING_ITEMS, SET_TO_FALSE_INCLUDING_ITEMS).contains(action.getType()));
-  }
-
-  private void processNoteFields(UnifiedTable table, Class<? extends BulkOperationsEntity> clazz) {
-    table.getHeader().forEach(cell -> {
-      if (ADMINISTRATIVE_NOTES.equalsIgnoreCase(cell.getValue())) {
-        cell.setValue(ADMINISTRATIVE_NOTE);
-      }
-    });
-    if (clazz == Item.class) {
-      noteTableUpdater.extendTableWithItemNotesTypes(table);
-    }
-    if (clazz == HoldingsRecord.class) {
-      noteTableUpdater.extendTableWithHoldingsNotesTypes(table);
-    }
   }
 
   public BulkOperation startBulkOperation(UUID bulkOperationId, UUID xOkapiUserId, BulkOperationStart bulkOperationStart) {
