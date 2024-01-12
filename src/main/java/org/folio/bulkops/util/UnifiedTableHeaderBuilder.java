@@ -22,7 +22,6 @@ import lombok.experimental.UtilityClass;
 
 import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTES;
-import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
 
 @UtilityClass
 public class UnifiedTableHeaderBuilder {

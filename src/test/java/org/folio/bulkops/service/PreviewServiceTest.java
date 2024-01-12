@@ -55,7 +55,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import lombok.SneakyThrows;
 
-public class PreviewServiceTest extends BaseTest {
+class PreviewServiceTest extends BaseTest {
 
   @Autowired
   private PreviewService previewService;

@@ -25,7 +25,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.folio.bulkops.domain.dto.UpdateOptionType;
-import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 
 public class UpdateOptionTypeToFieldResolver {
 
