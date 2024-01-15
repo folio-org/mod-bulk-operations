@@ -1,19 +1,19 @@
 package org.folio.bulkops.processor;
 
 import static java.lang.Boolean.TRUE;
+import static java.lang.Boolean.parseBoolean;
 import static java.lang.String.format;
-import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDING_ITEMS;
-import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
+import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.GET_ITEMS_BY_HOLDING_ID_QUERY;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
+import static org.folio.bulkops.util.RuleUtils.fetchParameters;
 import static org.folio.bulkops.util.RuleUtils.findRuleByOption;
 
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
-import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.service.ErrorService;
@@ -24,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -55,14 +54,8 @@ public class HoldingsUpdateProcessor extends AbstractUpdateProcessor<HoldingsRec
     }
   }
 
-  private boolean shouldUpdateDiscoverySuppressForItems(BulkOperationRule rule) {
-    return rule.getRuleDetails().getActions().stream()
-      .map(Action::getType)
-      .anyMatch(actionType -> Set.of(SET_TO_TRUE_INCLUDING_ITEMS, SET_TO_FALSE_INCLUDING_ITEMS).contains(actionType));
-  }
-
   private boolean suppressItemsIfRequired(HoldingsRecord holdingsRecord, BulkOperationRule rule) {
-    List<Item> itemsForUpdate = shouldUpdateDiscoverySuppressForItems(rule) ?
+    List<Item> itemsForUpdate = parseBoolean(fetchParameters(rule).get(APPLY_TO_ITEMS)) ?
       itemClient.getByQuery(format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsRecord.getId()), Integer.MAX_VALUE)
         .getItems().stream()
         .filter(item -> !holdingsRecord.getDiscoverySuppress().equals(item.getDiscoverySuppress()))

@@ -20,8 +20,7 @@
         "type": "array",
         "items": {
           "$ref": "action_parameter.json#/Parameter"
-        },
-        "minItems": 1
+        }
       }
     },
     "required": [
