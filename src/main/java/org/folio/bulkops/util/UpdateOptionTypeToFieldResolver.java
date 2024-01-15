@@ -15,6 +15,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PATRON_GROUP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.STAFF_SUPPRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOAN_TYPE;
@@ -54,6 +55,8 @@ public class UpdateOptionTypeToFieldResolver {
       return "Status";
     } else if (SUPPRESS_FROM_DISCOVERY == type) {
       return "Discovery Suppress";
+    } else if (STAFF_SUPPRESS == type) {
+      return "Staff Suppress";
     } else if (ITEM_NOTE == type) {
       return "Notes";
     } else if (ADMINISTRATIVE_NOTE == type) {
