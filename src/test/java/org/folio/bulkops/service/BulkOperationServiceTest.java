@@ -5,6 +5,7 @@ import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTES;
+import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.UnifiedTableHeaderBuilder.getHeaders;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
@@ -43,6 +44,7 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -77,6 +79,7 @@ import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
+import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
@@ -1021,7 +1024,11 @@ class BulkOperationServiceTest extends BaseTest {
         .bulkOperationRules(List.of(new BulkOperationRule()
           .ruleDetails(new BulkOperationRuleRuleDetails()
             .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
-            .actions(List.of(new Action().type(testData.actionType)))))));
+            .actions(List.of(new Action()
+              .type(testData.actionType)
+              .parameters(Collections.singletonList(new Parameter()
+                .key(APPLY_TO_ITEMS)
+                .value("true")))))))));
     when(itemClient.getByQuery(anyString(), anyInt()))
       .thenReturn(ItemCollection.builder()
         .items(List.of(

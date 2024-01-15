@@ -106,7 +106,7 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<Instance> {
         .map(id -> itemClient.getByQuery(format(GET_ITEMS_BY_HOLDING_ID_QUERY, id), Integer.MAX_VALUE))
         .map(ItemCollection::getItems)
         .flatMap(List::stream)
-        .filter(item -> suppress == item.getDiscoverySuppress())
+        .filter(item -> suppress != item.getDiscoverySuppress())
         .toList() :
       Collections.emptyList();
     log.info("Found {} items for update", itemsForUpdate.size());
