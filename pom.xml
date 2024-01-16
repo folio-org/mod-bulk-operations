@@ -35,7 +35,7 @@
     <folio-spring-base.version>7.2.0</folio-spring-base.version>
     <folio-spring-cql.version>7.2.0</folio-spring-cql.version>
     <folio-service-tools.version>3.1.0</folio-service-tools.version>
-    <folio-query-tool-metadata.version>1.1.0-SNAPSHOT</folio-query-tool-metadata.version>
+    <folio-query-tool-metadata.version>1.0.0</folio-query-tool-metadata.version>
     <mapstruct.version>1.5.3.Final</mapstruct.version>
     <apache-commons-io.version>2.11.0</apache-commons-io.version>
     <apache-commons-collections.version>4.4</apache-commons-collections.version>
@@ -243,6 +243,13 @@
       <groupId>com.github.tomakehurst</groupId>
       <artifactId>wiremock-jre8-standalone</artifactId>
       <version>${wiremock.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.flextrade.jfixture</groupId>
+      <artifactId>jfixture</artifactId>
+      <version>2.7.2</version>
       <scope>test</scope>
     </dependency>
 

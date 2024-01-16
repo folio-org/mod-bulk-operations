@@ -501,6 +501,8 @@ components:
       $ref: 'schemas/bulk_operation_step.json#/BulkOperationStep'
     bulkOperationStart:
       $ref: 'schemas/bulk_operation_start.json#/Start'
+    entityTypeSummary:
+      $ref: 'schemas/entity_type_summary_dto.json#/EntityTypeSummary'
     UUID:
       type: string
       format: uuid
