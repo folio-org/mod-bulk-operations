@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-public class FqmEndpointPassThroughTest extends BaseTest {
+class FqmEndpointPassThroughTest extends BaseTest {
 
   @Autowired
   private EntityTypesController entityTypesController;
