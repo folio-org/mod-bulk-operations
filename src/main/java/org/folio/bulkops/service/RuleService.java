@@ -9,7 +9,6 @@ import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationRuleDetailsRepository;
 import org.folio.bulkops.repository.BulkOperationRuleRepository;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +44,6 @@ public class RuleService {
     return ruleCollection;
   }
 
-  @Cacheable(cacheNames = "rules")
   public BulkOperationRuleCollection getRules(UUID bulkOperationId) {
     var rules = ruleRepository.findAllByBulkOperationId(bulkOperationId).stream()
       .map(this::mapBulkOperationRuleToDto)
