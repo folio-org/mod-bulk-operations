@@ -15,9 +15,8 @@ import static org.folio.bulkops.util.RuleUtils.findRuleByOption;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.folio.bulkops.client.HoldingsClient;
-import org.folio.bulkops.client.InstanceStorageClient;
+import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.ItemClient;
-import org.folio.bulkops.client.SRSRecordsClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
@@ -25,6 +24,7 @@ import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.service.ErrorService;
+import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.RuleService;
 import org.springframework.stereotype.Component;
 
@@ -37,16 +37,16 @@ import java.util.List;
 public class InstanceUpdateProcessor extends AbstractUpdateProcessor<Instance> {
   private static final String ERROR_MESSAGE_TEMPLATE = "No change in value for instance required, %s associated records have been updated.";
 
-  private final InstanceStorageClient instanceStorageClient;
+  private final InstanceClient instanceClient;
   private final RuleService ruleService;
-  private final SRSRecordsClient srsRecordsClient;
   private final HoldingsClient holdingsClient;
   private final ItemClient itemClient;
   private final ErrorService errorService;
+  private final HoldingsReferenceService holdingsReferenceService;
 
   @Override
   public void updateRecord(Instance instance) {
-    instanceStorageClient.updateInstance(instance.withIsbn(null).withIssn(null), instance.getId());
+    instanceClient.updateInstance(instance.withIsbn(null).withIssn(null), instance.getId());
   }
 
   @Override
@@ -61,7 +61,6 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<Instance> {
   }
 
   private boolean applyRuleToAssociatedRecords(Instance instance, BulkOperationRule rule) {
-    var srsUpdated = suppressSRSRecordIfRequired(instance);
     var parameters = fetchParameters(rule);
     var shouldApplyToHoldings = parseBoolean(parameters.get(APPLY_TO_HOLDINGS));
     var shouldApplyToItems = parseBoolean(parameters.get(APPLY_TO_ITEMS));
@@ -69,20 +68,14 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<Instance> {
     boolean itemsUpdated = false;
     if (shouldApplyToHoldings || shouldApplyToItems) {
       log.info("Should update associated records: holdings={}, items={}", shouldApplyToHoldings, shouldApplyToItems);
-      var holdings = holdingsClient.getByQuery(format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instance.getId()), Integer.MAX_VALUE).getHoldingsRecords();
+      var holdings = holdingsClient.getByQuery(format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instance.getId()), Integer.MAX_VALUE)
+        .getHoldingsRecords().stream()
+        .filter(holdingsRecord -> !"MARC".equals(holdingsReferenceService.getSourceById(holdingsRecord.getSourceId()).getName()))
+        .toList();
       holdingsUpdated = suppressHoldingsIfRequired(holdings, shouldApplyToHoldings, instance.getDiscoverySuppress());
       itemsUpdated = suppressItemsIfRequired(holdings, shouldApplyToItems, instance.getDiscoverySuppress());
     }
-    return srsUpdated || holdingsUpdated || itemsUpdated;
-  }
-
-  private boolean suppressSRSRecordIfRequired(Instance instance) {
-    if ("MARC".equals(instance.getSource())) {
-      srsRecordsClient.setSuppressFromDiscovery(instance.getId(), "INSTANCE", instance.getDiscoverySuppress());
-      log.info("Updated underlying SRS record for instance {}: suppress from discovery -> {}", instance.getId(), instance.getDiscoverySuppress());
-      return true;
-    }
-    return false;
+    return holdingsUpdated || itemsUpdated;
   }
 
   private boolean suppressHoldingsIfRequired(List<HoldingsRecord> holdingsRecords, boolean applyToHoldings, boolean suppress) {
