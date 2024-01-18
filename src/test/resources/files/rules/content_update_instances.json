@@ -1,0 +1,51 @@
+{
+  "bulkOperationRules": [
+    {
+      "bulkOperationId": "954fb413-3c2c-4a68-8bbe-4176c7ae81dd",
+      "rule_details": {
+        "option": "STAFF_SUPPRESS",
+        "actions": [
+          {
+            "type": "SET_TO_FALSE",
+            "initial": null,
+            "updated": "",
+            "parameters": []
+          }
+        ]
+      }
+    },
+    {
+      "bulkOperationId": "954fb413-3c2c-4a68-8bbe-4176c7ae81dd",
+      "rule_details": {
+        "option": "SUPPRESS_FROM_DISCOVERY",
+        "actions": [
+          {
+            "type": "SET_TO_TRUE",
+            "initial": null,
+            "updated": "",
+            "parameters": [
+              {
+                "key": "APPLY_TO_HOLDINGS",
+                "value": true
+              },
+              {
+                "key": "APPLY_TO_ITEMS",
+                "value": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "totalRecords": 1
+}
+
+
+
+
+
+
+
+
+

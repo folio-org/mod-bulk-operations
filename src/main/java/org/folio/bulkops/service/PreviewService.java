@@ -1,10 +1,9 @@
 package org.folio.bulkops.service;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
-import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTE;
-import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTES;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
+import static org.folio.bulkops.processor.ItemsNotesUpdater.ITEM_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 
 import java.io.InputStreamReader;
@@ -12,12 +11,12 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.client.HoldingsNoteTypeClient;
 import org.folio.bulkops.client.ItemNoteTypeClient;
@@ -34,6 +33,7 @@ import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
 import org.folio.bulkops.util.UpdateOptionTypeToFieldResolver;
 import org.springframework.stereotype.Service;
+import org.folio.bulkops.domain.dto.EntityType;
 
 import com.opencsv.CSVReader;
 
@@ -55,47 +55,66 @@ public class PreviewService {
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
   public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset, int limit) {
+    var entityType = operation.getEntityType();
     var clazz = resolveEntityClass(operation.getEntityType());
     return switch (step) {
       case UPLOAD -> buildPreviewFromCsvFile(operation.getLinkToMatchedRecordsCsvFile(), clazz, offset, limit);
       case EDIT -> {
         var bulkOperationId = operation.getId();
         var rules = ruleService.getRules(bulkOperationId);
-        var options = getChangedOptions(bulkOperationId, rules, clazz);
+        var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
         yield buildPreviewFromCsvFile(operation.getLinkToModifiedRecordsCsvFile(), clazz, offset, limit, options);
       }
       case COMMIT -> buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit);
     };
   }
 
-  private Set<String> getChangedOptions(UUID bulkOperationId, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> clazz) {
-    Set<String> options = new HashSet<>();
+  private Set<String> getChangedOptionsSet(UUID bulkOperationId, EntityType entityType, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> clazz) {
+    Set<String> forceVisibleOptions = new HashSet<>();
     rules.getBulkOperationRules().forEach(rule -> {
       var option = rule.getRuleDetails().getOption();
       rule.getRuleDetails().getActions().forEach(action -> {
-        var updated = action.getUpdated();
-        if (action.getType() == UpdateActionType.DUPLICATE) {
-          options.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option));
-          options.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(UpdateOptionType.fromValue(updated)));
-        } else if (action.getType() == UpdateActionType.CHANGE_TYPE) {
+
+        if (action.getType() == UpdateActionType.CHANGE_TYPE) {
+          var updated = action.getUpdated();
           if (UUID_REGEX.matcher(updated).matches()) {
-            if (clazz == HoldingsRecord.class) {
-              var holdingNoteType = holdingsNoteTypeClient.getById(updated).getName();
-              options.add(holdingNoteType);
-            } else if (clazz == Item.class) {
-              var itemNoteType = itemNoteTypeClient.getById(updated).getName();
-              options.add(itemNoteType);
+            var type = resolveAndGetItemTypeById(clazz, updated);
+            if (StringUtils.isNotEmpty(type)) {
+              forceVisibleOptions.add(type);
             }
           } else {
-            options.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(UpdateOptionType.fromValue(updated)));
+            forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(UpdateOptionType.fromValue(updated), entityType));
           }
+        } else if (action.getType() == UpdateActionType.DUPLICATE) {
+          forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option, entityType));
+          forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(UpdateOptionType.fromValue(action.getUpdated()), entityType));
+        } else if (ITEM_NOTE == option ) {
+          var initial = action.getParameters().stream().filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
+          initial.ifPresent(id -> {
+            var type = resolveAndGetItemTypeById(clazz, id);
+            if (StringUtils.isNotEmpty(type)) {
+              forceVisibleOptions.add(type);
+            }
+          });
         } else {
-          options.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option));
+          // Default common case - the only this case should be processed in right approach
+          forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option, entityType));
         }
       });
     });
-    log.info(format("Bulk Operation ID: %s, forced to visible fields: %s", bulkOperationId.toString(), String.join(",", options)));
-    return options;
+    log.info(format("Bulk Operation ID: %s, forced to visible fields: %s", bulkOperationId.toString(), String.join(",", forceVisibleOptions)));
+    return forceVisibleOptions;
+  }
+
+
+  private String resolveAndGetItemTypeById(Class<? extends BulkOperationsEntity> clazz, String value) {
+    if (clazz == HoldingsRecord.class) {
+      return holdingsNoteTypeClient.getById(value).getName();
+    } else if (clazz == Item.class) {
+      return itemNoteTypeClient.getById(value).getName();
+    } else {
+      return StringUtils.EMPTY;
+    }
   }
 
   private UnifiedTable buildPreviewFromCsvFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit, Set<String> forceVisible) {

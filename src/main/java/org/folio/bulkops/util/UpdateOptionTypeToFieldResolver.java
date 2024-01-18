@@ -1,5 +1,7 @@
 package org.folio.bulkops.util;
 
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
+import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_IN_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_OUT_NOTE;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 
 public class UpdateOptionTypeToFieldResolver {
@@ -32,11 +35,11 @@ public class UpdateOptionTypeToFieldResolver {
   private UpdateOptionTypeToFieldResolver() {
   }
 
-  public static Set<String> getFieldsByUpdateOptionTypes(List<UpdateOptionType> options) {
-    return options.stream().map(UpdateOptionTypeToFieldResolver::getFieldByUpdateOptionType).collect(Collectors.toSet());
+  public static Set<String> getFieldsByUpdateOptionTypes(List<UpdateOptionType> options, EntityType entity) {
+    return options.stream().map(option -> UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option, entity)).collect(Collectors.toSet());
   }
 
-  public static String getFieldByUpdateOptionType(UpdateOptionType type) {
+  public static String getFieldByUpdateOptionType(UpdateOptionType type, EntityType entity) {
     if (PATRON_GROUP == type) {
       return "Patron group";
     } else if (EXPIRATION_DATE == type) {
@@ -53,10 +56,14 @@ public class UpdateOptionTypeToFieldResolver {
       return "Temporary Loan Type";
     } else if (STATUS == type) {
       return "Status";
-    } else if (SUPPRESS_FROM_DISCOVERY == type) {
+    } else if (SUPPRESS_FROM_DISCOVERY == type && ITEM == entity) {
       return "Discovery Suppress";
-    } else if (STAFF_SUPPRESS == type) {
+    } else if (SUPPRESS_FROM_DISCOVERY == type && INSTANCE == entity) {
+      return "Suppress from discovery";
+    } else if (STAFF_SUPPRESS == type && ITEM == entity) {
       return "Staff Suppress";
+    } else if (STAFF_SUPPRESS == type && INSTANCE == entity) {
+      return "Staff suppress";
     } else if (ITEM_NOTE == type) {
       return "Notes";
     } else if (ADMINISTRATIVE_NOTE == type) {
