@@ -1,7 +1,6 @@
 package org.folio.bulkops.util;
 
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
-import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_IN_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_OUT_NOTE;
@@ -56,13 +55,13 @@ public class UpdateOptionTypeToFieldResolver {
       return "Temporary Loan Type";
     } else if (STATUS == type) {
       return "Status";
-    } else if (SUPPRESS_FROM_DISCOVERY == type && ITEM == entity) {
+    } else if (SUPPRESS_FROM_DISCOVERY == type && INSTANCE != entity) {
       return "Discovery Suppress";
-    } else if (SUPPRESS_FROM_DISCOVERY == type && INSTANCE == entity) {
+    } else if (SUPPRESS_FROM_DISCOVERY == type) {
       return "Suppress from discovery";
-    } else if (STAFF_SUPPRESS == type && ITEM == entity) {
+    } else if (STAFF_SUPPRESS == type && INSTANCE != entity) {
       return "Staff Suppress";
-    } else if (STAFF_SUPPRESS == type && INSTANCE == entity) {
+    } else if (STAFF_SUPPRESS == type) {
       return "Staff suppress";
     } else if (ITEM_NOTE == type) {
       return "Notes";
@@ -85,7 +84,7 @@ public class UpdateOptionTypeToFieldResolver {
     } else if (ELECTRONIC_ACCESS_URL_PUBLIC_NOTE == type) {
       return "Electronic access";
     } else {
-      throw new UnsupportedOperationException("There is no matching for Operation Type");
+      throw new UnsupportedOperationException("There is no matching for Operation Type: " + type);
     }
   }
 }
