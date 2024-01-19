@@ -1,6 +1,6 @@
 package org.folio.bulkops.util;
 
-import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
+import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_IN_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_OUT_NOTE;
@@ -45,24 +45,28 @@ public class UpdateOptionTypeToFieldResolver {
       return "Expiration date";
     } else if (EMAIL_ADDRESS == type) {
       return "Email";
-    } else if (PERMANENT_LOCATION == type) {
+    } else if (PERMANENT_LOCATION == type && ITEM == entity) {
       return "Permanent Location";
-    } else if (TEMPORARY_LOCATION == type) {
+    } else if (PERMANENT_LOCATION == type) {
+      return "Permanent location";
+    } else if (TEMPORARY_LOCATION == type && ITEM == entity) {
       return "Temporary Location";
+    } else if (TEMPORARY_LOCATION == type) {
+      return "Temporary location";
     } else if (PERMANENT_LOAN_TYPE == type) {
       return "Permanent Loan Type";
     } else if (TEMPORARY_LOAN_TYPE == type) {
       return "Temporary Loan Type";
     } else if (STATUS == type) {
       return "Status";
-    } else if (SUPPRESS_FROM_DISCOVERY == type && INSTANCE != entity) {
-      return "Discovery Suppress";
-    } else if (SUPPRESS_FROM_DISCOVERY == type) {
+    } else if (SUPPRESS_FROM_DISCOVERY == type && ITEM == entity) {
       return "Suppress from discovery";
-    } else if (STAFF_SUPPRESS == type && INSTANCE != entity) {
-      return "Staff Suppress";
-    } else if (STAFF_SUPPRESS == type) {
+    } else if (SUPPRESS_FROM_DISCOVERY == type) {
+      return "Discovery Suppress";
+    } else if (STAFF_SUPPRESS == type && ITEM == entity) {
       return "Staff suppress";
+    } else if (STAFF_SUPPRESS == type) {
+      return "Staff Suppress";
     } else if (ITEM_NOTE == type) {
       return "Notes";
     } else if (ADMINISTRATIVE_NOTE == type) {

@@ -42,7 +42,11 @@ import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.bean.NoteTypeCollection;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
+import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
+import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -120,14 +124,14 @@ class PreviewServiceTest extends BaseTest {
 
     assertThat(table.getRows(), hasSize(limit - offset));
     if (USER.equals(entityType)) {
-      if (step == EDIT) {
+      if (step == EDIT || step == COMMIT) {
         assertThat(table.getHeader(), equalTo(
           getHeaders(User.class, UpdateOptionTypeToFieldResolver.getFieldsByUpdateOptionTypes(List.of(UpdateOptionType.EMAIL_ADDRESS, UpdateOptionType.EXPIRATION_DATE), entityType))));
       } else {
         assertThat(table.getHeader(), equalTo(getHeaders(User.class)));
       }
     } else if (ITEM.equals(entityType)) {
-      if (step == EDIT) {
+      if (step == EDIT || step == COMMIT) {
         var headers = getHeaders(Item.class, Set.of("Binding","Status","Check Out Notes","Provenance","Check In Notes","Note","Administrative Notes"));
         noteTableUpdater.extendHeadersWithItemNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Note", "Provenance", "Reproduction"), Set.of("Binding","Status","Check Out Notes","Provenance","Check In Notes","Note","Administrative Notes"));
         assertThat(table.getHeader(), equalTo(headers));
@@ -137,7 +141,7 @@ class PreviewServiceTest extends BaseTest {
         assertThat(table.getHeader(), equalTo(headers));
       }
     } else if (HOLDINGS_RECORD.equals(entityType)) {
-      if (step == EDIT) {
+      if (step == EDIT || step == COMMIT) {
         var headers = getHeaders(HoldingsRecord.class, Set.of("Reproduction","Discovery Suppress","Electronic access","Administrative Notes"));
         noteTableUpdater.extendHeadersWithItemNoteTypeNames(HOLDINGS_NOTE_POSITION, headers , List.of("Binding", "Provenance", "Reproduction"), Set.of("Reproduction","Discovery Suppress","Electronic access","Administrative Notes"));
         assertThat(table.getHeader(), equalTo(headers));
@@ -147,7 +151,7 @@ class PreviewServiceTest extends BaseTest {
         assertThat(table.getHeader(), equalTo(headers));
       }
     } else if (INSTANCE.equals(entityType)) {
-      if (step == EDIT) {
+      if (step == EDIT || step == COMMIT) {
         assertThat(table.getHeader(), equalTo(
           getHeaders(Instance.class, UpdateOptionTypeToFieldResolver.getFieldsByUpdateOptionTypes(List.of(UpdateOptionType.STAFF_SUPPRESS, UpdateOptionType.SUPPRESS_FROM_DISCOVERY), entityType))));
       } else {
@@ -177,6 +181,8 @@ class PreviewServiceTest extends BaseTest {
 
     when(remoteFileSystemClient.get(anyString()))
       .thenReturn(new FileInputStream(path));
+
+    when(ruleService.getRules(any())).thenReturn(new BulkOperationRuleCollection().bulkOperationRules(List.of(new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails().option(UpdateOptionType.STATUS).actions(List.of(new Action().type(UpdateActionType.REPLACE_WITH).updated("New")))))).totalRecords(1));
 
     when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
 

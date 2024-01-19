@@ -67,7 +67,12 @@ public class PreviewService {
         var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
         yield buildPreviewFromCsvFile(operation.getLinkToModifiedRecordsCsvFile(), clazz, offset, limit, options);
       }
-      case COMMIT -> buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit);
+      case COMMIT -> {
+        var bulkOperationId = operation.getId();
+        var rules = ruleService.getRules(bulkOperationId);
+        var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
+        yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit, options);
+      }
     };
   }
 
