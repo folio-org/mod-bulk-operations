@@ -70,20 +70,18 @@ class PreviewServiceTest extends BaseTest {
   @Autowired
   private NoteTableUpdater noteTableUpdater;
 
-//  @CsvSource(value = { "users_preview.csv,USER,UPLOAD",
-//    "users_preview.csv,USER,EDIT",
-//    "users_preview.csv,USER,COMMIT",
-//    "items_preview.csv,ITEM,UPLOAD",
-//    "items_preview.csv,ITEM,EDIT",
-//    "items_preview.csv,ITEM,COMMIT",
-//    "holdings_preview.csv,HOLDINGS_RECORD,UPLOAD",
-//    "holdings_preview.csv,HOLDINGS_RECORD,EDIT",
-//    "holdings_preview.csv,HOLDINGS_RECORD,COMMIT",
-//    "instances_preview.csv,INSTANCE,UPLOAD",
-//    "instances_preview.csv,INSTANCE,EDIT",
-//    "instances_preview.csv,INSTANCE,COMMIT"}, delimiter = ',')
-@CsvSource(value = {
-  "instances_preview.csv,INSTANCE,EDIT"}, delimiter = ',')
+  @CsvSource(value = { "users_preview.csv,USER,UPLOAD",
+    "users_preview.csv,USER,EDIT",
+    "users_preview.csv,USER,COMMIT",
+    "items_preview.csv,ITEM,UPLOAD",
+    "items_preview.csv,ITEM,EDIT",
+    "items_preview.csv,ITEM,COMMIT",
+    "holdings_preview.csv,HOLDINGS_RECORD,UPLOAD",
+    "holdings_preview.csv,HOLDINGS_RECORD,EDIT",
+    "holdings_preview.csv,HOLDINGS_RECORD,COMMIT",
+    "instances_preview.csv,INSTANCE,UPLOAD",
+    "instances_preview.csv,INSTANCE,EDIT",
+    "instances_preview.csv,INSTANCE,COMMIT"}, delimiter = ',')
   @SneakyThrows
   @ParameterizedTest
   void shouldReturnPreviewIfAvailable(String fileName, org.folio.bulkops.domain.dto.EntityType entityType, org.folio.bulkops.domain.dto.BulkOperationStep step) {
