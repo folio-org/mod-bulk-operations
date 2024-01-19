@@ -2,7 +2,9 @@ package org.folio.bulkops.service;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
+import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDINGS_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.processor.ItemsNotesUpdater.ITEM_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 
@@ -88,8 +90,16 @@ public class PreviewService {
         } else if (action.getType() == UpdateActionType.DUPLICATE) {
           forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option, entityType));
           forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(UpdateOptionType.fromValue(action.getUpdated()), entityType));
-        } else if (ITEM_NOTE == option ) {
+        } else if (ITEM_NOTE == option) {
           var initial = action.getParameters().stream().filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
+          initial.ifPresent(id -> {
+            var type = resolveAndGetItemTypeById(clazz, id);
+            if (StringUtils.isNotEmpty(type)) {
+              forceVisibleOptions.add(type);
+            }
+          });
+        } else if (HOLDINGS_NOTE == option) {
+          var initial = action.getParameters().stream().filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
           initial.ifPresent(id -> {
             var type = resolveAndGetItemTypeById(clazz, id);
             if (StringUtils.isNotEmpty(type)) {
