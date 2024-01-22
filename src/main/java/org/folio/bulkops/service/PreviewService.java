@@ -86,11 +86,18 @@ public class PreviewService {
 
         if (action.getType() == UpdateActionType.CHANGE_TYPE) {
 
-          Optional<String> initial = CollectionUtils.isNotEmpty(action.getParameters()) ? action.getParameters().stream()
-            .filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst() :
-          Optional.empty();
+          Optional<String> initial = Optional.empty();
+          if (EntityType.ITEM == entityType) {
+            initial = CollectionUtils.isNotEmpty(action.getParameters()) ? action.getParameters().stream()
+              .filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst() : Optional.empty();
+          }
 
-          if ( initial.isPresent()) {
+          if (EntityType.HOLDINGS_RECORD == entityType) {
+            initial = CollectionUtils.isNotEmpty(action.getParameters()) ? action.getParameters().stream()
+              .filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst() : Optional.empty();
+          }
+
+          if (initial.isPresent()) {
             var type = resolveAndGetItemTypeById(clazz, initial.get());
             if (StringUtils.isNotEmpty(type)) {
               forceVisibleOptions.add(type);
