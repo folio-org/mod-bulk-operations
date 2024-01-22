@@ -1,5 +1,7 @@
 package org.folio.bulkops.util;
 
+import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_IN_NOTE;
@@ -59,18 +61,20 @@ public class UpdateOptionTypeToFieldResolver {
       return "Temporary Loan Type";
     } else if (STATUS == type) {
       return "Status";
-    } else if (SUPPRESS_FROM_DISCOVERY == type && ITEM == entity) {
+    } else if (SUPPRESS_FROM_DISCOVERY == type && INSTANCE == entity) {
       return "Suppress from discovery";
-    } else if (SUPPRESS_FROM_DISCOVERY == type) {
+    } else if (SUPPRESS_FROM_DISCOVERY == type && ITEM == entity) {
       return "Discovery Suppress";
-    } else if (STAFF_SUPPRESS == type && ITEM == entity) {
+    } else if (SUPPRESS_FROM_DISCOVERY == type && HOLDINGS_RECORD == entity) {
+      return "Discovery suppress";
+    } else if (STAFF_SUPPRESS == type && INSTANCE == entity) {
       return "Staff suppress";
-    } else if (STAFF_SUPPRESS == type) {
-      return "Staff Suppress";
     } else if (ITEM_NOTE == type) {
       return "Notes";
-    } else if (ADMINISTRATIVE_NOTE == type) {
+    } else if (ADMINISTRATIVE_NOTE == type && ITEM == entity) {
       return "Administrative Notes";
+    } else if (ADMINISTRATIVE_NOTE == type && HOLDINGS_RECORD == entity) {
+      return "Administrative notes";
     } else if (CHECK_IN_NOTE == type) {
       return "Check In Notes";
     } else if (CHECK_OUT_NOTE == type) {

@@ -83,6 +83,19 @@ public class PreviewService {
       rule.getRuleDetails().getActions().forEach(action -> {
 
         if (action.getType() == UpdateActionType.CHANGE_TYPE) {
+
+          var initial = action.getParameters().stream()
+            .filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
+
+          if (initial.isPresent()) {
+            var type = resolveAndGetItemTypeById(clazz, initial.get());
+            if (StringUtils.isNotEmpty(type)) {
+              forceVisibleOptions.add(type);
+            }
+          } else {
+            forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option, entityType));
+          }
+
           var updated = action.getUpdated();
           if (UUID_REGEX.matcher(updated).matches()) {
             var type = resolveAndGetItemTypeById(clazz, updated);
