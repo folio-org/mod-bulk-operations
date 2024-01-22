@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.util.Constants.QUERY_ALL_RECORDS;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
@@ -144,7 +145,9 @@ public class HoldingsReferenceService {
   @Cacheable(cacheNames = "holdingsSourceNames")
   public HoldingsRecordsSource getSourceById(String id) {
     try {
-      return holdingsSourceClient.getById(id);
+      return isEmpty(id) ?
+        HoldingsRecordsSource.builder().name(EMPTY).build() :
+        holdingsSourceClient.getById(id);
     } catch (Exception e) {
       throw new NotFoundException(format("Holdings record source not found by id=%s", id));
     }
