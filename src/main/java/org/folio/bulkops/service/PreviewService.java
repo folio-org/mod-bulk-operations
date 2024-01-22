@@ -13,10 +13,12 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
@@ -84,10 +86,11 @@ public class PreviewService {
 
         if (action.getType() == UpdateActionType.CHANGE_TYPE) {
 
-          var initial = action.getParameters().stream()
-            .filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
+          Optional<String> initial = CollectionUtils.isNotEmpty(action.getParameters()) ? action.getParameters().stream()
+            .filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst() :
+          Optional.empty();
 
-          if (initial.isPresent()) {
+          if ( initial.isPresent()) {
             var type = resolveAndGetItemTypeById(clazz, initial.get());
             if (StringUtils.isNotEmpty(type)) {
               forceVisibleOptions.add(type);
