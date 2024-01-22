@@ -1,5 +1,7 @@
 package org.folio.bulkops.service;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.STAFF_ONLY;
@@ -11,6 +13,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
@@ -24,11 +32,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @ExtendWith(MockitoExtension.class)
 class ItemNoteTableUpdaterTest {
@@ -62,13 +65,17 @@ class ItemNoteTableUpdaterTest {
         NoteType.builder().name("Note").build(),
         NoteType.builder().name("Other").build()));
 
-    noteTableUpdater.extendTableWithItemNotesTypes(table);
+    noteTableUpdater.extendTableWithItemNotesTypes(table, Set.of("Action note", "Other"));
 
     assertThat(table.getHeader(), hasSize(expectedTableSize));
     var headerNames = table.getHeader().stream().map(Cell::getValue).toList();
     assertThat(headerNames.indexOf("Action note"), is(ACTION_NOTE_POSITION));
     assertThat(headerNames.indexOf("Note"), is(NOTE_POSITION));
     assertThat(headerNames.indexOf("Other"), is(OTHER_POSITION));
+
+    assertTrue(table.getHeader().get(ACTION_NOTE_POSITION).getForceVisible());
+    assertFalse(table.getHeader().get(NOTE_POSITION).getForceVisible());
+    assertTrue(table.getHeader().get(OTHER_POSITION).getForceVisible());
 
     var modifiedRow = table.getRows().get(0).getRow();
     assertThat(modifiedRow, hasSize(expectedTableSize));
@@ -90,7 +97,7 @@ class ItemNoteTableUpdaterTest {
         NoteType.builder().name("Note").build(),
         NoteType.builder().name("Other").build()));
 
-    noteTableUpdater.extendTableWithItemNotesTypes(table);
+    noteTableUpdater.extendTableWithItemNotesTypes(table, emptySet());
 
     assertThat(table.getHeader(), hasSize(expectedTableSize));
     var headerNames = table.getHeader().stream().map(Cell::getValue).toList();
@@ -119,7 +126,7 @@ class ItemNoteTableUpdaterTest {
         NoteType.builder().name("Note").build(),
         NoteType.builder().name("Other").build()));
 
-    noteTableUpdater.extendTableWithItemNotesTypes(table);
+    noteTableUpdater.extendTableWithItemNotesTypes(table, emptySet());
 
     assertThat(table.getHeader(), hasSize(expectedTableSize));
     var headerNames = table.getHeader().stream().map(Cell::getValue).toList();
@@ -148,13 +155,17 @@ class ItemNoteTableUpdaterTest {
         HoldingsNoteType.builder().name("Note").build(),
         HoldingsNoteType.builder().name("Other").build()));
 
-    noteTableUpdater.extendTableWithHoldingsNotesTypes(table);
+    noteTableUpdater.extendTableWithHoldingsNotesTypes(table, Set.of("Action note", "Other"));
 
     assertThat(table.getHeader(), hasSize(expectedTableSize));
     var headerNames = table.getHeader().stream().map(Cell::getValue).toList();
     assertThat(headerNames.indexOf("Action note"), is(ACTION_HOLDINGS_NOTE_POSITION));
     assertThat(headerNames.indexOf("Note"), is(NOTE_HOLDINGS_POSITION));
     assertThat(headerNames.indexOf("Other"), is(OTHER_HOLDINGS_POSITION));
+
+    assertTrue(table.getHeader().get(ACTION_HOLDINGS_NOTE_POSITION).getForceVisible());
+    assertFalse(table.getHeader().get(NOTE_HOLDINGS_POSITION).getForceVisible());
+    assertTrue(table.getHeader().get(OTHER_HOLDINGS_POSITION).getForceVisible());
 
     var modifiedRow = table.getRows().get(0).getRow();
     assertThat(modifiedRow, hasSize(expectedTableSize));
@@ -177,7 +188,7 @@ class ItemNoteTableUpdaterTest {
         HoldingsNoteType.builder().name("Note").build(),
         HoldingsNoteType.builder().name("Other").build()));
 
-    noteTableUpdater.extendTableWithHoldingsNotesTypes(table);
+    noteTableUpdater.extendTableWithHoldingsNotesTypes(table, emptySet());
 
     assertThat(table.getHeader(), hasSize(expectedTableSize));
     var headerNames = table.getHeader().stream().map(Cell::getValue).toList();
@@ -206,7 +217,7 @@ class ItemNoteTableUpdaterTest {
         HoldingsNoteType.builder().name("Note").build(),
         HoldingsNoteType.builder().name("Other").build()));
 
-    noteTableUpdater.extendTableWithHoldingsNotesTypes(table);
+    noteTableUpdater.extendTableWithHoldingsNotesTypes(table, emptySet());
 
     assertThat(table.getHeader(), hasSize(expectedTableSize));
     var headerNames = table.getHeader().stream().map(Cell::getValue).toList();
@@ -233,7 +244,7 @@ class ItemNoteTableUpdaterTest {
         HoldingsNoteType.builder().name("Provenance").build(),
         HoldingsNoteType.builder().name("Reproduction").build()));
 
-    noteTableUpdater.extendTableWithHoldingsNotesTypes(table);
+    noteTableUpdater.extendTableWithHoldingsNotesTypes(table, emptySet());
 
     var headerNames = table.getHeader().stream().map(Cell::getValue).toList();
     List.of("Binding", "Electronic bookplate", "Provenance", "Reproduction").forEach(name ->
@@ -252,7 +263,7 @@ class ItemNoteTableUpdaterTest {
         NoteType.builder().name("Provenance").build(),
         NoteType.builder().name("Reproduction").build()));
 
-    noteTableUpdater.extendTableWithItemNotesTypes(table);
+    noteTableUpdater.extendTableWithItemNotesTypes(table, emptySet());
 
     var headerNames = table.getHeader().stream().map(Cell::getValue).toList();
     List.of("Binding", "Electronic bookplate", "Provenance", "Reproduction").forEach(name ->

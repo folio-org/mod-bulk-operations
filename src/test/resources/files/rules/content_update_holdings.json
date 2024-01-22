@@ -1,0 +1,59 @@
+{
+  "bulkOperationRules": [
+    {
+      "bulkOperationId": "3352816d-75b7-4cf7-abdb-333bc063a4c3",
+      "rule_details": {
+        "option": "ADMINISTRATIVE_NOTE",
+        "actions": [
+          {
+            "type": "CHANGE_TYPE",
+            "updated": "e19eabab-a85c-4aef-a7b2-33bd9acef24e"
+          }
+        ]
+      }
+    },
+    {
+      "bulkOperationId": "3352816d-75b7-4cf7-abdb-333bc063a4c3",
+      "rule_details": {
+        "option": "HOLDINGS_NOTE",
+        "actions": [
+          {
+            "type": "CHANGE_TYPE",
+            "updated": "ADMINISTRATIVE_NOTE",
+            "parameters": [
+              {
+                "key": "HOLDINGS_NOTE_TYPE_ID_KEY",
+                "value": "e19eabab-a85c-4aef-a7b2-33bd9acef24e"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "bulkOperationId": "3352816d-75b7-4cf7-abdb-333bc063a4c3",
+      "rule_details": {
+        "option": "SUPPRESS_FROM_DISCOVERY",
+        "actions": [
+          {
+            "type": "SET_TO_TRUE_INCLUDING_ITEMS",
+            "updated": ""
+          }
+        ]
+      }
+    },
+    {
+      "bulkOperationId": "3352816d-75b7-4cf7-abdb-333bc063a4c3",
+      "rule_details": {
+        "option": "ELECTRONIC_ACCESS_LINK_TEXT",
+        "actions": [
+          {
+            "type": "REPLACE_WITH",
+            "updated": "TEXT"
+          }
+        ]
+      }
+    }
+  ],
+  "totalRecords": 1
+}

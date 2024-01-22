@@ -37,26 +37,23 @@ public class NoteTableUpdater {
   private final ItemReferenceService itemReferenceService;
   private final HoldingsReferenceService holdingsReferenceService;
 
-  public void extendTableWithHoldingsNotesTypes(UnifiedTable unifiedTable) {
+  public void extendTableWithHoldingsNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible) {
     var noteTypeNames = holdingsReferenceService.getAllHoldingsNoteTypes().stream()
       .map(HoldingsNoteType::getName)
-      .map(this::concatNotePostfixIfRequired)
       .sorted()
       .toList();
 
-    extendHeadersWithItemNoteTypeNames(HOLDINGS_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames);
+    extendHeadersWithItemNoteTypeNames(HOLDINGS_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
     unifiedTable.getRows().forEach(row -> extendRowWithNotesData(HOLDINGS_NOTE_POSITION, row, noteTypeNames));
   }
 
-  public void extendTableWithItemNotesTypes(UnifiedTable unifiedTable) {
+  public void extendTableWithItemNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible) {
     var noteTypeNames = itemReferenceService.getAllItemNoteTypes().stream()
       .map(NoteType::getName)
       .sorted()
       .toList();
 
-    var noteTypeNamesWithPostfix = noteTypeNames.stream().map(this::concatNotePostfixIfRequired).toList();
-
-    extendHeadersWithItemNoteTypeNames(ITEM_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNamesWithPostfix);
+    extendHeadersWithItemNoteTypeNames(ITEM_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
     unifiedTable.getRows().forEach(row -> extendRowWithNotesData(ITEM_NOTE_POSITION, row, noteTypeNames));
   }
 
@@ -66,12 +63,13 @@ public class NoteTableUpdater {
       noteTypeName;
   }
 
-  private void extendHeadersWithItemNoteTypeNames(int notesInitialPosition, List<Cell> headers, List<String> noteTypeNames) {
+  public void extendHeadersWithItemNoteTypeNames(int notesInitialPosition, List<Cell> headers, List<String> noteTypeNames, Set<String> forceVisible) {
     var headerToReplace = headers.get(notesInitialPosition);
     var cellsToInsert = noteTypeNames.stream()
       .map(name -> new Cell()
-        .value(name)
+        .value(concatNotePostfixIfRequired(name))
         .visible(headerToReplace.getVisible())
+        .forceVisible(forceVisible.contains(name))
         .dataType(headerToReplace.getDataType())
         .ignoreTranslation(true))
       .toList();

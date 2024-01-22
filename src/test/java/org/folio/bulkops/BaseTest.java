@@ -59,6 +59,7 @@ import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.s3.client.S3ClientFactory;
 import org.folio.s3.client.S3ClientProperties;
 import org.folio.spring.DefaultFolioExecutionContext;
@@ -292,5 +293,22 @@ public abstract class BaseTest {
 
   public static BulkOperationRule rule(UpdateOptionType option, UpdateActionType action, String updated) {
     return rule(option, action, null, updated);
+  }
+
+  public BulkOperation buildBulkOperation(String fileName, org.folio.bulkops.domain.dto.EntityType entityType, org.folio.bulkops.domain.dto.BulkOperationStep step) {
+    return switch (step) {
+      case UPLOAD -> BulkOperation.builder()
+        .entityType(entityType)
+        .linkToMatchedRecordsCsvFile(fileName)
+        .build();
+      case EDIT -> BulkOperation.builder()
+        .entityType(entityType)
+        .linkToModifiedRecordsCsvFile(fileName)
+        .build();
+      case COMMIT -> BulkOperation.builder()
+        .entityType(entityType)
+        .linkToCommittedRecordsCsvFile(fileName)
+        .build();
+    };
   }
 }

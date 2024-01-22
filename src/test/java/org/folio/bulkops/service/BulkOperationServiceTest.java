@@ -868,89 +868,6 @@ class BulkOperationServiceTest extends BaseTest {
 
     assertDoesNotThrow(() -> bulkOperationService.commit(operation));
   }
-  @ParameterizedTest
-  @CsvSource(value = { "users_preview.csv,USER,UPLOAD",
-    "users_preview.csv,USER,EDIT",
-    "users_preview.csv,USER,COMMIT",
-    "items_preview.csv,ITEM,UPLOAD",
-    "items_preview.csv,ITEM,EDIT",
-    "items_preview.csv,ITEM,COMMIT",
-    "holdings_preview.csv,HOLDINGS_RECORD,UPLOAD",
-    "holdings_preview.csv,HOLDINGS_RECORD,EDIT",
-    "holdings_preview.csv,HOLDINGS_RECORD,COMMIT",
-    "instances_preview.csv,INSTANCE,UPLOAD",
-    "instances_preview.csv,INSTANCE,EDIT",
-    "instances_preview.csv,INSTANCE,COMMIT"}, delimiter = ',')
-  @SneakyThrows
-  void shouldReturnPreviewIfAvailable(String fileName, EntityType entityType, BulkOperationStep step) {
-    var path = "src/test/resources/files/" + fileName;
-    var operationId = UUID.randomUUID();
-    var offset = 2;
-    var limit = 5;
-
-    var bulkOperation = buildBulkOperation(fileName, entityType, step);
-    bulkOperation.setId(operationId);
-    when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(bulkOperation));
-
-    when(remoteFileSystemClient.get(anyString()))
-      .thenReturn(new FileInputStream(path));
-
-    when(groupClient.getGroupById(anyString())).thenReturn(new UserGroup().withGroup("Group"));
-    when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
-    when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
-
-    var table = bulkOperationService.getPreview(bulkOperation, step, offset, limit);
-
-    assertThat(table.getRows(), hasSize(limit - offset));
-    if (USER.equals(entityType)) {
-      assertThat(table.getHeader(), equalTo(getHeaders(User.class)));
-    } else if (EntityType.ITEM.equals(entityType)) {
-      assertThat(table.getHeader(), equalTo(renameAdministrativeNotesHeader(getHeaders(Item.class))));
-    } else if (EntityType.HOLDINGS_RECORD.equals(entityType)) {
-      assertThat(table.getHeader(), equalTo(renameAdministrativeNotesHeader(getHeaders(HoldingsRecord.class))));
-    }
-    assertTrue(table.getRows().stream()
-      .map(Row::getRow)
-      .flatMap(List::stream)
-      .filter(Objects::nonNull)
-      .noneMatch(s -> s.contains("%3A") || s.contains("%3B") || s.contains("%7C")));
-  }
-
-  @Test
-  @SneakyThrows
-  void shouldReturnPreviewWithCorrectNumberOfRecordsWhenRecordsContainLineBreaks() {
-    var path = "src/test/resources/files/items_preview_line_breaks.csv";
-    var operationId = UUID.randomUUID();
-    var offset = 1;
-    var limit = 10;
-
-    var bulkOperation = buildBulkOperation("items_preview_line_breaks.csv", ITEM, COMMIT);
-    bulkOperation.setId(operationId);
-    when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(bulkOperation));
-
-    when(remoteFileSystemClient.get(anyString()))
-      .thenReturn(new FileInputStream(path));
-
-    when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
-
-    var table = bulkOperationService.getPreview(bulkOperation, COMMIT, offset, limit);
-
-    assertThat(table.getRows(), hasSize(limit));
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
-  @SneakyThrows
-  void shouldReturnOnlyHeadersIfPreviewIsNotAvailable(OperationStatusType status) {
-
-    var bulkOperation = BulkOperation.builder().entityType(USER).status(status).build();
-
-    var table = bulkOperationService.getPreview(bulkOperation, BulkOperationStep.UPLOAD, 0, 10);
-    assertEquals(0, table.getRows().size());
-    Assertions.assertTrue(table.getHeader().size() > 0);
-  }
 
   @ParameterizedTest
   @EnumSource(OperationStatusType.class)
@@ -1135,23 +1052,6 @@ class BulkOperationServiceTest extends BaseTest {
     if (nonNull(testData.expectedErrorMessage)) {
       verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage));
     }
-  }
-
-  private BulkOperation buildBulkOperation(String fileName, EntityType entityType, BulkOperationStep step) {
-    return switch (step) {
-      case UPLOAD -> BulkOperation.builder()
-        .entityType(entityType)
-        .linkToMatchedRecordsCsvFile(fileName)
-        .build();
-      case EDIT -> BulkOperation.builder()
-        .entityType(entityType)
-        .linkToModifiedRecordsCsvFile(fileName)
-        .build();
-      case COMMIT -> BulkOperation.builder()
-        .entityType(entityType)
-        .linkToCommittedRecordsCsvFile(fileName)
-        .build();
-    };
   }
 
   private List<Cell> renameAdministrativeNotesHeader(List<Cell> headers) {

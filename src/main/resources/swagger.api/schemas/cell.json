@@ -16,6 +16,11 @@
       "type": "boolean",
       "default": "true"
     },
+    "forceVisible": {
+      "description": "Column visibility (forced to display in preview)",
+      "type": "boolean",
+      "default": "false"
+    },
     "ignoreTranslation": {
       "description": "Ignore translation",
       "type": "boolean",
