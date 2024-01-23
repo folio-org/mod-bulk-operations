@@ -5,8 +5,7 @@
     "type": "string",
     "enum": [
       "MANUAL",
-      "IN_APP",
-      "QUERY"
+      "IN_APP"
     ]
   }
 }

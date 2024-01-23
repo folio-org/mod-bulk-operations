@@ -44,7 +44,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
   private RemoteFileSystemClient remoteFileSystemClient;
 
   @ParameterizedTest
-  @EnumSource(value = ApproachType.class, names = {"QUERY", "IN_APP" }, mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(value = ApproachType.class, names = {"IN_APP" }, mode = EnumSource.Mode.INCLUDE)
   @SneakyThrows
   void shouldUpdateBulkOperationForCompletedJob(ApproachType approach) {
     var bulkOperationId = UUID.randomUUID();

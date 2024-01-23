@@ -3,7 +3,6 @@ package org.folio.bulkops.service;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.util.Constants.UTC_ZONE;
 
 import java.io.IOException;
@@ -97,16 +96,7 @@ public class DataExportJobUpdateService {
       var linkToOriginFile = downloadAndSaveJsonFile(operation, jobUpdate);
 
       Progress progress;
-      if (QUERY == operation.getApproach()) {
-        var value = remoteFileSystemClient.getNumOfLines(linkToMatchingRecordsFile) - 1;
-        progress = new Progress()
-          .withErrors(0)
-          .withSuccess(value)
-          .withTotal(value)
-          .withProcessed(value);
-      } else {
-        progress = jobUpdate.getProgress();
-      }
+      progress = jobUpdate.getProgress();
 
       operation.setStatus(OperationStatusType.DATA_MODIFICATION);
       operation.setLinkToMatchedRecordsJsonFile(linkToOriginFile);
