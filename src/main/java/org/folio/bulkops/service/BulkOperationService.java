@@ -377,7 +377,7 @@ public class BulkOperationService {
 
     String errorMessage = null;
     if (UPLOAD == step) {
-      errorMessage = executeDataExportJob(bulkOperationStart, step, approach, operation, errorMessage);
+      errorMessage = executeDataExportJob(step, approach, operation, errorMessage);
 
       if (nonNull(errorMessage)) {
         log.error(errorMessage);
@@ -413,7 +413,7 @@ public class BulkOperationService {
     }
   }
 
-  private String executeDataExportJob(BulkOperationStart bulkOperationStart, BulkOperationStep step, ApproachType approach, BulkOperation operation, String errorMessage) {
+  private String executeDataExportJob(BulkOperationStep step, ApproachType approach, BulkOperation operation, String errorMessage) {
     try {
       if (NEW.equals(operation.getStatus())) {
         if (MANUAL != approach) {
