@@ -7,7 +7,6 @@ import static org.apache.commons.lang3.StringUtils.LF;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
-import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
@@ -372,25 +371,13 @@ public class BulkOperationService {
   public BulkOperation startBulkOperation(UUID bulkOperationId, UUID xOkapiUserId, BulkOperationStart bulkOperationStart) {
     var step = bulkOperationStart.getStep();
     var approach = bulkOperationStart.getApproach();
-    BulkOperation operation;
-    if (QUERY == bulkOperationStart.getApproach() && UPLOAD == step) {
-      operation = BulkOperation.builder()
-        .id(bulkOperationId)
-        .entityType(bulkOperationStart.getEntityType())
-        .identifierType(bulkOperationStart.getEntityCustomIdentifierType())
-        .approach(QUERY)
-        .status(NEW)
-        .startTime(LocalDateTime.now())
-        .build();
-    } else {
-      operation = bulkOperationRepository.findById(bulkOperationId)
+    BulkOperation operation = bulkOperationRepository.findById(bulkOperationId)
         .orElseThrow(() -> new NotFoundException("Bulk operation was not found bu id=" + bulkOperationId));
-    }
     operation.setUserId(xOkapiUserId);
 
     String errorMessage = null;
     if (UPLOAD == step) {
-      errorMessage = executeDataExportJob(bulkOperationStart, step, approach, operation, errorMessage);
+      errorMessage = executeDataExportJob(step, approach, operation, errorMessage);
 
       if (nonNull(errorMessage)) {
         log.error(errorMessage);
@@ -426,28 +413,21 @@ public class BulkOperationService {
     }
   }
 
-  private String executeDataExportJob(BulkOperationStart bulkOperationStart, BulkOperationStep step, ApproachType approach, BulkOperation operation, String errorMessage) {
+  private String executeDataExportJob(BulkOperationStep step, ApproachType approach, BulkOperation operation, String errorMessage) {
     try {
       if (NEW.equals(operation.getStatus())) {
         if (MANUAL != approach) {
           var job = dataExportSpringClient.upsertJob(Job.builder()
-            .type((QUERY == approach) ?
-              ExportType.BULK_EDIT_QUERY :
-              ExportType.BULK_EDIT_IDENTIFIERS)
+            .type(ExportType.BULK_EDIT_IDENTIFIERS)
             .entityType(operation.getEntityType())
-            .exportTypeSpecificParameters((QUERY == approach) ?
-              new ExportTypeSpecificParameters()
-            .withQuery(bulkOperationStart.getQuery()) :
-              new ExportTypeSpecificParameters())
+            .exportTypeSpecificParameters(new ExportTypeSpecificParameters())
             .identifierType(operation.getIdentifierType()).build());
           operation.setDataExportJobId(job.getId());
           bulkOperationRepository.save(operation);
 
           if (JobStatus.SCHEDULED.equals(job.getStatus())) {
-            if (QUERY != approach) {
-              uploadCsvFile(job.getId(), new FolioMultiPartFile(FilenameUtils.getName(operation.getLinkToTriggeringCsvFile()), "application/json", remoteFileSystemClient.get(operation.getLinkToTriggeringCsvFile())));
-              job = dataExportSpringClient.getJob(job.getId());
-            }
+            uploadCsvFile(job.getId(), new FolioMultiPartFile(FilenameUtils.getName(operation.getLinkToTriggeringCsvFile()), "application/json", remoteFileSystemClient.get(operation.getLinkToTriggeringCsvFile())));
+            job = dataExportSpringClient.getJob(job.getId());
 
             if (JobStatus.FAILED.equals(job.getStatus())) {
               errorMessage = "Data export job failed";

@@ -281,29 +281,8 @@ class BulkOperationServiceTest extends BaseTest {
     assertEquals(OperationStatusType.FAILED, operationCaptor.getAllValues().get(3).getStatus());
   }
 
-  @SneakyThrows
-  @Test
-  void shouldStartDataExportJobForQueryApproach() {
-    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
-
-    var bulkOperationId = UUID.randomUUID();
-
-    when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(BulkOperation.builder().id(bulkOperationId).status(OperationStatusType.NEW).build());
-
-    var jobId = UUID.randomUUID();
-    when(dataExportSpringClient.upsertJob(any(Job.class)))
-      .thenReturn(Job.builder().id(jobId).status(JobStatus.SCHEDULED).build());
-
-    bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
-    bulkOperationService.startBulkOperation(bulkOperationId, any(UUID.class), new BulkOperationStart().approach(ApproachType.QUERY).step(BulkOperationStep.UPLOAD));
-
-    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
-    assertEquals(OperationStatusType.RETRIEVING_RECORDS, operationCaptor.getAllValues().get(3).getStatus());
-  }
   @ParameterizedTest
-  @EnumSource(value = ApproachType.class, names = {"IN_APP", "QUERY"}, mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(value = ApproachType.class, names = {"IN_APP"}, mode = EnumSource.Mode.INCLUDE)
   @SneakyThrows
   void shouldConfirmChanges(ApproachType approach) {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
@@ -385,7 +364,7 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = ApproachType.class, names = {"IN_APP", "QUERY"}, mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(value = ApproachType.class, names = {"IN_APP"}, mode = EnumSource.Mode.INCLUDE)
   void shouldConfirmChangesForItemWhenValidationErrorAndOtherValidChangesExist(ApproachType approach) throws FileNotFoundException {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
