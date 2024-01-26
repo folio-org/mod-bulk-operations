@@ -43,9 +43,11 @@ import org.folio.bulkops.domain.bean.NoteTypeCollection;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
+import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -58,6 +60,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.BulkOperationStep;
 
 import lombok.SneakyThrows;
 
@@ -74,21 +78,25 @@ class PreviewServiceTest extends BaseTest {
   @Autowired
   private NoteTableUpdater noteTableUpdater;
 
-  @CsvSource(value = { "users_preview.csv,USER,UPLOAD",
-    "users_preview.csv,USER,EDIT",
-    "users_preview.csv,USER,COMMIT",
-    "items_preview.csv,ITEM,UPLOAD",
-    "items_preview.csv,ITEM,EDIT",
-    "items_preview.csv,ITEM,COMMIT",
-    "holdings_preview.csv,HOLDINGS_RECORD,UPLOAD",
-    "holdings_preview.csv,HOLDINGS_RECORD,EDIT",
-    "holdings_preview.csv,HOLDINGS_RECORD,COMMIT",
-    "instances_preview.csv,INSTANCE,UPLOAD",
-    "instances_preview.csv,INSTANCE,EDIT",
-    "instances_preview.csv,INSTANCE,COMMIT"}, delimiter = ',')
+  @CsvSource(value = { "users_preview.csv,USER,UPLOAD,IN_APP",
+    "users_preview.csv,USER,EDIT,IN_APP",
+    "users_preview.csv,USER,COMMIT,IN_APP",
+    "users_preview.csv,USER,COMMIT,MANUAL",
+    "items_preview.csv,ITEM,UPLOAD,IN_APP",
+    "items_preview.csv,ITEM,EDIT,IN_APP",
+    "items_preview.csv,ITEM,COMMIT,IN_APP",
+    "items_preview.csv,ITEM,COMMIT,MANUAL",
+    "holdings_preview.csv,HOLDINGS_RECORD,UPLOAD,IN_APP",
+    "holdings_preview.csv,HOLDINGS_RECORD,EDIT,IN_APP",
+    "holdings_preview.csv,HOLDINGS_RECORD,COMMIT,IN_APP",
+    "holdings_preview.csv,HOLDINGS_RECORD,COMMIT,MANUAL",
+    "instances_preview.csv,INSTANCE,UPLOAD,IN_APP",
+    "instances_preview.csv,INSTANCE,EDIT,IN_APP",
+    "instances_preview.csv,INSTANCE,COMMIT,IN_APP",
+    "instances_preview.csv,INSTANCE,COMMIT,MANUAL"}, delimiter = ',')
   @SneakyThrows
   @ParameterizedTest
-  void shouldReturnPreviewIfAvailable(String fileName, org.folio.bulkops.domain.dto.EntityType entityType, org.folio.bulkops.domain.dto.BulkOperationStep step) {
+  void shouldReturnPreviewIfAvailable(String fileName, EntityType entityType, BulkOperationStep step, ApproachType approachType) {
     var path = "src/test/resources/files/" + fileName;
     var operationId = UUID.randomUUID();
     var offset = 2;
@@ -96,6 +104,7 @@ class PreviewServiceTest extends BaseTest {
 
     var bulkOperation = buildBulkOperation(fileName, entityType, step);
     bulkOperation.setId(operationId);
+    bulkOperation.setApproach(approachType);
     when(bulkOperationRepository.findById(operationId))
       .thenReturn(Optional.of(bulkOperation));
 
@@ -126,34 +135,34 @@ class PreviewServiceTest extends BaseTest {
 
     assertThat(table.getRows(), hasSize(limit - offset));
     if (USER.equals(entityType)) {
-      if (step == EDIT || step == COMMIT) {
+      if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
         assertThat(table.getHeader(), equalTo(
           getHeaders(User.class, UpdateOptionTypeToFieldResolver.getFieldsByUpdateOptionTypes(List.of(UpdateOptionType.EMAIL_ADDRESS, UpdateOptionType.EXPIRATION_DATE), entityType))));
       } else {
         assertThat(table.getHeader(), equalTo(getHeaders(User.class)));
       }
     } else if (ITEM.equals(entityType)) {
-      if (step == EDIT || step == COMMIT) {
-        var headers = getHeaders(Item.class, Set.of("Binding","Custom","Status","Check Out Notes","Provenance", "Reproduction", "Check In Notes","Note","Administrative Notes"));
+      List<Cell> headers;
+      if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
+        headers = getHeaders(Item.class, Set.of("Binding", "Custom", "Status", "Check Out Notes", "Provenance", "Reproduction", "Check In Notes", "Note", "Administrative Notes"));
         noteTableUpdater.extendHeadersWithItemNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"), Set.of("Binding","Status","Check Out Notes","Provenance","Check In Notes","Note","Custom", "Reproduction", "Administrative Notes"));
-        assertThat(table.getHeader(), equalTo(headers));
       } else {
-        var headers = getHeaders(Item.class);
+        headers = getHeaders(Item.class);
         noteTableUpdater.extendHeadersWithItemNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"), emptySet());
-        assertThat(table.getHeader(), equalTo(headers));
       }
+      assertThat(table.getHeader(), equalTo(headers));
     } else if (HOLDINGS_RECORD.equals(entityType)) {
-      if (step == EDIT || step == COMMIT) {
-        var headers = getHeaders(HoldingsRecord.class, Set.of("Reproduction","Discovery suppress","Electronic access","Administrative notes"));
+      List<Cell> headers;
+      if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
+        headers = getHeaders(HoldingsRecord.class, Set.of("Reproduction", "Discovery suppress", "Electronic access", "Administrative notes"));
         noteTableUpdater.extendHeadersWithItemNoteTypeNames(HOLDINGS_NOTE_POSITION, headers , List.of("Binding", "Provenance", "Reproduction"), Set.of("Reproduction","Discovery suppress","Electronic access","Administrative notes"));
-        assertThat(table.getHeader(), equalTo(headers));
       } else {
-        var headers = getHeaders(HoldingsRecord.class);
+        headers = getHeaders(HoldingsRecord.class);
         noteTableUpdater.extendHeadersWithItemNoteTypeNames(HOLDINGS_NOTE_POSITION, headers , List.of("Binding", "Provenance", "Reproduction"), emptySet());
-        assertThat(table.getHeader(), equalTo(headers));
       }
+      assertThat(table.getHeader(), equalTo(headers));
     } else if (INSTANCE.equals(entityType)) {
-      if (step == EDIT || step == COMMIT) {
+      if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
         assertThat(table.getHeader(), equalTo(
           getHeaders(Instance.class, UpdateOptionTypeToFieldResolver.getFieldsByUpdateOptionTypes(List.of(UpdateOptionType.STAFF_SUPPRESS, UpdateOptionType.SUPPRESS_FROM_DISCOVERY), entityType))));
       } else {
