@@ -7,15 +7,17 @@ import static org.apache.commons.lang3.StringUtils.LF;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
+import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
-import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
@@ -66,6 +68,7 @@ import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.Utils;
+import org.folio.querytool.domain.dto.SubmitQuery;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -102,8 +105,9 @@ public class BulkOperationService {
   private final DataProcessorFactory dataProcessorFactory;
   private final ErrorService errorService;
   private final LogFilesService logFilesService;
-  private final NoteTableUpdater noteTableUpdater;
   private final RecordUpdateService recordUpdateService;
+  private final EntityTypeService entityTypeService;
+  private final QueryService queryService;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
@@ -170,6 +174,22 @@ public class BulkOperationService {
     operation.setUserId(xOkapiUserId);
 
     return bulkOperationRepository.save(operation);
+  }
+
+  public BulkOperation triggerByQuery(UUID userId, SubmitQuery submitQuery) {
+    var queryId = queryService.executeQuery(submitQuery);
+    var entityType = entityTypeService.getEntityTypeById(submitQuery.getEntityTypeId());
+    return bulkOperationRepository.save(BulkOperation.builder()
+        .id(UUID.randomUUID())
+        .entityType(entityType)
+        .approach(QUERY)
+        .identifierType(IdentifierType.ID)
+        .status(EXECUTING_QUERY)
+        .startTime(LocalDateTime.now())
+        .userId(userId)
+        .fqlQuery(submitQuery.getFqlQuery())
+        .fqlQueryId(queryId)
+      .build());
   }
 
   public void confirm(BulkOperation operation)  {
@@ -415,7 +435,7 @@ public class BulkOperationService {
 
   private String executeDataExportJob(BulkOperationStep step, ApproachType approach, BulkOperation operation, String errorMessage) {
     try {
-      if (NEW.equals(operation.getStatus())) {
+      if (Set.of(NEW, SAVED_IDENTIFIERS).contains(operation.getStatus())) {
         if (MANUAL != approach) {
           var job = dataExportSpringClient.upsertJob(Job.builder()
             .type(ExportType.BULK_EDIT_IDENTIFIERS)
@@ -520,20 +540,29 @@ public class BulkOperationService {
 
   public BulkOperation getOperationById(UUID bulkOperationId) {
     var operation = getBulkOperationOrThrow(bulkOperationId);
-    if (DATA_MODIFICATION.equals(operation.getStatus())) {
-      var processing = dataProcessingRepository.findByBulkOperationId(bulkOperationId);
-      if (processing.isPresent() && StatusType.ACTIVE.equals(processing.get().getStatus())) {
-        operation.setProcessedNumOfRecords(processing.get().getProcessedNumOfRecords());
-        return operation;
+    return switch (operation.getStatus()) {
+      case EXECUTING_QUERY -> queryService.checkQueryExecutionStatus(operation);
+      case SAVED_IDENTIFIERS -> startBulkOperation(operation.getId(), operation.getUserId(), new BulkOperationStart()
+        .step(UPLOAD)
+        .approach(IN_APP)
+        .entityType(operation.getEntityType())
+        .entityCustomIdentifierType(IdentifierType.ID));
+      case DATA_MODIFICATION -> {
+        var processing = dataProcessingRepository.findByBulkOperationId(bulkOperationId);
+        if (processing.isPresent() && StatusType.ACTIVE.equals(processing.get().getStatus())) {
+          operation.setProcessedNumOfRecords(processing.get().getProcessedNumOfRecords());
+        }
+        yield operation;
       }
-    } else if (APPLY_CHANGES.equals(operation.getStatus())) {
-      var execution = executionRepository.findByBulkOperationId(bulkOperationId);
-      if (execution.isPresent() && StatusType.ACTIVE.equals(execution.get().getStatus())) {
-        operation.setProcessedNumOfRecords(execution.get().getProcessedRecords());
-        return operation;
+      case APPLY_CHANGES -> {
+        var execution = executionRepository.findByBulkOperationId(bulkOperationId);
+        if (execution.isPresent() && StatusType.ACTIVE.equals(execution.get().getStatus())) {
+          operation.setProcessedNumOfRecords(execution.get().getProcessedRecords());
+        }
+        yield operation;
       }
-    }
-    return operation;
+      default -> operation;
+    };
   }
 
   public BulkOperation getBulkOperationOrThrow(UUID operationId) {
