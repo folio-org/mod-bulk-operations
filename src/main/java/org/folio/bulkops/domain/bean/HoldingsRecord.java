@@ -159,7 +159,7 @@ public class HoldingsRecord implements BulkOperationsEntity, ElectronicAccessEnt
 
   @JsonProperty("administrativeNotes")
   @Valid
-  @CsvCustomBindByName(column = "Administrative notes", converter = StringListConverter.class)
+  @CsvCustomBindByName(column = "Administrative Note", converter = StringListConverter.class)
   @CsvCustomBindByPosition(position = 18, converter = StringListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> administrativeNotes = null;
