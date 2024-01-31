@@ -2,11 +2,8 @@ package org.folio.bulkops.service;
 
 import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
-import static org.folio.bulkops.util.Constants.TABLE_HEADER_VALUE_ADMINISTRATIVE_NOTE;
-import static org.folio.bulkops.util.Constants.CSV_COLUMN_NAME_ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
-import static org.folio.bulkops.util.UnifiedTableHeaderBuilder.getHeaders;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
@@ -18,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -1026,14 +1022,5 @@ class BulkOperationServiceTest extends BaseTest {
     if (nonNull(testData.expectedErrorMessage)) {
       verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage));
     }
-  }
-
-  private List<Cell> renameAdministrativeNotesHeader(List<Cell> headers) {
-    headers.forEach(cell -> {
-      if (CSV_COLUMN_NAME_ADMINISTRATIVE_NOTE.equalsIgnoreCase(cell.getValue())) {
-        cell.setValue(TABLE_HEADER_VALUE_ADMINISTRATIVE_NOTE);
-      }
-    });
-    return headers;
   }
 }

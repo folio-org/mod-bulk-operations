@@ -20,9 +20,6 @@ import com.opencsv.bean.CsvRecurse;
 
 import lombok.experimental.UtilityClass;
 
-import static org.folio.bulkops.util.Constants.TABLE_HEADER_VALUE_ADMINISTRATIVE_NOTE;
-import static org.folio.bulkops.util.Constants.CSV_COLUMN_NAME_ADMINISTRATIVE_NOTE;
-
 @UtilityClass
 public class UnifiedTableHeaderBuilder {
   public static UnifiedTable getEmptyTableWithHeaders(Class<? extends BulkOperationsEntity> clazz) {
@@ -83,7 +80,7 @@ public class UnifiedTableHeaderBuilder {
     var column = field.getAnnotation(CsvCustomBindByName.class).column();
     return new Cell()
       .dataType(field.getAnnotation(UnifiedTableCell.class).dataType())
-      .value(CSV_COLUMN_NAME_ADMINISTRATIVE_NOTE.equalsIgnoreCase(column) ? TABLE_HEADER_VALUE_ADMINISTRATIVE_NOTE : column)
+      .value(column)
       .visible(field.getAnnotation(UnifiedTableCell.class).visible())
       .forceVisible(forcedVisible.contains(column));
   }

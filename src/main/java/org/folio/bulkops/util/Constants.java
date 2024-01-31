@@ -44,8 +44,6 @@ public class Constants {
   public static final String MSG_HOLDING_NO_CHANGE_REQUIRED_UNSUPPRESSED_ITEMS_UPDATED = "No change in value for holdings record required, associated unsuppressed item(s) have been updated.";
   public static final String MSG_HOLDING_NO_CHANGE_REQUIRED_SUPPRESSED_ITEMS_UPDATED = "No change in value for holdings record required, associated suppressed item(s) have been updated.";
   public static final String STAFF_ONLY = "(staff only)";
-  public static final String CSV_COLUMN_NAME_ADMINISTRATIVE_NOTE = "Administrative note";
-  public static final String TABLE_HEADER_VALUE_ADMINISTRATIVE_NOTE = "Administrative note";
   public static final String GET_ITEMS_BY_HOLDING_ID_QUERY = "holdingsRecordId==%s";
   public static final String GET_HOLDINGS_BY_INSTANCE_ID_QUERY = "instanceId==%s";
   public static final String APPLY_TO_HOLDINGS = "APPLY_TO_HOLDINGS";
