@@ -202,6 +202,8 @@ public class Instance implements BulkOperationsEntity {
   private String isbn;
   @JsonProperty("ISSN")
   private String issn;
+  @JsonProperty("succeedingTitles")
+  private List<SucceedingTitle> succeedingTitles;
 
   @Override
   public String getIdentifier(IdentifierType identifierType) {

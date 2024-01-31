@@ -15,7 +15,10 @@
       "COMPLETED_WITH_ERRORS",
       "CANCELLED",
       "SCHEDULED",
-      "FAILED"
+      "FAILED",
+      "EXECUTING_QUERY",
+      "RETRIEVING_IDENTIFIERS",
+      "SAVED_IDENTIFIERS"
     ]
   }
 }

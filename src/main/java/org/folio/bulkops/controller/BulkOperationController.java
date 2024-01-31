@@ -13,6 +13,7 @@ import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.dto.QueryRequest;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.dto.Users;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -24,6 +25,7 @@ import org.folio.bulkops.service.ListUsersService;
 import org.folio.bulkops.service.LogFilesService;
 import org.folio.bulkops.service.PreviewService;
 import org.folio.bulkops.service.RuleService;
+import org.folio.querytool.domain.dto.SubmitQuery;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.core.io.ByteArrayResource;
@@ -169,5 +171,12 @@ public class BulkOperationController implements BulkOperationsApi {
     log.info("Cancelling bulk operation id={}", operationId);
     bulkOperationService.cancelOperationById(operationId);
     return new ResponseEntity<>(HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<BulkOperationDto> triggerBulkEditByQuery(UUID xOkapiUserId, QueryRequest queryRequest) {
+    return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.triggerByQuery(xOkapiUserId, new SubmitQuery()
+        .fqlQuery(queryRequest.getFqlQuery())
+        .entityTypeId(queryRequest.getEntityTypeId()))), HttpStatus.OK);
   }
 }
