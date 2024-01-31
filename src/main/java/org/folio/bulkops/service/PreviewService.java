@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
+import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
 import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDINGS_NOTE_TYPE_ID_KEY;
@@ -20,6 +21,7 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.client.HoldingsNoteTypeClient;
@@ -70,10 +72,14 @@ public class PreviewService {
         yield buildPreviewFromCsvFile(operation.getLinkToModifiedRecordsCsvFile(), clazz, offset, limit, options);
       }
       case COMMIT -> {
-        var bulkOperationId = operation.getId();
-        var rules = ruleService.getRules(bulkOperationId);
-        var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
-        yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit, options);
+        if (MANUAL == operation.getApproach()) {
+          yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit);
+        } else {
+          var bulkOperationId = operation.getId();
+          var rules = ruleService.getRules(bulkOperationId);
+          var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
+          yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit, options);
+        }
       }
     };
   }
