@@ -2,9 +2,8 @@ package org.folio.bulkops.service;
 
 import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
-import static org.folio.bulkops.domain.dto.EntityType.ITEM;
-import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTE;
-import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTES;
+import static org.folio.bulkops.util.Constants.TABLE_HEADER_VALUE_ADMINISTRATIVE_NOTE;
+import static org.folio.bulkops.util.Constants.CSV_COLUMN_NAME_ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.UnifiedTableHeaderBuilder.getHeaders;
@@ -46,7 +45,6 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.SneakyThrows;
@@ -57,7 +55,6 @@ import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
-import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.bean.ItemLocation;
@@ -80,7 +77,6 @@ import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.Parameter;
-import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -97,7 +93,6 @@ import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.RemoteStorageWriter;
 import org.folio.spring.scope.FolioExecutionContextSetter;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -1035,8 +1030,8 @@ class BulkOperationServiceTest extends BaseTest {
 
   private List<Cell> renameAdministrativeNotesHeader(List<Cell> headers) {
     headers.forEach(cell -> {
-      if (ADMINISTRATIVE_NOTES.equalsIgnoreCase(cell.getValue())) {
-        cell.setValue(ADMINISTRATIVE_NOTE);
+      if (CSV_COLUMN_NAME_ADMINISTRATIVE_NOTE.equalsIgnoreCase(cell.getValue())) {
+        cell.setValue(TABLE_HEADER_VALUE_ADMINISTRATIVE_NOTE);
       }
     });
     return headers;
