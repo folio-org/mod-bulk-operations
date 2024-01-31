@@ -174,7 +174,11 @@
           "permissionsRequired": [ "bulk-operations.item.get" ],
           "modulePermissions": [
             "fqm.query.sync.get",
-            "fqm.query.async.results.get"
+            "fqm.query.async.results.get",
+            "bulk-edit.item.post",
+            "bulk-edit.start.item.post",
+            "data-export.job.item.post",
+            "data-export.job.item.get"
           ]
         },
         {
