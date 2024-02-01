@@ -67,6 +67,46 @@ paths:
           content:
             application/json:
               schema:
+                $ref: "#/components/schemas/queryRequest"
+  /bulk-operations/query:
+    post:
+      description: Trigger bulk edit by query
+      operationId: triggerBulkEditByQuery
+      parameters:
+        - name: X-Okapi-User-Id
+          in: header
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/queryRequest"
+      responses:
+        "201":
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/bulkOperationDto"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/errors"
+        "422":
+          description: Unprocessable entity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/errors"
+        "500":
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            application/json:
+              schema:
                 $ref: "#/components/schemas/errors"
   /bulk-operations/{operationId}/content-update:
     post:
@@ -317,24 +357,18 @@ paths:
           description: Bad request
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
         "404":
           description: Not found
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
         "500":
           description: Internal server errors, e.g. due to misconfiguration
           content:
             application/json:
-              example:
-                $ref: "#/components/examples/errors"
               schema:
                 $ref: "#/components/schemas/errors"
   /bulk-operations/{operationId}:
@@ -501,6 +535,8 @@ components:
       $ref: 'schemas/bulk_operation_step.json#/BulkOperationStep'
     bulkOperationStart:
       $ref: 'schemas/bulk_operation_start.json#/Start'
+    queryRequest:
+      $ref: 'schemas/query-request.json#/QueryRequest'
     UUID:
       type: string
       format: uuid

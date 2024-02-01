@@ -2,6 +2,11 @@ package org.folio.bulkops.service;
 
 import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
+import static org.folio.bulkops.domain.dto.EntityType.ITEM;
+import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
+import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
+import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTE;
+import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTES;
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
@@ -27,7 +32,6 @@ import static org.mockito.Mockito.when;
 import static org.testcontainers.shaded.org.hamcrest.MatcherAssert.assertThat;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.containsString;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.equalTo;
-import static org.testcontainers.shaded.org.hamcrest.Matchers.hasSize;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.is;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.notNullValue;
 
@@ -45,6 +49,7 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.BulkEditClient;
@@ -86,6 +91,7 @@ import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.querytool.domain.dto.SubmitQuery;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.RemoteStorageWriter;
 import org.folio.spring.scope.FolioExecutionContextSetter;
@@ -139,6 +145,12 @@ class BulkOperationServiceTest extends BaseTest {
 
   @MockBean
   private NoteTableUpdater noteTableUpdater;
+
+  @MockBean
+  private QueryService queryService;
+
+  @MockBean
+  private EntityTypeService entityTypeService;
 
   @Test
   @SneakyThrows
@@ -864,6 +876,9 @@ class BulkOperationServiceTest extends BaseTest {
         .processedRecords(5)
         .build()));
 
+    when(queryService.checkQueryExecutionStatus(any(BulkOperation.class)))
+      .thenReturn(new BulkOperation());
+
     var operation = bulkOperationService.getOperationById(operationId);
 
     if (DATA_MODIFICATION.equals(operation.getStatus()) || APPLY_CHANGES.equals(operation.getStatus())) {
@@ -1022,5 +1037,64 @@ class BulkOperationServiceTest extends BaseTest {
     if (nonNull(testData.expectedErrorMessage)) {
       verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage));
     }
+  }
+
+  @Test
+  void testQueryExecution() {
+    var fqlQueryId = UUID.randomUUID();
+    var entityTypeId = UUID.randomUUID();
+    var query = "query";
+    var submitQuery = new SubmitQuery()
+      .fqlQuery(query)
+      .entityTypeId(entityTypeId);
+    when(queryService.executeQuery(submitQuery)).thenReturn(fqlQueryId);
+    when(entityTypeService.getEntityTypeById(entityTypeId)).thenReturn(ITEM);
+
+    bulkOperationService.triggerByQuery(UUID.randomUUID(), submitQuery);
+
+    verify(queryService).executeQuery(submitQuery);
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository).save(operationCaptor.capture());
+    var operation = operationCaptor.getValue();
+    Assertions.assertThat(operation.getEntityType()).isEqualTo(ITEM);
+    Assertions.assertThat(operation.getIdentifierType()).isEqualTo(IdentifierType.ID);
+    Assertions.assertThat(operation.getStatus()).isEqualTo(EXECUTING_QUERY);
+    Assertions.assertThat(operation.getFqlQueryId()).isEqualTo(fqlQueryId);
+    Assertions.assertThat(operation.getFqlQuery()).isEqualTo(query);
+  }
+
+  @Test
+  void shouldCheckQueryExecution() {
+    var operationId = UUID.randomUUID();
+    var operation = new BulkOperation();
+    operation.setStatus(EXECUTING_QUERY);
+    when(bulkOperationRepository.findById(operationId)).thenReturn(Optional.of(operation));
+
+    bulkOperationService.getOperationById(operationId);
+
+    verify(queryService).checkQueryExecutionStatus(operation);
+  }
+
+  @Test
+  void shouldStartDataExportJobWhenIdentifiersWereSaved() {
+    var operationId = UUID.randomUUID();
+    var operation = new BulkOperation();
+    operation.setId(operationId);
+    operation.setStatus(SAVED_IDENTIFIERS);
+    operation.setEntityType(ITEM);
+    when(bulkOperationRepository.findById(operationId)).thenReturn(Optional.of(operation));
+
+    bulkOperationService.getOperationById(operationId);
+
+    verify(dataExportSpringClient).upsertJob(any(Job.class));
+  }
+
+  private List<Cell> renameAdministrativeNotesHeader(List<Cell> headers) {
+    headers.forEach(cell -> {
+      if (ADMINISTRATIVE_NOTES.equalsIgnoreCase(cell.getValue())) {
+        cell.setValue(ADMINISTRATIVE_NOTE);
+      }
+    });
+    return headers;
   }
 }

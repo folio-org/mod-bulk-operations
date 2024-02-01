@@ -77,4 +77,6 @@ public class BulkOperation {
   private LocalDateTime endTime;
   private String errorMessage;
   private boolean expired;
+  private UUID fqlQueryId;
+  private String fqlQuery;
 }

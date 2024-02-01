@@ -15,6 +15,15 @@
         },
         {
           "methods": [ "POST" ],
+          "pathPattern": "/bulk-operations/query",
+          "permissionsRequired": [ "bulk-operations.item.query.post" ],
+          "modulePermissions": [
+            "fqm.entityTypes.item.get",
+            "fqm.query.async.post"
+          ]
+        },
+        {
+          "methods": [ "POST" ],
           "pathPattern": "/bulk-operations/{operationId}/content-update",
           "permissionsRequired": [ "bulk-operations.item.content-update.post" ],
           "modulePermissions": [
@@ -164,6 +173,12 @@
           "pathPattern": "/bulk-operations/{operationId}",
           "permissionsRequired": [ "bulk-operations.item.get" ],
           "modulePermissions": [
+            "fqm.query.sync.get",
+            "fqm.query.async.results.get",
+            "bulk-edit.item.post",
+            "bulk-edit.start.item.post",
+            "data-export.job.item.post",
+            "data-export.job.item.get"
           ]
         },
         {
@@ -238,6 +253,11 @@
       "permissionName" : "bulk-operations.item.upload.post",
       "displayName" : "upload identifiers list to initiate bulk-operation",
       "description" : "Upload identifiers list to initiate bulk-operation"
+    },
+    {
+      "permissionName" : "bulk-operations.item.query.post",
+      "displayName" : "trigger bulk edit by query",
+      "description" : "Trigger bulk edit by query"
     },
     {
       "permissionName" : "bulk-operations.item.content-update.post",
@@ -316,7 +336,8 @@
         "bulk-operations.download.item.get",
         "bulk-operations.list-users.collection.get",
         "bulk-operations.files.item.delete",
-        "bulk-operations.item.cancel.post"
+        "bulk-operations.item.cancel.post",
+        "bulk-operations.item.query.post"
       ]
     }
   ],
@@ -416,6 +437,14 @@
     {
       "id": "instance-formats",
       "version": "2.0"
+    },
+    {
+      "id": "fqm-query",
+      "version": "1.0"
+    },
+    {
+      "id": "entity-types",
+      "version": "1.0"
     }
   ],
   "launchDescriptor": {
