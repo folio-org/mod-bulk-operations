@@ -7,8 +7,6 @@ import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
-import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTE;
-import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTES;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.QUERY_ALL_RECORDS;
@@ -212,16 +210,6 @@ class PreviewServiceTest extends BaseTest {
     var table = previewService.getPreview(bulkOperation, org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD, 0, 10);
     assertEquals(0, table.getRows().size());
     Assertions.assertTrue(table.getHeader().size() > 0);
-  }
-
-
-  private List<org.folio.bulkops.domain.dto.Cell> renameAdministrativeNotesHeader(List<org.folio.bulkops.domain.dto.Cell> headers) {
-    headers.forEach(cell -> {
-      if (ADMINISTRATIVE_NOTES.equalsIgnoreCase(cell.getValue())) {
-        cell.setValue(ADMINISTRATIVE_NOTE);
-      }
-    });
-    return headers;
   }
 
   private String getPathToContentUpdateRequest(org.folio.bulkops.domain.dto.EntityType entityType) {
