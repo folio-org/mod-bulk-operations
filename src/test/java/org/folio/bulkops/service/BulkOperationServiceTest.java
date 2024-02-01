@@ -5,8 +5,6 @@ import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
-import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTE;
-import static org.folio.bulkops.util.Constants.ADMINISTRATIVE_NOTES;
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
@@ -1089,12 +1087,4 @@ class BulkOperationServiceTest extends BaseTest {
     verify(dataExportSpringClient).upsertJob(any(Job.class));
   }
 
-  private List<Cell> renameAdministrativeNotesHeader(List<Cell> headers) {
-    headers.forEach(cell -> {
-      if (ADMINISTRATIVE_NOTES.equalsIgnoreCase(cell.getValue())) {
-        cell.setValue(ADMINISTRATIVE_NOTE);
-      }
-    });
-    return headers;
-  }
 }
