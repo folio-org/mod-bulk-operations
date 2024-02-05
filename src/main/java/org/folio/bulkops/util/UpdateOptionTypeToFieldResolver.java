@@ -71,7 +71,7 @@ public class UpdateOptionTypeToFieldResolver {
       return "Staff suppress";
     } else if (ITEM_NOTE == type) {
       return "Notes";
-    } else if (ADMINISTRATIVE_NOTE == type && (ITEM == entity || HOLDINGS_RECORD == entity)) {
+    } else if (ADMINISTRATIVE_NOTE == type) {
       return "Administrative note";
     } else if (CHECK_IN_NOTE == type) {
       return "Check In Notes";
