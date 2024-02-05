@@ -142,8 +142,8 @@ class PreviewServiceTest extends BaseTest {
     } else if (ITEM.equals(entityType)) {
       List<Cell> headers;
       if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
-        headers = getHeaders(Item.class, Set.of("Binding", "Custom", "Status", "Check Out Notes", "Provenance", "Reproduction", "Check In Notes", "Note", "Administrative Notes"));
-        noteTableUpdater.extendHeadersWithItemNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"), Set.of("Binding","Status","Check Out Notes","Provenance","Check In Notes","Note","Custom", "Reproduction", "Administrative Notes"));
+        headers = getHeaders(Item.class, Set.of("Binding", "Custom", "Status", "Check Out Notes", "Provenance", "Reproduction", "Check In Notes", "Note", "Administrative note"));
+        noteTableUpdater.extendHeadersWithItemNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"), Set.of("Binding","Status","Check Out Notes","Provenance","Check In Notes","Note","Custom", "Reproduction", "Administrative notes"));
       } else {
         headers = getHeaders(Item.class);
         noteTableUpdater.extendHeadersWithItemNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"), emptySet());
@@ -152,8 +152,8 @@ class PreviewServiceTest extends BaseTest {
     } else if (HOLDINGS_RECORD.equals(entityType)) {
       List<Cell> headers;
       if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
-        headers = getHeaders(HoldingsRecord.class, Set.of("Reproduction", "Discovery suppress", "Electronic access", "Administrative notes"));
-        noteTableUpdater.extendHeadersWithItemNoteTypeNames(HOLDINGS_NOTE_POSITION, headers , List.of("Binding", "Provenance", "Reproduction"), Set.of("Reproduction","Discovery suppress","Electronic access","Administrative notes"));
+        headers = getHeaders(HoldingsRecord.class, Set.of("Reproduction", "Discovery suppress", "Electronic access", "Administrative note"));
+        noteTableUpdater.extendHeadersWithItemNoteTypeNames(HOLDINGS_NOTE_POSITION, headers , List.of("Binding", "Provenance", "Reproduction"), Set.of("Reproduction","Discovery suppress","Electronic access","Administrative note"));
       } else {
         headers = getHeaders(HoldingsRecord.class);
         noteTableUpdater.extendHeadersWithItemNoteTypeNames(HOLDINGS_NOTE_POSITION, headers , List.of("Binding", "Provenance", "Reproduction"), emptySet());
