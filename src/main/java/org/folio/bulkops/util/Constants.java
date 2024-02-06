@@ -52,4 +52,5 @@ public class Constants {
   public static final String SPECIAL_ARRAY_DELIMITER = NON_PRINTING_DELIMITER + ARRAY_DELIMITER;
   public static final String SPECIAL_ITEM_DELIMITER = NON_PRINTING_DELIMITER + ITEM_DELIMITER;
   public static final String SPECIAL_ITEM_DELIMITER_REGEX = NON_PRINTING_DELIMITER + ITEM_DELIMITER_PATTERN;
+  public static final String ELECTRONIC_ACCESS_HEADINGS = "URL relationship;URI;Link text;Materials specified;URL public note\n";
 }

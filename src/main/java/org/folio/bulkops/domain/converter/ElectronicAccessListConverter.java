@@ -1,6 +1,7 @@
 package org.folio.bulkops.domain.converter;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
 import static org.folio.bulkops.util.Constants.NEW_LINE_SEPARATOR;
 import static org.folio.bulkops.util.Constants.SPECIAL_ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.SPECIAL_ITEM_DELIMITER_REGEX;
@@ -30,7 +31,7 @@ public class ElectronicAccessListConverter extends BaseConverter<List<Electronic
   public String convertToString(List<ElectronicAccess> object) {
     return ObjectUtils.isEmpty(object) ?
       EMPTY :
-      "URL relationship;URI;Link text;Materials specified;URL public note\n" +
+      ELECTRONIC_ACCESS_HEADINGS +
         object.stream()
           .filter(Objects::nonNull)
           .map(ElectronicAccessHelper.service()::electronicAccessToString)
