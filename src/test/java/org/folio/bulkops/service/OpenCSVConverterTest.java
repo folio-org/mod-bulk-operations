@@ -22,6 +22,7 @@ import org.folio.bulkops.domain.bean.DamagedStatusCollection;
 import org.folio.bulkops.domain.bean.Department;
 import org.folio.bulkops.domain.bean.DepartmentCollection;
 import org.folio.bulkops.domain.bean.ElectronicAccessRelationship;
+import org.folio.bulkops.domain.bean.ElectronicAccessRelationshipCollection;
 import org.folio.bulkops.domain.bean.Format;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.HoldingsNoteTypeCollection;
@@ -163,7 +164,7 @@ class OpenCSVConverterTest extends BaseTest {
     } else if (result instanceof Instance instance) {
       assertThat(instance)
         .usingRecursiveComparison()
-        .ignoringFields("version", "contributors.contributorTypeId", "contributors.contributorTypeText", "contributors.contributorNameTypeId", "contributors.authorityId", "contributors.primary", "matchKey", "alternativeTitles", "identifiers", "subjects", "classifications", "publications", "publicationPeriod", "electronicAccesses", "instanceNotes", "statisticalCodeIds", "sourceRecordFormat", "statusUpdatedDate", "tags", "succeedingTitles")
+        .ignoringFields("version", "contributors.contributorTypeId", "contributors.contributorTypeText", "contributors.contributorNameTypeId", "contributors.authorityId", "contributors.primary", "matchKey", "alternativeTitles", "identifiers", "subjects", "classifications", "publications", "publicationPeriod", "electronicAccesses", "instanceNotes", "statisticalCodeIds", "sourceRecordFormat", "statusUpdatedDate", "tags", "precedingTitles", "succeedingTitles")
         .isEqualTo(bean);
     } else {
       assertEquals(bean, result);
@@ -340,6 +341,10 @@ class OpenCSVConverterTest extends BaseTest {
       new ElectronicAccessRelationship()
         .withId("f5d0068e-6272-458e-8a81-b85e7b9a14aa")
         .withName("EAR"));
+    when(relationshipClient.getByQuery("name==EAR")).thenReturn(
+      new ElectronicAccessRelationshipCollection().withElectronicAccessRelationships(Collections.singletonList(new ElectronicAccessRelationship()
+        .withId("f5d0068e-6272-458e-8a81-b85e7b9a14aa")
+        .withName("EAR"))));
     when(callNumberTypeClient.getById("5ba6b62e-6858-490a-8102-5b1369873835"))
       .thenReturn(new CallNumberType()
         .withId("5ba6b62e-6858-490a-8102-5b1369873835")

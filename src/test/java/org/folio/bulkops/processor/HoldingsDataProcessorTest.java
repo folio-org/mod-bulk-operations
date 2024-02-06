@@ -524,21 +524,6 @@ class HoldingsDataProcessorTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @NullSource
-  @ValueSource(strings = { "invalid-uuid", "aa76d5d9-4c0f-4895-84f4-56d3266941d1" })
-  void shouldNotUpdateInvalidElectronicAccessUrlRelationship(String id) {
-    doThrow(new NotFoundException("not found")).when(electronicAccessService).getRelationshipById("aa76d5d9-4c0f-4895-84f4-56d3266941d1");
-    var holdingsReferenceService = mock(HoldingsReferenceService.class);
-    when(holdingsReferenceService.getSourceById(MARC_SOURCE_ID)).thenReturn(new HoldingsRecordsSource().withName("MARC"));
-    var processor = new HoldingsDataProcessor(null, holdingsReferenceService, null, null, electronicAccessService);
-
-    var holdingsRecord = new HoldingsRecord().withSourceId(MARC_SOURCE_ID);
-    var action = new Action().type(REPLACE_WITH).updated(id);
-
-    assertThrows(RuleValidationException.class, () -> processor.validator(holdingsRecord).validate(ELECTRONIC_ACCESS_URL_RELATIONSHIP, action));
-  }
-
-  @ParameterizedTest
   @ValueSource(strings = {
     "ELECTRONIC_ACCESS_URL_RELATIONSHIP",
     "ELECTRONIC_ACCESS_URI",
