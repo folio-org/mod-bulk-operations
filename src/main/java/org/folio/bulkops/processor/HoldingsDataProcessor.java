@@ -29,9 +29,9 @@ import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.RuleValidationException;
-import org.folio.bulkops.service.ElectronicAccessService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
+import org.folio.bulkops.service.ElectronicAccessReferenceService;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;
@@ -47,7 +47,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
   private final HoldingsReferenceService holdingsReferenceService;
   private final HoldingsNotesUpdater holdingsNotesUpdater;
   private final ElectronicAccessUpdaterFactory electronicAccessUpdaterFactory;
-  private final ElectronicAccessService electronicAccessService;
+  private final ElectronicAccessReferenceService electronicAccessReferenceService;
 
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -120,7 +120,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
         }
       } else if (ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option)) {
         try {
-          electronicAccessService.getRelationshipNameAndIdById(newId);
+          electronicAccessReferenceService.getRelationshipNameById(newId);
         } catch (Exception e) {
           throw new RuleValidationException(format("URL relationship %s doesn't exist", newId));
         }

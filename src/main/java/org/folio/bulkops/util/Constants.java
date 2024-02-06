@@ -48,4 +48,9 @@ public class Constants {
   public static final String GET_HOLDINGS_BY_INSTANCE_ID_QUERY = "instanceId==%s";
   public static final String APPLY_TO_HOLDINGS = "APPLY_TO_HOLDINGS";
   public static final String APPLY_TO_ITEMS = "APPLY_TO_ITEMS";
+  public static final char NON_PRINTING_DELIMITER = '\u001f';
+  public static final String SPECIAL_ARRAY_DELIMITER = NON_PRINTING_DELIMITER + ARRAY_DELIMITER;
+  public static final String SPECIAL_ITEM_DELIMITER = NON_PRINTING_DELIMITER + ITEM_DELIMITER;
+  public static final String SPECIAL_ITEM_DELIMITER_REGEX = NON_PRINTING_DELIMITER + ITEM_DELIMITER_PATTERN;
+  public static final String ELECTRONIC_ACCESS_HEADINGS = "URL relationship;URI;Link text;Materials specified;URL public note\n";
 }

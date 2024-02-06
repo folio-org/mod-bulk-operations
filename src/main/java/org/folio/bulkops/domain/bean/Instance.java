@@ -198,12 +198,16 @@ public class Instance implements BulkOperationsEntity {
   private String statusUpdatedDate;
   @JsonProperty("tags")
   private Tags tags;
+  @JsonProperty("precedingTitles")
+  private List<PrecedingTitle> precedingTitles;
+  @JsonProperty("succeedingTitles")
+  private List<SucceedingTitle> succeedingTitles;
   @JsonProperty("ISBN")
   private String isbn;
   @JsonProperty("ISSN")
   private String issn;
-  @JsonProperty("succeedingTitles")
-  private List<SucceedingTitle> succeedingTitles;
+
+
 
   @Override
   public String getIdentifier(IdentifierType identifierType) {

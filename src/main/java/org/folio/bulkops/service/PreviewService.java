@@ -2,11 +2,14 @@ package org.folio.bulkops.service;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
 import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDINGS_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.processor.ItemsNotesUpdater.ITEM_NOTE_TYPE_ID_KEY;
+import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 
 import java.io.InputStreamReader;
@@ -21,7 +24,6 @@ import java.util.regex.Pattern;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.client.HoldingsNoteTypeClient;
@@ -184,7 +186,12 @@ public class PreviewService {
         }
       }
       processNoteFields(table, clazz, forceVisible);
-      table.getRows().forEach(row -> row.setRow(SpecialCharacterEscaper.restore(row.getRow())));
+      table.getRows().forEach(row -> {
+        var rowData = row.getRow().stream()
+          .map(s -> isEmpty(s) ? s : s.replace(ELECTRONIC_ACCESS_HEADINGS, EMPTY))
+          .toList();
+        row.setRow(SpecialCharacterEscaper.restore(rowData));
+      });
       return table;
     } catch (Exception e) {
       log.error(e.getMessage());

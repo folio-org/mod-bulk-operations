@@ -1,7 +1,16 @@
 package org.folio.bulkops.controller;
 
+import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
+import static org.folio.bulkops.util.Constants.NON_PRINTING_DELIMITER;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.ArrayUtils;
 import org.codehaus.plexus.util.FileUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.dto.BulkOperationCollection;
@@ -42,13 +51,6 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.UUID;
-
-import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
-import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 
 @RestController
 @RequiredArgsConstructor
@@ -133,7 +135,7 @@ public class BulkOperationController implements BulkOperationsApi {
       return ResponseEntity.ok().build();
     } else {
       try (var is = remoteFileSystemClient.get(path)) {
-        var content = is.readAllBytes();
+        var content = ArrayUtils.removeAllOccurrences(is.readAllBytes(), (byte) NON_PRINTING_DELIMITER);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentLength(content.length);
