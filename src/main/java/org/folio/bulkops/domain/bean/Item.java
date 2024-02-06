@@ -236,7 +236,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("administrativeNotes")
   @Valid
-  @CsvCustomBindByName(column = "Administrative Notes", converter = StringListConverter.class)
+  @CsvCustomBindByName(column = "Administrative note", converter = StringListConverter.class)
   @CsvCustomBindByPosition(position = 30, converter = StringListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> administrativeNotes;
