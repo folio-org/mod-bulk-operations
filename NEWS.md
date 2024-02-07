@@ -1,5 +1,8 @@
 ## v2.0.0 - Unreleased
 
+### Technical tasks
+* [UXPROD-3903](https://folio-org.atlassian.net/browse/UXPROD-3903) - Support `data-export-spring` interface 2.0. Breaking change in `data-export-spring` does not impact mod-bulk-operations use
+
 ## v1.1.0 - Released 2023/10/12
 This release includes file storage optimization, editing for items notes, suppression status, bugs fixes.
 
