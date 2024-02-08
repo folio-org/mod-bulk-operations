@@ -9,7 +9,6 @@ import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
-import static org.folio.bulkops.util.Constants.QUERY_ALL_RECORDS;
 import static org.folio.bulkops.util.UnifiedTableHeaderBuilder.getHeaders;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -113,17 +112,17 @@ class PreviewServiceTest extends BaseTest {
     when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
     when(holdingsSourceClient.getById(anyString())).thenReturn(new HoldingsRecordsSource().withName("Source"));
 
-    when(itemNoteTypeClient.getByQuery(QUERY_ALL_RECORDS)).thenReturn(new NoteTypeCollection().withItemNoteTypes(List.of(new NoteType().withName("Binding"), new NoteType().withName("Custom"), new NoteType().withName("Provenance"), new NoteType().withName("Reproduction"), new NoteType().withName("Note"))));
-    when(holdingsNoteTypeClient.getByQuery(QUERY_ALL_RECORDS)).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(List.of(new HoldingsNoteType().withName("Binding"), new HoldingsNoteType().withName("Provenance"), new HoldingsNoteType().withName("Reproduction"))));
+    when(itemNoteTypeClient.getNoteTypes(Integer.MAX_VALUE)).thenReturn(new NoteTypeCollection().withItemNoteTypes(List.of(new NoteType().withName("Binding"), new NoteType().withName("Custom"), new NoteType().withName("Provenance"), new NoteType().withName("Reproduction"), new NoteType().withName("Note"))));
+    when(holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE)).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(List.of(new HoldingsNoteType().withName("Binding"), new HoldingsNoteType().withName("Provenance"), new HoldingsNoteType().withName("Reproduction"))));
 
-    when(itemNoteTypeClient.getById("0e40884c-3523-4c6d-8187-d578e3d2794e")).thenReturn(new NoteType().withName("Binding"));
-    when(itemNoteTypeClient.getById("f3ae3823-d096-4c65-8734-0c1efd2ffea8")).thenReturn(new NoteType().withName("Provenance"));
-    when(itemNoteTypeClient.getById("c3a539b9-9576-4e3a-b6de-d910200b2919")).thenReturn(new NoteType().withName("Reproduction"));
-    when(itemNoteTypeClient.getById("87c450be-2033-41fb-80ba-dd2409883681")).thenReturn(new NoteType().withName("Custom"));
+    when(itemNoteTypeClient.getNoteTypeById("0e40884c-3523-4c6d-8187-d578e3d2794e")).thenReturn(new NoteType().withName("Binding"));
+    when(itemNoteTypeClient.getNoteTypeById("f3ae3823-d096-4c65-8734-0c1efd2ffea8")).thenReturn(new NoteType().withName("Provenance"));
+    when(itemNoteTypeClient.getNoteTypeById("c3a539b9-9576-4e3a-b6de-d910200b2919")).thenReturn(new NoteType().withName("Reproduction"));
+    when(itemNoteTypeClient.getNoteTypeById("87c450be-2033-41fb-80ba-dd2409883681")).thenReturn(new NoteType().withName("Custom"));
 
-    when(itemNoteTypeClient.getById("8d0a5eca-25de-4391-81a9-236eeefdd20b")).thenReturn(new NoteType().withName("Note"));
+    when(itemNoteTypeClient.getNoteTypeById("8d0a5eca-25de-4391-81a9-236eeefdd20b")).thenReturn(new NoteType().withName("Note"));
 
-    when(holdingsNoteTypeClient.getById("e19eabab-a85c-4aef-a7b2-33bd9acef24e")).thenReturn(new HoldingsNoteType().withName("Reproduction"));
+    when(holdingsNoteTypeClient.getNoteTypeById("e19eabab-a85c-4aef-a7b2-33bd9acef24e")).thenReturn(new HoldingsNoteType().withName("Reproduction"));
 
 
     var bulkOperationRuleCollection = objectMapper.readValue(new FileInputStream(getPathToContentUpdateRequest(entityType)), BulkOperationRuleCollection.class);
