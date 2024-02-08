@@ -93,7 +93,7 @@ public class ItemReferenceService {
   @Cacheable(cacheNames = "noteTypeNames")
   public String getNoteTypeNameById(String noteTypeId) {
     try {
-      return isEmpty(noteTypeId) ? EMPTY : itemNoteTypeClient.getById(noteTypeId).getName();
+      return isEmpty(noteTypeId) ? EMPTY : itemNoteTypeClient.getNoteTypeById(noteTypeId).getName();
     } catch (Exception e) {
       throw new NotFoundException(format("Note type was not found by id=%s", noteTypeId));
     }
@@ -101,7 +101,7 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "noteTypeIds")
   public String getNoteTypeIdByName(String name) {
-    var response = itemNoteTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
+    var response = itemNoteTypeClient.getNoteTypesByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (response.getItemNoteTypes().isEmpty()) {
       throw new NotFoundException(format("Note type was not found by name=%s", name));
     }
@@ -224,6 +224,6 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "itemNoteTypes")
   public List<NoteType> getAllItemNoteTypes() {
-    return itemNoteTypeClient.getByQuery(Integer.MAX_VALUE).getItemNoteTypes();
+    return itemNoteTypeClient.getNoteTypes(Integer.MAX_VALUE).getItemNoteTypes();
   }
 }
