@@ -77,14 +77,14 @@ class HoldingsReferenceHelperTest extends BaseTest {
     var actual = holdingsReferenceHelper.getNoteTypeNameById("id_1");
     assertEquals("name_1", actual);
 
-    when(holdingsNoteTypeClient.getByQuery("name==\"name_2\"")).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(Collections.singletonList(new HoldingsNoteType().withId("id_2"))));
+    when(holdingsNoteTypeClient.getByQuery("name==\"name_2\"", 1)).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(Collections.singletonList(new HoldingsNoteType().withId("id_2"))));
     actual = holdingsReferenceHelper.getNoteTypeIdByName("name_2");
     assertEquals("id_2", actual);
 
     when(holdingsNoteTypeClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
     assertThrows(NotFoundException.class, () -> holdingsReferenceHelper.getNoteTypeNameById("id_3"));
 
-    when(holdingsNoteTypeClient.getByQuery("name==\"name_4\"")).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(Collections.emptyList()));
+    when(holdingsNoteTypeClient.getByQuery("name==\"name_4\"", 1)).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(Collections.emptyList()));
     assertThrows(NotFoundException.class, () -> holdingsReferenceHelper.getNoteTypeIdByName("name_4"));
   }
 
