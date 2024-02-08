@@ -155,9 +155,9 @@ public class PreviewService {
 
   private String resolveAndGetItemTypeById(Class<? extends BulkOperationsEntity> clazz, String value) {
     if (clazz == HoldingsRecord.class) {
-      return holdingsNoteTypeClient.getById(value).getName();
+      return holdingsNoteTypeClient.getNoteTypeById(value).getName();
     } else if (clazz == Item.class) {
-      return itemNoteTypeClient.getById(value).getName();
+      return itemNoteTypeClient.getNoteTypeById(value).getName();
     } else {
       return StringUtils.EMPTY;
     }

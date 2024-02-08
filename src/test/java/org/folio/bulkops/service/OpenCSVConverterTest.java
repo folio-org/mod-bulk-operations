@@ -354,8 +354,8 @@ class OpenCSVConverterTest extends BaseTest {
       .withId("54d1dd76-ea33-4bcb-955b-6b29df4f7930")
       .withName("@damaged/status")
       .withSource("-source-"));
-    when(itemNoteTypeClient.getById("1dde7141-ec8a-4dae-9825-49ce14c728e7")).thenReturn(new NoteType().withId("1dde7141-ec8a-4dae-9825-49ce14c728e7").withName("Item@Note@NameX"));
-    when(itemNoteTypeClient.getById("c3a539b9-9576-4e3a-b6de-d910200b2919")).thenReturn(new NoteType().withId("c3a539b9-9576-4e3a-b6de-d910200b2919").withName("Item@Note@Name_2"));
+    when(itemNoteTypeClient.getNoteTypeById("1dde7141-ec8a-4dae-9825-49ce14c728e7")).thenReturn(new NoteType().withId("1dde7141-ec8a-4dae-9825-49ce14c728e7").withName("Item@Note@NameX"));
+    when(itemNoteTypeClient.getNoteTypeById("c3a539b9-9576-4e3a-b6de-d910200b2919")).thenReturn(new NoteType().withId("c3a539b9-9576-4e3a-b6de-d910200b2919").withName("Item@Note@Name_2"));
     when(statisticalCodeClient.getById("1c622d0f-2e91-4c30-ba43-2750f9735f51")).thenReturn(new StatisticalCode()
       .withId("1c622d0f-2e91-4c30-ba43-2750f9735f51")
       .withCode("St@tistical-Code#1"));
@@ -372,8 +372,8 @@ class OpenCSVConverterTest extends BaseTest {
         .withId("54d1dd76-ea33-4bcb-955b-6b29df4f7930")
         .withName("@damaged/status")
         .withSource("-source-"))));
-    when(itemNoteTypeClient.getByQuery("name==\"Item@Note@NameX\"")).thenReturn(new NoteTypeCollection().withItemNoteTypes(List.of(new NoteType().withId("1dde7141-ec8a-4dae-9825-49ce14c728e7").withName("Item@Note@NameX"))));
-    when(itemNoteTypeClient.getByQuery("name==\"Item@Note@Name_2\"")).thenReturn(new NoteTypeCollection().withItemNoteTypes(List.of(new NoteType().withId("c3a539b9-9576-4e3a-b6de-d910200b2919").withName("Item@Note@Name_2"))));
+    when(itemNoteTypeClient.getNoteTypesByQuery("name==\"Item@Note@NameX\"", 1)).thenReturn(new NoteTypeCollection().withItemNoteTypes(List.of(new NoteType().withId("1dde7141-ec8a-4dae-9825-49ce14c728e7").withName("Item@Note@NameX"))));
+    when(itemNoteTypeClient.getNoteTypesByQuery("name==\"Item@Note@Name_2\"", 1)).thenReturn(new NoteTypeCollection().withItemNoteTypes(List.of(new NoteType().withId("c3a539b9-9576-4e3a-b6de-d910200b2919").withName("Item@Note@Name_2"))));
     when(materialTypeClient.getByQuery("name==\"microform\"")).thenReturn(new MaterialTypeCollection().withMtypes(List.of(new MaterialType().withId("fd6c6515-d470-4561-9c32-3e3290d4ca98").withName("microform"))));
     when(loanTypeClient.getByQuery("name==\"Can circulate\"")).thenReturn(new LoanTypeCollection().withLoantypes(List.of(new LoanType().withId("2b94c631-fca9-4892-a730-03ee529ffe27").withName("Can circulate"))));
     when(loanTypeClient.getByQuery("name==\"Reading room\"")).thenReturn(new LoanTypeCollection().withLoantypes(List.of(new LoanType().withId("2e48e713-17f3-4c13-a9f8-23845bb210a4").withName("Reading room"))));
@@ -398,7 +398,7 @@ class OpenCSVConverterTest extends BaseTest {
         .withId("cd70562c-dd0b-42f6-aa80-ce803d24d4a1")
         .withName("Call-number@type_holding")
         .withSource("s@urce-holding"));
-    when(holdingsNoteTypeClient.getById("88914775-f677-4759-b57b-1a33b90b24e0")).thenReturn(new HoldingsNoteType().withId("88914775-f677-4759-b57b-1a33b90b24e0").withName("Holding#Type#Name"));
+    when(holdingsNoteTypeClient.getNoteTypeById("88914775-f677-4759-b57b-1a33b90b24e0")).thenReturn(new HoldingsNoteType().withId("88914775-f677-4759-b57b-1a33b90b24e0").withName("Holding#Type#Name"));
     when(statisticalCodeClient.getById("264c4f94-1538-43a3-8b40-bed68384b31b")).thenReturn(new StatisticalCode()
       .withId("264c4f94-1538-43a3-8b40-bed68384b31b")
       .withCode("ST1")
@@ -415,7 +415,7 @@ class OpenCSVConverterTest extends BaseTest {
       .withId("cd70562c-dd0b-42f6-aa80-ce803d24d4a1")
       .withName("Call-number@type_holding")
       .withSource("s@urce-holding"))));
-    when(holdingsNoteTypeClient.getByQuery("name==\"Holding#Type#Name\"")).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(List.of(new HoldingsNoteType().withId("88914775-f677-4759-b57b-1a33b90b24e0").withName("Holding#Type#Name"))));
+    when(holdingsNoteTypeClient.getNoteTypesByQuery("name==\"Holding#Type#Name\"", 1)).thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(List.of(new HoldingsNoteType().withId("88914775-f677-4759-b57b-1a33b90b24e0").withName("Holding#Type#Name"))));
     when(statisticalCodeClient.getByQuery("name==\"St@tistical-Code-holding_1\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(List.of(new StatisticalCode()
       .withId("264c4f94-1538-43a3-8b40-bed68384b31b")
       .withCode("ST1")

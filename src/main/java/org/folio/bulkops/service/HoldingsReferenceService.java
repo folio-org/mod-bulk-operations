@@ -27,7 +27,6 @@ import java.util.List;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.folio.bulkops.util.Constants.QUERY_ALL_RECORDS;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Utils.encode;
 
@@ -106,7 +105,7 @@ public class HoldingsReferenceService {
   @Cacheable(cacheNames = "holdingsNoteTypesNames")
   public String getNoteTypeNameById(String id) {
     try {
-      return holdingsNoteTypeClient.getById(id).getName();
+      return holdingsNoteTypeClient.getNoteTypeById(id).getName();
     } catch (Exception e) {
       throw new NotFoundException(format("Note type not found by id=%s", id));
     }
@@ -114,7 +113,7 @@ public class HoldingsReferenceService {
 
   @Cacheable(cacheNames = "holdingsNoteTypes")
   public String getNoteTypeIdByName(String name) {
-    var noteTypes = holdingsNoteTypeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
+    var noteTypes = holdingsNoteTypeClient.getNoteTypesByQuery(format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (noteTypes.getHoldingsNoteTypes().isEmpty()) {
       throw new NotFoundException(format("Note type not found by name=%s", name));
     }
@@ -182,6 +181,6 @@ public class HoldingsReferenceService {
 
   @Cacheable(cacheNames = "holdingsNoteTypes")
   public List<HoldingsNoteType> getAllHoldingsNoteTypes() {
-    return holdingsNoteTypeClient.getByQuery(QUERY_ALL_RECORDS).getHoldingsNoteTypes();
+    return holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE).getHoldingsNoteTypes();
   }
 }
