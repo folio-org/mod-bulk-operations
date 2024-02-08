@@ -11,6 +11,7 @@ import org.folio.bulkops.client.HoldingsTypeClient;
 import org.folio.bulkops.client.IllPolicyClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
+import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.HoldingsType;
@@ -21,8 +22,12 @@ import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.bulkops.util.Constants.QUERY_ALL_RECORDS;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Utils.encode;
 
@@ -101,7 +106,7 @@ public class HoldingsReferenceService {
   @Cacheable(cacheNames = "holdingsNoteTypesNames")
   public String getNoteTypeNameById(String id) {
     try {
-      return holdingsNoteTypeClient.getById(id).getName();
+      return holdingsNoteTypeClient.getNoteTypeById(id).getName();
     } catch (Exception e) {
       throw new NotFoundException(format("Note type not found by id=%s", id));
     }
@@ -109,7 +114,7 @@ public class HoldingsReferenceService {
 
   @Cacheable(cacheNames = "holdingsNoteTypes")
   public String getNoteTypeIdByName(String name) {
-    var noteTypes = holdingsNoteTypeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
+    var noteTypes = holdingsNoteTypeClient.getNoteTypesByQuery(format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (noteTypes.getHoldingsNoteTypes().isEmpty()) {
       throw new NotFoundException(format("Note type not found by name=%s", name));
     }
@@ -140,7 +145,9 @@ public class HoldingsReferenceService {
   @Cacheable(cacheNames = "holdingsSourceNames")
   public HoldingsRecordsSource getSourceById(String id) {
     try {
-      return holdingsSourceClient.getById(id);
+      return isEmpty(id) ?
+        HoldingsRecordsSource.builder().name(EMPTY).build() :
+        holdingsSourceClient.getById(id);
     } catch (Exception e) {
       throw new NotFoundException(format("Holdings record source not found by id=%s", id));
     }
@@ -171,5 +178,10 @@ public class HoldingsReferenceService {
       throw new NotFoundException(format("Statistical code not found by name=%s", name));
     }
     return statisticalCodes.getStatisticalCodes().get(0);
+  }
+
+  @Cacheable(cacheNames = "holdingsNoteTypes")
+  public List<HoldingsNoteType> getAllHoldingsNoteTypes() {
+    return holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE).getHoldingsNoteTypes();
   }
 }
