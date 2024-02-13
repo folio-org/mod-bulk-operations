@@ -22,8 +22,5 @@ public class ReceivingHistoryEntry {
 
   @JsonProperty("chronology")
   private String chronology;
-
-  @JsonProperty("displaySummary")
-  private String displaySummary;
 }
 
