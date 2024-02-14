@@ -75,12 +75,12 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         case PERMANENT_LOCATION -> item -> {
           item.setPermanentLocation(itemReferenceService.getLocationById(action.getUpdated()));
           item.setEffectiveLocation(getEffectiveLocation(item));
-          setupEffectiveLocationCallNumber(item);
+          setupHoldingsData(item);
         };
         case TEMPORARY_LOCATION -> item -> {
           item.setTemporaryLocation(itemReferenceService.getLocationById(action.getUpdated()));
           item.setEffectiveLocation(getEffectiveLocation(item));
-          setupEffectiveLocationCallNumber(item);
+          setupHoldingsData(item);
         };
         case STATUS -> item -> item.setStatus(new InventoryItemStatus()
           .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated()))
@@ -98,12 +98,12 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         case PERMANENT_LOCATION -> item -> {
           item.setPermanentLocation(null);
           item.setEffectiveLocation(getEffectiveLocation(item));
-          setupEffectiveLocationCallNumber(item);
+          setupHoldingsData(item);
         };
         case TEMPORARY_LOCATION -> item -> {
           item.setTemporaryLocation(null);
           item.setEffectiveLocation(getEffectiveLocation(item));
-          setupEffectiveLocationCallNumber(item);
+          setupHoldingsData(item);
         };
         case TEMPORARY_LOAN_TYPE -> item -> item.setTemporaryLoanType(null);
         default -> item -> {
@@ -117,8 +117,8 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
     };
   }
 
-  private void setupEffectiveLocationCallNumber(Item item) {
-    item.setEffectiveLocationCallNumber(String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER,
+  private void setupHoldingsData(Item item) {
+    item.setHoldingsData(String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER,
       isNull(item.getEffectiveLocation()) ? EMPTY : item.getEffectiveLocation().getName(),
       isNull(item.getEffectiveCallNumberComponents()) ? EMPTY : item.getEffectiveCallNumberComponents().getCallNumber())
     );
