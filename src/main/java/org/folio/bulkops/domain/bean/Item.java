@@ -366,6 +366,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private LastCheckIn lastCheckIn;
 
+  @JsonProperty("displaySummary")
+  private String displaySummary;
+
   @Override
   public String getIdentifier(IdentifierType identifierType) {
     return switch (identifierType) {
