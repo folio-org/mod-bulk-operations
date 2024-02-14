@@ -49,8 +49,9 @@ import lombok.With;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("item")
-@EqualsAndHashCode(exclude = {"metadata", "effectiveCallNumberComponents", "effectiveLocation", "boundWithTitles"})
+@EqualsAndHashCode(exclude = {"metadata", "effectiveCallNumberComponents", "effectiveLocation", "boundWithTitles", "effectiveLocationCallNumber"})
 public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
+
   @JsonProperty("id")
   @CsvCustomBindByName(column = "Item id", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 0, converter = StringConverter.class)
@@ -94,7 +95,6 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private String title;
 
-  @JsonProperty("effectiveLocationCallNumber")
   @CsvCustomBindByName(column = "Holdings (Location, Call number)", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 7, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)

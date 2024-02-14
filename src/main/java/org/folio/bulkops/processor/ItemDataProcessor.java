@@ -10,6 +10,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -73,11 +74,13 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
           item -> item.setTemporaryLoanType(itemReferenceService.getLoanTypeById(action.getUpdated()));
         case PERMANENT_LOCATION -> item -> {
           item.setPermanentLocation(itemReferenceService.getLocationById(action.getUpdated()));
-          setupEffectiveLocation(item);
+          item.setEffectiveLocation(getEffectiveLocation(item));
+          setupEffectiveLocationCallNumber(item);
         };
         case TEMPORARY_LOCATION -> item -> {
           item.setTemporaryLocation(itemReferenceService.getLocationById(action.getUpdated()));
-          setupEffectiveLocation(item);
+          item.setEffectiveLocation(getEffectiveLocation(item));
+          setupEffectiveLocationCallNumber(item);
         };
         case STATUS -> item -> item.setStatus(new InventoryItemStatus()
           .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated()))
@@ -94,11 +97,13 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
       return switch (option) {
         case PERMANENT_LOCATION -> item -> {
           item.setPermanentLocation(null);
-          setupEffectiveLocation(item);
+          item.setEffectiveLocation(getEffectiveLocation(item));
+          setupEffectiveLocationCallNumber(item);
         };
         case TEMPORARY_LOCATION -> item -> {
           item.setTemporaryLocation(null);
-          setupEffectiveLocation(item);
+          item.setEffectiveLocation(getEffectiveLocation(item));
+          setupEffectiveLocationCallNumber(item);
         };
         case TEMPORARY_LOAN_TYPE -> item -> item.setTemporaryLoanType(null);
         default -> item -> {
@@ -112,10 +117,11 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
     };
   }
 
-  private void setupEffectiveLocation(Item item) {
-    var effectiveLocationUpdated = getEffectiveLocation(item);
-    item.setEffectiveLocation(effectiveLocationUpdated);
-    item.setEffectiveLocationCallNumber(String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER, effectiveLocationUpdated.getName(), item.getEffectiveCallNumberComponents().getCallNumber()));
+  private void setupEffectiveLocationCallNumber(Item item) {
+    item.setEffectiveLocationCallNumber(String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER,
+      isNull(item.getEffectiveLocation()) ? EMPTY : item.getEffectiveLocation().getName(),
+      isNull(item.getEffectiveCallNumberComponents()) ? EMPTY : item.getEffectiveCallNumberComponents().getCallNumber())
+    );
   }
 
   @Override
