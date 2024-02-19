@@ -3,6 +3,7 @@ package org.folio.bulkops.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.CallNumberTypeClient;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.HoldingsNoteTypeClient;
@@ -186,12 +187,20 @@ public class HoldingsReferenceService {
   }
 
   public String getEffectiveLocationCallNumberComponentsForItem(String holdingsRecordId){
+    if(StringUtils.isEmpty(holdingsRecordId)){
+      return EMPTY;
+    }
+
     HoldingsRecord holding = holdingsClient.getHoldingById(holdingsRecordId);
     var effectiveLocationId = isEmpty(holding.getEffectiveLocationId()) ? getHoldingsEffectiveLocationId(holding) : holding.getEffectiveLocationId();
     var callNumber = isEmpty(holding.getCallNumber()) ? EMPTY : holding.getCallNumber();
 
     ItemLocation location = getLocationById(effectiveLocationId);
     var effectiveLocationName = isEmpty(location.getName()) ? EMPTY : location.getName();
+
+    if(StringUtils.isEmpty(effectiveLocationName) && StringUtils.isEmpty(callNumber)){
+      return EMPTY;
+    }
 
     return String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER, effectiveLocationName, callNumber);
   }
