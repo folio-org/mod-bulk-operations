@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.io.ByteArrayInputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -55,7 +56,7 @@ class QueryServiceTest extends BaseTest {
         .status(QueryDetails.StatusEnum.SUCCESS)
         .totalRecords(2));
       when(queryClient.getSortedIds(fqlQueryId, 0, Integer.MAX_VALUE))
-        .thenReturn(List.of(UUID.randomUUID(), UUID.randomUUID()));
+        .thenReturn(Collections.singletonList(List.of(UUID.randomUUID(), UUID.randomUUID())));
 
       queryService.checkQueryExecutionStatus(operation);
 
