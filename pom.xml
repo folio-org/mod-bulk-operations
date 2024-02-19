@@ -45,7 +45,7 @@
     <feign-jackson.version>12.1</feign-jackson.version>
     <aws-sdk-java.version>2.19.2</aws-sdk-java.version>
     <hypersistence-utils-hibernate-60.version>3.5.0</hypersistence-utils-hibernate-60.version>
-    <lib-fqm-query-processor.version>1.1.0-SNAPSHOT</lib-fqm-query-processor.version>
+    <lib-fqm-query-processor.version>1.1.0</lib-fqm-query-processor.version>
     <!-- Test dependencies versions -->
     <testcontainer.version>1.17.6</testcontainer.version>
     <wiremock.version>2.35.0</wiremock.version>
