@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -59,6 +60,8 @@ public class QueryService {
   private void saveIdentifiers(BulkOperation bulkOperation) {
     try {
       var identifiersString = queryClient.getSortedIds(bulkOperation.getFqlQueryId(), 0, Integer.MAX_VALUE).stream()
+        .flatMap(List::stream)
+        .distinct()
         .map(UUID::toString)
         .collect(Collectors.joining(NEW_LINE_SEPARATOR));
       var path = String.format(QUERY_FILENAME_TEMPLATE, bulkOperation.getId());
