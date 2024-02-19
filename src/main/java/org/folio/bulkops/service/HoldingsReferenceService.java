@@ -27,6 +27,7 @@ import java.util.List;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.bulkops.processor.ItemDataProcessor.HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Utils.encode;
 
@@ -182,5 +183,20 @@ public class HoldingsReferenceService {
   @Cacheable(cacheNames = "holdingsNoteTypes")
   public List<HoldingsNoteType> getAllHoldingsNoteTypes() {
     return holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE).getHoldingsNoteTypes();
+  }
+
+  public String getEffectiveLocationCallNumberComponentsForItem(String holdingsRecordId){
+    HoldingsRecord holding = holdingsClient.getHoldingById(holdingsRecordId);
+    var effectiveLocationId = isEmpty(holding.getEffectiveLocationId()) ? getHoldingsEffectiveLocationId(holding) : holding.getEffectiveLocationId();
+    var callNumber = isEmpty(holding.getCallNumber()) ? EMPTY : holding.getCallNumber();
+
+    ItemLocation location = getLocationById(effectiveLocationId);
+    var effectiveLocationName = isEmpty(location.getName()) ? EMPTY : location.getName();
+
+    return String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER, effectiveLocationName, callNumber);
+  }
+
+  private String getHoldingsEffectiveLocationId(HoldingsRecord holding) {
+    return ObjectUtils.isEmpty(holding.getTemporaryLocationId()) ? holding.getPermanentLocationId() : holding.getTemporaryLocationId();
   }
 }

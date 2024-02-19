@@ -10,7 +10,6 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -118,10 +117,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
   }
 
   private void setupHoldingsData(Item item) {
-    item.setHoldingsData(String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER,
-      isNull(item.getEffectiveLocation()) ? EMPTY : item.getEffectiveLocation().getName(),
-      isNull(item.getEffectiveCallNumberComponents()) ? EMPTY : item.getEffectiveCallNumberComponents().getCallNumber())
-    );
+    item.setHoldingsData(holdingsReferenceService.getEffectiveLocationCallNumberComponentsForItem(item.getHoldingsRecordId()));
   }
 
   @Override
