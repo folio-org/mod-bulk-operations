@@ -12,13 +12,7 @@ import org.folio.bulkops.client.HoldingsTypeClient;
 import org.folio.bulkops.client.IllPolicyClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
-import org.folio.bulkops.domain.bean.HoldingsNoteType;
-import org.folio.bulkops.domain.bean.HoldingsRecord;
-import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
-import org.folio.bulkops.domain.bean.HoldingsType;
-import org.folio.bulkops.domain.bean.IllPolicy;
-import org.folio.bulkops.domain.bean.ItemLocation;
-import org.folio.bulkops.domain.bean.StatisticalCode;
+import org.folio.bulkops.domain.bean.*;
 import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -186,7 +180,8 @@ public class HoldingsReferenceService {
     return holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE).getHoldingsNoteTypes();
   }
 
-  public String getEffectiveLocationCallNumberComponentsForItem(String holdingsRecordId){
+  public String getEffectiveLocationCallNumberComponentsForItem(Item item){
+    var holdingsRecordId = item.getHoldingsRecordId();
     if(StringUtils.isEmpty(holdingsRecordId)){
       return EMPTY;
     }

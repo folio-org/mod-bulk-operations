@@ -117,7 +117,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
   }
 
   private void setupHoldingsData(Item item) {
-    item.setHoldingsData(holdingsReferenceService.getEffectiveLocationCallNumberComponentsForItem(item.getHoldingsRecordId()));
+    item.setHoldingsData(holdingsReferenceService.getEffectiveLocationCallNumberComponentsForItem(item));
   }
 
   @Override
