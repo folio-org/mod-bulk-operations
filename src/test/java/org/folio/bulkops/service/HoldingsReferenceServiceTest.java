@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
-public class HoldingsReferenceServiceTest {
+class HoldingsReferenceServiceTest {
 
   @Mock
   private HoldingsClient holdingsClient;
