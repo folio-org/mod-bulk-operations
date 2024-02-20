@@ -71,7 +71,6 @@ import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
-import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
@@ -376,6 +375,8 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToModifiedCsv = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-identifiers.csv";
       var pathToItemJson = "src/test/resources/files/item.json";
 
+      mockHoldingsClient();
+      mockLocationClient();
       when(bulkOperationRepository.findById(bulkOperationId))
         .thenReturn(Optional.of(BulkOperation.builder()
           .id(bulkOperationId)
@@ -458,6 +459,23 @@ class BulkOperationServiceTest extends BaseTest {
       assertThat(capturedBulkOperation.getProcessedNumOfRecords(), equalTo(1));
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
     }
+  }
+
+  private void mockLocationClient() {
+    when(locationClient.getLocationById(any())).thenReturn(
+      ItemLocation.builder()
+        .name("Main Library")
+        .build()
+    );
+  }
+
+  private void mockHoldingsClient() {
+    when(holdingsClient.getHoldingById(any())).thenReturn(
+      HoldingsRecord.builder()
+        .effectiveLocationId(UUID.randomUUID().toString())
+        .callNumber("TK5105.88815 . A58 2004 FT MEADE")
+        .build()
+    );
   }
 
   @Test

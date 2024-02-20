@@ -12,7 +12,14 @@ import org.folio.bulkops.client.HoldingsTypeClient;
 import org.folio.bulkops.client.IllPolicyClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
-import org.folio.bulkops.domain.bean.*;
+import org.folio.bulkops.domain.bean.HoldingsNoteType;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
+import org.folio.bulkops.domain.bean.HoldingsType;
+import org.folio.bulkops.domain.bean.IllPolicy;
+import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -186,12 +193,16 @@ public class HoldingsReferenceService {
       return EMPTY;
     }
 
+    if (checkForItemLocationAndCallNumberExists(item)){
+      return composeDataFromItemLocationAndCallNumber(item);
+    }
+
     HoldingsRecord holding = holdingsClient.getHoldingById(holdingsRecordId);
     var effectiveLocationId = isEmpty(holding.getEffectiveLocationId()) ? getHoldingsEffectiveLocationId(holding) : holding.getEffectiveLocationId();
-    var callNumber = isEmpty(holding.getCallNumber()) ? EMPTY : holding.getCallNumber();
-
     ItemLocation location = getLocationById(effectiveLocationId);
     var effectiveLocationName = isEmpty(location.getName()) ? EMPTY : location.getName();
+
+    var callNumber = isEmpty(holding.getCallNumber()) ? EMPTY : holding.getCallNumber();
 
     if(StringUtils.isEmpty(effectiveLocationName) && StringUtils.isEmpty(callNumber)){
       return EMPTY;
@@ -202,5 +213,18 @@ public class HoldingsReferenceService {
 
   private String getHoldingsEffectiveLocationId(HoldingsRecord holding) {
     return ObjectUtils.isEmpty(holding.getTemporaryLocationId()) ? holding.getPermanentLocationId() : holding.getTemporaryLocationId();
+  }
+
+  private String composeDataFromItemLocationAndCallNumber(Item item) {
+    var effLocationName = ObjectUtils.isEmpty(item.getEffectiveLocation().getName()) ? EMPTY : item.getEffectiveLocation().getName();
+    var effLocationCallNumber = ObjectUtils.isEmpty(item.getEffectiveCallNumberComponents().getCallNumber()) ? EMPTY : item.getEffectiveCallNumberComponents().getCallNumber();
+    if(EMPTY.equals(effLocationName) && EMPTY.equals(effLocationCallNumber)){
+      return EMPTY;
+    }
+    return String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER, effLocationName, effLocationCallNumber);
+  }
+
+  private boolean checkForItemLocationAndCallNumberExists(Item item) {
+    return ObjectUtils.isEmpty(item.getPermanentLocation()) && ObjectUtils.isEmpty(item.getTemporaryLocation()) && ObjectUtils.isEmpty(item.getItemLevelCallNumber())&& ObjectUtils.isEmpty(item.getItemLevelCallNumberPrefix()) && ObjectUtils.isEmpty(item.getItemLevelCallNumberSuffix()) && ObjectUtils.isEmpty(item.getItemLevelCallNumberTypeId());
   }
 }
