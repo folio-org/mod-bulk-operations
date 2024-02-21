@@ -3,6 +3,7 @@ package org.folio.bulkops.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.CallNumberTypeClient;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.HoldingsNoteTypeClient;
@@ -16,6 +17,7 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.HoldingsType;
 import org.folio.bulkops.domain.bean.IllPolicy;
+import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.bulkops.exception.NotFoundException;
@@ -27,6 +29,7 @@ import java.util.List;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.bulkops.processor.ItemDataProcessor.HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Utils.encode;
 
@@ -182,5 +185,46 @@ public class HoldingsReferenceService {
   @Cacheable(cacheNames = "holdingsNoteTypes")
   public List<HoldingsNoteType> getAllHoldingsNoteTypes() {
     return holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE).getHoldingsNoteTypes();
+  }
+
+  public String getEffectiveLocationCallNumberComponentsForItem(Item item){
+    var holdingsRecordId = item.getHoldingsRecordId();
+    if(StringUtils.isEmpty(holdingsRecordId)){
+      return EMPTY;
+    }
+
+    if (checkForItemLocationAndCallNumberExists(item)){
+      return composeDataFromItemLocationAndCallNumber(item);
+    }
+
+    HoldingsRecord holding = holdingsClient.getHoldingById(holdingsRecordId);
+    var effectiveLocationId = isEmpty(holding.getEffectiveLocationId()) ? getHoldingsEffectiveLocationId(holding) : holding.getEffectiveLocationId();
+    ItemLocation location = getLocationById(effectiveLocationId);
+    var effectiveLocationName = isEmpty(location.getName()) ? EMPTY : location.getName();
+
+    var callNumber = isEmpty(holding.getCallNumber()) ? EMPTY : holding.getCallNumber();
+
+    if(StringUtils.isEmpty(effectiveLocationName) && StringUtils.isEmpty(callNumber)){
+      return EMPTY;
+    }
+
+    return String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER, effectiveLocationName, callNumber);
+  }
+
+  private String getHoldingsEffectiveLocationId(HoldingsRecord holding) {
+    return ObjectUtils.isEmpty(holding.getTemporaryLocationId()) ? holding.getPermanentLocationId() : holding.getTemporaryLocationId();
+  }
+
+  private String composeDataFromItemLocationAndCallNumber(Item item) {
+    var effLocationName = ObjectUtils.isEmpty(item.getEffectiveLocation().getName()) ? EMPTY : item.getEffectiveLocation().getName();
+    var effLocationCallNumber = ObjectUtils.isEmpty(item.getEffectiveCallNumberComponents().getCallNumber()) ? EMPTY : item.getEffectiveCallNumberComponents().getCallNumber();
+    if(EMPTY.equals(effLocationName) && EMPTY.equals(effLocationCallNumber)){
+      return EMPTY;
+    }
+    return String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER, effLocationName, effLocationCallNumber);
+  }
+
+  private boolean checkForItemLocationAndCallNumberExists(Item item) {
+    return ObjectUtils.isEmpty(item.getPermanentLocation()) && ObjectUtils.isEmpty(item.getTemporaryLocation()) && ObjectUtils.isEmpty(item.getItemLevelCallNumber())&& ObjectUtils.isEmpty(item.getItemLevelCallNumberPrefix()) && ObjectUtils.isEmpty(item.getItemLevelCallNumberSuffix()) && ObjectUtils.isEmpty(item.getItemLevelCallNumberTypeId());
   }
 }
