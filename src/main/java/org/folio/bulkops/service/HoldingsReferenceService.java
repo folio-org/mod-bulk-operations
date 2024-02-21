@@ -27,7 +27,6 @@ import java.util.List;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.folio.bulkops.util.Constants.QUERY_ALL_RECORDS;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Utils.encode;
 
