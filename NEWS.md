@@ -1,5 +1,11 @@
 ## v2.0.0 - Unreleased
 
+## v1.1.10 - Released 2024/02/21
+This release contains fix for rendering note types.
+
+### Bugs
+* [MODBULKOPS-224](https://folio-org.atlassian.net/browse/MODBULKOPS-224) - Not all but up to 10 note types are displayed in Bulk edit
+
 ## v1.1.7 - Released 2023/12/05
 This release includes only folio-s3-client version update.
 

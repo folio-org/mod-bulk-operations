@@ -20,6 +20,7 @@ public class Constants {
   public static final DateTimeFormatter DATE_WITHOUT_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_WITHOUT_TIME_PATTERN);
 
   public static final int ITEM_NOTE_POSITION = 31;
+  public static final int HOLDINGS_NOTE_POSITION = 19;
 
   public static final String ITEM_DELIMITER_PATTERN = "\\|";
   public static final String KEY_VALUE_DELIMITER = ":";

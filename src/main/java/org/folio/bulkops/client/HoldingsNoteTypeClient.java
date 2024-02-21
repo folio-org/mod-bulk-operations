@@ -12,8 +12,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 @FeignClient(name = "holdings-note-types", configuration = FeignClientConfiguration.class)
 public interface HoldingsNoteTypeClient {
   @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-  HoldingsNoteType getById(@PathVariable String id);
+  HoldingsNoteType getNoteTypeById(@PathVariable String id);
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  HoldingsNoteTypeCollection getByQuery(@RequestParam String query);
+  HoldingsNoteTypeCollection getNoteTypesByQuery(@RequestParam String query, @RequestParam("limit") int limit);
+
+  @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+  HoldingsNoteTypeCollection getNoteTypes(@RequestParam("limit") int limit);
 }
