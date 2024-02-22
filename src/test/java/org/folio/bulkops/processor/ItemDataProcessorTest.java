@@ -784,13 +784,15 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Test
   void testClone() {
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
+    var processor = new ItemDataProcessor(holdingsReferenceService, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
     var administrativeNotes = new ArrayList<String>();
     administrativeNotes.add("note1");
     var item1 = new Item().withId("id")
       .withAdministrativeNotes(administrativeNotes)
       .withCirculationNotes(new ArrayList<>())
       .withNotes(new ArrayList<>());
+
+    when(holdingsReferenceService.getEffectiveLocationCallNumberComponentsForItem(item1)).thenReturn("Main Library > K1 .M44");
 
     var item2 = processor.clone(item1);
     assertTrue(processor.compare(item1, item2));
