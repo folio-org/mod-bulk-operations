@@ -136,6 +136,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
       var itemNotes = entity.getNotes().stream().map(itemNote -> itemNote.toBuilder().build()).toList();
       clone.setNotes(new ArrayList<>(itemNotes));
     }
+    clone.setHoldingsData(holdingsReferenceService.getEffectiveLocationCallNumberComponentsForItem(entity));
     return clone;
   }
 
