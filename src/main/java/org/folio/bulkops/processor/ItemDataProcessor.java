@@ -122,6 +122,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
 
   @Override
   public Item clone(Item entity) {
+    entity.setHoldingsData(holdingsReferenceService.getEffectiveLocationCallNumberComponentsForItem(entity));
     var clone = entity.toBuilder()
       .build();
     if (entity.getAdministrativeNotes() != null) {
