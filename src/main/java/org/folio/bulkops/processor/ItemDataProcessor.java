@@ -33,8 +33,6 @@ import lombok.extern.log4j.Log4j2;
 @Component
 @AllArgsConstructor
 public class ItemDataProcessor extends AbstractDataProcessor<Item> {
-  public static final String HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER = " > ";
-
   private final HoldingsReferenceService holdingsReferenceService;
   private final ItemReferenceService itemReferenceService;
   private final ItemsNotesUpdater itemsNotesUpdater;
@@ -74,12 +72,10 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         case PERMANENT_LOCATION -> item -> {
           item.setPermanentLocation(itemReferenceService.getLocationById(action.getUpdated()));
           item.setEffectiveLocation(getEffectiveLocation(item));
-          setupHoldingsData(item);
         };
         case TEMPORARY_LOCATION -> item -> {
           item.setTemporaryLocation(itemReferenceService.getLocationById(action.getUpdated()));
           item.setEffectiveLocation(getEffectiveLocation(item));
-          setupHoldingsData(item);
         };
         case STATUS -> item -> item.setStatus(new InventoryItemStatus()
           .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated()))
@@ -97,12 +93,10 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         case PERMANENT_LOCATION -> item -> {
           item.setPermanentLocation(null);
           item.setEffectiveLocation(getEffectiveLocation(item));
-          setupHoldingsData(item);
         };
         case TEMPORARY_LOCATION -> item -> {
           item.setTemporaryLocation(null);
           item.setEffectiveLocation(getEffectiveLocation(item));
-          setupHoldingsData(item);
         };
         case TEMPORARY_LOAN_TYPE -> item -> item.setTemporaryLoanType(null);
         default -> item -> {
@@ -116,13 +110,8 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
     };
   }
 
-  private void setupHoldingsData(Item item) {
-    item.setHoldingsData(holdingsReferenceService.getEffectiveLocationCallNumberComponentsForItem(item));
-  }
-
   @Override
   public Item clone(Item entity) {
-    entity.setHoldingsData(holdingsReferenceService.getEffectiveLocationCallNumberComponentsForItem(entity));
     var clone = entity.toBuilder()
       .build();
     if (entity.getAdministrativeNotes() != null) {

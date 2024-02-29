@@ -792,8 +792,6 @@ class ItemDataProcessorTest extends BaseTest {
       .withCirculationNotes(new ArrayList<>())
       .withNotes(new ArrayList<>());
 
-    when(holdingsReferenceService.getEffectiveLocationCallNumberComponentsForItem(item1)).thenReturn("Main Library > K1 .M44");
-
     var item2 = processor.clone(item1);
     assertTrue(processor.compare(item1, item2));
 
