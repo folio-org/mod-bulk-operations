@@ -184,8 +184,4 @@ public class HoldingsReferenceService {
   public List<HoldingsNoteType> getAllHoldingsNoteTypes() {
     return holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE).getHoldingsNoteTypes();
   }
-
-  private boolean checkForItemLocationAndCallNumberExists(Item item) {
-    return ObjectUtils.isEmpty(item.getPermanentLocation()) && ObjectUtils.isEmpty(item.getTemporaryLocation()) && ObjectUtils.isEmpty(item.getItemLevelCallNumber())&& ObjectUtils.isEmpty(item.getItemLevelCallNumberPrefix()) && ObjectUtils.isEmpty(item.getItemLevelCallNumberSuffix()) && ObjectUtils.isEmpty(item.getItemLevelCallNumberTypeId());
-  }
 }
