@@ -13,7 +13,7 @@ public class ItemUpdateProcessor extends AbstractUpdateProcessor<Item> {
 
   @Override
   public void updateRecord(Item item) {
-    itemClient.updateItem(item, item.getId());
+    itemClient.updateItem(item.withHoldingsData(null), item.getId());
   }
 
   @Override

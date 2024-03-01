@@ -95,6 +95,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private String title;
 
+  @JsonProperty("holdingsData")
   @CsvCustomBindByName(column = "Holdings (Location, Call number)", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 7, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
