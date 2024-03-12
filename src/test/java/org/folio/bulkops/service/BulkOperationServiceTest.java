@@ -75,6 +75,7 @@ import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.Parameter;
+import org.folio.bulkops.domain.dto.QueryRequest;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -1060,13 +1061,17 @@ class BulkOperationServiceTest extends BaseTest {
     var fqlQueryId = UUID.randomUUID();
     var entityTypeId = UUID.randomUUID();
     var query = "query";
+    var queryRequest = new QueryRequest()
+      .fqlQuery(query)
+      .userFriendlyQuery(query)
+      .entityTypeId(entityTypeId);
     var submitQuery = new SubmitQuery()
       .fqlQuery(query)
       .entityTypeId(entityTypeId);
     when(queryService.executeQuery(submitQuery)).thenReturn(fqlQueryId);
     when(entityTypeService.getEntityTypeById(entityTypeId)).thenReturn(ITEM);
 
-    bulkOperationService.triggerByQuery(UUID.randomUUID(), submitQuery);
+    bulkOperationService.triggerByQuery(UUID.randomUUID(), queryRequest);
 
     verify(queryService).executeQuery(submitQuery);
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);

@@ -9,6 +9,10 @@
         "description": "FQL string",
         "type": "string"
       },
+      "userFriendlyQuery": {
+        "description": "User-friendly representation of FQL query",
+        "type": "string"
+      },
       "entityTypeId" : {
         "description": "Entity type identifier",
         "type": "string",

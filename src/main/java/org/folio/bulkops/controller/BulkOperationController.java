@@ -34,7 +34,6 @@ import org.folio.bulkops.service.ListUsersService;
 import org.folio.bulkops.service.LogFilesService;
 import org.folio.bulkops.service.PreviewService;
 import org.folio.bulkops.service.RuleService;
-import org.folio.querytool.domain.dto.SubmitQuery;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.core.io.ByteArrayResource;
@@ -177,8 +176,6 @@ public class BulkOperationController implements BulkOperationsApi {
 
   @Override
   public ResponseEntity<BulkOperationDto> triggerBulkEditByQuery(UUID xOkapiUserId, QueryRequest queryRequest) {
-    return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.triggerByQuery(xOkapiUserId, new SubmitQuery()
-        .fqlQuery(queryRequest.getFqlQuery())
-        .entityTypeId(queryRequest.getEntityTypeId()))), HttpStatus.OK);
+    return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.triggerByQuery(xOkapiUserId, queryRequest)), HttpStatus.OK);
   }
 }

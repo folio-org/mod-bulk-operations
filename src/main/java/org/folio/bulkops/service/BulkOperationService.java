@@ -53,6 +53,7 @@ import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
+import org.folio.bulkops.domain.dto.QueryRequest;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
@@ -176,7 +177,10 @@ public class BulkOperationService {
     return bulkOperationRepository.save(operation);
   }
 
-  public BulkOperation triggerByQuery(UUID userId, SubmitQuery submitQuery) {
+  public BulkOperation triggerByQuery(UUID userId, QueryRequest queryRequest) {
+    var submitQuery = new SubmitQuery()
+      .fqlQuery(queryRequest.getFqlQuery())
+      .entityTypeId(queryRequest.getEntityTypeId());
     var queryId = queryService.executeQuery(submitQuery);
     var entityType = entityTypeService.getEntityTypeById(submitQuery.getEntityTypeId());
     return bulkOperationRepository.save(BulkOperation.builder()
@@ -189,6 +193,7 @@ public class BulkOperationService {
         .userId(userId)
         .fqlQuery(submitQuery.getFqlQuery())
         .fqlQueryId(queryId)
+        .userFriendlyQuery(queryRequest.getUserFriendlyQuery())
       .build());
   }
 

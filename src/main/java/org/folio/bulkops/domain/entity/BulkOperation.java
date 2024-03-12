@@ -79,4 +79,5 @@ public class BulkOperation {
   private boolean expired;
   private UUID fqlQueryId;
   private String fqlQuery;
+  private String userFriendlyQuery;
 }
