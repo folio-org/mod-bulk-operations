@@ -90,4 +90,10 @@ public class Personal {
   @CsvCustomBindByPosition(position = 18, converter = PreferredContactTypeIdConverter.class)
   @UnifiedTableCell(visible = false)
   private String preferredContactTypeId;
+
+  @JsonProperty("profilePictureLink")
+  @CsvCustomBindByName(column = "Link to the profile picture", converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 19, converter = StringConverter.class)
+  @UnifiedTableCell(visible = false)
+  private String profilePictureLink;
 }

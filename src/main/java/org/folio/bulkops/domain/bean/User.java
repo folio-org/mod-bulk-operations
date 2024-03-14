@@ -112,13 +112,13 @@ public class User implements BulkOperationsEntity {
 
   @JsonProperty("enrollmentDate")
   @CsvCustomBindByName(column = "Enrollment date", converter = DateWithTimeConverter.class)
-  @CsvCustomBindByPosition(position = 19, converter = DateWithTimeConverter.class)
+  @CsvCustomBindByPosition(position = 20, converter = DateWithTimeConverter.class)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date enrollmentDate;
 
   @JsonProperty("expirationDate")
   @CsvCustomBindByName(column = "Expiration date", converter = DateWithTimeConverter.class)
-  @CsvCustomBindByPosition(position = 20, converter = DateWithTimeConverter.class)
+  @CsvCustomBindByPosition(position = 21, converter = DateWithTimeConverter.class)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date expirationDate;
@@ -128,14 +128,14 @@ public class User implements BulkOperationsEntity {
 
   @JsonProperty("tags")
   @CsvCustomBindByName(column = "Tags", converter = TagsConverter.class)
-  @CsvCustomBindByPosition(position = 21, converter = TagsConverter.class)
+  @CsvCustomBindByPosition(position = 22, converter = TagsConverter.class)
   @UnifiedTableCell(visible = false)
   private Tags tags;
 
   @JsonProperty("customFields")
   @Valid
   @CsvCustomBindByName(column = "Custom fields", converter = CustomFieldsConverter.class)
-  @CsvCustomBindByPosition(position = 22, converter = CustomFieldsConverter.class)
+  @CsvCustomBindByPosition(position = 23, converter = CustomFieldsConverter.class)
   @UnifiedTableCell(visible = false)
   private Map<String, Object> customFields;
 
