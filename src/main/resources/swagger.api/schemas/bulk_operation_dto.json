@@ -149,6 +149,10 @@
       "fqlQuery": {
         "description": "FQL query string",
         "type": "string"
+      },
+      "userFriendlyQuery": {
+        "description": "User-friendly FQL query string",
+        "type": "string"
       }
     },
     "additionalProperties": false,
