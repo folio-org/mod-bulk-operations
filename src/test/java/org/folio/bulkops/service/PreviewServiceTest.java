@@ -1,8 +1,7 @@
 package org.folio.bulkops.service;
 
 import static java.util.Collections.emptySet;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.*;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
@@ -197,6 +196,113 @@ class PreviewServiceTest extends BaseTest {
     var table = previewService.getPreview(bulkOperation, COMMIT, offset, limit);
 
     assertThat(table.getRows(), hasSize(limit));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldProperlyParseContentWithBackSlashes() {
+    var path = "src/test/resources/files/items_preview_back_slashes.csv";
+    var operationId = UUID.randomUUID();
+    var offset = 0;
+    var limit = 10;
+
+    var bulkOperation = buildBulkOperation("items_preview_back_slashes.csv", ITEM, UPLOAD);
+    bulkOperation.setId(operationId);
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(bulkOperation));
+
+    when(remoteFileSystemClient.get(anyString()))
+      .thenReturn(new FileInputStream(path));
+
+    when(ruleService.getRules(any())).thenReturn(new BulkOperationRuleCollection().bulkOperationRules(List.of(new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails().option(UpdateOptionType.STATUS).actions(List.of(new Action().type(UpdateActionType.REPLACE_WITH).updated("New")))))).totalRecords(1));
+
+    when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
+
+    var table = previewService.getPreview(bulkOperation, UPLOAD, offset, limit);
+
+    assertThat(table.getRows(), hasSize(1));
+
+    checkForTitle(table);    // #6
+    checkForHoldingsData(table);    // #7
+    checkForCallNumber(table);    // #9
+    checkForEffectiveShelvingOrder(table);    // #11
+    checkForEffectiveCallNumberComponents(table);    // #17
+    checkForCopyNumber(table);    // #23
+    checkForStatus(table);    // #41
+    checkForMaterialType(table);    // #42
+    checkForPermanentLoanType(table);    // #45
+    checkForEffectiveLocation(table);    // #49
+  }
+
+  private void checkForTitle(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(6).getValue();
+    assertEquals("Title", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(6);
+    assertEquals("Magazine - Q4", rowResult);
+  }
+  private void checkForHoldingsData(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(7).getValue();
+    assertEquals("Holdings (Location, Call number)", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(7);
+    assertEquals("Main Library > R11.A38\\", rowResult);
+  }
+  private void checkForCallNumber(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(9).getValue();
+    assertEquals("Call Number", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(9);
+    assertEquals("R11.A38\\", rowResult);
+  }
+  private void checkForEffectiveShelvingOrder(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(11).getValue();
+    assertEquals("Effective Shelving Order", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(11);
+    assertEquals("R11.A38\\ First copy of Q4", rowResult);
+  }
+  private void checkForEffectiveCallNumberComponents(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(17).getValue();
+    assertEquals("Effective Call Number Components", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(17);
+    assertEquals("R11.A38\\", rowResult);
+  }
+  private void checkForCopyNumber(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(23).getValue();
+    assertEquals("Copy Number", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(23);
+    assertEquals("First copy of Q4", rowResult);
+  }
+  private void checkForStatus(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(35).getValue();
+    assertEquals("Status", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(35);
+    assertEquals("Available", rowResult);
+  }
+  private void checkForMaterialType(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(36).getValue();
+    assertEquals("Material Type", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(36);
+    assertEquals("text", rowResult);
+  }
+  private void checkForPermanentLoanType(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(39).getValue();
+    assertEquals("Permanent Loan Type", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(39);
+    assertEquals("Can circulate", rowResult);
+  }
+  private void checkForEffectiveLocation(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(43).getValue();
+    assertEquals("Effective Location", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(43);
+    assertEquals("Main Library", rowResult);
   }
 
   @ParameterizedTest
