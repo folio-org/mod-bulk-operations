@@ -1,7 +1,69 @@
-## v2.0.0 - Unreleased
+## v2.1.0 - Unreleased
+
+## v2.0.0 - Released 2024/03/19
+This release includes FQM Integration, separate notes by note type, updating Suppress from discovery flag and Staff suppress flag
 
 ### Technical tasks
 * [UXPROD-3903](https://folio-org.atlassian.net/browse/UXPROD-3903) - Support `data-export-spring` interface 2.0. Breaking change in `data-export-spring` does not impact mod-bulk-operations use
+* [MODBULKOPS-197](https://issues.folio.org/browse/MODBULKOPS-197) - Accommodate changes in holdings records schema
+* [MODBULKOPS-181](https://issues.folio.org/browse/MODBULKOPS-181) - Always include column with edited properties on Are you sure form
+
+### Stories
+* [MODBULKOPS-230](https://issues.folio.org/browse/MODBULKOPS-230) - FQM Integration - Instances
+* [MODBULKOPS-226](https://issues.folio.org/browse/MODBULKOPS-226) - Add new displaySummarry field to the Item schema
+* [MODBULKOPS-209](https://issues.folio.org/browse/MODBULKOPS-209) - Rendering holdings electronic access properties in .csv file
+* [MODBULKOPS-196](https://issues.folio.org/browse/MODBULKOPS-196) - Updating Suppress from discovery flag
+* [MODBULKOPS-195](https://issues.folio.org/browse/MODBULKOPS-195) - Updating Staff suppress flag
+* [MODBULKOPS-179](https://issues.folio.org/browse/MODBULKOPS-179) - Rendering Instance record data in bulk edit forms and files
+* [MODBULKOPS-174](https://issues.folio.org/browse/MODBULKOPS-174) - Spike: Rendering holdings electronic access properties in .csv file
+* [MODBULKOPS-172](https://issues.folio.org/browse/MODBULKOPS-172) - BE - Update Item record column names
+* [MODBULKOPS-169](https://issues.folio.org/browse/MODBULKOPS-169) - Separate circulation notes in different columns
+* [MODBULKOPS-149](https://issues.folio.org/browse/MODBULKOPS-149) - Separate holdings notes by note type
+* [MODBULKOPS-144](https://issues.folio.org/browse/MODBULKOPS-144) - Holdings records - electronic access updates
+* [MODBULKOPS-131](https://issues.folio.org/browse/MODBULKOPS-131) - Supported bulk edit actions for holdings notes
+* [MODBULKOPS-44](https://issues.folio.org/browse/MODBULKOPS-44) - FQM Integration - Deprecate Bulk Operations Query API
+* [MODBULKOPS-43](https://issues.folio.org/browse/MODBULKOPS-43) - FQM Integration - FQM Results handling
+
+## v1.1.10 - Released 2024/02/21
+This release contains fix for rendering note types.
+
+### Bugs
+* [MODBULKOPS-224](https://folio-org.atlassian.net/browse/MODBULKOPS-224) - Not all but up to 10 note types are displayed in Bulk edit
+
+## v1.1.9 - Released 2024/01/15
+logging improvements
+
+## v1.1.8 - Released 2024/01/15
+logging improvements
+
+## v1.1.7 - Released 2023/12/05
+This release includes only folio-s3-client version update.
+
+## v1.1.6 - Released 2023/11/10
+This release includes folio-s3-client update.
+
+## v1.1.5 - Released 2023/11/10
+This release includes only folio-s3-client version update.
+
+## v1.1.4 - Released 2023/11/09
+This release includes only folio-s3-client version update.
+
+## v1.1.3 - Released 2023/11/08
+This release includes only folio-s3-client version update.
+
+## v1.1.2 - Released 2023/11/08
+This release includes bugs fixes and update folio-s3-client.
+
+### Bugs
+* [MODBULKOPS-166](https://issues.folio.org/browse/MODBULKOPS-166) - Suppress Holdings from discovery: changes are applied to no more than 10 associated Items
+
+## v1.1.1 - Released 2023/10/31
+This release includes bugs fixes for editing users and items.
+
+### Bugs
+* [MODBULKOPS-151](https://issues.folio.org/browse/MODBULKOPS-151) - Columns for all item note types
+* [MODBULKOPS-148](https://issues.folio.org/browse/MODBULKOPS-148) - Bulk edit (Local) is not done for the User with multiple departments associated
+* [MODBULKOPS-78](https://issues.folio.org/browse/MODBULKOPS-78) - Bulk editing Users records with an invalid data via CSV approach
 
 ## v1.1.0 - Released 2023/10/12
 This release includes file storage optimization, editing for items notes, suppression status, bugs fixes.
