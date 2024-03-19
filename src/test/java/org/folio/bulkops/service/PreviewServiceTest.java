@@ -1,7 +1,9 @@
 package org.folio.bulkops.service;
 
 import static java.util.Collections.emptySet;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.*;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
@@ -222,16 +224,16 @@ class PreviewServiceTest extends BaseTest {
 
     assertThat(table.getRows(), hasSize(1));
 
-    checkForTitle(table);    // #6
-    checkForHoldingsData(table);    // #7
-    checkForCallNumber(table);    // #9
-    checkForEffectiveShelvingOrder(table);    // #11
-    checkForEffectiveCallNumberComponents(table);    // #17
-    checkForCopyNumber(table);    // #23
-    checkForStatus(table);    // #41
-    checkForMaterialType(table);    // #42
-    checkForPermanentLoanType(table);    // #45
-    checkForEffectiveLocation(table);    // #49
+    checkForTitle(table);
+    checkForHoldingsData(table);
+    checkForCallNumber(table);
+    checkForEffectiveShelvingOrder(table);
+    checkForEffectiveCallNumberComponents(table);
+    checkForCopyNumber(table);
+    checkForStatus(table);
+    checkForMaterialType(table);
+    checkForPermanentLoanType(table);
+    checkForEffectiveLocation(table);
   }
 
   private void checkForTitle(org.folio.bulkops.domain.dto.UnifiedTable table) {
