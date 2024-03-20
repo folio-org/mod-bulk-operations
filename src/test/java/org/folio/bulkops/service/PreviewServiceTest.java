@@ -220,6 +220,14 @@ class PreviewServiceTest extends BaseTest {
 
     when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
 
+    when(itemNoteTypeClient.getNoteTypes(Integer.MAX_VALUE)).thenReturn(new NoteTypeCollection().withItemNoteTypes(List.of(new NoteType().withName("Binding"), new NoteType().withName("Custom"), new NoteType().withName("Provenance"), new NoteType().withName("Reproduction"), new NoteType().withName("Note"))));
+
+    when(itemNoteTypeClient.getNoteTypeById("0e40884c-3523-4c6d-8187-d578e3d2794e")).thenReturn(new NoteType().withName("Binding"));
+    when(itemNoteTypeClient.getNoteTypeById("f3ae3823-d096-4c65-8734-0c1efd2ffea8")).thenReturn(new NoteType().withName("Provenance"));
+    when(itemNoteTypeClient.getNoteTypeById("c3a539b9-9576-4e3a-b6de-d910200b2919")).thenReturn(new NoteType().withName("Reproduction"));
+    when(itemNoteTypeClient.getNoteTypeById("87c450be-2033-41fb-80ba-dd2409883681")).thenReturn(new NoteType().withName("Custom"));
+    when(itemNoteTypeClient.getNoteTypeById("8d0a5eca-25de-4391-81a9-236eeefdd20b")).thenReturn(new NoteType().withName("Note"));
+
     var table = previewService.getPreview(bulkOperation, UPLOAD, offset, limit);
 
     assertThat(table.getRows(), hasSize(1));
@@ -279,31 +287,31 @@ class PreviewServiceTest extends BaseTest {
     assertEquals("First copy of Q4", rowResult);
   }
   private void checkForStatus(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(35).getValue();
+    var headerValue = table.getHeader().get(39).getValue();
     assertEquals("Status", headerValue);
 
-    var rowResult = table.getRows().get(0).getRow().get(35);
+    var rowResult = table.getRows().get(0).getRow().get(39);
     assertEquals("Available", rowResult);
   }
   private void checkForMaterialType(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(36).getValue();
+    var headerValue = table.getHeader().get(40).getValue();
     assertEquals("Material Type", headerValue);
 
-    var rowResult = table.getRows().get(0).getRow().get(36);
+    var rowResult = table.getRows().get(0).getRow().get(40);
     assertEquals("text", rowResult);
   }
   private void checkForPermanentLoanType(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(39).getValue();
+    var headerValue = table.getHeader().get(43).getValue();
     assertEquals("Permanent Loan Type", headerValue);
 
-    var rowResult = table.getRows().get(0).getRow().get(39);
+    var rowResult = table.getRows().get(0).getRow().get(43);
     assertEquals("Can circulate", rowResult);
   }
   private void checkForEffectiveLocation(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(43).getValue();
+    var headerValue = table.getHeader().get(47).getValue();
     assertEquals("Effective Location", headerValue);
 
-    var rowResult = table.getRows().get(0).getRow().get(43);
+    var rowResult = table.getRows().get(0).getRow().get(47);
     assertEquals("Main Library", rowResult);
   }
 
