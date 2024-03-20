@@ -3,6 +3,7 @@ package org.folio.bulkops.service;
 import static java.util.Collections.emptySet;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
@@ -197,6 +198,121 @@ class PreviewServiceTest extends BaseTest {
     var table = previewService.getPreview(bulkOperation, COMMIT, offset, limit);
 
     assertThat(table.getRows(), hasSize(limit));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldProperlyParseContentWithBackSlashes() {
+    var path = "src/test/resources/files/items_preview_back_slashes.csv";
+    var operationId = UUID.randomUUID();
+    var offset = 0;
+    var limit = 10;
+
+    var bulkOperation = buildBulkOperation("items_preview_back_slashes.csv", ITEM, UPLOAD);
+    bulkOperation.setId(operationId);
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(bulkOperation));
+
+    when(remoteFileSystemClient.get(anyString()))
+      .thenReturn(new FileInputStream(path));
+
+    when(ruleService.getRules(any())).thenReturn(new BulkOperationRuleCollection().bulkOperationRules(List.of(new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails().option(UpdateOptionType.STATUS).actions(List.of(new Action().type(UpdateActionType.REPLACE_WITH).updated("New")))))).totalRecords(1));
+
+    when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
+
+    when(itemNoteTypeClient.getNoteTypes(Integer.MAX_VALUE)).thenReturn(new NoteTypeCollection().withItemNoteTypes(List.of(new NoteType().withName("Binding"), new NoteType().withName("Custom"), new NoteType().withName("Provenance"), new NoteType().withName("Reproduction"), new NoteType().withName("Note"))));
+
+    when(itemNoteTypeClient.getNoteTypeById("0e40884c-3523-4c6d-8187-d578e3d2794e")).thenReturn(new NoteType().withName("Binding"));
+    when(itemNoteTypeClient.getNoteTypeById("f3ae3823-d096-4c65-8734-0c1efd2ffea8")).thenReturn(new NoteType().withName("Provenance"));
+    when(itemNoteTypeClient.getNoteTypeById("c3a539b9-9576-4e3a-b6de-d910200b2919")).thenReturn(new NoteType().withName("Reproduction"));
+    when(itemNoteTypeClient.getNoteTypeById("87c450be-2033-41fb-80ba-dd2409883681")).thenReturn(new NoteType().withName("Custom"));
+    when(itemNoteTypeClient.getNoteTypeById("8d0a5eca-25de-4391-81a9-236eeefdd20b")).thenReturn(new NoteType().withName("Note"));
+
+    var table = previewService.getPreview(bulkOperation, UPLOAD, offset, limit);
+
+    assertThat(table.getRows(), hasSize(1));
+
+    checkForTitle(table);
+    checkForHoldingsData(table);
+    checkForCallNumber(table);
+    checkForEffectiveShelvingOrder(table);
+    checkForEffectiveCallNumberComponents(table);
+    checkForCopyNumber(table);
+    checkForStatus(table);
+    checkForMaterialType(table);
+    checkForPermanentLoanType(table);
+    checkForEffectiveLocation(table);
+  }
+
+  private void checkForTitle(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(6).getValue();
+    assertEquals("Title", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(6);
+    assertEquals("Magazine - Q4", rowResult);
+  }
+  private void checkForHoldingsData(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(7).getValue();
+    assertEquals("Holdings (Location, Call number)", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(7);
+    assertEquals("Main Library > R11.A38\\", rowResult);
+  }
+  private void checkForCallNumber(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(9).getValue();
+    assertEquals("Call Number", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(9);
+    assertEquals("R11.A38\\", rowResult);
+  }
+  private void checkForEffectiveShelvingOrder(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(11).getValue();
+    assertEquals("Effective Shelving Order", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(11);
+    assertEquals("R11.A38\\ First copy of Q4", rowResult);
+  }
+  private void checkForEffectiveCallNumberComponents(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(17).getValue();
+    assertEquals("Effective Call Number Components", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(17);
+    assertEquals("R11.A38\\", rowResult);
+  }
+  private void checkForCopyNumber(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(23).getValue();
+    assertEquals("Copy Number", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(23);
+    assertEquals("First copy of Q4", rowResult);
+  }
+  private void checkForStatus(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(39).getValue();
+    assertEquals("Status", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(39);
+    assertEquals("Available", rowResult);
+  }
+  private void checkForMaterialType(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(40).getValue();
+    assertEquals("Material Type", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(40);
+    assertEquals("text", rowResult);
+  }
+  private void checkForPermanentLoanType(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(43).getValue();
+    assertEquals("Permanent Loan Type", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(43);
+    assertEquals("Can circulate", rowResult);
+  }
+  private void checkForEffectiveLocation(org.folio.bulkops.domain.dto.UnifiedTable table) {
+    var headerValue = table.getHeader().get(47).getValue();
+    assertEquals("Effective Location", headerValue);
+
+    var rowResult = table.getRows().get(0).getRow().get(47);
+    assertEquals("Main Library", rowResult);
   }
 
   @ParameterizedTest

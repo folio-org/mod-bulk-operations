@@ -22,6 +22,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.RFC4180ParserBuilder;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.dto.Parameter;
@@ -174,8 +176,12 @@ public class PreviewService {
   }
 
   private UnifiedTable populatePreview(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit, UnifiedTable table, Set<String> forceVisible) {
+    var parser = new RFC4180ParserBuilder().build();
+
     try (Reader reader = new InputStreamReader(remoteFileSystemClient.get(pathToFile))) {
-      try (CSVReader csvReader = new CSVReader(reader)) {
+      var readerBuilder = new CSVReaderBuilder(reader)
+        .withCSVParser(parser);
+      CSVReader csvReader = readerBuilder.build();
         var recordsToSkip = offset + 1;
         csvReader.skip(recordsToSkip);
         String[] line;
@@ -184,7 +190,6 @@ public class PreviewService {
           row.setRow(new ArrayList<>(Arrays.asList(line)));
           table.addRowsItem(row);
         }
-      }
       processNoteFields(table, clazz, forceVisible);
       table.getRows().forEach(row -> {
         var rowData = row.getRow().stream()
