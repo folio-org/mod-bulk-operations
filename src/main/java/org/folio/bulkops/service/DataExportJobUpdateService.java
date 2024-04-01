@@ -10,6 +10,8 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.EnumMap;
 import java.util.Map;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
@@ -44,6 +46,7 @@ public class DataExportJobUpdateService {
   }
   private final BulkOperationRepository bulkOperationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
+  private final ObjectMapper mapper;
 
   @Transactional
   public void handleReceivedJobExecutionUpdate(Job jobExecutionUpdate) {
@@ -68,6 +71,13 @@ public class DataExportJobUpdateService {
     if (nonNull(status)) {
       if (JobStatus.SUCCESSFUL.equals(status)) {
         operation.setStatus(OperationStatusType.SAVING_RECORDS_LOCALLY);
+        try {
+          var operationStringVal = mapper.writeValueAsString(operation);
+          log.info("operationStringVal = "+operationStringVal);
+        }
+        catch (Exception ex){
+          log.error(ex);
+        }
         bulkOperationRepository.save(operation);
         downloadOriginFileAndUpdateBulkOperation(operation, jobExecutionUpdate);
       } else if (JobStatus.FAILED.equals(status)) {
