@@ -131,10 +131,8 @@ public class BulkOperationController implements BulkOperationsApi {
     }
 
     if (Objects.isNull(path)) {
-      log.info("THE PATH IS NULL");
       return ResponseEntity.ok().build();
     } else {
-      log.info("THE PATH IS "+path);
       try (var is = remoteFileSystemClient.get(path)) {
         var content = ArrayUtils.removeAllOccurrences(is.readAllBytes(), (byte) NON_PRINTING_DELIMITER);
         HttpHeaders headers = new HttpHeaders();

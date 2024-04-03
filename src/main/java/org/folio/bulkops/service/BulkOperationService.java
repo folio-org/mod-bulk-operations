@@ -262,7 +262,6 @@ public class BulkOperationService {
       operation.setStatus(OperationStatusType.REVIEW_CHANGES);
       operation.setProcessedNumOfRecords(processedNumOfRecords);
       bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
-      bulkOperationRepository.save(operation);
     } catch (Exception e) {
       log.error(e);
       dataProcessingRepository.save(dataProcessing
@@ -271,6 +270,7 @@ public class BulkOperationService {
       operation.setStatus(OperationStatusType.FAILED);
       operation.setEndTime(LocalDateTime.now());
       operation.setErrorMessage("Confirm changes operation failed, reason: " + e.getMessage());
+    } finally {
       bulkOperationRepository.save(operation);
     }
   }
