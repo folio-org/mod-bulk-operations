@@ -53,6 +53,7 @@ public class CustomFieldsConverter extends BaseConverter<Map<String, Object>> {
     var customField = UserReferenceHelper.service().getCustomFieldByName(name);
     if (ObjectUtils.isNotEmpty(customField) && ObjectUtils.isNotEmpty(customField.getType())) {
       return switch (customField.getType()) {
+        case DATE_PICKER -> Pair.of(customField.getRefId(), value);
         case SINGLE_CHECKBOX -> Pair.of(customField.getRefId(), Boolean.parseBoolean(value));
         case TEXTBOX_LONG, TEXTBOX_SHORT ->
           Pair.of(customField.getRefId(), value.replace(LINE_BREAK_REPLACEMENT, LINE_BREAK));
@@ -104,7 +105,7 @@ public class CustomFieldsConverter extends BaseConverter<Map<String, Object>> {
   private String customFieldToString(Map.Entry<String, Object> entry) {
     var customField = UserReferenceHelper.service().getCustomFieldByRefId(entry.getKey());
     return switch (customField.getType()) {
-      case TEXTBOX_LONG, TEXTBOX_SHORT, SINGLE_CHECKBOX ->
+      case DATE_PICKER, TEXTBOX_LONG, TEXTBOX_SHORT, SINGLE_CHECKBOX ->
         customField.getName() + KEY_VALUE_DELIMITER + (isNull(entry.getValue()) ? EMPTY : entry.getValue().toString());
       case SINGLE_SELECT_DROPDOWN, RADIO_BUTTON ->
         customField.getName() + KEY_VALUE_DELIMITER + (isNull(entry.getValue()) ? EMPTY : extractValueById(customField, entry.getValue().toString()));
