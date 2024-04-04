@@ -510,12 +510,12 @@ public class BulkOperationService {
       operation.setStatus(REVIEW_CHANGES);
       operation.setLinkToModifiedRecordsJsonFile(linkToModifiedRecordsJsonFile);
       bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
-      bulkOperationRepository.save(operation);
     } catch (Exception e) {
       operation.setErrorMessage("Error applying changes: " + e.getCause());
-      bulkOperationRepository.save(operation);
 
       throw new ServerErrorException(e.getMessage());
+    } finally {
+      bulkOperationRepository.save(operation);
     }
   }
 
