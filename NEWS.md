@@ -1,5 +1,12 @@
 ## v2.1.0 - Unreleased
 
+## v2.0.1 - Released 2024/04/05
+This release contains fixes for preview and custom fields types
+
+### Bugs
+* [MODBULKOPS-253](https://folio-org.atlassian.net/browse/MODBULKOPS-253) - Data is not provided from Back-end to populate the Previews
+* [MODBULKOPS-159](https://folio-org.atlassian.net/browse/MODBULKOPS-159) - Previews are broken if matched record has value ending with "\"
+
 ## v2.0.0 - Released 2024/03/19
 This release includes FQM Integration, separate notes by note type, updating Suppress from discovery flag and Staff suppress flag
 
