@@ -64,6 +64,7 @@ import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.bean.UserGroupCollection;
+import org.folio.bulkops.domain.converter.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
@@ -1110,4 +1111,34 @@ class BulkOperationServiceTest extends BaseTest {
     verify(dataExportSpringClient).upsertJob(any(Job.class));
   }
 
+  @ParameterizedTest
+  @EnumSource(OperationStatusType.class)
+  @SneakyThrows
+  void shouldWriteToCsvAfterConverterException(OperationStatusType operationStatusType) {
+    var item = Item.builder()
+      .id(UUID.randomUUID().toString())
+      .barcode("barcode")
+      .statisticalCodeIds(Collections.singletonList(UUID.randomUUID().toString()))
+      .build();
+
+    var operation = BulkOperation.builder()
+      .id(UUID.randomUUID())
+      .identifierType(IdentifierType.BARCODE)
+      .status(operationStatusType)
+      .build();
+
+    when(itemReferenceService.getStatisticalCodeById(anyString()))
+      .thenThrow(new NotFoundException("not found"));
+
+    try (var stringWriter = new StringWriter()) {
+      var writer = new BulkOperationsEntityCsvWriter(stringWriter, Item.class);
+      bulkOperationService.writeToCsv(operation, writer, item);
+      assertThat(stringWriter.toString(), containsString("FAILED"));
+      if (APPLY_CHANGES.equals(operation.getStatus())) {
+        verify(errorService, times(0)).saveError(any(), any(), any());
+      } else {
+        verify(errorService).saveError(any(), any(), any());
+      }
+    }
+  }
 }
