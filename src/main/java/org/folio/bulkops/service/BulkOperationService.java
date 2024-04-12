@@ -9,6 +9,7 @@ import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
+import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
@@ -237,7 +238,7 @@ public class BulkOperationService {
 
         if (Objects.nonNull(modified)) {
           // Prepare CSV for download and preview
-          process(operationId, operation.getIdentifierType(), csvWriter, modified.getPreview());
+          writeToCsv(operation, csvWriter, modified.getPreview());
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
           writerForModifiedJsonFile.write(modifiedRecord);
         }
@@ -275,12 +276,16 @@ public class BulkOperationService {
     }
   }
 
-  public void process(UUID operationId, IdentifierType identifierType, BulkOperationsEntityCsvWriter csvWriter, BulkOperationsEntity bean ) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException, IllegalAccessException {
+  public void writeToCsv(BulkOperation operation, BulkOperationsEntityCsvWriter csvWriter, BulkOperationsEntity bean) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
     try {
       csvWriter.write(bean);
     } catch (ConverterException e) {
-      errorService.saveError(operationId, bean.getIdentifier(identifierType), format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()));
-      process(operationId, identifierType, csvWriter, bean);
+      if (APPLY_CHANGES.equals(operation.getStatus())) {
+        log.error("Record {}, field: {}, converter exception: {}", bean.getIdentifier(operation.getIdentifierType()), e.getField().getName(), e.getMessage());
+      } else {
+        errorService.saveError(operation.getId(), bean.getIdentifier(operation.getIdentifierType()), format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()));
+      }
+      writeToCsv(operation, csvWriter, bean);
     }
   }
 
@@ -346,10 +351,8 @@ public class BulkOperationService {
             if (result != original) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
-              csvWriter.write(result);
+              writeToCsv(operation, csvWriter, result);
             }
-          } catch (ConverterException converterException) {
-            log.error("Record {}, field: {}, converter exception: {}", original.getIdentifier(operation.getIdentifierType()), converterException.getField().getName(), converterException.getMessage());
           } catch (Exception e) {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage());
           }
