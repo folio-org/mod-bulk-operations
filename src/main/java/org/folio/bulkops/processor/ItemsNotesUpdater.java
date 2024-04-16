@@ -127,10 +127,11 @@ public class ItemsNotesUpdater {
       return Optional.of(item -> item.setAdministrativeNotes(administrativeNotesUpdater.addToAdministrativeNotes(action.getUpdated(), item.getAdministrativeNotes())));
     } else if (option == CHECK_IN_NOTE || option == CHECK_OUT_NOTE) {
       var type = option == CHECK_IN_NOTE ? CirculationNote.NoteTypeEnum.IN : CirculationNote.NoteTypeEnum.OUT;
+      boolean staffOnly = extractStaffOnlyParamValue(action);
       return Optional.of(item -> {
         var circulationNotes = item.getCirculationNotes();
         var circulationNote = new CirculationNote().withNoteType(type)
-          .withNote(action.getUpdated()).withStaffOnly(false);
+          .withNote(action.getUpdated()).withStaffOnly(staffOnly);
         if (circulationNotes == null) {
           circulationNotes = new ArrayList<>();
         } else {
@@ -140,10 +141,14 @@ public class ItemsNotesUpdater {
         circulationNotes.add(circulationNote);
       });
     } else if (option == ITEM_NOTE) {
+      var staffOnly = extractStaffOnlyParamValue(action);
       return Optional.of(item -> action.getParameters()
         .stream().filter(parameter -> StringUtils.equals(parameter.getKey(), ITEM_NOTE_TYPE_ID_KEY))
         .findFirst().ifPresent(parameter -> {
-          var note = new ItemNote().withItemNoteTypeId(parameter.getValue()).withNote(action.getUpdated());
+          var note = new ItemNote()
+                  .withItemNoteTypeId(parameter.getValue())
+                  .withNote(action.getUpdated())
+                  .withStaffOnly(staffOnly);
           var notes = item.getNotes();
           if (notes == null) {
             notes = new ArrayList<>();
@@ -155,6 +160,19 @@ public class ItemsNotesUpdater {
         }));
     }
     return Optional.empty();
+  }
+
+  private Boolean extractStaffOnlyParamValue(org.folio.bulkops.domain.dto.Action action) {
+    if (action.getParameters().isEmpty()){
+      return false;
+    }
+
+    return action.getParameters()
+            .stream()
+            .filter(p -> "STAFF_ONLY".equalsIgnoreCase(p.getKey()))
+            .map(p -> Boolean.valueOf(p.getValue()))
+            .findFirst()
+            .orElse(false);
   }
 
   private Optional<Updater<Item>> changeType(Action action, UpdateOptionType option) {
