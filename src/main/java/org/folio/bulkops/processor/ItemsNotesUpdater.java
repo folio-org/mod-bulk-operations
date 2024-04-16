@@ -1,6 +1,7 @@
 package org.folio.bulkops.processor;
 
 import lombok.AllArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.CirculationNote;
 import org.folio.bulkops.domain.bean.Item;
@@ -26,6 +27,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_IN_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_OUT_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
+import static org.folio.bulkops.util.Constants.STAFF_ONLY_NOTE_PARAMETER_KEY;
 
 @Component
 @AllArgsConstructor
@@ -163,13 +165,13 @@ public class ItemsNotesUpdater {
   }
 
   private Boolean extractStaffOnlyParamValue(org.folio.bulkops.domain.dto.Action action) {
-    if (action.getParameters().isEmpty()){
+    if (CollectionUtils.isEmpty(action.getParameters())){
       return false;
     }
 
     return action.getParameters()
             .stream()
-            .filter(p -> "STAFF_ONLY".equalsIgnoreCase(p.getKey()))
+            .filter(p -> STAFF_ONLY_NOTE_PARAMETER_KEY.equalsIgnoreCase(p.getKey()))
             .map(p -> Boolean.valueOf(p.getValue()))
             .findFirst()
             .orElse(false);
