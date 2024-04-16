@@ -129,7 +129,7 @@ public class ItemsNotesUpdater {
       return Optional.of(item -> item.setAdministrativeNotes(administrativeNotesUpdater.addToAdministrativeNotes(action.getUpdated(), item.getAdministrativeNotes())));
     } else if (option == CHECK_IN_NOTE || option == CHECK_OUT_NOTE) {
       var type = option == CHECK_IN_NOTE ? CirculationNote.NoteTypeEnum.IN : CirculationNote.NoteTypeEnum.OUT;
-      boolean staffOnly = extractStaffOnlyParamValue(action);
+      var staffOnly = extractStaffOnlyParamValue(action);
       return Optional.of(item -> {
         var circulationNotes = item.getCirculationNotes();
         var circulationNote = new CirculationNote().withNoteType(type)
