@@ -1,6 +1,7 @@
 package org.folio.bulkops.processor;
 
 import lombok.AllArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.CirculationNote;
 import org.folio.bulkops.domain.bean.Item;
@@ -26,6 +27,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_IN_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_OUT_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
+import static org.folio.bulkops.util.Constants.STAFF_ONLY_NOTE_PARAMETER_KEY;
 
 @Component
 @AllArgsConstructor
@@ -127,10 +129,11 @@ public class ItemsNotesUpdater {
       return Optional.of(item -> item.setAdministrativeNotes(administrativeNotesUpdater.addToAdministrativeNotes(action.getUpdated(), item.getAdministrativeNotes())));
     } else if (option == CHECK_IN_NOTE || option == CHECK_OUT_NOTE) {
       var type = option == CHECK_IN_NOTE ? CirculationNote.NoteTypeEnum.IN : CirculationNote.NoteTypeEnum.OUT;
+      var staffOnly = extractStaffOnlyParamValue(action);
       return Optional.of(item -> {
         var circulationNotes = item.getCirculationNotes();
         var circulationNote = new CirculationNote().withNoteType(type)
-          .withNote(action.getUpdated()).withStaffOnly(false);
+          .withNote(action.getUpdated()).withStaffOnly(staffOnly);
         if (circulationNotes == null) {
           circulationNotes = new ArrayList<>();
         } else {
@@ -140,10 +143,14 @@ public class ItemsNotesUpdater {
         circulationNotes.add(circulationNote);
       });
     } else if (option == ITEM_NOTE) {
+      var staffOnly = extractStaffOnlyParamValue(action);
       return Optional.of(item -> action.getParameters()
         .stream().filter(parameter -> StringUtils.equals(parameter.getKey(), ITEM_NOTE_TYPE_ID_KEY))
         .findFirst().ifPresent(parameter -> {
-          var note = new ItemNote().withItemNoteTypeId(parameter.getValue()).withNote(action.getUpdated());
+          var note = new ItemNote()
+                  .withItemNoteTypeId(parameter.getValue())
+                  .withNote(action.getUpdated())
+                  .withStaffOnly(staffOnly);
           var notes = item.getNotes();
           if (notes == null) {
             notes = new ArrayList<>();
@@ -155,6 +162,19 @@ public class ItemsNotesUpdater {
         }));
     }
     return Optional.empty();
+  }
+
+  private Boolean extractStaffOnlyParamValue(org.folio.bulkops.domain.dto.Action action) {
+    if (CollectionUtils.isEmpty(action.getParameters())){
+      return false;
+    }
+
+    return action.getParameters()
+            .stream()
+            .filter(p -> STAFF_ONLY_NOTE_PARAMETER_KEY.equalsIgnoreCase(p.getKey()))
+            .map(p -> Boolean.valueOf(p.getValue()))
+            .findFirst()
+            .orElse(false);
   }
 
   private Optional<Updater<Item>> changeType(Action action, UpdateOptionType option) {
