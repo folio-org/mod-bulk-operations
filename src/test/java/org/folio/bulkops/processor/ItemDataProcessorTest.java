@@ -28,6 +28,7 @@ import static org.folio.bulkops.processor.ItemsNotesUpdater.ADMINISTRATIVE_NOTE_
 import static org.folio.bulkops.processor.ItemsNotesUpdater.CHECK_IN_NOTE_TYPE;
 import static org.folio.bulkops.processor.ItemsNotesUpdater.CHECK_OUT_NOTE_TYPE;
 import static org.folio.bulkops.processor.ItemsNotesUpdater.ITEM_NOTE_TYPE_ID_KEY;
+import static org.folio.bulkops.util.Constants.STAFF_ONLY_NOTE_PARAMETER_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -35,10 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.BaseTest;
@@ -470,12 +468,21 @@ class ItemDataProcessorTest extends BaseTest {
     processor.updater(CHECK_IN_NOTE, new Action().type(ADD_TO_EXISTING).updated(checkInNote)).apply(item);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals(checkInNote, item.getCirculationNotes().get(0).getNote());
+    assertEquals(false, item.getCirculationNotes().get(0).getStaffOnly());
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
 
     processor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING).updated(checkOutNote)).apply(item);
     assertEquals(2, item.getCirculationNotes().size());
     assertEquals(checkOutNote, item.getCirculationNotes().get(1).getNote());
+    assertEquals(false, item.getCirculationNotes().get(1).getStaffOnly());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(1).getNoteType());
+
+    List<Parameter> params = Collections.singletonList(new Parameter().key(STAFF_ONLY_NOTE_PARAMETER_KEY).value("true"));
+    processor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING).parameters(params).updated(checkOutNote)).apply(item);
+    assertEquals(3, item.getCirculationNotes().size());
+    assertEquals(checkOutNote, item.getCirculationNotes().get(2).getNote());
+    assertEquals(true, item.getCirculationNotes().get(2).getStaffOnly());
+    assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(2).getNoteType());
   }
 
   @Test
