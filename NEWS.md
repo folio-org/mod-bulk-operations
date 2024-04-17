@@ -1,5 +1,11 @@
 ## v2.1.0 - Unreleased
 
+## v2.0.2 - Released 2024/04/17
+This release contains fixes for missed records
+
+### Bugs
+* [MODBULKOPS-264](https://folio-org.atlassian.net/browse/MODBULKOPS-264) - Specific case when some records are missed in .csv file with updated records
+
 ## v2.0.1 - Released 2024/04/05
 This release contains fixes for preview and custom fields types
 
