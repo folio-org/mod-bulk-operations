@@ -6,8 +6,8 @@ spring:
     version: @project.version@
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: ${MAX_UPLOADED_FILE_SIZE:40MB}
+      max-request-size: ${MAX_UPLOADED_FILE_SIZE:40MB}
   datasource:
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
