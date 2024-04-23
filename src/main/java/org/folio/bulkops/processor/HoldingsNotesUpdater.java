@@ -8,6 +8,7 @@ import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
+import static org.folio.bulkops.util.Constants.STAFF_ONLY_NOTE_PARAMETER_KEY;
 
 @Component
 @AllArgsConstructor
@@ -69,6 +71,17 @@ public class HoldingsNotesUpdater {
     return Optional.empty();
   }
 
+  private Boolean extractStaffOnlyParamValue(List<Parameter> parameters) {
+    if (CollectionUtils.isEmpty(parameters)){
+      return false;
+    }
+
+    return parameters.stream()
+      .filter(p -> STAFF_ONLY_NOTE_PARAMETER_KEY.equalsIgnoreCase(p.getKey()))
+      .map(p -> Boolean.valueOf(p.getValue()))
+      .findFirst()
+      .orElse(false);
+  }
   private void setMarkAsStaffForNotesByTypeId(List<HoldingsNote> notes, List<Parameter> parameters, boolean markAsStaffValue) {
     parameters.stream().filter(p -> StringUtils.equals(p.getKey(), HOLDINGS_NOTE_TYPE_ID_KEY)).findFirst()
       .ifPresent(parameter -> {
@@ -94,10 +107,11 @@ public class HoldingsNotesUpdater {
   }
 
   private List<HoldingsNote> addToNotesByTypeId(List<HoldingsNote> notes, List<Parameter> parameters, String noteValue) {
+    var staffOnly = extractStaffOnlyParamValue(parameters);
     var typeIdParameterOptional = getTypeIdParameterOptional(parameters);
     if (typeIdParameterOptional.isPresent()) {
       var note = new HoldingsNote().withHoldingsNoteTypeId(typeIdParameterOptional.get().getValue())
-        .withNote(noteValue).withStaffOnly(false);
+        .withNote(noteValue).withStaffOnly(staffOnly);
       if (notes == null) {
         notes = new ArrayList<>();
       }

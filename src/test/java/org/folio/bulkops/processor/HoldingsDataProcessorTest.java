@@ -16,21 +16,18 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDI
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_URL_RELATIONSHIP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.EMAIL_ADDRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDINGS_NOTE_TYPE_ID_KEY;
+import static org.folio.bulkops.util.Constants.STAFF_ONLY_NOTE_PARAMETER_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -48,16 +45,13 @@ import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.NotFoundException;
-import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.service.ElectronicAccessService;
 import org.folio.bulkops.service.ErrorService;
-import org.folio.bulkops.service.HoldingsReferenceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -221,7 +215,7 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, nonExistedLocationId)));
     assertNotNull(actual.getUpdated());
-    assertFalse(actual.shouldBeUpdated);;
+    assertFalse(actual.shouldBeUpdated);
   }
 
   @Test
@@ -354,6 +348,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void testAddHoldingsNotes() {
     var note1 = "note1";
     var note2 = "note2";
+    var note3 = "note3";
     var holding = new HoldingsRecord();
     var parameter = new Parameter();
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
@@ -366,6 +361,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     assertEquals(1, holding.getNotes().size());
     assertEquals("typeId1", holding.getNotes().get(0).getHoldingsNoteTypeId());
     assertEquals(note1, holding.getNotes().get(0).getNote());
+    assertEquals(false, holding.getNotes().get(0).getStaffOnly());
 
     parameter.setValue("typeId2");
     processor.updater(HOLDINGS_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(note2)).apply(holding);
@@ -373,6 +369,15 @@ class HoldingsDataProcessorTest extends BaseTest {
     assertEquals(2, holding.getNotes().size());
     assertEquals("typeId2", holding.getNotes().get(1).getHoldingsNoteTypeId());
     assertEquals(note2, holding.getNotes().get(1).getNote());
+    assertEquals(false, holding.getNotes().get(1).getStaffOnly());
+
+    parameter.setValue("typeId3");
+    List<Parameter> params = List.of(new Parameter().key(STAFF_ONLY_NOTE_PARAMETER_KEY).value("true"), parameter);
+    processor.updater(HOLDINGS_NOTE, new Action().type(ADD_TO_EXISTING).parameters(params).updated(note3)).apply(holding);
+    assertEquals(3, holding.getNotes().size());
+    assertEquals("typeId3", holding.getNotes().get(2).getHoldingsNoteTypeId());
+    assertEquals(note3, holding.getNotes().get(2).getNote());
+    assertEquals(true, holding.getNotes().get(2).getStaffOnly());
   }
 
   @Test
