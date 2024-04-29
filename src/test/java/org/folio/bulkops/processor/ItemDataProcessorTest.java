@@ -766,9 +766,9 @@ class ItemDataProcessorTest extends BaseTest {
   @SneakyThrows
   void testDuplicateForCirculationNotes() {
     var checkInNote = new CirculationNote().withId(UUID.randomUUID().toString())
-      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note 1");
+      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note 1").withStaffOnly(true);
     var checkOutNote = new CirculationNote().withId(UUID.randomUUID().toString())
-      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note 2");
+      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note 2").withStaffOnly(true);
     var item = new Item().withCirculationNotes(new ArrayList<>(List.of(checkInNote, checkOutNote)));
     var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
@@ -778,6 +778,7 @@ class ItemDataProcessorTest extends BaseTest {
     var duplicated = item.getCirculationNotes().stream().filter(circNote ->
       circNote.getNoteType() == CirculationNote.NoteTypeEnum.OUT && StringUtils.equals(circNote.getNote(), "note 1")).findFirst();
     assertTrue(duplicated.isPresent());
+    assertTrue(duplicated.get().getStaffOnly());
 
     processor.updater(CHECK_OUT_NOTE, new Action().type(DUPLICATE).updated(CHECK_IN_NOTE_TYPE)).apply(item);
     assertEquals(5, item.getCirculationNotes().size());
@@ -787,9 +788,10 @@ class ItemDataProcessorTest extends BaseTest {
       circNote.getNoteType() == CirculationNote.NoteTypeEnum.IN && StringUtils.equals(circNote.getNote(), "note 1")).count();
     assertEquals(2, count);
 
-    count = item.getCirculationNotes().stream().filter(circNote ->
-      circNote.getNoteType() == CirculationNote.NoteTypeEnum.IN && StringUtils.equals(circNote.getNote(), "note 2")).count();
-    assertEquals(1, count);
+    duplicated = item.getCirculationNotes().stream().filter(circNote ->
+      circNote.getNoteType() == CirculationNote.NoteTypeEnum.IN && StringUtils.equals(circNote.getNote(), "note 2")).findFirst();
+    assertTrue(duplicated.isPresent());
+    assertTrue(duplicated.get().getStaffOnly());
   }
 
   @Test
