@@ -309,12 +309,14 @@ public class ItemsNotesUpdater {
             item.setCirculationNotes(new ArrayList<>());
           }
           notesWithTypeForChange.forEach(note -> {
-            if (CHECK_IN_NOTE_TYPE.equals(noteTypeToUse))
+            if (CHECK_IN_NOTE_TYPE.equals(noteTypeToUse)) {
               item.getCirculationNotes().add(new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN)
                 .withNote(note.getNote()).withStaffOnly(note.getStaffOnly()));
-            if (CHECK_OUT_NOTE_TYPE.equals(noteTypeToUse))
+            }
+            if (CHECK_OUT_NOTE_TYPE.equals(noteTypeToUse)) {
               item.getCirculationNotes().add(new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.OUT)
                 .withNote(note.getNote()).withStaffOnly(note.getStaffOnly()));
+            }
             if (ADMINISTRATIVE_NOTE_TYPE.equals(noteTypeToUse)) {
               item.getAdministrativeNotes().add(note.getNote());
             }
