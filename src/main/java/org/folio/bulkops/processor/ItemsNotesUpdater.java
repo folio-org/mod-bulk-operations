@@ -281,13 +281,17 @@ public class ItemsNotesUpdater {
         var circNotesWithoutTypeForChange = item.getCirculationNotes().stream().filter(circulationNote -> circulationNote.getNoteType() != typeForChange).collect(toCollection(ArrayList::new));
         var circNotesWithTypeForChange = item.getCirculationNotes().stream().filter(circulationNote -> circulationNote.getNoteType() == typeForChange).toList();
         if (!circNotesWithTypeForChange.isEmpty()) {
-          if (item.getAdministrativeNotes() == null) item.setAdministrativeNotes(new ArrayList<>());
-          if (item.getNotes() == null) item.setNotes(new ArrayList<>());
+          if (item.getAdministrativeNotes() == null) {
+            item.setAdministrativeNotes(new ArrayList<>());
+          }
+          if (item.getNotes() == null) {
+            item.setNotes(new ArrayList<>());
+          }
           circNotesWithTypeForChange.forEach(note -> {
             if (ADMINISTRATIVE_NOTE_TYPE.equals(noteTypeToUse)) {
               item.getAdministrativeNotes().add(note.getNote());
             } else {
-              item.getNotes().add(new ItemNote().withItemNoteTypeId(noteTypeToUse).withNote(note.getNote()));
+              item.getNotes().add(new ItemNote().withItemNoteTypeId(noteTypeToUse).withNote(note.getNote()).withStaffOnly(note.getStaffOnly()));
             }
           });
           item.setCirculationNotes(circNotesWithoutTypeForChange);
