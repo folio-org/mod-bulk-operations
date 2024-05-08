@@ -4,6 +4,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.CirculationNote;
 import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.Instance;
+import org.folio.bulkops.domain.bean.InstanceNote;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.dto.Action;
@@ -12,6 +14,8 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toCollection;
 import static org.folio.bulkops.processor.ItemsNotesUpdater.CHECK_IN_NOTE_TYPE;
 import static org.folio.bulkops.processor.ItemsNotesUpdater.CHECK_OUT_NOTE_TYPE;
@@ -25,11 +29,9 @@ public class AdministrativeNotesUpdater {
   }
 
   public List<String> addToAdministrativeNotes(String administrativeNote, List<String> administrativeNotes) {
-    if (administrativeNotes == null) {
-      administrativeNotes = new ArrayList<>();
-    }
-    administrativeNotes.add(administrativeNote);
-    return administrativeNotes;
+    List<String> notes = isNull(administrativeNotes) ? new ArrayList<>() : new ArrayList<>(administrativeNotes);
+    notes.add(administrativeNote);
+    return notes;
   }
 
   public List<String> findAndRemoveAdministrativeNote(String administrativeNoteToRemove, List<String> administrativeNotes) {
@@ -76,6 +78,23 @@ public class AdministrativeNotesUpdater {
         }
       });
       item.setAdministrativeNotes(new ArrayList<>());
+    }
+  }
+
+  public void changeNoteTypeForAdministrativeNotes(Instance instance, Action action) {
+    if (nonNull(instance.getAdministrativeNotes())) {
+      List<InstanceNote> instanceNotes = isNull(instance.getInstanceNotes()) ?
+        new ArrayList<>() :
+        new ArrayList<>(instance.getInstanceNotes());
+      var notes = instance.getAdministrativeNotes().stream()
+        .map(administrativeNote -> InstanceNote.builder()
+          .instanceNoteTypeId(action.getUpdated())
+          .note(administrativeNote)
+          .staffOnly(false).build())
+        .toList();
+      instanceNotes.addAll(notes);
+      instance.setInstanceNotes(instanceNotes);
+      instance.setAdministrativeNotes(new ArrayList<>());
     }
   }
 }

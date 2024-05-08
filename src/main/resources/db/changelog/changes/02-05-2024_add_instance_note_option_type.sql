@@ -1,0 +1,2 @@
+ALTER TYPE UpdateOptionType
+ADD VALUE 'INSTANCE_NOTE';
