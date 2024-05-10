@@ -680,9 +680,9 @@ class ItemDataProcessorTest extends BaseTest {
   @SneakyThrows
   void testChangeNoteTypeForCirculationNotes() {
     var checkInNote = new CirculationNote()
-      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note");
+      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note").withStaffOnly(true);
     var checkOutNote = new CirculationNote()
-      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note 2");
+      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note 2").withStaffOnly(true);
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
     var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
@@ -691,6 +691,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(2, item.getCirculationNotes().size());
     assertEquals("note", item.getCirculationNotes().get(0).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
+    assertTrue(item.getCirculationNotes().get(0).getStaffOnly());
 
     checkInNote.setNoteType(CirculationNote.NoteTypeEnum.IN);
 
@@ -711,12 +712,13 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(1, item.getNotes().size());
     assertEquals("note", item.getNotes().get(0).getNote());
     assertEquals("typeId", item.getNotes().get(0).getItemNoteTypeId());
+    assertTrue(item.getNotes().get(0).getStaffOnly());
   }
 
   @Test
   @SneakyThrows
   void testChangeNoteTypeForItemNotes() {
-    var itemNote1 = new ItemNote().withItemNoteTypeId("typeId1").withNote("itemNote1");
+    var itemNote1 = new ItemNote().withItemNoteTypeId("typeId1").withNote("itemNote1").withStaffOnly(true);
     var itemNote2 = new ItemNote().withItemNoteTypeId("typeId2").withNote("itemNote2");
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
@@ -738,6 +740,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals("itemNote1", item.getCirculationNotes().get(0).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
+    assertTrue(item.getCirculationNotes().get(0).getStaffOnly());
     assertEquals(1, item.getNotes().size());
     assertEquals("itemNote2", item.getNotes().get(0).getNote());
 
@@ -748,6 +751,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals("itemNote1", item.getCirculationNotes().get(0).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
+    assertTrue(item.getCirculationNotes().get(0).getStaffOnly());
     assertEquals(1, item.getNotes().size());
     assertEquals("itemNote2", item.getNotes().get(0).getNote());
 
@@ -766,9 +770,9 @@ class ItemDataProcessorTest extends BaseTest {
   @SneakyThrows
   void testDuplicateForCirculationNotes() {
     var checkInNote = new CirculationNote().withId(UUID.randomUUID().toString())
-      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note 1");
+      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note 1").withStaffOnly(true);
     var checkOutNote = new CirculationNote().withId(UUID.randomUUID().toString())
-      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note 2");
+      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note 2").withStaffOnly(true);
     var item = new Item().withCirculationNotes(new ArrayList<>(List.of(checkInNote, checkOutNote)));
     var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
@@ -778,6 +782,7 @@ class ItemDataProcessorTest extends BaseTest {
     var duplicated = item.getCirculationNotes().stream().filter(circNote ->
       circNote.getNoteType() == CirculationNote.NoteTypeEnum.OUT && StringUtils.equals(circNote.getNote(), "note 1")).findFirst();
     assertTrue(duplicated.isPresent());
+    assertTrue(duplicated.get().getStaffOnly());
 
     processor.updater(CHECK_OUT_NOTE, new Action().type(DUPLICATE).updated(CHECK_IN_NOTE_TYPE)).apply(item);
     assertEquals(5, item.getCirculationNotes().size());
@@ -787,9 +792,10 @@ class ItemDataProcessorTest extends BaseTest {
       circNote.getNoteType() == CirculationNote.NoteTypeEnum.IN && StringUtils.equals(circNote.getNote(), "note 1")).count();
     assertEquals(2, count);
 
-    count = item.getCirculationNotes().stream().filter(circNote ->
-      circNote.getNoteType() == CirculationNote.NoteTypeEnum.IN && StringUtils.equals(circNote.getNote(), "note 2")).count();
-    assertEquals(1, count);
+    duplicated = item.getCirculationNotes().stream().filter(circNote ->
+      circNote.getNoteType() == CirculationNote.NoteTypeEnum.IN && StringUtils.equals(circNote.getNote(), "note 2")).findFirst();
+    assertTrue(duplicated.isPresent());
+    assertTrue(duplicated.get().getStaffOnly());
   }
 
   @Test
