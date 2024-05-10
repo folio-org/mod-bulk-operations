@@ -9,13 +9,17 @@ import static org.folio.bulkops.util.Utils.encode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.InstanceFormatsClient;
+import org.folio.bulkops.client.InstanceNoteTypesClient;
 import org.folio.bulkops.client.InstanceStatusesClient;
 import org.folio.bulkops.client.InstanceTypesClient;
 import org.folio.bulkops.client.ModesOfIssuanceClient;
 import org.folio.bulkops.client.NatureOfContentTermsClient;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.domain.dto.InstanceNoteType;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @Log4j2
@@ -26,6 +30,7 @@ public class InstanceReferenceService {
   private final InstanceTypesClient instanceTypesClient;
   private final NatureOfContentTermsClient natureOfContentTermsClient;
   private final InstanceFormatsClient instanceFormatsClient;
+  private final InstanceNoteTypesClient instanceNoteTypesClient;
 
   @Cacheable(cacheNames = "instanceStatusNames")
   public String getInstanceStatusNameById(String id) {
@@ -115,5 +120,28 @@ public class InstanceReferenceService {
       throw new NotFoundException(format("Instance format was not found by name=%s", name));
     }
     return response.getFormats().get(0).getId();
+  }
+
+  @Cacheable(cacheNames = "instanceNoteTypesNames")
+  public String getNoteTypeNameById(String id) {
+    try {
+      return instanceNoteTypesClient.getNoteTypeById(id).getName();
+    } catch (Exception e) {
+      throw new NotFoundException(format("Note type not found by id=%s", id));
+    }
+  }
+
+  @Cacheable(cacheNames = "instanceNoteTypes")
+  public String getNoteTypeIdByName(String name) {
+    var noteTypes = instanceNoteTypesClient.getNoteTypesByQuery(format(QUERY_PATTERN_NAME, encode(name)), 1);
+    if (noteTypes.getInstanceNoteTypes().isEmpty()) {
+      throw new NotFoundException(format("Note type not found by name=%s", name));
+    }
+    return noteTypes.getInstanceNoteTypes().get(0).getId().toString();
+  }
+
+  @Cacheable(cacheNames = "allInstanceNoteTypes")
+  public List<InstanceNoteType> getAllInstanceNoteTypes() {
+    return instanceNoteTypesClient.getInstanceNoteTypes(Integer.MAX_VALUE).getInstanceNoteTypes();
   }
 }

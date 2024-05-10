@@ -24,4 +24,5 @@
   <include file="changes/05-01-2024_add_staff_suppress.xml" relativeToChangelogFile="true"/>
   <include file="changes/26-01-2024_add_query_fields_and_statuses.xml" relativeToChangelogFile="true"/>
   <include file="changes/12-03-2024_add_user_friendly_query_field.xml" relativeToChangelogFile="true"/>
+  <include file="changes/02-05-2024_add_instance_note_option_type.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

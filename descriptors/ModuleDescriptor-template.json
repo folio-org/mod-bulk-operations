@@ -53,7 +53,8 @@
             "inventory-storage.holdings-note-types.item.get",
             "inventory-storage.ill-policies.item.get",
             "inventory-storage.holdings-sources.item.get",
-            "inventory-storage.statistical-codes.item.get"
+            "inventory-storage.statistical-codes.item.get",
+            "inventory-storage.instance-note-types.collection.get"
           ]
         },
         {
@@ -78,7 +79,8 @@
             "inventory-storage.holdings-note-types.item.get",
             "inventory-storage.ill-policies.item.get",
             "inventory-storage.holdings-sources.item.get",
-            "inventory-storage.statistical-codes.item.get"
+            "inventory-storage.statistical-codes.item.get",
+            "inventory-storage.instance-note-types.item.get"
           ]
         },
         {
@@ -142,7 +144,9 @@
             "inventory-storage.nature-of-content-terms.item.get",
             "inventory-storage.instance-formats.collection.get",
             "inventory-storage.instance-formats.item.get",
-            "inventory.instances.item.put"
+            "inventory.instances.item.put",
+            "inventory-storage.instance-note-types.item.get",
+            "inventory-storage.instance-note-types.collection.get"
           ]
         },
         {
@@ -444,6 +448,10 @@
     },
     {
       "id": "entity-types",
+      "version": "1.0"
+    },
+    {
+      "id": "instance-note-types",
       "version": "1.0"
     }
   ],

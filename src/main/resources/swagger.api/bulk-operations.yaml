@@ -544,6 +544,8 @@ components:
       $ref: 'schemas/errors.json'
     users:
       $ref: 'schemas/users.json'
+    instanceNoteTypeCollection:
+      $ref: "schemas/instance_note_type_collection.json"
     searchResult:
       type: object
       properties:

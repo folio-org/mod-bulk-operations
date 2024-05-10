@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
+import static org.folio.bulkops.util.Constants.INSTANCE_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
@@ -17,6 +18,7 @@ import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.Row;
+import org.folio.bulkops.domain.dto.InstanceNoteType;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 
 import org.springframework.stereotype.Component;
@@ -36,6 +38,7 @@ public class NoteTableUpdater {
 
   private final ItemReferenceService itemReferenceService;
   private final HoldingsReferenceService holdingsReferenceService;
+  private final InstanceReferenceService instanceReferenceService;
 
   public void extendTableWithHoldingsNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible) {
     var noteTypeNames = holdingsReferenceService.getAllHoldingsNoteTypes().stream()
@@ -43,7 +46,7 @@ public class NoteTableUpdater {
       .sorted()
       .toList();
 
-    extendHeadersWithItemNoteTypeNames(HOLDINGS_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
+    extendHeadersWithNoteTypeNames(HOLDINGS_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
     unifiedTable.getRows().forEach(row -> extendRowWithNotesData(HOLDINGS_NOTE_POSITION, row, noteTypeNames));
   }
 
@@ -53,8 +56,18 @@ public class NoteTableUpdater {
       .sorted()
       .toList();
 
-    extendHeadersWithItemNoteTypeNames(ITEM_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
+    extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
     unifiedTable.getRows().forEach(row -> extendRowWithNotesData(ITEM_NOTE_POSITION, row, noteTypeNames));
+  }
+
+  public void extendTableWithInstanceNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible) {
+    var noteTypeNames = instanceReferenceService.getAllInstanceNoteTypes().stream()
+      .map(InstanceNoteType::getName)
+      .sorted()
+      .toList();
+
+    extendHeadersWithNoteTypeNames(INSTANCE_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
+    unifiedTable.getRows().forEach(row -> extendRowWithNotesData(INSTANCE_NOTE_POSITION, row, noteTypeNames));
   }
 
   private String concatNotePostfixIfRequired(String noteTypeName) {
@@ -63,7 +76,7 @@ public class NoteTableUpdater {
       noteTypeName;
   }
 
-  public void extendHeadersWithItemNoteTypeNames(int notesInitialPosition, List<Cell> headers, List<String> noteTypeNames, Set<String> forceVisible) {
+  public void extendHeadersWithNoteTypeNames(int notesInitialPosition, List<Cell> headers, List<String> noteTypeNames, Set<String> forceVisible) {
     var headerToReplace = headers.get(notesInitialPosition);
     var cellsToInsert = noteTypeNames.stream()
       .map(name -> new Cell()

@@ -51,6 +51,14 @@ public class InstanceReferenceHelper implements InitializingBean {
     return instanceReferenceService.getInstanceFormatIdByName(name);
   }
 
+  public String getNoteTypeNameById(String id) {
+    return instanceReferenceService.getNoteTypeNameById(id);
+  }
+
+  public String getNoteTypeIdByName(String name) {
+    return instanceReferenceService.getNoteTypeIdByName(name);
+  }
+
   private static InstanceReferenceHelper service;
 
   @Override

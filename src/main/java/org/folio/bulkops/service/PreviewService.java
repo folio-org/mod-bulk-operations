@@ -26,6 +26,7 @@ import com.opencsv.CSVReaderBuilder;
 import com.opencsv.RFC4180ParserBuilder;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.client.HoldingsNoteTypeClient;
@@ -207,9 +208,10 @@ public class PreviewService {
   private void processNoteFields(UnifiedTable table, Class<? extends BulkOperationsEntity> clazz, Set<String> forceVisible) {
     if (clazz == Item.class) {
       noteTableUpdater.extendTableWithItemNotesTypes(table, forceVisible);
-    }
-    if (clazz == HoldingsRecord.class) {
+    } else if (clazz == HoldingsRecord.class) {
       noteTableUpdater.extendTableWithHoldingsNotesTypes(table, forceVisible);
+    } else if (clazz == Instance.class) {
+      noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible);
     }
   }
 }
