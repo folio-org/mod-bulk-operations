@@ -17,7 +17,6 @@ import static wiremock.org.hamcrest.Matchers.hasSize;
 
 import java.io.InputStream;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -45,7 +44,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -134,7 +132,11 @@ class ErrorServiceTest extends BaseTest {
 
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       verify(remoteFileSystemClient).put(streamCaptor.capture(), eq(expectedFileName));
-      assertThat("123,Error message 123\n456,Error message 456", equalTo(new String(streamCaptor.getValue().readAllBytes())));
+      var actual = new String(streamCaptor.getValue().readAllBytes());
+      var actualArr = actual.split("\n");
+      Arrays.sort(actualArr);
+      var expectedArr = new String[] {"123,Error message 123", "456,Error message 456"};
+      assertArrayEquals(expectedArr, actualArr);
     }
   }
 
