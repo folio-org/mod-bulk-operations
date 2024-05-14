@@ -382,6 +382,11 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
     };
   }
 
+  @Override
+  public Integer _version() {
+    return version;
+  }
+
   public Boolean getDiscoverySuppress() {
     return isNull(discoverySuppress) ? FALSE : discoverySuppress;
   }

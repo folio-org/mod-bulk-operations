@@ -28,7 +28,7 @@ public class RecordUpdateService {
         updater.updateRecord(modified);
       } catch (FeignException e) {
         if (e.status() == 409 && e.getMessage().contains("optimistic locking")) {
-          throw new OptimisticLockingException(String.format(MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING, original.getVersion(), modified.getVersion()));
+          throw new OptimisticLockingException(String.format(MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING, original._version(), modified._version()));
         }
         throw e;
       }

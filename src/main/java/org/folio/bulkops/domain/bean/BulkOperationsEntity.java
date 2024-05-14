@@ -7,5 +7,5 @@ import org.folio.bulkops.domain.dto.IdentifierType;
  */
 public interface BulkOperationsEntity {
   String getIdentifier(IdentifierType identifierType);
-  Integer getVersion();
+  Integer _version();
 }

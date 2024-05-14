@@ -158,7 +158,7 @@ public class User implements BulkOperationsEntity {
   }
 
   @Override
-  public Integer getVersion() {
+  public Integer _version() {
     return null;
   }
 }

@@ -281,6 +281,11 @@ public class HoldingsRecord implements BulkOperationsEntity, ElectronicAccessEnt
     };
   }
 
+  @Override
+  public Integer _version() {
+    return version;
+  }
+
   public Boolean getDiscoverySuppress() {
     return isNull(discoverySuppress) ? FALSE : discoverySuppress;
   }

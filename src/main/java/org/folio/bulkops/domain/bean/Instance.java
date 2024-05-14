@@ -223,4 +223,9 @@ public class Instance implements BulkOperationsEntity {
       default -> id;
     };
   }
+
+  @Override
+  public Integer _version() {
+    return version;
+  }
 }
