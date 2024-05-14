@@ -13,6 +13,7 @@ import feign.FeignException;
 import feign.Request;
 import feign.Response;
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
@@ -105,5 +106,28 @@ class RecordUpdateServiceTest extends BaseTest {
       .build();
 
     assertThrows(OptimisticLockingException.class, () -> recordUpdateService.updateEntity(original, modified, operation));
+  }
+
+  @Test
+  void testUpdateModifiedEntityWithOtherError() {
+    var feignException = FeignException.errorStatus("", Response.builder().status(409)
+      .reason("other reason")
+      .request(Request.create(Request.HttpMethod.GET, "", Map.of(), new byte[]{}, Charset.defaultCharset(), null))
+      .build());
+    doThrow(feignException).when(instanceClient).updateInstance(any(Instance.class), any(String.class));
+    var original = Instance.builder()
+      .id(UUID.randomUUID().toString())
+      .build();
+    var modified = Instance.builder()
+      .id(UUID.randomUUID().toString())
+      .version(1)
+      .build();
+    var operation = BulkOperation.builder()
+      .id(UUID.randomUUID())
+      .identifierType(IdentifierType.ID)
+      .entityType(EntityType.INSTANCE)
+      .build();
+
+    assertThrows(FeignException.class, () -> recordUpdateService.updateEntity(original, modified, operation));
   }
 }
