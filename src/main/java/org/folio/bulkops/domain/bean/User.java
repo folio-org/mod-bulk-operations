@@ -156,4 +156,9 @@ public class User implements BulkOperationsEntity {
       default -> id;
     };
   }
+
+  @Override
+  public Integer getVersion() {
+    return null;
+  }
 }
