@@ -127,7 +127,7 @@ public class ErrorService {
   }
 
   public String uploadErrorsToStorage(UUID bulkOperationId) {
-    var contents = executionContentCqlRepository.findByCql("bulkOperationId==" + bulkOperationId + POSTFIX_ERROR_MESSAGE_NON_NULL, OffsetRequest.of(0, Integer.MAX_VALUE));
+    var contents = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId, OffsetRequest.of(0, Integer.MAX_VALUE));
     if (!contents.isEmpty()) {
       var errorsString = contents.stream()
         .map(content -> String.join(Constants.COMMA_DELIMETER, content.getIdentifier(), content.getErrorMessage()))
