@@ -38,6 +38,7 @@ import org.folio.bulkops.client.HoldingsSourceClient;
 import org.folio.bulkops.client.HoldingsTypeClient;
 import org.folio.bulkops.client.IllPolicyClient;
 import org.folio.bulkops.client.InstanceFormatsClient;
+import org.folio.bulkops.client.InstanceNoteTypesClient;
 import org.folio.bulkops.client.InstanceStatusesClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.InstanceTypesClient;
@@ -196,6 +197,8 @@ public abstract class BaseTest {
   public InstanceFormatsClient instanceFormatsClient;
   @MockBean
   public InstanceClient instanceClient;
+  @MockBean
+  public InstanceNoteTypesClient instanceNoteTypesClient;
 
   @Autowired
   protected MockMvc mockMvc;

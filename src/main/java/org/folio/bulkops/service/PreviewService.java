@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
 import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDINGS_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.processor.InstanceNotesUpdaterFactory.INSTANCE_NOTE_TYPE_ID_KEY;
@@ -147,6 +148,14 @@ public class PreviewService {
           });
         } else if (HOLDINGS_NOTE == option) {
           var initial = action.getParameters().stream().filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
+          initial.ifPresent(id -> {
+            var type = resolveAndGetItemTypeById(clazz, id);
+            if (StringUtils.isNotEmpty(type)) {
+              forceVisibleOptions.add(type);
+            }
+          });
+        } else if (INSTANCE_NOTE == option) {
+          var initial = action.getParameters().stream().filter(p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
           initial.ifPresent(id -> {
             var type = resolveAndGetItemTypeById(clazz, id);
             if (StringUtils.isNotEmpty(type)) {
