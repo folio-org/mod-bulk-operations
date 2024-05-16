@@ -14,6 +14,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_UR
 import static org.folio.bulkops.domain.dto.UpdateOptionType.EMAIL_ADDRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.EXPIRATION_DATE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PATRON_GROUP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
@@ -89,6 +90,8 @@ public class UpdateOptionTypeToFieldResolver {
       return "Electronic access";
     } else if (ELECTRONIC_ACCESS_URL_PUBLIC_NOTE == type) {
       return "Electronic access";
+    } else if (INSTANCE_NOTE == type) {
+      return "Instance note";
     } else {
       throw new UnsupportedOperationException("There is no matching for Operation Type: " + type);
     }

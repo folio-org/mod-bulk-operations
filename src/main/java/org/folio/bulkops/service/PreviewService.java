@@ -8,6 +8,7 @@ import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
 import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDINGS_NOTE_TYPE_ID_KEY;
+import static org.folio.bulkops.processor.InstanceNotesUpdaterFactory.INSTANCE_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.processor.ItemsNotesUpdater.ITEM_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
@@ -26,6 +27,7 @@ import com.opencsv.CSVReaderBuilder;
 import com.opencsv.RFC4180ParserBuilder;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.client.InstanceNoteTypesClient;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
@@ -61,6 +63,7 @@ public class PreviewService {
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final ItemNoteTypeClient itemNoteTypeClient;
   private final HoldingsNoteTypeClient holdingsNoteTypeClient;
+  private final InstanceNoteTypesClient instanceNoteTypesClient;
 
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -106,6 +109,11 @@ public class PreviewService {
           if (EntityType.HOLDINGS_RECORD == entityType) {
             initial = CollectionUtils.isNotEmpty(action.getParameters()) ? action.getParameters().stream()
               .filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst() : Optional.empty();
+          }
+
+          if (EntityType.INSTANCE == entityType) {
+            initial = CollectionUtils.isNotEmpty(action.getParameters()) ? action.getParameters().stream()
+              .filter(p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst() : Optional.empty();
           }
 
           if (initial.isPresent()) {
@@ -161,6 +169,8 @@ public class PreviewService {
       return holdingsNoteTypeClient.getNoteTypeById(value).getName();
     } else if (clazz == Item.class) {
       return itemNoteTypeClient.getNoteTypeById(value).getName();
+    } else if (clazz == Instance.class) {
+      return instanceNoteTypesClient.getNoteTypeById(value).getName();
     } else {
       return StringUtils.EMPTY;
     }
