@@ -8,8 +8,10 @@ import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
-import static org.folio.bulkops.processor.InstanceNotesUpdaterFactory.INSTANCE_NOTE_TYPE_ID_KEY;
+import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
+import static org.folio.bulkops.util.Constants.INSTANCE_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
 import static org.folio.bulkops.util.UnifiedTableHeaderBuilder.getHeaders;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -333,24 +335,31 @@ class PreviewServiceTest extends BaseTest {
     Assertions.assertTrue(table.getHeader().size() > 0);
   }
 
-  @Test
-  void shouldSetForceVisibleForUpdatedInstanceNotes() {
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+    INSTANCE        | CHANGE_TYPE     | INSTANCE_NOTE | INSTANCE_NOTE_TYPE_ID_KEY
+    INSTANCE        | ADD_TO_EXISTING | INSTANCE_NOTE | INSTANCE_NOTE_TYPE_ID_KEY
+    HOLDINGS_RECORD | CHANGE_TYPE     | HOLDINGS_NOTE | HOLDINGS_NOTE_TYPE_ID_KEY
+    HOLDINGS_RECORD | ADD_TO_EXISTING | HOLDINGS_NOTE | HOLDINGS_NOTE_TYPE_ID_KEY
+    """, delimiter = '|')
+  void shouldSetForceVisibleForUpdatedInstanceNotes(EntityType entityType, UpdateActionType actionType,
+                                                    UpdateOptionType updateOption, String key) {
     var operationId = UUID.randomUUID();
     var oldNoteTypeId = UUID.randomUUID().toString();
     var newNoteTypeId = UUID.randomUUID().toString();
     var pathToCsv = "commited.csv";
     var operation = BulkOperation.builder()
       .id(operationId)
-      .entityType(INSTANCE)
+      .entityType(entityType)
       .linkToCommittedRecordsCsvFile(pathToCsv).build();
     var rules = rules(new BulkOperationRule().bulkOperationId(operationId)
       .ruleDetails(new BulkOperationRuleRuleDetails()
-        .option(UpdateOptionType.INSTANCE_NOTE)
+        .option(updateOption)
         .actions(Collections.singletonList(new Action()
-          .type(UpdateActionType.CHANGE_TYPE)
+          .type(actionType)
           .updated(newNoteTypeId)
           .parameters(Collections.singletonList(new Parameter()
-            .key(INSTANCE_NOTE_TYPE_ID_KEY)
+            .key(key)
             .value(oldNoteTypeId)))))));
 
     when(ruleService.getRules(operationId)).thenReturn(rules);
@@ -361,15 +370,25 @@ class PreviewServiceTest extends BaseTest {
     when(instanceNoteTypesClient.getInstanceNoteTypes(Integer.MAX_VALUE))
       .thenReturn(new InstanceNoteTypeCollection().instanceNoteTypes(List.of(
         new InstanceNoteType().name("old note type"), new InstanceNoteType().name("new note type"))).totalRecords(2));
+    when(holdingsNoteTypeClient.getNoteTypeById(oldNoteTypeId))
+      .thenReturn(new HoldingsNoteType().withName("old note type"));
+    when(holdingsNoteTypeClient.getNoteTypeById(newNoteTypeId))
+      .thenReturn(new HoldingsNoteType().withName("new note type"));
+    when(holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE))
+      .thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(List.of(
+        new HoldingsNoteType().withName("old note type"), new HoldingsNoteType().withName("new note type"))).withTotalRecords(2));
     when(remoteFileSystemClient.get(pathToCsv))
       .thenReturn(new ByteArrayInputStream(",,,,,,,,,,".getBytes()));
 
     var table = previewService.getPreview(operation, COMMIT, 0, 10);
 
-    assertEquals("new note type", table.getHeader().get(22).getValue());
-    assertTrue(table.getHeader().get(22).getForceVisible());
-    assertEquals("old note type", table.getHeader().get(23).getValue());
-    assertTrue(table.getHeader().get(23).getForceVisible());
+    var position = HOLDINGS_NOTE.equals(updateOption) ? HOLDINGS_NOTE_POSITION : INSTANCE_NOTE_POSITION;
+    assertEquals("new note type", table.getHeader().get(position).getValue());
+    if (CHANGE_TYPE.equals(actionType)) {
+      assertTrue(table.getHeader().get(position).getForceVisible());
+    }
+    assertEquals("old note type", table.getHeader().get(position + 1).getValue());
+    assertTrue(table.getHeader().get(position + 1).getForceVisible());
   }
 
   private String getPathToContentUpdateRequest(org.folio.bulkops.domain.dto.EntityType entityType) {
