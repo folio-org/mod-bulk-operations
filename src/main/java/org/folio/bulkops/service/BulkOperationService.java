@@ -24,6 +24,7 @@ import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
 
+import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
@@ -325,8 +326,8 @@ public class BulkOperationService {
       var resultJsonFileName = String.format(CHANGED_JSON_PATH_TEMPLATE, operation.getId(), LocalDate.now(), triggeringFileName);
       var resultCsvFileName = String.format(CHANGED_CSV_PATH_TEMPLATE, operation.getId(), LocalDate.now(), triggeringFileName);
 
-      try (var originalFileReader = new InputStreamReader(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile()));
-           var modifiedFileReader = new InputStreamReader(remoteFileSystemClient.get(operation.getLinkToModifiedRecordsJsonFile()));
+      try (var originalFileReader = new InputStreamReader(new BufferedInputStream(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile())));
+           var modifiedFileReader = new InputStreamReader(new BufferedInputStream(remoteFileSystemClient.get(operation.getLinkToModifiedRecordsJsonFile())));
            var writerForResultCsvFile = remoteFileSystemClient.writer(resultCsvFileName);
            var writerForResultJsonFile = remoteFileSystemClient.writer(resultJsonFileName)) {
 
