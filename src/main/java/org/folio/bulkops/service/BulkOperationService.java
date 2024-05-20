@@ -326,15 +326,15 @@ public class BulkOperationService {
       var resultJsonFileName = String.format(CHANGED_JSON_PATH_TEMPLATE, operation.getId(), LocalDate.now(), triggeringFileName);
       var resultCsvFileName = String.format(CHANGED_CSV_PATH_TEMPLATE, operation.getId(), LocalDate.now(), triggeringFileName);
 
-      try (var originalFileReader = new InputStreamReader(new BufferedInputStream(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile())));
-           var modifiedFileReader = new InputStreamReader(new BufferedInputStream(remoteFileSystemClient.get(operation.getLinkToModifiedRecordsJsonFile())));
+      try (var originalFile = new BufferedInputStream(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile()));
+           var modifiedFile = new BufferedInputStream(remoteFileSystemClient.get(operation.getLinkToModifiedRecordsJsonFile()));
            var writerForResultCsvFile = remoteFileSystemClient.writer(resultCsvFileName);
            var writerForResultJsonFile = remoteFileSystemClient.writer(resultJsonFileName)) {
 
-        var originalFileParser = new JsonFactory().createParser(originalFileReader);
+        var originalFileParser = new JsonFactory().createParser(originalFile);
         var originalFileIterator = objectMapper.readValues(originalFileParser, entityClass);
 
-        var modifiedFileParser = new JsonFactory().createParser(modifiedFileReader);
+        var modifiedFileParser = new JsonFactory().createParser(modifiedFile);
         var modifiedFileIterator = objectMapper.readValues(modifiedFileParser, entityClass);
 
         var csvWriter = new BulkOperationsEntityCsvWriter(writerForResultCsvFile, entityClass);
