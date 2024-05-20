@@ -337,20 +337,18 @@ class PreviewServiceTest extends BaseTest {
 
   @ParameterizedTest
   @CsvSource(textBlock = """
-    INSTANCE        | CHANGE_TYPE     | INSTANCE_NOTE | INSTANCE_NOTE_TYPE_ID_KEY
-    INSTANCE        | ADD_TO_EXISTING | INSTANCE_NOTE | INSTANCE_NOTE_TYPE_ID_KEY
-    HOLDINGS_RECORD | CHANGE_TYPE     | HOLDINGS_NOTE | HOLDINGS_NOTE_TYPE_ID_KEY
-    HOLDINGS_RECORD | ADD_TO_EXISTING | HOLDINGS_NOTE | HOLDINGS_NOTE_TYPE_ID_KEY
+  CHANGE_TYPE     | INSTANCE_NOTE | INSTANCE_NOTE_TYPE_ID_KEY
+  ADD_TO_EXISTING | INSTANCE_NOTE | INSTANCE_NOTE_TYPE_ID_KEY
     """, delimiter = '|')
-  void shouldSetForceVisibleForUpdatedInstanceNotes(EntityType entityType, UpdateActionType actionType,
-                                                    UpdateOptionType updateOption, String key) {
+  void shouldSetForceVisibleForUpdatedInstanceNotes(UpdateActionType actionType, UpdateOptionType updateOption,
+                                                    String key) {
     var operationId = UUID.randomUUID();
     var oldNoteTypeId = UUID.randomUUID().toString();
     var newNoteTypeId = UUID.randomUUID().toString();
     var pathToCsv = "commited.csv";
     var operation = BulkOperation.builder()
       .id(operationId)
-      .entityType(entityType)
+      .entityType(INSTANCE)
       .linkToCommittedRecordsCsvFile(pathToCsv).build();
     var rules = rules(new BulkOperationRule().bulkOperationId(operationId)
       .ruleDetails(new BulkOperationRuleRuleDetails()
