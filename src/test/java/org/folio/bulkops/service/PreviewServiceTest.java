@@ -8,7 +8,10 @@ import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
+import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
+import static org.folio.bulkops.util.Constants.INSTANCE_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
 import static org.folio.bulkops.util.UnifiedTableHeaderBuilder.getHeaders;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,7 +23,9 @@ import static org.testcontainers.shaded.org.hamcrest.MatcherAssert.assertThat;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.equalTo;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.hasSize;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -46,6 +51,9 @@ import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.Cell;
+import org.folio.bulkops.domain.dto.InstanceNoteType;
+import org.folio.bulkops.domain.dto.InstanceNoteTypeCollection;
+import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -325,6 +333,60 @@ class PreviewServiceTest extends BaseTest {
     var table = previewService.getPreview(bulkOperation, org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD, 0, 10);
     assertEquals(0, table.getRows().size());
     Assertions.assertTrue(table.getHeader().size() > 0);
+  }
+
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+  CHANGE_TYPE     | INSTANCE_NOTE | INSTANCE_NOTE_TYPE_ID_KEY
+  ADD_TO_EXISTING | INSTANCE_NOTE | INSTANCE_NOTE_TYPE_ID_KEY
+    """, delimiter = '|')
+  void shouldSetForceVisibleForUpdatedInstanceNotes(UpdateActionType actionType, UpdateOptionType updateOption,
+                                                    String key) {
+    var operationId = UUID.randomUUID();
+    var oldNoteTypeId = UUID.randomUUID().toString();
+    var newNoteTypeId = UUID.randomUUID().toString();
+    var pathToCsv = "commited.csv";
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(INSTANCE)
+      .linkToCommittedRecordsCsvFile(pathToCsv).build();
+    var rules = rules(new BulkOperationRule().bulkOperationId(operationId)
+      .ruleDetails(new BulkOperationRuleRuleDetails()
+        .option(updateOption)
+        .actions(Collections.singletonList(new Action()
+          .type(actionType)
+          .updated(newNoteTypeId)
+          .parameters(Collections.singletonList(new Parameter()
+            .key(key)
+            .value(oldNoteTypeId)))))));
+
+    when(ruleService.getRules(operationId)).thenReturn(rules);
+    when(instanceNoteTypesClient.getNoteTypeById(oldNoteTypeId))
+      .thenReturn(new InstanceNoteType().name("old note type"));
+    when(instanceNoteTypesClient.getNoteTypeById(newNoteTypeId))
+      .thenReturn(new InstanceNoteType().name("new note type"));
+    when(instanceNoteTypesClient.getInstanceNoteTypes(Integer.MAX_VALUE))
+      .thenReturn(new InstanceNoteTypeCollection().instanceNoteTypes(List.of(
+        new InstanceNoteType().name("old note type"), new InstanceNoteType().name("new note type"))).totalRecords(2));
+    when(holdingsNoteTypeClient.getNoteTypeById(oldNoteTypeId))
+      .thenReturn(new HoldingsNoteType().withName("old note type"));
+    when(holdingsNoteTypeClient.getNoteTypeById(newNoteTypeId))
+      .thenReturn(new HoldingsNoteType().withName("new note type"));
+    when(holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE))
+      .thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(List.of(
+        new HoldingsNoteType().withName("old note type"), new HoldingsNoteType().withName("new note type"))).withTotalRecords(2));
+    when(remoteFileSystemClient.get(pathToCsv))
+      .thenReturn(new ByteArrayInputStream(",,,,,,,,,,".getBytes()));
+
+    var table = previewService.getPreview(operation, COMMIT, 0, 10);
+
+    var position = HOLDINGS_NOTE.equals(updateOption) ? HOLDINGS_NOTE_POSITION : INSTANCE_NOTE_POSITION;
+    assertEquals("new note type", table.getHeader().get(position).getValue());
+    if (CHANGE_TYPE.equals(actionType)) {
+      assertTrue(table.getHeader().get(position).getForceVisible());
+    }
+    assertEquals("old note type", table.getHeader().get(position + 1).getValue());
+    assertTrue(table.getHeader().get(position + 1).getForceVisible());
   }
 
   private String getPathToContentUpdateRequest(org.folio.bulkops.domain.dto.EntityType entityType) {

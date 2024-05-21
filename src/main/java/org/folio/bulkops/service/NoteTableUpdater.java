@@ -96,7 +96,7 @@ public class NoteTableUpdater {
     var notesString = rowList.get(notesInitialPosition);
     if (isNotEmpty(notesString)) {
       for (var note : notesString.split(ITEM_DELIMITER_PATTERN)) {
-        var noteFields = note.split(ARRAY_DELIMITER);
+        var noteFields = note.trim().split(ARRAY_DELIMITER);
         if (noteFields.length == NUMBER_OF_NOTE_FIELDS) {
           var position = noteTypeNames.indexOf(noteFields[NOTE_TYPE_POS]);
           if (position != NON_EXISTING_POSITION) {
