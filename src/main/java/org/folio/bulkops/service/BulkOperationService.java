@@ -119,6 +119,12 @@ public class BulkOperationService {
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
+  public void deleteIfExists(UUID operationId) {
+    if (bulkOperationRepository.existsById(operationId)) {
+      bulkOperationRepository.deleteById(operationId);
+    }
+  }
+
   public BulkOperation uploadCsvFile(EntityType entityType, IdentifierType identifierType, boolean manual, UUID operationId, UUID xOkapiUserId, MultipartFile multipartFile) {
 
     String errorMessage = null;
