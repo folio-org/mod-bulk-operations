@@ -1,19 +1,19 @@
 package org.folio.bulkops.service;
 
 import static java.util.Objects.nonNull;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
+import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
+import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
+import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
+import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
-import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
-import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
-import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
-import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
