@@ -155,7 +155,7 @@ class BulkOperationServiceTest extends BaseTest {
   @Test
   void shouldDeleteOperationFromDatabaseIfExists() {
     when(bulkOperationRepository.existsById(any(UUID.class))).thenReturn(true);
-    verify(bulkOperationRepository).deleteById(UUID.randomUUID());
+    verify(bulkOperationRepository).deleteById(any(UUID.class));
   }
 
   @Test
