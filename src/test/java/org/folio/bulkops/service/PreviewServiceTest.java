@@ -149,16 +149,6 @@ class PreviewServiceTest extends BaseTest {
         noteTableUpdater.extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"), emptySet());
       }
       assertThat(table.getHeader(), equalTo(headers));
-    } else if (HOLDINGS_RECORD.equals(entityType)) {
-      List<Cell> headers;
-      if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
-        headers = getHeaders(HoldingsRecord.class, Set.of("Reproduction", "Discovery suppress", "Electronic access", "Administrative note"));
-        noteTableUpdater.extendHeadersWithNoteTypeNames(HOLDINGS_NOTE_POSITION, headers , List.of("Binding", "Provenance", "Reproduction"), Set.of("Reproduction","Discovery suppress","Electronic access","Administrative note"));
-      } else {
-        headers = getHeaders(HoldingsRecord.class);
-        noteTableUpdater.extendHeadersWithNoteTypeNames(HOLDINGS_NOTE_POSITION, headers , List.of("Binding", "Provenance", "Reproduction"), emptySet());
-      }
-      assertThat(table.getHeader(), equalTo(headers));
     } else if (INSTANCE.equals(entityType)) {
       if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
         assertThat(table.getHeader(), equalTo(

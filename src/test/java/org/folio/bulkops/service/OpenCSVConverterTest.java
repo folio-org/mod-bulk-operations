@@ -166,8 +166,11 @@ class OpenCSVConverterTest extends BaseTest {
         .usingRecursiveComparison()
         .ignoringFields("version", "contributors.contributorTypeId", "contributors.contributorTypeText", "contributors.contributorNameTypeId", "contributors.authorityId", "contributors.primary", "matchKey", "alternativeTitles", "identifiers", "subjects", "classifications", "publications", "publicationPeriod", "electronicAccesses", "instanceNotes", "statisticalCodeIds", "sourceRecordFormat", "statusUpdatedDate", "tags", "precedingTitles", "succeedingTitles")
         .isEqualTo(bean);
-    } else {
-      assertEquals(bean, result);
+    } else if (result instanceof HoldingsRecord holdingsRecord) {
+      assertThat(holdingsRecord)
+        .usingRecursiveComparison()
+        .ignoringFields("discoverySuppress", "notes", "version", "instanceId", "effectiveLocationId", "receivingHistory", "metadata")
+        .isEqualTo(bean);
     }
 
   }

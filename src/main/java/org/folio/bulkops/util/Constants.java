@@ -54,4 +54,12 @@ public class Constants {
   public static final String ELECTRONIC_ACCESS_HEADINGS = "URL relationship;URI;Link text;Materials specified;URL public note\n";
   public static final String STAFF_ONLY_NOTE_PARAMETER_KEY = "STAFF_ONLY";
   public static final String MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING = "The record cannot be saved because it is not the most recent version. Stored version is %s, bulk edit version is %s.";
+
+  public static final String ACTION_NOTE = "Action note";
+  public static final String BINDING = "Binding";
+  public static final String COPY_NOTE = "Copy note";
+  public static final String ELECTRONIC_BOOKPLATE = "Electronic bookplate";
+  public static final String NOTE = "Note";
+  public static final String PROVENANCE = "Provenance";
+  public static final String REPRODUCTION = "Reproduction";
 }
