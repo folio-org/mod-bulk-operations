@@ -84,7 +84,6 @@ public class BulkOperationController implements BulkOperationsApi {
 
   @Override
   public ResponseEntity<BulkOperationRuleCollection> postContentUpdates(UUID operationId, BulkOperationRuleCollection bulkOperationRuleCollection) {
-    bulkOperationService.deleteIfExists(operationId);
     var operation = bulkOperationService.getBulkOperationOrThrow(operationId);
     var rules = ruleService.saveRules(bulkOperationRuleCollection);
 

@@ -24,7 +24,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -151,18 +150,6 @@ class BulkOperationServiceTest extends BaseTest {
 
   @MockBean
   private EntityTypeService entityTypeService;
-
-  @Test
-  void shouldDeleteOperationFromDatabaseIfExists() {
-    when(bulkOperationRepository.existsById(any(UUID.class))).thenReturn(true);
-    verify(bulkOperationRepository).deleteById(any(UUID.class));
-  }
-
-  @Test
-  void shouldNotExecuteDeleteIfOperationsDoesNotExists(){
-    when(bulkOperationRepository.existsById(any(UUID.class))).thenReturn(false);
-    verify(bulkOperationRepository, never()).deleteById(UUID.randomUUID());
-  }
 
   @Test
   @SneakyThrows

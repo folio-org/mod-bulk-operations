@@ -27,9 +27,6 @@ import lombok.With;
 @Table(name = "bulk_operation_data_processing")
 public class BulkOperationDataProcessing {
   @Id
-  @GeneratedValue(strategy = GenerationType.AUTO)
-  private UUID id;
-
   private UUID bulkOperationId;
 
   @Enumerated(EnumType.STRING)

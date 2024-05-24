@@ -119,12 +119,6 @@ public class BulkOperationService {
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
-  public void deleteIfExists(UUID operationId) {
-    if (bulkOperationRepository.existsById(operationId)) {
-      bulkOperationRepository.deleteById(operationId);
-    }
-  }
-
   public BulkOperation uploadCsvFile(EntityType entityType, IdentifierType identifierType, boolean manual, UUID operationId, UUID xOkapiUserId, MultipartFile multipartFile) {
 
     String errorMessage = null;
@@ -542,10 +536,10 @@ public class BulkOperationService {
   }
 
   public void clearOperationProcessing(BulkOperation operation) {
-    var processing = dataProcessingRepository.findByBulkOperationId(operation.getId());
+    var processing = dataProcessingRepository.findById(operation.getId());
 
     if (processing.isPresent()) {
-      dataProcessingRepository.deleteById(processing.get().getId());
+      dataProcessingRepository.deleteById(processing.get().getBulkOperationId());
 
       operation.setStatus(DATA_MODIFICATION);
       bulkOperationRepository.save(operation);
@@ -562,7 +556,7 @@ public class BulkOperationService {
         .entityType(operation.getEntityType())
         .entityCustomIdentifierType(IdentifierType.ID));
       case DATA_MODIFICATION -> {
-        var processing = dataProcessingRepository.findByBulkOperationId(bulkOperationId);
+        var processing = dataProcessingRepository.findById(bulkOperationId);
         if (processing.isPresent() && StatusType.ACTIVE.equals(processing.get().getStatus())) {
           operation.setProcessedNumOfRecords(processing.get().getProcessedNumOfRecords());
         }
