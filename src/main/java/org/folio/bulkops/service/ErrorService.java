@@ -6,17 +6,18 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
+import static org.folio.bulkops.util.Constants.MSG_ERROR_OPTIMISTIC_LOCKING;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.StateType;
@@ -44,6 +45,7 @@ import lombok.RequiredArgsConstructor;
 public class ErrorService {
   private static final String POSTFIX_ERROR_MESSAGE_NON_NULL = " AND errorMessage<null";
   public static final String IDENTIFIER = "IDENTIFIER";
+  public static final String LINK = "LINK";
   private final BulkOperationRepository operationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final BulkOperationExecutionContentRepository executionContentRepository;
@@ -115,11 +117,30 @@ public class ErrorService {
   }
 
   private Error executionContentToError(BulkOperationExecutionContent content) {
-    return new Error()
-      .message(content.getErrorMessage())
-      .parameters(Collections.singletonList(new Parameter()
-        .key(IDENTIFIER)
-        .value(content.getIdentifier())));
+
+    var message = content.getErrorMessage();
+
+    if (StringUtils.isNotBlank(message) && message.startsWith(MSG_ERROR_OPTIMISTIC_LOCKING)) {
+      var link = message.split(MSG_ERROR_OPTIMISTIC_LOCKING)[1].trim();
+      return new Error()
+        .message(MSG_ERROR_OPTIMISTIC_LOCKING)
+        .parameters(List.of(new Parameter()
+            .key(IDENTIFIER)
+            .value(content.getIdentifier()),
+          new Parameter()
+            .key(LINK)
+            .value(link)
+          )
+        );
+    } else {
+      return new Error()
+        .message(message)
+        .parameters(List.of(new Parameter()
+            .key(IDENTIFIER)
+            .value(content.getIdentifier())
+          )
+        );
+    }
   }
 
   public Page<BulkOperationExecutionContent> getErrorsByCql(String cql, int offset, int limit) {

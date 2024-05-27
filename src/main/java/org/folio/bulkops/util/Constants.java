@@ -53,5 +53,6 @@ public class Constants {
   public static final String SPECIAL_ITEM_DELIMITER_REGEX = NON_PRINTING_DELIMITER + ITEM_DELIMITER_PATTERN;
   public static final String ELECTRONIC_ACCESS_HEADINGS = "URL relationship;URI;Link text;Materials specified;URL public note\n";
   public static final String STAFF_ONLY_NOTE_PARAMETER_KEY = "STAFF_ONLY";
-  public static final String MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING = "The record cannot be saved because it is not the most recent version. Stored version is %s, bulk edit version is %s.";
+  public static final String MSG_ERROR_OPTIMISTIC_LOCKING = "The record cannot be saved because it is not the most recent version.";
+  public static final String MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING = MSG_ERROR_OPTIMISTIC_LOCKING + " %s";
 }
