@@ -43,10 +43,12 @@ class ListUsersServiceTest extends BaseTest {
 
       when(userClient.getByQuery("id==" + userIdUnique, 1))
         .thenReturn(new UserCollection().withUsers(List.of(new User().withId(userIdUnique.toString()).withPersonal(new Personal().withFirstName("Test unique")
-          .withLastName("Test last name unique")))));
+          .withLastName("Test last name unique").withPreferredFirstName("Test preferred first name unique")
+          .withMiddleName("Test middle name unique")))));
       when(userClient.getByQuery("id==" + userIdRepeated, 1))
         .thenReturn(new UserCollection().withUsers(List.of(new User().withId(userIdRepeated.toString()).withPersonal(new Personal().withFirstName("Test repeated")
-          .withLastName("Test last name repeated")))));
+          .withLastName("Test last name repeated").withPreferredFirstName("Test preferred first name repeated")
+          .withMiddleName("Test middle name repeated")))));
 
       final Page<BulkOperation> page = new PageImpl<>(List.of(BulkOperation.builder()
           .id(operationIdUnique)
