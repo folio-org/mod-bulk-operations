@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+
+  <changeSet id="24-05-2024_drop_id_column_bulk_operation_data_processing.sql" author="firebird">
+    <sqlFile path="24-05-2024_drop_id_column_bulk_operation_data_processing.sql" relativeToChangelogFile="true" />
+  </changeSet>
+
+</databaseChangeLog>

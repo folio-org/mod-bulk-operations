@@ -882,7 +882,7 @@ class BulkOperationServiceTest extends BaseTest {
         .processedNumOfRecords(0)
         .build()));
 
-    when(dataProcessingRepository.findByBulkOperationId(operationId))
+    when(dataProcessingRepository.findById(operationId))
       .thenReturn(Optional.of(BulkOperationDataProcessing.builder()
         .status(StatusType.ACTIVE)
         .processedNumOfRecords(5)
@@ -913,12 +913,11 @@ class BulkOperationServiceTest extends BaseTest {
       .id(operationId)
       .build();
 
-    when(dataProcessingRepository.findByBulkOperationId(operationId))
+    when(dataProcessingRepository.findById(operationId))
       .thenReturn(Optional.of(BulkOperationDataProcessing.builder()
-        .id(UUID.randomUUID())
+        .bulkOperationId(operationId)
         .status(StatusType.ACTIVE)
         .processedNumOfRecords(5)
-        .bulkOperationId(operationId)
         .build()));
 
     bulkOperationService.clearOperationProcessing(operation);

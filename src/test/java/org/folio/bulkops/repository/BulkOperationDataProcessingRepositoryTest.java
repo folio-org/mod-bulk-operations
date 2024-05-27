@@ -29,7 +29,7 @@ class BulkOperationDataProcessingRepositoryTest extends BaseTest {
   void shouldSaveEntity() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var saved = repository.save(createEntity());
-      assertThat(saved.getId(), notNullValue());
+      assertThat(saved.getBulkOperationId(), notNullValue());
     }
   }
 
@@ -37,8 +37,8 @@ class BulkOperationDataProcessingRepositoryTest extends BaseTest {
   void shouldFindEntityById() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
-      var retrieved = repository.findById(created.getId());
-      assertTrue(retrieved.isPresent() && created.getId().equals(retrieved.get().getId()));
+      var retrieved = repository.findById(created.getBulkOperationId());
+      assertTrue(retrieved.isPresent() && created.getBulkOperationId().equals(retrieved.get().getBulkOperationId()));
     }
   }
 
@@ -48,7 +48,7 @@ class BulkOperationDataProcessingRepositoryTest extends BaseTest {
       var created = repository.save(createEntity());
       var endTime = LocalDateTime.now();
       var updated = repository.save(created.withEndTime(endTime));
-      assertTrue(created.getId().equals(updated.getId()) && endTime.isEqual(updated.getEndTime()));
+      assertTrue(created.getBulkOperationId().equals(updated.getBulkOperationId()) && endTime.isEqual(updated.getEndTime()));
     }
   }
 
@@ -56,8 +56,8 @@ class BulkOperationDataProcessingRepositoryTest extends BaseTest {
   void shouldDeleteEntity() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
-      repository.deleteById(created.getId());
-      assertTrue(repository.findById(created.getId()).isEmpty());
+      repository.deleteById(created.getBulkOperationId());
+      assertTrue(repository.findById(created.getBulkOperationId()).isEmpty());
     }
   }
 
