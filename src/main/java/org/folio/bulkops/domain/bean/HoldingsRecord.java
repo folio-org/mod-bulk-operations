@@ -105,7 +105,7 @@ public class HoldingsRecord implements BulkOperationsEntity, ElectronicAccessEnt
   private String permanentLocationId;
 
   @JsonProperty("temporaryLocationId")
-  @CsvCustomBindByName(column = "Temporary location", converter = HoldingsLocationConverter.class)
+  @CsvCustomBindByName(column = "Holdings еemporary location", converter = HoldingsLocationConverter.class)
   @CsvCustomBindByPosition(position = 10, converter = HoldingsLocationConverter.class)
   @UnifiedTableCell(visible = false)
   private String temporaryLocationId;
@@ -174,7 +174,7 @@ public class HoldingsRecord implements BulkOperationsEntity, ElectronicAccessEnt
   private List<HoldingsStatement> holdingsStatementsForIndexes = null;
 
   @JsonProperty("illPolicyId")
-  @CsvCustomBindByName(column = "Ill policy", converter = IllPolicyConverter.class)
+  @CsvCustomBindByName(column = "ILL policy", converter = IllPolicyConverter.class)
   @CsvCustomBindByPosition(position = 21, converter = IllPolicyConverter.class)
   @UnifiedTableCell(visible = false)
   private String illPolicyId;
@@ -240,22 +240,22 @@ public class HoldingsRecord implements BulkOperationsEntity, ElectronicAccessEnt
   private String acquisitionMethod;
 
   @JsonProperty("acquisitionFormat")
-  @CsvCustomBindByName(column = "Acquisition format", converter = StringConverter.class)
+  @CsvCustomBindByName(column = "Order format", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 33, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String acquisitionFormat;
 
-  @JsonProperty("tags")
-  @CsvCustomBindByName(column = "Tags", converter = TagsConverter.class)
-  @CsvCustomBindByPosition(position = 34, converter = TagsConverter.class)
-  @UnifiedTableCell(visible = false)
-  private Tags tags;
-
   @JsonProperty("receiptStatus")
   @CsvCustomBindByName(column = "Receipt status", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 35, converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 34, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String receiptStatus;
+
+  @JsonProperty("tags")
+  @CsvCustomBindByName(column = "Tags", converter = TagsConverter.class)
+  @CsvCustomBindByPosition(position = 35, converter = TagsConverter.class)
+  @UnifiedTableCell(visible = false)
+  private Tags tags;
 
   @JsonProperty("_version")
   private Integer version;
