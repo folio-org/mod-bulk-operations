@@ -6,6 +6,8 @@ import org.folio.bulkops.domain.bean.*;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 @Log4j2
@@ -43,6 +45,10 @@ public class HoldingsReferenceHelper implements InitializingBean {
 
   public String getNoteTypeIdByName(String name) {
     return holdingsReferenceService.getNoteTypeIdByName(name);
+  }
+
+  public List<HoldingsNoteType> getHoldingsNoteTypes() {
+    return holdingsReferenceService.getAllHoldingsNoteTypes();
   }
 
   public IllPolicy getIllPolicyNameById(String id) {
