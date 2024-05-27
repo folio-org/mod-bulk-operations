@@ -227,9 +227,7 @@ public class PreviewService {
   private void processNoteFields(UnifiedTable table, Class<? extends BulkOperationsEntity> clazz, Set<String> forceVisible) {
     if (clazz == Item.class) {
       noteTableUpdater.extendTableWithItemNotesTypes(table, forceVisible);
-    } else if (clazz == HoldingsRecord.class) {
-      noteTableUpdater.extendTableWithHoldingsNotesTypes(table, forceVisible);
-    } else if (clazz == Instance.class) {
+    }  else if (clazz == Instance.class) {
       noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible);
     }
   }
