@@ -32,7 +32,7 @@ class EntityPathResolverTest extends BaseTest {
   void testInstancePathResolving() {
     var entity = Instance.builder().id(UUID.randomUUID().toString()).build();
     var actual = entityPathResolver.resolve(EntityType.INSTANCE, entity);
-    var expected = format("/inventory/edit/%s/instance", entity.getId());
+    var expected = format("/inventory/view/%s", entity.getId());
     assertThat(expected).isEqualTo(actual);
   }
 
