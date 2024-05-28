@@ -36,7 +36,6 @@ import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.HoldingsNoteTypeCollection;
-import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
@@ -155,16 +154,6 @@ class PreviewServiceTest extends BaseTest {
       } else {
         headers = getHeaders(Item.class);
         noteTableUpdater.extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"), emptySet());
-      }
-      assertThat(table.getHeader(), equalTo(headers));
-    } else if (HOLDINGS_RECORD.equals(entityType)) {
-      List<Cell> headers;
-      if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
-        headers = getHeaders(HoldingsRecord.class, Set.of("Reproduction", "Discovery suppress", "Electronic access", "Administrative note"));
-        noteTableUpdater.extendHeadersWithNoteTypeNames(HOLDINGS_NOTE_POSITION, headers , List.of("Binding", "Provenance", "Reproduction"), Set.of("Reproduction","Discovery suppress","Electronic access","Administrative note"));
-      } else {
-        headers = getHeaders(HoldingsRecord.class);
-        noteTableUpdater.extendHeadersWithNoteTypeNames(HOLDINGS_NOTE_POSITION, headers , List.of("Binding", "Provenance", "Reproduction"), emptySet());
       }
       assertThat(table.getHeader(), equalTo(headers));
     } else if (INSTANCE.equals(entityType)) {
