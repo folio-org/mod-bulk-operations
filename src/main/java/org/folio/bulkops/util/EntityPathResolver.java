@@ -28,7 +28,7 @@ public class EntityPathResolver {
       }
       case INSTANCE -> {
         var instance = (Instance) entity;
-        return format("/inventory/edit/%s/instance", instance.getId());
+        return format("/inventory/view/%s", instance.getId());
       }
       case HOLDINGS_RECORD -> {
         var holding = (HoldingsRecord) entity;
