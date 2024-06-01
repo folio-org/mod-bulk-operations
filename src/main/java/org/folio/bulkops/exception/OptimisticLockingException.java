@@ -9,7 +9,7 @@ public class OptimisticLockingException extends RuntimeException {
 
   private final String csvErrorMessage;
   private final String uiErrorMessage;
-  private final String link;
+  private final String linkToFailedEntity;
 
   /**
    * @deprecated This method is not supported. {@link this.getCsvErrorMessage()}

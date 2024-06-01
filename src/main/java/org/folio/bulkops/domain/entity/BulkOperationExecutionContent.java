@@ -40,5 +40,5 @@ public class BulkOperationExecutionContent {
 
   private String uiErrorMessage;
 
-  private String link;
+  private String linkToFailedEntity;
 }

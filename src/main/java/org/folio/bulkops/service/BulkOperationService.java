@@ -70,7 +70,6 @@ import org.folio.bulkops.processor.UpdatedEntityHolder;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.folio.bulkops.util.EntityPathResolver;
 import org.folio.bulkops.util.Utils;
 import org.folio.querytool.domain.dto.SubmitQuery;
 import org.springframework.beans.factory.annotation.Value;
@@ -356,7 +355,7 @@ public class BulkOperationService {
               writeToCsv(operation, csvWriter, result);
             }
           } catch (OptimisticLockingException e) {
-            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLink());
+            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLinkToFailedEntity());
           } catch (Exception e) {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage());
           }

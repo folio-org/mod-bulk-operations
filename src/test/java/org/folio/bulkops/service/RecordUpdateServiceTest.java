@@ -1,8 +1,6 @@
 package org.folio.bulkops.service;
 
 import static java.lang.String.format;
-import static org.folio.bulkops.util.Constants.CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING;
-import static org.folio.bulkops.util.Constants.UI_MSG_ERROR_OPTIMISTIC_LOCKING;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,6 +30,8 @@ import org.folio.bulkops.util.EntityPathResolver;
 import org.folio.bulkops.util.Utils;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -94,10 +94,12 @@ class RecordUpdateServiceTest extends BaseTest {
     verify(errorService).saveError(operation.getId(), original.getIdentifier(IdentifierType.ID), MSG_NO_CHANGE_REQUIRED);
   }
 
-  @Test
-  void testUpdateModifiedEntityWithOptimisticLockingError() {
+  @ParameterizedTest
+  @ValueSource(strings = {"ERROR: Cannot update record cb475fa9-aa07-4bbf-8382-b0b1426f9a20 because it has been changed (optimistic locking): Stored _version is 2, _version of request is 1 (23F09)",
+    "ERROR: Cannot update record cb475fa9-aa07-4bbf-8382-b0b1426f9a20 because it has been changed (optimistic locking): S"})
+  void testUpdateModifiedEntityWithOptimisticLockingError(String responseErrorMessage) {
     var feignException = FeignException.errorStatus("", Response.builder().status(409)
-      .reason("ERROR: Cannot update record cb475fa9-aa07-4bbf-8382-b0b1426f9a20 because it has been changed (optimistic locking): Stored _version is 2, _version of request is 1 (23F09)")
+      .reason("null".equals(responseErrorMessage) ? null : responseErrorMessage)
       .request(Request.create(Request.HttpMethod.PUT, "", Map.of(), new byte[]{}, Charset.defaultCharset(), null))
       .build());
     doThrow(feignException).when(itemClient).updateItem(any(Item.class), any(String.class));

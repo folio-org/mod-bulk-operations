@@ -68,7 +68,7 @@ public class ErrorService {
         .state(StateType.FAILED)
         .errorMessage(errorMessage)
         .uiErrorMessage(uiErrorMessage)
-        .link(link)
+        .linkToFailedEntity(link)
       .build());
   }
 
@@ -131,8 +131,9 @@ public class ErrorService {
   private Error executionContentToFolioError(BulkOperationExecutionContent content) {
 
     List<Parameter> parameters = new ArrayList<>();
-    if (StringUtils.isNotBlank(content.getLink())) {
-      parameters.add(new Parameter().key(LINK).value(content.getLink()));
+    parameters.add(new Parameter().key(IDENTIFIER).value(content.getIdentifier()));
+    if (StringUtils.isNotBlank(content.getLinkToFailedEntity())) {
+      parameters.add(new Parameter().key(LINK).value(content.getLinkToFailedEntity()));
     }
 
     return new Error()
