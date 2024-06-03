@@ -13,9 +13,9 @@ public class UserToUserDtoMapperImpl implements UserToUserDtoMapper {
     Personal userPersonal = user.getPersonal();
     return new org.folio.bulkops.domain.dto.User()
       .id(UUID.fromString(user.getId()))
-      .firstName(user.getPersonal().getFirstName())
+      .firstName(userPersonal.getFirstName())
       .lastName(userPersonal.getLastName())
-      .preferredFirstName(user.getPersonal().getPreferredFirstName())
+      .preferredFirstName(userPersonal.getPreferredFirstName())
       .middleName(userPersonal.getMiddleName());
   }
 }
