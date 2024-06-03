@@ -47,7 +47,7 @@ public class NoteTableUpdater {
       .toList();
 
     extendHeadersWithNoteTypeNames(HOLDINGS_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
-    unifiedTable.getRows().forEach(row -> extendRowWithNotesData(HOLDINGS_NOTE_POSITION, row, noteTypeNames));
+    unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), HOLDINGS_NOTE_POSITION, noteTypeNames)));
   }
 
   public void extendTableWithItemNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible) {
@@ -57,7 +57,7 @@ public class NoteTableUpdater {
       .toList();
 
     extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
-    unifiedTable.getRows().forEach(row -> extendRowWithNotesData(ITEM_NOTE_POSITION, row, noteTypeNames));
+    unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), ITEM_NOTE_POSITION, noteTypeNames)));
   }
 
   public void extendTableWithInstanceNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible) {
@@ -67,7 +67,7 @@ public class NoteTableUpdater {
       .toList();
 
     extendHeadersWithNoteTypeNames(INSTANCE_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
-    unifiedTable.getRows().forEach(row -> extendRowWithNotesData(INSTANCE_NOTE_POSITION, row, noteTypeNames));
+    unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), INSTANCE_NOTE_POSITION, noteTypeNames)));
   }
 
   private String concatNotePostfixIfRequired(String noteTypeName) {
@@ -90,10 +90,13 @@ public class NoteTableUpdater {
     headers.addAll(notesInitialPosition, cellsToInsert);
   }
 
-  private void extendRowWithNotesData(int notesInitialPosition, Row row, List<String> noteTypeNames) {
+  public void extendRowWithNotesData(int notesInitialPosition, Row row, List<String> noteTypeNames) {
+    row.setRow(enrichWithNotesByType(row.getRow(), notesInitialPosition, noteTypeNames));
+  }
+
+  public List<String> enrichWithNotesByType(List<String> list, int notesPosition, List<String> noteTypeNames) {
     var notesArray = new String[noteTypeNames.size()];
-    var rowList = row.getRow();
-    var notesString = rowList.get(notesInitialPosition);
+    var notesString = list.get(notesPosition);
     if (isNotEmpty(notesString)) {
       for (var note : notesString.split(ITEM_DELIMITER_PATTERN)) {
         var noteFields = note.trim().split(ARRAY_DELIMITER);
@@ -107,8 +110,8 @@ public class NoteTableUpdater {
         }
       }
     }
-    rowList.remove(notesInitialPosition);
-    rowList.addAll(notesInitialPosition, Arrays.asList(notesArray));
-    row.setRow(rowList);
+    list.remove(notesPosition);
+    list.addAll(notesPosition, Arrays.asList(notesArray));
+    return list;
   }
 }
