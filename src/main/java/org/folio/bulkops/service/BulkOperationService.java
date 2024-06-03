@@ -63,6 +63,7 @@ import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.OptimisticLockingException;
 import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.processor.DataProcessorFactory;
 import org.folio.bulkops.processor.UpdatedEntityHolder;
@@ -353,6 +354,8 @@ public class BulkOperationService {
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
               writeToCsv(operation, csvWriter, result);
             }
+          } catch (OptimisticLockingException e) {
+            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLinkToFailedEntity());
           } catch (Exception e) {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage());
           }

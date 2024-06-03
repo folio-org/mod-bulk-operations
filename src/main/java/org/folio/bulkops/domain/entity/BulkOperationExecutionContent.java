@@ -37,4 +37,8 @@ public class BulkOperationExecutionContent {
   private StateType state;
 
   private String errorMessage;
+
+  private String uiErrorMessage;
+
+  private String linkToFailedEntity;
 }

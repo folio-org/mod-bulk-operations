@@ -1,6 +1,6 @@
 package org.folio.bulkops.service;
 
-import static org.folio.bulkops.util.Constants.MSG_ERROR_OPTIMISTIC_LOCKING;
+import static java.lang.String.format;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -22,11 +22,16 @@ import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.exception.OptimisticLockingException;
 import org.folio.bulkops.processor.ItemUpdateProcessor;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.util.EntityPathResolver;
+import org.folio.bulkops.util.Utils;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -38,6 +43,8 @@ import java.util.UUID;
 class RecordUpdateServiceTest extends BaseTest {
   @Autowired
   private RecordUpdateService recordUpdateService;
+  @Autowired
+  private EntityPathResolver entityPathResolver;
   @MockBean
   private BulkOperationExecutionContentRepository executionContentRepository;
   @MockBean
@@ -87,11 +94,13 @@ class RecordUpdateServiceTest extends BaseTest {
     verify(errorService).saveError(operation.getId(), original.getIdentifier(IdentifierType.ID), MSG_NO_CHANGE_REQUIRED);
   }
 
-  @Test
-  void testUpdateModifiedEntityWithOptimisticLockingError() {
+  @ParameterizedTest
+  @ValueSource(strings = {"ERROR: Cannot update record cb475fa9-aa07-4bbf-8382-b0b1426f9a20 because it has been changed (optimistic locking): Stored _version is 2, _version of request is 1 (23F09)",
+    "ERROR: Cannot update record cb475fa9-aa07-4bbf-8382-b0b1426f9a20 because it has been changed (optimistic locking): S"})
+  void testUpdateModifiedEntityWithOptimisticLockingError(String responseErrorMessage) {
     var feignException = FeignException.errorStatus("", Response.builder().status(409)
-      .reason("optimistic locking")
-      .request(Request.create(Request.HttpMethod.GET, "", Map.of(), new byte[]{}, Charset.defaultCharset(), null))
+      .reason("null".equals(responseErrorMessage) ? null : responseErrorMessage)
+      .request(Request.create(Request.HttpMethod.PUT, "", Map.of(), new byte[]{}, Charset.defaultCharset(), null))
       .build());
     doThrow(feignException).when(itemClient).updateItem(any(Item.class), any(String.class));
     when(holdingsClient.getHoldingById("cb475fa9-aa07-4bbf-8382-b0b1426f9a20")).thenReturn(HoldingsRecord.builder().instanceId("f3e3bd0f-1d95-4f25-9df1-7eb39a2957e3").build());
@@ -99,6 +108,7 @@ class RecordUpdateServiceTest extends BaseTest {
       .id("1f5e22ed-92ed-4c65-a603-2a5cb4c6052e")
       .barcode("barcode")
       .holdingsRecordId("cb475fa9-aa07-4bbf-8382-b0b1426f9a20")
+      .version(2)
       .build();
     var modified = Item.builder()
       .id("1f5e22ed-92ed-4c65-a603-2a5cb4c6052e")
@@ -114,10 +124,12 @@ class RecordUpdateServiceTest extends BaseTest {
 
     try {
       recordUpdateService.updateEntity(original, modified, operation);
-    } catch (Exception e) {
-      var msg = e.getMessage();
-      assertThat(msg, Matchers.startsWith(MSG_ERROR_OPTIMISTIC_LOCKING));
-      assertThat(msg.split(MSG_ERROR_OPTIMISTIC_LOCKING)[1].trim(), Matchers.equalTo("/inventory/view/f3e3bd0f-1d95-4f25-9df1-7eb39a2957e3/cb475fa9-aa07-4bbf-8382-b0b1426f9a20/1f5e22ed-92ed-4c65-a603-2a5cb4c6052e"));
+    } catch (OptimisticLockingException e) {
+      var expectedUiErrorMessage = Utils.getMessageFromFeignException(feignException);
+      var link = entityPathResolver.resolve(operation.getEntityType(), original);
+      var expectedCsvErrorMessage = format("%s %s", expectedUiErrorMessage, link);
+      assertThat(e.getCsvErrorMessage(), Matchers.equalTo(expectedCsvErrorMessage));
+      assertThat(e.getUiErrorMessage(), Matchers.equalTo(expectedUiErrorMessage));
     }
   }
 

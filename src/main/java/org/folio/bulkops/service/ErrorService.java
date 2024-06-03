@@ -6,11 +6,11 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
-import static org.folio.bulkops.util.Constants.MSG_ERROR_OPTIMISTIC_LOCKING;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -53,7 +53,7 @@ public class ErrorService {
   private final BulkOperationProcessingContentRepository processingContentRepository;
   private final BulkEditClient bulkEditClient;
 
-  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage) {
+  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
     if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
       return;
     }
@@ -67,7 +67,13 @@ public class ErrorService {
         .bulkOperationId(bulkOperationId)
         .state(StateType.FAILED)
         .errorMessage(errorMessage)
+        .uiErrorMessage(uiErrorMessage)
+        .linkToFailedEntity(link)
       .build());
+  }
+
+  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage) {
+    saveError(bulkOperationId, identifier, errorMessage, null, null);
   }
 
   @Transactional
@@ -109,38 +115,30 @@ public class ErrorService {
   private Errors getExecutionErrors(UUID bulkOperationId, int limit) {
     var errorPage = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId, OffsetRequest.of(0, limit));
     var errors = errorPage.toList().stream()
-      .map(this::executionContentToError)
+      .map(this::executionContentToFolioError)
       .toList();
     return new Errors()
       .errors(errors)
       .totalRecords((int) errorPage.getTotalElements());
   }
 
-  private Error executionContentToError(BulkOperationExecutionContent content) {
+  /**
+   * Convert BulkOperationExecutionContent to Error for preview on UI
+   * @param content {@link BulkOperationExecutionContent}
+   * @return {@link Error} with message equals to specific UI representation (uiErrorMessage) if it is not blank,
+   * otherwise - the same message as it is presented in csv file with errors (csvErrorMessage)
+   */
+  private Error executionContentToFolioError(BulkOperationExecutionContent content) {
 
-    var message = content.getErrorMessage();
-
-    if (StringUtils.isNotBlank(message) && message.startsWith(MSG_ERROR_OPTIMISTIC_LOCKING)) {
-      var link = message.split(MSG_ERROR_OPTIMISTIC_LOCKING)[1].trim();
-      return new Error()
-        .message(MSG_ERROR_OPTIMISTIC_LOCKING)
-        .parameters(List.of(new Parameter()
-            .key(IDENTIFIER)
-            .value(content.getIdentifier()),
-          new Parameter()
-            .key(LINK)
-            .value(link)
-          )
-        );
-    } else {
-      return new Error()
-        .message(message)
-        .parameters(List.of(new Parameter()
-            .key(IDENTIFIER)
-            .value(content.getIdentifier())
-          )
-        );
+    List<Parameter> parameters = new ArrayList<>();
+    parameters.add(new Parameter().key(IDENTIFIER).value(content.getIdentifier()));
+    if (StringUtils.isNotBlank(content.getLinkToFailedEntity())) {
+      parameters.add(new Parameter().key(LINK).value(content.getLinkToFailedEntity()));
     }
+
+    return new Error()
+      .message(StringUtils.isNotBlank(content.getUiErrorMessage()) ? content.getUiErrorMessage() : content.getErrorMessage())
+      .parameters(parameters);
   }
 
   public Page<BulkOperationExecutionContent> getErrorsByCql(String cql, int offset, int limit) {
