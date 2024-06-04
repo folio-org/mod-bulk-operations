@@ -26,7 +26,7 @@ import static org.folio.bulkops.util.Constants.MSG_ERROR_TEMPLATE_OPTIMISTIC_LOC
 @Log4j2
 public class Utils {
 
-  private static final Pattern PATTERN = Pattern.compile("\\s\\d+\\s|\\s\\d+,");
+  private static final Pattern PATTERN = Pattern.compile("\\s\\d+\\b");
   public static Optional<String> ofEmptyString(String string) {
     return StringUtils.isNotEmpty(string) ? Optional.of(string) : Optional.empty();
   }
