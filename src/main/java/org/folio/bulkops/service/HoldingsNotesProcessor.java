@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static com.opencsv.ICSVWriter.NO_QUOTE_CHARACTER;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.folio.bulkops.util.Constants.COMMA_DELIMETER;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
@@ -45,7 +46,10 @@ public class HoldingsNotesProcessor {
     try (var reader = new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(input)))
           .withCSVParser(new RFC4180ParserBuilder().build()).build();
          var stringWriter = new StringWriter();
-         var writer = new CSVWriterBuilder(stringWriter).withSeparator(',').build()) {
+         var writer = new CSVWriterBuilder(stringWriter)
+           .withSeparator(',')
+           .withQuoteChar(NO_QUOTE_CHARACTER)
+           .build()) {
       String[] line;
       while ((line = reader.readNext()) != null) {
         if (reader.getRecordsRead() == FIRST_LINE) {
