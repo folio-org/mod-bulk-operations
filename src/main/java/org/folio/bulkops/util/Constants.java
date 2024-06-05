@@ -57,5 +57,4 @@ public class Constants {
   public static final String MSG_ERROR_OPTIMISTIC_LOCKING_DEFAULT = "The record cannot be saved because it is not the most recent version.";
 
   public static final String CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING = "The record cannot be saved because it is not the most recent version. Stored version is %s, bulk edit version is %s.";
-  public static final String MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING = "The record cannot be saved because it is not the most recent version. Stored version is %s, bulk edit version is %s.";
 }
