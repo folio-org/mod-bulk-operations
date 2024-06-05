@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static com.opencsv.ICSVWriter.NO_ESCAPE_CHARACTER;
 import static com.opencsv.ICSVWriter.NO_QUOTE_CHARACTER;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.folio.bulkops.util.Constants.COMMA_DELIMETER;
@@ -49,6 +50,7 @@ public class HoldingsNotesProcessor {
          var writer = new CSVWriterBuilder(stringWriter)
            .withSeparator(',')
            .withQuoteChar(NO_QUOTE_CHARACTER)
+           .withEscapeChar(NO_ESCAPE_CHARACTER)
            .build()) {
       String[] line;
       while ((line = reader.readNext()) != null) {
