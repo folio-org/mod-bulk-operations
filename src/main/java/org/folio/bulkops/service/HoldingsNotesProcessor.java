@@ -40,6 +40,7 @@ public class HoldingsNotesProcessor {
       .toList();
     var noteTypeHeaders = noteTypeNames.stream()
       .map(noteTableUpdater::concatNotePostfixIfRequired)
+      .map(this::masqueradeSpecialCharacters)
       .toList();
 
     try (var reader = new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(input)))
@@ -69,7 +70,13 @@ public class HoldingsNotesProcessor {
   }
 
   private String[] processNotesData(String[] line, List<String> noteTypeNames) {
-    return noteTableUpdater.enrichWithNotesByType(new ArrayList<>(Arrays.asList(line)), HOLDINGS_NOTE_POSITION, noteTypeNames)
+    return noteTableUpdater.enrichWithNotesByType(new ArrayList<>(Arrays.asList(line)), HOLDINGS_NOTE_POSITION, noteTypeNames).stream()
+      .map(this::masqueradeSpecialCharacters)
       .toArray(String[]::new);
+  }
+
+  private String masqueradeSpecialCharacters(String line) {
+    line = line.contains("\"") ? line.replace("\"", "\"\"") : line;
+    return line.contains(COMMA_DELIMETER) || line.contains(LF) ? "\"" + line + "\"" : line;
   }
 }
