@@ -95,8 +95,8 @@ class RecordUpdateServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"ERROR: Cannot update record cb475fa9-aa07-4bbf-8382-b0b1426f9a20 because it has been changed (optimistic locking): Stored _version is 2, _version of request is 1 (23F09)",
-    "ERROR: Cannot update record cb475fa9-aa07-4bbf-8382-b0b1426f9a20 because it has been changed (optimistic locking): S"})
+  @ValueSource(strings = {"[409 Conflict] during [PUT] to [http://inventory/items/23f2c8e1-bd5d-4f27-9398-a688c998808a] [ItemClient#updateItem(Item,String)]: [ERROR: Cannot update record 23f2c8e1-bd5d-4f27-9398-a688c998808a because it has been changed (optimistic locking): Stored _version is 13, _version of request is 12 (23F09)]",
+    "[409 Conflict] during [PUT] to [http://inventory/items/23f2c8e1-bd5d-4f27-9398-a688c998808a] [ItemClient#updateItem(Item,String)]: [ERROR: Cannot update record 23f2c8e1-bd5d-4f27-9398-a688c998808a because it has been changed (optimistic locking): S"})
   void testUpdateModifiedEntityWithOptimisticLockingError(String responseErrorMessage) {
     var feignException = FeignException.errorStatus("", Response.builder().status(409)
       .reason("null".equals(responseErrorMessage) ? null : responseErrorMessage)
