@@ -4,9 +4,9 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.folio.bulkops.service.ErrorService.IDENTIFIER;
 import static org.folio.bulkops.service.ErrorService.LINK;
-import static org.folio.bulkops.util.Constants.MSG_ERROR_OPTIMISTIC_LOCKING;
-import static org.folio.bulkops.util.Constants.MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING;
+import static org.folio.bulkops.util.Constants.CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -257,11 +257,14 @@ class ErrorServiceTest extends BaseTest {
         .getId();
 
       var link = "/inventory/view/ff12f28b-1982-4a8d-982c-c797bf92d479/1028b1eb-0b9d-4fe9-a458-2f0a8570cf9c";
+      var message = format(CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING, 2, 1);
 
       executionContentRepository.save(BulkOperationExecutionContent.builder()
         .bulkOperationId(operationId)
         .identifier("789")
-        .errorMessage(format(MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING, link))
+        .errorMessage(format("%s %s", message, link))
+        .uiErrorMessage(message)
+        .linkToFailedEntity(link)
         .build());
 
       var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1);
@@ -269,7 +272,9 @@ class ErrorServiceTest extends BaseTest {
       assertThat(errors.getErrors(), hasSize(1));
       assertThat(errors.getErrors().get(0).getParameters(), hasSize(2));
 
-      assertThat(errors.getErrors().get(0).getMessage(), equalTo(MSG_ERROR_OPTIMISTIC_LOCKING));
+      assertThat(errors.getErrors().get(0).getMessage(), equalTo(message));
+      assertThat(errors.getErrors().get(0).getParameters().get(0).getKey(), equalTo(IDENTIFIER));
+      assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(), equalTo("789"));
       assertThat(errors.getErrors().get(0).getParameters().get(1).getKey(), equalTo(LINK));
       assertThat(errors.getErrors().get(0).getParameters().get(1).getValue(), equalTo(link));
     }
