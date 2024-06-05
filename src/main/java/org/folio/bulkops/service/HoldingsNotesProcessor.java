@@ -1,7 +1,8 @@
 package org.folio.bulkops.service;
 
-import static io.swagger.v3.core.util.Constants.COMMA;
 import static org.apache.commons.lang3.StringUtils.LF;
+import static org.folio.bulkops.util.Constants.COMMA_DELIMETER;
+import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
 
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriterBuilder;
@@ -25,7 +26,6 @@ import java.util.Objects;
 @Log4j2
 public class HoldingsNotesProcessor {
   private static final int FIRST_LINE = 1;
-  private static final int NOTES_POSITION = 24;
 
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final HoldingsReferenceService holdingsReferenceService;
@@ -39,25 +39,26 @@ public class HoldingsNotesProcessor {
       .toList();
     var noteTypeHeaders = noteTypeNames.stream()
       .map(noteTableUpdater::concatNotePostfixIfRequired)
-      .map(s -> s.contains(COMMA) || s.contains(LF) ? "\"" + s + "\"" : s)
+      .map(s -> s.contains(COMMA_DELIMETER) || s.contains(LF) ? "\"" + s + "\"" : s)
       .toList();
 
     try (var reader = new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(input)))
           .withCSVParser(new RFC4180ParserBuilder().build()).build();
-         var writer = new CSVWriterBuilder(new StringWriter()).withSeparator(',').build()) {
+         var stringWriter = new StringWriter();
+         var writer = new CSVWriterBuilder(stringWriter).withSeparator(',').build()) {
       String[] line;
       while ((line = reader.readNext()) != null) {
         if (reader.getRecordsRead() == FIRST_LINE) {
           var headers = new ArrayList<>(Arrays.asList(line));
-          headers.remove(NOTES_POSITION);
-          headers.addAll(NOTES_POSITION, noteTypeHeaders);
+          headers.remove(HOLDINGS_NOTE_POSITION);
+          headers.addAll(HOLDINGS_NOTE_POSITION, noteTypeHeaders);
           line = headers.toArray(new String[0]);
         } else {
           line = processNotesData(line, noteTypeNames);
         }
         writer.writeNext(line);
       }
-      return writer.toString().getBytes();
+      return stringWriter.toString().getBytes();
     } catch (Exception e) {
       log.error(e.getMessage());
       return new byte[0];
@@ -65,7 +66,7 @@ public class HoldingsNotesProcessor {
   }
 
   private String[] processNotesData(String[] line, List<String> noteTypeNames) {
-    return noteTableUpdater.enrichWithNotesByType(new ArrayList<>(Arrays.asList(line)), NOTES_POSITION, noteTypeNames)
+    return noteTableUpdater.enrichWithNotesByType(new ArrayList<>(Arrays.asList(line)), HOLDINGS_NOTE_POSITION, noteTypeNames)
       .toArray(String[]::new);
   }
 }

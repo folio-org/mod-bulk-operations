@@ -22,7 +22,7 @@ public class Constants {
   public static final DateTimeFormatter DATE_WITHOUT_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_WITHOUT_TIME_PATTERN);
 
   public static final int ITEM_NOTE_POSITION = 32;
-  public static final int HOLDINGS_NOTE_POSITION = 19;
+  public static final int HOLDINGS_NOTE_POSITION = 24;
   public static final int INSTANCE_NOTE_POSITION = 22;
 
   public static final String ITEM_DELIMITER_PATTERN = "\\|";
@@ -53,16 +53,9 @@ public class Constants {
   public static final String SPECIAL_ITEM_DELIMITER_REGEX = NON_PRINTING_DELIMITER + ITEM_DELIMITER_PATTERN;
   public static final String ELECTRONIC_ACCESS_HEADINGS = "URL relationship;URI;Link text;Materials specified;URL public note\n";
   public static final String STAFF_ONLY_NOTE_PARAMETER_KEY = "STAFF_ONLY";
-
   public static final String MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING = "The record cannot be saved because it is not the most recent version. Stored version is %s, bulk edit version is %s.";
   public static final String MSG_ERROR_OPTIMISTIC_LOCKING_DEFAULT = "The record cannot be saved because it is not the most recent version.";
 
   public static final String CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING = "The record cannot be saved because it is not the most recent version. Stored version is %s, bulk edit version is %s.";
-  public static final String ACTION_NOTE = "Action note";
-  public static final String BINDING = "Binding";
-  public static final String COPY_NOTE = "Copy note";
-  public static final String ELECTRONIC_BOOKPLATE = "Electronic bookplate";
-  public static final String NOTE = "Note";
-  public static final String PROVENANCE = "Provenance";
-  public static final String REPRODUCTION = "Reproduction";
+  public static final String MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING = "The record cannot be saved because it is not the most recent version. Stored version is %s, bulk edit version is %s.";
 }
