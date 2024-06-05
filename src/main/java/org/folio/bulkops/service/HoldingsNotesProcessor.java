@@ -40,7 +40,6 @@ public class HoldingsNotesProcessor {
       .toList();
     var noteTypeHeaders = noteTypeNames.stream()
       .map(noteTableUpdater::concatNotePostfixIfRequired)
-      .map(s -> s.contains(COMMA_DELIMETER) || s.contains(LF) ? "\"" + s + "\"" : s)
       .toList();
 
     try (var reader = new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(input)))
