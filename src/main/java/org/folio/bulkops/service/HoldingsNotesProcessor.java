@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
 
@@ -73,6 +74,6 @@ public class HoldingsNotesProcessor {
       line = line.contains("\"") ? line.replace("\"", "\"\"") : line;
       return line.contains(",") || line.contains("\n") ? "\"" + line + "\"" : line;
     }
-    return line;
+    return EMPTY;
   }
 }
