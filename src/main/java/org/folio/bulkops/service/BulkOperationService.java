@@ -279,10 +279,6 @@ public class BulkOperationService {
     }
   }
 
-  private boolean isHoldingsRecord(Class<? extends BulkOperationsEntity> clazz) {
-    return HoldingsRecord.class.equals(clazz);
-  }
-
   public void writeToCsv(BulkOperation operation, BulkOperationsEntityCsvWriter csvWriter, BulkOperationsEntity bean) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
     try {
       csvWriter.write(bean);
