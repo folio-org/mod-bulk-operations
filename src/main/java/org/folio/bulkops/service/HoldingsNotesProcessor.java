@@ -1,17 +1,11 @@
 package org.folio.bulkops.service;
 
-import static com.opencsv.ICSVWriter.NO_ESCAPE_CHARACTER;
-import static com.opencsv.ICSVWriter.NO_QUOTE_CHARACTER;
-import static org.apache.commons.lang3.StringUtils.LF;
-import static org.folio.bulkops.util.Constants.COMMA_DELIMETER;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
 
 import com.opencsv.CSVReaderBuilder;
-import com.opencsv.CSVWriterBuilder;
 import com.opencsv.RFC4180ParserBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.springframework.stereotype.Component;
 
@@ -29,7 +23,6 @@ import java.util.Objects;
 public class HoldingsNotesProcessor {
   private static final int FIRST_LINE = 1;
 
-  private final RemoteFileSystemClient remoteFileSystemClient;
   private final HoldingsReferenceService holdingsReferenceService;
   private final NoteTableUpdater noteTableUpdater;
 
@@ -41,28 +34,24 @@ public class HoldingsNotesProcessor {
       .toList();
     var noteTypeHeaders = noteTypeNames.stream()
       .map(noteTableUpdater::concatNotePostfixIfRequired)
-      .map(this::masqueradeSpecialCharacters)
       .toList();
 
     try (var reader = new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(input)))
           .withCSVParser(new RFC4180ParserBuilder().build()).build();
-         var stringWriter = new StringWriter();
-         var writer = new CSVWriterBuilder(stringWriter)
-           .withSeparator(',')
-           .withQuoteChar(NO_QUOTE_CHARACTER)
-           .withEscapeChar(NO_ESCAPE_CHARACTER)
-           .build()) {
+         var stringWriter = new StringWriter()) {
       String[] line;
       while ((line = reader.readNext()) != null) {
         if (reader.getRecordsRead() == FIRST_LINE) {
           var headers = new ArrayList<>(Arrays.asList(line));
           headers.remove(HOLDINGS_NOTE_POSITION);
           headers.addAll(HOLDINGS_NOTE_POSITION, noteTypeHeaders);
-          line = headers.toArray(new String[0]);
+          line = headers.stream()
+            .map(this::processSpecialCharacters)
+            .toArray(String[]::new);
         } else {
           line = processNotesData(line, noteTypeNames);
         }
-        writer.writeNext(line);
+        stringWriter.write(String.join(",", line) + "\n");
       }
       return stringWriter.toString().getBytes();
     } catch (Exception e) {
@@ -73,12 +62,12 @@ public class HoldingsNotesProcessor {
 
   private String[] processNotesData(String[] line, List<String> noteTypeNames) {
     return noteTableUpdater.enrichWithNotesByType(new ArrayList<>(Arrays.asList(line)), HOLDINGS_NOTE_POSITION, noteTypeNames).stream()
-      .map(this::masqueradeSpecialCharacters)
+      .map(this::processSpecialCharacters)
       .toArray(String[]::new);
   }
 
-  private String masqueradeSpecialCharacters(String line) {
+  private String processSpecialCharacters(String line) {
     line = line.contains("\"") ? line.replace("\"", "\"\"") : line;
-    return line.contains(COMMA_DELIMETER) || line.contains(LF) ? "\"" + line + "\"" : line;
+    return line.contains(",") || line.contains("\n") ? "\"" + line + "\"" : line;
   }
 }
