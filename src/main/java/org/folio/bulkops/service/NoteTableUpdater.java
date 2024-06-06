@@ -17,10 +17,10 @@ import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.dto.Cell;
-import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.InstanceNoteType;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -47,7 +47,7 @@ public class NoteTableUpdater {
       .toList();
 
     extendHeadersWithNoteTypeNames(HOLDINGS_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
-    unifiedTable.getRows().forEach(row -> extendRowWithNotesData(HOLDINGS_NOTE_POSITION, row, noteTypeNames));
+    unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), HOLDINGS_NOTE_POSITION, noteTypeNames)));
   }
 
   public void extendTableWithItemNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible) {
@@ -57,7 +57,7 @@ public class NoteTableUpdater {
       .toList();
 
     extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
-    unifiedTable.getRows().forEach(row -> extendRowWithNotesData(ITEM_NOTE_POSITION, row, noteTypeNames));
+    unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), ITEM_NOTE_POSITION, noteTypeNames)));
   }
 
   public void extendTableWithInstanceNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible) {
@@ -67,10 +67,10 @@ public class NoteTableUpdater {
       .toList();
 
     extendHeadersWithNoteTypeNames(INSTANCE_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
-    unifiedTable.getRows().forEach(row -> extendRowWithNotesData(INSTANCE_NOTE_POSITION, row, noteTypeNames));
+    unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), INSTANCE_NOTE_POSITION, noteTypeNames)));
   }
 
-  private String concatNotePostfixIfRequired(String noteTypeName) {
+  public String concatNotePostfixIfRequired(String noteTypeName) {
     return Set.of("Binding", "Electronic bookplate", "Provenance", "Reproduction").contains(noteTypeName) ?
       noteTypeName + " note" :
       noteTypeName;
@@ -90,10 +90,9 @@ public class NoteTableUpdater {
     headers.addAll(notesInitialPosition, cellsToInsert);
   }
 
-  private void extendRowWithNotesData(int notesInitialPosition, Row row, List<String> noteTypeNames) {
+  public List<String> enrichWithNotesByType(List<String> list, int notesPosition, List<String> noteTypeNames) {
     var notesArray = new String[noteTypeNames.size()];
-    var rowList = row.getRow();
-    var notesString = rowList.get(notesInitialPosition);
+    var notesString = list.get(notesPosition);
     if (isNotEmpty(notesString)) {
       for (var note : notesString.split(ITEM_DELIMITER_PATTERN)) {
         var noteFields = note.trim().split(ARRAY_DELIMITER);
@@ -101,14 +100,14 @@ public class NoteTableUpdater {
           var position = noteTypeNames.indexOf(noteFields[NOTE_TYPE_POS]);
           if (position != NON_EXISTING_POSITION) {
             var staffOnlyPostfix = TRUE.equals(Boolean.parseBoolean(noteFields[STAFF_ONLY_FLAG_POS])) ? SPACE + STAFF_ONLY : EMPTY;
-            var value = noteFields[NOTE_VALUE_POS] + staffOnlyPostfix;
+            var value = SpecialCharacterEscaper.restore(noteFields[NOTE_VALUE_POS]) + staffOnlyPostfix;
             notesArray[position] = isEmpty(notesArray[position]) ? value : String.join(ITEM_DELIMITER_SPACED, notesArray[position], value);
           }
         }
       }
     }
-    rowList.remove(notesInitialPosition);
-    rowList.addAll(notesInitialPosition, Arrays.asList(notesArray));
-    row.setRow(rowList);
+    list.remove(notesPosition);
+    list.addAll(notesPosition, Arrays.asList(notesArray));
+    return list;
   }
 }

@@ -1,5 +1,6 @@
 package org.folio.bulkops.controller;
 
+import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
@@ -30,6 +31,7 @@ import org.folio.bulkops.mapper.BulkOperationMapper;
 import org.folio.bulkops.rest.resource.BulkOperationsApi;
 import org.folio.bulkops.service.BulkOperationService;
 import org.folio.bulkops.service.ErrorService;
+import org.folio.bulkops.service.HoldingsNotesProcessor;
 import org.folio.bulkops.service.ListUsersService;
 import org.folio.bulkops.service.LogFilesService;
 import org.folio.bulkops.service.PreviewService;
@@ -49,6 +51,7 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
@@ -64,6 +67,7 @@ public class BulkOperationController implements BulkOperationsApi {
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final LogFilesService logFilesService;
   private final ListUsersService listUsersService;
+  private final HoldingsNotesProcessor holdingsNotesProcessor;
 
   @Override
   public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(String query, Integer offset, Integer limit) {
@@ -135,6 +139,9 @@ public class BulkOperationController implements BulkOperationsApi {
     } else {
       try (var is = remoteFileSystemClient.get(path)) {
         var content = ArrayUtils.removeAllOccurrences(is.readAllBytes(), (byte) NON_PRINTING_DELIMITER);
+        if (isDownloadPreview(fileContentType) && HOLDINGS_RECORD.equals(bulkOperation.getEntityType())) {
+          content = holdingsNotesProcessor.processHoldingsNotes(content);
+        }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentLength(content.length);
@@ -146,6 +153,10 @@ public class BulkOperationController implements BulkOperationsApi {
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
+  }
+
+  private boolean isDownloadPreview(FileContentType fileContentType) {
+    return Set.of(MATCHED_RECORDS_FILE, PROPOSED_CHANGES_FILE, COMMITTED_RECORDS_FILE).contains(fileContentType);
   }
 
   @Override
