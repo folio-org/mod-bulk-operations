@@ -9,6 +9,7 @@ import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.CallNumberTypeConverter;
 import org.folio.bulkops.domain.converter.ElectronicAccessListConverter;
 import org.folio.bulkops.domain.converter.HoldingsLocationConverter;
+import org.folio.bulkops.domain.converter.HoldingsNoteListConverter;
 import org.folio.bulkops.domain.converter.HoldingsStatementListConverter;
 import org.folio.bulkops.domain.converter.HoldingsStatisticalCodeListConverter;
 import org.folio.bulkops.domain.converter.HoldingsTypeConverter;
@@ -154,21 +155,21 @@ public class HoldingsRecord implements BulkOperationsEntity, ElectronicAccessEnt
 
   @JsonProperty("holdingsStatements")
   @Valid
-  @CsvCustomBindByName(column = "Holdings statements", converter = HoldingsStatementListConverter.class)
+  @CsvCustomBindByName(column = "Holdings statement", converter = HoldingsStatementListConverter.class)
   @CsvCustomBindByPosition(position = 18, converter = HoldingsStatementListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<HoldingsStatement> holdingsStatements = null;
 
   @JsonProperty("holdingsStatementsForSupplements")
   @Valid
-  @CsvCustomBindByName(column = "Holdings statements for supplements", converter = HoldingsStatementListConverter.class)
+  @CsvCustomBindByName(column = "Holdings statement for supplements", converter = HoldingsStatementListConverter.class)
   @CsvCustomBindByPosition(position = 19, converter = HoldingsStatementListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<HoldingsStatement> holdingsStatementsForSupplements = null;
 
   @JsonProperty("holdingsStatementsForIndexes")
   @Valid
-  @CsvCustomBindByName(column = "Holdings statements for indexes", converter = HoldingsStatementListConverter.class)
+  @CsvCustomBindByName(column = "Holdings statement for indexes", converter = HoldingsStatementListConverter.class)
   @CsvCustomBindByPosition(position = 20, converter = HoldingsStatementListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<HoldingsStatement> holdingsStatementsForIndexes = null;
@@ -191,69 +192,40 @@ public class HoldingsRecord implements BulkOperationsEntity, ElectronicAccessEnt
   @UnifiedTableCell(visible = false)
   private String retentionPolicy;
 
-  @CsvCustomBindByName(column = "Action note", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 24, converter = StringConverter.class)
+  @JsonProperty("notes")
+  @CsvCustomBindByName(column = "Notes", converter = HoldingsNoteListConverter.class)
+  @CsvCustomBindByPosition(position = 24, converter = HoldingsNoteListConverter.class)
   @UnifiedTableCell(visible = false)
-  private String actionNote;
-
-  @CsvCustomBindByName(column = "Binding note", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 25, converter = StringConverter.class)
-  @UnifiedTableCell(visible = false)
-  private String bindingNote;
-
-  @CsvCustomBindByName(column = "Copy note", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 26, converter = StringConverter.class)
-  @UnifiedTableCell(visible = false)
-  private String copyNote;
-
-  @CsvCustomBindByName(column = "Electronic bookplate note", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 27, converter = StringConverter.class)
-  @UnifiedTableCell(visible = false)
-  private String electronicBookplateNote;
-
-  @CsvCustomBindByName(column = "Note", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 28, converter = StringConverter.class)
-  @UnifiedTableCell(visible = false)
-  private String note;
-
-  @CsvCustomBindByName(column = "Provenance note", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 29, converter = StringConverter.class)
-  @UnifiedTableCell(visible = false)
-  private String provenanceNote;
-
-  @CsvCustomBindByName(column = "Reproduction note", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 30, converter = StringConverter.class)
-  @UnifiedTableCell(visible = false)
-  private String reproductionNote;
+  private List<HoldingsNote> notes;
 
   @JsonProperty("electronicAccess")
   @Valid
   @CsvCustomBindByName(column = "Electronic access", converter = ElectronicAccessListConverter.class)
-  @CsvCustomBindByPosition(position = 31, converter = ElectronicAccessListConverter.class)
+  @CsvCustomBindByPosition(position = 25, converter = ElectronicAccessListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<ElectronicAccess> electronicAccess = null;
 
   @JsonProperty("acquisitionMethod")
   @CsvCustomBindByName(column = "Acquisition method", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 32, converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 26, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String acquisitionMethod;
 
   @JsonProperty("acquisitionFormat")
   @CsvCustomBindByName(column = "Order format", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 33, converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 27, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String acquisitionFormat;
 
   @JsonProperty("receiptStatus")
   @CsvCustomBindByName(column = "Receipt status", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 34, converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 28, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String receiptStatus;
 
   @JsonProperty("tags")
   @CsvCustomBindByName(column = "Tags", converter = TagsConverter.class)
-  @CsvCustomBindByPosition(position = 35, converter = TagsConverter.class)
+  @CsvCustomBindByPosition(position = 29, converter = TagsConverter.class)
   @UnifiedTableCell(visible = false)
   private Tags tags;
 
@@ -265,9 +237,6 @@ public class HoldingsRecord implements BulkOperationsEntity, ElectronicAccessEnt
 
   @JsonProperty("effectiveLocationId")
   private String effectiveLocationId;
-
-  @JsonProperty("notes")
-  private List<HoldingsNote> notes = null;
 
   @JsonProperty("illPolicy")
   private IllPolicy illPolicy;

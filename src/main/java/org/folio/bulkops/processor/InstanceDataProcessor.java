@@ -32,11 +32,11 @@ public class InstanceDataProcessor extends AbstractDataProcessor<Instance> {
   public Validator<UpdateOptionType, Action> validator(Instance instance) {
     return (option, action) -> {
       if (CLEAR_FIELD.equals(action.getType()) && Set.of(STAFF_SUPPRESS, SUPPRESS_FROM_DISCOVERY).contains(option)) {
-        throw new RuleValidationException("Suppress flag cannot be cleared");
+        throw new RuleValidationException("Suppress flag cannot be cleared.");
       } else if (INSTANCE_NOTE.equals(option) && !"FOLIO".equals(instance.getSource())) {
-        throw new RuleValidationException("Bulk edit of instance notes is not supported for MARC Instances");
+        throw new RuleValidationException("Bulk edit of instance notes is not supported for MARC Instances.");
       } else if (ADMINISTRATIVE_NOTE.equals(option) && CHANGE_TYPE.equals(action.getType()) && !"FOLIO".equals(instance.getSource())) {
-        throw new RuleValidationException("Change note type for administrative notes is not supported for MARC Instances");
+        throw new RuleValidationException("Change note type for administrative notes is not supported for MARC Instances.");
       }
     };
   }

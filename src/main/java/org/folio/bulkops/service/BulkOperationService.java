@@ -43,6 +43,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExportType;
 import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.bean.StatusType;
@@ -229,7 +230,7 @@ public class BulkOperationService {
 
       var processedNumOfRecords = 0;
 
-      if(iterator.hasNext()) {
+      if (iterator.hasNext()) {
         operation.setLinkToModifiedRecordsCsvFile(modifiedPreviewCsvFileName);
       }
 
@@ -255,6 +256,7 @@ public class BulkOperationService {
           dataProcessingRepository.save(dataProcessing);
         }
       }
+
       operation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
 
       dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
