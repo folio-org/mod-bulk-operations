@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
 
 import com.opencsv.CSVReaderBuilder;
@@ -39,7 +40,6 @@ public class HoldingsNotesProcessor {
     try (var reader = new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(input)))
           .withCSVParser(new RFC4180ParserBuilder().build()).build();
          var stringWriter = new StringWriter()) {
-      log.info("input: {}", new String(input));
       String[] line;
       while ((line = reader.readNext()) != null) {
         if (reader.getRecordsRead() == FIRST_LINE) {
@@ -69,7 +69,10 @@ public class HoldingsNotesProcessor {
   }
 
   private String processSpecialCharacters(String line) {
-    line = line.contains("\"") ? line.replace("\"", "\"\"") : line;
-    return line.contains(",") || line.contains("\n") ? "\"" + line + "\"" : line;
+    if (isNotEmpty(line)) {
+      line = line.contains("\"") ? line.replace("\"", "\"\"") : line;
+      return line.contains(",") || line.contains("\n") ? "\"" + line + "\"" : line;
+    }
+    return line;
   }
 }
