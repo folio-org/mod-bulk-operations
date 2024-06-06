@@ -39,6 +39,7 @@ public class HoldingsNotesProcessor {
     try (var reader = new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(input)))
           .withCSVParser(new RFC4180ParserBuilder().build()).build();
          var stringWriter = new StringWriter()) {
+      log.info("input: {}", new String(input));
       String[] line;
       while ((line = reader.readNext()) != null) {
         if (reader.getRecordsRead() == FIRST_LINE) {
