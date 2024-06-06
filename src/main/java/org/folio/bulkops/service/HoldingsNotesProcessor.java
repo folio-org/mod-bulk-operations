@@ -53,6 +53,7 @@ public class HoldingsNotesProcessor {
         }
         stringWriter.write(String.join(",", line) + "\n");
       }
+      stringWriter.flush();
       return stringWriter.toString().getBytes();
     } catch (Exception e) {
       log.error(e.getMessage());
