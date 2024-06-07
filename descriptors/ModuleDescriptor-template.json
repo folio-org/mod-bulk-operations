@@ -192,6 +192,7 @@
           "pathPattern": "/bulk-operations/{operationId}/download",
           "permissionsRequired": [ "bulk-operations.download.item.get" ],
           "modulePermissions": [
+            "inventory-storage.holdings-note-types.collection.get"
           ]
         },
         {
