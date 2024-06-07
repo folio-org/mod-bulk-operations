@@ -50,10 +50,14 @@ public class UpdateOptionTypeToFieldResolver {
       return "Email";
     } else if (PERMANENT_LOCATION == type && ITEM == entity) {
       return "Permanent Location";
+    } else if (PERMANENT_LOCATION == type && HOLDINGS_RECORD == entity) {
+      return "Holdings permanent location";
     } else if (PERMANENT_LOCATION == type) {
       return "Permanent location";
     } else if (TEMPORARY_LOCATION == type && ITEM == entity) {
       return "Temporary Location";
+    } else if (TEMPORARY_LOCATION == type && HOLDINGS_RECORD == entity) {
+      return "Holdings temporary location";
     } else if (TEMPORARY_LOCATION == type) {
       return "Temporary location";
     } else if (PERMANENT_LOAN_TYPE == type) {
@@ -67,7 +71,7 @@ public class UpdateOptionTypeToFieldResolver {
     } else if (SUPPRESS_FROM_DISCOVERY == type && ITEM == entity) {
       return "Discovery Suppress";
     } else if (SUPPRESS_FROM_DISCOVERY == type && HOLDINGS_RECORD == entity) {
-      return "Discovery suppress";
+      return "Suppress from discovery";
     } else if (STAFF_SUPPRESS == type && INSTANCE == entity) {
       return "Staff suppress";
     } else if (ITEM_NOTE == type) {
