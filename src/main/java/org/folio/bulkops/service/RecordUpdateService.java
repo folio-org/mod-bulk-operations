@@ -1,6 +1,6 @@
 package org.folio.bulkops.service;
 
-import static org.folio.bulkops.util.Constants.MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING;
+import static java.lang.String.format;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 
 import feign.FeignException;
@@ -12,6 +12,8 @@ import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.OptimisticLockingException;
 import org.folio.bulkops.processor.UpdateProcessorFactory;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
+import org.folio.bulkops.util.EntityPathResolver;
+import org.folio.bulkops.util.Utils;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 public class RecordUpdateService {
   private final UpdateProcessorFactory updateProcessorFactory;
   private final BulkOperationExecutionContentRepository executionContentRepository;
+  private final EntityPathResolver entityPathResolver;
 
   public BulkOperationsEntity updateEntity(BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation) {
     var isEqual = original.hashCode() == modified.hashCode() && original.equals(modified);
@@ -28,7 +31,9 @@ public class RecordUpdateService {
         updater.updateRecord(modified);
       } catch (FeignException e) {
         if (e.status() == 409 && e.getMessage().contains("optimistic locking")) {
-          throw new OptimisticLockingException(String.format(MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING, original._version(), modified._version()));
+          var message = Utils.getMessageFromFeignException(e);
+          var link = entityPathResolver.resolve(operation.getEntityType(), original);
+          throw new OptimisticLockingException(format("%s %s", message, link), message, link);
         }
         throw e;
       }

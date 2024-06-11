@@ -31,10 +31,14 @@ public class BulkOperationsEntityCsvWriter {
 
   public void write(BulkOperationsEntity entity)
     throws ConverterException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
+    delegate.write(processNotes(entity));
+  }
+
+  private BulkOperationsEntity processNotes(BulkOperationsEntity entity) {
     if (entity instanceof Item item) {
-      entity = splitCirculationNotes(item);
+      return splitCirculationNotes(item);
     }
-    delegate.write(entity);
+    return entity;
   }
 
   private Item splitCirculationNotes(Item item) {

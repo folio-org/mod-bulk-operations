@@ -44,6 +44,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExportType;
 import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.bean.StatusType;
@@ -64,6 +65,7 @@ import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.OptimisticLockingException;
 import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.processor.DataProcessorFactory;
 import org.folio.bulkops.processor.UpdatedEntityHolder;
@@ -229,7 +231,7 @@ public class BulkOperationService {
 
       var processedNumOfRecords = 0;
 
-      if(iterator.hasNext()) {
+      if (iterator.hasNext()) {
         operation.setLinkToModifiedRecordsCsvFile(modifiedPreviewCsvFileName);
       }
 
@@ -255,6 +257,7 @@ public class BulkOperationService {
           dataProcessingRepository.save(dataProcessing);
         }
       }
+
       operation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
 
       dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
@@ -354,6 +357,8 @@ public class BulkOperationService {
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
               writeToCsv(operation, csvWriter, result);
             }
+          } catch (OptimisticLockingException e) {
+            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLinkToFailedEntity());
           } catch (Exception e) {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage());
           }
@@ -537,10 +542,10 @@ public class BulkOperationService {
   }
 
   public void clearOperationProcessing(BulkOperation operation) {
-    var processing = dataProcessingRepository.findByBulkOperationId(operation.getId());
+    var processing = dataProcessingRepository.findById(operation.getId());
 
     if (processing.isPresent()) {
-      dataProcessingRepository.deleteById(processing.get().getId());
+      dataProcessingRepository.deleteById(processing.get().getBulkOperationId());
 
       operation.setStatus(DATA_MODIFICATION);
       bulkOperationRepository.save(operation);
@@ -557,7 +562,7 @@ public class BulkOperationService {
         .entityType(operation.getEntityType())
         .entityCustomIdentifierType(IdentifierType.ID));
       case DATA_MODIFICATION -> {
-        var processing = dataProcessingRepository.findByBulkOperationId(bulkOperationId);
+        var processing = dataProcessingRepository.findById(bulkOperationId);
         if (processing.isPresent() && StatusType.ACTIVE.equals(processing.get().getStatus())) {
           operation.setProcessedNumOfRecords(processing.get().getProcessedNumOfRecords());
         }

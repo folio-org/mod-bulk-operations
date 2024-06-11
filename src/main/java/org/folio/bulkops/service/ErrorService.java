@@ -10,13 +10,14 @@ import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.StateType;
@@ -44,6 +45,7 @@ import lombok.RequiredArgsConstructor;
 public class ErrorService {
   private static final String POSTFIX_ERROR_MESSAGE_NON_NULL = " AND errorMessage<null";
   public static final String IDENTIFIER = "IDENTIFIER";
+  public static final String LINK = "LINK";
   private final BulkOperationRepository operationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final BulkOperationExecutionContentRepository executionContentRepository;
@@ -51,7 +53,7 @@ public class ErrorService {
   private final BulkOperationProcessingContentRepository processingContentRepository;
   private final BulkEditClient bulkEditClient;
 
-  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage) {
+  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
     if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
       return;
     }
@@ -65,7 +67,13 @@ public class ErrorService {
         .bulkOperationId(bulkOperationId)
         .state(StateType.FAILED)
         .errorMessage(errorMessage)
+        .uiErrorMessage(uiErrorMessage)
+        .linkToFailedEntity(link)
       .build());
+  }
+
+  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage) {
+    saveError(bulkOperationId, identifier, errorMessage, null, null);
   }
 
   @Transactional
@@ -107,19 +115,30 @@ public class ErrorService {
   private Errors getExecutionErrors(UUID bulkOperationId, int limit) {
     var errorPage = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId, OffsetRequest.of(0, limit));
     var errors = errorPage.toList().stream()
-      .map(this::executionContentToError)
+      .map(this::executionContentToFolioError)
       .toList();
     return new Errors()
       .errors(errors)
       .totalRecords((int) errorPage.getTotalElements());
   }
 
-  private Error executionContentToError(BulkOperationExecutionContent content) {
+  /**
+   * Convert BulkOperationExecutionContent to Error for preview on UI
+   * @param content {@link BulkOperationExecutionContent}
+   * @return {@link Error} with message equals to specific UI representation (uiErrorMessage) if it is not blank,
+   * otherwise - the same message as it is presented in csv file with errors (csvErrorMessage)
+   */
+  private Error executionContentToFolioError(BulkOperationExecutionContent content) {
+
+    List<Parameter> parameters = new ArrayList<>();
+    parameters.add(new Parameter().key(IDENTIFIER).value(content.getIdentifier()));
+    if (StringUtils.isNotBlank(content.getLinkToFailedEntity())) {
+      parameters.add(new Parameter().key(LINK).value(content.getLinkToFailedEntity()));
+    }
+
     return new Error()
-      .message(content.getErrorMessage())
-      .parameters(Collections.singletonList(new Parameter()
-        .key(IDENTIFIER)
-        .value(content.getIdentifier())));
+      .message(StringUtils.isNotBlank(content.getUiErrorMessage()) ? content.getUiErrorMessage() : content.getErrorMessage())
+      .parameters(parameters);
   }
 
   public Page<BulkOperationExecutionContent> getErrorsByCql(String cql, int offset, int limit) {
