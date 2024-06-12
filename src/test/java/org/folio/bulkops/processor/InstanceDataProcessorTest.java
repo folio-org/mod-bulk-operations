@@ -25,6 +25,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.InstanceNote;
@@ -53,35 +54,38 @@ class InstanceDataProcessorTest extends BaseTest {
   @MockBean
   ErrorService errorService;
 
-  private DataProcessor<Instance> processor;
+  private DataProcessor<ExtendedInstance> processor;
 
   public static final String IDENTIFIER = "123";
 
   @BeforeEach
   void setUp() {
     if (isNull(processor)) {
-      processor = factory.getProcessorFromFactory(Instance.class);
+      processor = factory.getProcessorFromFactory(ExtendedInstance.class);
     }
   }
 
   @Test
   void testSetStaffSuppressToTrue() {
-    var actual = processor.process(IDENTIFIER, new Instance(), rules(rule(STAFF_SUPPRESS, SET_TO_TRUE, null)));
+    var extendedInstance = ExtendedInstance.builder().entity(new Instance()).build();
+    var actual = processor.process(IDENTIFIER, extendedInstance, rules(rule(STAFF_SUPPRESS, SET_TO_TRUE, null)));
     assertNotNull(actual.getUpdated());
-    assertTrue(actual.getUpdated().getStaffSuppress());
+    assertTrue(actual.getUpdated().getEntity().getStaffSuppress());
   }
 
   @Test
   void testSetStaffSuppressToFalse() {
-    var actual = processor.process(IDENTIFIER, new Instance(), rules(rule(STAFF_SUPPRESS, SET_TO_FALSE, null)));
+    var extendedInstance = ExtendedInstance.builder().entity(new Instance()).build();
+    var actual = processor.process(IDENTIFIER, extendedInstance, rules(rule(STAFF_SUPPRESS, SET_TO_FALSE, null)));
     assertNotNull(actual.getUpdated());
-    assertFalse(actual.getUpdated().getStaffSuppress());
+    assertFalse(actual.getUpdated().getEntity().getStaffSuppress());
   }
 
   @Test
   void shouldNotUpdateInstanceWhenActionIsInvalid() {
-    var actual = processor.process(IDENTIFIER, new Instance().withDiscoverySuppress(true), rules(rule(STAFF_SUPPRESS, CLEAR_FIELD, null)));
-    assertTrue(actual.getUpdated().getDiscoverySuppress());
+    var extendedInstance = ExtendedInstance.builder().entity(new Instance().withDiscoverySuppress(true)).build();
+    var actual = processor.process(IDENTIFIER, extendedInstance, rules(rule(STAFF_SUPPRESS, CLEAR_FIELD, null)));
+    assertTrue(actual.getUpdated().getEntity().getDiscoverySuppress());
     verify(errorService).saveError(any(UUID.class), eq(IDENTIFIER), anyString());
   }
 
@@ -94,17 +98,18 @@ class InstanceDataProcessorTest extends BaseTest {
       .discoverySuppress(false)
       .administrativeNotes(List.of("Note1", "Note2"))
       .build();
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+    var cloned = processor.clone(extendedInstance);
+    assertTrue(processor.compare(extendedInstance, cloned));
 
-    var cloned = processor.clone(instance);
-    assertTrue(processor.compare(instance, cloned));
-
-    cloned.setAdministrativeNotes(Collections.singletonList("Note3"));
-    assertFalse(processor.compare(instance, cloned));
+    cloned.getEntity().setAdministrativeNotes(Collections.singletonList("Note3"));
+    assertFalse(processor.compare(extendedInstance, cloned));
   }
 
   @ParameterizedTest
   @EnumSource(value = UpdateActionType.class, names = {"MARK_AS_STAFF_ONLY", "REMOVE_MARK_AS_STAFF_ONLY"}, mode = EnumSource.Mode.INCLUDE)
   void shouldSetOrRemoveStaffOnlyForInstanceNotesByInstanceNoteTypeId(UpdateActionType actionType) {
+
     var typeId = UUID.randomUUID().toString();
     var staffOnly = REMOVE_MARK_AS_STAFF_ONLY.equals(actionType);
     var instance = Instance.builder()
@@ -116,6 +121,7 @@ class InstanceDataProcessorTest extends BaseTest {
         InstanceNote.builder()
           .instanceNoteTypeId(UUID.randomUUID().toString()).staffOnly(staffOnly).build()))
       .build();
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
     var rules = rules(new BulkOperationRule()
       .ruleDetails(new BulkOperationRuleRuleDetails()
@@ -126,13 +132,13 @@ class InstanceDataProcessorTest extends BaseTest {
             .key(INSTANCE_NOTE_TYPE_ID_KEY)
             .value(typeId)))))));
 
-    var result = processor.process(IDENTIFIER, instance, rules);
+    var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
-    assertTrue(result.getUpdated().getInstanceNotes().stream()
+    assertTrue(result.getUpdated().getEntity().getInstanceNotes().stream()
       .filter(instanceNote -> typeId.equals(instanceNote.getInstanceNoteTypeId()))
       .map(InstanceNote::getStaffOnly)
       .allMatch(so -> so.equals(!staffOnly)));
-    assertTrue(result.getUpdated().getInstanceNotes().stream()
+    assertTrue(result.getUpdated().getEntity().getInstanceNotes().stream()
       .filter(instanceNote -> !typeId.equals(instanceNote.getInstanceNoteTypeId()))
       .map(InstanceNote::getStaffOnly)
       .noneMatch(so -> so.equals(!staffOnly)));
@@ -161,16 +167,17 @@ class InstanceDataProcessorTest extends BaseTest {
           .parameters(Collections.singletonList(new Parameter()
             .key(INSTANCE_NOTE_TYPE_ID_KEY)
             .value(typeId)))))));
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
-    var result = processor.process(IDENTIFIER, instance, rules);
+    var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
     if (ADMINISTRATIVE_NOTE.equals(optionType)) {
-      assertThat(result.getUpdated().getAdministrativeNotes()).isEmpty();
-      assertThat(result.getUpdated().getInstanceNotes()).hasSize(2);
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).isEmpty();
+      assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
     } else {
-      assertThat(result.getUpdated().getAdministrativeNotes()).hasSize(1);
-      assertThat(result.getUpdated().getInstanceNotes()).hasSize(1);
-      assertThat(result.getUpdated().getInstanceNotes().get(0).getInstanceNoteTypeId()).isNotEqualTo(typeId);
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(1);
+      assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(1);
+      assertThat(result.getUpdated().getEntity().getInstanceNotes().get(0).getInstanceNoteTypeId()).isNotEqualTo(typeId);
     }
   }
 
@@ -193,17 +200,18 @@ class InstanceDataProcessorTest extends BaseTest {
           .parameters(Collections.singletonList(new Parameter()
             .key(INSTANCE_NOTE_TYPE_ID_KEY)
             .value(typeId)))))));
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
-    var result = processor.process(IDENTIFIER, instance, rules);
+    var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
     if (ADMINISTRATIVE_NOTE.equals(optionType)) {
-      assertThat(result.getUpdated().getAdministrativeNotes()).hasSize(1);
-      assertThat(result.getUpdated().getAdministrativeNotes().get(0)).isEqualTo("new note");
-      assertThat(result.getUpdated().getInstanceNotes()).isNull();
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(1);
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes().get(0)).isEqualTo("new note");
+      assertThat(result.getUpdated().getEntity().getInstanceNotes()).isNull();
     } else {
-      assertThat(result.getUpdated().getAdministrativeNotes()).isNull();
-      assertThat(result.getUpdated().getInstanceNotes()).hasSize(1);
-      var newNote = result.getUpdated().getInstanceNotes().get(0);
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).isNull();
+      assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(1);
+      var newNote = result.getUpdated().getEntity().getInstanceNotes().get(0);
       assertThat(newNote.getNote()).isEqualTo("new note");
       assertThat(newNote.getInstanceNoteTypeId()).isEqualTo(typeId);
     }
@@ -234,16 +242,18 @@ class InstanceDataProcessorTest extends BaseTest {
             .key(INSTANCE_NOTE_TYPE_ID_KEY)
             .value(typeId)))))));
 
-    var result = processor.process(IDENTIFIER, instance, rules);
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+
+    var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
     if (ADMINISTRATIVE_NOTE.equals(optionType)) {
-      assertThat(result.getUpdated().getAdministrativeNotes()).hasSize(1);
-      assertThat(result.getUpdated().getAdministrativeNotes().get(0)).isEqualTo("First note");
-      assertThat(result.getUpdated().getInstanceNotes()).hasSize(2);
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(1);
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes().get(0)).isEqualTo("First note");
+      assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
     } else {
-      assertThat(result.getUpdated().getAdministrativeNotes()).hasSize(2);
-      assertThat(result.getUpdated().getInstanceNotes()).hasSize(1);
-      assertThat(result.getUpdated().getInstanceNotes().get(0).getNote()).isEqualTo("First note");
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(2);
+      assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(1);
+      assertThat(result.getUpdated().getEntity().getInstanceNotes().get(0).getNote()).isEqualTo("First note");
     }
   }
 
@@ -273,16 +283,18 @@ class InstanceDataProcessorTest extends BaseTest {
             .key(INSTANCE_NOTE_TYPE_ID_KEY)
             .value(typeId)))))));
 
-    var result = processor.process(IDENTIFIER, instance, rules);
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+
+    var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
     if (ADMINISTRATIVE_NOTE.equals(optionType)) {
-      assertThat(result.getUpdated().getAdministrativeNotes()).hasSize(2);
-      assertThat(result.getUpdated().getAdministrativeNotes().get(0)).isEqualTo("updated note");
-      assertThat(result.getUpdated().getInstanceNotes()).hasSize(2);
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(2);
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes().get(0)).isEqualTo("updated note");
+      assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
     } else {
-      assertThat(result.getUpdated().getAdministrativeNotes()).hasSize(2);
-      assertThat(result.getUpdated().getInstanceNotes()).hasSize(2);
-      assertThat(result.getUpdated().getInstanceNotes().get(0).getNote()).isEqualTo("updated note");
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(2);
+      assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
+      assertThat(result.getUpdated().getEntity().getInstanceNotes().get(0).getNote()).isEqualTo("updated note");
     }
   }
 
@@ -310,17 +322,19 @@ class InstanceDataProcessorTest extends BaseTest {
             .key(INSTANCE_NOTE_TYPE_ID_KEY)
             .value(typeId)))))));
 
-    var result = processor.process(IDENTIFIER, instance, rules);
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+
+    var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
     if (ADMINISTRATIVE_NOTE.getValue().equals(newType)) {
-      assertThat(result.getUpdated().getAdministrativeNotes()).hasSize(1);
-      assertThat(result.getUpdated().getAdministrativeNotes().get(0)).isEqualTo("first note");
-      assertThat(result.getUpdated().getInstanceNotes()).hasSize(1);
-      assertThat(result.getUpdated().getInstanceNotes().get(0).getNote()).isEqualTo("second note");
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(1);
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes().get(0)).isEqualTo("first note");
+      assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(1);
+      assertThat(result.getUpdated().getEntity().getInstanceNotes().get(0).getNote()).isEqualTo("second note");
     } else {
-      assertThat(result.getUpdated().getAdministrativeNotes()).isNull();
-      assertThat(result.getUpdated().getInstanceNotes()).hasSize(2);
-      var updatedNote = result.getUpdated().getInstanceNotes().get(0);
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).isNull();
+      assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
+      var updatedNote = result.getUpdated().getEntity().getInstanceNotes().get(0);
       assertThat(updatedNote.getNote()).isEqualTo("first note");
       assertThat(updatedNote.getInstanceNoteTypeId()).isEqualTo(newType);
     }
@@ -343,11 +357,12 @@ class InstanceDataProcessorTest extends BaseTest {
           .type(CHANGE_TYPE)
           .updated(typeId)))));
 
-    var result = processor.process(IDENTIFIER, instance, rules);
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+    var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
-    assertThat(result.getUpdated().getAdministrativeNotes()).isEmpty();
-    assertThat(result.getUpdated().getInstanceNotes()).hasSize(2);
-    assertThat(result.getUpdated().getInstanceNotes()).allMatch(note -> typeId.equals(note.getInstanceNoteTypeId()));
+    assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).isEmpty();
+    assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
+    assertThat(result.getUpdated().getEntity().getInstanceNotes()).allMatch(note -> typeId.equals(note.getInstanceNoteTypeId()));
   }
 
   @ParameterizedTest
@@ -367,7 +382,8 @@ class InstanceDataProcessorTest extends BaseTest {
       .title("Sample title")
       .build();
 
-    var validator = ((InstanceDataProcessor) processor).validator(instance);
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+    var validator = ((InstanceDataProcessor) processor).validator(extendedInstance);
 
     assertThrows(RuleValidationException.class, () -> validator.validate(INSTANCE_NOTE, new Action().type(actionType)));
   }
@@ -379,8 +395,8 @@ class InstanceDataProcessorTest extends BaseTest {
       .source("MARC")
       .title("Sample title")
       .build();
-
-    var validator = ((InstanceDataProcessor) processor).validator(instance);
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+    var validator = ((InstanceDataProcessor) processor).validator(extendedInstance);
 
     assertThrows(RuleValidationException.class, () -> validator.validate(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)));
   }

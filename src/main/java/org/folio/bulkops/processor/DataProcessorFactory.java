@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
@@ -21,7 +22,7 @@ public class DataProcessorFactory {
   private DataProcessor<User> userDataProcessor;
   private DataProcessor<Item> itemDataProcessor;
   private DataProcessor<HoldingsRecord> holdingsDataProcessor;
-  private DataProcessor<Instance> instanceDataProcessor;
+  private DataProcessor<ExtendedInstance> instanceDataProcessor;
 
   @Autowired
   private List<DataProcessor<? extends BulkOperationsEntity>> services;

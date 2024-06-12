@@ -36,6 +36,7 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
         } catch (RuleValidationException e) {
           errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
         } catch (Exception e) {
+          // ToDo error message
           log.error(String.format("%s id=%s, error: %s", updated.getClass().getSimpleName(), "id", e.getMessage()));
           errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
         }
