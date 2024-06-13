@@ -45,7 +45,6 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExportType;
 import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
-import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.bean.StatusType;
@@ -244,8 +243,7 @@ public class BulkOperationService {
 
         if (Objects.nonNull(modified)) {
           // Prepare CSV for download and preview
-          // ToDo update preview value
-          writeToCsv(operation, csvWriter, modified.getPreview());
+          writeToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity());
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
           writerForModifiedJsonFile.write(modifiedRecord);
         }
@@ -356,11 +354,11 @@ public class BulkOperationService {
           processedNumOfRecords++;
 
           try {
-            var result = recordUpdateService.updateEntity(original, modified, operation);
+            //ToDo MODBULKOPS-273
+            var result = recordUpdateService.updateEntity(original.getRecordBulkOperationEntity(), modified.getRecordBulkOperationEntity(), operation);
             if (result != original) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
-              // ToDo update entity for preview
               writeToCsv(operation, csvWriter, result);
             }
           } catch (OptimisticLockingException e) {

@@ -8,4 +8,7 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 public interface BulkOperationsEntity {
   String getIdentifier(IdentifierType identifierType);
   Integer _version();
+  default BulkOperationsEntity getRecordBulkOperationEntity() {
+    return null;
+  }
 }

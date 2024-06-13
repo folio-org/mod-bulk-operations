@@ -29,4 +29,9 @@ public class ExtendedInstance implements BulkOperationsEntity {
   public Integer _version() {
     return entity._version();
   }
+
+  @Override
+  public BulkOperationsEntity getRecordBulkOperationEntity() {
+    return entity;
+  }
 }
