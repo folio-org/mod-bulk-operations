@@ -5,6 +5,7 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
@@ -62,7 +63,7 @@ public class Utils {
     return switch (clazz) {
       case USER -> User.class;
       case ITEM -> Item.class;
-      case HOLDINGS_RECORD -> HoldingsRecord.class;
+      case HOLDINGS_RECORD -> ExtendedHoldingsRecord.class;
       case INSTANCE -> ExtendedInstance.class;
     };
   }

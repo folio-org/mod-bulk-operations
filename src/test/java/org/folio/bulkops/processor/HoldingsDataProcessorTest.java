@@ -37,6 +37,7 @@ import java.util.UUID;
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
+import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
@@ -70,7 +71,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   @MockBean
   ElectronicAccessService electronicAccessService;
 
-  private DataProcessor<HoldingsRecord> processor;
+  private DataProcessor<ExtendedHoldingsRecord> processor;
 
   @MockBean
   private BulkOperationExecutionContentRepository bulkOperationExecutionContentRepository;
@@ -78,7 +79,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   @BeforeEach
   void setUp() {
     if (isNull(processor)) {
-      processor = factory.getProcessorFromFactory(HoldingsRecord.class);
+      processor = factory.getProcessorFromFactory(ExtendedHoldingsRecord.class);
     }
     when(holdingsSourceClient.getById(FOLIO_SOURCE_ID)).thenReturn(
       new HoldingsRecordsSource()
@@ -105,6 +106,8 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withTemporaryLocationId(temporaryLocationId)
       .withEffectiveLocationId(temporaryLocationId);
 
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
+
     when(holdingsSourceClient.getById(FOLIO_SOURCE_ID)).thenReturn(
       new HoldingsRecordsSource()
         .withName("FOLIO")
@@ -112,26 +115,29 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     when(locationClient.getLocationById(updatedLocationId)).thenReturn(updatedLocation);
 
-    var temporaryLocationUpdatingResult = processor.process(IDENTIFIER, holding, rules(rule(TEMPORARY_LOCATION, REPLACE_WITH, updatedLocationId)));
+    var temporaryLocationUpdatingResult = processor.process(IDENTIFIER, extendedHoldingsRecord, rules(rule(TEMPORARY_LOCATION, REPLACE_WITH, updatedLocationId)));
 
     assertNotNull(temporaryLocationUpdatingResult);
-    assertEquals(updatedLocationId, temporaryLocationUpdatingResult.getUpdated().getTemporaryLocationId());
-    assertEquals(updatedLocationId, temporaryLocationUpdatingResult.getUpdated().getEffectiveLocationId());
+    assertEquals(updatedLocationId, temporaryLocationUpdatingResult.getUpdated().getEntity().getTemporaryLocationId());
+    assertEquals(updatedLocationId, temporaryLocationUpdatingResult.getUpdated().getEntity().getEffectiveLocationId());
 
-    var permanentLocationUpdatingResult = processor.process(IDENTIFIER, holding, rules(rule(PERMANENT_LOCATION, REPLACE_WITH, updatedLocationId)));
+    var permanentLocationUpdatingResult = processor.process(IDENTIFIER, extendedHoldingsRecord, rules(rule(PERMANENT_LOCATION, REPLACE_WITH, updatedLocationId)));
 
     assertNotNull(permanentLocationUpdatingResult);
-    assertEquals(updatedLocationId, permanentLocationUpdatingResult.getUpdated().getPermanentLocationId());
-    assertEquals(temporaryLocationId, permanentLocationUpdatingResult.getUpdated().getEffectiveLocationId());
+    assertEquals(updatedLocationId, permanentLocationUpdatingResult.getUpdated().getEntity().getPermanentLocationId());
+    assertEquals(temporaryLocationId, permanentLocationUpdatingResult.getUpdated().getEntity().getEffectiveLocationId());
   }
 
   @Test
   void testUpdateMarcEntity() {
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withSourceId(MARC_SOURCE_ID)).tenantId("tenant").build();
+
     when(holdingsSourceClient.getById(MARC_SOURCE_ID)).thenReturn(new HoldingsRecordsSource()
       .withName("MARC")
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
-    var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(MARC_SOURCE_ID), rules(rule(PERMANENT_LOCATION, CLEAR_FIELD, null)));
+
+    var actual = processor.process(IDENTIFIER, extendedHoldingsRecord, rules(rule(PERMANENT_LOCATION, CLEAR_FIELD, null)));
     assertNotNull(actual.getUpdated());
     assertFalse(actual.shouldBeUpdated);
   }
@@ -148,14 +154,15 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withPermanentLocationId(permanentLocationId)
       .withTemporaryLocationId(temporaryLocationId)
       .withEffectiveLocationId(temporaryLocationId);
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
 
     when(holdingsSourceClient.getById(unknownSourceId)).thenThrow(new NotFoundException("Source was not found"));
 
-    var result = processor.process(IDENTIFIER, holding, rules(rule(TEMPORARY_LOCATION, CLEAR_FIELD, null)));
+    var result = processor.process(IDENTIFIER, extendedHoldingsRecord, rules(rule(TEMPORARY_LOCATION, CLEAR_FIELD, null)));
 
     assertNotNull(result);
-    assertNull(result.getUpdated().getTemporaryLocationId());
-    assertEquals(permanentLocationId, result.getUpdated().getEffectiveLocationId());
+    assertNull(result.getUpdated().getEntity().getTemporaryLocationId());
+    assertEquals(permanentLocationId, result.getUpdated().getEntity().getEffectiveLocationId());
   }
 
   @Test
@@ -169,42 +176,50 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withTemporaryLocationId(temporaryLocationId)
       .withEffectiveLocationId(temporaryLocationId);
 
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
+
     when(holdingsSourceClient.getById(FOLIO_SOURCE_ID)).thenReturn(
       new HoldingsRecordsSource()
         .withName("FOLIO")
         .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
-    var result = processor.process(IDENTIFIER, holding, rules(rule(TEMPORARY_LOCATION, CLEAR_FIELD, null)));
+    var result = processor.process(IDENTIFIER, extendedHoldingsRecord, rules(rule(TEMPORARY_LOCATION, CLEAR_FIELD, null)));
 
     assertNotNull(result);
-    assertNull(result.getUpdated().getTemporaryLocationId());
-    assertEquals(permanentLocationId, result.getUpdated().getEffectiveLocationId());
+    assertNull(result.getUpdated().getEntity().getTemporaryLocationId());
+    assertEquals(permanentLocationId, result.getUpdated().getEntity().getEffectiveLocationId());
   }
 
   @Test
   void testClearPermanentLocation() {
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID)).tenantId("tenant").build();
+
     when(holdingsSourceClient.getById(FOLIO_SOURCE_ID)).thenReturn(new HoldingsRecordsSource()
       .withName("FOLIO")
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
-    var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, CLEAR_FIELD, null)));
+    var actual = processor.process(IDENTIFIER, extendedHoldingsRecord, rules(rule(PERMANENT_LOCATION, CLEAR_FIELD, null)));
     assertNotNull(actual.getUpdated());
     assertFalse(actual.shouldBeUpdated);
   }
 
   @Test
   void testReplacePermanentLocationWithEmptyValue() {
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID)).tenantId("tenant").build();
+
     when(holdingsSourceClient.getById(FOLIO_SOURCE_ID)).thenReturn(new HoldingsRecordsSource()
       .withName("FOLIO")
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
-    var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, null)));
+    var actual = processor.process(IDENTIFIER, extendedHoldingsRecord, rules(rule(PERMANENT_LOCATION, REPLACE_WITH, null)));
     assertNotNull(actual.getUpdated());
     assertFalse(actual.shouldBeUpdated);
   }
 
   @Test
   void testReplacePermanentLocationWithNonExistedValue() {
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID)).tenantId("tenant").build();
+
     var nonExistedLocationId = "62b9c19c-59d0-481d-8957-eb95a96bb144";
     when(holdingsSourceClient.getById(FOLIO_SOURCE_ID)).thenReturn(new HoldingsRecordsSource()
       .withName("FOLIO")
@@ -213,7 +228,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     when(locationClient.getLocationById(nonExistedLocationId))
       .thenThrow(FeignException.FeignClientException.class);
 
-    var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, nonExistedLocationId)));
+    var actual = processor.process(IDENTIFIER, extendedHoldingsRecord, rules(rule(PERMANENT_LOCATION, REPLACE_WITH, nonExistedLocationId)));
     assertNotNull(actual.getUpdated());
     assertFalse(actual.shouldBeUpdated);
   }
@@ -221,18 +236,20 @@ class HoldingsDataProcessorTest extends BaseTest {
   @Test
   void testReplacePermanentLocationWithInvalidValue() {
     var invalidLocationId = "62b9c19c-59d0";
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID)).tenantId("tenant").build();
 
     when(holdingsSourceClient.getById(FOLIO_SOURCE_ID)).thenReturn(new HoldingsRecordsSource()
       .withName("FOLIO")
       .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
-    var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(PERMANENT_LOCATION, REPLACE_WITH, invalidLocationId)));
+    var actual = processor.process(IDENTIFIER, extendedHoldingsRecord, rules(rule(PERMANENT_LOCATION, REPLACE_WITH, invalidLocationId)));
     assertNotNull(actual.getUpdated());
     assertFalse(actual.shouldBeUpdated);
   }
 
   @Test
   void testNonSupportedOptionAndAction() {
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID)).tenantId("tenant").build();
     var updatedLocationId = "dc3868f6-6169-47b2-88a7-71c2e9e4e924";
     var updatedLocation = new ItemLocation()
       .withId(updatedLocationId)
@@ -244,7 +261,7 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     when(locationClient.getLocationById(updatedLocationId)).thenReturn(updatedLocation);
 
-    var actual = processor.process(IDENTIFIER, new HoldingsRecord().withSourceId(FOLIO_SOURCE_ID), rules(rule(EMAIL_ADDRESS, REPLACE_WITH, updatedLocationId),
+    var actual = processor.process(IDENTIFIER, extendedHoldingsRecord, rules(rule(EMAIL_ADDRESS, REPLACE_WITH, updatedLocationId),
       rule(PERMANENT_LOCATION, ADD_TO_EXISTING, updatedLocationId)));
 
     assertNotNull(actual.getUpdated());
@@ -257,16 +274,17 @@ class HoldingsDataProcessorTest extends BaseTest {
     var holdingsRecord = new HoldingsRecord()
       .withId(UUID.randomUUID().toString())
       .withDiscoverySuppress(false);
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
 
     var processor = new HoldingsDataProcessor(null, null, null, null, null);
 
-    processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_TRUE)).apply(holdingsRecord);
+    processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_TRUE)).apply(extendedHoldingsRecord);
     assertTrue(holdingsRecord.getDiscoverySuppress());
-    processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_FALSE)).apply(holdingsRecord);
+    processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_FALSE)).apply(extendedHoldingsRecord);
     assertFalse(holdingsRecord.getDiscoverySuppress());
-    processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_TRUE_INCLUDING_ITEMS)).apply(holdingsRecord);
+    processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_TRUE_INCLUDING_ITEMS)).apply(extendedHoldingsRecord);
     assertTrue(holdingsRecord.getDiscoverySuppress());
-    processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_FALSE_INCLUDING_ITEMS)).apply(holdingsRecord);
+    processor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_FALSE_INCLUDING_ITEMS)).apply(extendedHoldingsRecord);
     assertFalse(holdingsRecord.getDiscoverySuppress());
   }
 
@@ -274,13 +292,16 @@ class HoldingsDataProcessorTest extends BaseTest {
   @SneakyThrows
   void testUpdateMarkAsStaffOnlyForHoldingsNotes() {
     var holdingsNote = new HoldingsNote().withHoldingsNoteTypeId("typeId").withStaffOnly(false);
-    var  holding= new HoldingsRecord().withNotes(List.of(holdingsNote));
+    var holding= new HoldingsRecord().withNotes(List.of(holdingsNote));
+
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
+
     var parameter = new Parameter();
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
-    processor.updater(HOLDINGS_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(holding);
+    processor.updater(HOLDINGS_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(extendedHoldingsRecord);
 
     assertTrue(holding.getNotes().get(0).getStaffOnly());
   }
@@ -290,12 +311,15 @@ class HoldingsDataProcessorTest extends BaseTest {
   void testUpdateRemoveMarkAsStaffOnlyForHoldingsNotes() {
     var holdingsNote = new HoldingsNote().withHoldingsNoteTypeId("typeId").withStaffOnly(true);
     var  holding= new HoldingsRecord().withNotes(List.of(holdingsNote));
+
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
+
     var parameter = new Parameter();
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
-    processor.updater(HOLDINGS_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(holding);
+    processor.updater(HOLDINGS_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(extendedHoldingsRecord);
 
     assertFalse(holding.getNotes().get(0).getStaffOnly());
   }
@@ -305,9 +329,11 @@ class HoldingsDataProcessorTest extends BaseTest {
   void testRemoveAdministrativeNotes() {
     var administrativeNote = "administrative note";
     var holding =  new HoldingsRecord().withAdministrativeNotes(List.of(administrativeNote));
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
+
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(REMOVE_ALL)).apply(holding);
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(REMOVE_ALL)).apply(extendedHoldingsRecord);
     assertTrue(holding.getAdministrativeNotes().isEmpty());
   }
 
@@ -317,12 +343,13 @@ class HoldingsDataProcessorTest extends BaseTest {
     var note1 = new HoldingsNote().withHoldingsNoteTypeId("typeId1");
     var note2 = new HoldingsNote().withHoldingsNoteTypeId("typeId2");
     var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
     var parameter = new Parameter();
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
-    processor.updater(HOLDINGS_NOTE, new Action().type(REMOVE_ALL).parameters(List.of(parameter))).apply(holding);
+    processor.updater(HOLDINGS_NOTE, new Action().type(REMOVE_ALL).parameters(List.of(parameter))).apply(extendedHoldingsRecord);
     assertEquals(1, holding.getNotes().size());
     assertEquals("typeId2", holding.getNotes().get(0).getHoldingsNoteTypeId());
   }
@@ -333,13 +360,14 @@ class HoldingsDataProcessorTest extends BaseTest {
     var administrativeNote1 = "administrative note";
     var administrativeNote2 = "administrative note 2";
     var holding = new HoldingsRecord();
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote1)).apply(holding);
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote1)).apply(extendedHoldingsRecord);
     assertEquals(1, holding.getAdministrativeNotes().size());
     assertEquals(administrativeNote1, holding.getAdministrativeNotes().get(0));
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote2)).apply(holding);
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote2)).apply(extendedHoldingsRecord);
     assertEquals(2, holding.getAdministrativeNotes().size());
   }
 
@@ -353,10 +381,10 @@ class HoldingsDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
-
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
-    processor.updater(HOLDINGS_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(note1)).apply(holding);
+    processor.updater(HOLDINGS_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(note1)).apply(extendedHoldingsRecord);
 
     assertEquals(1, holding.getNotes().size());
     assertEquals("typeId1", holding.getNotes().get(0).getHoldingsNoteTypeId());
@@ -364,7 +392,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     assertEquals(false, holding.getNotes().get(0).getStaffOnly());
 
     parameter.setValue("typeId2");
-    processor.updater(HOLDINGS_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(note2)).apply(holding);
+    processor.updater(HOLDINGS_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(note2)).apply(extendedHoldingsRecord);
 
     assertEquals(2, holding.getNotes().size());
     assertEquals("typeId2", holding.getNotes().get(1).getHoldingsNoteTypeId());
@@ -373,7 +401,7 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     parameter.setValue("typeId3");
     List<Parameter> params = List.of(new Parameter().key(STAFF_ONLY_NOTE_PARAMETER_KEY).value("true"), parameter);
-    processor.updater(HOLDINGS_NOTE, new Action().type(ADD_TO_EXISTING).parameters(params).updated(note3)).apply(holding);
+    processor.updater(HOLDINGS_NOTE, new Action().type(ADD_TO_EXISTING).parameters(params).updated(note3)).apply(extendedHoldingsRecord);
     assertEquals(3, holding.getNotes().size());
     assertEquals("typeId3", holding.getNotes().get(2).getHoldingsNoteTypeId());
     assertEquals(note3, holding.getNotes().get(2).getNote());
@@ -386,12 +414,13 @@ class HoldingsDataProcessorTest extends BaseTest {
     var administrativeNote1 = "administrative note 1";
     var administrativeNote2 = "administrative note 2";
     var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("administrative note")).apply(holding);
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("administrative note")).apply(extendedHoldingsRecord);
     assertEquals(2, holding.getAdministrativeNotes().size());
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial(administrativeNote2)).apply(holding);
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial(administrativeNote2)).apply(extendedHoldingsRecord);
     assertEquals(1, holding.getAdministrativeNotes().size());
     assertEquals(administrativeNote1, holding.getAdministrativeNotes().get(0));
   }
@@ -406,16 +435,17 @@ class HoldingsDataProcessorTest extends BaseTest {
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
     var holding = new HoldingsRecord().withNotes(List.of(note1, note2, note3));
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note")
-      .parameters(List.of(parameter))).apply(holding);
+      .parameters(List.of(parameter))).apply(extendedHoldingsRecord);
     assertEquals(3, holding.getNotes().size());
     processor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note1")
-      .parameters(List.of(parameter))).apply(holding);
+      .parameters(List.of(parameter))).apply(extendedHoldingsRecord);
     assertEquals(2, holding.getNotes().size());
     processor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note2")
-      .parameters(List.of(parameter))).apply(holding);
+      .parameters(List.of(parameter))).apply(extendedHoldingsRecord);
     assertEquals(1, holding.getNotes().size());
   }
 
@@ -426,10 +456,11 @@ class HoldingsDataProcessorTest extends BaseTest {
     var administrativeNote2 = "administrative note 2";
     var administrativeNote3 = "administrative note 3";
     var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REPLACE)
-      .initial(administrativeNote1).updated(administrativeNote3)).apply(holding);
+      .initial(administrativeNote1).updated(administrativeNote3)).apply(extendedHoldingsRecord);
     assertEquals(2, holding.getAdministrativeNotes().size());
     assertEquals(administrativeNote3, holding.getAdministrativeNotes().get(0));
     assertEquals(administrativeNote2, holding.getAdministrativeNotes().get(1));
@@ -444,10 +475,11 @@ class HoldingsDataProcessorTest extends BaseTest {
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
     var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REPLACE).parameters(List.of(parameter))
-      .initial("note1").updated("note3")).apply(holding);
+      .initial("note1").updated("note3")).apply(extendedHoldingsRecord);
 
     assertEquals("note3", holding.getNotes().get(0).getNote());
     assertEquals("note1", holding.getNotes().get(1).getNote());
@@ -458,10 +490,11 @@ class HoldingsDataProcessorTest extends BaseTest {
   void testChangeTypeForAdministrativeNotes() {
     var administrativeNote = "note";
     var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote)));
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
-      .updated("typeId")).apply(holding);
+      .updated("typeId")).apply(extendedHoldingsRecord);
     assertEquals(0, holding.getAdministrativeNotes().size());
     assertEquals("note", holding.getNotes().get(0).getNote());
     assertEquals("typeId", holding.getNotes().get(0).getHoldingsNoteTypeId());
@@ -476,9 +509,10 @@ class HoldingsDataProcessorTest extends BaseTest {
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
     var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
     var processor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null);
 
-    processor.updater(HOLDINGS_NOTE, new Action().type(CHANGE_TYPE).updated(ADMINISTRATIVE_NOTE.getValue()).parameters(List.of(parameter))).apply(holding);
+    processor.updater(HOLDINGS_NOTE, new Action().type(CHANGE_TYPE).updated(ADMINISTRATIVE_NOTE.getValue()).parameters(List.of(parameter))).apply(extendedHoldingsRecord);
 
     assertEquals(1, holding.getAdministrativeNotes().size());
     assertEquals("note1", holding.getAdministrativeNotes().get(0));
@@ -488,7 +522,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     holding.setAdministrativeNotes(null);
     holding.setNotes(List.of(note1, note2));
 
-    processor.updater(HOLDINGS_NOTE, new Action().type(CHANGE_TYPE).updated("typeId3").parameters(List.of(parameter))).apply(holding);
+    processor.updater(HOLDINGS_NOTE, new Action().type(CHANGE_TYPE).updated("typeId3").parameters(List.of(parameter))).apply(extendedHoldingsRecord);
     assertEquals(2, holding.getNotes().size());
     assertEquals("note1", holding.getNotes().get(0).getNote());
     assertEquals("typeId3", holding.getNotes().get(0).getHoldingsNoteTypeId());
@@ -505,27 +539,27 @@ class HoldingsDataProcessorTest extends BaseTest {
     var holding1 = new HoldingsRecord().withId("id")
       .withAdministrativeNotes(administrativeNotes)
       .withNotes(new ArrayList<>());
+    var extendedHoldingsRecord1 = ExtendedHoldingsRecord.builder().entity(holding1).tenantId("tenant").build();
+    var extendedHoldingsRecord2 = processor.clone(extendedHoldingsRecord1);
+    assertTrue(processor.compare(extendedHoldingsRecord1, extendedHoldingsRecord2));
 
-    var holding2 = processor.clone(holding1);
-    assertTrue(processor.compare(holding1, holding2));
-
-    holding2.getAdministrativeNotes().add("note2");
-    assertFalse(processor.compare(holding1, holding2));
+    extendedHoldingsRecord2.getEntity().getAdministrativeNotes().add("note2");
+    assertFalse(processor.compare(extendedHoldingsRecord1, extendedHoldingsRecord2));
     holding1.setAdministrativeNotes(null);
 
     var note1 = new HoldingsNote().withHoldingsNoteTypeId("typeId").withStaffOnly(true);
     var note2 = new HoldingsNote().withHoldingsNoteTypeId("typeId").withStaffOnly(false);
     holding1.getNotes().add(note1);
 
-    holding2 = processor.clone(holding1);
-    assertTrue(processor.compare(holding1, holding2));
+    extendedHoldingsRecord2 = processor.clone(extendedHoldingsRecord1);
+    assertTrue(processor.compare(extendedHoldingsRecord1, extendedHoldingsRecord2));
 
-    holding2.getNotes().get(0).setStaffOnly(false);
-    assertFalse(processor.compare(holding1, holding2));
+    extendedHoldingsRecord2.getEntity().getNotes().get(0).setStaffOnly(false);
+    assertFalse(processor.compare(extendedHoldingsRecord1, extendedHoldingsRecord2));
 
-    holding2.getNotes().add(note2);
+    extendedHoldingsRecord2.getEntity().getNotes().add(note2);
 
-    assertFalse(processor.compare(holding1, holding2));
+    assertFalse(processor.compare(extendedHoldingsRecord1, extendedHoldingsRecord2));
   }
 
   @ParameterizedTest
@@ -542,8 +576,9 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
     var action = new Action().type(CLEAR_FIELD);
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
 
-    processor.updater(option, action).apply(holdingsRecord);
+    processor.updater(option, action).apply(extendedHoldingsRecord);
 
     var electronicAccess = holdingsRecord.getElectronicAccess().get(0);
     switch (option) {
@@ -566,11 +601,11 @@ class HoldingsDataProcessorTest extends BaseTest {
   @SneakyThrows
   void shouldFindAndClearExactlyMatchedElectronicAccessFields(UpdateOptionType option, String value) {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
-
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
     var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
     var action = new Action().type(FIND_AND_REMOVE_THESE).initial(value);
 
-    processor.updater(option, action).apply(holdingsRecord);
+    processor.updater(option, action).apply(extendedHoldingsRecord);
 
     var modified = holdingsRecord.getElectronicAccess().get(0);
     var unmodified = holdingsRecord.getElectronicAccess().get(1);
@@ -611,11 +646,11 @@ class HoldingsDataProcessorTest extends BaseTest {
   @SneakyThrows
   void shouldReplaceElectronicAccessFields(UpdateOptionType option, String newValue) {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
-
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
     var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
     var action = new Action().type(REPLACE_WITH).updated(newValue);
 
-    processor.updater(option, action).apply(holdingsRecord);
+    processor.updater(option, action).apply(extendedHoldingsRecord);
 
     var electronicAccess = holdingsRecord.getElectronicAccess().get(0);
     switch (option) {
@@ -638,11 +673,11 @@ class HoldingsDataProcessorTest extends BaseTest {
   @SneakyThrows
   void shouldFindAndReplaceExactlyMatchedElectronicAccessFields(UpdateOptionType option, String initial, String updated) {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
-
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
     var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
     var action = new Action().type(FIND_AND_REPLACE).initial(initial).updated(updated);
 
-    processor.updater(option, action).apply(holdingsRecord);
+    processor.updater(option, action).apply(extendedHoldingsRecord);
 
     var modified = holdingsRecord.getElectronicAccess().get(0);
     var unmodified = holdingsRecord.getElectronicAccess().get(1);
