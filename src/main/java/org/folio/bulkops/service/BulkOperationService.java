@@ -48,6 +48,7 @@ import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.bean.StatusType;
+import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.converter.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -243,7 +244,11 @@ public class BulkOperationService {
 
         if (Objects.nonNull(modified)) {
           // Prepare CSV for download and preview
-          writeToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity());
+          if (User.class == extendedClazz) {
+            writeToCsv(operation, csvWriter, modified.getPreview());
+          } else {
+            writeToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity());
+          }
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
           writerForModifiedJsonFile.write(modifiedRecord);
         }
@@ -355,7 +360,12 @@ public class BulkOperationService {
 
           try {
             //ToDo MODBULKOPS-273
-            var result = recordUpdateService.updateEntity(original.getRecordBulkOperationEntity(), modified.getRecordBulkOperationEntity(), operation);
+            BulkOperationsEntity result;
+            if (User.class == extendedClass) {
+              result = recordUpdateService.updateEntity(original, modified, operation);
+            } else {
+              result = recordUpdateService.updateEntity(original.getRecordBulkOperationEntity(), modified.getRecordBulkOperationEntity(), operation);
+            }
             if (result != original) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));

@@ -6,6 +6,7 @@ import java.util.Map;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
+import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ import lombok.AllArgsConstructor;
 public class DataProcessorFactory {
 
   private DataProcessor<User> userDataProcessor;
-  private DataProcessor<Item> itemDataProcessor;
+  private DataProcessor<ExtendedItem> itemDataProcessor;
   private DataProcessor<ExtendedHoldingsRecord> holdingsDataProcessor;
   private DataProcessor<ExtendedInstance> instanceDataProcessor;
 
