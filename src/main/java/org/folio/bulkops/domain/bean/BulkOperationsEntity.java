@@ -1,5 +1,6 @@
 package org.folio.bulkops.domain.bean;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.folio.bulkops.domain.dto.IdentifierType;
 
 /**
@@ -8,6 +9,7 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 public interface BulkOperationsEntity {
   String getIdentifier(IdentifierType identifierType);
   Integer _version();
+  @JsonIgnore
   default BulkOperationsEntity getRecordBulkOperationEntity() {
     return null;
   }
