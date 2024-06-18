@@ -81,9 +81,9 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   @Override
-  public ResponseEntity<UnifiedTable> getPreviewByOperationId(UUID operationId, BulkOperationStep step, Integer limit, Integer offset) {
+  public ResponseEntity<UnifiedTable> getPreviewByOperationId(UUID operationId, BulkOperationStep step, Integer limit, Integer offset, String source) {
     var bulkOperation = bulkOperationService.getBulkOperationOrThrow(operationId);
-    return new ResponseEntity<>(previewService.getPreview(bulkOperation, step, Objects.isNull(offset) ? 0 : offset, limit), HttpStatus.OK);
+    return new ResponseEntity<>(previewService.getPreview(bulkOperation, step, Objects.isNull(offset) ? 0 : offset, limit, source), HttpStatus.OK);
   }
 
   @Override

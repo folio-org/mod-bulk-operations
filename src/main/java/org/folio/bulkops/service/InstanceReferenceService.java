@@ -1,25 +1,33 @@
 package org.folio.bulkops.service;
 
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_CODE;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Utils.encode;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.client.ContributorTypesClient;
 import org.folio.bulkops.client.InstanceFormatsClient;
 import org.folio.bulkops.client.InstanceNoteTypesClient;
 import org.folio.bulkops.client.InstanceStatusesClient;
 import org.folio.bulkops.client.InstanceTypesClient;
 import org.folio.bulkops.client.ModesOfIssuanceClient;
 import org.folio.bulkops.client.NatureOfContentTermsClient;
+import org.folio.bulkops.domain.bean.InstanceFormats;
+import org.folio.bulkops.domain.bean.InstanceTypes;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.domain.dto.ContributorTypeCollection;
 import org.folio.bulkops.domain.dto.InstanceNoteType;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Log4j2
@@ -31,6 +39,7 @@ public class InstanceReferenceService {
   private final NatureOfContentTermsClient natureOfContentTermsClient;
   private final InstanceFormatsClient instanceFormatsClient;
   private final InstanceNoteTypesClient instanceNoteTypesClient;
+  private final ContributorTypesClient contributorTypesClient;
 
   @Cacheable(cacheNames = "instanceStatusNames")
   public String getInstanceStatusNameById(String id) {
@@ -122,6 +131,13 @@ public class InstanceReferenceService {
     return response.getFormats().get(0).getId();
   }
 
+  @Cacheable(cacheNames = "instanceFormats")
+  public InstanceFormats getInstanceFormatsByCode(String code) {
+    return isNull(code) ?
+      InstanceFormats.builder().formats(Collections.emptyList()).totalRecords(0).build() :
+      instanceFormatsClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(code)), 1);
+  }
+
   @Cacheable(cacheNames = "instanceNoteTypesNames")
   public String getNoteTypeNameById(String id) {
     try {
@@ -143,5 +159,42 @@ public class InstanceReferenceService {
   @Cacheable(cacheNames = "allInstanceNoteTypes")
   public List<InstanceNoteType> getAllInstanceNoteTypes() {
     return instanceNoteTypesClient.getInstanceNoteTypes(Integer.MAX_VALUE).getInstanceNoteTypes();
+  }
+
+  @Cacheable(cacheNames = "sortedInstanceNoteTypes")
+  public List<String> getSortedInstanceNoteTypes() {
+    return instanceNoteTypesClient.getInstanceNoteTypes(Integer.MAX_VALUE).getInstanceNoteTypes().stream()
+      .map(InstanceNoteType::getName)
+      .filter(Objects::nonNull)
+      .sorted()
+      .toList();
+  }
+
+  @Cacheable(cacheNames = "contributorTypesByName")
+  public ContributorTypeCollection getContributorTypesByName(String name) {
+    return isNull(name) ?
+      new ContributorTypeCollection().contributorTypes(Collections.emptyList()).totalRecords(0) :
+      contributorTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, name), 1);
+  }
+
+  @Cacheable(cacheNames = "contributorTypesByCode")
+  public ContributorTypeCollection getContributorTypesByCode(String code) {
+    return isNull(code) ?
+      new ContributorTypeCollection().contributorTypes(Collections.emptyList()).totalRecords(0) :
+      contributorTypesClient.getByQuery(String.format(QUERY_PATTERN_CODE, code), 1);
+  }
+
+  @Cacheable(cacheNames = "instanceTypesByNames")
+  public InstanceTypes getInstanceTypesByName(String name) {
+    return isNull(name) ?
+      InstanceTypes.builder().types(Collections.emptyList()).totalRecords(0).build() :
+      instanceTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, name), 1);
+  }
+
+  @Cacheable(cacheNames = "instanceTypesByCodes")
+  public InstanceTypes getInstanceTypesByCode(String code) {
+    return isNull(code) ?
+      InstanceTypes.builder().types(Collections.emptyList()).totalRecords(0).build() :
+      instanceTypesClient.getByQuery(String.format(QUERY_PATTERN_CODE, code), 1);
   }
 }
