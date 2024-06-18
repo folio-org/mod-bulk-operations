@@ -1,6 +1,7 @@
 package org.folio.bulkops.domain.format;
 
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.KEY_VALUE_DELIMITER;
@@ -17,7 +18,7 @@ public class SpecialCharacterEscaper {
   private static final String[] ESCAPED_VALUES = {"%7C", "%3B", "%3A"};
 
   public static String escape(String initial) {
-    if (StringUtils.isEmpty(initial)) return initial;
+    if (StringUtils.isEmpty(initial)) return EMPTY;
     for (int i = 0; i < SPECIAL_CHARACTERS.length; i++) {
       initial = initial.replace(SPECIAL_CHARACTERS[i], ESCAPED_VALUES[i]);
     }
