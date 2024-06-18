@@ -1,5 +1,6 @@
 package org.folio.bulkops.domain.bean;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,7 +38,7 @@ public class ExtendedHoldingsRecord implements BulkOperationsEntity, ElectronicA
     return entity;
   }
 
-  @Override
+  @JsonIgnore
   public List<ElectronicAccess> getElectronicAccess() {
     return entity.getElectronicAccess();
   }
