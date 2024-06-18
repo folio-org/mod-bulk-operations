@@ -129,8 +129,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
       var itemNotes = entity.getNotes().stream().map(itemNote -> itemNote.toBuilder().build()).toList();
       clone.setNotes(new ArrayList<>(itemNotes));
     }
-    var extendedClone = ExtendedItem.builder().tenantId(extendedItem.getTenantId()).entity(clone).build();
-    return extendedClone;
+    return ExtendedItem.builder().tenantId(extendedItem.getTenantId()).entity(clone).build();
   }
 
   @Override
