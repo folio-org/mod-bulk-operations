@@ -42,12 +42,12 @@ public class MarcToUnifiedTableRowMapper {
 
   private final MarcToUnifiedTableRowMapperHelper helper;
 
-  public List<String> processRecord(Record record, List<String> headers) {
+  public List<String> processRecord(Record rec, List<String> headers) {
     var rowData = new ArrayList<>(Arrays.asList(new String[headers.size()]));
     setSourceMarc(rowData, headers);
-    processLeader(rowData, record.getLeader(), headers);
-    processControlFields(rowData, record.getControlFields(), headers);
-    processDataFields(rowData, record.getDataFields(), headers);
+    processLeader(rowData, rec.getLeader(), headers);
+    processControlFields(rowData, rec.getControlFields(), headers);
+    processDataFields(rowData, rec.getDataFields(), headers);
     return rowData;
   }
 

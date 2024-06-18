@@ -206,7 +206,7 @@ public class PreviewService {
   private UnifiedTable buildPreviewFromMarcFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit, Set<String> forceVisible) {
     var table =  UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
     noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible);
-    return populatePreviewFromMarc(pathToFile, clazz, offset, limit, table, forceVisible);
+    return populatePreviewFromMarc(pathToFile, offset, limit, table);
   }
 
   private UnifiedTable populatePreview(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit, UnifiedTable table, Set<String> forceVisible) {
@@ -238,7 +238,7 @@ public class PreviewService {
     return table;
   }
 
-  private UnifiedTable populatePreviewFromMarc(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit, UnifiedTable table, Set<String> forceVisible) {
+  private UnifiedTable populatePreviewFromMarc(String pathToFile, int offset, int limit, UnifiedTable table) {
     var headers = table.getHeader().stream()
       .map(Cell::getValue)
       .toList();
