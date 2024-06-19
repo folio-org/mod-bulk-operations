@@ -161,15 +161,6 @@ public class InstanceReferenceService {
     return instanceNoteTypesClient.getInstanceNoteTypes(Integer.MAX_VALUE).getInstanceNoteTypes();
   }
 
-  @Cacheable(cacheNames = "sortedInstanceNoteTypes")
-  public List<String> getSortedInstanceNoteTypes() {
-    return instanceNoteTypesClient.getInstanceNoteTypes(Integer.MAX_VALUE).getInstanceNoteTypes().stream()
-      .map(InstanceNoteType::getName)
-      .filter(Objects::nonNull)
-      .sorted()
-      .toList();
-  }
-
   @Cacheable(cacheNames = "contributorTypesByName")
   public ContributorTypeCollection getContributorTypesByName(String name) {
     return isNull(name) ?
