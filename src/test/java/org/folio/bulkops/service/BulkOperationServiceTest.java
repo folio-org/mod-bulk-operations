@@ -1117,7 +1117,7 @@ class BulkOperationServiceTest extends BaseTest {
     var item = Item.builder()
       .id(UUID.randomUUID().toString())
       .barcode("barcode")
-      .statisticalCodeIds(Collections.singletonList(UUID.randomUUID().toString()))
+      .statisticalCodes(Collections.singletonList(UUID.randomUUID().toString()))
       .build();
 
     var operation = BulkOperation.builder()
