@@ -26,7 +26,7 @@ public class EntityPathResolver {
         var user = (User) entity;
         return format("/users/%s", user.getId());
       }
-      case INSTANCE_FOLIO -> {
+      case INSTANCE -> {
         var instance = (Instance) entity;
         return format("/inventory/view/%s", instance.getId());
       }

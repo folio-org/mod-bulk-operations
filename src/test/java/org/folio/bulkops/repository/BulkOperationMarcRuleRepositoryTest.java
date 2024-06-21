@@ -77,7 +77,7 @@ class BulkOperationMarcRuleRepositoryTest extends BaseTest {
       .id(UUID.randomUUID())
       .userId(UUID.randomUUID())
       .operationType(UPDATE)
-      .entityType(EntityType.INSTANCE_FOLIO)
+      .entityType(EntityType.INSTANCE)
       .identifierType(ID)
       .status(NEW)
       .dataExportJobId(UUID.randomUUID())

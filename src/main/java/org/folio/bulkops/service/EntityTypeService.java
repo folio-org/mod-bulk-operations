@@ -18,7 +18,7 @@ public class EntityTypeService {
       case "Items" -> EntityType.ITEM;
       case "Users" -> EntityType.USER;
       case "Holdings" -> EntityType.HOLDINGS_RECORD;
-      case "Instances" -> EntityType.INSTANCE_FOLIO;
+      case "Instances" -> EntityType.INSTANCE;
       default -> throw new IllegalArgumentException(String.format("Entity type %s is not supported", alias));
     };
   }

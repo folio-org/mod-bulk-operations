@@ -130,7 +130,7 @@ public class PreviewService {
               .filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst() : Optional.empty();
           }
 
-          if (EntityType.INSTANCE_FOLIO == entityType) {
+          if (EntityType.INSTANCE == entityType) {
             initial = CollectionUtils.isNotEmpty(action.getParameters()) ? action.getParameters().stream()
               .filter(p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst() : Optional.empty();
           }
