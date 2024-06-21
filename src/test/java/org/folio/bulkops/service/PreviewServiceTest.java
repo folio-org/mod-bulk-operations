@@ -9,11 +9,8 @@ import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_FOLIO;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
-import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
-import static org.folio.bulkops.processor.InstanceNotesUpdaterFactory.INSTANCE_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.service.Marc21ReferenceProvider.GENERAL_NOTE;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.INSTANCE_NOTE_POSITION;
@@ -56,9 +53,11 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.ApproachType;
+import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
+import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.ContributorType;
 import org.folio.bulkops.domain.dto.ContributorTypeCollection;
@@ -408,17 +407,13 @@ class PreviewServiceTest extends BaseTest {
     var contributorTypes = new HashMap<String, String>();
     contributorTypes.put("art", "Artist");
 
-    var rules = rules(new BulkOperationRule().bulkOperationId(bulkOperationId)
-      .ruleDetails(new BulkOperationRuleRuleDetails()
-        .option(INSTANCE_NOTE)
-        .actions(Collections.singletonList(new Action()
-          .type(ADD_TO_EXISTING)
-          .updated("new note")
-          .parameters(Collections.singletonList(new Parameter()
-            .key(INSTANCE_NOTE_TYPE_ID_KEY)
-            .value(summaryNoteTypeId)))))));
+    var rules = new BulkOperationMarcRuleCollection()
+      .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule()
+        .bulkOperationId(bulkOperationId)
+        .tag("520")))
+      .totalRecords(1);
 
-    when(ruleService.getRules(bulkOperationId)).thenReturn(rules);
+    when(ruleService.getMarcRules(bulkOperationId)).thenReturn(rules);
     when(instanceNoteTypesClient.getNoteTypeById(summaryNoteTypeId))
       .thenReturn(new InstanceNoteType().name("Summary"));
     when(instanceReferenceService.getAllInstanceNoteTypes())
