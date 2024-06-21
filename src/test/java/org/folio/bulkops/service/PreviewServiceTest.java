@@ -5,12 +5,14 @@ import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
-import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_FOLIO;
-import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
+import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
+import static org.folio.bulkops.processor.InstanceNotesUpdaterFactory.INSTANCE_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.service.Marc21ReferenceProvider.GENERAL_NOTE;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.INSTANCE_NOTE_POSITION;
@@ -53,11 +55,9 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.ApproachType;
-import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
-import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.ContributorType;
 import org.folio.bulkops.domain.dto.ContributorTypeCollection;
@@ -107,10 +107,10 @@ class PreviewServiceTest extends BaseTest {
     "holdings_preview.csv,HOLDINGS_RECORD,EDIT,IN_APP",
     "holdings_preview.csv,HOLDINGS_RECORD,COMMIT,IN_APP",
     "holdings_preview.csv,HOLDINGS_RECORD,COMMIT,MANUAL",
-    "instances_preview.csv,INSTANCE_FOLIO,UPLOAD,IN_APP",
-    "instances_preview.csv,INSTANCE_FOLIO,EDIT,IN_APP",
-    "instances_preview.csv,INSTANCE_FOLIO,COMMIT,IN_APP",
-    "instances_preview.csv,INSTANCE_FOLIO,COMMIT,MANUAL"}, delimiter = ',')
+    "instances_preview.csv,INSTANCE,UPLOAD,IN_APP",
+    "instances_preview.csv,INSTANCE,EDIT,IN_APP",
+    "instances_preview.csv,INSTANCE,COMMIT,IN_APP",
+    "instances_preview.csv,INSTANCE,COMMIT,MANUAL"}, delimiter = ',')
   @SneakyThrows
   @ParameterizedTest
   void shouldReturnPreviewIfAvailable(String fileName, EntityType entityType, BulkOperationStep step, ApproachType approachType) {
@@ -148,7 +148,7 @@ class PreviewServiceTest extends BaseTest {
     var bulkOperationRuleCollection = objectMapper.readValue(new FileInputStream(getPathToContentUpdateRequest(entityType)), BulkOperationRuleCollection.class);
     when(ruleService.getRules(any(UUID.class))).thenReturn(bulkOperationRuleCollection);
 
-    var table = previewService.getPreview(bulkOperation, step, offset, limit);
+    var table = previewService.getPreview(bulkOperation, step, offset, limit, "FOLIO");
 
     assertThat(table.getRows(), hasSize(limit - offset));
     if (USER.equals(entityType)) {
@@ -168,7 +168,7 @@ class PreviewServiceTest extends BaseTest {
         noteTableUpdater.extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"), emptySet());
       }
       assertThat(table.getHeader(), equalTo(headers));
-    } else if (INSTANCE_FOLIO.equals(entityType)) {
+    } else if (INSTANCE.equals(entityType)) {
       if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
         assertThat(table.getHeader(), equalTo(
           getHeaders(Instance.class, UpdateOptionTypeToFieldResolver.getFieldsByUpdateOptionTypes(List.of(UpdateOptionType.STAFF_SUPPRESS, UpdateOptionType.SUPPRESS_FROM_DISCOVERY), entityType))));
@@ -204,7 +204,7 @@ class PreviewServiceTest extends BaseTest {
 
     when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
 
-    var table = previewService.getPreview(bulkOperation, COMMIT, offset, limit);
+    var table = previewService.getPreview(bulkOperation, COMMIT, offset, limit, "FOLIO");
 
     assertThat(table.getRows(), hasSize(limit));
   }
@@ -237,7 +237,7 @@ class PreviewServiceTest extends BaseTest {
     when(itemNoteTypeClient.getNoteTypeById("87c450be-2033-41fb-80ba-dd2409883681")).thenReturn(new NoteType().withName("Custom"));
     when(itemNoteTypeClient.getNoteTypeById("8d0a5eca-25de-4391-81a9-236eeefdd20b")).thenReturn(new NoteType().withName("Note"));
 
-    var table = previewService.getPreview(bulkOperation, UPLOAD, offset, limit);
+    var table = previewService.getPreview(bulkOperation, UPLOAD, offset, limit, "FOLIO");
 
     assertThat(table.getRows(), hasSize(1));
 
@@ -331,7 +331,7 @@ class PreviewServiceTest extends BaseTest {
 
     var bulkOperation = BulkOperation.builder().entityType(USER).status(status).build();
 
-    var table = previewService.getPreview(bulkOperation, org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD, 0, 10);
+    var table = previewService.getPreview(bulkOperation, org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD, 0, 10, "FOLIO");
     assertEquals(0, table.getRows().size());
     Assertions.assertTrue(table.getHeader().size() > 0);
   }
@@ -349,7 +349,7 @@ class PreviewServiceTest extends BaseTest {
     var pathToCsv = "commited.csv";
     var operation = BulkOperation.builder()
       .id(operationId)
-      .entityType(INSTANCE_FOLIO)
+      .entityType(INSTANCE)
       .linkToCommittedRecordsCsvFile(pathToCsv).build();
     var rules = rules(new BulkOperationRule().bulkOperationId(operationId)
       .ruleDetails(new BulkOperationRuleRuleDetails()
@@ -379,7 +379,7 @@ class PreviewServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(pathToCsv))
       .thenReturn(new ByteArrayInputStream(",,,,,,,,,,".getBytes()));
 
-    var table = previewService.getPreview(operation, COMMIT, 0, 10);
+    var table = previewService.getPreview(operation, COMMIT, 0, 10, "FOLIO");
 
     var position = HOLDINGS_NOTE.equals(updateOption) ? HOLDINGS_NOTE_POSITION : INSTANCE_NOTE_POSITION;
     assertEquals("new note type", table.getHeader().get(position).getValue());
@@ -399,7 +399,7 @@ class PreviewServiceTest extends BaseTest {
     var pathToFile = bulkOperationId + "/" + "file.mrc";
     var bulkOperation = BulkOperation.builder()
         .id(bulkOperationId)
-        .entityType(INSTANCE_MARC)
+        .entityType(INSTANCE)
         .linkToMatchedRecordsMarcFile(pathToFile)
         .linkToModifiedRecordsMarcFile(pathToFile)
         .linkToCommittedRecordsMarcFile(pathToFile)
@@ -407,13 +407,17 @@ class PreviewServiceTest extends BaseTest {
     var contributorTypes = new HashMap<String, String>();
     contributorTypes.put("art", "Artist");
 
-    var rules = new BulkOperationMarcRuleCollection()
-      .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule()
-        .bulkOperationId(bulkOperationId)
-        .tag("520")))
-      .totalRecords(1);
+    var rules = rules(new BulkOperationRule().bulkOperationId(bulkOperationId)
+      .ruleDetails(new BulkOperationRuleRuleDetails()
+        .option(INSTANCE_NOTE)
+        .actions(Collections.singletonList(new Action()
+          .type(ADD_TO_EXISTING)
+          .updated("new note")
+          .parameters(Collections.singletonList(new Parameter()
+            .key(INSTANCE_NOTE_TYPE_ID_KEY)
+            .value(summaryNoteTypeId)))))));
 
-    when(ruleService.getMarcRules(bulkOperationId)).thenReturn(rules);
+    when(ruleService.getRules(bulkOperationId)).thenReturn(rules);
     when(instanceNoteTypesClient.getNoteTypeById(summaryNoteTypeId))
       .thenReturn(new InstanceNoteType().name("Summary"));
     when(instanceReferenceService.getAllInstanceNoteTypes())
@@ -433,7 +437,7 @@ class PreviewServiceTest extends BaseTest {
       .thenReturn(InstanceFormats.builder()
         .formats(Collections.singletonList(InstanceFormat.builder().name("computer -- other").code("cz").source("rdacarrier").build())).build());
 
-    var res = previewService.getPreview(bulkOperation, step, 0, 10);
+    var res = previewService.getPreview(bulkOperation, step, 0, 10, "MARC");
 
     assertThat(res.getHeader().get(22).getValue(), equalTo("General note"));
     assertThat(res.getHeader().get(22).getForceVisible(), equalTo(Boolean.FALSE));
@@ -466,7 +470,7 @@ class PreviewServiceTest extends BaseTest {
       return "src/test/resources/files/rules/content_update_items.json";
     } else if (HOLDINGS_RECORD == entityType) {
       return "src/test/resources/files/rules/content_update_holdings.json";
-    } else if (INSTANCE_FOLIO == entityType) {
+    } else if (INSTANCE == entityType) {
         return "src/test/resources/files/rules/content_update_instances.json";
       } else {
       throw new IllegalArgumentException("Sample not found for entity type: " + entityType);

@@ -7,8 +7,7 @@
       "USER",
       "ITEM",
       "HOLDINGS_RECORD",
-      "INSTANCE_FOLIO",
-      "INSTANCE_MARC"
+      "INSTANCE"
     ]
   }
 }
