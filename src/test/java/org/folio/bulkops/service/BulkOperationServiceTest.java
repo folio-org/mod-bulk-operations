@@ -53,6 +53,7 @@ import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemCollection;
@@ -1006,12 +1007,12 @@ class BulkOperationServiceTest extends BaseTest {
       .identifierType(IdentifierType.ID)
       .build();
     var holdingsId = UUID.randomUUID().toString();
-    var originalHoldingsString = objectMapper.writeValueAsString(HoldingsRecord.builder()
+    var originalHoldingsString = objectMapper.writeValueAsString(ExtendedHoldingsRecord.builder().entity(HoldingsRecord.builder()
         .id(holdingsId)
-      .discoverySuppress(testData.originalHoldingsDiscoverySuppress).build());
-    var modifiedHoldingsString = objectMapper.writeValueAsString(HoldingsRecord.builder()
+      .discoverySuppress(testData.originalHoldingsDiscoverySuppress).build()).tenantId("tenantId").build());
+    var modifiedHoldingsString = objectMapper.writeValueAsString(ExtendedHoldingsRecord.builder().entity(HoldingsRecord.builder()
         .id(holdingsId)
-      .discoverySuppress(testData.modifiedHoldingsDiscoverySuppress).build());
+      .discoverySuppress(testData.modifiedHoldingsDiscoverySuppress).build()).tenantId("tenantId").build());
     when(bulkOperationRepository.save(any()))
       .thenReturn(operation);
     when(remoteFileSystemClient.get(matchedRecordsJsonFileName))

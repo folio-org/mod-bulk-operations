@@ -22,7 +22,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
@@ -40,7 +41,7 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @Component
 @AllArgsConstructor
-public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord> {
+public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHoldingsRecord> {
 
 
   private final ItemReferenceService itemReferenceService;
@@ -53,14 +54,14 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
   @Override
-  public Validator<UpdateOptionType, Action> validator(HoldingsRecord entity) {
+  public Validator<UpdateOptionType, Action> validator(ExtendedHoldingsRecord extendedHoldingsRecord) {
     return (option, action) -> {
       try {
-        if ("MARC".equals(holdingsReferenceService.getSourceById(entity.getSourceId()).getName())) {
+        if ("MARC".equals(holdingsReferenceService.getSourceById(extendedHoldingsRecord.getEntity().getSourceId()).getName())) {
           throw new RuleValidationException("Holdings records that have source \"MARC\" cannot be changed");
         }
       } catch (NotFoundException e) {
-        log.error("Holdings source was not found by id={}", entity.getSourceId());
+        log.error("Holdings source was not found by id={}", extendedHoldingsRecord.getEntity().getSourceId());
       }
       if (REPLACE_WITH == action.getType()) {
         validateReplacement(option, action);
@@ -71,29 +72,29 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
     };
   }
 
-  public Updater<HoldingsRecord> updater(UpdateOptionType option, Action action) {
+  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action) {
     if (isElectronicAccessUpdate(option)) {
-      return (Updater<HoldingsRecord>) electronicAccessUpdaterFactory.updater(option, action);
+      return (Updater<ExtendedHoldingsRecord>) electronicAccessUpdaterFactory.updater(option, action);
     } else if (REPLACE_WITH == action.getType()) {
-      return holding -> {
+      return extendedHoldingsRecord -> {
         var locationId = action.getUpdated();
         if (PERMANENT_LOCATION == option) {
-          holding.setPermanentLocationId(locationId);
-          holding.setEffectiveLocationId(isEmpty(holding.getTemporaryLocationId()) ? locationId : holding.getTemporaryLocationId());
+          extendedHoldingsRecord.getEntity().setPermanentLocationId(locationId);
+          extendedHoldingsRecord.getEntity().setEffectiveLocationId(isEmpty(extendedHoldingsRecord.getEntity().getTemporaryLocationId()) ? locationId : extendedHoldingsRecord.getEntity().getTemporaryLocationId());
         } else {
-          holding.setTemporaryLocationId(locationId);
-          holding.setEffectiveLocationId(locationId);
+          extendedHoldingsRecord.getEntity().setTemporaryLocationId(locationId);
+          extendedHoldingsRecord.getEntity().setEffectiveLocationId(locationId);
         }
       };
     } else if (CLEAR_FIELD == action.getType()) {
-      return holding -> {
-        holding.setTemporaryLocationId(null);
-        holding.setEffectiveLocationId(holding.getPermanentLocationId());
+      return extendedHoldingsRecord -> {
+        extendedHoldingsRecord.getEntity().setTemporaryLocationId(null);
+        extendedHoldingsRecord.getEntity().setEffectiveLocationId(extendedHoldingsRecord.getEntity().getPermanentLocationId());
       };
     } else if (isSetDiscoverySuppressTrue(action.getType(), option)) {
-      return holding -> holding.setDiscoverySuppress(true);
+      return extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().setDiscoverySuppress(true);
     } else if (isSetDiscoverySuppressFalse(action.getType(), option)) {
-      return holding -> holding.setDiscoverySuppress(false);
+      return extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().setDiscoverySuppress(false);
     }
     var notesUpdaterOptional = holdingsNotesUpdater.updateNotes(action, option);
     if (notesUpdaterOptional.isPresent()) return notesUpdaterOptional.get();
@@ -151,7 +152,8 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
   }
 
   @Override
-  public HoldingsRecord clone(HoldingsRecord entity) {
+  public ExtendedHoldingsRecord clone(ExtendedHoldingsRecord extendedEntity) {
+    var entity = extendedEntity.getEntity();
     var clone = entity.toBuilder().build();
     if (entity.getAdministrativeNotes() != null) {
       var administrativeNotes = new ArrayList<>(entity.getAdministrativeNotes());
@@ -161,16 +163,20 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<HoldingsRecord>
       var holdingsNotes = entity.getNotes().stream().map(note -> note.toBuilder().build()).toList();
       clone.setNotes(new ArrayList<>(holdingsNotes));
     }
-    return clone;
+
+    return ExtendedHoldingsRecord.builder().tenantId(extendedEntity.getTenantId()).entity(clone).build();
   }
 
   @Override
-  public boolean compare(HoldingsRecord first, HoldingsRecord second) {
-    return Objects.equals(first, second);
+  public boolean compare(ExtendedHoldingsRecord first, ExtendedHoldingsRecord second) {
+    if (StringUtils.equals(first.getTenantId(), second.getTenantId())) {
+      return Objects.equals(first.getEntity(), second.getEntity());
+    }
+    return false;
   }
 
   @Override
-  public Class<HoldingsRecord> getProcessedType() {
-    return HoldingsRecord.class;
+  public Class<ExtendedHoldingsRecord> getProcessedType() {
+    return ExtendedHoldingsRecord.class;
   }
 }

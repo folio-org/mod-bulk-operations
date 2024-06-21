@@ -22,8 +22,10 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
+import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
 
+import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
@@ -43,7 +45,6 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExportType;
 import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
-import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.bean.StatusType;
@@ -206,6 +207,8 @@ public class BulkOperationService {
     var operationId = operation.getId();
 
     var clazz = resolveEntityClass(operation.getEntityType());
+    var extendedClazz = resolveExtendedEntityClass(operation.getEntityType());
+
     var ruleCollection = ruleService.getRules(operationId);
 
     var dataProcessing = dataProcessingRepository.save(BulkOperationDataProcessing.builder()
@@ -226,7 +229,7 @@ public class BulkOperationService {
 
       var csvWriter = new BulkOperationsEntityCsvWriter(writerForModifiedPreviewCsvFile, clazz);
 
-      var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), clazz);
+      var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), extendedClazz);
 
       var processedNumOfRecords = 0;
 
@@ -236,11 +239,12 @@ public class BulkOperationService {
 
       while (iterator.hasNext()) {
         var original = iterator.next();
-        var modified = processUpdate(original, operation, ruleCollection, clazz);
+        var modified = processUpdate(original, operation, ruleCollection, extendedClazz);
 
         if (Objects.nonNull(modified)) {
           // Prepare CSV for download and preview
-          writeToCsv(operation, csvWriter, modified.getPreview());
+          writeToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity());
+
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
           writerForModifiedJsonFile.write(modifiedRecord);
         }
@@ -316,6 +320,7 @@ public class BulkOperationService {
 
     if (StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsJsonFile())) {
       var entityClass = resolveEntityClass(operation.getEntityType());
+      var extendedClass = resolveExtendedEntityClass(operation.getEntityType());
 
       var execution = executionRepository.save(BulkOperationExecution.builder()
         .bulkOperationId(operationId)
@@ -328,16 +333,16 @@ public class BulkOperationService {
       var resultJsonFileName = String.format(CHANGED_JSON_PATH_TEMPLATE, operation.getId(), LocalDate.now(), triggeringFileName);
       var resultCsvFileName = String.format(CHANGED_CSV_PATH_TEMPLATE, operation.getId(), LocalDate.now(), triggeringFileName);
 
-      try (var originalFileReader = new InputStreamReader(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile()));
-           var modifiedFileReader = new InputStreamReader(remoteFileSystemClient.get(operation.getLinkToModifiedRecordsJsonFile()));
+      try (var originalFileReader = new InputStreamReader(new BufferedInputStream(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile())));
+           var modifiedFileReader = new InputStreamReader(new BufferedInputStream(remoteFileSystemClient.get(operation.getLinkToModifiedRecordsJsonFile())));
            var writerForResultCsvFile = remoteFileSystemClient.writer(resultCsvFileName);
            var writerForResultJsonFile = remoteFileSystemClient.writer(resultJsonFileName)) {
 
         var originalFileParser = new JsonFactory().createParser(originalFileReader);
-        var originalFileIterator = objectMapper.readValues(originalFileParser, entityClass);
+        var originalFileIterator = objectMapper.readValues(originalFileParser, extendedClass);
 
         var modifiedFileParser = new JsonFactory().createParser(modifiedFileReader);
-        var modifiedFileIterator = objectMapper.readValues(modifiedFileParser, entityClass);
+        var modifiedFileIterator = objectMapper.readValues(modifiedFileParser, extendedClass);
 
         var csvWriter = new BulkOperationsEntityCsvWriter(writerForResultCsvFile, entityClass);
 
@@ -350,7 +355,8 @@ public class BulkOperationService {
           processedNumOfRecords++;
 
           try {
-            var result = recordUpdateService.updateEntity(original, modified, operation);
+            //ToDo MODBULKOPS-273
+            var result = recordUpdateService.updateEntity(original.getRecordBulkOperationEntity(), modified.getRecordBulkOperationEntity(), operation);
             if (result != original) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));

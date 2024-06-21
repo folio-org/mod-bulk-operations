@@ -2,6 +2,7 @@ package org.folio.bulkops.processor;
 
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
@@ -33,39 +34,39 @@ public class HoldingsNotesUpdater {
   public static final String HOLDINGS_NOTE_TYPE_ID_KEY = "HOLDINGS_NOTE_TYPE_ID_KEY";
   private final AdministrativeNotesUpdater administrativeNotesUpdater;
 
-  public Optional<Updater<HoldingsRecord>> updateNotes( Action action, UpdateOptionType option) {
+  public Optional<Updater<ExtendedHoldingsRecord>> updateNotes(Action action, UpdateOptionType option) {
     if ((MARK_AS_STAFF_ONLY == action.getType() || REMOVE_MARK_AS_STAFF_ONLY == action.getType()) && option == HOLDINGS_NOTE){
       var markAsStaffValue = action.getType() == MARK_AS_STAFF_ONLY;
-      return Optional.of(holding -> setMarkAsStaffForNotesByTypeId(holding.getNotes(), action.getParameters(), markAsStaffValue));
+      return Optional.of(extendedHoldingsRecord -> setMarkAsStaffForNotesByTypeId(extendedHoldingsRecord.getEntity().getNotes(), action.getParameters(), markAsStaffValue));
     } else if (REMOVE_ALL == action.getType()) {
       if (option == ADMINISTRATIVE_NOTE) {
-        return Optional.of(holding -> holding.setAdministrativeNotes(administrativeNotesUpdater.removeAdministrativeNotes()));
+        return Optional.of(extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().setAdministrativeNotes(administrativeNotesUpdater.removeAdministrativeNotes()));
       } else if (option == HOLDINGS_NOTE) {
-        return Optional.of(holding -> holding.setNotes(removeNotesByTypeId(holding.getNotes(), action.getParameters())));
+        return Optional.of(extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().setNotes(removeNotesByTypeId(extendedHoldingsRecord.getEntity().getNotes(), action.getParameters())));
       }
     } else if (ADD_TO_EXISTING == action.getType()) {
       if (option == ADMINISTRATIVE_NOTE) {
-        return Optional.of(holding -> holding.setAdministrativeNotes(administrativeNotesUpdater.addToAdministrativeNotes(action.getUpdated(), holding.getAdministrativeNotes())));
+        return Optional.of(extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().setAdministrativeNotes(administrativeNotesUpdater.addToAdministrativeNotes(action.getUpdated(), extendedHoldingsRecord.getEntity().getAdministrativeNotes())));
       } else if (option == HOLDINGS_NOTE) {
-        return Optional.of(holding -> holding.setNotes(addToNotesByTypeId(holding.getNotes(), action.getParameters(), action.getUpdated())));
+        return Optional.of(extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().setNotes(addToNotesByTypeId(extendedHoldingsRecord.getEntity().getNotes(), action.getParameters(), action.getUpdated())));
       }
     } else if (FIND_AND_REMOVE_THESE == action.getType()) {
       if (option == ADMINISTRATIVE_NOTE) {
-        return Optional.of(holding -> holding.setAdministrativeNotes(administrativeNotesUpdater.findAndRemoveAdministrativeNote(action.getInitial(), holding.getAdministrativeNotes())));
+        return Optional.of(extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().setAdministrativeNotes(administrativeNotesUpdater.findAndRemoveAdministrativeNote(action.getInitial(), extendedHoldingsRecord.getEntity().getAdministrativeNotes())));
       } else if (option == HOLDINGS_NOTE) {
-        return Optional.of(holding -> holding.setNotes(findAndRemoveNoteByValueAndTypeId(action.getInitial(), holding.getNotes(), action.getParameters())));
+        return Optional.of(extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().setNotes(findAndRemoveNoteByValueAndTypeId(action.getInitial(), extendedHoldingsRecord.getEntity().getNotes(), action.getParameters())));
       }
     } else if (FIND_AND_REPLACE == action.getType()) {
       if (option == ADMINISTRATIVE_NOTE) {
-        return Optional.of(holding -> holding.setAdministrativeNotes(administrativeNotesUpdater.findAndReplaceAdministrativeNote(action, holding.getAdministrativeNotes())));
+        return Optional.of(extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().setAdministrativeNotes(administrativeNotesUpdater.findAndReplaceAdministrativeNote(action, extendedHoldingsRecord.getEntity().getAdministrativeNotes())));
       } else if (option == HOLDINGS_NOTE) {
-        return Optional.of(holding -> findAndReplaceNoteByValueAndTypeId(action, holding.getNotes()));
+        return Optional.of(extendedHoldingsRecord -> findAndReplaceNoteByValueAndTypeId(action, extendedHoldingsRecord.getEntity().getNotes()));
       }
     } else if (CHANGE_TYPE == action.getType()) {
       if (option == ADMINISTRATIVE_NOTE) {
-        return Optional.of(holding -> administrativeNotesUpdater.changeNoteTypeForAdministrativeNotes(holding, action));
+        return Optional.of(extendedHoldingsRecord -> administrativeNotesUpdater.changeNoteTypeForAdministrativeNotes(extendedHoldingsRecord.getEntity(), action));
       } else if (option == HOLDINGS_NOTE) {
-        return Optional.of(holding -> changeNoteTypeForHoldingsNote(holding, action));
+        return Optional.of(extendedHoldingsRecord -> changeNoteTypeForHoldingsNote(extendedHoldingsRecord.getEntity(), action));
       }
     }
     return Optional.empty();
