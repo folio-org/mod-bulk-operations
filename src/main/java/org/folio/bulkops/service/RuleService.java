@@ -4,14 +4,9 @@ import java.util.UUID;
 
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
-import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
-import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.exception.NotFoundException;
-import org.folio.bulkops.mapper.MarcRulesMapper;
-import org.folio.bulkops.repository.BulkOperationMarcRuleRepository;
-import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.repository.BulkOperationRuleDetailsRepository;
 import org.folio.bulkops.repository.BulkOperationRuleRepository;
 import org.springframework.stereotype.Service;
@@ -24,9 +19,6 @@ import lombok.RequiredArgsConstructor;
 public class RuleService {
   private final BulkOperationRuleRepository ruleRepository;
   private final BulkOperationRuleDetailsRepository ruleDetailsRepository;
-  private final BulkOperationRepository bulkOperationRepository;
-  private final BulkOperationMarcRuleRepository marcRuleRepository;
-  private final MarcRulesMapper marcRulesMapper;
 
   @Transactional
   public BulkOperationRuleCollection saveRules(BulkOperationRuleCollection ruleCollection) {
@@ -74,28 +66,5 @@ public class RuleService {
             .updated(details.getUpdatedValue())
             .parameters(details.getParameters()))
           .toList()));
-  }
-
-  @Transactional
-  public BulkOperationMarcRuleCollection saveMarcRules(BulkOperationMarcRuleCollection ruleCollection) {
-    ruleCollection.getBulkOperationMarcRules().stream()
-      .map(BulkOperationMarcRule::getBulkOperationId)
-      .distinct()
-      .forEach(marcRuleRepository::deleteAllByBulkOperationId);
-
-    ruleCollection.getBulkOperationMarcRules()
-      .forEach(marcRule -> marcRuleRepository.save(marcRulesMapper.mapToEntity(marcRule)));
-
-    return ruleCollection;
-  }
-
-  public BulkOperationMarcRuleCollection getMarcRules(UUID bulkOperationId) {
-    var rules = marcRuleRepository.findAllByBulkOperationId(bulkOperationId).stream()
-      .map(marcRulesMapper::mapToDto)
-      .toList();
-    if (rules.isEmpty()) {
-      throw new NotFoundException("Bulk operation MARC rules were not found by bulk operation id=" + bulkOperationId);
-    }
-    return new BulkOperationMarcRuleCollection().bulkOperationMarcRules(rules).totalRecords(rules.size());
   }
 }

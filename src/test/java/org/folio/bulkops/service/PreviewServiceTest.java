@@ -5,13 +5,11 @@ import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
-import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_FOLIO;
-import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
-import static org.folio.bulkops.service.Marc21ReferenceProvider.GENERAL_NOTE;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.INSTANCE_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
@@ -28,7 +26,6 @@ import static org.testcontainers.shaded.org.hamcrest.Matchers.hasSize;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -41,10 +38,6 @@ import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.HoldingsNoteTypeCollection;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.Instance;
-import org.folio.bulkops.domain.bean.InstanceFormat;
-import org.folio.bulkops.domain.bean.InstanceFormats;
-import org.folio.bulkops.domain.bean.InstanceType;
-import org.folio.bulkops.domain.bean.InstanceTypes;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.NoteType;
@@ -53,15 +46,12 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.ApproachType;
-import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
-import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.Cell;
-import org.folio.bulkops.domain.dto.ContributorType;
-import org.folio.bulkops.domain.dto.ContributorTypeCollection;
 import org.folio.bulkops.domain.dto.InstanceNoteType;
+import org.folio.bulkops.domain.dto.InstanceNoteTypeCollection;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
@@ -90,8 +80,6 @@ class PreviewServiceTest extends BaseTest {
   private RemoteFileSystemClient remoteFileSystemClient;
   @MockBean
   private RuleService ruleService;
-  @MockBean
-  private InstanceReferenceService instanceReferenceService;
   @Autowired
   private NoteTableUpdater noteTableUpdater;
 
@@ -107,10 +95,10 @@ class PreviewServiceTest extends BaseTest {
     "holdings_preview.csv,HOLDINGS_RECORD,EDIT,IN_APP",
     "holdings_preview.csv,HOLDINGS_RECORD,COMMIT,IN_APP",
     "holdings_preview.csv,HOLDINGS_RECORD,COMMIT,MANUAL",
-    "instances_preview.csv,INSTANCE_FOLIO,UPLOAD,IN_APP",
-    "instances_preview.csv,INSTANCE_FOLIO,EDIT,IN_APP",
-    "instances_preview.csv,INSTANCE_FOLIO,COMMIT,IN_APP",
-    "instances_preview.csv,INSTANCE_FOLIO,COMMIT,MANUAL"}, delimiter = ',')
+    "instances_preview.csv,INSTANCE,UPLOAD,IN_APP",
+    "instances_preview.csv,INSTANCE,EDIT,IN_APP",
+    "instances_preview.csv,INSTANCE,COMMIT,IN_APP",
+    "instances_preview.csv,INSTANCE,COMMIT,MANUAL"}, delimiter = ',')
   @SneakyThrows
   @ParameterizedTest
   void shouldReturnPreviewIfAvailable(String fileName, EntityType entityType, BulkOperationStep step, ApproachType approachType) {
@@ -168,7 +156,7 @@ class PreviewServiceTest extends BaseTest {
         noteTableUpdater.extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"), emptySet());
       }
       assertThat(table.getHeader(), equalTo(headers));
-    } else if (INSTANCE_FOLIO.equals(entityType)) {
+    } else if (INSTANCE.equals(entityType)) {
       if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
         assertThat(table.getHeader(), equalTo(
           getHeaders(Instance.class, UpdateOptionTypeToFieldResolver.getFieldsByUpdateOptionTypes(List.of(UpdateOptionType.STAFF_SUPPRESS, UpdateOptionType.SUPPRESS_FROM_DISCOVERY), entityType))));
@@ -349,7 +337,7 @@ class PreviewServiceTest extends BaseTest {
     var pathToCsv = "commited.csv";
     var operation = BulkOperation.builder()
       .id(operationId)
-      .entityType(INSTANCE_FOLIO)
+      .entityType(INSTANCE)
       .linkToCommittedRecordsCsvFile(pathToCsv).build();
     var rules = rules(new BulkOperationRule().bulkOperationId(operationId)
       .ruleDetails(new BulkOperationRuleRuleDetails()
@@ -366,9 +354,9 @@ class PreviewServiceTest extends BaseTest {
       .thenReturn(new InstanceNoteType().name("old note type"));
     when(instanceNoteTypesClient.getNoteTypeById(newNoteTypeId))
       .thenReturn(new InstanceNoteType().name("new note type"));
-    when(instanceReferenceService.getAllInstanceNoteTypes())
-      .thenReturn(List.of(new InstanceNoteType().name("old note type"),
-        new InstanceNoteType().name("new note type")));
+    when(instanceNoteTypesClient.getInstanceNoteTypes(Integer.MAX_VALUE))
+      .thenReturn(new InstanceNoteTypeCollection().instanceNoteTypes(List.of(
+        new InstanceNoteType().name("old note type"), new InstanceNoteType().name("new note type"))).totalRecords(2));
     when(holdingsNoteTypeClient.getNoteTypeById(oldNoteTypeId))
       .thenReturn(new HoldingsNoteType().withName("old note type"));
     when(holdingsNoteTypeClient.getNoteTypeById(newNoteTypeId))
@@ -390,75 +378,6 @@ class PreviewServiceTest extends BaseTest {
     assertTrue(table.getHeader().get(position + 1).getForceVisible());
   }
 
-  @ParameterizedTest
-  @EnumSource(value = BulkOperationStep.class, names = {"EDIT", "COMMIT"}, mode = EnumSource.Mode.INCLUDE)
-  @SneakyThrows
-  void shouldGetMarcPreviewIfAvailable(BulkOperationStep step) {
-    var summaryNoteTypeId = "10e2e11b-450f-45c8-b09b-0f819999966e";
-    var bulkOperationId = UUID.randomUUID();
-    var pathToFile = bulkOperationId + "/" + "file.mrc";
-    var bulkOperation = BulkOperation.builder()
-        .id(bulkOperationId)
-        .entityType(INSTANCE_MARC)
-        .linkToMatchedRecordsMarcFile(pathToFile)
-        .linkToModifiedRecordsMarcFile(pathToFile)
-        .linkToCommittedRecordsMarcFile(pathToFile)
-      .build();
-    var contributorTypes = new HashMap<String, String>();
-    contributorTypes.put("art", "Artist");
-
-    var rules = new BulkOperationMarcRuleCollection()
-      .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule()
-        .bulkOperationId(bulkOperationId)
-        .tag("520")))
-      .totalRecords(1);
-
-    when(ruleService.getMarcRules(bulkOperationId)).thenReturn(rules);
-    when(instanceNoteTypesClient.getNoteTypeById(summaryNoteTypeId))
-      .thenReturn(new InstanceNoteType().name("Summary"));
-    when(instanceReferenceService.getAllInstanceNoteTypes())
-      .thenReturn(List.of(new InstanceNoteType().name("Summary"), new InstanceNoteType().name(GENERAL_NOTE)));
-    when(remoteFileSystemClient.get(pathToFile)).thenReturn(new FileInputStream("src/test/resources/files/preview.mrc"));
-    when(instanceReferenceService.getContributorTypesByCode("art"))
-      .thenReturn(new ContributorTypeCollection().contributorTypes(
-        Collections.singletonList(new ContributorType().name("Artist"))));
-    when(instanceReferenceService.getContributorTypesByCode(null))
-      .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
-    when(instanceReferenceService.getContributorTypesByName("contributor"))
-      .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
-    when(instanceReferenceService.getInstanceTypesByName("Text"))
-      .thenReturn(InstanceTypes.builder()
-        .types(Collections.singletonList(InstanceType.builder().name("Text").code("txt").source("rdacontent").build())).build());
-    when(instanceReferenceService.getInstanceFormatsByCode("cz"))
-      .thenReturn(InstanceFormats.builder()
-        .formats(Collections.singletonList(InstanceFormat.builder().name("computer -- other").code("cz").source("rdacarrier").build())).build());
-
-    var res = previewService.getPreview(bulkOperation, step, 0, 10);
-
-    assertThat(res.getHeader().get(22).getValue(), equalTo("General note"));
-    assertThat(res.getHeader().get(22).getForceVisible(), equalTo(Boolean.FALSE));
-    assertThat(res.getHeader().get(23).getValue(), equalTo("Summary"));
-    assertThat(res.getHeader().get(23).getForceVisible(), equalTo(Boolean.TRUE));
-
-    assertThat(res.getRows().get(0).getRow().get(0), equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
-    assertThat(res.getRows().get(0).getRow().get(4), equalTo("in00000000002"));
-    assertThat(res.getRows().get(0).getRow().get(5), equalTo("MARC"));
-    assertThat(res.getRows().get(0).getRow().get(8), equalTo("single unit"));
-    assertThat(res.getRows().get(0).getRow().get(10), equalTo("summerland / Michael Chabon."));
-    assertThat(res.getRows().get(0).getRow().get(11), equalTo("Mmerland /"));
-    assertThat(res.getRows().get(0).getRow().get(12), equalTo("series800 | series810 | series811 | series830"));
-    assertThat(res.getRows().get(0).getRow().get(13), equalTo("Chabon, Michael;Personal name;Artist | Another Contributor;Meeting name;contributor"));
-    assertThat(res.getRows().get(0).getRow().get(14), equalTo("1st ed."));
-    assertThat(res.getRows().get(0).getRow().get(15), equalTo("500 p. ; 22 cm."));
-    assertThat(res.getRows().get(0).getRow().get(16), equalTo("Text;txt;rdacontent"));
-    assertThat(res.getRows().get(0).getRow().get(18), equalTo("computer -- other"));
-    assertThat(res.getRows().get(0).getRow().get(19), equalTo("English | French"));
-    assertThat(res.getRows().get(0).getRow().get(20), equalTo("monthly. Jun 10, 2024 | yearly. 2024"));
-    assertThat(res.getRows().get(0).getRow().get(21), equalTo("2002-2024"));
-    assertThat(res.getRows().get(0).getRow().get(22), equalTo("language note (staff only)"));
-    assertThat(res.getRows().get(0).getRow().get(23), equalTo("Ethan Feld, the worst baseball player in the history of the game, finds himself recruited by a 100-year-old scout to help a band of fairies triumph over an ancient enemy. 2nd"));
-  }
-
   private String getPathToContentUpdateRequest(org.folio.bulkops.domain.dto.EntityType entityType) {
     if (USER == entityType) {
       return "src/test/resources/files/rules/content_update_users.json";
@@ -466,7 +385,7 @@ class PreviewServiceTest extends BaseTest {
       return "src/test/resources/files/rules/content_update_items.json";
     } else if (HOLDINGS_RECORD == entityType) {
       return "src/test/resources/files/rules/content_update_holdings.json";
-    } else if (INSTANCE_FOLIO == entityType) {
+    } else if (INSTANCE == entityType) {
         return "src/test/resources/files/rules/content_update_instances.json";
       } else {
       throw new IllegalArgumentException("Sample not found for entity type: " + entityType);

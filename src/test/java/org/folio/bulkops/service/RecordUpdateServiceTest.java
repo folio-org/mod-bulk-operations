@@ -150,7 +150,7 @@ class RecordUpdateServiceTest extends BaseTest {
     var operation = BulkOperation.builder()
       .id(UUID.randomUUID())
       .identifierType(IdentifierType.ID)
-      .entityType(EntityType.INSTANCE_FOLIO)
+      .entityType(EntityType.INSTANCE)
       .build();
 
     assertThrows(FeignException.class, () -> recordUpdateService.updateEntity(original, modified, operation));

@@ -56,10 +56,6 @@
         "description": "Path to the matched (origin) csv file",
         "type": "string"
       },
-      "linkToMatchedRecordsMarcFile": {
-        "description": "Path to the matched (origin) mrc file",
-        "type": "string"
-      },
       "linkToMatchedRecordsErrorsCsvFile": {
         "description": "Path to the matching errors csv file",
         "type": "string"
@@ -72,20 +68,12 @@
         "description": "Path to the modified (updated) csv file",
         "type": "string"
       },
-      "linkToModifiedRecordsMarcFile": {
-        "description": "Path to the modified (updated) mrc file",
-        "type": "string"
-      },
       "linkToCommittedRecordsJsonFile": {
         "description": "Path to the committed (result) json file",
         "type": "string"
       },
       "linkToCommittedRecordsCsvFile": {
         "description": "Path to the committed (result) csv file",
-        "type": "string"
-      },
-      "linkToCommittedRecordsMarcFile": {
-        "description": "Path to the committed (result) mrc file",
         "type": "string"
       },
       "linkToCommittedRecordsErrorsCsvFile": {

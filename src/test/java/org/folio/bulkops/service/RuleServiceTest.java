@@ -1,25 +1,20 @@
 package org.folio.bulkops.service;
 
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.dto.Action;
-import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
-import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperationRuleDetails;
-import org.folio.bulkops.repository.BulkOperationMarcRuleRepository;
 import org.folio.bulkops.repository.BulkOperationRuleDetailsRepository;
 import org.folio.bulkops.repository.BulkOperationRuleRepository;
 import org.folio.spring.scope.FolioExecutionContextSetter;
@@ -34,8 +29,6 @@ class RuleServiceTest extends BaseTest {
   private RuleService ruleService;
   @MockBean
   private BulkOperationRuleRepository ruleRepository;
-  @MockBean
-  private BulkOperationMarcRuleRepository marcRuleRepository;
   @MockBean
   private BulkOperationRuleDetailsRepository ruleDetailsRepository;
 
@@ -70,39 +63,6 @@ class RuleServiceTest extends BaseTest {
     assertEquals(rules(), fetchedRules);
   }
 
-  @Test
-  void shouldSaveMarcRules() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      when(marcRuleRepository.save(any(org.folio.bulkops.domain.entity.BulkOperationMarcRule.class)))
-        .thenReturn(org.folio.bulkops.domain.entity.BulkOperationMarcRule.builder().id(UUID.randomUUID()).build());
-
-      ruleService.saveMarcRules(marcRules());
-
-      verify(marcRuleRepository).deleteAllByBulkOperationId(BULK_OPERATION_ID);
-      verify(marcRuleRepository).save(any(org.folio.bulkops.domain.entity.BulkOperationMarcRule.class));
-    }
-  }
-
-  @Test
-  void shouldGetMarcRules() {
-    when(marcRuleRepository.findAllByBulkOperationId(BULK_OPERATION_ID))
-      .thenReturn(List.of(org.folio.bulkops.domain.entity.BulkOperationMarcRule.builder()
-        .bulkOperationId(BULK_OPERATION_ID)
-        .tag("100")
-        .ind1(EMPTY)
-        .ind2(EMPTY)
-        .actions(Collections.singletonList(new org.folio.bulkops.domain.dto.MarcAction()
-          .name(UpdateActionType.FIND)
-          .data(Collections.singletonList(new org.folio.bulkops.domain.dto.MarcActionDataInner()
-            .key(org.folio.bulkops.domain.dto.MarcDataType.VALUE)
-            .value("text")))))
-        .build()));
-
-    var fetchedRules = ruleService.getMarcRules(BULK_OPERATION_ID);
-
-    assertEquals(marcRules(), fetchedRules);
-  }
-
   private BulkOperationRuleCollection rules() {
     return new BulkOperationRuleCollection()
       .bulkOperationRules(List.of(new BulkOperationRule()
@@ -112,21 +72,6 @@ class RuleServiceTest extends BaseTest {
           .actions(List.of(new Action()
             .type(UpdateActionType.REPLACE_WITH)
             .updated(LOCATION_ID))))))
-      .totalRecords(1);
-  }
-
-  private BulkOperationMarcRuleCollection marcRules() {
-    return new BulkOperationMarcRuleCollection()
-      .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule()
-        .bulkOperationId(BULK_OPERATION_ID)
-        .tag("100")
-        .ind1(EMPTY)
-        .ind2(EMPTY)
-        .actions(Collections.singletonList(new org.folio.bulkops.domain.dto.MarcAction()
-          .name(UpdateActionType.FIND)
-          .data(Collections.singletonList(new org.folio.bulkops.domain.dto.MarcActionDataInner()
-            .key(org.folio.bulkops.domain.dto.MarcDataType.VALUE)
-            .value("text")))))))
       .totalRecords(1);
   }
 }

@@ -66,10 +66,8 @@ public class NoteTableUpdater {
       .sorted()
       .toList();
 
-    if (!noteTypeNames.isEmpty()) {
-      extendHeadersWithNoteTypeNames(INSTANCE_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
-      unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), INSTANCE_NOTE_POSITION, noteTypeNames)));
-    }
+    extendHeadersWithNoteTypeNames(INSTANCE_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
+    unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), INSTANCE_NOTE_POSITION, noteTypeNames)));
   }
 
   public String concatNotePostfixIfRequired(String noteTypeName) {

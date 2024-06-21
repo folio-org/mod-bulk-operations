@@ -150,48 +150,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/errors"
-  /bulk-operations/{operationId}/marc-content-update:
-    post:
-      description: Upload MARC content updates
-      operationId: postMarcContentUpdates
-      parameters:
-        - name: operationId
-          in: path
-          required: true
-          description: UUID of the Bulk Operation
-          schema:
-            $ref: "#/components/schemas/UUID"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/bulkOperationMarcRuleCollection"
-      responses:
-        "200":
-          description: Rules are saved
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/bulkOperationMarcRuleCollection"
-        "400":
-          description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errors"
-        "404":
-          description: Not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errors"
-        "500":
-          description: Internal server errors, e.g. due to misconfiguration
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/errors"
   /bulk-operations/{operationId}/preview:
     get:
       description: Get preview
@@ -579,8 +537,6 @@ components:
       $ref: 'schemas/bulk_operation_start.json#/Start'
     queryRequest:
       $ref: 'schemas/query-request.json#/QueryRequest'
-    bulkOperationMarcRuleCollection:
-      $ref: 'schemas/bulk_operation_marc_rule_collection.json#/BulkOperationMarcRuleCollection'
     UUID:
       type: string
       format: uuid
@@ -590,8 +546,6 @@ components:
       $ref: 'schemas/users.json'
     instanceNoteTypeCollection:
       $ref: "schemas/instance_note_type_collection.json"
-    contributorTypeCollection:
-      $ref: "schemas/contributor_types.json"
     searchResult:
       type: object
       properties:

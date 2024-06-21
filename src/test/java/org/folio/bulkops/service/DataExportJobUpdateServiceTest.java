@@ -66,10 +66,6 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     when(remoteFileSystemClient.put(any(InputStream.class), eq(expectedJsonFileName)))
       .thenReturn(expectedJsonFileName);
 
-    var expectedMarcFileName = bulkOperationId + "/preview.mrc";
-    when(remoteFileSystemClient.put(any(InputStream.class), eq(expectedMarcFileName)))
-      .thenReturn(expectedMarcFileName);
-
     when(remoteFileSystemClient.put(any(InputStream.class), eq(expectedCsvErrorsFileName)))
       .thenReturn(expectedCsvErrorsFileName);
 
@@ -86,7 +82,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
       .progress(Progress.builder()
         .total(totalRecords)
         .processed(processedRecords).build())
-      .files(List.of("file:src/test/resources/files/users.csv", "file:src/test/resources/files/errors.csv", "file:src/test/resources/files/user.json", "file:src/test/resources/files/preview.mrc")).build();
+      .files(List.of("file:src/test/resources/files/users.csv", "file:src/test/resources/files/errors.csv", "file:src/test/resources/files/user.json")).build();
 
     dataExportJobUpdateReceiverService.receiveJobExecutionUpdate(jobUpdate, okapiHeaders);
 
@@ -95,7 +91,6 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     assertEquals(OperationStatusType.DATA_MODIFICATION, operationCaptor.getAllValues().get(1).getStatus());
     assertEquals(expectedJsonFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsJsonFile());
     assertEquals(expectedCsvFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsCsvFile());
-    assertEquals(expectedMarcFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsMarcFile());
     assertEquals(expectedCsvErrorsFileName, operationCaptor.getAllValues().get(1).getLinkToMatchedRecordsErrorsCsvFile());
   }
 

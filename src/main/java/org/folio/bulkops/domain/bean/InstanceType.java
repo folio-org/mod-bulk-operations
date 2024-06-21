@@ -18,11 +18,5 @@ public class InstanceType {
 
   @JsonProperty("name")
   private String name;
-
-  @JsonProperty("code")
-  private String code;
-
-  @JsonProperty("source")
-  private String source;
 }
 

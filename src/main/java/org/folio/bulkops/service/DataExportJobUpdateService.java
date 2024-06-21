@@ -93,7 +93,6 @@ public class DataExportJobUpdateService {
       }
 
       var linkToMatchingRecordsFile = downloadAndSaveCsvFile(operation, jobUpdate);
-      var linkToMatchingRecordsMarcFile = downloadAndSaveMarcFile(operation, jobUpdate);
       var linkToOriginFile = downloadAndSaveJsonFile(operation, jobUpdate);
 
       Progress progress;
@@ -102,7 +101,6 @@ public class DataExportJobUpdateService {
       operation.setStatus(OperationStatusType.DATA_MODIFICATION);
       operation.setLinkToMatchedRecordsJsonFile(linkToOriginFile);
       operation.setLinkToMatchedRecordsCsvFile(linkToMatchingRecordsFile);
-      operation.setLinkToMatchedRecordsMarcFile(linkToMatchingRecordsMarcFile);
       if (nonNull(progress)) {
         operation.setMatchedNumOfRecords(isNull(progress.getSuccess()) ? 0 : progress.getSuccess());
         operation.setMatchedNumOfErrors(isNull(progress.getErrors()) ? 0 : progress.getErrors());
@@ -130,10 +128,5 @@ public class DataExportJobUpdateService {
   public String downloadAndSaveCsvFile(BulkOperation bulkOperation, Job jobUpdate) throws IOException {
     var csvUrl = jobUpdate.getFiles().get(0);
     return remoteFileSystemClient.put(new URL(csvUrl).openStream(), bulkOperation.getId() + "/" + FilenameUtils.getName(csvUrl.split("\\?")[0]));
-  }
-
-  public String downloadAndSaveMarcFile(BulkOperation bulkOperation, Job jobUpdate) throws IOException {
-    var marcUrl = jobUpdate.getFiles().get(3);
-    return remoteFileSystemClient.put(new URL(marcUrl).openStream(), bulkOperation.getId() + "/" + FilenameUtils.getName(marcUrl.split("\\?")[0]));
   }
 }
