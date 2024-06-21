@@ -51,7 +51,7 @@ public class Utils {
   public static Class<? extends BulkOperationsEntity> resolveEntityClass(EntityType clazz) {
     return switch (clazz) {
       case USER -> User.class;
-      case INSTANCE -> Instance.class;
+      case INSTANCE_FOLIO, INSTANCE_MARC -> Instance.class;
       case ITEM -> Item.class;
       case HOLDINGS_RECORD -> HoldingsRecord.class;
     };

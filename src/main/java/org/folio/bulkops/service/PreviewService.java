@@ -5,6 +5,7 @@ import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
@@ -73,7 +74,7 @@ public class PreviewService {
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
-  public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset, int limit, String source) {
+  public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset, int limit) {
     var entityType = operation.getEntityType();
     var clazz = resolveEntityClass(operation.getEntityType());
     return switch (step) {
@@ -82,7 +83,7 @@ public class PreviewService {
         var bulkOperationId = operation.getId();
         var rules = ruleService.getRules(bulkOperationId);
         var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
-        yield "MARC".equals(source) ?
+        yield INSTANCE_MARC.equals(operation.getEntityType()) ?
           buildPreviewFromMarcFile(operation.getLinkToModifiedRecordsMarcFile(), clazz, offset, limit, options) :
           buildPreviewFromCsvFile(operation.getLinkToModifiedRecordsCsvFile(), clazz, offset, limit, options);
       }
@@ -93,7 +94,7 @@ public class PreviewService {
           var bulkOperationId = operation.getId();
           var rules = ruleService.getRules(bulkOperationId);
           var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
-          yield "MARC".equals(source) ?
+          yield INSTANCE_MARC.equals(operation.getEntityType()) ?
             buildPreviewFromMarcFile(operation.getLinkToCommittedRecordsMarcFile(), clazz, offset, limit, options) :
             buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit, options);
         }
@@ -120,7 +121,7 @@ public class PreviewService {
               .filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst() : Optional.empty();
           }
 
-          if (EntityType.INSTANCE == entityType) {
+          if (EntityType.INSTANCE_FOLIO == entityType) {
             initial = CollectionUtils.isNotEmpty(action.getParameters()) ? action.getParameters().stream()
               .filter(p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst() : Optional.empty();
           }

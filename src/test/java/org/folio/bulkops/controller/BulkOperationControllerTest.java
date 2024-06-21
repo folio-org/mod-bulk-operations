@@ -10,10 +10,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.InputStream;
@@ -29,10 +31,12 @@ import org.folio.bulkops.domain.bean.Personal;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.BulkOperationService;
 import org.folio.bulkops.service.ListUsersService;
 import org.folio.bulkops.service.LogFilesService;
+import org.folio.bulkops.service.RuleService;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
@@ -47,6 +51,8 @@ class BulkOperationControllerTest extends BaseTest {
   private BulkOperationService bulkOperationService;
   @MockBean
   private RemoteFileSystemClient remoteFileSystemClient;
+  @MockBean
+  private RuleService ruleService;
 
   @MockBean
   private ListUsersService listUsersService;
@@ -155,5 +161,59 @@ class BulkOperationControllerTest extends BaseTest {
         .headers(defaultHeaders())
         .contentType(APPLICATION_JSON))
       .andExpect(status().isNoContent());
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldPostBulkOperationMarcRules() {
+    var bulkoperationId = UUID.fromString("1910fae2-08c7-46e8-a73b-fc35d2639734");
+    var content = """
+      {
+         "bulkOperationMarcRules" : [ {
+           "bulkOperationId" : "1910fae2-08c7-46e8-a73b-fc35d2639734",
+           "tag" : "500",
+           "ind1" : null,
+           "ind2" : null,
+           "subfield" : null,
+           "actions" : [ {
+             "name" : "FIND",
+             "data" : [ {
+               "key" : "VALUE",
+               "value" : "text"
+             } ]
+           } ],
+           "parameters" : [ {
+             "key" : "OVERRIDE_PROTECTED",
+             "value" : "false"
+           } ],
+           "subfields" : [ {
+             "subfield" : "",
+             "actions" : [ {
+               "name" : "ADD_TO_EXISTING",
+               "data" : [ {
+                 "key" : "VALUE",
+                 "value" : "text"
+               } ]
+             } ]
+           } ]
+         } ],
+         "totalRecords" : 1
+       }
+      """;
+
+    var bulkOperation = BulkOperation.builder()
+        .id(bulkoperationId).build();
+
+    when(bulkOperationService.getBulkOperationOrThrow(bulkoperationId))
+      .thenReturn(bulkOperation);
+
+    mockMvc.perform(post(String.format("/bulk-operations/%s/marc-content-update", bulkoperationId))
+        .headers(defaultHeaders())
+        .contentType(APPLICATION_JSON)
+        .content(content))
+      .andExpect(status().isOk());
+
+    verify(ruleService).saveMarcRules(any(BulkOperationMarcRuleCollection.class));
+    verify(bulkOperationService).clearOperationProcessing(bulkOperation);
   }
 }
