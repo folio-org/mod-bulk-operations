@@ -55,7 +55,10 @@
             "inventory-storage.holdings-sources.item.get",
             "inventory-storage.statistical-codes.item.get",
             "inventory-storage.instance-note-types.item.get",
-            "inventory-storage.instance-note-types.collection.get"
+            "inventory-storage.instance-note-types.collection.get",
+            "inventory-storage.contributor-types.item.get",
+            "inventory-storage.instance-types.item.get",
+            "inventory-storage.instance-formats.item.get"
           ]
         },
         {
@@ -456,6 +459,10 @@
     {
       "id": "instance-note-types",
       "version": "1.0"
+    },
+    {
+      "id": "contributor-types",
+      "version": "2.0"
     }
   ],
   "launchDescriptor": {
