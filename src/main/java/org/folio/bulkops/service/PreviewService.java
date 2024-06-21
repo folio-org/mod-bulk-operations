@@ -5,6 +5,7 @@ import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
@@ -39,6 +40,7 @@ import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.Row;
@@ -73,29 +75,37 @@ public class PreviewService {
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
-  public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset, int limit, String source) {
+  public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset, int limit) {
     var entityType = operation.getEntityType();
     var clazz = resolveEntityClass(operation.getEntityType());
     return switch (step) {
       case UPLOAD -> buildPreviewFromCsvFile(operation.getLinkToMatchedRecordsCsvFile(), clazz, offset, limit);
       case EDIT -> {
         var bulkOperationId = operation.getId();
-        var rules = ruleService.getRules(bulkOperationId);
-        var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
-        yield "MARC".equals(source) ?
-          buildPreviewFromMarcFile(operation.getLinkToModifiedRecordsMarcFile(), clazz, offset, limit, options) :
-          buildPreviewFromCsvFile(operation.getLinkToModifiedRecordsCsvFile(), clazz, offset, limit, options);
+        if (INSTANCE_MARC.equals(operation.getEntityType())) {
+          var rules = ruleService.getMarcRules(bulkOperationId);
+          var options = getChangedOptionsSet(rules);
+          yield buildPreviewFromMarcFile(operation.getLinkToModifiedRecordsMarcFile(), clazz, offset, limit, options);
+        } else {
+          var rules = ruleService.getRules(bulkOperationId);
+          var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
+          yield buildPreviewFromCsvFile(operation.getLinkToModifiedRecordsCsvFile(), clazz, offset, limit, options);
+        }
       }
       case COMMIT -> {
         if (MANUAL == operation.getApproach()) {
           yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit);
         } else {
           var bulkOperationId = operation.getId();
-          var rules = ruleService.getRules(bulkOperationId);
-          var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
-          yield "MARC".equals(source) ?
-            buildPreviewFromMarcFile(operation.getLinkToCommittedRecordsMarcFile(), clazz, offset, limit, options) :
-            buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit, options);
+          if (INSTANCE_MARC.equals(operation.getEntityType())) {
+            var rules = ruleService.getMarcRules(bulkOperationId);
+            var options = getChangedOptionsSet(rules);
+            yield buildPreviewFromMarcFile(operation.getLinkToCommittedRecordsMarcFile(), clazz, offset, limit, options);
+          } else {
+            var rules = ruleService.getRules(bulkOperationId);
+            var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
+            yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit, options);
+          }
         }
       }
     };
@@ -120,7 +130,7 @@ public class PreviewService {
               .filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst() : Optional.empty();
           }
 
-          if (EntityType.INSTANCE == entityType) {
+          if (EntityType.INSTANCE_FOLIO == entityType) {
             initial = CollectionUtils.isNotEmpty(action.getParameters()) ? action.getParameters().stream()
               .filter(p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst() : Optional.empty();
           }
@@ -180,6 +190,12 @@ public class PreviewService {
     return forceVisibleOptions;
   }
 
+  private Set<String> getChangedOptionsSet(BulkOperationMarcRuleCollection rules) {
+    Set<String> forceVisibleOptions = new HashSet<>();
+    rules.getBulkOperationMarcRules()
+      .forEach(rule -> forceVisibleOptions.add(Marc21ReferenceProvider.getNoteTypeByTag(rule.getTag())));
+    return forceVisibleOptions;
+  }
 
   private String resolveAndGetItemTypeById(Class<? extends BulkOperationsEntity> clazz, String value) {
     if (clazz == HoldingsRecord.class) {
