@@ -3,6 +3,7 @@ package org.folio.bulkops.service;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.util.Constants.UTC_ZONE;
 
 import java.io.IOException;
@@ -134,6 +135,8 @@ public class DataExportJobUpdateService {
 
   public String downloadAndSaveMarcFile(BulkOperation bulkOperation, Job jobUpdate) throws IOException {
     var marcUrl = jobUpdate.getFiles().get(3);
-    return remoteFileSystemClient.put(new URL(marcUrl).openStream(), bulkOperation.getId() + "/" + FilenameUtils.getName(marcUrl.split("\\?")[0]));
+    return isEmpty(marcUrl) ?
+      null :
+      remoteFileSystemClient.put(new URL(marcUrl).openStream(), bulkOperation.getId() + "/" + FilenameUtils.getName(marcUrl.split("\\?")[0]));
   }
 }

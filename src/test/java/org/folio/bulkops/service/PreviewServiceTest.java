@@ -5,7 +5,7 @@ import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
-import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_FOLIO;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
@@ -107,10 +107,10 @@ class PreviewServiceTest extends BaseTest {
     "holdings_preview.csv,HOLDINGS_RECORD,EDIT,IN_APP",
     "holdings_preview.csv,HOLDINGS_RECORD,COMMIT,IN_APP",
     "holdings_preview.csv,HOLDINGS_RECORD,COMMIT,MANUAL",
-    "instances_preview.csv,INSTANCE_FOLIO,UPLOAD,IN_APP",
-    "instances_preview.csv,INSTANCE_FOLIO,EDIT,IN_APP",
-    "instances_preview.csv,INSTANCE_FOLIO,COMMIT,IN_APP",
-    "instances_preview.csv,INSTANCE_FOLIO,COMMIT,MANUAL"}, delimiter = ',')
+    "instances_preview.csv,INSTANCE,UPLOAD,IN_APP",
+    "instances_preview.csv,INSTANCE,EDIT,IN_APP",
+    "instances_preview.csv,INSTANCE,COMMIT,IN_APP",
+    "instances_preview.csv,INSTANCE,COMMIT,MANUAL"}, delimiter = ',')
   @SneakyThrows
   @ParameterizedTest
   void shouldReturnPreviewIfAvailable(String fileName, EntityType entityType, BulkOperationStep step, ApproachType approachType) {
@@ -168,7 +168,7 @@ class PreviewServiceTest extends BaseTest {
         noteTableUpdater.extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"), emptySet());
       }
       assertThat(table.getHeader(), equalTo(headers));
-    } else if (INSTANCE_FOLIO.equals(entityType)) {
+    } else if (INSTANCE.equals(entityType)) {
       if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
         assertThat(table.getHeader(), equalTo(
           getHeaders(Instance.class, UpdateOptionTypeToFieldResolver.getFieldsByUpdateOptionTypes(List.of(UpdateOptionType.STAFF_SUPPRESS, UpdateOptionType.SUPPRESS_FROM_DISCOVERY), entityType))));
@@ -349,7 +349,7 @@ class PreviewServiceTest extends BaseTest {
     var pathToCsv = "commited.csv";
     var operation = BulkOperation.builder()
       .id(operationId)
-      .entityType(INSTANCE_FOLIO)
+      .entityType(INSTANCE)
       .linkToCommittedRecordsCsvFile(pathToCsv).build();
     var rules = rules(new BulkOperationRule().bulkOperationId(operationId)
       .ruleDetails(new BulkOperationRuleRuleDetails()
@@ -466,7 +466,7 @@ class PreviewServiceTest extends BaseTest {
       return "src/test/resources/files/rules/content_update_items.json";
     } else if (HOLDINGS_RECORD == entityType) {
       return "src/test/resources/files/rules/content_update_holdings.json";
-    } else if (INSTANCE_FOLIO == entityType) {
+    } else if (INSTANCE == entityType) {
         return "src/test/resources/files/rules/content_update_instances.json";
       } else {
       throw new IllegalArgumentException("Sample not found for entity type: " + entityType);
