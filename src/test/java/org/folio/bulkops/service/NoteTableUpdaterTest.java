@@ -1,6 +1,5 @@
 package org.folio.bulkops.service;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
@@ -26,6 +25,7 @@ import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.Row;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,7 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class ItemNoteTableUpdaterTest {
+class NoteTableUpdaterTest {
   private static final int ACTION_NOTE_POSITION = ITEM_NOTE_POSITION;
   private static final int NOTE_POSITION = ITEM_NOTE_POSITION + 1;
   private static final int OTHER_POSITION = ITEM_NOTE_POSITION + 2;
@@ -268,5 +268,15 @@ class ItemNoteTableUpdaterTest {
     var headerNames = table.getHeader().stream().map(Cell::getValue).toList();
     List.of("Binding", "Electronic bookplate", "Provenance", "Reproduction").forEach(name ->
       assertTrue(headerNames.contains(name + " note")));
+  }
+
+  @Test
+  void shouldEnrichWithNotesByTypeIfNoteTypeHasSpecialCharacters() {
+    var noteTypeWithEscapedSpecialCharacters = SpecialCharacterEscaper.escape("O|;:ther");
+    var row = new ArrayList<>(List.of("Note;Note text;false|" + noteTypeWithEscapedSpecialCharacters + ";Other text;true"));
+    var noteTypeNames = List.of("Note", "O|;:ther");
+    var enriched = noteTableUpdater.enrichWithNotesByType(row, 0, noteTypeNames);
+    assertEquals(2, enriched.size());
+    assertEquals("Other text (staff only)", enriched.get(1));
   }
 }
