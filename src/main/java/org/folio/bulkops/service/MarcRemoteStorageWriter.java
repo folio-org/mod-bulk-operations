@@ -17,10 +17,10 @@ public class MarcRemoteStorageWriter extends RemoteStorageWriter {
     super(path, size, s3Client);
   }
 
-  public void writeRecord(Record record) throws IOException {
+  public void writeRecord(Record marcRecord) throws IOException {
     try (var byteArrayOutputStream = new ByteArrayOutputStream()) {
       var marcStreamWriter = new MarcStreamWriter(byteArrayOutputStream, StandardCharsets.UTF_8.name());
-      marcStreamWriter.write(record);
+      marcStreamWriter.write(marcRecord);
       super.write(byteArrayOutputStream.toString());
     } catch (IOException e) {
       log.error(e.getMessage());
