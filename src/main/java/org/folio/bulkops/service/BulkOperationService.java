@@ -43,7 +43,6 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExportType;
 import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
-import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.bean.StatusType;
@@ -67,12 +66,14 @@ import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.OptimisticLockingException;
 import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.processor.DataProcessorFactory;
+import org.folio.bulkops.processor.MarcInstanceDataProcessor;
 import org.folio.bulkops.processor.UpdatedEntityHolder;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.Utils;
 import org.folio.querytool.domain.dto.SubmitQuery;
+import org.marc4j.MarcStreamReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -112,10 +113,12 @@ public class BulkOperationService {
   private final RecordUpdateService recordUpdateService;
   private final EntityTypeService entityTypeService;
   private final QueryService queryService;
+  private final MarcInstanceDataProcessor marcInstanceDataProcessor;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
   private static final String PREVIEW_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-%s.csv";
+  private static final String PREVIEW_MARC_PATH_TEMPLATE = "%s/%s-Updates-Preview-Marc-Records-%s.mrc";
   private static final String CHANGED_JSON_PATH_TEMPLATE = "%s/json/%s-Changed-Records-%s.json";
   private static final String CHANGED_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-%s.csv";
 
@@ -201,7 +204,10 @@ public class BulkOperationService {
   }
 
   public void confirm(BulkOperation operation)  {
-
+    if (operation.getEntityType() == EntityType.INSTANCE_MARC) {
+      confirmForInstanceMarc(operation);
+      return;
+    }
     operation.setProcessedNumOfRecords(0);
     var operationId = operation.getId();
 
@@ -258,6 +264,63 @@ public class BulkOperationService {
       }
 
       operation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
+
+      dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
+      dataProcessingRepository.save(dataProcessing);
+
+      operation.setApproach(IN_APP);
+      operation.setStatus(OperationStatusType.REVIEW_CHANGES);
+      operation.setProcessedNumOfRecords(processedNumOfRecords);
+      bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
+    } catch (Exception e) {
+      log.error(e);
+      dataProcessingRepository.save(dataProcessing
+        .withStatus(StatusType.FAILED)
+        .withEndTime(LocalDateTime.now()));
+      operation.setStatus(OperationStatusType.FAILED);
+      operation.setEndTime(LocalDateTime.now());
+      operation.setErrorMessage("Confirm changes operation failed, reason: " + e.getMessage());
+    } finally {
+      bulkOperationRepository.save(operation);
+    }
+  }
+
+  private void confirmForInstanceMarc(BulkOperation operation)  {
+    operation.setProcessedNumOfRecords(0);
+    var operationId = operation.getId();
+    var ruleCollection = ruleService.getMarcRules(operationId);
+
+    var dataProcessing = dataProcessingRepository.save(BulkOperationDataProcessing.builder()
+      .bulkOperationId(operation.getId())
+      .status(StatusType.ACTIVE)
+      .startTime(LocalDateTime.now())
+      .totalNumOfRecords(operation.getTotalNumOfRecords())
+      .processedNumOfRecords(0)
+      .build());
+
+    var processedNumOfRecords = 0;
+    var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
+    var modifiedMarcFileName = String.format(PREVIEW_MARC_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
+    try (var writerForModifiedPreviewMarcFile = remoteFileSystemClient.marcWriter(modifiedMarcFileName)) {
+      var matchedRecordsReader = new MarcStreamReader(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile()));
+      while (matchedRecordsReader.hasNext()) {
+
+        var marcRecord = matchedRecordsReader.next();
+        marcInstanceDataProcessor.update(marcRecord, ruleCollection);
+        writerForModifiedPreviewMarcFile.writeRecord(marcRecord);
+
+        processedNumOfRecords++;
+        dataProcessing = dataProcessing
+          .withStatus(matchedRecordsReader.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
+          .withEndTime(matchedRecordsReader.hasNext() ? null : LocalDateTime.now());
+
+        if (processedNumOfRecords - dataProcessing.getProcessedNumOfRecords() > OPERATION_UPDATING_STEP) {
+          dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
+          dataProcessingRepository.save(dataProcessing);
+        }
+      }
+
+      operation.setLinkToModifiedRecordsMarcFile(modifiedMarcFileName);
 
       dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
       dataProcessingRepository.save(dataProcessing);

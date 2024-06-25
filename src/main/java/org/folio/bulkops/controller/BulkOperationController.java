@@ -1,6 +1,7 @@
 package org.folio.bulkops.controller;
 
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
@@ -29,6 +30,7 @@ import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.dto.Users;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.mapper.BulkOperationMapper;
+import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.rest.resource.BulkOperationsApi;
 import org.folio.bulkops.service.BulkOperationService;
 import org.folio.bulkops.service.ErrorService;
@@ -69,6 +71,7 @@ public class BulkOperationController implements BulkOperationsApi {
   private final LogFilesService logFilesService;
   private final ListUsersService listUsersService;
   private final HoldingsNotesProcessor holdingsNotesProcessor;
+  private final BulkOperationRepository bulkOperationRepository;
 
   @Override
   public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(String query, Integer offset, Integer limit) {
@@ -100,7 +103,8 @@ public class BulkOperationController implements BulkOperationsApi {
   @Override
   public ResponseEntity<BulkOperationMarcRuleCollection> postMarcContentUpdates(UUID operationId, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection) {
     var operation = bulkOperationService.getBulkOperationOrThrow(operationId);
-
+    operation.setEntityType(INSTANCE_MARC);
+    bulkOperationRepository.save(operation);
     var rules = ruleService.saveMarcRules(bulkOperationMarcRuleCollection);
 
     bulkOperationService.clearOperationProcessing(operation);
