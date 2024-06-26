@@ -67,6 +67,7 @@ import org.folio.bulkops.domain.bean.UserGroupCollection;
 import org.folio.bulkops.domain.converter.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.ApproachType;
+import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
@@ -74,6 +75,7 @@ import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.dto.MarcAction;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.QueryRequest;
@@ -83,6 +85,7 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
@@ -361,6 +364,75 @@ class BulkOperationServiceTest extends BaseTest {
       Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getLinkToModifiedRecordsCsvFile(), equalTo(expectedPathToModifiedCsvFile));
+      assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
+    }
+  }
+
+
+  @Test
+  @SneakyThrows
+  void shouldConfirmChangesForInstanceMarc() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var bulkOperationId = UUID.randomUUID();
+      var marcAction = new MarcAction();
+      marcAction.setName(UpdateActionType.CLEAR_FIELD);
+      var bulkOperationMarcRule = new BulkOperationMarcRule();
+      bulkOperationMarcRule.setBulkOperationId(bulkOperationId);
+      bulkOperationMarcRule.setActions(List.of(marcAction));
+      bulkOperationMarcRule.setTag("tag");
+      bulkOperationMarcRule.setInd1("ind1");
+      bulkOperationMarcRule.setInd2("ind2");
+
+      var bulkOperationMarcRuleCollection = new BulkOperationMarcRuleCollection();
+      bulkOperationMarcRuleCollection.setBulkOperationMarcRules(List.of(bulkOperationMarcRule));
+
+      var pathToTriggering = "/some/path/instance_marc.csv";
+      var pathToMatchedRecordsMarcFile = "/some/path/Marc-Records-instance_marc.mrc";
+      var pathToOriginalCsv = bulkOperationId + "/origin.csv";
+      var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
+      var pathToInstanceMarc = "src/test/resources/files/instance_marc.mrc";
+      var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-Marc-Records-instance_marc.mrc";
+
+      when(bulkOperationRepository.findById(any(UUID.class)))
+        .thenReturn(Optional.of(BulkOperation.builder()
+          .id(bulkOperationId)
+          .status(DATA_MODIFICATION)
+          .entityType(EntityType.INSTANCE_MARC)
+          .identifierType(IdentifierType.ID)
+          .linkToTriggeringCsvFile(pathToTriggering)
+          .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
+          .linkToMatchedRecordsMarcFile(pathToMatchedRecordsMarcFile)
+          .linkToModifiedRecordsMarcFile(pathToModifiedRecordsMarcFileName)
+          .processedNumOfRecords(0)
+          .build()));
+      when(ruleService.getMarcRules(bulkOperationId))
+        .thenReturn(bulkOperationMarcRuleCollection);
+      when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
+        .thenReturn(BulkOperationDataProcessing.builder()
+          .processedNumOfRecords(0)
+          .build());
+      when(remoteFileSystemClient.get(pathToMatchedRecordsMarcFile ))
+        .thenReturn(new FileInputStream(pathToInstanceMarc));
+      when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenReturn(new MarcRemoteStorageWriter(expectedPathToModifiedMarcFile, 8192, remoteFolioS3Client));
+
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
+
+
+      var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
+      var pathCaptor = ArgumentCaptor.forClass(String.class);
+      Awaitility.await().untilAsserted(() -> verify(remoteFolioS3Client, times(2)).write(pathCaptor.capture(), streamCaptor.capture()));
+
+      var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
+      Awaitility.await().untilAsserted(() -> verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));
+      var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(1);
+      assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(1));
+      assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));
+      assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
+
+      var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository).save(bulkOperationCaptor.capture()));
+      var capturedBulkOperation = bulkOperationCaptor.getValue();
+      assertThat(capturedBulkOperation.getLinkToModifiedRecordsCsvFile(), equalTo(expectedPathToModifiedMarcFile));
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
     }
   }
