@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class MarcInstanceDataProcessor {
 
-  public void update(Record record, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection) {
-    var fieldsByTag = record.getVariableFields("20");
+  public void update(Record marcRecord, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection) {
+    var fieldsByTag = marcRecord.getVariableFields("20");
   }
 }

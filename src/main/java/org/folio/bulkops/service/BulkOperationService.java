@@ -304,7 +304,6 @@ public class BulkOperationService {
     try (var writerForModifiedPreviewMarcFile = remoteFileSystemClient.marcWriter(modifiedMarcFileName)) {
       var matchedRecordsReader = new MarcStreamReader(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile()));
       while (matchedRecordsReader.hasNext()) {
-
         var marcRecord = matchedRecordsReader.next();
         marcInstanceDataProcessor.update(marcRecord, ruleCollection);
         writerForModifiedPreviewMarcFile.writeRecord(marcRecord);
@@ -319,9 +318,7 @@ public class BulkOperationService {
           dataProcessingRepository.save(dataProcessing);
         }
       }
-
       operation.setLinkToModifiedRecordsMarcFile(modifiedMarcFileName);
-
       dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
       dataProcessingRepository.save(dataProcessing);
 
