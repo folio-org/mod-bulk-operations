@@ -437,6 +437,64 @@ class BulkOperationServiceTest extends BaseTest {
     }
   }
 
+  @Test
+  @SneakyThrows
+  void shouldFailConfirmChangesForInstanceMarcIfMarcWriterNotAvailable() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var bulkOperationId = UUID.randomUUID();
+      var marcAction = new MarcAction();
+      marcAction.setName(UpdateActionType.CLEAR_FIELD);
+      var bulkOperationMarcRule = new BulkOperationMarcRule();
+      bulkOperationMarcRule.setBulkOperationId(bulkOperationId);
+      bulkOperationMarcRule.setActions(List.of(marcAction));
+      bulkOperationMarcRule.setTag("tag");
+      bulkOperationMarcRule.setInd1("ind1");
+      bulkOperationMarcRule.setInd2("ind2");
+
+      var bulkOperationMarcRuleCollection = new BulkOperationMarcRuleCollection();
+      bulkOperationMarcRuleCollection.setBulkOperationMarcRules(List.of(bulkOperationMarcRule));
+
+      var pathToTriggering = "/some/path/instance_marc.csv";
+      var pathToMatchedRecordsMarcFile = "/some/path/Marc-Records-instance_marc.mrc";
+      var pathToOriginalCsv = bulkOperationId + "/origin.csv";
+      var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
+      var pathToInstanceMarc = "src/test/resources/files/instance_marc.mrc";
+      var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-Marc-Records-instance_marc.mrc";
+
+      when(bulkOperationRepository.findById(any(UUID.class)))
+        .thenReturn(Optional.of(BulkOperation.builder()
+          .id(bulkOperationId)
+          .status(DATA_MODIFICATION)
+          .entityType(EntityType.INSTANCE_MARC)
+          .identifierType(IdentifierType.ID)
+          .linkToTriggeringCsvFile(pathToTriggering)
+          .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
+          .linkToMatchedRecordsMarcFile(pathToMatchedRecordsMarcFile)
+          .linkToModifiedRecordsMarcFile(pathToModifiedRecordsMarcFileName)
+          .processedNumOfRecords(0)
+          .build()));
+      when(ruleService.getMarcRules(bulkOperationId))
+        .thenReturn(bulkOperationMarcRuleCollection);
+      when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
+        .thenReturn(BulkOperationDataProcessing.builder()
+          .processedNumOfRecords(0)
+          .build());
+      when(remoteFileSystemClient.get(pathToMatchedRecordsMarcFile ))
+        .thenReturn(new FileInputStream(pathToInstanceMarc));
+      when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenThrow(new RuntimeException("error"));
+
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
+
+      var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
+      Awaitility.await().untilAsserted(() -> verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));
+
+      var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository).save(bulkOperationCaptor.capture()));
+      var capturedBulkOperation = bulkOperationCaptor.getValue();
+      assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
+    }
+  }
+
   @ParameterizedTest
   @EnumSource(value = ApproachType.class, names = {"IN_APP"}, mode = EnumSource.Mode.INCLUDE)
   void shouldConfirmChangesForItemWhenValidationErrorAndOtherValidChangesExist(ApproachType approach) throws FileNotFoundException {
