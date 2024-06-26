@@ -420,10 +420,10 @@ class BulkOperationServiceTest extends BaseTest {
 
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       var pathCaptor = ArgumentCaptor.forClass(String.class);
-      Awaitility.await().untilAsserted(() -> verify(remoteFolioS3Client, times(2)).write(pathCaptor.capture(), streamCaptor.capture()));
+      Awaitility.await().untilAsserted(() -> verify(remoteFolioS3Client, times(1)).write(pathCaptor.capture(), streamCaptor.capture()));
 
       var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
-      Awaitility.await().untilAsserted(() -> verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));
+      Awaitility.await().untilAsserted(() -> verify(dataProcessingRepository, times(3)).save(dataProcessingCaptor.capture()));
       var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(1);
       assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(1));
       assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));
@@ -432,7 +432,7 @@ class BulkOperationServiceTest extends BaseTest {
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
       Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
-      assertThat(capturedBulkOperation.getLinkToModifiedRecordsCsvFile(), equalTo(expectedPathToModifiedMarcFile));
+      assertThat(capturedBulkOperation.getLinkToModifiedRecordsMarcFile(), equalTo(expectedPathToModifiedMarcFile));
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
     }
   }
