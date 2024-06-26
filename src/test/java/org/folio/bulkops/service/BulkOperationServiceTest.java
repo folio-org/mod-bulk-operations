@@ -423,7 +423,7 @@ class BulkOperationServiceTest extends BaseTest {
       Awaitility.await().untilAsserted(() -> verify(remoteFolioS3Client, times(1)).write(pathCaptor.capture(), streamCaptor.capture()));
 
       var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
-      Awaitility.await().untilAsserted(() -> verify(dataProcessingRepository, times(3)).save(dataProcessingCaptor.capture()));
+      Awaitility.await().untilAsserted(() -> verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));
       var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(1);
       assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(1));
       assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));
