@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
 
+import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.InventoryItemStatus;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
@@ -32,13 +34,13 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @Component
 @AllArgsConstructor
-public class ItemDataProcessor extends AbstractDataProcessor<Item> {
+public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
   private final HoldingsReferenceService holdingsReferenceService;
   private final ItemReferenceService itemReferenceService;
   private final ItemsNotesUpdater itemsNotesUpdater;
 
   @Override
-  public Validator<UpdateOptionType, Action> validator(Item item) {
+  public Validator<UpdateOptionType, Action> validator(ExtendedItem extendedItem) {
     return (option, action) -> {
       if (CLEAR_FIELD == action.getType() && STATUS == option) {
         throw new RuleValidationException("Status field can not be cleared");
@@ -48,11 +50,11 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         throw new RuleValidationException("Suppress from discovery flag cannot be cleared");
       } else if (REPLACE_WITH == action.getType() && isEmpty(action.getUpdated())) {
         throw new RuleValidationException("Loan type value cannot be empty for REPLACE_WITH option");
-      } else if (REPLACE_WITH == action.getType() && option == STATUS && !item.getStatus()
+      } else if (REPLACE_WITH == action.getType() && option == STATUS && !extendedItem.getEntity().getStatus()
         .getName()
         .getValue()
         .equals(action.getUpdated())
-          && !itemReferenceService.getAllowedStatuses(item.getStatus()
+          && !itemReferenceService.getAllowedStatuses(extendedItem.getEntity().getStatus()
             .getName()
             .getValue()).contains(action.getUpdated())) {
         throw new RuleValidationException(
@@ -62,22 +64,22 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
   }
 
   @Override
-  public Updater<Item> updater(UpdateOptionType option, Action action) {
+  public Updater<ExtendedItem> updater(UpdateOptionType option, Action action) {
     if (REPLACE_WITH == action.getType()) {
       return switch (option) {
         case PERMANENT_LOAN_TYPE ->
-          item -> item.setPermanentLoanType(itemReferenceService.getLoanTypeById(action.getUpdated()));
+          extendedItem -> extendedItem.getEntity().setPermanentLoanType(itemReferenceService.getLoanTypeById(action.getUpdated()));
         case TEMPORARY_LOAN_TYPE ->
-          item -> item.setTemporaryLoanType(itemReferenceService.getLoanTypeById(action.getUpdated()));
-        case PERMANENT_LOCATION -> item -> {
-          item.setPermanentLocation(itemReferenceService.getLocationById(action.getUpdated()));
-          item.setEffectiveLocation(getEffectiveLocation(item));
+          extendedItem -> extendedItem.getEntity().setTemporaryLoanType(itemReferenceService.getLoanTypeById(action.getUpdated()));
+        case PERMANENT_LOCATION -> extendedItem -> {
+          extendedItem.getEntity().setPermanentLocation(itemReferenceService.getLocationById(action.getUpdated()));
+          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity()));
         };
-        case TEMPORARY_LOCATION -> item -> {
-          item.setTemporaryLocation(itemReferenceService.getLocationById(action.getUpdated()));
-          item.setEffectiveLocation(getEffectiveLocation(item));
+        case TEMPORARY_LOCATION -> extendedItem -> {
+          extendedItem.getEntity().setTemporaryLocation(itemReferenceService.getLocationById(action.getUpdated()));
+          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity()));
         };
-        case STATUS -> item -> item.setStatus(new InventoryItemStatus()
+        case STATUS -> extendedItem -> extendedItem.getEntity().setStatus(new InventoryItemStatus()
           .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated()))
           .withDate(new Date()));
         default -> item -> {
@@ -85,20 +87,20 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
         };
       };
     } else if (SET_TO_TRUE == action.getType()) {
-      if (option == SUPPRESS_FROM_DISCOVERY) return item -> item.setDiscoverySuppress(true);
+      if (option == SUPPRESS_FROM_DISCOVERY) return extendedItem -> extendedItem.getEntity().setDiscoverySuppress(true);
     } else if (SET_TO_FALSE == action.getType()) {
-      if (option == SUPPRESS_FROM_DISCOVERY) return item -> item.setDiscoverySuppress(false);
+      if (option == SUPPRESS_FROM_DISCOVERY) return extendedItem -> extendedItem.getEntity().setDiscoverySuppress(false);
     } else if (CLEAR_FIELD == action.getType()) {
       return switch (option) {
-        case PERMANENT_LOCATION -> item -> {
-          item.setPermanentLocation(null);
-          item.setEffectiveLocation(getEffectiveLocation(item));
+        case PERMANENT_LOCATION -> extendedItem -> {
+          extendedItem.getEntity().setPermanentLocation(null);
+          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity()));
         };
-        case TEMPORARY_LOCATION -> item -> {
-          item.setTemporaryLocation(null);
-          item.setEffectiveLocation(getEffectiveLocation(item));
+        case TEMPORARY_LOCATION -> extendedItem -> {
+          extendedItem.getEntity().setTemporaryLocation(null);
+          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity()));
         };
-        case TEMPORARY_LOAN_TYPE -> item -> item.setTemporaryLoanType(null);
+        case TEMPORARY_LOAN_TYPE -> extendedItem -> extendedItem.getEntity().setTemporaryLoanType(null);
         default -> item -> {
         };
       };
@@ -111,7 +113,8 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
   }
 
   @Override
-  public Item clone(Item entity) {
+  public ExtendedItem clone(ExtendedItem extendedItem) {
+    var entity = extendedItem.getEntity();
     var clone = entity.toBuilder()
       .build();
     if (entity.getAdministrativeNotes() != null) {
@@ -126,17 +129,20 @@ public class ItemDataProcessor extends AbstractDataProcessor<Item> {
       var itemNotes = entity.getNotes().stream().map(itemNote -> itemNote.toBuilder().build()).toList();
       clone.setNotes(new ArrayList<>(itemNotes));
     }
-    return clone;
+    return ExtendedItem.builder().tenantId(extendedItem.getTenantId()).entity(clone).build();
   }
 
   @Override
-  public boolean compare(Item first, Item second) {
-    return Objects.equals(first, second);
+  public boolean compare(ExtendedItem first, ExtendedItem second) {
+    if (StringUtils.equals(first.getTenantId(), second.getTenantId())) {
+      return Objects.equals(first.getEntity(), second.getEntity());
+    }
+    return false;
   }
 
   @Override
-  public Class<Item> getProcessedType() {
-    return Item.class;
+  public Class<ExtendedItem> getProcessedType() {
+    return ExtendedItem.class;
   }
 
   private ItemLocation getEffectiveLocation(Item item) {

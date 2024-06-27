@@ -5,6 +5,9 @@ import lombok.experimental.UtilityClass;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
+import org.folio.bulkops.domain.bean.ExtendedInstance;
+import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
@@ -54,6 +57,15 @@ public class Utils {
       case INSTANCE, INSTANCE_MARC -> Instance.class;
       case ITEM -> Item.class;
       case HOLDINGS_RECORD -> HoldingsRecord.class;
+    };
+  }
+
+  public static Class<? extends BulkOperationsEntity> resolveExtendedEntityClass(EntityType clazz) {
+    return switch (clazz) {
+      case USER -> User.class;
+      case ITEM -> ExtendedItem.class;
+      case HOLDINGS_RECORD -> ExtendedHoldingsRecord.class;
+      case INSTANCE, INSTANCE_MARC -> ExtendedInstance.class;
     };
   }
 
