@@ -1,40 +1,10 @@
 package org.folio.bulkops.domain.bean;
 
-import static java.lang.Boolean.FALSE;
-import static java.util.Collections.emptyList;
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-
-import java.util.List;
-
-import org.folio.bulkops.domain.converter.BooleanConverter;
-import org.folio.bulkops.domain.converter.BoundWithTitlesConverter;
-import org.folio.bulkops.domain.converter.CallNumberTypeConverter;
-import org.folio.bulkops.domain.converter.CirculationNoteListConverter;
-import org.folio.bulkops.domain.converter.ContributorListConverter;
-import org.folio.bulkops.domain.converter.DamagedStatusConverter;
-import org.folio.bulkops.domain.converter.EffectiveCallNumberComponentsConverter;
-import org.folio.bulkops.domain.converter.ElectronicAccessListConverter;
-import org.folio.bulkops.domain.converter.IntegerConverter;
-import org.folio.bulkops.domain.converter.ItemLocationConverter;
-import org.folio.bulkops.domain.converter.ItemNoteListConverter;
-import org.folio.bulkops.domain.converter.ItemStatisticalCodeListConverter;
-import org.folio.bulkops.domain.converter.ItemStatusConverter;
-import org.folio.bulkops.domain.converter.LastCheckInConverter;
-import org.folio.bulkops.domain.converter.LoanTypeConverter;
-import org.folio.bulkops.domain.converter.MaterialTypeConverter;
-import org.folio.bulkops.domain.converter.ServicePointConverter;
-import org.folio.bulkops.domain.converter.StringConverter;
-import org.folio.bulkops.domain.converter.StringListConverter;
-import org.folio.bulkops.domain.converter.TagsConverter;
-import org.folio.bulkops.domain.dto.IdentifierType;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.CsvCustomBindByPosition;
-
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,6 +12,15 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.With;
+import org.folio.bulkops.domain.converter.*;
+import org.folio.bulkops.domain.dto.IdentifierType;
+
+import java.util.List;
+
+import static java.lang.Boolean.FALSE;
+import static java.util.Collections.emptyList;
+import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 @Data
 @With
@@ -323,46 +302,12 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private String holdingsRecordId;
 
-  // TODO: ?
   @JsonProperty("_version")
   private Integer version;
 
   @JsonProperty("circulationNotes")
   @Valid
   private List<CirculationNote> circulationNotes;
-
-  @JsonProperty("contributorNames")
-  @Valid
-  @CsvCustomBindByName(column = "Contributor Names", converter = ContributorListConverter.class)
-  @CsvCustomBindByPosition(position = 44, converter = ContributorListConverter.class)
-  @UnifiedTableCell(visible = false)
-  private List<ContributorName> contributorNames;
-
-  @JsonProperty("callNumber")
-  @CsvCustomBindByName(column = "Call Number", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 45, converter = StringConverter.class)
-  @UnifiedTableCell(visible = false)
-  private String callNumber;
-
-  @JsonProperty("inTransitDestinationServicePointId")
-  @CsvCustomBindByName(column = "In Transit Destination Service Point", converter = ServicePointConverter.class)
-  @CsvCustomBindByPosition(position = 46, converter = ServicePointConverter.class)
-  @UnifiedTableCell(visible = false)
-  private String inTransitDestinationServicePointId;
-
-  @JsonProperty("purchaseOrderLineIdentifier")
-  @CsvCustomBindByName(column = "Purchase Order Line Identifier", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 47, converter = StringConverter.class)
-  @UnifiedTableCell(visible = false)
-  private String purchaseOrderLineIdentifier;
-
-  @JsonProperty("lastCheckIn")
-  @CsvCustomBindByName(column = "Last CheckIn", converter = LastCheckInConverter.class)
-  @CsvCustomBindByPosition(position = 48, converter = LastCheckInConverter.class)
-  @UnifiedTableCell(visible = false)
-  private LastCheckIn lastCheckIn;
-
-
 
   @Override
   public String getIdentifier(IdentifierType identifierType) {

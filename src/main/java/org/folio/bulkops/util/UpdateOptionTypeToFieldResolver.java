@@ -1,8 +1,7 @@
 package org.folio.bulkops.util;
 
-import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
-import static org.folio.bulkops.domain.dto.EntityType.ITEM;
+import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_IN_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_OUT_NOTE;
@@ -48,29 +47,17 @@ public class UpdateOptionTypeToFieldResolver {
       return "Expiration date";
     } else if (EMAIL_ADDRESS == type) {
       return "Email";
-    } else if (PERMANENT_LOCATION == type && ITEM == entity) {
-      return "Permanent Location";
-    } else if (PERMANENT_LOCATION == type && HOLDINGS_RECORD == entity) {
-      return "Holdings permanent location";
     } else if (PERMANENT_LOCATION == type) {
-      return "Permanent location";
-    } else if (TEMPORARY_LOCATION == type && ITEM == entity) {
-      return "Temporary Location";
-    } else if (TEMPORARY_LOCATION == type && HOLDINGS_RECORD == entity) {
-      return "Holdings temporary location";
+      return buildPermanentLocationFieldByEntityType(entity);
     } else if (TEMPORARY_LOCATION == type) {
-      return "Temporary location";
+      return buildTemporaryLocationFieldByEntityType(entity);
     } else if (PERMANENT_LOAN_TYPE == type) {
-      return "Permanent Loan Type";
+      return "Permanent loan type";
     } else if (TEMPORARY_LOAN_TYPE == type) {
-      return "Temporary Loan Type";
+      return "Temporary loan type";
     } else if (STATUS == type) {
       return "Status";
-    } else if (SUPPRESS_FROM_DISCOVERY == type && INSTANCE == entity) {
-      return "Suppress from discovery";
-    } else if (SUPPRESS_FROM_DISCOVERY == type && ITEM == entity) {
-      return "Discovery Suppress";
-    } else if (SUPPRESS_FROM_DISCOVERY == type && HOLDINGS_RECORD == entity) {
+    } else if (SUPPRESS_FROM_DISCOVERY == type && entity != USER) {
       return "Suppress from discovery";
     } else if (STAFF_SUPPRESS == type && INSTANCE == entity) {
       return "Staff suppress";
@@ -99,5 +86,21 @@ public class UpdateOptionTypeToFieldResolver {
     } else {
       throw new UnsupportedOperationException("There is no matching for Operation Type: " + type);
     }
+  }
+
+  private static String buildPermanentLocationFieldByEntityType(EntityType entityType) {
+    return switch (entityType) {
+      case ITEM -> "Item permanent location";
+      case HOLDINGS_RECORD -> "Holdings permanent location";
+      default -> "Permanent location";
+    };
+  }
+
+  private static String buildTemporaryLocationFieldByEntityType(EntityType entityType) {
+    return switch (entityType) {
+      case ITEM -> "Item temporary location";
+      case HOLDINGS_RECORD -> "Holdings temporary location";
+      default -> "Temporary location";
+    };
   }
 }
