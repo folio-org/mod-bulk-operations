@@ -30,6 +30,13 @@
           ]
         },
         {
+          "methods": [ "POST" ],
+          "pathPattern": "/bulk-operations/{operationId}/marc-content-update",
+          "permissionsRequired": [ "bulk-operations.item.marc-content-update.post" ],
+          "modulePermissions": [
+          ]
+        },
+        {
           "methods": [ "GET" ],
           "pathPattern": "/bulk-operations/{operationId}/preview",
           "permissionsRequired": [ "bulk-operations.item.preview.get" ],
@@ -55,7 +62,10 @@
             "inventory-storage.holdings-sources.item.get",
             "inventory-storage.statistical-codes.item.get",
             "inventory-storage.instance-note-types.item.get",
-            "inventory-storage.instance-note-types.collection.get"
+            "inventory-storage.instance-note-types.collection.get",
+            "inventory-storage.contributor-types.item.get",
+            "inventory-storage.instance-types.item.get",
+            "inventory-storage.instance-formats.item.get"
           ]
         },
         {
@@ -272,6 +282,11 @@
       "description" : "Upload content updates for bulk operation"
     },
     {
+      "permissionName" : "bulk-operations.item.marc-content-update.post",
+      "displayName" : "upload MARC content updates for bulk operation",
+      "description" : "Upload MARC content updates for bulk operation"
+    },
+    {
       "permissionName" : "bulk-operations.item.preview.get",
       "displayName" : "get bulk operation preview",
       "description" : "Get bulk operation preview"
@@ -333,6 +348,7 @@
       "subPermissions" : [
         "bulk-operations.item.upload.post",
         "bulk-operations.item.content-update.post",
+        "bulk-operations.item.marc-content-update.post",
         "bulk-operations.item.preview.get",
         "bulk-operations.item.preview.download.get",
         "bulk-operations.item.start.post",
@@ -355,7 +371,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "6.0"
+      "version": "7.0"
     },
     {
       "id": "instance-storage",
@@ -456,6 +472,10 @@
     {
       "id": "instance-note-types",
       "version": "1.0"
+    },
+    {
+      "id": "contributor-types",
+      "version": "2.0"
     }
   ],
   "launchDescriptor": {

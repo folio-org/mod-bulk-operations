@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A collection of bulk operation MARC rules",
+  "BulkOperationMarcRuleCollection": {
+    "type": "object",
+    "properties": {
+      "bulkOperationMarcRules": {
+        "description": "List of bulk operation MARC rules",
+        "type": "array",
+        "items": {
+          "$ref": "bulk_operation_marc_rule.json#/BulkOperationMarcRule"
+        },
+        "minItems": 1
+      },
+      "totalRecords": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "bulkOperationMarcRules",
+      "totalRecords"
+    ],
+    "additionalProperties": false
+  }
+}

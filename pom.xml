@@ -46,6 +46,7 @@
     <aws-sdk-java.version>2.19.2</aws-sdk-java.version>
     <hypersistence-utils-hibernate-63.version>3.7.3</hypersistence-utils-hibernate-63.version>
     <lib-fqm-query-processor.version>1.1.0</lib-fqm-query-processor.version>
+    <marc4j.version>2.9.2</marc4j.version>
     <!-- Test dependencies versions -->
     <testcontainer.version>1.17.6</testcontainer.version>
     <wiremock.version>2.35.0</wiremock.version>
@@ -184,6 +185,13 @@
       <artifactId>hypersistence-utils-hibernate-63</artifactId>
       <version>${hypersistence-utils-hibernate-63.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.marc4j</groupId>
+      <artifactId>marc4j</artifactId>
+      <version>${marc4j.version}</version>
+    </dependency>
+
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

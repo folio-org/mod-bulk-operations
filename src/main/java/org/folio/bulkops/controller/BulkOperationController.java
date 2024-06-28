@@ -17,6 +17,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.dto.BulkOperationCollection;
 import org.folio.bulkops.domain.dto.BulkOperationDto;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -91,6 +92,17 @@ public class BulkOperationController implements BulkOperationsApi {
   public ResponseEntity<BulkOperationRuleCollection> postContentUpdates(UUID operationId, BulkOperationRuleCollection bulkOperationRuleCollection) {
     var operation = bulkOperationService.getBulkOperationOrThrow(operationId);
     var rules = ruleService.saveRules(bulkOperationRuleCollection);
+
+    bulkOperationService.clearOperationProcessing(operation);
+
+    return ResponseEntity.ok(rules);
+  }
+
+  @Override
+  public ResponseEntity<BulkOperationMarcRuleCollection> postMarcContentUpdates(UUID operationId, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection) {
+    var operation = bulkOperationService.getBulkOperationOrThrow(operationId);
+
+    var rules = ruleService.saveMarcRules(bulkOperationMarcRuleCollection);
 
     bulkOperationService.clearOperationProcessing(operation);
 
