@@ -90,31 +90,7 @@ class BulkOperationControllerTest extends BaseTest {
     }
   }
 
-  private void mockData(org.folio.bulkops.domain.dto.EntityType entityType) {
-    when(remoteFileSystemClient.get(any(String.class))).thenReturn(InputStream.nullInputStream());
 
-    when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(BulkOperation.builder()
-      .id(UUID.randomUUID())
-      .linkToTriggeringCsvFile("A")
-      .linkToMatchedRecordsJsonFile("B")
-      .linkToMatchedRecordsCsvFile("C")
-      .linkToMatchedRecordsErrorsCsvFile("D")
-      .linkToModifiedRecordsJsonFile("E")
-      .linkToModifiedRecordsCsvFile("F")
-      .linkToCommittedRecordsJsonFile("G")
-      .linkToCommittedRecordsCsvFile("H")
-      .linkToCommittedRecordsErrorsCsvFile("I")
-      .entityType(entityType)
-      .build());
-
-    when(itemNoteTypeClient.getNoteTypes(any(Integer.class))).thenReturn(NoteTypeCollection.builder()
-      .itemNoteTypes(List.of(NoteType.builder().name("name_1").build()))
-      .build());
-
-    when(holdingsNoteTypeClient.getNoteTypes(any(Integer.class))).thenReturn(HoldingsNoteTypeCollection.builder()
-      .holdingsNoteTypes(List.of(HoldingsNoteType.builder().name("name_1").build()))
-      .build());
-  }
 
   @Test
   void shouldHaveHrIdWhenGetBulkOperationCollection() throws Exception {
@@ -269,5 +245,31 @@ class BulkOperationControllerTest extends BaseTest {
       Arguments.of(COMMITTING_CHANGES_ERROR_FILE, USER),
       Arguments.of(COMMITTING_CHANGES_ERROR_FILE, INSTANCE)
     );
+  }
+
+  private void mockData(org.folio.bulkops.domain.dto.EntityType entityType) {
+    when(remoteFileSystemClient.get(any(String.class))).thenReturn(InputStream.nullInputStream());
+
+    when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(BulkOperation.builder()
+      .id(UUID.randomUUID())
+      .linkToTriggeringCsvFile("A")
+      .linkToMatchedRecordsJsonFile("B")
+      .linkToMatchedRecordsCsvFile("C")
+      .linkToMatchedRecordsErrorsCsvFile("D")
+      .linkToModifiedRecordsJsonFile("E")
+      .linkToModifiedRecordsCsvFile("F")
+      .linkToCommittedRecordsJsonFile("G")
+      .linkToCommittedRecordsCsvFile("H")
+      .linkToCommittedRecordsErrorsCsvFile("I")
+      .entityType(entityType)
+      .build());
+
+    when(itemNoteTypeClient.getNoteTypes(any(Integer.class))).thenReturn(NoteTypeCollection.builder()
+      .itemNoteTypes(List.of(NoteType.builder().name("name_1").build()))
+      .build());
+
+    when(holdingsNoteTypeClient.getNoteTypes(any(Integer.class))).thenReturn(HoldingsNoteTypeCollection.builder()
+      .holdingsNoteTypes(List.of(HoldingsNoteType.builder().name("name_1").build()))
+      .build());
   }
 }
