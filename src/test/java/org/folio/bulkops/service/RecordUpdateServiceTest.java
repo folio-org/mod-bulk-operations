@@ -60,7 +60,7 @@ class RecordUpdateServiceTest extends BaseTest {
       .id(UUID.randomUUID().toString())
       .barcode("barcode")
       .build();
-    var modified = original.withCallNumber("call number");
+    var modified = original.withItemLevelCallNumber("call number");
     var operation = BulkOperation.builder()
       .id(UUID.randomUUID())
       .identifierType(IdentifierType.ID)

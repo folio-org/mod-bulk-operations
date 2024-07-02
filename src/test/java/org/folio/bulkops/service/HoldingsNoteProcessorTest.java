@@ -5,6 +5,9 @@ import static org.mockito.Mockito.when;
 
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
+import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.processor.note.AbstractNoteProcessor;
+import org.folio.bulkops.processor.note.NoteProcessorFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -15,7 +18,9 @@ class HoldingsNoteProcessorTest extends BaseTest {
   @MockBean
   private HoldingsReferenceService holdingsReferenceService;
   @Autowired
-  private HoldingsNotesProcessor holdingsNotesProcessor;
+  private AbstractNoteProcessor holdingsNotesProcessor;
+  @Autowired
+  private NoteProcessorFactory noteProcessorFactory;
 
   @Test
   void shouldEnrichPreviewWithHoldingsRecordsNoteTypeColumns() {
@@ -27,7 +32,7 @@ class HoldingsNoteProcessorTest extends BaseTest {
         new HoldingsNoteType().withName("Note type 1"),
         new HoldingsNoteType().withName("Note type 2")));
 
-    var res = holdingsNotesProcessor.processHoldingsNotes(sourceCsv.getBytes());
+    var res =noteProcessorFactory.getNoteProcessor(EntityType.HOLDINGS_RECORD.getValue()).processNotes(sourceCsv.getBytes());
 
     var lines = new String(res).split("\n");
     assertThat(lines).hasSize(2);
