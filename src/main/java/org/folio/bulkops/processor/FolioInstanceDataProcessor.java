@@ -25,7 +25,7 @@ import java.util.Set;
 @Log4j2
 @Component
 @RequiredArgsConstructor
-public class InstanceDataProcessor extends AbstractDataProcessor<Instance> {
+public class FolioInstanceDataProcessor extends AbstractDataProcessor<Instance> {
   private final InstanceNotesUpdaterFactory instanceNotesUpdaterFactory;
 
   @Override
