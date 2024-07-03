@@ -88,7 +88,6 @@ public enum TestEntity {
         .itemDamagedStatusDate("01-2001")
         .administrativeNotes(List.of("administrative-note-1", "administrative-note-2"))
         .notes(List.of(ItemNote.builder().build()))
-//        .circulationNotes(List.of(CirculationNote.builder().build()))
         .status(InventoryItemStatus.builder().build())
         .materialType(MaterialType.builder().build())
         .permanentLoanType(LoanType.builder().build())
@@ -97,11 +96,8 @@ public enum TestEntity {
         .temporaryLocation(ItemLocation.builder().build())
         .effectiveLocation(ItemLocation.builder().build())
         .electronicAccess(List.of(ElectronicAccess.builder().build()))
-//        .inTransitDestinationServicePointId(randomUUID().toString())
         .statisticalCodes(List.of(randomUUID().toString(), randomUUID().toString()))
-//        .purchaseOrderLineIdentifier("purchase-ol-identifier")
         .tags(Tags.builder().build())
-//        .lastCheckIn(LastCheckIn.builder().build())
         .build();
     }
 
