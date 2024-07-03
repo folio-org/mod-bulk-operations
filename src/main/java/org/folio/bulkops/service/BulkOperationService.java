@@ -456,7 +456,9 @@ public class BulkOperationService {
     }
     var operationOpt = bulkOperationRepository.findById(operation.getId());
     if (operationOpt.isPresent()) {
+      log.info("operationOpt.get().getCommittedNumOfErrors(): {}", operationOpt.get().getCommittedNumOfErrors());
       operation.setCommittedNumOfErrors(operationOpt.get().getCommittedNumOfErrors());
+      log.info("operation.getCommittedNumOfErrors: {}", operation.getCommittedNumOfErrors());
     }
     bulkOperationRepository.save(operation);
   }
