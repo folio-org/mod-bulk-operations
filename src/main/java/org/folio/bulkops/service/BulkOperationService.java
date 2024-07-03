@@ -371,6 +371,7 @@ public class BulkOperationService {
     operation.setCommittedNumOfRecords(0);
     operation.setStatus(OperationStatusType.APPLY_CHANGES);
     operation.setTotalNumOfRecords(operation.getMatchedNumOfRecords());
+    operation.setCommittedNumOfErrors(0);
 
     operation = bulkOperationRepository.save(operation);
 
