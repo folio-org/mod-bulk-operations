@@ -16,6 +16,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
@@ -41,6 +42,7 @@ import org.springframework.util.ObjectUtils;
 import lombok.RequiredArgsConstructor;
 
 @Service
+@Log4j2
 @RequiredArgsConstructor
 public class ErrorService {
   private static final String POSTFIX_ERROR_MESSAGE_NON_NULL = " AND errorMessage<null";
@@ -59,6 +61,7 @@ public class ErrorService {
     }
     operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
       int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
+      log.info("committedNumOfErrors: {}", committedNumOfErrors);
       bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
       operationRepository.save(bulkOperation);
     });
