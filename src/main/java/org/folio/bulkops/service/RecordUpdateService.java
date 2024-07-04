@@ -1,7 +1,7 @@
 package org.folio.bulkops.service;
 
 import static java.lang.String.format;
-import static org.folio.bulkops.util.Utils.resolveEntityClass;
+import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
@@ -25,14 +25,14 @@ public class RecordUpdateService {
 
   public BulkOperationsEntity updateEntity(BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation) {
     var isEqual = original.hashCode() == modified.hashCode() && original.equals(modified);
-    var updater = updateProcessorFactory.getProcessorFromFactory(resolveEntityClass(operation.getEntityType()));
+    var updater = updateProcessorFactory.getProcessorFromFactory(resolveExtendedEntityClass(operation.getEntityType()));
     if (!isEqual) {
       try {
         updater.updateRecord(modified);
       } catch (FeignException e) {
         if (e.status() == 409 && e.getMessage().contains("optimistic locking")) {
           var message = Utils.getMessageFromFeignException(e);
-          var link = entityPathResolver.resolve(operation.getEntityType(), original);
+          var link = entityPathResolver.resolve(operation.getEntityType(), original.getRecordBulkOperationEntity());
           throw new OptimisticLockingException(format("%s %s", message, link), message, link);
         }
         throw e;

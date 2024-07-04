@@ -355,12 +355,11 @@ public class BulkOperationService {
           processedNumOfRecords++;
 
           try {
-            //ToDo MODBULKOPS-273
-            var result = recordUpdateService.updateEntity(original.getRecordBulkOperationEntity(), modified.getRecordBulkOperationEntity(), operation);
+            var result = recordUpdateService.updateEntity(original, modified, operation);
             if (result != original) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
-              writeToCsv(operation, csvWriter, result);
+              writeToCsv(operation, csvWriter, result.getRecordBulkOperationEntity());
             }
           } catch (OptimisticLockingException e) {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLinkToFailedEntity());
