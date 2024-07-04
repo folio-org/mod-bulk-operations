@@ -70,13 +70,11 @@ public class ErrorService {
     }
     operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
       var identifierErrorsByOperationId = identifierErrorsByOperationIdMap.get(bulkOperationId.toString());
-      if (nonNull(identifierErrorsByOperationId)) {
-        var identifierErrors = identifierErrorsByOperationId.get(identifier);
-        if (isNull(identifierErrors) || nonNull(identifierErrors) && !identifierErrors.contains(errorMessage)) {
-          int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
-          log.info("committedNumOfErrors: {}", committedNumOfErrors);
-          bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
-        }
+      var identifierErrors = isNull(identifierErrorsByOperationId) ? null : identifierErrorsByOperationId.get(identifier);
+      if (isNull(identifierErrors) || nonNull(identifierErrors) && !identifierErrors.contains(errorMessage)) {
+        int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
+        log.info("committedNumOfErrors: {}", committedNumOfErrors);
+        bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
       }
       operationRepository.save(bulkOperation);
       identifierErrorsByOperationIdMap.computeIfAbsent(bulkOperationId.toString(), k -> new HashMap<>()).computeIfAbsent(identifier, l -> new HashSet<>()).add(errorMessage);
