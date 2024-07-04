@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
 
+import org.folio.bulkops.service.MarcRemoteStorageWriter;
 import org.folio.s3.client.FolioS3Client;
 import org.springframework.stereotype.Component;
 
@@ -43,4 +44,7 @@ public class RemoteFileSystemClient {
     return remoteFolioS3Client.getRemoteStorageWriter(path, DEFAULT_CHAR_BUFFER_SIZE);
   }
 
+  public MarcRemoteStorageWriter marcWriter(String path) {
+    return new MarcRemoteStorageWriter(path, DEFAULT_CHAR_BUFFER_SIZE, remoteFolioS3Client);
+  }
 }

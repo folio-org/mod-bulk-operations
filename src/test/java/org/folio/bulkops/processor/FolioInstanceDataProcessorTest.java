@@ -48,7 +48,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-class InstanceDataProcessorTest extends BaseTest {
+class FolioInstanceDataProcessorTest extends BaseTest {
   @Autowired
   DataProcessorFactory factory;
   @MockBean
@@ -91,7 +91,7 @@ class InstanceDataProcessorTest extends BaseTest {
 
   @Test
   void testClone() {
-    var processor = new InstanceDataProcessor(new InstanceNotesUpdaterFactory(new AdministrativeNotesUpdater()));
+    var processor = new FolioInstanceDataProcessor(new InstanceNotesUpdaterFactory(new AdministrativeNotesUpdater()));
     var instance = Instance.builder()
       .id(UUID.randomUUID().toString())
       .title("Title")
@@ -383,7 +383,7 @@ class InstanceDataProcessorTest extends BaseTest {
       .build();
 
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
-    var validator = ((InstanceDataProcessor) processor).validator(extendedInstance);
+    var validator = ((FolioInstanceDataProcessor) processor).validator(extendedInstance);
 
     assertThrows(RuleValidationException.class, () -> validator.validate(INSTANCE_NOTE, new Action().type(actionType)));
   }
@@ -396,7 +396,7 @@ class InstanceDataProcessorTest extends BaseTest {
       .title("Sample title")
       .build();
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
-    var validator = ((InstanceDataProcessor) processor).validator(extendedInstance);
+    var validator = ((FolioInstanceDataProcessor) processor).validator(extendedInstance);
 
     assertThrows(RuleValidationException.class, () -> validator.validate(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)));
   }

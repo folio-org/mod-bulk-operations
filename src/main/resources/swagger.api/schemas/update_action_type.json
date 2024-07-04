@@ -18,7 +18,11 @@
       "REMOVE_MARK_AS_STAFF_ONLY",
       "REMOVE_ALL",
       "CHANGE_TYPE",
-      "DUPLICATE"
+      "DUPLICATE",
+      "APPEND",
+      "ADDITIONAL_SUBFIELD",
+      "REMOVE_FIELD",
+      "REMOVE_SUBFIELD"
     ]
   }
 }

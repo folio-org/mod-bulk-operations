@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "MARC parameter type",
+  "MarcParameterType": {
+    "type": "string",
+    "enum": [
+      "OVERRIDE_PROTECTED"
+    ]
+  }
+}
