@@ -366,6 +366,7 @@ public class BulkOperationService {
   }
 
   public void commit(BulkOperation operation) {
+    log.info("commit11");
 
     var operationId = operation.getId();
     operation.setCommittedNumOfRecords(0);
@@ -404,6 +405,7 @@ public class BulkOperationService {
         int processedNumOfRecords = 0;
 
         while (hasNextRecord(originalFileIterator, modifiedFileIterator)) {
+          log.info("commit11next");
           var original = originalFileIterator.next();
           var modified = modifiedFileIterator.next();
 
@@ -460,7 +462,6 @@ public class BulkOperationService {
       operation.setCommittedNumOfErrors(operationOpt.get().getCommittedNumOfErrors());
       log.info("operation.getCommittedNumOfErrors: {}", operation.getCommittedNumOfErrors());
     }
-    operation.setCommittedNumOfErrors(0);
     bulkOperationRepository.save(operation);
   }
 
