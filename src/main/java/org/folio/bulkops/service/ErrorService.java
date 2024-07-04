@@ -73,8 +73,8 @@ public class ErrorService {
         int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
         log.info("committedNumOfErrors: {}", committedNumOfErrors);
         bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
-        operationRepository.save(bulkOperation);
       }
+      operationRepository.save(bulkOperation);
       identifierErrorsMap.computeIfAbsent(identifier, k -> new HashSet<>()).add(errorMessage);
     });
     executionContentRepository.save(BulkOperationExecutionContent.builder()
