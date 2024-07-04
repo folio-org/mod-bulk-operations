@@ -1,5 +1,7 @@
 package org.folio.bulkops.service;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
@@ -11,8 +13,12 @@ import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -55,15 +61,21 @@ public class ErrorService {
   private final BulkOperationProcessingContentRepository processingContentRepository;
   private final BulkEditClient bulkEditClient;
 
+  private final Map<String, Set<String>> identifierErrorsMap = new HashMap<>();
+
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
     if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
       return;
     }
     operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
-      int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
-      log.info("committedNumOfErrors: {}", committedNumOfErrors);
-      bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
-      operationRepository.save(bulkOperation);
+      var identifierErrors = identifierErrorsMap.get(identifier);
+      if (isNull(identifierErrors) || nonNull(identifierErrors) && !identifierErrors.contains(errorMessage)) {
+        int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
+        log.info("committedNumOfErrors: {}", committedNumOfErrors);
+        bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
+        operationRepository.save(bulkOperation);
+      }
+      identifierErrorsMap.computeIfAbsent(identifier, k -> new HashSet<>()).add(errorMessage);
     });
     executionContentRepository.save(BulkOperationExecutionContent.builder()
         .identifier(identifier)
@@ -101,7 +113,7 @@ public class ErrorService {
   }
 
   private boolean noCommittedErrors(BulkOperation bulkOperation) {
-    return Objects.isNull(bulkOperation.getCommittedNumOfErrors()) || bulkOperation.getCommittedNumOfErrors() == 0;
+    return isNull(bulkOperation.getCommittedNumOfErrors()) || bulkOperation.getCommittedNumOfErrors() == 0;
   }
 
   private Error prepareInternalErrorRepresentation(Error e) {
@@ -162,5 +174,9 @@ public class ErrorService {
       return remoteFileSystemClient.put(new ByteArrayInputStream(errorsString.getBytes()), bulkOperationId + "/" + errorsFileName);
     }
     return null;
+  }
+
+  public void clearIdentifierErrorsMap() {
+    identifierErrorsMap.clear();
   }
 }
