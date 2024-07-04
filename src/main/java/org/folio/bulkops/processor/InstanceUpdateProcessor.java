@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.ItemClient;
+import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
@@ -26,6 +27,9 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.RuleService;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
@@ -34,7 +38,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class InstanceUpdateProcessor extends AbstractUpdateProcessor<Instance> {
+public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedInstance> {
   private static final String ERROR_MESSAGE_TEMPLATE = "No change in value for instance required, %s associated records have been updated.";
 
   private final InstanceClient instanceClient;
@@ -45,12 +49,14 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<Instance> {
   private final HoldingsReferenceService holdingsReferenceService;
 
   @Override
-  public void updateRecord(Instance instance) {
+  public void updateRecord(ExtendedInstance extendedInstance) {
+    var instance = extendedInstance.getEntity();
     instanceClient.updateInstance(instance.withIsbn(null).withIssn(null), instance.getId());
   }
 
   @Override
-  public void updateAssociatedRecords(Instance instance, BulkOperation operation, boolean notChanged) {
+  public void updateAssociatedRecords(ExtendedInstance extendedInstance, BulkOperation operation, boolean notChanged) {
+    var instance = extendedInstance.getEntity();
     var recordsUpdated = findRuleByOption(ruleService.getRules(operation.getId()), SUPPRESS_FROM_DISCOVERY)
       .filter(rule -> applyRuleToAssociatedRecords(instance, rule))
       .isPresent();
@@ -118,7 +124,7 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<Instance> {
   }
 
   @Override
-  public Class<Instance> getUpdatedType() {
-    return Instance.class;
+  public Class<ExtendedInstance> getUpdatedType() {
+    return ExtendedInstance.class;
   }
 }

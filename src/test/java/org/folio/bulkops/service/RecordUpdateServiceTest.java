@@ -16,6 +16,8 @@ import feign.FeignException;
 import feign.Request;
 import feign.Response;
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.bean.ExtendedInstance;
+import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
@@ -32,6 +34,7 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.platform.commons.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -60,17 +63,19 @@ class RecordUpdateServiceTest extends BaseTest {
       .id(UUID.randomUUID().toString())
       .barcode("barcode")
       .build();
+    var extendedOriginalItem = ExtendedItem.builder().entity(original).build();
     var modified = original.withCallNumber("call number");
+    var extendedModifiedItem = ExtendedItem.builder().entity(modified).build();
     var operation = BulkOperation.builder()
       .id(UUID.randomUUID())
       .identifierType(IdentifierType.ID)
       .entityType(EntityType.ITEM)
       .build();
 
-    var result = recordUpdateService.updateEntity(original, modified, operation);
+    var result = recordUpdateService.updateEntity(extendedOriginalItem, extendedModifiedItem, operation);
 
-    assertEquals(modified, result);
-    verify(itemUpdateProcessor).updateRecord(any(Item.class));
+    assertEquals(extendedModifiedItem, result);
+    verify(itemUpdateProcessor).updateRecord(any(ExtendedItem.class));
     verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString());
   }
 
@@ -80,17 +85,19 @@ class RecordUpdateServiceTest extends BaseTest {
       .id(UUID.randomUUID().toString())
       .barcode("barcode")
       .build();
+    var extendedOriginalItem = ExtendedItem.builder().entity(original).build();
     var modified = original;
+    var extendedModifiedItem = ExtendedItem.builder().entity(modified).build();
     var operation = BulkOperation.builder()
       .id(UUID.randomUUID())
       .identifierType(IdentifierType.ID)
       .entityType(EntityType.ITEM)
       .build();
 
-    var result = recordUpdateService.updateEntity(original, modified, operation);
+    var result = recordUpdateService.updateEntity(extendedOriginalItem, extendedModifiedItem, operation);
 
-    assertEquals(original, result);
-    verify(itemUpdateProcessor, times(0)).updateRecord(any(Item.class));
+    assertEquals(extendedOriginalItem, result);
+    verify(itemUpdateProcessor, times(0)).updateRecord(any(ExtendedItem.class));
     verify(errorService).saveError(operation.getId(), original.getIdentifier(IdentifierType.ID), MSG_NO_CHANGE_REQUIRED);
   }
 
@@ -110,20 +117,23 @@ class RecordUpdateServiceTest extends BaseTest {
       .holdingsRecordId("cb475fa9-aa07-4bbf-8382-b0b1426f9a20")
       .version(2)
       .build();
+    var extendedOriginalItem = ExtendedItem.builder().entity(original).build();
     var modified = Item.builder()
       .id("1f5e22ed-92ed-4c65-a603-2a5cb4c6052e")
       .barcode("barcode1")
       .holdingsRecordId("cb475fa9-aa07-4bbf-8382-b0b1426f9a20")
       .version(1)
       .build();
+    var extendedModifiedItem = ExtendedItem.builder().entity(modified).build();
     var operation = BulkOperation.builder()
       .id(UUID.randomUUID())
       .identifierType(IdentifierType.ID)
       .entityType(EntityType.ITEM)
       .build();
 
+
     try {
-      recordUpdateService.updateEntity(original, modified, operation);
+      recordUpdateService.updateEntity(extendedOriginalItem, extendedModifiedItem, operation);
     } catch (OptimisticLockingException e) {
       var expectedUiErrorMessage = Utils.getMessageFromFeignException(feignException);
       var link = entityPathResolver.resolve(operation.getEntityType(), original);
@@ -143,16 +153,18 @@ class RecordUpdateServiceTest extends BaseTest {
     var original = Instance.builder()
       .id(UUID.randomUUID().toString())
       .build();
+    var extendedOriginal = ExtendedInstance.builder().entity(original).build();
     var modified = Instance.builder()
       .id(UUID.randomUUID().toString())
       .version(1)
       .build();
+    var extendedModified = ExtendedInstance.builder().entity(modified).build();
     var operation = BulkOperation.builder()
       .id(UUID.randomUUID())
       .identifierType(IdentifierType.ID)
       .entityType(EntityType.INSTANCE)
       .build();
 
-    assertThrows(FeignException.class, () -> recordUpdateService.updateEntity(original, modified, operation));
+    assertThrows(FeignException.class, () -> recordUpdateService.updateEntity(extendedOriginal, extendedModified, operation));
   }
 }

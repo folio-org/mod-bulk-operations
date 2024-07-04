@@ -21,6 +21,9 @@ import java.util.UUID;
 
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.ItemClient;
+import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
+import org.folio.bulkops.domain.bean.ExtendedInstance;
+import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordCollection;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
@@ -77,9 +80,10 @@ class UpdateProcessorTest extends BaseTest {
     var holdingsRecord = new HoldingsRecord()
         .withId(UUID.randomUUID().toString())
         .withInstanceId(UUID.randomUUID().toString());
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).build();
 
     when(ruleService.getRules(isA(UUID.class))).thenReturn(new BulkOperationRuleCollection());
-    holdingsUpdateProcessor.updateRecord(holdingsRecord);
+    holdingsUpdateProcessor.updateRecord(extendedHoldingsRecord);
 
     verify(holdingsClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
   }
@@ -97,6 +101,7 @@ class UpdateProcessorTest extends BaseTest {
       .id(holdingsId)
       .discoverySuppress(true)
       .build();
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).build();
 
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
@@ -116,7 +121,7 @@ class UpdateProcessorTest extends BaseTest {
         Item.builder().discoverySuppress(false).build()))
       .build());
 
-    holdingsUpdateProcessor.updateAssociatedRecords(holdingsRecord, operation, notChanged);
+    holdingsUpdateProcessor.updateAssociatedRecords(extendedHoldingsRecord, operation, notChanged);
 
     verify(itemClient, times(0)).updateItem(any(Item.class), anyString());
 
@@ -140,6 +145,7 @@ class UpdateProcessorTest extends BaseTest {
       .id(holdingsId)
       .discoverySuppress(SET_TO_TRUE_INCLUDING_ITEMS.equals(actionType))
       .build();
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).build();
 
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
@@ -163,7 +169,7 @@ class UpdateProcessorTest extends BaseTest {
         Item.builder().id(UUID.randomUUID().toString()).discoverySuppress(false).build()))
       .build());
 
-    holdingsUpdateProcessor.updateAssociatedRecords(holdingsRecord, operation, notChanged);
+    holdingsUpdateProcessor.updateAssociatedRecords(extendedHoldingsRecord, operation, notChanged);
 
     verify(itemClient, times(1)).updateItem(any(Item.class), anyString());
 
@@ -182,8 +188,8 @@ class UpdateProcessorTest extends BaseTest {
     var item = new Item()
       .withId(UUID.randomUUID().toString())
       .withHoldingsRecordId(UUID.randomUUID().toString());
-
-    itemUpdateProcessor.updateRecord(item);
+    var extendedItem = ExtendedItem.builder().entity(item).build();
+    itemUpdateProcessor.updateRecord(extendedItem);
 
     verify(itemClient).updateItem(item, item.getId());
   }
@@ -206,8 +212,9 @@ class UpdateProcessorTest extends BaseTest {
       .id(UUID.randomUUID().toString())
       .title("Title")
       .build();
+    var extendedInstance = ExtendedInstance.builder().entity(instance).build();
 
-    instanceUpdateProcessor.updateRecord(instance);
+    instanceUpdateProcessor.updateRecord(extendedInstance);
 
     verify(instanceClient).updateInstance(instance, instance.getId());
   }
@@ -230,7 +237,7 @@ class UpdateProcessorTest extends BaseTest {
       .source("FOLIO")
       .discoverySuppress(SET_TO_TRUE.equals(actionType))
       .build();
-
+    var extendedInstance = ExtendedInstance.builder().entity(instance).build();
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
       .id(operationId)
@@ -258,7 +265,7 @@ class UpdateProcessorTest extends BaseTest {
         .totalRecords(2)
         .build());
 
-    instanceUpdateProcessor.updateAssociatedRecords(instance, operation, false);
+    instanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
 
     verify(holdingsClient, times("folio_id".equals(sourceId) && applyToHoldings ? 1 : 0)).updateHoldingsRecord(any(HoldingsRecord.class), anyString());
   }
@@ -281,7 +288,7 @@ class UpdateProcessorTest extends BaseTest {
       .source("FOLIO")
       .discoverySuppress(SET_TO_TRUE.equals(actionType))
       .build();
-
+    var extendedInstance = ExtendedInstance.builder().entity(instance).build();
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
       .id(operationId)
@@ -316,7 +323,7 @@ class UpdateProcessorTest extends BaseTest {
         .totalRecords(2)
         .build());
 
-    instanceUpdateProcessor.updateAssociatedRecords(instance, operation, false);
+    instanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
 
     verify(itemClient, times("folio_id".equals(sourceId) && applyToItems ? 1 : 0)).updateItem(any(Item.class), anyString());
   }
