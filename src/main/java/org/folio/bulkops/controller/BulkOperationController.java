@@ -1,6 +1,5 @@
 package org.folio.bulkops.controller;
 
-import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
@@ -54,7 +53,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -73,7 +71,6 @@ public class BulkOperationController implements BulkOperationsApi {
   private final LogFilesService logFilesService;
   private final ListUsersService listUsersService;
   private final NoteProcessorFactory noteProcessorFactory;
-  private final HoldingsNotesProcessor holdingsNotesProcessor;
   private final BulkOperationRepository bulkOperationRepository;
 
   @Override
