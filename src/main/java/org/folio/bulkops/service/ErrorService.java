@@ -67,18 +67,12 @@ public class ErrorService {
       return;
     }
     operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
-      var optCont = executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier);
-      log.info("optCont: {}", optCont);
-      if (optCont.isPresent()) {
-        log.info("optContPresent: {}", optCont.get());
-      }
-      var opt = executionContentRepository.findFirstByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage);
-      if (!opt.isPresent()) {
+      var opt = executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage);
+      log.info("optt: {}", opt);
+      if (opt.isEmpty()) {
         log.info("not present: {}, {}, {}, {}", opt, bulkOperationId, identifier, errorMessage);
         int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
         bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
-      } else {
-        log.info("present: {}", opt.get());
       }
       operationRepository.save(bulkOperation);
     });
