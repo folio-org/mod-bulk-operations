@@ -418,7 +418,7 @@ public class BulkOperationService {
           try {
             //ToDo MODBULKOPS-273
             var result = recordUpdateService.updateEntity(original.getRecordBulkOperationEntity(), modified.getRecordBulkOperationEntity(), operation);
-            if (result != original) {
+            if (result != original.getRecordBulkOperationEntity()) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
               writeToCsv(operation, csvWriter, result);
