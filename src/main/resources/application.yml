@@ -23,7 +23,7 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-    show-sql: false
+    show-sql: true
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/changelog-master.xml
@@ -76,3 +76,7 @@ application:
     group-id: ${ENV:folio}-mod-bulk-operations-events-group
   file-uploading:
     max-retry-count: ${MAX_UPLOADING_RETRIES:5000}
+logging:
+  level:
+    org.hibernate.orm.jdbc.bind: trace
+
