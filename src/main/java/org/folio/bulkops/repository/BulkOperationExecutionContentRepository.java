@@ -12,6 +12,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BulkOperationExecutionContentRepository extends JpaRepository<BulkOperationExecutionContent, UUID> {
   Page<BulkOperationExecutionContent> findByBulkOperationIdAndErrorMessageIsNotNull(UUID bulkOperationId, OffsetRequest offsetRequest);
+  Optional<BulkOperationExecutionContent> findByBulkOperationIdAndIdentifierAndErrorMessage(UUID bulkOperationId, String identifier, String errorMessage);
 
   Optional<BulkOperationExecutionContent> findFirstByBulkOperationIdAndIdentifier(UUID bulkOperationId, String identifier);
 

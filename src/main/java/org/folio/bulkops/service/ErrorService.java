@@ -62,22 +62,16 @@ public class ErrorService {
   private final BulkOperationProcessingContentRepository processingContentRepository;
   private final BulkEditClient bulkEditClient;
 
-  private final Map<String, Map<String, Set<String>>> identifierErrorsByOperationIdMap = new HashMap<>();
-
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
     if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
       return;
     }
     operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
-      var identifierErrorsByOperationId = identifierErrorsByOperationIdMap.get(bulkOperationId.toString());
-      var identifierErrors = isNull(identifierErrorsByOperationId) ? null : identifierErrorsByOperationId.get(identifier);
-      if (isNull(identifierErrors) || nonNull(identifierErrors) && !identifierErrors.contains(errorMessage)) {
+      if (!executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage).isPresent()) {
         int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
-        log.info("committedNumOfErrors: {}", committedNumOfErrors);
         bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
       }
       operationRepository.save(bulkOperation);
-      identifierErrorsByOperationIdMap.computeIfAbsent(bulkOperationId.toString(), k -> new HashMap<>()).computeIfAbsent(identifier, l -> new HashSet<>()).add(errorMessage);
     });
     executionContentRepository.save(BulkOperationExecutionContent.builder()
         .identifier(identifier)
@@ -176,9 +170,5 @@ public class ErrorService {
       return remoteFileSystemClient.put(new ByteArrayInputStream(errorsString.getBytes()), bulkOperationId + "/" + errorsFileName);
     }
     return null;
-  }
-
-  public void clearIdentifierErrorsMap() {
-    identifierErrorsByOperationIdMap.clear();
   }
 }
