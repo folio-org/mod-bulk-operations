@@ -15,7 +15,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -45,6 +47,9 @@ import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.RuleService;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.integration.XOkapiHeaders;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -72,6 +77,10 @@ class UpdateProcessorTest extends BaseTest {
   private UserUpdateProcessor userUpdateProcessor;
   @Autowired
   private InstanceUpdateProcessor instanceUpdateProcessor;
+  @Autowired
+  private FolioModuleMetadata folioModuleMetadata;
+  @SpyBean
+  private FolioExecutionContext folioExecutionContext;
   @MockBean
   private HoldingsReferenceService holdingsReferenceService;
 
@@ -83,6 +92,25 @@ class UpdateProcessorTest extends BaseTest {
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).build();
 
     when(ruleService.getRules(isA(UUID.class))).thenReturn(new BulkOperationRuleCollection());
+    holdingsUpdateProcessor.updateRecord(extendedHoldingsRecord);
+
+    verify(holdingsClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
+  }
+
+  @Test
+  void shouldUpdateHoldingsRecordWithTenant() {
+    var holdingsRecord = new HoldingsRecord()
+      .withId(UUID.randomUUID().toString())
+      .withInstanceId(UUID.randomUUID().toString());
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().tenantId("tenantId").entity(holdingsRecord).build();
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+
+    when(ruleService.getRules(isA(UUID.class))).thenReturn(new BulkOperationRuleCollection());
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
+
     holdingsUpdateProcessor.updateRecord(extendedHoldingsRecord);
 
     verify(holdingsClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
@@ -189,6 +217,24 @@ class UpdateProcessorTest extends BaseTest {
       .withId(UUID.randomUUID().toString())
       .withHoldingsRecordId(UUID.randomUUID().toString());
     var extendedItem = ExtendedItem.builder().entity(item).build();
+    itemUpdateProcessor.updateRecord(extendedItem);
+
+    verify(itemClient).updateItem(item, item.getId());
+  }
+
+  @Test
+  void shouldUpdateItemRecordWithTenant() {
+    var item = new Item()
+      .withId(UUID.randomUUID().toString())
+      .withHoldingsRecordId(UUID.randomUUID().toString());
+    var extendedItem = ExtendedItem.builder().tenantId("tenantId").entity(item).build();
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
+
     itemUpdateProcessor.updateRecord(extendedItem);
 
     verify(itemClient).updateItem(item, item.getId());

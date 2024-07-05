@@ -11,11 +11,10 @@ import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 
 import lombok.extern.log4j.Log4j2;
+import org.folio.spring.integration.XOkapiHeaders;
 
 @Log4j2
 public class FolioExecutionContextUtil {
-
-  private static final String X_OKAPI_TENANT = "X-Okapi-Tenant";
 
   private FolioExecutionContextUtil(){}
 
@@ -23,7 +22,7 @@ public class FolioExecutionContextUtil {
     if (MapUtils.isNotEmpty(context.getOkapiHeaders())) {
       // create deep copy of headers in order to make switching context thread safe
       var headersCopy = SerializationUtils.clone((HashMap<String, Collection<String>>) context.getAllHeaders());
-      headersCopy.put(X_OKAPI_TENANT, List.of(tenantId));
+      headersCopy.put(XOkapiHeaders.TENANT, List.of(tenantId));
       log.info("FOLIO context initialized with tenant {}", tenantId);
       return new DefaultFolioExecutionContext(folioModuleMetadata, headersCopy);
     }
