@@ -70,9 +70,9 @@ public class ErrorService {
       var opt = executionContentRepository.findByBulkOperationId(bulkOperationId);
       log.info("optt: {}", opt);
       var opt2 = executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage);
-      log.info("optt2: {}", opt2);
+      log.info("optt2: {}, {}", opt2, identifier);
       if (opt2.isEmpty()) {
-        log.info("not present: {}, {}, {}, {}", opt, bulkOperationId, identifier, errorMessage);
+        log.info("not present: {}, {}, {}", bulkOperationId, identifier, errorMessage);
         int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
         bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
       }
@@ -95,6 +95,7 @@ public class ErrorService {
   @Transactional
   public void deleteErrorsByBulkOperationId(UUID bulkOperationId) {
     executionContentRepository.deleteByBulkOperationId(bulkOperationId);
+    log.info("deletederrors: {}", bulkOperationId);
   }
 
   public Errors getErrorsPreviewByBulkOperationId(UUID bulkOperationId, int limit) {
