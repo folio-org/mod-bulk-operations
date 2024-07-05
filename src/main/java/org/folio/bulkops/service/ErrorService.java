@@ -70,7 +70,7 @@ public class ErrorService {
       var opt = executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage);
 
       if (!opt.isPresent()) {
-        log.info("not present");
+        log.info("not present: {}, {}, {}", bulkOperationId, identifier, errorMessage);
         int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
         bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
       } else {
