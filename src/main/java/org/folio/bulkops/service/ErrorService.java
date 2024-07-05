@@ -67,6 +67,11 @@ public class ErrorService {
       return;
     }
     operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
+      var optCont = executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier);
+      log.info("optCont: {}", optCont);
+      if (optCont.isPresent()) {
+        log.info("optContPresent: {}", optCont.get());
+      }
       var opt = executionContentRepository.findFirstByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage);
       if (!opt.isPresent()) {
         log.info("not present: {}, {}, {}, {}", opt, bulkOperationId, identifier, errorMessage);
