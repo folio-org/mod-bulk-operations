@@ -1,6 +1,5 @@
 package org.folio.bulkops.controller;
 
-import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
@@ -9,6 +8,7 @@ import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE
 import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 import static org.folio.bulkops.util.Constants.NON_PRINTING_DELIMITER;
+import static org.folio.bulkops.util.Constants.SPLIT_NOTE_ENTITIES;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -31,10 +31,10 @@ import org.folio.bulkops.domain.dto.Users;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.mapper.BulkOperationMapper;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.processor.note.NoteProcessorFactory;
 import org.folio.bulkops.rest.resource.BulkOperationsApi;
 import org.folio.bulkops.service.BulkOperationService;
 import org.folio.bulkops.service.ErrorService;
-import org.folio.bulkops.service.HoldingsNotesProcessor;
 import org.folio.bulkops.service.ListUsersService;
 import org.folio.bulkops.service.LogFilesService;
 import org.folio.bulkops.service.PreviewService;
@@ -70,7 +70,7 @@ public class BulkOperationController implements BulkOperationsApi {
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final LogFilesService logFilesService;
   private final ListUsersService listUsersService;
-  private final HoldingsNotesProcessor holdingsNotesProcessor;
+  private final NoteProcessorFactory noteProcessorFactory;
   private final BulkOperationRepository bulkOperationRepository;
 
   @Override
@@ -155,8 +155,9 @@ public class BulkOperationController implements BulkOperationsApi {
     } else {
       try (var is = remoteFileSystemClient.get(path)) {
         var content = ArrayUtils.removeAllOccurrences(is.readAllBytes(), (byte) NON_PRINTING_DELIMITER);
-        if (isDownloadPreview(fileContentType) && HOLDINGS_RECORD.equals(bulkOperation.getEntityType())) {
-          content = holdingsNotesProcessor.processHoldingsNotes(content);
+        var entityType = bulkOperation.getEntityType().getValue();
+        if (isDownloadPreview(fileContentType) && SPLIT_NOTE_ENTITIES.contains(entityType)) {
+          content = noteProcessorFactory.getNoteProcessor(entityType).processNotes(content);
         }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);

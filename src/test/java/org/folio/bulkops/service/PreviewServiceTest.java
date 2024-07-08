@@ -254,71 +254,71 @@ class PreviewServiceTest extends BaseTest {
   }
 
   private void checkForTitle(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(6).getValue();
-    assertEquals("Title", headerValue);
+    var headerValue = table.getHeader().get(1).getValue();
+    assertEquals("Instance (Title, Publisher, Publication date)", headerValue);
 
     var rowResult = table.getRows().get(0).getRow().get(6);
     assertEquals("Magazine - Q4", rowResult);
   }
   private void checkForHoldingsData(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(7).getValue();
+    var headerValue = table.getHeader().get(2).getValue();
     assertEquals("Holdings (Location, Call number)", headerValue);
 
     var rowResult = table.getRows().get(0).getRow().get(7);
     assertEquals("Main Library > R11.A38\\", rowResult);
   }
   private void checkForCallNumber(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(9).getValue();
-    assertEquals("Call Number", headerValue);
+    var headerValue = table.getHeader().get(18).getValue();
+    assertEquals("Item level call number", headerValue);
 
     var rowResult = table.getRows().get(0).getRow().get(9);
     assertEquals("R11.A38\\", rowResult);
   }
   private void checkForEffectiveShelvingOrder(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(11).getValue();
-    assertEquals("Effective Shelving Order", headerValue);
+    var headerValue = table.getHeader().get(15).getValue();
+    assertEquals("Shelving order", headerValue);
 
     var rowResult = table.getRows().get(0).getRow().get(11);
     assertEquals("R11.A38\\ First copy of Q4", rowResult);
   }
   private void checkForEffectiveCallNumberComponents(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(17).getValue();
-    assertEquals("Effective Call Number Components", headerValue);
+    var headerValue = table.getHeader().get(4).getValue();
+    assertEquals("Effective call number", headerValue);
 
     var rowResult = table.getRows().get(0).getRow().get(17);
     assertEquals("R11.A38\\", rowResult);
   }
   private void checkForCopyNumber(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(23).getValue();
-    assertEquals("Copy Number", headerValue);
+    var headerValue = table.getHeader().get(14).getValue();
+    assertEquals("Copy number", headerValue);
 
     var rowResult = table.getRows().get(0).getRow().get(23);
     assertEquals("First copy of Q4", rowResult);
   }
   private void checkForStatus(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(39).getValue();
+    var headerValue = table.getHeader().get(38).getValue();
     assertEquals("Status", headerValue);
 
     var rowResult = table.getRows().get(0).getRow().get(39);
     assertEquals("Available", rowResult);
   }
   private void checkForMaterialType(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(40).getValue();
-    assertEquals("Material Type", headerValue);
+    var headerValue = table.getHeader().get(13).getValue();
+    assertEquals("Material type", headerValue);
 
     var rowResult = table.getRows().get(0).getRow().get(40);
     assertEquals("text", rowResult);
   }
   private void checkForPermanentLoanType(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(43).getValue();
-    assertEquals("Permanent Loan Type", headerValue);
+    var headerValue = table.getHeader().get(36).getValue();
+    assertEquals("Permanent loan type", headerValue);
 
     var rowResult = table.getRows().get(0).getRow().get(43);
     assertEquals("Can circulate", rowResult);
   }
   private void checkForEffectiveLocation(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(47).getValue();
-    assertEquals("Effective Location", headerValue);
+    var headerValue = table.getHeader().get(3).getValue();
+    assertEquals("Item effective location", headerValue);
 
     var rowResult = table.getRows().get(0).getRow().get(47);
     assertEquals("Main Library", rowResult);
