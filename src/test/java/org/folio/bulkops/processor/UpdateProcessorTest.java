@@ -44,6 +44,7 @@ import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.RuleService;
@@ -83,6 +84,8 @@ class UpdateProcessorTest extends BaseTest {
   private FolioExecutionContext folioExecutionContext;
   @MockBean
   private HoldingsReferenceService holdingsReferenceService;
+  @MockBean
+  private ConsortiaService consortiaService;
 
   @Test
   void shouldUpdateHoldingsRecord() {
@@ -297,6 +300,8 @@ class UpdateProcessorTest extends BaseTest {
         .parameters(Collections.singletonList(new Parameter()
           .key(APPLY_TO_HOLDINGS)
           .value(Boolean.toString(applyToHoldings)))))));
+
+    when(consortiaService.isCurrentTenantCentralTenant(isA(String.class))).thenReturn(false);
     when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()
       .bulkOperationRules(Collections.singletonList(rule))
       .totalRecords(1));
@@ -341,6 +346,7 @@ class UpdateProcessorTest extends BaseTest {
       .identifierType(IdentifierType.ID)
       .build();
 
+    when(consortiaService.isCurrentTenantCentralTenant(isA(String.class))).thenReturn(false);
     var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
       .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
       .actions(Collections.singletonList(new Action()
