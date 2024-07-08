@@ -2,7 +2,16 @@ package org.folio.bulkops.controller;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
+import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
+import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 import static org.folio.bulkops.domain.dto.IdentifierType.BARCODE;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationType.UPDATE;
@@ -23,10 +32,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.bean.HoldingsNoteType;
+import org.folio.bulkops.domain.bean.HoldingsNoteTypeCollection;
+import org.folio.bulkops.domain.bean.NoteType;
+import org.folio.bulkops.domain.bean.NoteTypeCollection;
 import org.folio.bulkops.domain.bean.Personal;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.FileContentType;
@@ -41,7 +55,8 @@ import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -63,26 +78,15 @@ class BulkOperationControllerTest extends BaseTest {
   @Autowired
   private BulkOperationRepository bulkOperationRepository;
 
+
+
   @ParameterizedTest
-  @EnumSource(value = FileContentType.class)
-  void shouldDownloadFileWithPreview(FileContentType type) throws Exception {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+  @MethodSource("fileContentTypeToNoteTypeCollection")
+  void shouldDownloadFileWithPreview(FileContentType type, org.folio.bulkops.domain.dto.EntityType entityType) throws Exception {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = UUID.randomUUID();
 
-      when(remoteFileSystemClient.get(any(String.class))).thenReturn(InputStream.nullInputStream());
-
-      when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(BulkOperation.builder()
-        .id(UUID.randomUUID())
-        .linkToTriggeringCsvFile("A")
-        .linkToMatchedRecordsJsonFile("B")
-        .linkToMatchedRecordsCsvFile("C")
-        .linkToMatchedRecordsErrorsCsvFile("D")
-        .linkToModifiedRecordsJsonFile("E")
-        .linkToModifiedRecordsCsvFile("F")
-        .linkToCommittedRecordsJsonFile("G")
-        .linkToCommittedRecordsCsvFile("H")
-        .linkToCommittedRecordsErrorsCsvFile("I")
-        .build());
+      mockData(entityType);
 
       mockMvc.perform(get(format("/bulk-operations/%s/download?fileContentType=%s", operationId, type))
           .headers(defaultHeaders())
@@ -90,6 +94,8 @@ class BulkOperationControllerTest extends BaseTest {
         .andExpect(status().isOk());
     }
   }
+
+
 
   @Test
   void shouldHaveHrIdWhenGetBulkOperationCollection() throws Exception {
@@ -215,5 +221,60 @@ class BulkOperationControllerTest extends BaseTest {
 
     verify(ruleService).saveMarcRules(any(BulkOperationMarcRuleCollection.class));
     verify(bulkOperationService).clearOperationProcessing(bulkOperation);
+  }
+
+  private static Stream<Arguments> fileContentTypeToNoteTypeCollection() {
+    return Stream.of(
+      Arguments.of(TRIGGERING_FILE, ITEM),
+      Arguments.of(TRIGGERING_FILE, HOLDINGS_RECORD),
+      Arguments.of(TRIGGERING_FILE, USER),
+      Arguments.of(TRIGGERING_FILE, INSTANCE),
+      Arguments.of(MATCHED_RECORDS_FILE, ITEM),
+      Arguments.of(MATCHED_RECORDS_FILE, HOLDINGS_RECORD),
+      Arguments.of(MATCHED_RECORDS_FILE, USER),
+      Arguments.of(MATCHED_RECORDS_FILE, INSTANCE),
+      Arguments.of(RECORD_MATCHING_ERROR_FILE, ITEM),
+      Arguments.of(RECORD_MATCHING_ERROR_FILE, HOLDINGS_RECORD),
+      Arguments.of(RECORD_MATCHING_ERROR_FILE, USER),
+      Arguments.of(RECORD_MATCHING_ERROR_FILE, INSTANCE),
+      Arguments.of(PROPOSED_CHANGES_FILE, ITEM),
+      Arguments.of(PROPOSED_CHANGES_FILE, HOLDINGS_RECORD),
+      Arguments.of(PROPOSED_CHANGES_FILE, USER),
+      Arguments.of(PROPOSED_CHANGES_FILE, INSTANCE),
+      Arguments.of(COMMITTED_RECORDS_FILE, ITEM),
+      Arguments.of(COMMITTED_RECORDS_FILE, HOLDINGS_RECORD),
+      Arguments.of(COMMITTED_RECORDS_FILE, USER),
+      Arguments.of(COMMITTED_RECORDS_FILE, INSTANCE),
+      Arguments.of(COMMITTING_CHANGES_ERROR_FILE, ITEM),
+      Arguments.of(COMMITTING_CHANGES_ERROR_FILE, HOLDINGS_RECORD),
+      Arguments.of(COMMITTING_CHANGES_ERROR_FILE, USER),
+      Arguments.of(COMMITTING_CHANGES_ERROR_FILE, INSTANCE)
+    );
+  }
+
+  private void mockData(org.folio.bulkops.domain.dto.EntityType entityType) {
+    when(remoteFileSystemClient.get(any(String.class))).thenReturn(InputStream.nullInputStream());
+
+    when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(BulkOperation.builder()
+      .id(UUID.randomUUID())
+      .linkToTriggeringCsvFile("A")
+      .linkToMatchedRecordsJsonFile("B")
+      .linkToMatchedRecordsCsvFile("C")
+      .linkToMatchedRecordsErrorsCsvFile("D")
+      .linkToModifiedRecordsJsonFile("E")
+      .linkToModifiedRecordsCsvFile("F")
+      .linkToCommittedRecordsJsonFile("G")
+      .linkToCommittedRecordsCsvFile("H")
+      .linkToCommittedRecordsErrorsCsvFile("I")
+      .entityType(entityType)
+      .build());
+
+    when(itemNoteTypeClient.getNoteTypes(any(Integer.class))).thenReturn(NoteTypeCollection.builder()
+      .itemNoteTypes(List.of(NoteType.builder().name("name_1").build()))
+      .build());
+
+    when(holdingsNoteTypeClient.getNoteTypes(any(Integer.class))).thenReturn(HoldingsNoteTypeCollection.builder()
+      .holdingsNoteTypes(List.of(HoldingsNoteType.builder().name("name_1").build()))
+      .build());
   }
 }
