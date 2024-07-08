@@ -76,7 +76,3 @@ application:
     group-id: ${ENV:folio}-mod-bulk-operations-events-group
   file-uploading:
     max-retry-count: ${MAX_UPLOADING_RETRIES:5000}
-#logging:
-#  level:
-#    org.hibernate.orm.jdbc.bind: trace
-

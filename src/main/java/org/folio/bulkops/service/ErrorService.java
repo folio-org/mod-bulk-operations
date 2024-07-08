@@ -1,8 +1,6 @@
 package org.folio.bulkops.service;
 
 import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
-import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
@@ -14,12 +12,7 @@ import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -67,12 +60,8 @@ public class ErrorService {
       return;
     }
     operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
-      var opt = executionContentRepository.findByBulkOperationId(bulkOperationId);
-      log.info("optt: {}", opt);
-      var opt2 = executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage);
-      log.info("optt2: {}, {}", opt2, identifier);
-      if (opt2.isEmpty()) {
-        log.info("not present: {}, {}, {}", bulkOperationId, identifier, errorMessage);
+      if (executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage).isEmpty()) {
+        log.debug("New error message {} for bulk operation {} and identifier {}", errorMessage, bulkOperationId, identifier);
         int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
         bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
       }
@@ -95,7 +84,7 @@ public class ErrorService {
   @Transactional
   public void deleteErrorsByBulkOperationId(UUID bulkOperationId) {
     executionContentRepository.deleteByBulkOperationId(bulkOperationId);
-    log.info("deletederrors: {}", bulkOperationId);
+    log.info("Errors deleted for bulk operation {}", bulkOperationId);
   }
 
   public Errors getErrorsPreviewByBulkOperationId(UUID bulkOperationId, int limit) {
