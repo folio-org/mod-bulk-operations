@@ -9,6 +9,7 @@ import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.GET_HOLDINGS_BY_INSTANCE_ID_QUERY;
 import static org.folio.bulkops.util.Constants.GET_ITEMS_BY_HOLDING_ID_QUERY;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.RuleUtils.fetchParameters;
 import static org.folio.bulkops.util.RuleUtils.findRuleByOption;
 
@@ -17,13 +18,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.ItemClient;
+import org.folio.bulkops.client.SearchConsortiumHoldings;
+import org.folio.bulkops.client.UserClient;
+import org.folio.bulkops.domain.bean.ConsortiumHolding;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
-import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.RuleService;
@@ -34,6 +38,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -42,11 +49,16 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedIns
   private static final String ERROR_MESSAGE_TEMPLATE = "No change in value for instance required, %s associated records have been updated.";
 
   private final InstanceClient instanceClient;
+  private final UserClient userClient;
   private final RuleService ruleService;
   private final HoldingsClient holdingsClient;
   private final ItemClient itemClient;
+  private final SearchConsortiumHoldings searchConsortiumHoldings;
   private final ErrorService errorService;
   private final HoldingsReferenceService holdingsReferenceService;
+  private final ConsortiaService consortiaService;
+  private final FolioModuleMetadata folioModuleMetadata;
+  private final FolioExecutionContext folioExecutionContext;
 
   @Override
   public void updateRecord(ExtendedInstance extendedInstance) {
@@ -58,7 +70,7 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedIns
   public void updateAssociatedRecords(ExtendedInstance extendedInstance, BulkOperation operation, boolean notChanged) {
     var instance = extendedInstance.getEntity();
     var recordsUpdated = findRuleByOption(ruleService.getRules(operation.getId()), SUPPRESS_FROM_DISCOVERY)
-      .filter(rule -> applyRuleToAssociatedRecords(instance, rule))
+      .filter(rule -> applyRuleToAssociatedRecords(extendedInstance, rule, operation))
       .isPresent();
     if (notChanged) {
       var errorMessage = buildErrorMessage(recordsUpdated, instance.getDiscoverySuppress());
@@ -66,7 +78,7 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedIns
     }
   }
 
-  private boolean applyRuleToAssociatedRecords(Instance instance, BulkOperationRule rule) {
+  private boolean applyRuleToAssociatedRecords(ExtendedInstance extendedInstance, BulkOperationRule rule, BulkOperation operation) {
     var parameters = fetchParameters(rule);
     var shouldApplyToHoldings = parseBoolean(parameters.get(APPLY_TO_HOLDINGS));
     var shouldApplyToItems = parseBoolean(parameters.get(APPLY_TO_ITEMS));
@@ -74,12 +86,47 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedIns
     boolean itemsUpdated = false;
     if (shouldApplyToHoldings || shouldApplyToItems) {
       log.info("Should update associated records: holdings={}, items={}", shouldApplyToHoldings, shouldApplyToItems);
-      var holdings = holdingsClient.getByQuery(format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instance.getId()), Integer.MAX_VALUE)
-        .getHoldingsRecords().stream()
-        .filter(holdingsRecord -> !"MARC".equals(holdingsReferenceService.getSourceById(holdingsRecord.getSourceId()).getName()))
-        .toList();
-      holdingsUpdated = suppressHoldingsIfRequired(holdings, shouldApplyToHoldings, instance.getDiscoverySuppress());
-      itemsUpdated = suppressItemsIfRequired(holdings, shouldApplyToItems, instance.getDiscoverySuppress());
+      if (!consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+        var instance = extendedInstance.getEntity();
+        var holdings = holdingsClient.getByQuery(format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instance.getId()), Integer.MAX_VALUE)
+          .getHoldingsRecords().stream()
+          .filter(holdingsRecord -> !"MARC".equals(holdingsReferenceService.getSourceById(holdingsRecord.getSourceId()).getName()))
+          .toList();
+        holdingsUpdated = suppressHoldingsIfRequired(holdings, shouldApplyToHoldings, instance.getDiscoverySuppress());
+        itemsUpdated = suppressItemsIfRequired(holdings, shouldApplyToItems, instance.getDiscoverySuppress());
+      } else {
+        var instance = extendedInstance.getEntity();
+        var consortiumHoldings = searchConsortiumHoldings.getHoldingsById(UUID.fromString(instance.getId())).getHoldings();
+        Map<String, List<String>> consortiaHoldingsIdsPerTenant = consortiumHoldings.stream()
+          .filter(h -> !folioExecutionContext.getTenantId().equals(h.getTenantId()))
+          .collect(Collectors.groupingBy(ConsortiumHolding::getTenantId, Collectors.mapping(ConsortiumHolding::getId, Collectors.toList())));
+        var userTenants = consortiaService.getAffiliatedTenants(folioExecutionContext.getTenantId(), folioExecutionContext.getUserId().toString());
+        var user = userClient.getUserById(folioExecutionContext.getUserId().toString());
+        for (var memberTenantForHoldings : consortiaHoldingsIdsPerTenant.keySet()) {
+          if (!userTenants.contains(memberTenantForHoldings)) {
+            var holdingsIds = consortiaHoldingsIdsPerTenant.get(memberTenantForHoldings);
+            for (var holdingId : holdingsIds) {
+              var errorMessage = String.format("User %s does not have edit permission to edit the holdings record - %s on the tenant %s", user.getUsername(), holdingId, memberTenantForHoldings);
+              log.error(errorMessage);
+              errorService.saveError(operation.getId(), instance.getIdentifier(operation.getIdentifierType()), errorMessage);
+            }
+          }
+          try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(memberTenantForHoldings, folioModuleMetadata, folioExecutionContext))) {
+            var holdings = holdingsClient.getByQuery(format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instance.getId()), Integer.MAX_VALUE)
+              .getHoldingsRecords().stream()
+              .filter(holdingsRecord -> !"MARC".equals(holdingsReferenceService.getSourceById(holdingsRecord.getSourceId()).getName()))
+              .toList();
+            var isHoldingsUpdatedInMemberTenant = suppressHoldingsIfRequired(holdings, shouldApplyToHoldings, instance.getDiscoverySuppress());
+            if (!holdingsUpdated) {
+              holdingsUpdated = isHoldingsUpdatedInMemberTenant;
+            }
+            var isItemUpdatedInMemberTenant  = suppressItemsIfRequired(holdings, shouldApplyToItems, instance.getDiscoverySuppress());
+            if (!itemsUpdated) {
+              itemsUpdated = isItemUpdatedInMemberTenant;
+            }
+          }
+        }
+      }
     }
     return holdingsUpdated || itemsUpdated;
   }
