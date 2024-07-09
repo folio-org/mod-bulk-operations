@@ -100,10 +100,10 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedIns
           .collect(Collectors.groupingBy(ConsortiumHolding::getTenantId, Collectors.mapping(ConsortiumHolding::getId, Collectors.toList())));
         var userTenants = consortiaService.getAffiliatedTenants(folioExecutionContext.getTenantId(), folioExecutionContext.getUserId().toString());
         var user = userClient.getUserById(folioExecutionContext.getUserId().toString());
-        for (var memberTenantForHoldings : consortiaHoldingsIdsPerTenant.keySet()) {
+        for (var consortiaHoldingsEntry : consortiaHoldingsIdsPerTenant.entrySet()) {
+          var memberTenantForHoldings = consortiaHoldingsEntry.getKey();
           if (!userTenants.contains(memberTenantForHoldings)) {
-            var holdingsIds = consortiaHoldingsIdsPerTenant.get(memberTenantForHoldings);
-            for (var holdingId : holdingsIds) {
+            for (var holdingId : consortiaHoldingsEntry.getValue()) {
               var errorMessage = String.format(ERROR_NO_PERMISSIONS_TO_EDIT_HOLDINGS, user.getUsername(), holdingId, memberTenantForHoldings);
               log.error(errorMessage);
               errorService.saveError(operation.getId(), instance.getIdentifier(operation.getIdentifierType()), errorMessage);
