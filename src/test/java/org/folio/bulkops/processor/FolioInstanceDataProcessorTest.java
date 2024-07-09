@@ -47,7 +47,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-class InstanceDataProcessorTest extends BaseTest {
+class FolioInstanceDataProcessorTest extends BaseTest {
   @Autowired
   DataProcessorFactory factory;
   @MockBean
@@ -87,7 +87,7 @@ class InstanceDataProcessorTest extends BaseTest {
 
   @Test
   void testClone() {
-    var processor = new InstanceDataProcessor(new InstanceNotesUpdaterFactory(new AdministrativeNotesUpdater()));
+    var processor = new FolioInstanceDataProcessor(new InstanceNotesUpdaterFactory(new AdministrativeNotesUpdater()));
     var instance = Instance.builder()
       .id(UUID.randomUUID().toString())
       .title("Title")
@@ -367,7 +367,7 @@ class InstanceDataProcessorTest extends BaseTest {
       .title("Sample title")
       .build();
 
-    var validator = ((InstanceDataProcessor) processor).validator(instance);
+    var validator = ((FolioInstanceDataProcessor) processor).validator(instance);
 
     assertThrows(RuleValidationException.class, () -> validator.validate(INSTANCE_NOTE, new Action().type(actionType)));
   }
@@ -380,7 +380,7 @@ class InstanceDataProcessorTest extends BaseTest {
       .title("Sample title")
       .build();
 
-    var validator = ((InstanceDataProcessor) processor).validator(instance);
+    var validator = ((FolioInstanceDataProcessor) processor).validator(instance);
 
     assertThrows(RuleValidationException.class, () -> validator.validate(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)));
   }
