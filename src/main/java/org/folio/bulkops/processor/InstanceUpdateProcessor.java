@@ -47,6 +47,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedInstance> {
   private static final String ERROR_MESSAGE_TEMPLATE = "No change in value for instance required, %s associated records have been updated.";
+  private static final String ERROR_NO_PERMISSIONS_TO_EDIT_HOLDINGS = "User %s does not have edit permission to edit the holdings record - %s on the tenant %s";
 
   private final InstanceClient instanceClient;
   private final UserClient userClient;
@@ -88,10 +89,7 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedIns
       log.info("Should update associated records: holdings={}, items={}", shouldApplyToHoldings, shouldApplyToItems);
       if (!consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
         var instance = extendedInstance.getEntity();
-        var holdings = holdingsClient.getByQuery(format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instance.getId()), Integer.MAX_VALUE)
-          .getHoldingsRecords().stream()
-          .filter(holdingsRecord -> !"MARC".equals(holdingsReferenceService.getSourceById(holdingsRecord.getSourceId()).getName()))
-          .toList();
+        var holdings = getHoldingsSourceFolioByInstanceId(instance.getId());
         holdingsUpdated = suppressHoldingsIfRequired(holdings, shouldApplyToHoldings, instance.getDiscoverySuppress());
         itemsUpdated = suppressItemsIfRequired(holdings, shouldApplyToItems, instance.getDiscoverySuppress());
       } else {
@@ -106,16 +104,14 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedIns
           if (!userTenants.contains(memberTenantForHoldings)) {
             var holdingsIds = consortiaHoldingsIdsPerTenant.get(memberTenantForHoldings);
             for (var holdingId : holdingsIds) {
-              var errorMessage = String.format("User %s does not have edit permission to edit the holdings record - %s on the tenant %s", user.getUsername(), holdingId, memberTenantForHoldings);
+              var errorMessage = String.format(ERROR_NO_PERMISSIONS_TO_EDIT_HOLDINGS, user.getUsername(), holdingId, memberTenantForHoldings);
               log.error(errorMessage);
               errorService.saveError(operation.getId(), instance.getIdentifier(operation.getIdentifierType()), errorMessage);
             }
+            continue;
           }
           try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(memberTenantForHoldings, folioModuleMetadata, folioExecutionContext))) {
-            var holdings = holdingsClient.getByQuery(format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instance.getId()), Integer.MAX_VALUE)
-              .getHoldingsRecords().stream()
-              .filter(holdingsRecord -> !"MARC".equals(holdingsReferenceService.getSourceById(holdingsRecord.getSourceId()).getName()))
-              .toList();
+            var holdings = getHoldingsSourceFolioByInstanceId(instance.getId());
             var isHoldingsUpdatedInMemberTenant = suppressHoldingsIfRequired(holdings, shouldApplyToHoldings, instance.getDiscoverySuppress());
             if (!holdingsUpdated) {
               holdingsUpdated = isHoldingsUpdatedInMemberTenant;
@@ -168,6 +164,13 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedIns
     return recordsUpdated ?
       format(ERROR_MESSAGE_TEMPLATE, affectedState) :
       MSG_NO_CHANGE_REQUIRED;
+  }
+
+  private List<HoldingsRecord> getHoldingsSourceFolioByInstanceId(String instanceId) {
+    return holdingsClient.getByQuery(format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE)
+      .getHoldingsRecords().stream()
+      .filter(holdingsRecord -> !"MARC".equals(holdingsReferenceService.getSourceById(holdingsRecord.getSourceId()).getName()))
+      .toList();
   }
 
   @Override
