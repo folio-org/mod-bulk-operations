@@ -362,7 +362,7 @@ public class BulkOperationService {
     UpdatedEntityHolder<BulkOperationsEntity> modified = null;
 
     try {
-      modified = processor.process(original.getIdentifier(operation.getIdentifierType()), original, rules);
+      modified = processor.process(original.getRecordBulkOperationEntity().getIdentifier(operation.getIdentifierType()), original, rules);
     } catch (Exception e) {
       log.error("Failed to modify entity, reason:" + e.getMessage());
     }
