@@ -488,8 +488,6 @@ public class BulkOperationService {
       bulkOperationRepository.save(operation);
       return operation;
     } else if (BulkOperationStep.EDIT == step) {
-      errorService.deleteErrorsByBulkOperationId(bulkOperationId);
-      operation.setCommittedNumOfErrors(0);
       if (DATA_MODIFICATION.equals(operation.getStatus()) || REVIEW_CHANGES.equals(operation.getStatus())) {
         if (MANUAL == approach) {
           executor.execute(getRunnableWithCurrentFolioContext(() -> apply(operation)));
@@ -502,6 +500,8 @@ public class BulkOperationService {
         throw new BadRequestException(format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
       }
     } else if (BulkOperationStep.COMMIT == step) {
+      errorService.deleteErrorsByBulkOperationId(bulkOperationId);
+      operation.setCommittedNumOfErrors(0);
       if (REVIEW_CHANGES.equals(operation.getStatus())) {
         executor.execute(getRunnableWithCurrentFolioContext(() -> commit(operation)));
         return operation;
