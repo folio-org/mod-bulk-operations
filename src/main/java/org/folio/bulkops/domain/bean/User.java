@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.CustomFieldsConverter;
 import org.folio.bulkops.domain.converter.DateWithTimeConverter;
@@ -168,5 +169,10 @@ public class User implements BulkOperationsEntity {
   @Override
   public Integer _version() {
     return null;
+  }
+
+  @JsonIgnore
+  public BulkOperationsEntity getRecordBulkOperationEntity() {
+    return this;
   }
 }
