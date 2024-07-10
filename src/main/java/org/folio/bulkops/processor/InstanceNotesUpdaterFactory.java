@@ -10,6 +10,7 @@ import static org.folio.bulkops.util.Constants.STAFF_ONLY_NOTE_PARAMETER_KEY;
 
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.InstanceNote;
 import org.folio.bulkops.domain.dto.Action;
@@ -29,14 +30,14 @@ public class InstanceNotesUpdaterFactory {
   public static final String INSTANCE_NOTE_TYPE_ID_KEY = "INSTANCE_NOTE_TYPE_ID_KEY";
   private final AdministrativeNotesUpdater administrativeNotesUpdater;
 
-  public Optional<Updater<Instance>> getUpdater(UpdateOptionType option, Action action) {
+  public Optional<Updater<ExtendedInstance>> getUpdater(UpdateOptionType option, Action action) {
     return switch (action.getType()) {
-      case MARK_AS_STAFF_ONLY, REMOVE_MARK_AS_STAFF_ONLY -> Optional.of(instance -> setStaffOnly(instance, action, option));
-      case REMOVE_ALL -> Optional.of(instance -> removeAll(instance, action, option));
-      case ADD_TO_EXISTING -> Optional.of(instance -> addToExisting(instance, action, option));
-      case FIND_AND_REMOVE_THESE -> Optional.of(instance -> findAndRemove(instance, action, option));
-      case FIND_AND_REPLACE -> Optional.of(instance -> findAndReplace(instance, action, option));
-      case CHANGE_TYPE -> Optional.of(instance -> changeNoteType(instance, action, option));
+      case MARK_AS_STAFF_ONLY, REMOVE_MARK_AS_STAFF_ONLY -> Optional.of(extendedInstance -> setStaffOnly(extendedInstance.getEntity(), action, option));
+      case REMOVE_ALL -> Optional.of(extendedInstance -> removeAll(extendedInstance.getEntity(), action, option));
+      case ADD_TO_EXISTING -> Optional.of(extendedInstance -> addToExisting(extendedInstance.getEntity(), action, option));
+      case FIND_AND_REMOVE_THESE -> Optional.of(extendedInstance -> findAndRemove(extendedInstance.getEntity(), action, option));
+      case FIND_AND_REPLACE -> Optional.of(extendedInstance -> findAndReplace(extendedInstance.getEntity(), action, option));
+      case CHANGE_TYPE -> Optional.of(extendedInstance -> changeNoteType(extendedInstance.getEntity(), action, option));
       default -> Optional.empty();
     };
   }

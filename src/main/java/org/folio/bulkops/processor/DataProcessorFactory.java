@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
-import org.folio.bulkops.domain.bean.HoldingsRecord;
-import org.folio.bulkops.domain.bean.Instance;
-import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
+import org.folio.bulkops.domain.bean.ExtendedInstance;
+import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,9 +19,9 @@ import lombok.AllArgsConstructor;
 public class DataProcessorFactory {
 
   private DataProcessor<User> userDataProcessor;
-  private DataProcessor<Item> itemDataProcessor;
-  private DataProcessor<HoldingsRecord> holdingsDataProcessor;
-  private DataProcessor<Instance> instanceDataProcessor;
+  private DataProcessor<ExtendedItem> itemDataProcessor;
+  private DataProcessor<ExtendedHoldingsRecord> holdingsDataProcessor;
+  private DataProcessor<ExtendedInstance> instanceDataProcessor;
 
   @Autowired
   private List<DataProcessor<? extends BulkOperationsEntity>> services;
