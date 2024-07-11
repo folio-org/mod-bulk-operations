@@ -63,7 +63,7 @@ class RecordUpdateServiceTest extends BaseTest {
       .barcode("barcode")
       .build();
     var extendedOriginalItem = ExtendedItem.builder().entity(original).build();
-    var modified = original.withCallNumber("call number");
+    var modified = original.withItemLevelCallNumber("call number");
     var extendedModifiedItem = ExtendedItem.builder().entity(modified).build();
     var operation = BulkOperation.builder()
       .id(UUID.randomUUID())

@@ -1,14 +1,10 @@
-package org.folio.bulkops.service;
-
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
+package org.folio.bulkops.processor.note;
 
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.RFC4180ParserBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.bulkops.domain.bean.HoldingsNoteType;
+import org.folio.bulkops.service.NoteTableUpdater;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
@@ -17,36 +13,34 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @Component
 @RequiredArgsConstructor
 @Log4j2
-public class HoldingsNotesProcessor {
+public abstract class AbstractNoteProcessor {
+
   private static final int FIRST_LINE = 1;
 
-  private final HoldingsReferenceService holdingsReferenceService;
   private final NoteTableUpdater noteTableUpdater;
 
-  public byte[] processHoldingsNotes(byte[] input) {
-    var noteTypeNames = holdingsReferenceService.getAllHoldingsNoteTypes().stream()
-      .map(HoldingsNoteType::getName)
-      .filter(Objects::nonNull)
-      .sorted()
-      .toList();
+  public byte[] processNotes(byte[] input) {
+    List<String> noteTypeNames = getNoteTypeNames();
     var noteTypeHeaders = noteTypeNames.stream()
       .map(noteTableUpdater::concatNotePostfixIfRequired)
       .toList();
 
     try (var reader = new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(input)))
-          .withCSVParser(new RFC4180ParserBuilder().build()).build();
+      .withCSVParser(new RFC4180ParserBuilder().build()).build();
          var stringWriter = new StringWriter()) {
       String[] line;
       while ((line = reader.readNext()) != null) {
         if (reader.getRecordsRead() == FIRST_LINE) {
           var headers = new ArrayList<>(Arrays.asList(line));
-          headers.remove(HOLDINGS_NOTE_POSITION);
-          headers.addAll(HOLDINGS_NOTE_POSITION, noteTypeHeaders);
+          headers.remove(getNotePosition());
+          headers.addAll(getNotePosition(), noteTypeHeaders);
           line = headers.stream()
             .map(this::processSpecialCharacters)
             .toArray(String[]::new);
@@ -63,8 +57,12 @@ public class HoldingsNotesProcessor {
     }
   }
 
+  protected abstract List<String> getNoteTypeNames();
+
+  protected abstract int getNotePosition();
+
   private String[] processNotesData(String[] line, List<String> noteTypeNames) {
-    return noteTableUpdater.enrichWithNotesByType(new ArrayList<>(Arrays.asList(line)), HOLDINGS_NOTE_POSITION, noteTypeNames).stream()
+    return noteTableUpdater.enrichWithNotesByType(new ArrayList<>(Arrays.asList(line)), getNotePosition(), noteTypeNames).stream()
       .map(this::processSpecialCharacters)
       .toArray(String[]::new);
   }

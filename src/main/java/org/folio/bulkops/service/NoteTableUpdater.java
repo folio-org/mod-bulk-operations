@@ -99,7 +99,7 @@ public class NoteTableUpdater {
       for (var note : notesString.split(ITEM_DELIMITER_PATTERN)) {
         var noteFields = note.trim().split(ARRAY_DELIMITER);
         if (noteFields.length == NUMBER_OF_NOTE_FIELDS) {
-          var position = noteTypeNames.indexOf(noteFields[NOTE_TYPE_POS]);
+          var position = noteTypeNames.indexOf(SpecialCharacterEscaper.restore(noteFields[NOTE_TYPE_POS]));
           if (position != NON_EXISTING_POSITION) {
             var staffOnlyPostfix = TRUE.equals(Boolean.parseBoolean(noteFields[STAFF_ONLY_FLAG_POS])) ? SPACE + STAFF_ONLY : EMPTY;
             var value = SpecialCharacterEscaper.restore(noteFields[NOTE_VALUE_POS]) + staffOnlyPostfix;

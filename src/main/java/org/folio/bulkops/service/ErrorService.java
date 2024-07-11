@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
@@ -12,10 +13,10 @@ import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
@@ -41,6 +42,7 @@ import org.springframework.util.ObjectUtils;
 import lombok.RequiredArgsConstructor;
 
 @Service
+@Log4j2
 @RequiredArgsConstructor
 public class ErrorService {
   private static final String POSTFIX_ERROR_MESSAGE_NON_NULL = " AND errorMessage<null";
@@ -58,8 +60,11 @@ public class ErrorService {
       return;
     }
     operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
-      int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
-      bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
+      if (executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage).isEmpty()) {
+        log.debug("New error message {} for bulk operation {} and identifier {}", errorMessage, bulkOperationId, identifier);
+        int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
+        bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
+      }
       operationRepository.save(bulkOperation);
     });
     executionContentRepository.save(BulkOperationExecutionContent.builder()
@@ -79,6 +84,7 @@ public class ErrorService {
   @Transactional
   public void deleteErrorsByBulkOperationId(UUID bulkOperationId) {
     executionContentRepository.deleteByBulkOperationId(bulkOperationId);
+    log.info("Errors deleted for bulk operation {}", bulkOperationId);
   }
 
   public Errors getErrorsPreviewByBulkOperationId(UUID bulkOperationId, int limit) {
@@ -98,7 +104,7 @@ public class ErrorService {
   }
 
   private boolean noCommittedErrors(BulkOperation bulkOperation) {
-    return Objects.isNull(bulkOperation.getCommittedNumOfErrors()) || bulkOperation.getCommittedNumOfErrors() == 0;
+    return isNull(bulkOperation.getCommittedNumOfErrors()) || bulkOperation.getCommittedNumOfErrors() == 0;
   }
 
   private Error prepareInternalErrorRepresentation(Error e) {

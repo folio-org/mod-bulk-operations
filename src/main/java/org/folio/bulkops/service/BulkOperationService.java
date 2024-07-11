@@ -416,8 +416,9 @@ public class BulkOperationService {
           processedNumOfRecords++;
 
           try {
-            var result = recordUpdateService.updateEntity(original, modified, operation);
-            if (result != original) {
+            //ToDo MODBULKOPS-273
+            var result = recordUpdateService.updateEntity(original.getRecordBulkOperationEntity(), modified.getRecordBulkOperationEntity(), operation);
+            if (result != original.getRecordBulkOperationEntity()) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
               writeToCsv(operation, csvWriter, result.getRecordBulkOperationEntity());
@@ -487,8 +488,6 @@ public class BulkOperationService {
       bulkOperationRepository.save(operation);
       return operation;
     } else if (BulkOperationStep.EDIT == step) {
-      errorService.deleteErrorsByBulkOperationId(bulkOperationId);
-      operation.setCommittedNumOfErrors(0);
       if (DATA_MODIFICATION.equals(operation.getStatus()) || REVIEW_CHANGES.equals(operation.getStatus())) {
         if (MANUAL == approach) {
           executor.execute(getRunnableWithCurrentFolioContext(() -> apply(operation)));
@@ -501,6 +500,8 @@ public class BulkOperationService {
         throw new BadRequestException(format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
       }
     } else if (BulkOperationStep.COMMIT == step) {
+      errorService.deleteErrorsByBulkOperationId(bulkOperationId);
+      operation.setCommittedNumOfErrors(0);
       if (REVIEW_CHANGES.equals(operation.getStatus())) {
         executor.execute(getRunnableWithCurrentFolioContext(() -> commit(operation)));
         return operation;

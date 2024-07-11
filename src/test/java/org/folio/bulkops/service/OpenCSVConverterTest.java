@@ -21,6 +21,7 @@ import org.folio.bulkops.domain.bean.DamagedStatus;
 import org.folio.bulkops.domain.bean.DamagedStatusCollection;
 import org.folio.bulkops.domain.bean.Department;
 import org.folio.bulkops.domain.bean.DepartmentCollection;
+import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.domain.bean.ElectronicAccessRelationship;
 import org.folio.bulkops.domain.bean.ElectronicAccessRelationshipCollection;
 import org.folio.bulkops.domain.bean.Format;
@@ -41,6 +42,7 @@ import org.folio.bulkops.domain.bean.InstanceTypes;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.ItemLocationCollection;
+import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.LoanTypeCollection;
 import org.folio.bulkops.domain.bean.MaterialType;
@@ -56,6 +58,7 @@ import org.folio.bulkops.domain.bean.SelectFieldOption;
 import org.folio.bulkops.domain.bean.SelectFieldOptions;
 import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.bulkops.domain.bean.StatisticalCodeCollection;
+import org.folio.bulkops.domain.bean.Tags;
 import org.folio.bulkops.domain.bean.TextField;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
@@ -91,6 +94,7 @@ import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_REF_ID;
 import static org.folio.bulkops.util.Utils.encode;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -118,9 +122,8 @@ class OpenCSVConverterTest extends BaseTest {
     /* JSON -> Object */
     var bean = objectMapper.readValue(new FileInputStream(getPathToSample(clazz)), clazz);
     if (bean instanceof Item item) {
-      bean = item
-        .withCheckInNotes(Collections.singletonList(CirculationNote.builder().note("Check in note").staffOnly(true).build()))
-        .withCheckOutNotes(Collections.singletonList(CirculationNote.builder().note("Check out note").staffOnly(false).build()));
+      mockItemData();
+      bean = buildItem(item);
     }
 
     /* Object -> CSV */
@@ -172,6 +175,48 @@ class OpenCSVConverterTest extends BaseTest {
         .isEqualTo(bean);
     }
 
+  }
+
+  private void mockItemData() {
+    when(relationshipClient.getById("f5d0068e-6272-458e-8a81-b85e7b9a14aa"))
+      .thenReturn(new ElectronicAccessRelationship().withId("f5d0068e-6272-458e-8a81-b85e7b9a14aa").withName("EAR"));
+
+    when(itemNoteTypeClient.getNoteTypeById("Item@Note@NameX"))
+      .thenReturn(NoteType.builder().id("Item@Note@NameX").name("note").build());
+
+    when(itemNoteTypeClient.getNoteTypeById("Item@Note@Name_2"))
+      .thenReturn(NoteType.builder().id("Item@Note@Name_2").name("provenance").build());
+
+    when(itemNoteTypeClient.getNoteTypesByQuery(String.format(QUERY_PATTERN_NAME, encode("note")), 1))
+      .thenReturn(NoteTypeCollection.builder().itemNoteTypes(List.of(NoteType.builder().id("Item@Note@NameX")
+        .name("note").build())).build());
+
+    when(itemNoteTypeClient.getNoteTypesByQuery(String.format(QUERY_PATTERN_NAME, encode("provenance")), 1))
+      .thenReturn(NoteTypeCollection.builder().itemNoteTypes(List.of(NoteType.builder().id("Item@Note@Name_2")
+        .name("provenance").build())).build());
+
+    when(statisticalCodeClient.getById(anyString())).thenReturn(new StatisticalCode()
+      .withId("1c622d0f-2e91-4c30-ba43-2750f9735f51")
+      .withCode("St@tistical-Code#1"));
+  }
+
+  private static Item buildItem(Item item) {
+    return item
+      .withAdministrativeNotes(Collections.singletonList("Administrative note"))
+      .withElectronicAccess(Collections.singletonList(ElectronicAccess.builder()
+        .relationshipId("f5d0068e-6272-458e-8a81-b85e7b9a14aa")
+        .uri("http://example2.org")
+        .linkText("Link text")
+        .materialsSpecification("Materials")
+        .publicNote("note").build()))
+      .withFormerIds(Collections.singletonList("Former identifier"))
+      .withNotes(List.of(ItemNote.builder().itemNoteTypeId("Item@Note@NameX").note("note").staffOnly(true).build(),
+        ItemNote.builder().itemNoteTypeId("Item@Note@Name_2").note("provenance").staffOnly(false).build()))
+      .withStatisticalCodes(List.of("1c622d0f-2e91-4c30-ba43-2750f9735f51"))
+      .withTags(Tags.builder().tagList(Collections.emptyList()).build())
+      .withYearCaption(List.of("2001/11/12"))
+      .withCheckInNotes(Collections.singletonList(CirculationNote.builder().note("Check in note").staffOnly(true).build()))
+      .withCheckOutNotes(Collections.singletonList(CirculationNote.builder().note("Check out note").staffOnly(false).build()));
   }
 
   @ParameterizedTest
