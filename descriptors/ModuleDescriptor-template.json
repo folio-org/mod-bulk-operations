@@ -80,6 +80,7 @@
             "okapi.proxy.tenants.modules.list",
             "inventory-storage.item-damaged-statuses.item.get",
             "inventory-storage.item-note-types.item.get",
+            "inventory-storage.item-note-types.collection.get",
             "inventory-storage.service-points.item.get",
             "users.item.get",
             "inventory-storage.instances.item.get",
@@ -206,7 +207,8 @@
           "pathPattern": "/bulk-operations/{operationId}/download",
           "permissionsRequired": [ "bulk-operations.download.item.get" ],
           "modulePermissions": [
-            "inventory-storage.holdings-note-types.collection.get"
+            "inventory-storage.holdings-note-types.collection.get",
+            "inventory-storage.item-note-types.collection.get"
           ]
         },
         {
