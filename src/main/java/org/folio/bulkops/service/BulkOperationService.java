@@ -500,10 +500,14 @@ public class BulkOperationService {
         throw new BadRequestException(format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
       }
     } else if (BulkOperationStep.COMMIT == step) {
-      errorService.deleteErrorsByBulkOperationId(bulkOperationId);
-      operation.setCommittedNumOfErrors(0);
+//      errorService.deleteErrorsByBulkOperationId(bulkOperationId);
+//      operation.setCommittedNumOfErrors(0);
       if (REVIEW_CHANGES.equals(operation.getStatus())) {
-        executor.execute(getRunnableWithCurrentFolioContext(() -> commit(operation)));
+        executor.execute(getRunnableWithCurrentFolioContext(() -> {
+          commit(operation);
+          errorService.deleteErrorsByBulkOperationId(bulkOperationId);
+          operation.setCommittedNumOfErrors(0);
+        }));
         return operation;
       } else {
         throw new BadRequestException(format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
