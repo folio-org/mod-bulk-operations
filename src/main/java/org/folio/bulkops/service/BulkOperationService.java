@@ -488,8 +488,8 @@ public class BulkOperationService {
       bulkOperationRepository.save(operation);
       return operation;
     } else if (BulkOperationStep.EDIT == step) {
-      errorService.deleteErrorsByBulkOperationId(bulkOperationId);
-      operation.setCommittedNumOfErrors(0);
+//      errorService.deleteErrorsByBulkOperationId(bulkOperationId);
+//      operation.setCommittedNumOfErrors(0);
       if (DATA_MODIFICATION.equals(operation.getStatus()) || REVIEW_CHANGES.equals(operation.getStatus())) {
         if (MANUAL == approach) {
           executor.execute(getRunnableWithCurrentFolioContext(() -> apply(operation)));
@@ -505,6 +505,8 @@ public class BulkOperationService {
       if (REVIEW_CHANGES.equals(operation.getStatus())) {
         executor.execute(getRunnableWithCurrentFolioContext(() -> {
           commit(operation);
+          errorService.deleteErrorsByBulkOperationId(bulkOperationId);
+          operation.setCommittedNumOfErrors(0);
         }));
         return operation;
       } else {
