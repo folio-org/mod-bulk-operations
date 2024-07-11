@@ -60,11 +60,11 @@ public class ErrorService {
       return;
     }
     operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
-      if (executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage).isEmpty()) {
+//      if (executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage).isEmpty()) {
         log.debug("New error message {} for bulk operation {} and identifier {}", errorMessage, bulkOperationId, identifier);
         int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
         bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
-      }
+//      }
       operationRepository.save(bulkOperation);
     });
     executionContentRepository.save(BulkOperationExecutionContent.builder()
