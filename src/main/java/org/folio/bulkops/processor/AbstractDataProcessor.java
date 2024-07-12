@@ -6,6 +6,7 @@ import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.service.ErrorService;
@@ -34,10 +35,10 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
           validator(entity).validate(option, action);
           updater(option, action).apply(updated);
         } catch (RuleValidationException e) {
-          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
+          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), BulkOperationStep.EDIT);
         } catch (Exception e) {
           log.error(String.format("%s id=%s, error: %s", updated.getRecordBulkOperationEntity().getClass().getSimpleName(), "id", e.getMessage()));
-          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
+          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), BulkOperationStep.EDIT);
         }
       }
     }

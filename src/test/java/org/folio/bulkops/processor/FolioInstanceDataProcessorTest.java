@@ -29,6 +29,7 @@ import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.InstanceNote;
+import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.service.ErrorService;
@@ -86,7 +87,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var extendedInstance = ExtendedInstance.builder().entity(new Instance().withDiscoverySuppress(true)).build();
     var actual = processor.process(IDENTIFIER, extendedInstance, rules(rule(STAFF_SUPPRESS, CLEAR_FIELD, null)));
     assertTrue(actual.getUpdated().getEntity().getDiscoverySuppress());
-    verify(errorService).saveError(any(UUID.class), eq(IDENTIFIER), anyString());
+    verify(errorService).saveError(any(UUID.class), eq(IDENTIFIER), anyString(), any(BulkOperationStep.class));
   }
 
   @Test

@@ -250,7 +250,7 @@ public class BulkOperationService {
 
         if (Objects.nonNull(modified)) {
           // Prepare CSV for download and preview
-          writeToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity());
+          writeToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity(), BulkOperationStep.EDIT);
 
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
           writerForModifiedJsonFile.write(modifiedRecord);
@@ -344,16 +344,16 @@ public class BulkOperationService {
     }
   }
 
-  public void writeToCsv(BulkOperation operation, BulkOperationsEntityCsvWriter csvWriter, BulkOperationsEntity bean) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
+  public void writeToCsv(BulkOperation operation, BulkOperationsEntityCsvWriter csvWriter, BulkOperationsEntity bean, BulkOperationStep step) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
     try {
       csvWriter.write(bean);
     } catch (ConverterException e) {
       if (APPLY_CHANGES.equals(operation.getStatus())) {
         log.error("Record {}, field: {}, converter exception: {}", bean.getIdentifier(operation.getIdentifierType()), e.getField().getName(), e.getMessage());
       } else {
-        errorService.saveError(operation.getId(), bean.getIdentifier(operation.getIdentifierType()), format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()));
+        errorService.saveError(operation.getId(), bean.getIdentifier(operation.getIdentifierType()), format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()), step);
       }
-      writeToCsv(operation, csvWriter, bean);
+      writeToCsv(operation, csvWriter, bean, step);
     }
   }
 
@@ -421,12 +421,12 @@ public class BulkOperationService {
             if (result != original.getRecordBulkOperationEntity()) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
-              writeToCsv(operation, csvWriter, result);
+              writeToCsv(operation, csvWriter, result, BulkOperationStep.COMMIT);
             }
           } catch (OptimisticLockingException e) {
-            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLinkToFailedEntity());
+            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLinkToFailedEntity(), BulkOperationStep.COMMIT);
           } catch (Exception e) {
-            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage());
+            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage(), BulkOperationStep.COMMIT);
           }
           execution = execution
             .withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
@@ -488,8 +488,8 @@ public class BulkOperationService {
       bulkOperationRepository.save(operation);
       return operation;
     } else if (BulkOperationStep.EDIT == step) {
-//      errorService.deleteErrorsByBulkOperationId(bulkOperationId);
-//      operation.setCommittedNumOfErrors(0);
+      errorService.deleteErrorsByBulkOperationId(bulkOperationId);
+      operation.setCommittedNumOfErrors(0);
       if (DATA_MODIFICATION.equals(operation.getStatus()) || REVIEW_CHANGES.equals(operation.getStatus())) {
         if (MANUAL == approach) {
           executor.execute(getRunnableWithCurrentFolioContext(() -> apply(operation)));
@@ -503,11 +503,7 @@ public class BulkOperationService {
       }
     } else if (BulkOperationStep.COMMIT == step) {
       if (REVIEW_CHANGES.equals(operation.getStatus())) {
-        executor.execute(getRunnableWithCurrentFolioContext(() -> {
-          commit(operation);
-          errorService.deleteErrorsByBulkOperationId(bulkOperationId);
-          operation.setCommittedNumOfErrors(0);
-        }));
+        executor.execute(getRunnableWithCurrentFolioContext(() -> commit(operation)));
         return operation;
       } else {
         throw new BadRequestException(format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
@@ -583,7 +579,7 @@ public class BulkOperationService {
           bulkOperationRepository.save(operation);
         }
       }
-      csvToBean.getCapturedExceptions().forEach(e -> errorService.saveError(operation.getId(), Utils.getIdentifierForManualApproach(e.getLine(), operation.getIdentifierType()), e.getMessage()));
+      csvToBean.getCapturedExceptions().forEach(e -> errorService.saveError(operation.getId(), Utils.getIdentifierForManualApproach(e.getLine(), operation.getIdentifierType()), e.getMessage(), BulkOperationStep.EDIT));
       csvToBean.getCapturedExceptions().clear();
       operation.setProcessedNumOfRecords(processedNumOfRecords);
       operation.setStatus(REVIEW_CHANGES);

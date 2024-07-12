@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.StateType;
+import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.Parameter;
@@ -55,12 +56,12 @@ public class ErrorService {
   private final BulkOperationProcessingContentRepository processingContentRepository;
   private final BulkEditClient bulkEditClient;
 
-  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
+  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link, BulkOperationStep step) {
     if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
       return;
     }
     operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
-      if (executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage).isEmpty()) {
+      if (executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessageAndStep(bulkOperationId, identifier, errorMessage, BulkOperationStep.COMMIT).isEmpty()) {
         log.debug("New error message {} for bulk operation {} and identifier {}", errorMessage, bulkOperationId, identifier);
         int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
         bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
@@ -74,11 +75,12 @@ public class ErrorService {
         .errorMessage(errorMessage)
         .uiErrorMessage(uiErrorMessage)
         .linkToFailedEntity(link)
+        .step(step)
       .build());
   }
 
-  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage) {
-    saveError(bulkOperationId, identifier, errorMessage, null, null);
+  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, BulkOperationStep step) {
+    saveError(bulkOperationId, identifier, errorMessage, null, null, step);
   }
 
   @Transactional

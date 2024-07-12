@@ -582,7 +582,7 @@ class BulkOperationServiceTest extends BaseTest {
       assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));
       assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
 
-      verify(errorService).saveError(eq(bulkOperationId), eq("10101"), any(String.class));
+      verify(errorService).saveError(eq(bulkOperationId), eq("10101"), any(String.class), any(BulkOperationStep.class));
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
       Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository).save(bulkOperationCaptor.capture()));
@@ -878,7 +878,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     verify(userClient, times(0)).updateUser(any(User.class), anyString());
 
-    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), eq(MSG_NO_CHANGE_REQUIRED)));
+    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), eq(MSG_NO_CHANGE_REQUIRED), any(BulkOperationStep.class)));
 
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).writer(pathCaptor.capture()));
@@ -935,7 +935,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     bulkOperationService.commit(operation);
 
-    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), anyString()));
+    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), anyString(), any()));
 
   }
 
@@ -1151,7 +1151,7 @@ class BulkOperationServiceTest extends BaseTest {
       .thenReturn(new ByteArrayInputStream(modifiedHoldingsString.getBytes()));
     when(remoteFileSystemClient.writer(anyString()))
       .thenReturn(new StringWriter());
-    doNothing().when(errorService).saveError(any(), any(), any());
+    doNothing().when(errorService).saveError(any(), any(), any(), any());
     when(ruleService.getRules(operationId))
       .thenReturn(new BulkOperationRuleCollection()
         .bulkOperationRules(List.of(new BulkOperationRule()
@@ -1183,7 +1183,7 @@ class BulkOperationServiceTest extends BaseTest {
       verify(itemClient, times(testData.expectedNumOfItemUpdates)).updateItem(any(), anyString());
     }
     if (nonNull(testData.expectedErrorMessage)) {
-      verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage));
+      verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage), any(BulkOperationStep.class));
     }
   }
 
@@ -1262,12 +1262,12 @@ class BulkOperationServiceTest extends BaseTest {
 
     try (var stringWriter = new StringWriter()) {
       var writer = new BulkOperationsEntityCsvWriter(stringWriter, Item.class);
-      bulkOperationService.writeToCsv(operation, writer, item);
+      bulkOperationService.writeToCsv(operation, writer, item, BulkOperationStep.EDIT);
       assertThat(stringWriter.toString(), containsString("FAILED"));
       if (APPLY_CHANGES.equals(operation.getStatus())) {
-        verify(errorService, times(0)).saveError(any(), any(), any());
+        verify(errorService, times(0)).saveError(any(), any(), any(), any());
       } else {
-        verify(errorService).saveError(any(), any(), any());
+        verify(errorService).saveError(any(), any(), any(), any());
       }
     }
   }

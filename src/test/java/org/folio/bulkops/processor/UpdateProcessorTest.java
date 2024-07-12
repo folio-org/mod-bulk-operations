@@ -32,6 +32,7 @@ import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
+import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateActionType;
@@ -121,9 +122,9 @@ class UpdateProcessorTest extends BaseTest {
     verify(itemClient, times(0)).updateItem(any(Item.class), anyString());
 
     if (notChanged) {
-      verify(errorService).saveError(any(UUID.class), anyString(), eq(MSG_NO_CHANGE_REQUIRED));
+      verify(errorService).saveError(any(UUID.class), anyString(), eq(MSG_NO_CHANGE_REQUIRED), any(BulkOperationStep.class));
     } else {
-      verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString());
+      verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString(), any(BulkOperationStep.class));
     }
   }
 
@@ -170,9 +171,9 @@ class UpdateProcessorTest extends BaseTest {
     if (notChanged) {
       var errorMessage = String.format("No change in value for holdings record required, associated %s item(s) have been updated.",
         SET_TO_TRUE_INCLUDING_ITEMS.equals(actionType) ? "unsuppressed" : "suppressed");
-      verify(errorService).saveError(any(UUID.class), anyString(), eq(errorMessage));
+      verify(errorService).saveError(any(UUID.class), anyString(), eq(errorMessage), any(BulkOperationStep.class));
     } else {
-      verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString());
+      verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString(), any(BulkOperationStep.class));
     }
   }
 
