@@ -92,7 +92,7 @@ class RecordUpdateServiceTest extends BaseTest {
 
     assertEquals(original, result);
     verify(itemUpdateProcessor, times(0)).updateRecord(any(Item.class));
-    verify(errorService).saveError(operation.getId(), original.getIdentifier(IdentifierType.ID), MSG_NO_CHANGE_REQUIRED, BulkOperationStep.EDIT);
+    verify(errorService).saveError(operation.getId(), original.getIdentifier(IdentifierType.ID), MSG_NO_CHANGE_REQUIRED, BulkOperationStep.COMMIT);
   }
 
   @ParameterizedTest

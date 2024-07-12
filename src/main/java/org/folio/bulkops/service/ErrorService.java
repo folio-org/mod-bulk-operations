@@ -61,22 +61,22 @@ public class ErrorService {
       return;
     }
     operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
-      if (executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessageAndStep(bulkOperationId, identifier, errorMessage, BulkOperationStep.COMMIT).isEmpty()) {
+      if (executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage).isEmpty()) {
         log.debug("New error message {} for bulk operation {} and identifier {}", errorMessage, bulkOperationId, identifier);
         int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
         bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
+        executionContentRepository.save(BulkOperationExecutionContent.builder()
+          .identifier(identifier)
+          .bulkOperationId(bulkOperationId)
+          .state(StateType.FAILED)
+          .errorMessage(errorMessage)
+          .uiErrorMessage(uiErrorMessage)
+          .linkToFailedEntity(link)
+          .step(step)
+          .build());
       }
       operationRepository.save(bulkOperation);
     });
-    executionContentRepository.save(BulkOperationExecutionContent.builder()
-        .identifier(identifier)
-        .bulkOperationId(bulkOperationId)
-        .state(StateType.FAILED)
-        .errorMessage(errorMessage)
-        .uiErrorMessage(uiErrorMessage)
-        .linkToFailedEntity(link)
-        .step(step)
-      .build());
   }
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, BulkOperationStep step) {
@@ -84,8 +84,8 @@ public class ErrorService {
   }
 
   @Transactional
-  public void deleteErrorsByBulkOperationIdExcludingCommitStep(UUID bulkOperationId) {
-    executionContentRepository.deleteByBulkOperationIdAndStepNot(bulkOperationId, BulkOperationStep.COMMIT);
+  public void deleteErrorsByBulkOperationId(UUID bulkOperationId) {
+    executionContentRepository.deleteByBulkOperationId(bulkOperationId);
     log.info("Errors deleted for bulk operation {}", bulkOperationId);
   }
 

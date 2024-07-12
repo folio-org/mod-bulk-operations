@@ -14,8 +14,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BulkOperationExecutionContentRepository extends JpaRepository<BulkOperationExecutionContent, UUID> {
   Page<BulkOperationExecutionContent> findByBulkOperationIdAndErrorMessageIsNotNull(UUID bulkOperationId, OffsetRequest offsetRequest);
-  List<BulkOperationExecutionContent> findByBulkOperationIdAndIdentifierAndErrorMessageAndStep(UUID bulkOperationId, String identifier, String errorMessage, BulkOperationStep step);
+  List<BulkOperationExecutionContent> findByBulkOperationIdAndIdentifierAndErrorMessage(UUID bulkOperationId, String identifier, String errorMessage);
   Optional<BulkOperationExecutionContent> findFirstByBulkOperationIdAndIdentifier(UUID bulkOperationId, String identifier);
 
-  void deleteByBulkOperationIdAndStepNot(UUID bulkOperationId, BulkOperationStep step);
+  void deleteByBulkOperationId(UUID bulkOperationId);
 }
