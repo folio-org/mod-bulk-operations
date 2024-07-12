@@ -84,8 +84,8 @@ public class ErrorService {
   }
 
   @Transactional
-  public void deleteErrorsByBulkOperationId(UUID bulkOperationId) {
-    executionContentRepository.deleteByBulkOperationId(bulkOperationId);
+  public void deleteErrorsByBulkOperationIdExcludingCommitStep(UUID bulkOperationId) {
+    executionContentRepository.deleteByBulkOperationIdAndStepNot(bulkOperationId, BulkOperationStep.COMMIT);
     log.info("Errors deleted for bulk operation {}", bulkOperationId);
   }
 

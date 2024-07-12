@@ -488,7 +488,7 @@ public class BulkOperationService {
       bulkOperationRepository.save(operation);
       return operation;
     } else if (BulkOperationStep.EDIT == step) {
-      errorService.deleteErrorsByBulkOperationId(bulkOperationId);
+      errorService.deleteErrorsByBulkOperationIdExcludingCommitStep(bulkOperationId);
       operation.setCommittedNumOfErrors(0);
       if (DATA_MODIFICATION.equals(operation.getStatus()) || REVIEW_CHANGES.equals(operation.getStatus())) {
         if (MANUAL == approach) {

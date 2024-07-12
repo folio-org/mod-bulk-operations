@@ -17,5 +17,5 @@ public interface BulkOperationExecutionContentRepository extends JpaRepository<B
   List<BulkOperationExecutionContent> findByBulkOperationIdAndIdentifierAndErrorMessageAndStep(UUID bulkOperationId, String identifier, String errorMessage, BulkOperationStep step);
   Optional<BulkOperationExecutionContent> findFirstByBulkOperationIdAndIdentifier(UUID bulkOperationId, String identifier);
 
-  void deleteByBulkOperationId(UUID bulkOperationId);
+  void deleteByBulkOperationIdAndStepNot(UUID bulkOperationId, BulkOperationStep step);
 }
