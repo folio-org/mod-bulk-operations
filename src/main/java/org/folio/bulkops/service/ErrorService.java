@@ -65,18 +65,18 @@ public class ErrorService {
         log.debug("New error message {} for bulk operation {} and identifier {}", errorMessage, bulkOperationId, identifier);
         int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
         bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
-        executionContentRepository.save(BulkOperationExecutionContent.builder()
-          .identifier(identifier)
-          .bulkOperationId(bulkOperationId)
-          .state(StateType.FAILED)
-          .errorMessage(errorMessage)
-          .uiErrorMessage(uiErrorMessage)
-          .linkToFailedEntity(link)
-          .step(step)
-          .build());
       }
       operationRepository.save(bulkOperation);
     });
+    executionContentRepository.save(BulkOperationExecutionContent.builder()
+      .identifier(identifier)
+      .bulkOperationId(bulkOperationId)
+      .state(StateType.FAILED)
+      .errorMessage(errorMessage)
+      .uiErrorMessage(uiErrorMessage)
+      .linkToFailedEntity(link)
+      .step(step)
+      .build());
   }
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, BulkOperationStep step) {
@@ -85,7 +85,7 @@ public class ErrorService {
 
   @Transactional
   public void deleteErrorsByBulkOperationId(UUID bulkOperationId) {
-    executionContentRepository.deleteByBulkOperationId(bulkOperationId);
+//    executionContentRepository.deleteByBulkOperationId(bulkOperationId);
     log.info("Errors deleted for bulk operation {}", bulkOperationId);
   }
 
