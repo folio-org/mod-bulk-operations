@@ -17,7 +17,7 @@ public class PreferredEmailCommunicationConverter extends BaseConverter<Set<Pref
   @Override
   public Set<PreferredEmailCommunication> convertToObject(String value) {
     if (isNotEmpty(value)) {
-      return Arrays.stream(value.split(ARRAY_DELIMITER)).map(PreferredEmailCommunication::valueOf).collect(Collectors.toSet());
+      return Arrays.stream(value.split(ARRAY_DELIMITER)).map(PreferredEmailCommunication::fromValue).collect(Collectors.toSet());
     }
     return Collections.emptySet();
   }
