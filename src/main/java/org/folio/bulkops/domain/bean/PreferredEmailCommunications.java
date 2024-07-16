@@ -1,12 +1,12 @@
 package org.folio.bulkops.domain.bean;
 
-public enum PreferredEmailCommunication {
+public enum PreferredEmailCommunications {
 
   SUPPORT("Support"), PROGRAMS("Programs"), SERVICES("Services");
 
   private String value;
 
-  PreferredEmailCommunication(String value) {
+  PreferredEmailCommunications(String value) {
     this.value = value;
   }
 
@@ -14,8 +14,8 @@ public enum PreferredEmailCommunication {
     return value;
   }
 
-  public static PreferredEmailCommunication fromValue(String value) {
-    for (PreferredEmailCommunication communication : PreferredEmailCommunication.values()) {
+  public static PreferredEmailCommunications fromValue(String value) {
+    for (PreferredEmailCommunications communication : PreferredEmailCommunications.values()) {
       if (communication.getValue().equalsIgnoreCase(value)) {
         return communication;
       }

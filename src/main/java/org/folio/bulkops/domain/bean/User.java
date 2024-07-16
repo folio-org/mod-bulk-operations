@@ -16,7 +16,7 @@ import org.folio.bulkops.domain.converter.CustomFieldsConverter;
 import org.folio.bulkops.domain.converter.DateWithTimeConverter;
 import org.folio.bulkops.domain.converter.DepartmentsConverter;
 import org.folio.bulkops.domain.converter.PatronGroupConverter;
-import org.folio.bulkops.domain.converter.PreferredEmailCommunicationConverter;
+import org.folio.bulkops.domain.converter.PreferredEmailCommunicationsConverter;
 import org.folio.bulkops.domain.converter.ProxyForConverter;
 import org.folio.bulkops.domain.converter.StringConverter;
 import org.folio.bulkops.domain.converter.TagsConverter;
@@ -141,12 +141,12 @@ public class User implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private Map<String, Object> customFields;
 
-  @JsonProperty("preferredEmailCommunication")
+  @JsonProperty("preferredEmailCommunications")
   @Valid
-  @CsvCustomBindByName(column = "Preferred email communication", converter = PreferredEmailCommunicationConverter.class)
-  @CsvCustomBindByPosition(position = 24, converter = PreferredEmailCommunicationConverter.class)
+  @CsvCustomBindByName(column = "Preferred email communications", converter = PreferredEmailCommunicationsConverter.class)
+  @CsvCustomBindByPosition(position = 24, converter = PreferredEmailCommunicationsConverter.class)
   @UnifiedTableCell(visible = false)
-  private Set<PreferredEmailCommunication> preferredEmailCommunication;
+  private Set<PreferredEmailCommunications> preferredEmailCommunications;
 
   public void setCustomFields(Map<String, Object> customFields) {
     this.customFields = isNull(customFields) ? Collections.emptyMap() : customFields;
