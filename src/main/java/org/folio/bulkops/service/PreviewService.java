@@ -256,7 +256,6 @@ public class PreviewService {
       });
       return table;
     } catch (Exception e) {
-      e.printStackTrace();
       log.info("pathToFile: {}", pathToFile);
       log.error(e.getMessage());
     }
