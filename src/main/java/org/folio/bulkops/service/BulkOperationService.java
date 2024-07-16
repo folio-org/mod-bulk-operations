@@ -278,7 +278,6 @@ public class BulkOperationService {
       operation.setProcessedNumOfRecords(processedNumOfRecords);
       bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
     } catch (Exception e) {
-      e.printStackTrace();
       log.error(e);
       dataProcessingRepository.save(dataProcessing
         .withStatus(StatusType.FAILED)
