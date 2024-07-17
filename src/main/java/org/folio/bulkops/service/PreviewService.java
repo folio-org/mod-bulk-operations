@@ -78,7 +78,6 @@ public class PreviewService {
   public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset, int limit) {
     var entityType = operation.getEntityType();
     var clazz = resolveEntityClass(operation.getEntityType());
-    log.info("getLinkToMatchedRecordsCsvFile");
     return switch (step) {
       case UPLOAD -> buildPreviewFromCsvFile(operation.getLinkToMatchedRecordsCsvFile(), clazz, offset, limit);
       case EDIT -> {
@@ -90,25 +89,21 @@ public class PreviewService {
         } else {
           var rules = ruleService.getRules(bulkOperationId);
           var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
-          log.info("getLinkToModifiedRecordsCsvFile");
           yield buildPreviewFromCsvFile(operation.getLinkToModifiedRecordsCsvFile(), clazz, offset, limit, options);
         }
       }
       case COMMIT -> {
         if (MANUAL == operation.getApproach()) {
-          log.info("getLinkToCommittedRecordsCsvFile rr");
           yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit);
         } else {
           var bulkOperationId = operation.getId();
           if (INSTANCE_MARC.equals(operation.getEntityType())) {
             var rules = ruleService.getMarcRules(bulkOperationId);
             var options = getChangedOptionsSet(rules);
-            log.info("getLinkToCommittedRecordsMarcFile 223");
             yield buildPreviewFromMarcFile(operation.getLinkToCommittedRecordsMarcFile(), clazz, offset, limit, options);
           } else {
             var rules = ruleService.getRules(bulkOperationId);
             var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
-            log.info("getLinkToCommittedRecordsCsvFile");
             yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit, options);
           }
         }
@@ -216,13 +211,11 @@ public class PreviewService {
 
   private UnifiedTable buildPreviewFromCsvFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit, Set<String> forceVisible) {
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz, forceVisible);
-    log.info("buildPreviewFromCsvFile 1 : {}", pathToFile);
     return populatePreview(pathToFile, clazz, offset, limit, table, forceVisible);
   }
 
   private UnifiedTable buildPreviewFromCsvFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit) {
     var table =  UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
-    log.info("buildPreviewFromCsvFile 2 : {}", pathToFile);
     return populatePreview(pathToFile, clazz, offset, limit, table, emptySet());
   }
 
@@ -256,7 +249,6 @@ public class PreviewService {
       });
       return table;
     } catch (Exception e) {
-      log.info("pathToFile: {}", pathToFile);
       log.error(e.getMessage());
     }
     return table;
