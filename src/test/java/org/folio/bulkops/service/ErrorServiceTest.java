@@ -29,7 +29,6 @@ import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.OperationStatusType;
@@ -99,7 +98,7 @@ class ErrorServiceTest extends BaseTest {
   @Test
   void shouldSaveError() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      errorService.saveError(bulkOperationId, "123", "Error message", BulkOperationStep.EDIT);
+      errorService.saveError(bulkOperationId, "123", "Error message");
 
       var result = executionContentCqlRepository.findByCql("bulkOperationId==" + bulkOperationId, OffsetRequest.of(0, 10));
 
@@ -113,10 +112,10 @@ class ErrorServiceTest extends BaseTest {
   @Test
   void shouldGetErrorsByCqlQuery() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      IntStream.range(0, 10).forEach(i -> errorService.saveError(bulkOperationId, "123", i % 2 == 0 ? null : "Error message", BulkOperationStep.EDIT));
+      IntStream.range(0, 10).forEach(i -> errorService.saveError(bulkOperationId, "123", i % 2 == 0 ? null : "Error message"));
 
       var result = errorService.getErrorsByCql("bulkOperationId==" + bulkOperationId, 0, 3);
-      assertThat(result.getTotalElements(), equalTo(5L));
+      assertThat(result.getTotalElements(), equalTo(1L));
       assertThat(result.getSize(), equalTo(3));
       assertTrue(result.get().allMatch(content -> "Error message".equals(content.getErrorMessage())));
     }
@@ -126,8 +125,8 @@ class ErrorServiceTest extends BaseTest {
   @SneakyThrows
   void shouldUploadErrorsAndReturnLinkToFile() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      errorService.saveError(bulkOperationId, "123", "Error message 123", BulkOperationStep.EDIT);
-      errorService.saveError(bulkOperationId, "456", "Error message 456", BulkOperationStep.EDIT);
+      errorService.saveError(bulkOperationId, "123", "Error message 123");
+      errorService.saveError(bulkOperationId, "456", "Error message 456");
 
       var expectedFileName = bulkOperationId + "/" + LocalDate.now() + "-Committing-changes-Errors-records.csv";
       when(remoteFileSystemClient.put(any(), eq(expectedFileName))).thenReturn(expectedFileName);

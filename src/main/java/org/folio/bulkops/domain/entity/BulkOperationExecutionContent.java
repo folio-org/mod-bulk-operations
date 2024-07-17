@@ -16,9 +16,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import org.folio.bulkops.domain.dto.BulkOperationStep;
-import org.hibernate.annotations.JdbcType;
-import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 @Data
 @Builder
@@ -44,8 +41,4 @@ public class BulkOperationExecutionContent {
   private String uiErrorMessage;
 
   private String linkToFailedEntity;
-
-  @Enumerated(EnumType.STRING)
-  @JdbcType(PostgreSQLEnumJdbcType.class)
-  private BulkOperationStep step;
 }

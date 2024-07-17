@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.data.domain.Page;

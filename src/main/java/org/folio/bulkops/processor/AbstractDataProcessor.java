@@ -35,10 +35,10 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
           validator(entity).validate(option, action);
           updater(option, action).apply(updated);
         } catch (RuleValidationException e) {
-          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), BulkOperationStep.EDIT);
+          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
         } catch (Exception e) {
           log.error(String.format("%s id=%s, error: %s", updated.getRecordBulkOperationEntity().getClass().getSimpleName(), "id", e.getMessage()));
-          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), BulkOperationStep.EDIT);
+          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
         }
       }
     }

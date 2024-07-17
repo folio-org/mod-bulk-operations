@@ -19,7 +19,6 @@ import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
-import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -72,7 +71,7 @@ class RecordUpdateServiceTest extends BaseTest {
 
     assertEquals(modified, result);
     verify(itemUpdateProcessor).updateRecord(any(Item.class));
-    verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString(), any(BulkOperationStep.class));
+    verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString());
   }
 
   @Test
@@ -92,7 +91,7 @@ class RecordUpdateServiceTest extends BaseTest {
 
     assertEquals(original, result);
     verify(itemUpdateProcessor, times(0)).updateRecord(any(Item.class));
-    verify(errorService).saveError(operation.getId(), original.getIdentifier(IdentifierType.ID), MSG_NO_CHANGE_REQUIRED, BulkOperationStep.COMMIT);
+    verify(errorService).saveError(operation.getId(), original.getIdentifier(IdentifierType.ID), MSG_NO_CHANGE_REQUIRED);
   }
 
   @ParameterizedTest

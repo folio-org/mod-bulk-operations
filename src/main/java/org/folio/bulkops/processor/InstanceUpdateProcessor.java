@@ -22,7 +22,6 @@ import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
-import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.HoldingsReferenceService;
@@ -57,7 +56,7 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<Instance> {
       .isPresent();
     if (notChanged) {
       var errorMessage = buildErrorMessage(recordsUpdated, instance.getDiscoverySuppress());
-      errorService.saveError(operation.getId(), instance.getIdentifier(operation.getIdentifierType()), errorMessage, BulkOperationStep.COMMIT);
+      errorService.saveError(operation.getId(), instance.getIdentifier(operation.getIdentifierType()), errorMessage);
     }
   }
 

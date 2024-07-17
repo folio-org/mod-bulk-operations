@@ -22,7 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.StateType;
-import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.Parameter;
@@ -56,7 +55,7 @@ public class ErrorService {
   private final BulkOperationProcessingContentRepository processingContentRepository;
   private final BulkEditClient bulkEditClient;
 
-  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link, BulkOperationStep step) {
+  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
     if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
       return;
     }
@@ -72,15 +71,14 @@ public class ErrorService {
           .errorMessage(errorMessage)
           .uiErrorMessage(uiErrorMessage)
           .linkToFailedEntity(link)
-          .step(step)
           .build());
       }
       operationRepository.save(bulkOperation);
     });
   }
 
-  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, BulkOperationStep step) {
-    saveError(bulkOperationId, identifier, errorMessage, null, null, step);
+  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage) {
+    saveError(bulkOperationId, identifier, errorMessage, null, null);
   }
 
   @Transactional
