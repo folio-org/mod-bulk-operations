@@ -62,8 +62,8 @@ public class ErrorService {
     }
     operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
       if (executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage).isEmpty()) {
-        log.debug("New error message {} for bulk operation {} and identifier {}", errorMessage, bulkOperationId, identifier);
         int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
+        log.info("New error message {} for bulk operation {} and identifier {} and committed error {}", errorMessage, bulkOperationId, identifier, committedNumOfErrors);
         bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
         executionContentRepository.save(BulkOperationExecutionContent.builder()
           .identifier(identifier)
