@@ -143,7 +143,7 @@ public class User implements BulkOperationsEntity {
 
   @JsonProperty("preferredEmailCommunication")
   @Valid
-  @CsvCustomBindByName(column = "Preferred email communication", converter = PreferredEmailCommunicationConverter.class)
+  @CsvCustomBindByName(column = "Preferred email communications", converter = PreferredEmailCommunicationConverter.class)
   @CsvCustomBindByPosition(position = 24, converter = PreferredEmailCommunicationConverter.class)
   @UnifiedTableCell(visible = false)
   private Set<PreferredEmailCommunication> preferredEmailCommunication;

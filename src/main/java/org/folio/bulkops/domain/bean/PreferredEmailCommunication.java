@@ -1,8 +1,15 @@
 package org.folio.bulkops.domain.bean;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public enum PreferredEmailCommunication {
 
-  SUPPORT("Support"), PROGRAMS("Programs"), SERVICES("Services");
+  @JsonProperty("Support")
+  SUPPORT("Support"),
+  @JsonProperty("Programs")
+  PROGRAMS("Programs"),
+  @JsonProperty("Services")
+  SERVICES("Services");
 
   private String value;
 
