@@ -1139,10 +1139,10 @@ class BulkOperationServiceTest extends BaseTest {
     var holdingsId = UUID.randomUUID().toString();
     var originalHoldingsString = objectMapper.writeValueAsString(ExtendedHoldingsRecord.builder().entity(HoldingsRecord.builder()
         .id(holdingsId)
-      .discoverySuppress(testData.originalHoldingsDiscoverySuppress).build()).tenantId("tenantId").build());
+      .discoverySuppress(testData.originalHoldingsDiscoverySuppress).build()).build());
     var modifiedHoldingsString = objectMapper.writeValueAsString(ExtendedHoldingsRecord.builder().entity(HoldingsRecord.builder()
         .id(holdingsId)
-      .discoverySuppress(testData.modifiedHoldingsDiscoverySuppress).build()).tenantId("tenantId").build());
+      .discoverySuppress(testData.modifiedHoldingsDiscoverySuppress).build()).build());
     when(bulkOperationRepository.save(any()))
       .thenReturn(operation);
     when(remoteFileSystemClient.get(matchedRecordsJsonFileName))

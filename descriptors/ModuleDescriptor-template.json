@@ -159,7 +159,11 @@
             "inventory-storage.instance-formats.item.get",
             "inventory.instances.item.put",
             "inventory-storage.instance-note-types.item.get",
-            "inventory-storage.instance-note-types.collection.get"
+            "inventory-storage.instance-note-types.collection.get",
+            "consortia.consortium.item.get",
+            "user-tenants.collection.get",
+            "consortia.user-tenants.collection.get",
+            "consortium-search.holdings.collection.get"
           ]
         },
         {
