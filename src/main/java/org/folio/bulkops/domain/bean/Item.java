@@ -148,7 +148,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private String effectiveShelvingOrder;
 
-  @JsonProperty("itemLevelCallNumberType")
+  @JsonProperty("itemLevelCallNumberTypeId")
   @CsvCustomBindByName(column = "Item level call number type", converter = CallNumberTypeConverter.class)
   @CsvCustomBindByPosition(position = 16, converter = CallNumberTypeConverter.class)
   @UnifiedTableCell(visible = false)
@@ -227,7 +227,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(dataType = DataType.DATE_TIME, visible = false)
   private Date missingPiecesDate;
 
-  @JsonProperty("itemDamagedStatus")
+  @JsonProperty("itemDamagedStatusId")
   @CsvCustomBindByName(column = "Item damaged status", converter = DamagedStatusConverter.class)
   @CsvCustomBindByPosition(position = 29, converter = DamagedStatusConverter.class)
   @UnifiedTableCell(visible = false)
