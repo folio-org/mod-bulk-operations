@@ -61,20 +61,20 @@ public class ErrorService {
     }
     operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
       if (executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage).isEmpty()) {
-        log.debug("New error message {} for bulk operation {} and identifier {}", errorMessage, bulkOperationId, identifier);
         int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
+        log.info("New error message {} for bulk operation {} and identifier {} and committed error {}", errorMessage, bulkOperationId, identifier, committedNumOfErrors);
         bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
+        executionContentRepository.save(BulkOperationExecutionContent.builder()
+          .identifier(identifier)
+          .bulkOperationId(bulkOperationId)
+          .state(StateType.FAILED)
+          .errorMessage(errorMessage)
+          .uiErrorMessage(uiErrorMessage)
+          .linkToFailedEntity(link)
+          .build());
       }
       operationRepository.save(bulkOperation);
     });
-    executionContentRepository.save(BulkOperationExecutionContent.builder()
-        .identifier(identifier)
-        .bulkOperationId(bulkOperationId)
-        .state(StateType.FAILED)
-        .errorMessage(errorMessage)
-        .uiErrorMessage(uiErrorMessage)
-        .linkToFailedEntity(link)
-      .build());
   }
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage) {
