@@ -1,5 +1,6 @@
 package org.folio.bulkops.processor;
 
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
 import static org.folio.bulkops.util.Constants.APPLY_TO_HOLDINGS;
@@ -15,12 +16,20 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.ItemClient;
+import org.folio.bulkops.client.SearchConsortiumHoldings;
+import org.folio.bulkops.domain.bean.ConsortiumHolding;
+import org.folio.bulkops.domain.bean.ConsortiumHoldingCollection;
+import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
+import org.folio.bulkops.domain.bean.ExtendedInstance;
+import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordCollection;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
@@ -39,9 +48,13 @@ import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.RuleService;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.integration.XOkapiHeaders;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -69,17 +82,45 @@ class UpdateProcessorTest extends BaseTest {
   private UserUpdateProcessor userUpdateProcessor;
   @Autowired
   private InstanceUpdateProcessor instanceUpdateProcessor;
+  @Autowired
+  private FolioModuleMetadata folioModuleMetadata;
+  @SpyBean
+  private FolioExecutionContext folioExecutionContext;
   @MockBean
   private HoldingsReferenceService holdingsReferenceService;
+  @MockBean
+  private ConsortiaService consortiaService;
+  @MockBean
+  private SearchConsortiumHoldings searchConsortiumHoldings;
 
   @Test
   void shouldUpdateHoldingsRecord() {
     var holdingsRecord = new HoldingsRecord()
         .withId(UUID.randomUUID().toString())
         .withInstanceId(UUID.randomUUID().toString());
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).build();
 
     when(ruleService.getRules(isA(UUID.class))).thenReturn(new BulkOperationRuleCollection());
-    holdingsUpdateProcessor.updateRecord(holdingsRecord);
+    holdingsUpdateProcessor.updateRecord(extendedHoldingsRecord);
+
+    verify(holdingsClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
+  }
+
+  @Test
+  void shouldUpdateHoldingsRecordWithTenant() {
+    var holdingsRecord = new HoldingsRecord()
+      .withId(UUID.randomUUID().toString())
+      .withInstanceId(UUID.randomUUID().toString());
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().tenantId("tenantId").entity(holdingsRecord).build();
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+
+    when(ruleService.getRules(isA(UUID.class))).thenReturn(new BulkOperationRuleCollection());
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
+
+    holdingsUpdateProcessor.updateRecord(extendedHoldingsRecord);
 
     verify(holdingsClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
   }
@@ -97,6 +138,7 @@ class UpdateProcessorTest extends BaseTest {
       .id(holdingsId)
       .discoverySuppress(true)
       .build();
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).build();
 
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
@@ -116,7 +158,7 @@ class UpdateProcessorTest extends BaseTest {
         Item.builder().discoverySuppress(false).build()))
       .build());
 
-    holdingsUpdateProcessor.updateAssociatedRecords(holdingsRecord, operation, notChanged);
+    holdingsUpdateProcessor.updateAssociatedRecords(extendedHoldingsRecord, operation, notChanged);
 
     verify(itemClient, times(0)).updateItem(any(Item.class), anyString());
 
@@ -140,6 +182,7 @@ class UpdateProcessorTest extends BaseTest {
       .id(holdingsId)
       .discoverySuppress(SET_TO_TRUE_INCLUDING_ITEMS.equals(actionType))
       .build();
+    var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).build();
 
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
@@ -163,7 +206,7 @@ class UpdateProcessorTest extends BaseTest {
         Item.builder().id(UUID.randomUUID().toString()).discoverySuppress(false).build()))
       .build());
 
-    holdingsUpdateProcessor.updateAssociatedRecords(holdingsRecord, operation, notChanged);
+    holdingsUpdateProcessor.updateAssociatedRecords(extendedHoldingsRecord, operation, notChanged);
 
     verify(itemClient, times(1)).updateItem(any(Item.class), anyString());
 
@@ -182,8 +225,26 @@ class UpdateProcessorTest extends BaseTest {
     var item = new Item()
       .withId(UUID.randomUUID().toString())
       .withHoldingsRecordId(UUID.randomUUID().toString());
+    var extendedItem = ExtendedItem.builder().entity(item).build();
+    itemUpdateProcessor.updateRecord(extendedItem);
 
-    itemUpdateProcessor.updateRecord(item);
+    verify(itemClient).updateItem(item, item.getId());
+  }
+
+  @Test
+  void shouldUpdateItemRecordWithTenant() {
+    var item = new Item()
+      .withId(UUID.randomUUID().toString())
+      .withHoldingsRecordId(UUID.randomUUID().toString());
+    var extendedItem = ExtendedItem.builder().tenantId("tenantId").entity(item).build();
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
+
+    itemUpdateProcessor.updateRecord(extendedItem);
 
     verify(itemClient).updateItem(item, item.getId());
   }
@@ -206,8 +267,9 @@ class UpdateProcessorTest extends BaseTest {
       .id(UUID.randomUUID().toString())
       .title("Title")
       .build();
+    var extendedInstance = ExtendedInstance.builder().entity(instance).build();
 
-    instanceUpdateProcessor.updateRecord(instance);
+    instanceUpdateProcessor.updateRecord(extendedInstance);
 
     verify(instanceClient).updateInstance(instance, instance.getId());
   }
@@ -230,7 +292,7 @@ class UpdateProcessorTest extends BaseTest {
       .source("FOLIO")
       .discoverySuppress(SET_TO_TRUE.equals(actionType))
       .build();
-
+    var extendedInstance = ExtendedInstance.builder().entity(instance).build();
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
       .id(operationId)
@@ -244,6 +306,8 @@ class UpdateProcessorTest extends BaseTest {
         .parameters(Collections.singletonList(new Parameter()
           .key(APPLY_TO_HOLDINGS)
           .value(Boolean.toString(applyToHoldings)))))));
+
+    when(consortiaService.isCurrentTenantCentralTenant(isA(String.class))).thenReturn(false);
     when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()
       .bulkOperationRules(Collections.singletonList(rule))
       .totalRecords(1));
@@ -258,7 +322,7 @@ class UpdateProcessorTest extends BaseTest {
         .totalRecords(2)
         .build());
 
-    instanceUpdateProcessor.updateAssociatedRecords(instance, operation, false);
+    instanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
 
     verify(holdingsClient, times("folio_id".equals(sourceId) && applyToHoldings ? 1 : 0)).updateHoldingsRecord(any(HoldingsRecord.class), anyString());
   }
@@ -281,13 +345,14 @@ class UpdateProcessorTest extends BaseTest {
       .source("FOLIO")
       .discoverySuppress(SET_TO_TRUE.equals(actionType))
       .build();
-
+    var extendedInstance = ExtendedInstance.builder().entity(instance).build();
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
       .id(operationId)
       .identifierType(IdentifierType.ID)
       .build();
 
+    when(consortiaService.isCurrentTenantCentralTenant(isA(String.class))).thenReturn(false);
     var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
       .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
       .actions(Collections.singletonList(new Action()
@@ -316,8 +381,79 @@ class UpdateProcessorTest extends BaseTest {
         .totalRecords(2)
         .build());
 
-    instanceUpdateProcessor.updateAssociatedRecords(instance, operation, false);
+    instanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
 
     verify(itemClient, times("folio_id".equals(sourceId) && applyToItems ? 1 : 0)).updateItem(any(Item.class), anyString());
+  }
+
+  @Test
+  void instance_testUpdateUnderlyingHoldingsAndItemsDiscoverySuppressForMemberTenant() {
+    var userId = UUID.randomUUID().toString();
+    var user = User.builder().id(userId).username("username").build();
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+    var applyToHoldings = true;
+    var sourceId = "folio_id";
+    var instanceId = UUID.randomUUID().toString();
+    var instance = Instance.builder()
+      .id(instanceId)
+      .source("FOLIO")
+      .discoverySuppress(true)
+      .build();
+    var extendedInstance = ExtendedInstance.builder().entity(instance).build();
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+    var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
+      .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
+      .actions(Collections.singletonList(new Action()
+        .type(SET_TO_FALSE)
+        .parameters(List.of(new Parameter()
+            .key(APPLY_TO_HOLDINGS)
+            .value(Boolean.toString(applyToHoldings)),
+          new Parameter()
+            .key(APPLY_TO_ITEMS)
+            .value(Boolean.toString(applyToHoldings))
+        )))));
+    var item = Item.builder().id(UUID.randomUUID().toString()).discoverySuppress(false).build();
+    var itemCollection = ItemCollection.builder()
+      .items(List.of(item))
+      .totalRecords(1)
+      .build();
+    var holdingRecord = HoldingsRecord.builder().id(UUID.randomUUID().toString())
+      .sourceId(sourceId).discoverySuppress(false).build();
+    var consortiumHolding = new ConsortiumHolding(holdingRecord.getId(), "memberTenant", instanceId);
+    var consortiumHolding2 = new ConsortiumHolding(UUID.randomUUID().toString(), "memberTenant2", instanceId);
+    var consortiumHoldingCollection = new ConsortiumHoldingCollection();
+    consortiumHoldingCollection.setHoldings(List.of(consortiumHolding, consortiumHolding2));
+    var affiliatedTenants = List.of("memberTenant");
+
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
+    when(folioExecutionContext.getUserId()).thenReturn(UUID.fromString(userId));
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(userClient.getUserById(userId)).thenReturn(user);
+    when(consortiaService.isCurrentTenantCentralTenant("diku")).thenReturn(true);
+    when(consortiaService.getAffiliatedTenants(any(), any())).thenReturn(affiliatedTenants);
+    when(searchConsortiumHoldings.getHoldingsById(UUID.fromString(instanceId))).thenReturn(consortiumHoldingCollection);
+    when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()
+      .bulkOperationRules(Collections.singletonList(rule))
+      .totalRecords(1));
+    when(holdingsReferenceService.getSourceById("folio_id")).thenReturn(HoldingsRecordsSource.builder().name("FOLIO").build());
+    when(holdingsClient.getByQuery(String.format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE))
+      .thenReturn(HoldingsRecordCollection.builder()
+        .holdingsRecords(List.of(holdingRecord))
+        .totalRecords(1)
+        .build());
+    when(itemClient.getByQuery(String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingRecord.getId()), Integer.MAX_VALUE))
+      .thenReturn(itemCollection);
+
+    instanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
+    verify(errorService).saveError(eq(operationId), eq(instanceId), anyString());
+    verify(holdingsClient).updateHoldingsRecord(any(HoldingsRecord.class), eq(holdingRecord.getId()));
+    verify(itemClient).updateItem(any(Item.class), eq(item.getId()));
   }
 }
