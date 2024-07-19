@@ -116,7 +116,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private List<String> formerIds;
 
-  @JsonProperty("statisticalCodes")
+  @JsonProperty("statisticalCodeIds")
   @Valid
   @CsvCustomBindByName(column = "Statistical codes", converter = ItemStatisticalCodeListConverter.class)
   @CsvCustomBindByPosition(position = 11, converter = ItemStatisticalCodeListConverter.class)
