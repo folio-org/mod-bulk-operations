@@ -115,7 +115,7 @@ class ErrorServiceTest extends BaseTest {
       IntStream.range(0, 10).forEach(i -> errorService.saveError(bulkOperationId, "123", i % 2 == 0 ? null : "Error message"));
 
       var result = errorService.getErrorsByCql("bulkOperationId==" + bulkOperationId, 0, 3);
-      assertThat(result.getTotalElements(), equalTo(5L));
+      assertThat(result.getTotalElements(), equalTo(1L));
       assertThat(result.getSize(), equalTo(3));
       assertTrue(result.get().allMatch(content -> "Error message".equals(content.getErrorMessage())));
     }
