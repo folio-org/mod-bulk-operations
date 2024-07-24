@@ -114,6 +114,7 @@
             "departments.item.get",
             "departments.collection.get",
             "inventory.items.item.put",
+            "inventory.items.collection.get",
             "inventory-storage.call-number-types.item.get",
             "inventory-storage.call-number-types.collection.get",
             "inventory-storage.electronic-access-relationships.item.get",
