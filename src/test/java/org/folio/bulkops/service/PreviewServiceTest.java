@@ -92,6 +92,8 @@ class PreviewServiceTest extends BaseTest {
   private RuleService ruleService;
   @MockBean
   private InstanceReferenceService instanceReferenceService;
+  @MockBean
+  private ConsortiaService consortiaService;
   @Autowired
   private NoteTableUpdater noteTableUpdater;
 
@@ -143,7 +145,7 @@ class PreviewServiceTest extends BaseTest {
     when(itemNoteTypeClient.getNoteTypeById("8d0a5eca-25de-4391-81a9-236eeefdd20b")).thenReturn(new NoteType().withName("Note"));
 
     when(holdingsNoteTypeClient.getNoteTypeById("e19eabab-a85c-4aef-a7b2-33bd9acef24e")).thenReturn(new HoldingsNoteType().withName("Reproduction"));
-
+    when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
 
     var bulkOperationRuleCollection = objectMapper.readValue(new FileInputStream(getPathToContentUpdateRequest(entityType)), BulkOperationRuleCollection.class);
     when(ruleService.getRules(any(UUID.class))).thenReturn(bulkOperationRuleCollection);
