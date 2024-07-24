@@ -211,7 +211,10 @@
           "permissionsRequired": [ "bulk-operations.download.item.get" ],
           "modulePermissions": [
             "inventory-storage.holdings-note-types.collection.get",
-            "inventory-storage.item-note-types.collection.get"
+            "inventory-storage.item-note-types.collection.get",
+            "consortia.consortium.item.get",
+            "user-tenants.collection.get",
+            "consortia.user-tenants.collection.get"
           ]
         },
         {

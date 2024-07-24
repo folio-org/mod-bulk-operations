@@ -2,11 +2,9 @@ package org.folio.bulkops.processor.note;
 
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.RFC4180ParserBuilder;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.service.NoteTableUpdater;
-import org.folio.spring.FolioExecutionContext;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -18,15 +16,17 @@ import java.util.List;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
-@Component
-@RequiredArgsConstructor
 @Log4j2
 public abstract class AbstractNoteProcessor {
 
   private static final int FIRST_LINE = 1;
 
-  private final NoteTableUpdater noteTableUpdater;
-  protected final FolioExecutionContext folioExecutionContext;
+  private NoteTableUpdater noteTableUpdater;
+
+  @Autowired
+  private void setNoteTableUpdater(NoteTableUpdater noteTableUpdater) {
+    this.noteTableUpdater = noteTableUpdater;
+  }
 
   public byte[] processNotes(byte[] input) {
     List<String> noteTypeNames = getNoteTypeNames();
