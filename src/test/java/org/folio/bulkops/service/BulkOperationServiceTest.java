@@ -155,6 +155,9 @@ class BulkOperationServiceTest extends BaseTest {
   @MockBean
   private EntityTypeService entityTypeService;
 
+  @MockBean
+  private ConsortiaService consortiaService;
+
   @Test
   @SneakyThrows
   void shouldUploadIdentifiers() {
@@ -301,6 +304,8 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToOriginalCsv = bulkOperationId + "/origin.csv";
       var pathToModifiedCsv = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-identifiers.csv";
       var pathToUserJson = "src/test/resources/files/user.json";
+
+      when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
 
       when(bulkOperationRepository.findById(any(UUID.class)))
         .thenReturn(Optional.of(BulkOperation.builder()
@@ -510,6 +515,8 @@ class BulkOperationServiceTest extends BaseTest {
 
       mockHoldingsClient();
       mockLocationClient();
+
+      when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
       when(bulkOperationRepository.findById(bulkOperationId))
         .thenReturn(Optional.of(BulkOperation.builder()
           .id(bulkOperationId)
