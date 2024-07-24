@@ -5,6 +5,7 @@ import com.opencsv.RFC4180ParserBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.service.NoteTableUpdater;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
@@ -25,6 +26,7 @@ public abstract class AbstractNoteProcessor {
   private static final int FIRST_LINE = 1;
 
   private final NoteTableUpdater noteTableUpdater;
+  protected final FolioExecutionContext folioExecutionContext;
 
   public byte[] processNotes(byte[] input) {
     List<String> noteTypeNames = getNoteTypeNames();

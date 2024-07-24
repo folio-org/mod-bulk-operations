@@ -65,7 +65,10 @@
             "inventory-storage.instance-note-types.collection.get",
             "inventory-storage.contributor-types.item.get",
             "inventory-storage.instance-types.item.get",
-            "inventory-storage.instance-formats.item.get"
+            "inventory-storage.instance-formats.item.get",
+            "consortia.consortium.item.get",
+            "user-tenants.collection.get",
+            "consortia.user-tenants.collection.get"
           ]
         },
         {

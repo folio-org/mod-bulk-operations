@@ -21,6 +21,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
@@ -75,6 +76,9 @@ import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.Utils;
 import org.folio.querytool.domain.dto.SubmitQuery;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.marc4j.MarcStreamReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -116,6 +120,9 @@ public class BulkOperationService {
   private final EntityTypeService entityTypeService;
   private final QueryService queryService;
   private final MarcInstanceDataProcessor marcInstanceDataProcessor;
+  private final FolioModuleMetadata folioModuleMetadata;
+  private final FolioExecutionContext folioExecutionContext;
+  private final ConsortiaService consortiaService;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
@@ -250,8 +257,14 @@ public class BulkOperationService {
 
         if (Objects.nonNull(modified)) {
           // Prepare CSV for download and preview
-          writeToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity());
-
+          if (!consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+            writeToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity());
+          } else {
+            var tenantIdOfEntity = modified.getPreview().getTenant();
+            try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
+              writeToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity());
+            }
+          }
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
           writerForModifiedJsonFile.write(modifiedRecord);
         }
@@ -420,7 +433,14 @@ public class BulkOperationService {
             if (result != original) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
-              writeToCsv(operation, csvWriter, result.getRecordBulkOperationEntity());
+              if (!consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+                writeToCsv(operation, csvWriter, result.getRecordBulkOperationEntity());
+              } else {
+                var tenantIdOfEntity = result.getTenant();
+                try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
+                  writeToCsv(operation, csvWriter, result.getRecordBulkOperationEntity());
+                }
+              }
             }
           } catch (OptimisticLockingException e) {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLinkToFailedEntity());

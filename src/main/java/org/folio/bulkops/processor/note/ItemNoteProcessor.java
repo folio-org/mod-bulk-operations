@@ -4,6 +4,7 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.service.ItemReferenceService;
 import org.folio.bulkops.service.NoteTableUpdater;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,14 +18,14 @@ public class ItemNoteProcessor extends AbstractNoteProcessor {
 
   private final ItemReferenceService itemReferenceService;
 
-  public ItemNoteProcessor(ItemReferenceService itemReferenceService, NoteTableUpdater noteTableUpdater) {
-    super(noteTableUpdater);
+  public ItemNoteProcessor(ItemReferenceService itemReferenceService, NoteTableUpdater noteTableUpdater, FolioExecutionContext folioExecutionContext) {
+    super(noteTableUpdater, folioExecutionContext);
     this.itemReferenceService = itemReferenceService;
   }
 
   @Override
   public List<String> getNoteTypeNames() {
-    return itemReferenceService.getAllItemNoteTypes().stream()
+    return itemReferenceService.getAllItemNoteTypes(folioExecutionContext.getTenantId()).stream()
       .map(NoteType::getName)
       .filter(Objects::nonNull)
       .sorted()

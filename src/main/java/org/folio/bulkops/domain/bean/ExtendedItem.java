@@ -34,4 +34,9 @@ public class ExtendedItem implements BulkOperationsEntity {
   public BulkOperationsEntity getRecordBulkOperationEntity() {
     return entity;
   }
+
+  @Override
+  public String getTenant() {
+    return tenantId;
+  }
 }

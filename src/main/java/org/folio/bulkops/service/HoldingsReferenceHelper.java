@@ -47,10 +47,6 @@ public class HoldingsReferenceHelper implements InitializingBean {
     return holdingsReferenceService.getNoteTypeIdByName(name);
   }
 
-  public List<HoldingsNoteType> getHoldingsNoteTypes() {
-    return holdingsReferenceService.getAllHoldingsNoteTypes();
-  }
-
   public IllPolicy getIllPolicyNameById(String id) {
     return holdingsReferenceService.getIllPolicyById(id);
   }

@@ -181,7 +181,7 @@ public class HoldingsReferenceService {
   }
 
   @Cacheable(cacheNames = "holdingsNoteTypes")
-  public List<HoldingsNoteType> getAllHoldingsNoteTypes() {
+  public List<HoldingsNoteType> getAllHoldingsNoteTypes(String tenantId) {
     return holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE).getHoldingsNoteTypes();
   }
 }
