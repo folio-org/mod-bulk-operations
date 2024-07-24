@@ -33,7 +33,7 @@ class HoldingsNoteProcessorTest extends BaseTest {
         new HoldingsNoteType().withName("Note type 1"),
         new HoldingsNoteType().withName("Note type 2")));
 
-    var res= noteProcessorFactory.getNoteProcessor(EntityType.HOLDINGS_RECORD.getValue()).processNotes(sourceCsv.getBytes());
+    var res = noteProcessorFactory.getNoteProcessor(EntityType.HOLDINGS_RECORD.getValue()).processNotes(sourceCsv.getBytes());
 
     var lines = new String(res).split("\n");
     assertThat(lines).hasSize(2);

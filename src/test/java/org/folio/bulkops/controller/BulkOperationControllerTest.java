@@ -48,6 +48,7 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.BulkOperationService;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ListUsersService;
 import org.folio.bulkops.service.LogFilesService;
 import org.folio.bulkops.service.RuleService;
@@ -75,6 +76,8 @@ class BulkOperationControllerTest extends BaseTest {
   @MockBean
   private LogFilesService logFilesService;
 
+  @MockBean
+  private ConsortiaService consortiaService;
   @Autowired
   private BulkOperationRepository bulkOperationRepository;
 
@@ -83,6 +86,8 @@ class BulkOperationControllerTest extends BaseTest {
   @ParameterizedTest
   @MethodSource("fileContentTypeToNoteTypeCollection")
   void shouldDownloadFileWithPreview(FileContentType type, org.folio.bulkops.domain.dto.EntityType entityType) throws Exception {
+    when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
+
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = UUID.randomUUID();
 
