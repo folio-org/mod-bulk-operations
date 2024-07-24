@@ -1,7 +1,7 @@
 package org.folio.bulkops.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import org.folio.bulkops.BaseTest;
@@ -28,12 +28,12 @@ class HoldingsNoteProcessorTest extends BaseTest {
     var sourceCsv = "Holdings UUID,\"Instance (Title, Publisher, Publication date)\",Suppress from discovery,Holdings HRID,Source,Former holdings Id,Holdings type,Statistical codes,Administrative note,Holdings permanent location,Holdings temporary location,Shelving title,Holdings copy number,Holdings level call number type,Holdings level call number prefix,Holdings level call number,Holdings level call number suffix,Number of items,Holdings statement,Holdings statement for supplements,Holdings statement for indexes,ILL policy,Digitization policy,Retention policy,Notes,Electronic access,Acquisition method,Order format,Receipt status,Tags\n" +
       "59b36165-fcf2-49d2-bf7f-25fedbc07e44,Sample instance;123,,ho14,FOLIO,,,,,Main Library,,,,,,,,,,,,,,,Note type 3;note3;false|Note type 1;note1;true|Note type 2;note2;false,,,,,";
 
-    when(holdingsReferenceService.getAllHoldingsNoteTypes(isA(String.class)))
+    when(holdingsReferenceService.getAllHoldingsNoteTypes(any()))
       .thenReturn(List.of(new HoldingsNoteType().withName("Note type 3"),
         new HoldingsNoteType().withName("Note type 1"),
         new HoldingsNoteType().withName("Note type 2")));
 
-    var res =noteProcessorFactory.getNoteProcessor(EntityType.HOLDINGS_RECORD.getValue()).processNotes(sourceCsv.getBytes());
+    var res= noteProcessorFactory.getNoteProcessor(EntityType.HOLDINGS_RECORD.getValue()).processNotes(sourceCsv.getBytes());
 
     var lines = new String(res).split("\n");
     assertThat(lines).hasSize(2);
