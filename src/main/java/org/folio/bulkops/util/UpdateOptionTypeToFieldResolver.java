@@ -66,9 +66,9 @@ public class UpdateOptionTypeToFieldResolver {
     } else if (ADMINISTRATIVE_NOTE == type) {
       return "Administrative note";
     } else if (CHECK_IN_NOTE == type) {
-      return "Check In Notes";
+      return "Check in note";
     } else if (CHECK_OUT_NOTE == type) {
-      return "Check Out Notes";
+      return "Check out note";
     } else if (HOLDINGS_NOTE == type) {
       return "Notes";
     } else if (ELECTRONIC_ACCESS_URL_RELATIONSHIP == type) {

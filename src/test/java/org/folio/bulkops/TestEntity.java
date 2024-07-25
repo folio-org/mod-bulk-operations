@@ -2,14 +2,14 @@ package org.folio.bulkops;
 
 import static java.util.UUID.randomUUID;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
-import org.folio.bulkops.domain.bean.CirculationNote;
-import org.folio.bulkops.domain.bean.ContributorName;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
@@ -18,7 +18,6 @@ import org.folio.bulkops.domain.bean.InventoryItemStatus;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.ItemNote;
-import org.folio.bulkops.domain.bean.LastCheckIn;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.MaterialType;
 import org.folio.bulkops.domain.bean.Personal;
@@ -56,7 +55,8 @@ public enum TestEntity {
   },
   ITEM {
     @Override
-    public BulkOperationsEntity entity() {
+    public BulkOperationsEntity entity() throws ParseException {
+      Date date = new SimpleDateFormat("yyyy-MM-dd").parse("2024-01-01");
       return Item.builder()
         .id(randomUUID().toString())
         .version(2)
@@ -83,9 +83,9 @@ public enum TestEntity {
         .descriptionOfPieces("description")
         .numberOfMissingPieces("1")
         .missingPieces("missing")
-        .missingPiecesDate("01-01-2000")
+        .missingPiecesDate(date)
         .itemDamagedStatus("damaged-status-id")
-        .itemDamagedStatusDate("01-2001")
+        .itemDamagedStatusDate(date)
         .administrativeNotes(List.of("administrative-note-1", "administrative-note-2"))
         .notes(List.of(ItemNote.builder().build()))
         .status(InventoryItemStatus.builder().build())
@@ -153,6 +153,6 @@ public enum TestEntity {
     }
 
   };
-  public abstract BulkOperationsEntity entity();
+  public abstract BulkOperationsEntity entity() throws ParseException;
   public abstract Class<? extends BulkOperationsEntity> getEntityClass();
 }
