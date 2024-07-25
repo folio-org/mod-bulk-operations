@@ -163,8 +163,8 @@ class PreviewServiceTest extends BaseTest {
     } else if (ITEM.equals(entityType)) {
       List<Cell> headers;
       if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
-        headers = getHeaders(Item.class, Set.of("Binding", "Custom", "Status", "Check Out Notes", "Provenance", "Reproduction", "Check In Notes", "Note", "Administrative note"));
-        noteTableUpdater.extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"), Set.of("Binding","Status","Check Out Notes","Provenance","Check In Notes","Note","Custom", "Reproduction", "Administrative notes"));
+        headers = getHeaders(Item.class, Set.of("Binding", "Custom", "Status", "Check out note", "Provenance", "Reproduction", "Check in note", "Note", "Administrative note"));
+        noteTableUpdater.extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"), Set.of("Binding","Status","Check out note","Provenance","Check in note","Note","Custom", "Reproduction", "Administrative notes"));
       } else {
         headers = getHeaders(Item.class);
         noteTableUpdater.extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"), emptySet());
