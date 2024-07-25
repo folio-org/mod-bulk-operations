@@ -1,6 +1,5 @@
 package org.folio.bulkops.processor;
 
-import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.service.ConsortiaService;

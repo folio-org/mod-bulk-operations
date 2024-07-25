@@ -37,7 +37,7 @@ public class HoldingsNotesProcessor extends AbstractNoteProcessor {
       var userTenants = consortiaService.getAffiliatedTenants(folioExecutionContext.getTenantId(), folioExecutionContext.getUserId().toString());
       for (var userTenant : userTenants) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(userTenant, folioModuleMetadata, folioExecutionContext))) {
-          var noteTypesFromMember = holdingsReferenceService.getAllHoldingsNoteTypes(folioExecutionContext.getTenantId()).stream()
+          var noteTypesFromMember = holdingsReferenceService.getAllHoldingsNoteTypes(userTenant).stream()
             .map(HoldingsNoteType::getName)
             .filter(Objects::nonNull)
             .toList();
