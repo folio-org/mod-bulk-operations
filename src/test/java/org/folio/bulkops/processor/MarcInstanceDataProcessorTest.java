@@ -47,6 +47,12 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     dataField = new DataFieldImpl("500", '1', '2');
     dataField.addSubfield(new SubfieldImpl('a', "Text a"));
     marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("500", '1', '2');
+    dataField.addSubfield(new SubfieldImpl('b', "Text a"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("510", '1', '2');
+    dataField.addSubfield(new SubfieldImpl('a', "Text a"));
+    marcRecord.addVariableField(dataField);
     var findAndAppendRule = new BulkOperationMarcRule()
       .id(UUID.randomUUID())
       .bulkOperationId(bulkOperationId)
@@ -76,7 +82,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     processor.update(operation, marcRecord, rules);
 
     var dataFields = marcRecord.getDataFields();
-    assertThat(dataFields).hasSize(2);
+    assertThat(dataFields).hasSize(4);
 
     var subfields = dataFields.get(0).getSubfields();
     assertThat(subfields).hasSize(2);
@@ -85,6 +91,10 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     assertThat(subfields.get(1).getCode()).isEqualTo('b');
     assertThat(subfields.get(1).getData()).isEqualTo("text b");
     subfields = dataFields.get(1).getSubfields();
+    assertThat(subfields).hasSize(1);
+    subfields = dataFields.get(2).getSubfields();
+    assertThat(subfields).hasSize(1);
+    subfields = dataFields.get(3).getSubfields();
     assertThat(subfields).hasSize(1);
   }
 
