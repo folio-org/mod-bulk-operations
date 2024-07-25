@@ -47,6 +47,9 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     dataField = new DataFieldImpl("500", '1', '2');
     dataField.addSubfield(new SubfieldImpl('a', "Text a"));
     marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("500", '2', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "Text a"));
+    marcRecord.addVariableField(dataField);
     dataField = new DataFieldImpl("500", '1', '2');
     dataField.addSubfield(new SubfieldImpl('b', "Text a"));
     marcRecord.addVariableField(dataField);
@@ -82,7 +85,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     processor.update(operation, marcRecord, rules);
 
     var dataFields = marcRecord.getDataFields();
-    assertThat(dataFields).hasSize(4);
+    assertThat(dataFields).hasSize(5);
 
     var subfields = dataFields.get(0).getSubfields();
     assertThat(subfields).hasSize(2);
@@ -95,6 +98,8 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     subfields = dataFields.get(2).getSubfields();
     assertThat(subfields).hasSize(1);
     subfields = dataFields.get(3).getSubfields();
+    assertThat(subfields).hasSize(1);
+    subfields = dataFields.get(4).getSubfields();
     assertThat(subfields).hasSize(1);
   }
 
