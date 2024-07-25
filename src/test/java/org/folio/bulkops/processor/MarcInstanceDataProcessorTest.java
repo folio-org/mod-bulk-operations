@@ -23,6 +23,7 @@ import org.marc4j.marc.impl.SubfieldImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -41,19 +42,19 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .identifierType(IdentifierType.ID)
       .build();
     var marcRecord = new RecordImpl();
-    var dataField = new DataFieldImpl("500", '1', '2');
+    var dataField = new DataFieldImpl("500", '1', ' ');
     dataField.addSubfield(new SubfieldImpl('a', "text a"));
     marcRecord.addVariableField(dataField);
-    dataField = new DataFieldImpl("500", '1', '2');
+    dataField = new DataFieldImpl("500", '1', ' ');
     dataField.addSubfield(new SubfieldImpl('a', "Text a"));
     marcRecord.addVariableField(dataField);
-    dataField = new DataFieldImpl("500", '2', '1');
+    dataField = new DataFieldImpl("500", ' ', '1');
     dataField.addSubfield(new SubfieldImpl('a', "Text a"));
     marcRecord.addVariableField(dataField);
-    dataField = new DataFieldImpl("500", '1', '2');
+    dataField = new DataFieldImpl("500", '1', ' ');
     dataField.addSubfield(new SubfieldImpl('b', "Text a"));
     marcRecord.addVariableField(dataField);
-    dataField = new DataFieldImpl("510", '1', '2');
+    dataField = new DataFieldImpl("510", '1', ' ');
     dataField.addSubfield(new SubfieldImpl('a', "Text a"));
     marcRecord.addVariableField(dataField);
     var findAndAppendRule = new BulkOperationMarcRule()
@@ -61,7 +62,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationId(bulkOperationId)
       .tag("500")
       .ind1("1")
-      .ind2("2")
+      .ind2("\\")
       .subfield("a")
       .actions(List.of(
         new MarcAction()
@@ -163,10 +164,11 @@ class MarcInstanceDataProcessorTest extends BaseTest {
 
   @ParameterizedTest
   @CsvSource(textBlock = """
-    FIND                  | MARK_AS_STAFF_ONLY
-    FIND_AND_REMOVE_THESE | FIND_AND_REMOVE_THESE
-    """, delimiter = '|')
-  void shouldNotApplyUnsupportedAction(UpdateActionType updateActionType, String errorMessageArg) {
+    FIND                  | MARK_AS_STAFF_ONLY    | MARK_AS_STAFF_ONLY
+    FIND                  | null                  | FIND
+    FIND_AND_REMOVE_THESE | null                  | FIND_AND_REMOVE_THESE
+    """, delimiter = '|', nullValues = "null")
+  void shouldNotApplyUnsupportedAction(UpdateActionType updateActionType1, UpdateActionType updateActionType2, String errorMessageArg) {
     var bulkOperationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
       .id(bulkOperationId)
@@ -176,6 +178,13 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     var controlNumberField = new ControlFieldImpl("001", hrid);
     var marcRecord = new RecordImpl();
     marcRecord.addVariableField(controlNumberField);
+
+    var actions = new ArrayList<MarcAction>();
+    actions.add(new MarcAction().name(updateActionType1));
+    if (updateActionType2 != null) {
+      actions.add(new MarcAction().name(updateActionType2));
+    }
+
     var findAndAppendRule = new BulkOperationMarcRule()
       .id(UUID.randomUUID())
       .bulkOperationId(bulkOperationId)
@@ -183,11 +192,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .ind1("1")
       .ind2("2")
       .subfield("a")
-      .actions(List.of(
-        new MarcAction()
-          .name(updateActionType),
-        new MarcAction()
-          .name(UpdateActionType.MARK_AS_STAFF_ONLY)));
+      .actions(actions);
     var rules = new BulkOperationMarcRuleCollection()
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
