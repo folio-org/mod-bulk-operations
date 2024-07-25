@@ -56,7 +56,7 @@ public class NoteTableUpdater {
       var userTenants = consortiaService.getAffiliatedTenants(folioExecutionContext.getTenantId(), folioExecutionContext.getUserId().toString());
       for (var userTenant : userTenants) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(userTenant, folioModuleMetadata, folioExecutionContext))) {
-          var noteTypesFromMember = holdingsReferenceService.getAllHoldingsNoteTypes(folioExecutionContext.getTenantId()).stream()
+          var noteTypesFromMember = holdingsReferenceService.getAllHoldingsNoteTypes(userTenant).stream()
             .map(HoldingsNoteType::getName)
             .toList();
           noteTypeNamesSet.addAll(noteTypesFromMember);
@@ -76,7 +76,7 @@ public class NoteTableUpdater {
       var userTenants = consortiaService.getAffiliatedTenants(folioExecutionContext.getTenantId(), folioExecutionContext.getUserId().toString());
       for (var userTenant : userTenants) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(userTenant, folioModuleMetadata, folioExecutionContext))) {
-          var noteTypesFromMember = itemReferenceService.getAllItemNoteTypes(folioExecutionContext.getTenantId()).stream()
+          var noteTypesFromMember = itemReferenceService.getAllItemNoteTypes(userTenant).stream()
             .map(NoteType::getName)
             .toList();
           noteTypeNamesSet.addAll(noteTypesFromMember);
