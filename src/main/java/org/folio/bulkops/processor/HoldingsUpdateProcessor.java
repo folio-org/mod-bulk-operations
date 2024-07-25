@@ -66,11 +66,11 @@ public class HoldingsUpdateProcessor extends AbstractUpdateProcessor<ExtendedHol
 
   @Override
   public void updateAssociatedRecords(ExtendedHoldingsRecord extendedHoldingsRecord, BulkOperation operation, boolean notChanged) {
-    var tenantId = extendedHoldingsRecord.getTenantId();
     var holdingsRecord = extendedHoldingsRecord.getEntity();
     var bulkOperationRules = ruleService.getRules(operation.getId());
     boolean itemsUpdated;
-    if (StringUtils.isNotEmpty(tenantId)) {
+    if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+      var tenantId = extendedHoldingsRecord.getTenantId();
       try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
         itemsUpdated = findRuleByOption(bulkOperationRules, SUPPRESS_FROM_DISCOVERY)
           .filter(bulkOperationRule -> suppressItemsIfRequired(holdingsRecord, bulkOperationRule))
