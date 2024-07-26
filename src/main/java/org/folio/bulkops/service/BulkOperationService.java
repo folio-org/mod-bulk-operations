@@ -374,13 +374,18 @@ public class BulkOperationService {
   private UpdatedEntityHolder<? extends BulkOperationsEntity> processUpdate(BulkOperationsEntity original, BulkOperation operation, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> entityClass) {
     var processor = dataProcessorFactory.getProcessorFromFactory(entityClass);
     UpdatedEntityHolder<BulkOperationsEntity> modified = null;
-
     try {
-      modified = processor.process(original.getRecordBulkOperationEntity().getIdentifier(operation.getIdentifierType()), original, rules);
+      if (!consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId()) || entityClass == User.class) {
+        modified = processor.process(original.getRecordBulkOperationEntity().getIdentifier(operation.getIdentifierType()), original, rules);
+      } else {
+        var tenantIdOfEntity = original.getTenant();
+        try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
+          modified = processor.process(original.getRecordBulkOperationEntity().getIdentifier(operation.getIdentifierType()), original, rules);
+        }
+      }
     } catch (Exception e) {
       log.error("Failed to modify entity, reason:" + e.getMessage());
     }
-
     return modified;
   }
 
