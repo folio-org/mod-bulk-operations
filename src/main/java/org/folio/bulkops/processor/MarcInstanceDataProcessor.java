@@ -23,7 +23,6 @@ import org.marc4j.marc.Subfield;
 import org.marc4j.marc.impl.SubfieldImpl;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
 import java.util.List;
 
 @Component
