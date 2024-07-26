@@ -11,7 +11,6 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 import static org.folio.bulkops.util.RuleUtils.fetchParameters;
 import static org.folio.bulkops.util.RuleUtils.findRuleByOption;
 
-import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
