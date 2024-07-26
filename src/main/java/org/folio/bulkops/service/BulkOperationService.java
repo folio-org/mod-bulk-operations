@@ -371,7 +371,7 @@ public class BulkOperationService {
     }
   }
 
-  private UpdatedEntityHolder<? extends BulkOperationsEntity> processUpdate(BulkOperationsEntity original, BulkOperation operation, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> entityClass) {
+  protected UpdatedEntityHolder<? extends BulkOperationsEntity> processUpdate(BulkOperationsEntity original, BulkOperation operation, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> entityClass) {
     var processor = dataProcessorFactory.getProcessorFromFactory(entityClass);
     UpdatedEntityHolder<BulkOperationsEntity> modified = null;
     try {
