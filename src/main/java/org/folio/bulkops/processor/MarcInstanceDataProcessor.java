@@ -87,12 +87,10 @@ public class MarcInstanceDataProcessor {
   private List<DataField> findFields(BulkOperationMarcRule rule, Record marcRecord) {
     char ind1 = fetchIndicatorValue(rule.getInd1());
     char ind2 = fetchIndicatorValue(rule.getInd2());
-    return marcRecord.getDataFields().isEmpty() ?
-      Collections.emptyList() :
-      marcRecord.getDataFields().stream()
-        .filter(dataField -> rule.getTag().equals(dataField.getTag()) &&
-          ind1 == dataField.getIndicator1() && ind2 == dataField.getIndicator2())
-        .toList();
+    return marcRecord.getDataFields().stream()
+      .filter(dataField -> rule.getTag().equals(dataField.getTag()) &&
+        ind1 == dataField.getIndicator1() && ind2 == dataField.getIndicator2())
+      .toList();
   }
 
   private char fetchIndicatorValue(String s) {
