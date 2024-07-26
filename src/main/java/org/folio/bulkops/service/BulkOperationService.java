@@ -310,7 +310,7 @@ public class BulkOperationService {
       var matchedRecordsReader = new MarcStreamReader(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile()));
       while (matchedRecordsReader.hasNext()) {
         var marcRecord = matchedRecordsReader.next();
-        marcInstanceDataProcessor.update(marcRecord, ruleCollection);
+        marcInstanceDataProcessor.update(operation, marcRecord, ruleCollection);
         writerForModifiedPreviewMarcFile.writeRecord(marcRecord);
 
         processedNumOfRecords++;
