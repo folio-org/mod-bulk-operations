@@ -49,6 +49,7 @@ import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.bean.StatusType;
+import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.converter.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -257,7 +258,7 @@ public class BulkOperationService {
 
         if (Objects.nonNull(modified)) {
           // Prepare CSV for download and preview
-          if (!consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+          if (!consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId()) || clazz == User.class) {
             writeToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity());
           } else {
             var tenantIdOfEntity = modified.getPreview().getTenant();
@@ -433,7 +434,7 @@ public class BulkOperationService {
             if (result != original) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
-              if (!consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+              if (!consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId()) || entityClass == User.class ) {
                 writeToCsv(operation, csvWriter, result.getRecordBulkOperationEntity());
               } else {
                 var tenantIdOfEntity = result.getTenant();
