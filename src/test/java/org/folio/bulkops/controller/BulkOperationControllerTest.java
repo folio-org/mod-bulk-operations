@@ -183,9 +183,9 @@ class BulkOperationControllerTest extends BaseTest {
          "bulkOperationMarcRules" : [ {
            "bulkOperationId" : "1910fae2-08c7-46e8-a73b-fc35d2639734",
            "tag" : "500",
-           "ind1" : null,
-           "ind2" : null,
-           "subfield" : null,
+           "ind1" : "#",
+           "ind2" : "#",
+           "subfield" : "h",
            "actions" : [ {
              "name" : "FIND",
              "data" : [ {

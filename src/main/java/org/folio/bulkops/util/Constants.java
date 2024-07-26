@@ -22,6 +22,8 @@ public class Constants {
   public static final String DATE_WITHOUT_TIME_PATTERN = "yyyy-MM-dd";
   public static final DateTimeFormatter DATE_WITHOUT_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_WITHOUT_TIME_PATTERN);
 
+  public static final char SPACE_CHAR = ' ';
+
   public static final int ITEM_NOTE_POSITION = 31;
   public static final int HOLDINGS_NOTE_POSITION = 24;
   public static final int INSTANCE_NOTE_POSITION = 22;
@@ -61,4 +63,7 @@ public class Constants {
   public static final String ITEM_TYPE = "ITEM";
   public static final String HOLDING_TYPE = "HOLDINGS_RECORD";
   public static final Set<String> SPLIT_NOTE_ENTITIES = Set.of(ITEM_TYPE, HOLDING_TYPE);
+
+  public static final String FIELD_999 = "999";
+  public static final char INDICATOR_F = 'f';
 }
