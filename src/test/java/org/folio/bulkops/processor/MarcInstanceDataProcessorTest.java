@@ -1,6 +1,8 @@
 package org.folio.bulkops.processor;
 
+import static java.util.Objects.nonNull;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.mockito.Mockito.verify;
 
 import org.folio.bulkops.BaseTest;
@@ -66,7 +68,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .subfield("a")
       .actions(List.of(
         new MarcAction()
-          .name(UpdateActionType.FIND)
+          .name(FIND)
           .data(Collections.singletonList(new MarcActionDataInner()
             .key(MarcDataType.VALUE)
             .value("text a"))),
@@ -104,6 +106,77 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     assertThat(subfields).hasSize(1);
   }
 
+  @Test
+  void shouldApplyFindAndReplaceRule() {
+    var bulkOperationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(bulkOperationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+    var marcRecord = new RecordImpl();
+    var dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "old value"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "Old value"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("500", ' ', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "old value"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('b', "old value"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("510", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "old value"));
+    marcRecord.addVariableField(dataField);
+    var findAndReplaceRule = new BulkOperationMarcRule()
+      .id(UUID.randomUUID())
+      .bulkOperationId(bulkOperationId)
+      .tag("500")
+      .ind1("1")
+      .ind2("\\")
+      .subfield("a")
+      .actions(List.of(
+        new MarcAction()
+          .name(FIND)
+          .data(Collections.singletonList(new MarcActionDataInner()
+            .key(MarcDataType.VALUE)
+            .value("old value"))),
+        new MarcAction()
+          .name(UpdateActionType.REPLACE_WITH)
+          .data(List.of(
+            new MarcActionDataInner()
+              .key(MarcDataType.VALUE)
+              .value("new value")))));
+    var rules = new BulkOperationMarcRuleCollection()
+      .bulkOperationMarcRules(Collections.singletonList(findAndReplaceRule))
+      .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules);
+
+    var dataFields = marcRecord.getDataFields();
+    assertThat(dataFields).hasSize(5);
+
+    dataFields.forEach(df -> assertThat(df.getSubfields()).hasSize(1));
+
+    var subfield = dataFields.get(0).getSubfields().get(0);
+    assertThat(subfield.getCode()).isEqualTo('a');
+    assertThat(subfield.getData()).isEqualTo("new value");
+    subfield = dataFields.get(1).getSubfields().get(0);
+    assertThat(subfield.getCode()).isEqualTo('a');
+    assertThat(subfield.getData()).isEqualTo("Old value");
+    subfield = dataFields.get(2).getSubfields().get(0);
+    assertThat(subfield.getCode()).isEqualTo('a');
+    assertThat(subfield.getData()).isEqualTo("old value");
+    subfield = dataFields.get(3).getSubfields().get(0);
+    assertThat(subfield.getCode()).isEqualTo('b');
+    assertThat(subfield.getData()).isEqualTo("old value");
+    subfield = dataFields.get(4).getSubfields().get(0);
+    assertThat(subfield.getCode()).isEqualTo('a');
+    assertThat(subfield.getData()).isEqualTo("old value");
+
+  }
+
   @ParameterizedTest
   @CsvSource(textBlock = """
     null   | text b | b    | Action data VALUE is absent.    | ID   | true
@@ -139,7 +212,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .subfield("a")
       .actions(List.of(
         new MarcAction()
-          .name(UpdateActionType.FIND)
+          .name(FIND)
           .data(Collections.singletonList(new MarcActionDataInner()
             .key(MarcDataType.VALUE)
             .value(findValue))),
@@ -199,7 +272,10 @@ class MarcInstanceDataProcessorTest extends BaseTest {
 
     processor.update(operation, marcRecord, rules);
 
-    var errorMessage = String.format("Action %s is not supported yet.", errorMessageArg);
+    var errorMessageTemplate = FIND.equals(updateActionType1) && nonNull(updateActionType2) ?
+      "Action FIND + %s is not supported yet." :
+      "Action %s is not supported yet.";
+    var errorMessage = String.format(errorMessageTemplate, errorMessageArg);
     verify(errorService).saveError(bulkOperationId, hrid, errorMessage);
   }
 }
