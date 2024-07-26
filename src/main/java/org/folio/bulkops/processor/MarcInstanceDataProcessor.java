@@ -3,6 +3,7 @@ package org.folio.bulkops.processor;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.MarcDataType.SUBFIELD;
 import static org.folio.bulkops.domain.dto.MarcDataType.VALUE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.APPEND;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.folio.bulkops.util.Constants.SPACE_CHAR;
 
