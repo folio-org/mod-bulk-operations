@@ -1,5 +1,6 @@
 package org.folio.bulkops.processor;
 
+import static java.util.Objects.nonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.mockito.Mockito.verify;
@@ -271,7 +272,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
 
     processor.update(operation, marcRecord, rules);
 
-    var errorMessageTemplate = FIND.equals(updateActionType1) ?
+    var errorMessageTemplate = FIND.equals(updateActionType1) && nonNull(updateActionType2) ?
       "Action FIND + %s is not supported yet." :
       "Action %s is not supported yet.";
     var errorMessage = String.format(errorMessageTemplate, errorMessageArg);

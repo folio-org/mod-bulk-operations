@@ -3,8 +3,9 @@ package org.folio.bulkops.processor;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.MarcDataType.SUBFIELD;
 import static org.folio.bulkops.domain.dto.MarcDataType.VALUE;
-import static org.folio.bulkops.domain.dto.UpdateActionType.APPEND;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
+import static org.folio.bulkops.util.Constants.FIELD_999;
+import static org.folio.bulkops.util.Constants.INDICATOR_F;
 import static org.folio.bulkops.util.Constants.SPACE_CHAR;
 
 import lombok.RequiredArgsConstructor;
@@ -100,7 +101,7 @@ public class MarcInstanceDataProcessor {
 
   private String fetchInstanceUuidOrElseHrid(Record marcRecord) {
     return marcRecord.getDataFields().stream()
-      .filter(f -> "999".equals(f.getTag()) && 'f' == f.getIndicator1() && 'f' == f.getIndicator2())
+      .filter(f -> FIELD_999.equals(f.getTag()) && INDICATOR_F == f.getIndicator1() && INDICATOR_F == f.getIndicator2())
       .findFirst()
       .map(f -> f.getSubfield('i'))
       .map(Subfield::getData)
