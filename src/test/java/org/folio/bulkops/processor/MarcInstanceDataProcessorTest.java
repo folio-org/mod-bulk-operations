@@ -177,6 +177,72 @@ class MarcInstanceDataProcessorTest extends BaseTest {
 
   }
 
+  @Test
+  void shouldApplyRemoveAllRule() {
+    var bulkOperationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(bulkOperationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+    var marcRecord = new RecordImpl();
+    var dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "text a"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "Text a"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("500", ' ', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "Text a"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('b', "Text b"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("500", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('b', "Text b"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("510", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "Text a"));
+    marcRecord.addVariableField(dataField);
+    var findAndAppendRule = new BulkOperationMarcRule()
+      .id(UUID.randomUUID())
+      .bulkOperationId(bulkOperationId)
+      .tag("500")
+      .ind1("1")
+      .ind2("\\")
+      .subfield("a")
+      .actions(List.of(
+        new MarcAction()
+          .name(UpdateActionType.REMOVE_ALL)
+          .data(Collections.singletonList(new MarcActionDataInner()
+            .key(MarcDataType.VALUE)
+            .value("text a")))));
+    var rules = new BulkOperationMarcRuleCollection()
+      .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
+      .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules);
+
+    var dataFields = marcRecord.getDataFields();
+    assertThat(dataFields).hasSize(4);
+
+    var subfields = dataFields.get(0).getSubfields();
+    assertThat(subfields).hasSize(1);
+    assertThat(subfields.get(0).getCode()).isEqualTo('a');
+    assertThat(subfields.get(0).getData()).isEqualTo("Text a");
+    subfields = dataFields.get(1).getSubfields();
+    assertThat(subfields).hasSize(1);
+    assertThat(subfields.get(0).getCode()).isEqualTo('b');
+    assertThat(subfields.get(0).getData()).isEqualTo("Text b");
+    subfields = dataFields.get(2).getSubfields();
+    assertThat(subfields).hasSize(1);
+    assertThat(subfields.get(0).getCode()).isEqualTo('b');
+    assertThat(subfields.get(0).getData()).isEqualTo("Text b");
+    subfields = dataFields.get(3).getSubfields();
+    assertThat(subfields).hasSize(1);
+    assertThat(subfields.get(0).getCode()).isEqualTo('a');
+    assertThat(subfields.get(0).getData()).isEqualTo("Text a");
+  }
+
   @ParameterizedTest
   @CsvSource(textBlock = """
     null   | text b | b    | Action data VALUE is absent.    | ID   | true

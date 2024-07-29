@@ -4,6 +4,7 @@ import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.MarcDataType.SUBFIELD;
 import static org.folio.bulkops.domain.dto.MarcDataType.VALUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.util.Constants.FIELD_999;
 import static org.folio.bulkops.util.Constants.INDICATOR_F;
 import static org.folio.bulkops.util.Constants.SPACE_CHAR;
@@ -53,6 +54,8 @@ public class MarcInstanceDataProcessor {
         case REPLACE_WITH -> processFindAndReplace(rule, marcRecord);
         default -> throw new BulkOperationException(String.format("Action FIND + %s is not supported yet.", actions.get(1).getName()));
       }
+    } else if (REMOVE_ALL.equals(actions.get(0).getName())) {
+      processRemoveAll(rule, marcRecord);
     } else {
       throw new BulkOperationException(String.format("Action %s is not supported yet.", actions.get(0).getName()));
     }
@@ -90,6 +93,15 @@ public class MarcInstanceDataProcessor {
       .filter(dataField -> rule.getTag().equals(dataField.getTag()) &&
         ind1 == dataField.getIndicator1() && ind2 == dataField.getIndicator2())
       .toList();
+  }
+
+  private void processRemoveAll(BulkOperationMarcRule rule, Record marcRecord) throws BulkOperationException {
+    var tag = rule.getTag();
+    char ind1 = fetchIndicatorValue(rule.getInd1());
+    char ind2 = fetchIndicatorValue(rule.getInd2());
+    char subfieldCode = rule.getSubfield().charAt(0);
+    marcRecord.getDataFields().removeIf(dataField -> dataField.getTag().equals(tag) && dataField.getIndicator1() == ind1
+      && dataField.getIndicator2() == ind2 && dataField.getSubfields().stream().anyMatch(subfield -> subfield.getCode() == subfieldCode));
   }
 
   private char fetchIndicatorValue(String s) {
