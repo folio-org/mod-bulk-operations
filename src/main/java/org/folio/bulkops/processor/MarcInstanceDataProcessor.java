@@ -95,7 +95,7 @@ public class MarcInstanceDataProcessor {
       .toList();
   }
 
-  private void processRemoveAll(BulkOperationMarcRule rule, Record marcRecord) throws BulkOperationException {
+  private void processRemoveAll(BulkOperationMarcRule rule, Record marcRecord) {
     var tag = rule.getTag();
     char ind1 = fetchIndicatorValue(rule.getInd1());
     char ind2 = fetchIndicatorValue(rule.getInd2());
