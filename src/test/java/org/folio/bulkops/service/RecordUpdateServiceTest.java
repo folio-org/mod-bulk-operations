@@ -50,6 +50,8 @@ class RecordUpdateServiceTest extends BaseTest {
   @MockBean
   private BulkOperationExecutionContentRepository executionContentRepository;
   @MockBean
+  private ConsortiaService consortiaService;
+  @MockBean
   private BulkOperationRepository bulkOperationRepository;
   @SpyBean
   private ItemUpdateProcessor itemUpdateProcessor;
@@ -70,6 +72,8 @@ class RecordUpdateServiceTest extends BaseTest {
       .identifierType(IdentifierType.ID)
       .entityType(EntityType.ITEM)
       .build();
+
+    when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
 
     var result = recordUpdateService.updateEntity(extendedOriginalItem, extendedModifiedItem, operation);
 
@@ -108,8 +112,11 @@ class RecordUpdateServiceTest extends BaseTest {
       .reason("null".equals(responseErrorMessage) ? null : responseErrorMessage)
       .request(Request.create(Request.HttpMethod.PUT, "", Map.of(), new byte[]{}, Charset.defaultCharset(), null))
       .build());
+
+    when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
     doThrow(feignException).when(itemClient).updateItem(any(Item.class), any(String.class));
     when(holdingsClient.getHoldingById("cb475fa9-aa07-4bbf-8382-b0b1426f9a20")).thenReturn(HoldingsRecord.builder().instanceId("f3e3bd0f-1d95-4f25-9df1-7eb39a2957e3").build());
+
     var original = Item.builder()
       .id("1f5e22ed-92ed-4c65-a603-2a5cb4c6052e")
       .barcode("barcode")
