@@ -74,6 +74,7 @@ public class MarcInstanceDataProcessor {
       dataField.getSubfields().forEach(subfield -> {
         if (subfieldCode == subfield.getCode() && findValue.equals(subfield.getData())) {
           dataField.addSubfield(new SubfieldImpl(appendSubfieldCode, appendValue));
+          dataField.getSubfields().sort(subfieldComparator);
         }
       }));
   }
