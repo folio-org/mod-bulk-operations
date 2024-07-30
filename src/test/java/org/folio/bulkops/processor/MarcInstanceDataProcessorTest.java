@@ -62,6 +62,9 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     dataField = new DataFieldImpl("510", '1', ' ');
     dataField.addSubfield(new SubfieldImpl('b', "Text b"));
     marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('b', "text b"));
+    marcRecord.addVariableField(dataField);
     var findAndAppendRule = new BulkOperationMarcRule()
       .id(UUID.randomUUID())
       .bulkOperationId(bulkOperationId)
@@ -91,13 +94,115 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     processor.update(operation, marcRecord, rules);
 
     var dataFields = marcRecord.getDataFields();
-    assertThat(dataFields).hasSize(5);
+    assertThat(dataFields).hasSize(6);
 
     assertThat(dataFields.get(0)).hasToString("500 1 $atext a$btext b");
     assertThat(dataFields.get(1).getSubfields()).hasSize(1);
     assertThat(dataFields.get(2).getSubfields()).hasSize(1);
     assertThat(dataFields.get(3).getSubfields()).hasSize(1);
     assertThat(dataFields.get(4).getSubfields()).hasSize(1);
+    assertThat(dataFields.get(5)).hasToString("500 1 $atext a$btext b");
+  }
+
+  @Test
+  void shouldApplyFindAndRemoveField() {
+    var bulkOperationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(bulkOperationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+    var marcRecord = new RecordImpl();
+    var dataField = new DataFieldImpl("500", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "text a"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("500", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "Text a"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("510", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "text a"));
+    marcRecord.addVariableField(dataField);
+    var findAndAppendRule = new BulkOperationMarcRule()
+      .id(UUID.randomUUID())
+      .bulkOperationId(bulkOperationId)
+      .tag("500")
+      .ind1("1")
+      .ind2("1")
+      .subfield("a")
+      .actions(List.of(
+        new MarcAction()
+          .name(FIND)
+          .data(Collections.singletonList(new MarcActionDataInner()
+            .key(MarcDataType.VALUE)
+            .value("text a"))),
+        new MarcAction()
+          .name(UpdateActionType.REMOVE_FIELD)
+          .data(Collections.emptyList())));
+    var rules = new BulkOperationMarcRuleCollection()
+      .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
+      .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules);
+
+    var dataFields = marcRecord.getDataFields();
+    assertThat(dataFields).hasSize(2);
+
+    assertThat(dataFields.get(0)).hasToString("500 11$aText a");
+    assertThat(dataFields.get(1)).hasToString("510 11$atext a");
+  }
+
+  @Test
+  void shouldApplyFindAndRemoveSubfield() {
+    var bulkOperationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(bulkOperationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+    var marcRecord = new RecordImpl();
+    var dataField = new DataFieldImpl("500", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "text a"));
+    dataField.addSubfield(new SubfieldImpl('b', "text b"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("500", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "Text a"));
+    dataField.addSubfield(new SubfieldImpl('b', "Text b"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("510", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "text a"));
+    dataField.addSubfield(new SubfieldImpl('b', "text b"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("500", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "text a"));
+    dataField.addSubfield(new SubfieldImpl('b', "text b"));
+    marcRecord.addVariableField(dataField);
+    var findAndAppendRule = new BulkOperationMarcRule()
+      .id(UUID.randomUUID())
+      .bulkOperationId(bulkOperationId)
+      .tag("500")
+      .ind1("1")
+      .ind2("1")
+      .subfield("a")
+      .actions(List.of(
+        new MarcAction()
+          .name(FIND)
+          .data(Collections.singletonList(new MarcActionDataInner()
+            .key(MarcDataType.VALUE)
+            .value("text a"))),
+        new MarcAction()
+          .name(UpdateActionType.REMOVE_SUBFIELD)
+          .data(Collections.emptyList())));
+    var rules = new BulkOperationMarcRuleCollection()
+      .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
+      .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules);
+
+    var dataFields = marcRecord.getDataFields();
+    assertThat(dataFields).hasSize(4);
+
+    assertThat(dataFields.get(0)).hasToString("500 11$btext b");
+    assertThat(dataFields.get(1)).hasToString("500 11$aText a$bText b");
+    assertThat(dataFields.get(2)).hasToString("510 11$atext a$btext b");
+    assertThat(dataFields.get(3)).hasToString("500 11$btext b");
   }
 
   @Test
