@@ -1,8 +1,10 @@
 package org.folio.bulkops.processor;
 
+import static java.lang.Character.isDigit;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.MarcDataType.SUBFIELD;
 import static org.folio.bulkops.domain.dto.MarcDataType.VALUE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.folio.bulkops.util.Constants.FIELD_999;
 import static org.folio.bulkops.util.Constants.INDICATOR_F;
@@ -10,6 +12,7 @@ import static org.folio.bulkops.util.Constants.SPACE_CHAR;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.MarcActionDataInner;
@@ -20,9 +23,11 @@ import org.folio.bulkops.service.ErrorService;
 import org.marc4j.marc.DataField;
 import org.marc4j.marc.Record;
 import org.marc4j.marc.Subfield;
+import org.marc4j.marc.impl.DataFieldImpl;
 import org.marc4j.marc.impl.SubfieldImpl;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Component
@@ -53,6 +58,8 @@ public class MarcInstanceDataProcessor {
         case REPLACE_WITH -> processFindAndReplace(rule, marcRecord);
         default -> throw new BulkOperationException(String.format("Action FIND + %s is not supported yet.", actions.get(1).getName()));
       }
+    } else if (ADD_TO_EXISTING.equals(actions.get(0).getName())) {
+      processAddToExisting(rule, marcRecord);
     } else {
       throw new BulkOperationException(String.format("Action %s is not supported yet.", actions.get(0).getName()));
     }
@@ -67,6 +74,7 @@ public class MarcInstanceDataProcessor {
       dataField.getSubfields().forEach(subfield -> {
         if (subfieldCode == subfield.getCode() && findValue.equals(subfield.getData())) {
           dataField.addSubfield(new SubfieldImpl(appendSubfieldCode, appendValue));
+          dataField.getSubfields().sort(subfieldComparator);
         }
       }));
   }
@@ -92,6 +100,29 @@ public class MarcInstanceDataProcessor {
       .toList();
   }
 
+  private void processAddToExisting(BulkOperationMarcRule rule, Record marcRecord) throws BulkOperationException {
+    var tag = rule.getTag();
+    char ind1 = fetchIndicatorValue(rule.getInd1());
+    char ind2 = fetchIndicatorValue(rule.getInd2());
+    var newField = new DataFieldImpl(tag, ind1, ind2);
+    var subfieldCode = rule.getSubfield().charAt(0);
+    var value = fetchActionDataValue(VALUE, rule.getActions().get(0).getData());
+    newField.addSubfield(new SubfieldImpl(subfieldCode, value));
+    if (ObjectUtils.isNotEmpty(rule.getSubfields())) {
+      for (var subfieldAction : rule.getSubfields()) {
+        var action = subfieldAction.getActions().get(0);
+        if (ADD_TO_EXISTING.equals(action.getName())) {
+          subfieldCode = subfieldAction.getSubfield().charAt(0);
+          value = fetchActionDataValue(VALUE, action.getData());
+          newField.addSubfield(new SubfieldImpl(subfieldCode, value));
+        }
+      }
+      newField.getSubfields().sort(subfieldComparator);
+    }
+    marcRecord.addVariableField(newField);
+    marcRecord.getDataFields().sort(Comparator.comparing(DataField::toString));
+  }
+
   private char fetchIndicatorValue(String s) {
     return "\\".equals(s) ? SPACE_CHAR : s.charAt(0);
   }
@@ -112,4 +143,12 @@ public class MarcInstanceDataProcessor {
       .map(MarcActionDataInner::getValue)
       .orElseThrow(() -> new BulkOperationException(String.format("Action data %s is absent.", dataType)));
   }
+
+  private final Comparator<Subfield> subfieldComparator = (sf1, sf2) -> {
+    if (isDigit(sf1.getCode()) ^ isDigit(sf2.getCode())) {
+      return isDigit(sf1.getCode()) ? 1 : -1;
+    } else {
+      return sf1.toString().compareTo(sf2.toString());
+    }
+  };
 }
