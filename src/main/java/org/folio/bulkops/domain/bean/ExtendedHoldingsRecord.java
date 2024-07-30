@@ -38,6 +38,11 @@ public class ExtendedHoldingsRecord implements BulkOperationsEntity, ElectronicA
     return entity;
   }
 
+  @Override
+  public String getTenant() {
+    return tenantId;
+  }
+
   @JsonIgnore
   public List<ElectronicAccess> getElectronicAccess() {
     return entity.getElectronicAccess();

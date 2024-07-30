@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedInstance> {
   private static final String ERROR_MESSAGE_TEMPLATE = "No change in value for instance required, %s associated records have been updated.";
-  private static final String ERROR_NO_PERMISSIONS_TO_EDIT_HOLDINGS = "User %s does not have edit permission to edit the holdings record - %s on the tenant %s";
+  private static final String ERROR_NO_AFFILIATION_TO_EDIT_HOLDINGS = "User %s does not have required affiliation to edit the holdings record - %s on the tenant %s";
 
   private final InstanceClient instanceClient;
   private final UserClient userClient;
@@ -104,7 +104,7 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedIns
           var memberTenantForHoldings = consortiaHoldingsEntry.getKey();
           if (!userTenants.contains(memberTenantForHoldings)) {
             for (var holdingId : consortiaHoldingsEntry.getValue()) {
-              var errorMessage = String.format(ERROR_NO_PERMISSIONS_TO_EDIT_HOLDINGS, user.getUsername(), holdingId, memberTenantForHoldings);
+              var errorMessage = String.format(ERROR_NO_AFFILIATION_TO_EDIT_HOLDINGS, user.getUsername(), holdingId, memberTenantForHoldings);
               log.error(errorMessage);
               errorService.saveError(operation.getId(), instance.getIdentifier(operation.getIdentifierType()), errorMessage);
             }

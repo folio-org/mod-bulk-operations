@@ -11,7 +11,6 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 import static org.folio.bulkops.util.RuleUtils.fetchParameters;
 import static org.folio.bulkops.util.RuleUtils.findRuleByOption;
 
-import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
@@ -19,6 +18,7 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.RuleService;
 import org.folio.spring.FolioExecutionContext;
@@ -42,12 +42,13 @@ public class HoldingsUpdateProcessor extends AbstractUpdateProcessor<ExtendedHol
   private final ErrorService errorService;
   private final FolioModuleMetadata folioModuleMetadata;
   private final FolioExecutionContext folioExecutionContext;
+  private final ConsortiaService consortiaService;
 
   @Override
   public void updateRecord(ExtendedHoldingsRecord extendedHoldingsRecord) {
-    var tenantId = extendedHoldingsRecord.getTenantId();
     var holdingsRecord = extendedHoldingsRecord.getEntity();
-    if (StringUtils.isNotEmpty(tenantId)) {
+    if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+      var tenantId = extendedHoldingsRecord.getTenantId();
       try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
         holdingsClient.updateHoldingsRecord(
           holdingsRecord.withInstanceHrid(null).withItemBarcode(null).withInstanceTitle(null),
@@ -64,11 +65,11 @@ public class HoldingsUpdateProcessor extends AbstractUpdateProcessor<ExtendedHol
 
   @Override
   public void updateAssociatedRecords(ExtendedHoldingsRecord extendedHoldingsRecord, BulkOperation operation, boolean notChanged) {
-    var tenantId = extendedHoldingsRecord.getTenantId();
     var holdingsRecord = extendedHoldingsRecord.getEntity();
     var bulkOperationRules = ruleService.getRules(operation.getId());
     boolean itemsUpdated;
-    if (StringUtils.isNotEmpty(tenantId)) {
+    if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+      var tenantId = extendedHoldingsRecord.getTenantId();
       try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
         itemsUpdated = findRuleByOption(bulkOperationRules, SUPPRESS_FROM_DISCOVERY)
           .filter(bulkOperationRule -> suppressItemsIfRequired(holdingsRecord, bulkOperationRule))
