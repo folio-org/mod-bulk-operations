@@ -2,6 +2,8 @@ package org.folio.bulkops.processor;
 
 import static java.util.Objects.nonNull;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.bulkops.domain.dto.UpdateActionType.ADDITIONAL_SUBFIELD;
+import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.mockito.Mockito.verify;
 
@@ -12,6 +14,7 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.MarcAction;
 import org.folio.bulkops.domain.dto.MarcActionDataInner;
 import org.folio.bulkops.domain.dto.MarcDataType;
+import org.folio.bulkops.domain.dto.MarcSubfieldAction;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.service.ErrorService;
@@ -45,19 +48,19 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .build();
     var marcRecord = new RecordImpl();
     var dataField = new DataFieldImpl("500", '1', ' ');
-    dataField.addSubfield(new SubfieldImpl('a', "text a"));
+    dataField.addSubfield(new SubfieldImpl('b', "text b"));
     marcRecord.addVariableField(dataField);
     dataField = new DataFieldImpl("500", '1', ' ');
-    dataField.addSubfield(new SubfieldImpl('a', "Text a"));
+    dataField.addSubfield(new SubfieldImpl('b', "Text b"));
     marcRecord.addVariableField(dataField);
     dataField = new DataFieldImpl("500", ' ', '1');
-    dataField.addSubfield(new SubfieldImpl('a', "Text a"));
+    dataField.addSubfield(new SubfieldImpl('b', "Text b"));
     marcRecord.addVariableField(dataField);
     dataField = new DataFieldImpl("500", '1', ' ');
-    dataField.addSubfield(new SubfieldImpl('b', "Text a"));
+    dataField.addSubfield(new SubfieldImpl('a', "Text b"));
     marcRecord.addVariableField(dataField);
     dataField = new DataFieldImpl("510", '1', ' ');
-    dataField.addSubfield(new SubfieldImpl('a', "Text a"));
+    dataField.addSubfield(new SubfieldImpl('b', "Text b"));
     marcRecord.addVariableField(dataField);
     var findAndAppendRule = new BulkOperationMarcRule()
       .id(UUID.randomUUID())
@@ -65,22 +68,22 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .tag("500")
       .ind1("1")
       .ind2("\\")
-      .subfield("a")
+      .subfield("b")
       .actions(List.of(
         new MarcAction()
           .name(FIND)
           .data(Collections.singletonList(new MarcActionDataInner()
             .key(MarcDataType.VALUE)
-            .value("text a"))),
+            .value("text b"))),
         new MarcAction()
           .name(UpdateActionType.APPEND)
           .data(List.of(
             new MarcActionDataInner()
               .key(MarcDataType.VALUE)
-              .value("text b"),
+              .value("text a"),
             new MarcActionDataInner()
               .key(MarcDataType.SUBFIELD)
-              .value("b")))));
+              .value("a")))));
     var rules = new BulkOperationMarcRuleCollection()
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
@@ -90,20 +93,11 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     var dataFields = marcRecord.getDataFields();
     assertThat(dataFields).hasSize(5);
 
-    var subfields = dataFields.get(0).getSubfields();
-    assertThat(subfields).hasSize(2);
-    assertThat(subfields.get(0).getCode()).isEqualTo('a');
-    assertThat(subfields.get(0).getData()).isEqualTo("text a");
-    assertThat(subfields.get(1).getCode()).isEqualTo('b');
-    assertThat(subfields.get(1).getData()).isEqualTo("text b");
-    subfields = dataFields.get(1).getSubfields();
-    assertThat(subfields).hasSize(1);
-    subfields = dataFields.get(2).getSubfields();
-    assertThat(subfields).hasSize(1);
-    subfields = dataFields.get(3).getSubfields();
-    assertThat(subfields).hasSize(1);
-    subfields = dataFields.get(4).getSubfields();
-    assertThat(subfields).hasSize(1);
+    assertThat(dataFields.get(0)).hasToString("500 1 $atext a$btext b");
+    assertThat(dataFields.get(1).getSubfields()).hasSize(1);
+    assertThat(dataFields.get(2).getSubfields()).hasSize(1);
+    assertThat(dataFields.get(3).getSubfields()).hasSize(1);
+    assertThat(dataFields.get(4).getSubfields()).hasSize(1);
   }
 
   @Test
@@ -343,5 +337,70 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       "Action %s is not supported yet.";
     var errorMessage = String.format(errorMessageTemplate, errorMessageArg);
     verify(errorService).saveError(bulkOperationId, hrid, errorMessage);
+  }
+
+  @Test
+  void shouldApplyAddToExistingRule() {
+    var bulkOperationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(bulkOperationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+    var marcRecord = new RecordImpl();
+    var dataField = new DataFieldImpl("500", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "text a"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("550", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "text a"));
+    marcRecord.addVariableField(dataField);
+    var findAndAppendRule = new BulkOperationMarcRule()
+      .id(UUID.randomUUID())
+      .bulkOperationId(bulkOperationId)
+      .tag("510")
+      .ind1("1")
+      .ind2("1")
+      .subfield("b")
+      .actions(List.of(
+        new MarcAction()
+          .name(ADD_TO_EXISTING)
+          .data(Collections.singletonList(new MarcActionDataInner()
+            .key(MarcDataType.VALUE)
+            .value("text b"))),
+        new MarcAction()
+          .name(ADDITIONAL_SUBFIELD)
+          .data(Collections.emptyList())))
+      .subfields(List.of(new MarcSubfieldAction()
+          .subfield("1")
+          .actions(List.of(new MarcAction()
+              .name(ADD_TO_EXISTING)
+              .data(Collections.singletonList(new MarcActionDataInner()
+                .key(MarcDataType.VALUE)
+                .value("text 1"))),
+            new MarcAction()
+              .name(ADDITIONAL_SUBFIELD)
+              .data(Collections.emptyList()))),
+        new MarcSubfieldAction()
+          .subfield("a")
+          .actions(List.of(new MarcAction()
+              .name(ADD_TO_EXISTING)
+              .data(Collections.singletonList(new MarcActionDataInner()
+                .key(MarcDataType.VALUE)
+                .value("text a"))),
+            new MarcAction()
+              .name(ADDITIONAL_SUBFIELD)
+              .data(Collections.emptyList())))));
+    var rules = new BulkOperationMarcRuleCollection()
+      .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
+      .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules);
+
+    var dataFields = marcRecord.getDataFields();
+    assertThat(dataFields).hasSize(3);
+
+    assertThat(dataFields.get(0).getTag()).isEqualTo("500");
+    assertThat(dataFields.get(1).getTag()).isEqualTo("510");
+    assertThat(dataFields.get(1)).hasToString("510 11$atext a$btext b$1text 1");
+    assertThat(dataFields.get(2).getTag()).isEqualTo("550");
   }
 }
