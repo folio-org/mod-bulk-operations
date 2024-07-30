@@ -54,7 +54,7 @@ public class MarcInstanceDataProcessor {
         case REPLACE_WITH -> processFindAndReplace(rule, marcRecord);
         default -> throw new BulkOperationException(String.format("Action FIND + %s is not supported yet.", actions.get(1).getName()));
       }
-    } else if (REMOVE_ALL.equals(actions.get(0).getName())) {
+    } else if (REMOVE_ALL == actions.get(0).getName()) {
       processRemoveAll(rule, marcRecord);
     } else {
       throw new BulkOperationException(String.format("Action %s is not supported yet.", actions.get(0).getName()));
