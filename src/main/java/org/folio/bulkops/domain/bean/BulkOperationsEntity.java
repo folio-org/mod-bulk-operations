@@ -1,6 +1,7 @@
 package org.folio.bulkops.domain.bean;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.dto.IdentifierType;
 
 /**
@@ -12,5 +13,9 @@ public interface BulkOperationsEntity {
   @JsonIgnore
   default BulkOperationsEntity getRecordBulkOperationEntity() {
     return null;
+  }
+  @JsonIgnore
+  default String getTenant() {
+    return StringUtils.EMPTY;
   }
 }

@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -41,8 +42,11 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.SneakyThrows;
@@ -54,6 +58,7 @@ import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
+import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemCollection;
@@ -154,6 +159,9 @@ class BulkOperationServiceTest extends BaseTest {
 
   @MockBean
   private EntityTypeService entityTypeService;
+
+  @MockBean
+  private ConsortiaService consortiaService;
 
   @Test
   @SneakyThrows
@@ -301,6 +309,8 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToOriginalCsv = bulkOperationId + "/origin.csv";
       var pathToModifiedCsv = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-identifiers.csv";
       var pathToUserJson = "src/test/resources/files/user.json";
+
+      when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
 
       when(bulkOperationRepository.findById(any(UUID.class)))
         .thenReturn(Optional.of(BulkOperation.builder()
@@ -510,6 +520,8 @@ class BulkOperationServiceTest extends BaseTest {
 
       mockHoldingsClient();
       mockLocationClient();
+
+      when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
       when(bulkOperationRepository.findById(bulkOperationId))
         .thenReturn(Optional.of(BulkOperation.builder()
           .id(bulkOperationId)
@@ -1269,6 +1281,41 @@ class BulkOperationServiceTest extends BaseTest {
       } else {
         verify(errorService).saveError(any(), any(), any());
       }
+    }
+  }
+
+  @Test
+  void shouldProcessUpdateInConsortia() {
+    Map<String, Collection<String>> headers = new HashMap<>();
+    headers.put("tenant", List.of("central"));
+
+    var item = Item.builder()
+      .id(UUID.randomUUID().toString())
+      .barcode("barcode")
+      .statisticalCodes(Collections.singletonList(UUID.randomUUID().toString()))
+      .build();
+    var extendedItem = ExtendedItem.builder().tenantId("member").entity(item).build();
+
+    var operation = BulkOperation.builder()
+      .id(UUID.randomUUID())
+      .identifierType(IdentifierType.BARCODE)
+      .build();
+
+    var rules = new BulkOperationRule()
+      .bulkOperationId(operation.getId())
+      .ruleDetails(new BulkOperationRuleRuleDetails()
+        .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
+        .actions(List.of(new Action()
+          .type(UpdateActionType.SET_TO_TRUE))));
+    var rulesCollection = new BulkOperationRuleCollection().bulkOperationRules(List.of(rules)).totalRecords(1);
+
+    when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(true);
+
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var modified = bulkOperationService.processUpdate(extendedItem, operation, rulesCollection, ExtendedItem.class);
+      var itemEntity = (Item) modified.getUpdated().getRecordBulkOperationEntity();
+
+      assertTrue(itemEntity.getDiscoverySuppress());
     }
   }
 }
