@@ -110,6 +110,7 @@ public class MarcInstanceDataProcessor {
     char subfieldCode = rule.getSubfield().charAt(0);
     marcRecord.getDataFields().removeIf(dataField -> dataField.getTag().equals(tag) && dataField.getIndicator1() == ind1
       && dataField.getIndicator2() == ind2 && dataField.getSubfields().stream().anyMatch(subfield -> subfield.getCode() == subfieldCode));
+  }
 
   private void processAddToExisting(BulkOperationMarcRule rule, Record marcRecord) throws BulkOperationException {
     var tag = rule.getTag();
