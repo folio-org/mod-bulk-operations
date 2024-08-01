@@ -97,7 +97,7 @@ public class ErrorService {
           .map(this::prepareInternalErrorRepresentation)
           .toList())
         .totalRecords(errors.getTotalRecords());
-    } else if (REVIEW_CHANGES == bulkOperation.getStatus() || COMPLETED == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
+    } else if (COMPLETED == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
       return getExecutionErrors(bulkOperationId, limit);
     } else {
       throw new NotFoundException("Errors preview is not available");
