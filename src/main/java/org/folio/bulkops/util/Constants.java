@@ -3,6 +3,7 @@ package org.folio.bulkops.util;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import lombok.experimental.UtilityClass;
 
@@ -66,4 +67,5 @@ public class Constants {
 
   public static final String FIELD_999 = "999";
   public static final char INDICATOR_F = 'f';
+  public static final Pattern NOTE_FIELDS = Pattern.compile("5\\d{2}");
 }
