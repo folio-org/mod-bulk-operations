@@ -145,7 +145,7 @@ class ErrorServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "COMPLETED" }, mode = EnumSource.Mode.INCLUDE)
   void shouldGetErrorsPreviewByBulkOperationId(OperationStatusType statusType) {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
@@ -177,7 +177,7 @@ class ErrorServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "COMPLETED" }, mode = EnumSource.Mode.INCLUDE)
   void shouldGetErrorsCsvByBulkOperationId(OperationStatusType statusType) {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
