@@ -12,11 +12,14 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class JobProfilePost {
+public class MatchProfile {
 
   @JsonProperty("id")
   private String id;
 
-  @JsonProperty("profile")
-  private JobProfile profile;
+  @JsonProperty("name")
+  private String name;
+
+  @JsonProperty("description")
+  private String description;
 }
