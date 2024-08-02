@@ -2,7 +2,6 @@ package org.folio.bulkops.client;
 
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import org.folio.bulkops.configs.FeignClientConfiguration;
-import org.folio.bulkops.domain.bean.ActionProfile;
 import org.folio.bulkops.domain.bean.ActionProfilePost;
 import org.folio.bulkops.domain.bean.JobProfileCollection;
 import org.folio.bulkops.domain.bean.JobProfilePost;
