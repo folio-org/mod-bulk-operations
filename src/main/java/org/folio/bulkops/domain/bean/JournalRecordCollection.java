@@ -17,10 +17,9 @@ import java.util.List;
 @AllArgsConstructor
 public class JournalRecordCollection {
 
-  @JsonProperty("jobExecutions")
+  @JsonProperty("journalRecords")
   private List<JournalRecord> journalRecords = new ArrayList<>();
 
   @JsonProperty("totalRecords")
   private Integer totalRecords;
-
 }
