@@ -7,6 +7,7 @@ import org.folio.bulkops.domain.bean.ActionProfilePost;
 import org.folio.bulkops.domain.bean.JobProfileCollection;
 import org.folio.bulkops.domain.bean.JobProfilePost;
 import org.folio.bulkops.domain.bean.MatchProfilePost;
+import org.folio.bulkops.domain.bean.ProfileAssociations;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,4 +30,7 @@ public interface DataImportProfilesClient {
 
   @PostMapping(value = "/mappingProfiles")
   void createMappingProfile(@RequestBody MatchProfilePost matchProfilePost);
+
+  @PostMapping(value = "/profileAssociations")
+  void createProfileAssociations(@RequestBody ProfileAssociations profileAssociations);
 }
