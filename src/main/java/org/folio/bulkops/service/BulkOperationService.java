@@ -79,7 +79,6 @@ import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.Utils;
 import org.folio.querytool.domain.dto.SubmitQuery;
-import org.folio.s3.exception.S3ClientException;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
