@@ -207,21 +207,13 @@ class BulkOperationServiceTest extends BaseTest {
 
   @Test
   @SneakyThrows
-  void shouldPopulateErrorToBulkOperationIfS3IssuesForUploadIdentifiers() {
+  void shouldPopulateErrorToBulkOperationIfS3IssuesForUploadIdentifiersInApp() {
     var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
+    var jobId = UUID.randomUUID();
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
       .thenReturn(BulkOperation.builder().id(UUID.randomUUID()).build());
 
-    var jobId = UUID.randomUUID();
-    when(dataExportSpringClient.upsertJob(any(Job.class)))
-      .thenReturn(Job.builder().id(jobId).status(JobStatus.SCHEDULED).build());
-
-    when(dataExportSpringClient.getJob(jobId))
-      .thenReturn(Job.builder().id(jobId).status(JobStatus.IN_PROGRESS).build());
-
-    when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
-      .thenReturn("3");
     when(remoteFileSystemClient.put(any(), any()))
       .thenThrow(new S3ClientException("error"));
 
@@ -267,6 +259,29 @@ class BulkOperationServiceTest extends BaseTest {
     assertEquals(2, capture.getTotalNumOfRecords());
     assertEquals(2, capture.getProcessedNumOfRecords());
     assertEquals(2, capture.getMatchedNumOfRecords());
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldPopulateErrorToBulkOperationIfS3IssuesForUploadIdentifiersManual() {
+    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
+    var bulkOperationId = UUID.randomUUID();
+    var jobId = UUID.randomUUID();
+
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
+    when(remoteFileSystemClient.put(any(), any()))
+      .thenThrow(new S3ClientException("error"));
+    when(bulkOperationRepository.findById(bulkOperationId))
+      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringCsvFile("barcodes.csv").build()));
+
+    bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, true, bulkOperationId, null, file);
+
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository, times(1)).save(operationCaptor.capture());
+    var capturedBulkOperation = operationCaptor.getValue();
+    assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
+    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(ErrorCode.ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION));
   }
 
   @Test
