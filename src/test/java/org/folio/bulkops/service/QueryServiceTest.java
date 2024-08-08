@@ -56,7 +56,7 @@ class QueryServiceTest extends BaseTest {
         .status(QueryDetails.StatusEnum.SUCCESS)
         .totalRecords(2));
       when(queryClient.getSortedIds(fqlQueryId, 0, Integer.MAX_VALUE))
-        .thenReturn(Collections.singletonList(List.of(UUID.randomUUID(), UUID.randomUUID())));
+        .thenReturn(Collections.singletonList(List.of(UUID.randomUUID().toString(), UUID.randomUUID().toString())));
 
       queryService.checkQueryExecutionStatus(operation);
 

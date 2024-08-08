@@ -60,9 +60,8 @@ public class QueryService {
   private void saveIdentifiers(BulkOperation bulkOperation) {
     try {
       var identifiersString = queryClient.getSortedIds(bulkOperation.getFqlQueryId(), 0, Integer.MAX_VALUE).stream()
-        .flatMap(List::stream)
+        .map(list -> list.get(0))
         .distinct()
-        .map(UUID::toString)
         .collect(Collectors.joining(NEW_LINE_SEPARATOR));
       var path = String.format(QUERY_FILENAME_TEMPLATE, bulkOperation.getId());
       remoteFileSystemClient.put(new ByteArrayInputStream(identifiersString.getBytes()), path);
