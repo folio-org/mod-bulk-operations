@@ -21,6 +21,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
+import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_INVALID_CONFIGURATION;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
@@ -78,6 +79,7 @@ import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.Utils;
 import org.folio.querytool.domain.dto.SubmitQuery;
+import org.folio.s3.exception.S3ClientException;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
@@ -299,7 +301,11 @@ public class BulkOperationService {
         .withEndTime(LocalDateTime.now()));
       operation.setStatus(OperationStatusType.FAILED);
       operation.setEndTime(LocalDateTime.now());
-      operation.setErrorMessage("Confirm changes operation failed, reason: " + e.getMessage());
+      if (e instanceof S3ClientException) {
+        operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_INVALID_CONFIGURATION);
+      } else {
+        operation.setErrorMessage("Confirm changes operation failed, reason: " + e.getMessage());
+      }
     } finally {
       bulkOperationRepository.save(operation);
     }
@@ -353,7 +359,11 @@ public class BulkOperationService {
         .withEndTime(LocalDateTime.now()));
       operation.setStatus(OperationStatusType.FAILED);
       operation.setEndTime(LocalDateTime.now());
-      operation.setErrorMessage("Confirm changes operation failed, reason: " + e.getMessage());
+      if (e instanceof S3ClientException) {
+        operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_INVALID_CONFIGURATION);
+      } else {
+        operation.setErrorMessage("Confirm changes operation failed, reason: " + e.getMessage());
+      }
     } finally {
       bulkOperationRepository.save(operation);
     }
