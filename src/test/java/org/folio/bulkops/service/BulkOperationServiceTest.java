@@ -518,6 +518,61 @@ class BulkOperationServiceTest extends BaseTest {
 
   @Test
   @SneakyThrows
+  void  shouldPopulateErrorToBulkOperationIfS3IssuesForConfirmChangesForInstanceMarc() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var bulkOperationId = UUID.randomUUID();
+      var marcAction = new MarcAction();
+      marcAction.setName(UpdateActionType.CLEAR_FIELD);
+      var bulkOperationMarcRule = new BulkOperationMarcRule();
+      bulkOperationMarcRule.setBulkOperationId(bulkOperationId);
+      bulkOperationMarcRule.setActions(List.of(marcAction));
+      bulkOperationMarcRule.setTag("tag");
+      bulkOperationMarcRule.setInd1("ind1");
+      bulkOperationMarcRule.setInd2("ind2");
+
+      var bulkOperationMarcRuleCollection = new BulkOperationMarcRuleCollection();
+      bulkOperationMarcRuleCollection.setBulkOperationMarcRules(List.of(bulkOperationMarcRule));
+
+      var pathToTriggering = "/some/path/instance_marc.csv";
+      var pathToMatchedRecordsMarcFile = "/some/path/Marc-Records-instance_marc.mrc";
+      var pathToOriginalCsv = bulkOperationId + "/origin.csv";
+      var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
+      var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-Marc-Records-instance_marc.mrc";
+
+      when(bulkOperationRepository.findById(any(UUID.class)))
+        .thenReturn(Optional.of(BulkOperation.builder()
+          .id(bulkOperationId)
+          .status(DATA_MODIFICATION)
+          .entityType(EntityType.INSTANCE_MARC)
+          .identifierType(IdentifierType.ID)
+          .linkToTriggeringCsvFile(pathToTriggering)
+          .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
+          .linkToMatchedRecordsMarcFile(pathToMatchedRecordsMarcFile)
+          .linkToModifiedRecordsMarcFile(pathToModifiedRecordsMarcFileName)
+          .processedNumOfRecords(0)
+          .build()));
+      when(ruleService.getMarcRules(bulkOperationId))
+        .thenReturn(bulkOperationMarcRuleCollection);
+      when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
+        .thenReturn(BulkOperationDataProcessing.builder()
+          .processedNumOfRecords(0)
+          .build());
+      when(remoteFileSystemClient.get(pathToModifiedRecordsMarcFileName))
+        .thenThrow(new S3ClientException("error"));
+      when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenReturn(new MarcRemoteStorageWriter(expectedPathToModifiedMarcFile, 8192, remoteFolioS3Client));
+
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
+
+      var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(2)).save(bulkOperationCaptor.capture()));
+      var capturedBulkOperation = bulkOperationCaptor.getValue();
+      assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
+      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE));
+    }
+  }
+
+  @Test
+  @SneakyThrows
   void shouldFailConfirmChangesForInstanceMarcIfMarcWriterNotAvailable() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
