@@ -6,6 +6,7 @@ import static org.folio.bulkops.domain.dto.MarcDataType.SUBFIELD;
 import static org.folio.bulkops.domain.dto.MarcDataType.VALUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.util.Constants.FIELD_999;
 import static org.folio.bulkops.util.Constants.INDICATOR_F;
 import static org.folio.bulkops.util.Constants.SPACE_CHAR;
@@ -56,8 +57,12 @@ public class MarcInstanceDataProcessor {
       switch (actions.get(1).getName()) {
         case APPEND -> processFindAndAppend(rule, marcRecord);
         case REPLACE_WITH -> processFindAndReplace(rule, marcRecord);
+        case REMOVE_FIELD -> processFindAndRemoveField(rule, marcRecord);
+        case REMOVE_SUBFIELD -> processFindAndRemoveSubfield(rule, marcRecord);
         default -> throw new BulkOperationException(String.format("Action FIND + %s is not supported yet.", actions.get(1).getName()));
       }
+    } else if (REMOVE_ALL == actions.get(0).getName()) {
+      processRemoveAll(rule, marcRecord);
     } else if (ADD_TO_EXISTING.equals(actions.get(0).getName())) {
       processAddToExisting(rule, marcRecord);
     } else {
@@ -70,13 +75,12 @@ public class MarcInstanceDataProcessor {
     var findValue = fetchActionDataValue(VALUE, rule.getActions().get(0).getData());
     var appendValue = fetchActionDataValue(VALUE, rule.getActions().get(1).getData());
     var appendSubfieldCode = fetchActionDataValue(SUBFIELD, rule.getActions().get(1).getData()).charAt(0);
-    findFields(rule, marcRecord).forEach(dataField ->
-      dataField.getSubfields().forEach(subfield -> {
-        if (subfieldCode == subfield.getCode() && findValue.equals(subfield.getData())) {
-          dataField.addSubfield(new SubfieldImpl(appendSubfieldCode, appendValue));
-          dataField.getSubfields().sort(subfieldComparator);
-        }
-      }));
+    findFields(rule, marcRecord).stream()
+        .filter(df -> df.getSubfields(subfieldCode).stream().anyMatch(sf -> findValue.equals(sf.getData())))
+        .forEach(df -> {
+          df.addSubfield(new SubfieldImpl(appendSubfieldCode, appendValue));
+          df.getSubfields().sort(subfieldComparator);
+        });
   }
 
   private void processFindAndReplace(BulkOperationMarcRule rule, Record marcRecord) throws BulkOperationException {
@@ -84,11 +88,27 @@ public class MarcInstanceDataProcessor {
     var findValue = fetchActionDataValue(VALUE, rule.getActions().get(0).getData());
     var newValue = fetchActionDataValue(VALUE, rule.getActions().get(1).getData());
     findFields(rule, marcRecord).forEach(dataField ->
-      dataField.getSubfields().forEach(subfield -> {
-        if (subfieldCode == subfield.getCode() && findValue.equals(subfield.getData())) {
+      dataField.getSubfields(subfieldCode).forEach(subfield -> {
+        if (findValue.equals(subfield.getData())) {
           subfield.setData(newValue);
         }
       }));
+  }
+
+  private void processFindAndRemoveField(BulkOperationMarcRule rule, Record marcRecord) throws BulkOperationException {
+    char subfieldCode = rule.getSubfield().charAt(0);
+    var findValue = fetchActionDataValue(VALUE, rule.getActions().get(0).getData());
+    findFields(rule, marcRecord).stream()
+      .filter(df -> df.getSubfields(subfieldCode).stream().anyMatch(sf -> findValue.equals(sf.getData())))
+      .forEach(marcRecord::removeVariableField);
+  }
+
+  private void processFindAndRemoveSubfield(BulkOperationMarcRule rule, Record marcRecord) throws BulkOperationException {
+    char subfieldCode = rule.getSubfield().charAt(0);
+    var findValue = fetchActionDataValue(VALUE, rule.getActions().get(0).getData());
+    findFields(rule, marcRecord).forEach(df -> df.getSubfields(subfieldCode).stream()
+      .filter(sf -> findValue.equals(sf.getData()))
+      .forEach(df::removeSubfield));
   }
 
   private List<DataField> findFields(BulkOperationMarcRule rule, Record marcRecord) {
@@ -98,6 +118,15 @@ public class MarcInstanceDataProcessor {
       .filter(dataField -> rule.getTag().equals(dataField.getTag()) &&
         ind1 == dataField.getIndicator1() && ind2 == dataField.getIndicator2())
       .toList();
+  }
+
+  private void processRemoveAll(BulkOperationMarcRule rule, Record marcRecord) {
+    var tag = rule.getTag();
+    char ind1 = fetchIndicatorValue(rule.getInd1());
+    char ind2 = fetchIndicatorValue(rule.getInd2());
+    char subfieldCode = rule.getSubfield().charAt(0);
+    marcRecord.getDataFields().removeIf(dataField -> dataField.getTag().equals(tag) && dataField.getIndicator1() == ind1
+      && dataField.getIndicator2() == ind2 && dataField.getSubfields().stream().anyMatch(subfield -> subfield.getCode() == subfieldCode));
   }
 
   private void processAddToExisting(BulkOperationMarcRule rule, Record marcRecord) throws BulkOperationException {
