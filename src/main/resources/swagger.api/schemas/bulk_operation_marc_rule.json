@@ -6,8 +6,7 @@
     "properties": {
       "id": {
         "description": "Bulk operation rule ID",
-        "type": "string",
-        "format": "uuid"
+        "type": "string"
       },
       "bulkOperationId": {
         "description": "Bulk operation ID",
