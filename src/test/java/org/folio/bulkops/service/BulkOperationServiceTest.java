@@ -234,6 +234,13 @@ class BulkOperationServiceTest extends BaseTest {
     assertEquals(2, capture.getMatchedNumOfRecords());
   }
 
+  @Test
+  @SneakyThrows
+  void shouldThrowExceptionIfOperationIdIsNull() {
+    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/modified-user.csv").readAllBytes());
+    assertThrows(NotFoundException.class, () -> bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, true, null, UUID.randomUUID(), file));
+  }
+
   @ParameterizedTest
   @EnumSource(value = JobStatus.class, names = { "FAILED", "SCHEDULED" }, mode = EnumSource.Mode.INCLUDE)
   @SneakyThrows
