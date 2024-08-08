@@ -21,7 +21,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
-import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_INVALID_CONFIGURATION;
+import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
@@ -301,11 +301,7 @@ public class BulkOperationService {
         .withEndTime(LocalDateTime.now()));
       operation.setStatus(OperationStatusType.FAILED);
       operation.setEndTime(LocalDateTime.now());
-      if (e instanceof S3ClientException) {
-        operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_INVALID_CONFIGURATION);
-      } else {
-        operation.setErrorMessage("Confirm changes operation failed, reason: " + e.getMessage());
-      }
+      operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
     } finally {
       bulkOperationRepository.save(operation);
     }
@@ -359,11 +355,7 @@ public class BulkOperationService {
         .withEndTime(LocalDateTime.now()));
       operation.setStatus(OperationStatusType.FAILED);
       operation.setEndTime(LocalDateTime.now());
-      if (e instanceof S3ClientException) {
-        operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_INVALID_CONFIGURATION);
-      } else {
-        operation.setErrorMessage("Confirm changes operation failed, reason: " + e.getMessage());
-      }
+      operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
     } finally {
       bulkOperationRepository.save(operation);
     }
