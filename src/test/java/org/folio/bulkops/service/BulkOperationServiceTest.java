@@ -99,9 +99,11 @@ import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.util.ErrorCode;
 import org.folio.querytool.domain.dto.SubmitQuery;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.RemoteStorageWriter;
+import org.folio.s3.exception.S3ClientException;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -386,6 +388,65 @@ class BulkOperationServiceTest extends BaseTest {
     }
   }
 
+  @Test
+  @SneakyThrows
+  void shouldPopulateErrorToBulkOperationIfS3IssuesForConfirmChanges() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var bulkOperationId = UUID.randomUUID();
+      var newPatronGroupId = "56c86552-20ec-41d1-964a-5a2be46969e5";
+      var pathToTriggering = "/some/path/identifiers.csv";
+      var pathToOrigin = "path/origin.json";
+      var pathToModified = bulkOperationId + "/json/" + LocalDate.now() + "-Updates-Preview-identifiers.json";
+      var pathToOriginalCsv = bulkOperationId + "/origin.csv";
+      var pathToUserJson = "src/test/resources/files/user.json";
+
+      when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
+
+      when(bulkOperationRepository.findById(any(UUID.class)))
+        .thenReturn(Optional.of(BulkOperation.builder()
+          .id(bulkOperationId)
+          .status(DATA_MODIFICATION)
+          .entityType(EntityType.USER)
+          .identifierType(IdentifierType.BARCODE)
+          .linkToTriggeringCsvFile(pathToTriggering)
+          .linkToMatchedRecordsJsonFile(pathToOrigin)
+          .linkToModifiedRecordsJsonFile("existing.csv")
+          .linkToModifiedRecordsCsvFile("existing.json")
+          .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
+          .processedNumOfRecords(0)
+          .build()));
+
+      when(ruleService.getRules(bulkOperationId))
+        .thenReturn(new BulkOperationRuleCollection()
+          .bulkOperationRules(List.of(new BulkOperationRule()
+            .ruleDetails(new BulkOperationRuleRuleDetails()
+              .option(UpdateOptionType.PATRON_GROUP)
+              .actions(List.of(new Action()
+                .type(UpdateActionType.REPLACE_WITH)
+                .updated(newPatronGroupId))))))
+          .totalRecords(1));
+
+      when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
+        .thenReturn(BulkOperationDataProcessing.builder()
+          .processedNumOfRecords(0)
+          .build());
+
+      when(remoteFileSystemClient.get(pathToOrigin))
+        .thenThrow(new S3ClientException("error"));
+
+      when(remoteFileSystemClient.get(pathToModified))
+        .thenReturn(new FileInputStream(pathToUserJson));
+
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
+
+      var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(2)).save(bulkOperationCaptor.capture()));
+      var capturedBulkOperation = bulkOperationCaptor.getValue();
+
+      assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
+      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE));
+    }
+  }
 
   @Test
   @SneakyThrows
