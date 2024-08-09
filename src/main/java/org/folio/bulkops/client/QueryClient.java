@@ -23,5 +23,5 @@ public interface QueryClient {
   QueryDetails getQuery(@RequestHeader UUID queryId);
 
   @GetMapping("/{queryId}/sortedIds")
-  List<List<UUID>> getSortedIds(@RequestHeader UUID queryId, @RequestParam Integer offset, @RequestParam Integer limit);
+  List<List<String>> getSortedIds(@RequestHeader UUID queryId, @RequestParam Integer offset, @RequestParam Integer limit);
 }
