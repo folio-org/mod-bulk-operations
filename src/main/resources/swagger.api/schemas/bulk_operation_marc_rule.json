@@ -4,11 +4,6 @@
   "BulkOperationMarcRule": {
     "type": "object",
     "properties": {
-      "id": {
-        "description": "Bulk operation rule ID",
-        "type": "string",
-        "format": "uuid"
-      },
       "bulkOperationId": {
         "description": "Bulk operation ID",
         "type": "string",

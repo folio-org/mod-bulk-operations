@@ -6,12 +6,15 @@ import org.marc4j.marc.DataField;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @UtilityClass
 public class Marc21ReferenceProvider {
   public static final String GENERAL_NOTE = "General note";
   private static final String LOCAL_NOTES = "Local notes";
   private static final String ABCDU3 = "abcdu3";
+  private static final Pattern UNDESIRED_LOCAL_NOTE_TAGS = Pattern.compile("59[1-9]");
 
   private static final Map<String, String> languages = new HashMap<>();
   private static final Map<String, String> instanceNoteTypes = new HashMap<>();
@@ -679,5 +682,11 @@ public class Marc21ReferenceProvider {
 
   public static boolean isStaffOnlyNote(DataField dataField) {
     return staffOnlyNotes.contains(dataField.getTag()) && '0' == dataField.getIndicator1();
+  }
+
+  public static Set<String> getMappedNoteTags() {
+    return instanceNoteTypes.keySet().stream()
+      .filter(s -> !UNDESIRED_LOCAL_NOTE_TAGS.matcher(s).matches())
+      .collect(Collectors.toSet());
   }
 }

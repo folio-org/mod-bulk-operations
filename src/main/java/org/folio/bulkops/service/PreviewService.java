@@ -13,7 +13,6 @@ import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDINGS_NOTE_TYP
 import static org.folio.bulkops.processor.InstanceNotesUpdaterFactory.INSTANCE_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.processor.ItemsNotesUpdater.ITEM_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
-import static org.folio.bulkops.util.Constants.NOTE_FIELDS;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 
 import java.io.InputStreamReader;
@@ -194,7 +193,7 @@ public class PreviewService {
   private Set<String> getChangedOptionsSet(BulkOperationMarcRuleCollection rules) {
     Set<String> forceVisibleOptions = new HashSet<>();
     rules.getBulkOperationMarcRules()
-      .stream().filter(rule -> NOTE_FIELDS.matcher(rule.getTag()).matches())
+      .stream().filter(rule -> Marc21ReferenceProvider.getMappedNoteTags().contains(rule.getTag()))
       .forEach(rule -> forceVisibleOptions.add(Marc21ReferenceProvider.getNoteTypeByTag(rule.getTag())));
     return forceVisibleOptions;
   }
