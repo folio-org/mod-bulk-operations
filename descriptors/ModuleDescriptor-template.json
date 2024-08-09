@@ -167,7 +167,18 @@
             "consortia.consortium.item.get",
             "user-tenants.collection.get",
             "consortia.user-tenants.collection.get",
-            "consortium-search.holdings.collection.get"
+            "consortium-search.holdings.collection.get",
+            "data-import.uploaddefinitions.post",
+            "data-import.upload.file.post",
+            "data-import.uploaddefinitions.files.post",
+            "converter-storage.jobprofile.get",
+            "converter-storage.jobprofile.post",
+            "metadata-provider.jobexecutions.get",
+            "metadata-provider.logs.get",
+            "converter-storage.matchprofile.post",
+            "converter-storage.actionprofile.post",
+            "converter-storage.mappingprofile.post",
+            "converter-storage.profileassociation.post"
           ]
         },
         {
