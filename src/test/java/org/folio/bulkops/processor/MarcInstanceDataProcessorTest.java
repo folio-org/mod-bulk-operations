@@ -66,7 +66,6 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     dataField.addSubfield(new SubfieldImpl('b', "text b"));
     marcRecord.addVariableField(dataField);
     var findAndAppendRule = new BulkOperationMarcRule()
-      .id("1")
       .bulkOperationId(bulkOperationId)
       .tag("500")
       .ind1("1")
