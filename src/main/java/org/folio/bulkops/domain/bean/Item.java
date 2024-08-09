@@ -20,6 +20,7 @@ import org.folio.bulkops.domain.converter.DamagedStatusConverter;
 import org.folio.bulkops.domain.converter.DateWithoutTimeConverter;
 import org.folio.bulkops.domain.converter.EffectiveCallNumberComponentsConverter;
 import org.folio.bulkops.domain.converter.ElectronicAccessListConverter;
+import org.folio.bulkops.domain.converter.ItemElectronicAccessListConverter;
 import org.folio.bulkops.domain.converter.ItemLocationConverter;
 import org.folio.bulkops.domain.converter.ItemNoteListConverter;
 import org.folio.bulkops.domain.converter.ItemStatisticalCodeListConverter;
@@ -290,8 +291,8 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("electronicAccess")
   @Valid
-  @CsvCustomBindByName(column = "Electronic access", converter = ElectronicAccessListConverter.class)
-  @CsvCustomBindByPosition(position = 39, converter = ElectronicAccessListConverter.class)
+  @CsvCustomBindByName(column = "Electronic access", converter = ItemElectronicAccessListConverter.class)
+  @CsvCustomBindByPosition(position = 39, converter = ItemElectronicAccessListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<ElectronicAccess> electronicAccess;
 
