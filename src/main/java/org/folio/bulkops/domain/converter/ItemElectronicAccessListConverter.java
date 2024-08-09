@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
 import static org.folio.bulkops.util.Constants.NEW_LINE_SEPARATOR;
 
 public class ItemElectronicAccessListConverter extends BaseConverter<List<ElectronicAccess>> {
@@ -19,7 +20,7 @@ public class ItemElectronicAccessListConverter extends BaseConverter<List<Electr
   public List<ElectronicAccess> convertToObject(String value) {
     var tokens = value.split(NEW_LINE_SEPARATOR, 2);
     var electronicAccessData = tokens.length == 2 ? tokens[1] : value;
-    return Arrays.stream(electronicAccessData.split(ITEM_DELIMITER))
+    return Arrays.stream(electronicAccessData.split(ITEM_DELIMITER_PATTERN))
       .map(ElectronicAccessHelper.service()::restoreItemElectronicAccessItem)
       .filter(ObjectUtils::isNotEmpty)
       .toList();
