@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
@@ -48,6 +49,7 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.BulkOperationService;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ListUsersService;
 import org.folio.bulkops.service.LogFilesService;
 import org.folio.bulkops.service.RuleService;
@@ -75,6 +77,8 @@ class BulkOperationControllerTest extends BaseTest {
   @MockBean
   private LogFilesService logFilesService;
 
+  @MockBean
+  private ConsortiaService consortiaService;
   @Autowired
   private BulkOperationRepository bulkOperationRepository;
 
@@ -83,6 +87,8 @@ class BulkOperationControllerTest extends BaseTest {
   @ParameterizedTest
   @MethodSource("fileContentTypeToNoteTypeCollection")
   void shouldDownloadFileWithPreview(FileContentType type, org.folio.bulkops.domain.dto.EntityType entityType) throws Exception {
+    when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
+
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = UUID.randomUUID();
 
@@ -92,6 +98,10 @@ class BulkOperationControllerTest extends BaseTest {
           .headers(defaultHeaders())
           .contentType(APPLICATION_JSON))
         .andExpect(status().isOk());
+
+      if (PROPOSED_CHANGES_FILE.equals(type) && INSTANCE_MARC.equals(entityType)) {
+        verify(remoteFileSystemClient).get("G");
+      }
     }
   }
 
@@ -178,9 +188,9 @@ class BulkOperationControllerTest extends BaseTest {
          "bulkOperationMarcRules" : [ {
            "bulkOperationId" : "1910fae2-08c7-46e8-a73b-fc35d2639734",
            "tag" : "500",
-           "ind1" : null,
-           "ind2" : null,
-           "subfield" : null,
+           "ind1" : "#",
+           "ind2" : "#",
+           "subfield" : "h",
            "actions" : [ {
              "name" : "FIND",
              "data" : [ {
@@ -241,6 +251,7 @@ class BulkOperationControllerTest extends BaseTest {
       Arguments.of(PROPOSED_CHANGES_FILE, HOLDINGS_RECORD),
       Arguments.of(PROPOSED_CHANGES_FILE, USER),
       Arguments.of(PROPOSED_CHANGES_FILE, INSTANCE),
+      Arguments.of(PROPOSED_CHANGES_FILE, INSTANCE_MARC),
       Arguments.of(COMMITTED_RECORDS_FILE, ITEM),
       Arguments.of(COMMITTED_RECORDS_FILE, HOLDINGS_RECORD),
       Arguments.of(COMMITTED_RECORDS_FILE, USER),
@@ -263,9 +274,10 @@ class BulkOperationControllerTest extends BaseTest {
       .linkToMatchedRecordsErrorsCsvFile("D")
       .linkToModifiedRecordsJsonFile("E")
       .linkToModifiedRecordsCsvFile("F")
-      .linkToCommittedRecordsJsonFile("G")
-      .linkToCommittedRecordsCsvFile("H")
-      .linkToCommittedRecordsErrorsCsvFile("I")
+      .linkToModifiedRecordsMarcFile("G")
+      .linkToCommittedRecordsJsonFile("H")
+      .linkToCommittedRecordsCsvFile("I")
+      .linkToCommittedRecordsErrorsCsvFile("J")
       .entityType(entityType)
       .build());
 
