@@ -4,6 +4,7 @@ import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
 
 import org.folio.bulkops.domain.bean.ElectronicAccess;
@@ -28,7 +29,23 @@ public class ElectronicAccessService {
 
 
   public String electronicAccessToString(ElectronicAccess access) {
-    return String.join(SPECIAL_ARRAY_DELIMITER,
+    return electronicAccessToString(access, SPECIAL_ARRAY_DELIMITER);
+  }
+
+  public String itemElectronicAccessToString(ElectronicAccess access) {
+    return electronicAccessToString(access, ARRAY_DELIMITER);
+  }
+
+  public ElectronicAccess restoreElectronicAccessItem(String access) {
+    return restoreElectronicAccessItem(access, SPECIAL_ARRAY_DELIMITER);
+  }
+
+  public ElectronicAccess restoreItemElectronicAccessItem(String access) {
+    return restoreElectronicAccessItem(access, ARRAY_DELIMITER);
+  }
+
+  private String electronicAccessToString(ElectronicAccess access, String delimiter) {
+    return String.join(delimiter,
       isEmpty(access.getRelationshipId()) ? EMPTY : electronicAccessReferenceService.getRelationshipNameById(access.getRelationshipId()),
       isNull(access.getUri()) ? EMPTY : access.getUri(),
       isEmpty(access.getLinkText()) ? EMPTY : access.getLinkText(),
@@ -36,9 +53,9 @@ public class ElectronicAccessService {
       isEmpty(access.getPublicNote()) ? EMPTY : access.getPublicNote());
   }
 
-  public ElectronicAccess restoreElectronicAccessItem(String s) {
-    if (isNotEmpty(s)) {
-      var tokens = s.split(SPECIAL_ARRAY_DELIMITER, -1);
+  private ElectronicAccess restoreElectronicAccessItem(String access, String delimiter) {
+    if (isNotEmpty(access)) {
+      var tokens = access.split(delimiter, -1);
       if (NUMBER_OF_ELECTRONIC_ACCESS_COMPONENTS == tokens.length) {
         var uri = tokens[ELECTRONIC_ACCESS_URI_INDEX];
         return ElectronicAccess.builder()
