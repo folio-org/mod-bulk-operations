@@ -36,12 +36,12 @@ public class ElectronicAccessService {
     return electronicAccessToString(access, ARRAY_DELIMITER);
   }
 
-  public ElectronicAccess restoreElectronicAccessItem(String s) {
-    return restoreElectronicAccessItem(s, SPECIAL_ARRAY_DELIMITER);
+  public ElectronicAccess restoreElectronicAccessItem(String access) {
+    return restoreElectronicAccessItem(access, SPECIAL_ARRAY_DELIMITER);
   }
 
-  public ElectronicAccess restoreItemElectronicAccessItem(String s) {
-    return restoreElectronicAccessItem(s, ARRAY_DELIMITER);
+  public ElectronicAccess restoreItemElectronicAccessItem(String access) {
+    return restoreElectronicAccessItem(access, ARRAY_DELIMITER);
   }
 
   private String electronicAccessToString(ElectronicAccess access, String delimiter) {
@@ -53,9 +53,9 @@ public class ElectronicAccessService {
       isEmpty(access.getPublicNote()) ? EMPTY : access.getPublicNote());
   }
 
-  private ElectronicAccess restoreElectronicAccessItem(String s, String delimiter) {
-    if (isNotEmpty(s)) {
-      var tokens = s.split(delimiter, -1);
+  private ElectronicAccess restoreElectronicAccessItem(String access, String delimiter) {
+    if (isNotEmpty(access)) {
+      var tokens = access.split(delimiter, -1);
       if (NUMBER_OF_ELECTRONIC_ACCESS_COMPONENTS == tokens.length) {
         var uri = tokens[ELECTRONIC_ACCESS_URI_INDEX];
         return ElectronicAccess.builder()

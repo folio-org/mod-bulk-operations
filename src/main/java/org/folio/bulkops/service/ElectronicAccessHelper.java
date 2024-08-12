@@ -20,12 +20,12 @@ public class ElectronicAccessHelper implements InitializingBean {
     return electronicAccessService.itemElectronicAccessToString(access);
   }
 
-  public ElectronicAccess restoreElectronicAccessItem(String s) {
-    return electronicAccessService.restoreElectronicAccessItem(s);
+  public ElectronicAccess restoreElectronicAccessItem(String electronicAccess) {
+    return electronicAccessService.restoreElectronicAccessItem(electronicAccess);
   }
 
-  public ElectronicAccess restoreItemElectronicAccessItem(String s) {
-    return electronicAccessService.restoreItemElectronicAccessItem(s);
+  public ElectronicAccess restoreItemElectronicAccessItem(String electronicAccess) {
+    return electronicAccessService.restoreItemElectronicAccessItem(electronicAccess);
   }
 
   private static ElectronicAccessHelper service;
