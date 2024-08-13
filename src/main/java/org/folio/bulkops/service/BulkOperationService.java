@@ -486,10 +486,6 @@ public class BulkOperationService {
     if (!FAILED.equals(operation.getStatus())) {
       operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
     }
-    var operationOpt = bulkOperationRepository.findById(operation.getId());
-    if (operationOpt.isPresent()) {
-      operation.setCommittedNumOfErrors(operationOpt.get().getCommittedNumOfErrors());
-    }
     bulkOperationRepository.save(operation);
   }
 
