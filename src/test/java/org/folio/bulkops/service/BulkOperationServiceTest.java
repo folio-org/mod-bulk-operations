@@ -738,7 +738,7 @@ class BulkOperationServiceTest extends BaseTest {
       when(remoteFileSystemClient.writer(pathToModifiedResult)).thenReturn(new RemoteStorageWriter(pathToModifiedResult, 8192, remoteFolioS3Client));
       when(remoteFileSystemClient.writer(pathToModifiedCsvResult)).thenReturn(new RemoteStorageWriter(pathToModifiedCsvResult, 8192, remoteFolioS3Client));
 
-      when(errorService.uploadErrorsToStorage(any(UUID.class))).thenReturn(linkToErrors);
+      when(errorService.uploadErrorsToStorage(any(BulkOperation.class))).thenReturn(linkToErrors);
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(COMMIT));
 

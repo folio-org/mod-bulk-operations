@@ -30,12 +30,9 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
-import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.Constants;
-import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ObjectUtils;
@@ -52,30 +49,20 @@ public class ErrorService {
   private final BulkOperationRepository operationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final BulkOperationExecutionContentRepository executionContentRepository;
-  private final JpaCqlRepository<BulkOperationExecutionContent, UUID> executionContentCqlRepository;
-  private final BulkOperationProcessingContentRepository processingContentRepository;
   private final BulkEditClient bulkEditClient;
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
     if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
       return;
     }
-    operationRepository.findById(bulkOperationId).ifPresent(bulkOperation -> {
-      if (executionContentRepository.findByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage).isEmpty()) {
-        int committedNumOfErrors = bulkOperation.getCommittedNumOfErrors();
-        log.info("New error message {} for bulk operation {} and identifier {} and committed error {}", errorMessage, bulkOperationId, identifier, committedNumOfErrors);
-        bulkOperation.setCommittedNumOfErrors(++committedNumOfErrors);
-        executionContentRepository.save(BulkOperationExecutionContent.builder()
-          .identifier(identifier)
-          .bulkOperationId(bulkOperationId)
-          .state(StateType.FAILED)
-          .errorMessage(errorMessage)
-          .uiErrorMessage(uiErrorMessage)
-          .linkToFailedEntity(link)
-          .build());
-      }
-      operationRepository.save(bulkOperation);
-    });
+    executionContentRepository.save(BulkOperationExecutionContent.builder()
+      .identifier(identifier)
+      .bulkOperationId(bulkOperationId)
+      .state(StateType.FAILED)
+      .errorMessage(errorMessage)
+      .uiErrorMessage(uiErrorMessage)
+      .linkToFailedEntity(link)
+      .build());
   }
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage) {
@@ -148,13 +135,11 @@ public class ErrorService {
       .parameters(parameters);
   }
 
-  public Page<BulkOperationExecutionContent> getErrorsByCql(String cql, int offset, int limit) {
-    return executionContentCqlRepository.findByCql(cql.contains("errorMessage") ? cql : cql + POSTFIX_ERROR_MESSAGE_NON_NULL, OffsetRequest.of(offset, limit));
-  }
-
-  public String uploadErrorsToStorage(UUID bulkOperationId) {
+  public String uploadErrorsToStorage(BulkOperation bulkOperation) {
+    var bulkOperationId = bulkOperation.getId();
     var contents = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId, OffsetRequest.of(0, Integer.MAX_VALUE));
     if (!contents.isEmpty()) {
+      bulkOperation.setCommittedNumOfErrors((int) contents.getTotalElements());
       var errorsString = contents.stream()
         .map(content -> String.join(Constants.COMMA_DELIMETER, content.getIdentifier(), content.getErrorMessage()))
         .collect(Collectors.joining(LF));
