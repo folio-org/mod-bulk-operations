@@ -16,7 +16,7 @@ public interface BulkOperationExecutionContentRepository extends JpaRepository<B
   Page<BulkOperationExecutionContent> findByBulkOperationIdAndErrorMessageIsNotNull(UUID bulkOperationId, OffsetRequest offsetRequest);
   List<BulkOperationExecutionContent> findByBulkOperationIdAndIdentifierAndErrorMessage(UUID bulkOperationId, String identifier, String errorMessage);
   Optional<BulkOperationExecutionContent> findFirstByBulkOperationIdAndIdentifier(UUID bulkOperationId, String identifier);
-  int countAllByBulkOperationIdAndState(UUID bulkOperationId, StateType stateType);
+  int countAllByBulkOperationIdAndErrorMessageIsNotNull(UUID bulkOperationId);
 
   void deleteByBulkOperationId(UUID bulkOperationId);
 }

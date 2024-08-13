@@ -151,7 +151,7 @@ public class ErrorService {
   }
 
   public int getCommittedNumOfErrors(UUID bulkOperationId) {
-    return executionContentRepository.countAllByBulkOperationIdAndState(bulkOperationId, StateType.FAILED);
+    return executionContentRepository.countAllByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId);
   }
 
 }
