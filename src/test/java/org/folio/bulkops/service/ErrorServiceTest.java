@@ -111,14 +111,13 @@ class ErrorServiceTest extends BaseTest {
   @SneakyThrows
   void shouldUploadErrorsAndReturnLinkToFile() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var bulkOperation = BulkOperation.builder().id(bulkOperationId).build();
       errorService.saveError(bulkOperationId, "123", "Error message 123");
       errorService.saveError(bulkOperationId, "456", "Error message 456");
 
       var expectedFileName = bulkOperationId + "/" + LocalDate.now() + "-Committing-changes-Errors-records.csv";
       when(remoteFileSystemClient.put(any(), eq(expectedFileName))).thenReturn(expectedFileName);
 
-      var result = errorService.uploadErrorsToStorage(bulkOperation);
+      var result = errorService.uploadErrorsToStorage(bulkOperationId);
       assertThat(result, equalTo(expectedFileName));
 
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);

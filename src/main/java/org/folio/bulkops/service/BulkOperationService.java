@@ -480,8 +480,9 @@ public class BulkOperationService {
       executionRepository.save(execution);
     }
 
-    var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operation);
+    var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operationId);
     operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
+    operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operationId));
 
     if (!FAILED.equals(operation.getStatus())) {
       operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);

@@ -1,23 +1,17 @@
 package org.folio.bulkops.service;
 
 import static java.util.Objects.isNull;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.mapping;
-import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
-import static org.folio.bulkops.util.Constants.COMMA_DELIMETER;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -57,7 +51,9 @@ public class ErrorService {
   private final BulkEditClient bulkEditClient;
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
-    log.info("saving: {}, {}", identifier, errorMessage);
+    if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
+      return;
+    }
     executionContentRepository.save(BulkOperationExecutionContent.builder()
       .identifier(identifier)
       .bulkOperationId(bulkOperationId)
@@ -138,18 +134,11 @@ public class ErrorService {
       .parameters(parameters);
   }
 
-  public String uploadErrorsToStorage(BulkOperation bulkOperation) {
-    var bulkOperationId = bulkOperation.getId();
+  public String uploadErrorsToStorage(UUID bulkOperationId) {
     var contents = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId, OffsetRequest.of(0, Integer.MAX_VALUE));
-    log.info("saving errors to s3, found {}", contents.getTotalElements());
     if (!contents.isEmpty()) {
-      bulkOperation.setCommittedNumOfErrors((int) contents.getTotalElements());
       var errorsString = contents.stream()
-        .collect(groupingBy(BulkOperationExecutionContent::getIdentifier,
-          LinkedHashMap::new,
-          mapping(BulkOperationExecutionContent::getErrorMessage, toCollection(LinkedHashSet::new))))
-        .entrySet().stream()
-        .map(es -> errorsToString(es.getKey(), es.getValue()))
+        .map(content -> String.join(Constants.COMMA_DELIMETER, content.getIdentifier(), content.getErrorMessage()))
         .collect(Collectors.joining(LF));
       var errorsFileName = LocalDate.now() + operationRepository.findById(bulkOperationId)
         .map(BulkOperation::getLinkToTriggeringCsvFile)
@@ -161,16 +150,8 @@ public class ErrorService {
     return null;
   }
 
-  private String errorsToString(String identifier, Set<String> errorMessages) {
-    return removeRedundantErrors(errorMessages).stream()
-      .map(msg -> String.join(COMMA_DELIMETER, identifier, msg))
-      .collect(Collectors.joining(LF));
+  public int getCommittedNumOfErrors(UUID bulkOperationId) {
+    return executionContentRepository.countAllByBulkOperationIdAndState(bulkOperationId, StateType.FAILED);
   }
 
-  private Set<String> removeRedundantErrors(Set<String> errors) {
-    if (errors.contains(MSG_NO_CHANGE_REQUIRED) && errors.size() > 1) {
-      errors.remove(MSG_NO_CHANGE_REQUIRED);
-    }
-    return errors;
-  }
 }
