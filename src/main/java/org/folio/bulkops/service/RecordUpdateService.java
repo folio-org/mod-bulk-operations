@@ -5,7 +5,6 @@ import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -19,7 +18,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-@Log4j2
 public class RecordUpdateService {
   private final UpdateProcessorFactory updateProcessorFactory;
   private final BulkOperationExecutionContentRepository executionContentRepository;
@@ -27,7 +25,6 @@ public class RecordUpdateService {
 
   public BulkOperationsEntity updateEntity(BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation) {
     var isEqual = original.hashCode() == modified.hashCode() && original.equals(modified);
-    log.info("equal={}", isEqual);
     var updater = updateProcessorFactory.getProcessorFromFactory(resolveExtendedEntityClass(operation.getEntityType()));
     if (!isEqual) {
       try {

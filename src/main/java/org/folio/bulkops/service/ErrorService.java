@@ -57,6 +57,7 @@ public class ErrorService {
   private final BulkEditClient bulkEditClient;
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
+    log.info("saving: {}, {}", identifier, errorMessage);
     executionContentRepository.save(BulkOperationExecutionContent.builder()
       .identifier(identifier)
       .bulkOperationId(bulkOperationId)
@@ -140,6 +141,7 @@ public class ErrorService {
   public String uploadErrorsToStorage(BulkOperation bulkOperation) {
     var bulkOperationId = bulkOperation.getId();
     var contents = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId, OffsetRequest.of(0, Integer.MAX_VALUE));
+    log.info("saving errors to s3, found {}", contents.getTotalElements());
     if (!contents.isEmpty()) {
       bulkOperation.setCommittedNumOfErrors((int) contents.getTotalElements());
       var errorsString = contents.stream()
