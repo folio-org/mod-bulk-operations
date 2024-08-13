@@ -49,7 +49,6 @@ import lombok.RequiredArgsConstructor;
 @Log4j2
 @RequiredArgsConstructor
 public class ErrorService {
-  private static final String POSTFIX_ERROR_MESSAGE_NON_NULL = " AND errorMessage<null";
   public static final String IDENTIFIER = "IDENTIFIER";
   public static final String LINK = "LINK";
   private final BulkOperationRepository operationRepository;
