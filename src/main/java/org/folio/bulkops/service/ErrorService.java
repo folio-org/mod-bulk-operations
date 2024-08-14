@@ -13,7 +13,6 @@ import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -51,10 +50,8 @@ public class ErrorService {
   private final BulkOperationExecutionContentRepository executionContentRepository;
   private final BulkEditClient bulkEditClient;
 
-  private String previousIdentifier;
-
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
-    if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && Objects.equals(previousIdentifier, identifier)) {
+    if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId).isPresent()) {
       return;
     }
     executionContentRepository.save(BulkOperationExecutionContent.builder()
@@ -65,7 +62,6 @@ public class ErrorService {
       .uiErrorMessage(uiErrorMessage)
       .linkToFailedEntity(link)
       .build());
-    previousIdentifier = identifier;
   }
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage) {

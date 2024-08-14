@@ -1,5 +1,6 @@
 package org.folio.bulkops.repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BulkOperationExecutionContentRepository extends JpaRepository<BulkOperationExecutionContent, UUID> {
   Page<BulkOperationExecutionContent> findByBulkOperationIdAndErrorMessageIsNotNull(UUID bulkOperationId, OffsetRequest offsetRequest);
+  Optional<BulkOperationExecutionContent> findFirstByBulkOperationIdAndErrorMessageIsNotNull(UUID bulkOperationId);
   int countAllByBulkOperationIdAndErrorMessageIsNotNull(UUID bulkOperationId);
 
   void deleteByBulkOperationId(UUID bulkOperationId);
