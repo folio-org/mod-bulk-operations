@@ -51,7 +51,7 @@ public class ErrorService {
   private final BulkEditClient bulkEditClient;
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
-    if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId).isPresent()) {
+    if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
       return;
     }
     executionContentRepository.save(BulkOperationExecutionContent.builder()
