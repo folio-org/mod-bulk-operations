@@ -16,9 +16,16 @@ public class ElectronicAccessHelper implements InitializingBean {
   public String electronicAccessToString(ElectronicAccess access) {
     return electronicAccessService.electronicAccessToString(access);
   }
+  public String itemElectronicAccessToString(ElectronicAccess access) {
+    return electronicAccessService.itemElectronicAccessToString(access);
+  }
 
-  public ElectronicAccess restoreElectronicAccessItem(String s) {
-    return electronicAccessService.restoreElectronicAccessItem(s);
+  public ElectronicAccess restoreElectronicAccessItem(String electronicAccess) {
+    return electronicAccessService.restoreElectronicAccessItem(electronicAccess);
+  }
+
+  public ElectronicAccess restoreItemElectronicAccessItem(String electronicAccess) {
+    return electronicAccessService.restoreItemElectronicAccessItem(electronicAccess);
   }
 
   private static ElectronicAccessHelper service;
