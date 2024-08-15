@@ -159,7 +159,6 @@ public class BulkOperationService {
           operation.setMatchedNumOfRecords(numOfLines);
 
         } catch (Exception e) {
-          e.printStackTrace();
           log.error(ERROR_STARTING_BULK_OPERATION + e.getCause());
           errorMessage = format(FILE_UPLOADING_FAILED_REASON, e.getMessage());
         }
@@ -177,7 +176,6 @@ public class BulkOperationService {
         var linkToTriggeringFile = remoteFileSystemClient.put(multipartFile.getInputStream(), operation.getId() + "/" + multipartFile.getOriginalFilename());
         operation.setLinkToTriggeringCsvFile(linkToTriggeringFile);
       } catch (Exception e) {
-        e.printStackTrace();
         log.error(ERROR_STARTING_BULK_OPERATION + e);
         errorMessage = format(FILE_UPLOADING_FAILED_REASON, e.getMessage());
       }
@@ -570,7 +568,6 @@ public class BulkOperationService {
         throw new BadRequestException(format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
       }
     } catch (Exception e) {
-      e.printStackTrace();
       log.error(ERROR_STARTING_BULK_OPERATION + e.getCause());
       errorMessage = format(FILE_UPLOADING_FAILED_REASON, e.getMessage());
     }
