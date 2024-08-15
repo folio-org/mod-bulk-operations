@@ -21,6 +21,8 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
+import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
+import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
@@ -160,7 +162,7 @@ public class BulkOperationService {
 
         } catch (Exception e) {
           log.error(ERROR_STARTING_BULK_OPERATION + e.getCause());
-          errorMessage = format(FILE_UPLOADING_FAILED_REASON, e.getMessage());
+          errorMessage = ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION;
         }
       }
       operation.setApproach(MANUAL);
@@ -177,7 +179,7 @@ public class BulkOperationService {
         operation.setLinkToTriggeringCsvFile(linkToTriggeringFile);
       } catch (Exception e) {
         log.error(ERROR_STARTING_BULK_OPERATION + e);
-        errorMessage = format(FILE_UPLOADING_FAILED_REASON, e.getMessage());
+        errorMessage = ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION;
       }
     }
 
@@ -298,7 +300,7 @@ public class BulkOperationService {
         .withEndTime(LocalDateTime.now()));
       operation.setStatus(OperationStatusType.FAILED);
       operation.setEndTime(LocalDateTime.now());
-      operation.setErrorMessage("Confirm changes operation failed, reason: " + e.getMessage());
+      operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
     } finally {
       bulkOperationRepository.save(operation);
     }
@@ -352,7 +354,7 @@ public class BulkOperationService {
         .withEndTime(LocalDateTime.now()));
       operation.setStatus(OperationStatusType.FAILED);
       operation.setEndTime(LocalDateTime.now());
-      operation.setErrorMessage("Confirm changes operation failed, reason: " + e.getMessage());
+      operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
     } finally {
       bulkOperationRepository.save(operation);
     }
@@ -482,13 +484,10 @@ public class BulkOperationService {
 
     var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operationId);
     operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
+    operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operationId));
 
     if (!FAILED.equals(operation.getStatus())) {
       operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
-    }
-    var operationOpt = bulkOperationRepository.findById(operation.getId());
-    if (operationOpt.isPresent()) {
-      operation.setCommittedNumOfErrors(operationOpt.get().getCommittedNumOfErrors());
     }
     bulkOperationRepository.save(operation);
   }
