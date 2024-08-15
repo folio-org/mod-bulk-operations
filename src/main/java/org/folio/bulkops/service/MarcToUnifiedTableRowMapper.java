@@ -22,7 +22,6 @@ import static org.folio.bulkops.service.Marc21ReferenceProvider.getLanguageByCod
 import static org.folio.bulkops.service.Marc21ReferenceProvider.getNoteTypeByTag;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
-import static org.folio.bulkops.util.Constants.NOTE_FIELDS;
 
 import lombok.RequiredArgsConstructor;
 import org.marc4j.marc.ControlField;
@@ -95,7 +94,7 @@ public class MarcToUnifiedTableRowMapper {
         case "800", "810", "811", "830" -> processSeries(rowData, dataField, headers);
         case "999" -> processInstanceId(rowData, dataField, headers);
         default -> {
-          if (NOTE_FIELDS.matcher(tag).matches() || "255".equals(tag)) {
+          if (Marc21ReferenceProvider.getMappedNoteTags().contains(tag)) {
             processInstanceNotes(rowData, dataField, headers);
           }
         }
