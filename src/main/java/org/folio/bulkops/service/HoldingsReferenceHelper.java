@@ -28,7 +28,7 @@ public class HoldingsReferenceHelper implements InitializingBean {
   }
 
   public ItemLocation getLocationByName(String name) {
-    return holdingsReferenceService.getLocationIdByName(name, folioExecutionContext.getTenantId());
+    return holdingsReferenceService.getLocationIdByName(name);
   }
 
   public String getCallNumberTypeNameById(String id) {

@@ -76,7 +76,7 @@ public class HoldingsReferenceService {
     }
   }
 
-  public ItemLocation getLocationIdByName(String name, String tenantId) {
+  public ItemLocation getLocationIdByName(String name) {
     var locations = locationClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (locations.getLocations().isEmpty()) {
       throw new NotFoundException(format("Location not found by name=%s", name));
