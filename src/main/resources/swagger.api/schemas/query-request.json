@@ -5,6 +5,11 @@
     "description": "Query request body",
     "type": "object",
     "properties": {
+      "queryId": {
+        "description": "FQL query identifier",
+        "type": "string",
+        "format": "uuid"
+      },
       "fqlQuery": {
         "description": "FQL string",
         "type": "string"
