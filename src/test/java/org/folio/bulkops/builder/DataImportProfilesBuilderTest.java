@@ -14,28 +14,28 @@ class DataImportProfilesBuilderTest extends BaseTest  {
 
   @Test
   @SneakyThrows
-  public void shouldGetMatchProfile() {
+  void shouldGetMatchProfile() {
     var matchProfile = dataImportProfilesBuilder.getMatchProfile();
     assertNotNull(matchProfile);
   }
 
   @Test
   @SneakyThrows
-  public void shouldGetActionProfile() {
+  void shouldGetActionProfile() {
     var actionProfile = dataImportProfilesBuilder.getActionProfile();
     assertNotNull(actionProfile);
   }
 
   @Test
   @SneakyThrows
-  public void shouldGetMappingProfile() {
+  void shouldGetMappingProfile() {
     var mappingProfile = dataImportProfilesBuilder.getMappingProfile();
     assertNotNull(mappingProfile);
   }
 
   @Test
   @SneakyThrows
-  public void shouldGetJobProfile() {
+  void shouldGetJobProfile() {
     var jobProfile = dataImportProfilesBuilder.getJobProfile();
     assertNotNull(jobProfile);
   }
@@ -43,7 +43,7 @@ class DataImportProfilesBuilderTest extends BaseTest  {
 
   @Test
   @SneakyThrows
-  public void shouldGetProfileAssociation() {
+  void shouldGetProfileAssociation() {
     var profileAssociation = dataImportProfilesBuilder.getProfileAssociation();
     assertNotNull(profileAssociation);
   }
