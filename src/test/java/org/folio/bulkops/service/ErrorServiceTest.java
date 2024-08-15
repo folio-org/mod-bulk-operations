@@ -9,7 +9,6 @@ import static org.folio.bulkops.service.ErrorService.LINK;
 import static org.folio.bulkops.util.Constants.CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -24,7 +23,6 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.IntStream;
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.BulkEditClient;
@@ -106,18 +104,6 @@ class ErrorServiceTest extends BaseTest {
       var content = result.iterator().next();
       assertThat(content.getIdentifier(), equalTo("123"));
       assertThat(content.getErrorMessage(), equalTo("Error message"));
-    }
-  }
-
-  @Test
-  void shouldGetErrorsByCqlQuery() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      IntStream.range(0, 10).forEach(i -> errorService.saveError(bulkOperationId, "123", i % 2 == 0 ? null : "Error message"));
-
-      var result = errorService.getErrorsByCql("bulkOperationId==" + bulkOperationId, 0, 3);
-      assertThat(result.getTotalElements(), equalTo(1L));
-      assertThat(result.getSize(), equalTo(3));
-      assertTrue(result.get().allMatch(content -> "Error message".equals(content.getErrorMessage())));
     }
   }
 

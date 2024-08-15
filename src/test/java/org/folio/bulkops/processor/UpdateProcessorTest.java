@@ -312,8 +312,8 @@ class UpdateProcessorTest extends BaseTest {
       .bulkOperationRules(Collections.singletonList(rule))
       .totalRecords(1));
 
-    when(holdingsReferenceService.getSourceById("marc_id")).thenReturn(HoldingsRecordsSource.builder().name("MARC").build());
-    when(holdingsReferenceService.getSourceById("folio_id")).thenReturn(HoldingsRecordsSource.builder().name("FOLIO").build());
+    when(holdingsReferenceService.getSourceById("marc_id", folioExecutionContext.getTenantId())).thenReturn(HoldingsRecordsSource.builder().name("MARC").build());
+    when(holdingsReferenceService.getSourceById("folio_id", folioExecutionContext.getTenantId())).thenReturn(HoldingsRecordsSource.builder().name("FOLIO").build());
 
     when(holdingsClient.getByQuery(String.format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE))
       .thenReturn(HoldingsRecordCollection.builder()
@@ -364,8 +364,8 @@ class UpdateProcessorTest extends BaseTest {
       .bulkOperationRules(Collections.singletonList(rule))
       .totalRecords(1));
 
-    when(holdingsReferenceService.getSourceById("marc_id")).thenReturn(HoldingsRecordsSource.builder().name("MARC").build());
-    when(holdingsReferenceService.getSourceById("folio_id")).thenReturn(HoldingsRecordsSource.builder().name("FOLIO").build());
+    when(holdingsReferenceService.getSourceById("marc_id", folioExecutionContext.getTenantId())).thenReturn(HoldingsRecordsSource.builder().name("MARC").build());
+    when(holdingsReferenceService.getSourceById("folio_id", folioExecutionContext.getTenantId())).thenReturn(HoldingsRecordsSource.builder().name("FOLIO").build());
 
     var holdingsId = UUID.randomUUID().toString();
     when(holdingsClient.getByQuery(String.format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE))
@@ -442,7 +442,7 @@ class UpdateProcessorTest extends BaseTest {
     when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()
       .bulkOperationRules(Collections.singletonList(rule))
       .totalRecords(1));
-    when(holdingsReferenceService.getSourceById("folio_id")).thenReturn(HoldingsRecordsSource.builder().name("FOLIO").build());
+    when(holdingsReferenceService.getSourceById("folio_id", folioExecutionContext.getTenantId())).thenReturn(HoldingsRecordsSource.builder().name("FOLIO").build());
     when(holdingsClient.getByQuery(String.format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE))
       .thenReturn(HoldingsRecordCollection.builder()
         .holdingsRecords(List.of(holdingRecord))

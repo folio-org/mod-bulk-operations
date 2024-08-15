@@ -99,6 +99,7 @@ import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.RemoteStorageWriter;
+import org.folio.s3.exception.S3ClientException;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -196,6 +197,31 @@ class BulkOperationServiceTest extends BaseTest {
 
   @Test
   @SneakyThrows
+  void shouldPopulateErrorToBulkOperationIfS3IssuesForUploadIdentifiersInApp() {
+    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
+    var jobId = UUID.randomUUID();
+
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(BulkOperation.builder().id(UUID.randomUUID()).build());
+
+    when(remoteFileSystemClient.put(any(), any()))
+      .thenThrow(new S3ClientException("error"));
+
+    var bulkOperation = bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
+    var bulkOperationId = bulkOperation.getId();
+
+    when(bulkOperationRepository.findById(bulkOperationId))
+      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringCsvFile("barcodes.csv").build()));
+
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
+    var capturedBulkOperation = operationCaptor.getValue();
+    assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
+    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(ErrorCode.ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION));
+  }
+
+  @Test
+  @SneakyThrows
   void shouldUploadManualInstances() {
     var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/modified-user.csv").readAllBytes());
 
@@ -223,6 +249,36 @@ class BulkOperationServiceTest extends BaseTest {
     assertEquals(2, capture.getTotalNumOfRecords());
     assertEquals(2, capture.getProcessedNumOfRecords());
     assertEquals(2, capture.getMatchedNumOfRecords());
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldPopulateErrorToBulkOperationIfS3IssuesForUploadIdentifiersManual() {
+    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
+    var bulkOperationId = UUID.randomUUID();
+    var jobId = UUID.randomUUID();
+
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
+    when(remoteFileSystemClient.put(any(), any()))
+      .thenThrow(new S3ClientException("error"));
+    when(bulkOperationRepository.findById(bulkOperationId))
+      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringCsvFile("barcodes.csv").build()));
+
+    bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, true, bulkOperationId, null, file);
+
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository, times(1)).save(operationCaptor.capture());
+    var capturedBulkOperation = operationCaptor.getValue();
+    assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
+    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(ErrorCode.ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowExceptionIfOperationIdIsNull() {
+    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/modified-user.csv").readAllBytes());
+    assertThrows(NotFoundException.class, () -> bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, true, null, UUID.randomUUID(), file));
   }
 
   @ParameterizedTest
@@ -370,6 +426,65 @@ class BulkOperationServiceTest extends BaseTest {
     }
   }
 
+  @Test
+  @SneakyThrows
+  void shouldPopulateErrorToBulkOperationIfS3IssuesForConfirmChanges() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var bulkOperationId = UUID.randomUUID();
+      var newPatronGroupId = "56c86552-20ec-41d1-964a-5a2be46969e5";
+      var pathToTriggering = "/some/path/identifiers.csv";
+      var pathToOrigin = "path/origin.json";
+      var pathToModified = bulkOperationId + "/json/" + LocalDate.now() + "-Updates-Preview-identifiers.json";
+      var pathToOriginalCsv = bulkOperationId + "/origin.csv";
+      var pathToUserJson = "src/test/resources/files/user.json";
+
+      when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
+
+      when(bulkOperationRepository.findById(any(UUID.class)))
+        .thenReturn(Optional.of(BulkOperation.builder()
+          .id(bulkOperationId)
+          .status(DATA_MODIFICATION)
+          .entityType(EntityType.USER)
+          .identifierType(IdentifierType.BARCODE)
+          .linkToTriggeringCsvFile(pathToTriggering)
+          .linkToMatchedRecordsJsonFile(pathToOrigin)
+          .linkToModifiedRecordsJsonFile("existing.csv")
+          .linkToModifiedRecordsCsvFile("existing.json")
+          .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
+          .processedNumOfRecords(0)
+          .build()));
+
+      when(ruleService.getRules(bulkOperationId))
+        .thenReturn(new BulkOperationRuleCollection()
+          .bulkOperationRules(List.of(new BulkOperationRule()
+            .ruleDetails(new BulkOperationRuleRuleDetails()
+              .option(UpdateOptionType.PATRON_GROUP)
+              .actions(List.of(new Action()
+                .type(UpdateActionType.REPLACE_WITH)
+                .updated(newPatronGroupId))))))
+          .totalRecords(1));
+
+      when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
+        .thenReturn(BulkOperationDataProcessing.builder()
+          .processedNumOfRecords(0)
+          .build());
+
+      when(remoteFileSystemClient.get(pathToOrigin))
+        .thenThrow(new S3ClientException("error"));
+
+      when(remoteFileSystemClient.get(pathToModified))
+        .thenReturn(new FileInputStream(pathToUserJson));
+
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
+
+      var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(2)).save(bulkOperationCaptor.capture()));
+      var capturedBulkOperation = bulkOperationCaptor.getValue();
+
+      assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
+      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE));
+    }
+  }
 
   @Test
   @SneakyThrows
@@ -436,6 +551,61 @@ class BulkOperationServiceTest extends BaseTest {
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getLinkToModifiedRecordsMarcFile(), equalTo(expectedPathToModifiedMarcFile));
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void  shouldPopulateErrorToBulkOperationIfS3IssuesForConfirmChangesForInstanceMarc() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var bulkOperationId = UUID.randomUUID();
+      var marcAction = new MarcAction();
+      marcAction.setName(UpdateActionType.CLEAR_FIELD);
+      var bulkOperationMarcRule = new BulkOperationMarcRule();
+      bulkOperationMarcRule.setBulkOperationId(bulkOperationId);
+      bulkOperationMarcRule.setActions(List.of(marcAction));
+      bulkOperationMarcRule.setTag("tag");
+      bulkOperationMarcRule.setInd1("ind1");
+      bulkOperationMarcRule.setInd2("ind2");
+
+      var bulkOperationMarcRuleCollection = new BulkOperationMarcRuleCollection();
+      bulkOperationMarcRuleCollection.setBulkOperationMarcRules(List.of(bulkOperationMarcRule));
+
+      var pathToTriggering = "/some/path/instance_marc.csv";
+      var pathToMatchedRecordsMarcFile = "/some/path/Marc-Records-instance_marc.mrc";
+      var pathToOriginalCsv = bulkOperationId + "/origin.csv";
+      var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
+      var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-Marc-Records-instance_marc.mrc";
+
+      when(bulkOperationRepository.findById(any(UUID.class)))
+        .thenReturn(Optional.of(BulkOperation.builder()
+          .id(bulkOperationId)
+          .status(DATA_MODIFICATION)
+          .entityType(EntityType.INSTANCE_MARC)
+          .identifierType(IdentifierType.ID)
+          .linkToTriggeringCsvFile(pathToTriggering)
+          .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
+          .linkToMatchedRecordsMarcFile(pathToMatchedRecordsMarcFile)
+          .linkToModifiedRecordsMarcFile(pathToModifiedRecordsMarcFileName)
+          .processedNumOfRecords(0)
+          .build()));
+      when(ruleService.getMarcRules(bulkOperationId))
+        .thenReturn(bulkOperationMarcRuleCollection);
+      when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
+        .thenReturn(BulkOperationDataProcessing.builder()
+          .processedNumOfRecords(0)
+          .build());
+      when(remoteFileSystemClient.get(pathToModifiedRecordsMarcFileName))
+        .thenThrow(new S3ClientException("error"));
+      when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenReturn(new MarcRemoteStorageWriter(expectedPathToModifiedMarcFile, 8192, remoteFolioS3Client));
+
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
+
+      var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(2)).save(bulkOperationCaptor.capture()));
+      var capturedBulkOperation = bulkOperationCaptor.getValue();
+      assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
+      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE));
     }
   }
 

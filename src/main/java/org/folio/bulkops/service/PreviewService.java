@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
@@ -13,13 +14,13 @@ import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDINGS_NOTE_TYP
 import static org.folio.bulkops.processor.InstanceNotesUpdaterFactory.INSTANCE_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.processor.ItemsNotesUpdater.ITEM_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
-import static org.folio.bulkops.util.Constants.NOTE_FIELDS;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -194,7 +195,7 @@ public class PreviewService {
   private Set<String> getChangedOptionsSet(BulkOperationMarcRuleCollection rules) {
     Set<String> forceVisibleOptions = new HashSet<>();
     rules.getBulkOperationMarcRules()
-      .stream().filter(rule -> NOTE_FIELDS.matcher(rule.getTag()).matches())
+      .stream().filter(rule -> Marc21ReferenceProvider.getMappedNoteTags().contains(rule.getTag()))
       .forEach(rule -> forceVisibleOptions.add(Marc21ReferenceProvider.getNoteTypeByTag(rule.getTag())));
     return forceVisibleOptions;
   }
@@ -224,7 +225,9 @@ public class PreviewService {
   private UnifiedTable buildPreviewFromMarcFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit, Set<String> forceVisible) {
     var table =  UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
     noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible);
-    return populatePreviewFromMarc(pathToFile, offset, limit, table);
+    return isNotEmpty(pathToFile) ?
+      populatePreviewFromMarc(pathToFile, offset, limit, table) :
+      table.rows(Collections.emptyList());
   }
 
   private UnifiedTable populatePreview(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit, UnifiedTable table, Set<String> forceVisible) {
