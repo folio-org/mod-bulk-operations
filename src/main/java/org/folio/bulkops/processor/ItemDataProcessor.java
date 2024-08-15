@@ -26,6 +26,7 @@ import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;
@@ -38,6 +39,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
   private final HoldingsReferenceService holdingsReferenceService;
   private final ItemReferenceService itemReferenceService;
   private final ItemsNotesUpdater itemsNotesUpdater;
+  private final FolioExecutionContext folioExecutionContext;
 
   @Override
   public Validator<UpdateOptionType, Action> validator(ExtendedItem extendedItem) {
@@ -147,7 +149,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
 
   private ItemLocation getEffectiveLocation(Item item) {
     if (isNull(item.getTemporaryLocation()) && isNull(item.getPermanentLocation())) {
-      var holdingsRecord = holdingsReferenceService.getHoldingsRecordById(item.getHoldingsRecordId());
+      var holdingsRecord = holdingsReferenceService.getHoldingsRecordById(item.getHoldingsRecordId(), folioExecutionContext.getTenantId());
       var holdingsEffectiveLocationId = isNull(holdingsRecord.getTemporaryLocationId()) ? holdingsRecord.getPermanentLocationId() : holdingsRecord.getTemporaryLocationId();
       return itemReferenceService.getLocationById(holdingsEffectiveLocationId);
     } else {

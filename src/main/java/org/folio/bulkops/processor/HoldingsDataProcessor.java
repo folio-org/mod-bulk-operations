@@ -33,6 +33,7 @@ import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
 import org.folio.bulkops.service.ElectronicAccessReferenceService;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;
@@ -49,6 +50,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
   private final HoldingsNotesUpdater holdingsNotesUpdater;
   private final ElectronicAccessUpdaterFactory electronicAccessUpdaterFactory;
   private final ElectronicAccessReferenceService electronicAccessReferenceService;
+  private final FolioExecutionContext folioExecutionContext;
 
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -57,7 +59,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
   public Validator<UpdateOptionType, Action> validator(ExtendedHoldingsRecord extendedHoldingsRecord) {
     return (option, action) -> {
       try {
-        if ("MARC".equals(holdingsReferenceService.getSourceById(extendedHoldingsRecord.getEntity().getSourceId()).getName())) {
+        if ("MARC".equals(holdingsReferenceService.getSourceById(extendedHoldingsRecord.getEntity().getSourceId(), folioExecutionContext.getTenantId()).getName())) {
           throw new RuleValidationException("Holdings records that have source \"MARC\" cannot be changed");
         }
       } catch (NotFoundException e) {
