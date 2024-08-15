@@ -484,13 +484,10 @@ public class BulkOperationService {
 
     var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operationId);
     operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
+    operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operationId));
 
     if (!FAILED.equals(operation.getStatus())) {
       operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
-    }
-    var operationOpt = bulkOperationRepository.findById(operation.getId());
-    if (operationOpt.isPresent()) {
-      operation.setCommittedNumOfErrors(operationOpt.get().getCommittedNumOfErrors());
     }
     bulkOperationRepository.save(operation);
   }

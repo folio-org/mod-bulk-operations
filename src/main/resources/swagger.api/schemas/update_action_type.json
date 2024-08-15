@@ -22,7 +22,8 @@
       "APPEND",
       "ADDITIONAL_SUBFIELD",
       "REMOVE_FIELD",
-      "REMOVE_SUBFIELD"
+      "REMOVE_SUBFIELD",
+      ""
     ]
   }
 }

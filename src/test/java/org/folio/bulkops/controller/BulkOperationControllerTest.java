@@ -30,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
@@ -44,6 +45,7 @@ import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.bean.NoteTypeCollection;
 import org.folio.bulkops.domain.bean.Personal;
 import org.folio.bulkops.domain.bean.User;
+import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
@@ -79,10 +81,52 @@ class BulkOperationControllerTest extends BaseTest {
 
   @MockBean
   private ConsortiaService consortiaService;
+
   @Autowired
   private BulkOperationRepository bulkOperationRepository;
 
+  @Test
+  @SneakyThrows
+  void shouldChangeEntityTypeAndClearProcessingOnPostContentUpdates() {
+    var bulkOperation = BulkOperation.builder()
+      .id(UUID.fromString("1910fae2-08c7-46e8-a73b-fc35d2639734"))
+      .entityType(INSTANCE_MARC)
+      .build();
+    var content = """
+      {
+         "bulkOperationRules" : [ {
+           "id" : "27749ff8-bffd-4344-853c-bc765c504631",
+           "bulkOperationId": "1910fae2-08c7-46e8-a73b-fc35d2639734",
+           "rule_details": {
+             "option": "ITEM_NOTE",
+             "actions": [ {
+               "type": "ADD_TO_EXISTING"
+             } ]
+           }
+         } ],
+         "totalRecords" : 1
+       }
+      """;
+    when(bulkOperationService.getBulkOperationOrThrow(bulkOperation.getId())).thenReturn(bulkOperation);
+    when(ruleService.saveRules(any(BulkOperationRuleCollection.class)))
+      .thenReturn(new BulkOperationRuleCollection().bulkOperationRules(Collections.emptyList()).totalRecords(1));
 
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      bulkOperationRepository.save(bulkOperation);
+
+      mockMvc.perform(post(format("/bulk-operations/%s/content-update", bulkOperation.getId()))
+          .headers(defaultHeaders())
+          .contentType(APPLICATION_JSON)
+          .content(content))
+        .andExpect(status().isOk());
+
+      var updatedBulkOperation = bulkOperationRepository.findById(bulkOperation.getId());
+      assertThat(updatedBulkOperation).isPresent();
+      assertThat(updatedBulkOperation.get().getEntityType()).isEqualTo(INSTANCE);
+    }
+
+    verify(bulkOperationService).clearOperationProcessing(any(BulkOperation.class));
+  }
 
   @ParameterizedTest
   @MethodSource("fileContentTypeToNoteTypeCollection")
