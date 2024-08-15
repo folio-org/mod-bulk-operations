@@ -108,7 +108,7 @@ class ItemDataProcessorTest extends BaseTest {
   void testClearItemLocationAndLoanType() {
     var holdingsId = UUID.randomUUID().toString();
     var locationId = UUID.randomUUID().toString();
-    when(holdingsReferenceService.getHoldingsRecordById(holdingsId, folioExecutionContext.getTenantId()))
+    when(holdingsReferenceService.getHoldingsRecordById(holdingsId, null))
       .thenReturn(new HoldingsRecord().withPermanentLocationId(locationId));
     when(itemReferenceService.getLocationById(locationId))
       .thenReturn(new ItemLocation().withId(locationId));
@@ -197,7 +197,7 @@ class ItemDataProcessorTest extends BaseTest {
     var holdingsLocationId = UUID.randomUUID().toString();
     var holdingsLocation = ItemLocation.builder().id(holdingsLocationId).name("Holdings' location").build();
 
-    when(holdingsReferenceService.getHoldingsRecordById(holdingsId, folioExecutionContext.getTenantId())).thenReturn(new HoldingsRecord().withPermanentLocationId(holdingsLocationId));
+    when(holdingsReferenceService.getHoldingsRecordById(holdingsId, null)).thenReturn(new HoldingsRecord().withPermanentLocationId(holdingsLocationId));
     when(itemReferenceService.getLocationById(holdingsLocationId)).thenReturn(holdingsLocation);
 
     var item = new Item()
