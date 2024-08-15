@@ -17,9 +17,8 @@ public class DataImportProfilesBuilder {
 
   private static final String DATA_IMPORT_PROFILES_PATH = "/import/profiles/";
 
-  private ObjectMapper objectMapper = new ObjectMapper();
-
   public MatchProfile getMatchProfile() throws IOException {
+    var objectMapper = new ObjectMapper();
     try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "match_profile.json")) {
       return objectMapper.readValue(is, MatchProfile.class);
     } catch (IOException e) {
@@ -29,6 +28,7 @@ public class DataImportProfilesBuilder {
   }
 
   public ActionProfile getActionProfile() throws IOException {
+    var objectMapper = new ObjectMapper();
     try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "action_profile.json")) {
       return objectMapper.readValue(is, ActionProfile.class);
     } catch (IOException e) {
@@ -38,6 +38,7 @@ public class DataImportProfilesBuilder {
   }
 
   public MappingProfile getMappingProfile() throws IOException {
+    var objectMapper = new ObjectMapper();
     try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "mapping_profile.json")) {
       return objectMapper.readValue(is, MappingProfile.class);
     } catch (IOException e) {
@@ -47,6 +48,7 @@ public class DataImportProfilesBuilder {
   }
 
   public JobProfile getJobProfile() throws IOException {
+    var objectMapper = new ObjectMapper();
     try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "job_profile.json")) {
       return objectMapper.readValue(is, JobProfile.class);
     } catch (IOException e) {
@@ -56,6 +58,7 @@ public class DataImportProfilesBuilder {
   }
 
   public ProfileAssociation getProfileAssociation() throws IOException {
+    var objectMapper = new ObjectMapper();
     try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "profile_association.json")) {
       return objectMapper.readValue(is, ProfileAssociation.class);
     } catch (IOException e) {
