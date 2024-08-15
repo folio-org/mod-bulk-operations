@@ -45,12 +45,12 @@ public class HoldingsReferenceService {
   private final StatisticalCodeClient statisticalCodeClient;
 
   @Cacheable(cacheNames = "holdings")
-  public HoldingsRecord getHoldingsRecordById(String id) {
+  public HoldingsRecord getHoldingsRecordById(String id, String tenantId) {
     return holdingsClient.getHoldingById(id);
   }
 
   @Cacheable(cacheNames = "holdingsTypesNames")
-  public HoldingsType getHoldingsTypeById(String id) {
+  public HoldingsType getHoldingsTypeById(String id, String tenantId) {
     try {
       return holdingsTypeClient.getById(id);
     } catch (Exception e) {
@@ -59,7 +59,7 @@ public class HoldingsReferenceService {
   }
 
   @Cacheable(cacheNames = "holdingsTypeIds")
-  public HoldingsType getHoldingsTypeByName(String name) {
+  public HoldingsType getHoldingsTypeByName(String name, String tenantId) {
     var holdingsTypes = holdingsTypeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (holdingsTypes.getHoldingsTypes().isEmpty()) {
       throw new NotFoundException(format("Holdings type not found by name=%s", name));
@@ -68,7 +68,7 @@ public class HoldingsReferenceService {
   }
 
   @Cacheable(cacheNames = "holdingsLocationsNames")
-  public ItemLocation getLocationById(String id) {
+  public ItemLocation getLocationById(String id, String tenantId) {
     try {
       return locationClient.getLocationById(id);
     } catch (Exception e) {
@@ -76,7 +76,7 @@ public class HoldingsReferenceService {
     }
   }
 
-  public ItemLocation getLocationIdByName(String name) {
+  public ItemLocation getLocationIdByName(String name, String tenantId) {
     var locations = locationClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (locations.getLocations().isEmpty()) {
       throw new NotFoundException(format("Location not found by name=%s", name));
@@ -85,7 +85,7 @@ public class HoldingsReferenceService {
   }
 
   @Cacheable(cacheNames = "holdingsCallNumberTypesNames")
-  public String getCallNumberTypeNameById(String id) {
+  public String getCallNumberTypeNameById(String id, String tenantId) {
     try {
       return  callNumberTypeClient.getById(id).getName();
     } catch (Exception e) {
@@ -94,7 +94,7 @@ public class HoldingsReferenceService {
   }
 
   @Cacheable(cacheNames = "holdingsCallNumberTypes")
-  public String getCallNumberTypeIdByName(String name) {
+  public String getCallNumberTypeIdByName(String name, String tenantId) {
     var callNumberTypes = callNumberTypeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (callNumberTypes.getCallNumberTypes().isEmpty()) {
       throw new NotFoundException(format("Call number type not found by name=%s", name));
@@ -103,7 +103,7 @@ public class HoldingsReferenceService {
   }
 
   @Cacheable(cacheNames = "holdingsNoteTypesNames")
-  public String getNoteTypeNameById(String id) {
+  public String getNoteTypeNameById(String id, String tenantId) {
     try {
       return holdingsNoteTypeClient.getNoteTypeById(id).getName();
     } catch (Exception e) {
@@ -112,7 +112,7 @@ public class HoldingsReferenceService {
   }
 
   @Cacheable(cacheNames = "holdingsNoteTypes")
-  public String getNoteTypeIdByName(String name) {
+  public String getNoteTypeIdByName(String name, String tenantId) {
     var noteTypes = holdingsNoteTypeClient.getNoteTypesByQuery(format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (noteTypes.getHoldingsNoteTypes().isEmpty()) {
       throw new NotFoundException(format("Note type not found by name=%s", name));
@@ -121,7 +121,7 @@ public class HoldingsReferenceService {
   }
 
   @Cacheable(cacheNames = "illPolicyNames")
-  public IllPolicy getIllPolicyById(String id) {
+  public IllPolicy getIllPolicyById(String id, String tenantId) {
     try {
       return illPolicyClient.getById(id);
     } catch (Exception e) {
@@ -130,7 +130,7 @@ public class HoldingsReferenceService {
   }
 
   @Cacheable(cacheNames = "illPolicies")
-  public IllPolicy getIllPolicyByName(String name) {
+  public IllPolicy getIllPolicyByName(String name, String tenantId) {
     if (isEmpty(name)) {
       return null;
     }
@@ -142,7 +142,7 @@ public class HoldingsReferenceService {
   }
 
   @Cacheable(cacheNames = "holdingsSourceNames")
-  public HoldingsRecordsSource getSourceById(String id) {
+  public HoldingsRecordsSource getSourceById(String id, String tenantId) {
     try {
       return isEmpty(id) ?
         HoldingsRecordsSource.builder().name(EMPTY).build() :
@@ -153,7 +153,7 @@ public class HoldingsReferenceService {
   }
 
   @Cacheable(cacheNames = "holdingsSources")
-  public HoldingsRecordsSource getSourceByName(String name) {
+  public HoldingsRecordsSource getSourceByName(String name, String tenantId) {
     var sources = holdingsSourceClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (ObjectUtils.isEmpty(sources) || ObjectUtils.isEmpty(sources.getHoldingsRecordsSources())) {
       throw new NotFoundException(format("Source not found by name=%s", name));
@@ -162,7 +162,7 @@ public class HoldingsReferenceService {
   }
 
   @Cacheable(cacheNames = "holdingsStatisticalCodeNames")
-  public StatisticalCode getStatisticalCodeById(String id) {
+  public StatisticalCode getStatisticalCodeById(String id, String tenantId) {
     try {
       return statisticalCodeClient.getById(id);
     } catch (Exception e) {
@@ -171,7 +171,7 @@ public class HoldingsReferenceService {
   }
 
   @Cacheable(cacheNames = "holdingsStatisticalCodes")
-  public StatisticalCode getStatisticalCodeByName(String name) {
+  public StatisticalCode getStatisticalCodeByName(String name, String tenantId) {
     var statisticalCodes = statisticalCodeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (statisticalCodes.getStatisticalCodes().isEmpty()) {
       throw new NotFoundException(format("Statistical code not found by name=%s", name));
