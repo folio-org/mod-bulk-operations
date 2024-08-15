@@ -5,6 +5,7 @@ import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.util.Constants.UTC_ZONE;
+import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_DOWNLOAD_ORIGIN_FILE_FROM_S3;
 
 import java.io.IOException;
 import java.net.URL;
@@ -117,6 +118,7 @@ public class DataExportJobUpdateService {
       log.error(msg);
       operation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);
       operation.setEndTime(LocalDateTime.now());
+      operation.setErrorMessage(ERROR_NOT_DOWNLOAD_ORIGIN_FILE_FROM_S3);
       if (ObjectUtils.isNotEmpty(jobUpdate.getProgress())) {
         operation.setMatchedNumOfErrors(isNull(jobUpdate.getProgress().getErrors()) ? 0 : jobUpdate.getProgress().getErrors());
       }
