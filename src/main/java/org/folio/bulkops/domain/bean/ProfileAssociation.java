@@ -12,12 +12,12 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProfileAssociations {
+public class ProfileAssociation {
 
   @JsonProperty("id")
   private String id;
 
-  @JsonProperty("masterProfileI")
+  @JsonProperty("masterProfileId")
   private String masterProfileId;
 
   @JsonProperty("detailProfileId")
@@ -41,9 +41,9 @@ public class ProfileAssociations {
   @JsonProperty("masterWrapperId")
   private String masterWrapperId;
 
-  @JsonProperty("id")
+  @JsonProperty("detailWrapperId")
   private String detailWrapperId;
 
-  @JsonProperty("id")
+  @JsonProperty("jobProfileId")
   private String jobProfileId;
 }
