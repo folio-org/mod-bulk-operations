@@ -25,7 +25,7 @@
       }
     },
     "required": [
-      "fqlQuery",
+      "queryId",
       "entityTypeId"
     ],
     "additionalProperties": false
