@@ -78,7 +78,6 @@ import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.Utils;
-import org.folio.querytool.domain.dto.SubmitQuery;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
@@ -196,21 +195,16 @@ public class BulkOperationService {
   }
 
   public BulkOperation triggerByQuery(UUID userId, QueryRequest queryRequest) {
-    var submitQuery = new SubmitQuery()
-      .fqlQuery(queryRequest.getFqlQuery())
-      .entityTypeId(queryRequest.getEntityTypeId());
-    var queryId = queryService.executeQuery(submitQuery);
-    var entityType = entityTypeService.getEntityTypeById(submitQuery.getEntityTypeId());
     return bulkOperationRepository.save(BulkOperation.builder()
         .id(UUID.randomUUID())
-        .entityType(entityType)
+        .entityType(entityTypeService.getEntityTypeById(queryRequest.getEntityTypeId()))
         .approach(QUERY)
         .identifierType(IdentifierType.ID)
         .status(EXECUTING_QUERY)
         .startTime(LocalDateTime.now())
         .userId(userId)
-        .fqlQuery(submitQuery.getFqlQuery())
-        .fqlQueryId(queryId)
+        .fqlQuery(queryRequest.getFqlQuery())
+        .fqlQueryId(queryRequest.getQueryId())
         .userFriendlyQuery(queryRequest.getUserFriendlyQuery())
       .build());
   }
