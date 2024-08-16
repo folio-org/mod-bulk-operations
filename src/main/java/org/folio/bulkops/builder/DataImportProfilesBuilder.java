@@ -3,10 +3,9 @@ package org.folio.bulkops.builder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.ActionProfile;
-import org.folio.bulkops.domain.bean.JobProfile;
+import org.folio.bulkops.domain.bean.JobProfilePost;
 import org.folio.bulkops.domain.bean.MappingProfile;
 import org.folio.bulkops.domain.bean.MatchProfile;
-import org.folio.bulkops.domain.bean.ProfileAssociation;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -38,17 +37,10 @@ public class DataImportProfilesBuilder {
     }
   }
 
-  public JobProfile getJobProfile() throws IOException {
+  public JobProfilePost getJobProfilePost() throws IOException {
     var objectMapper = new ObjectMapper();
-    try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "job_profile.json")) {
-      return objectMapper.readValue(is, JobProfile.class);
-    }
-  }
-
-  public ProfileAssociation getProfileAssociation() throws IOException {
-    var objectMapper = new ObjectMapper();
-    try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "profile_association.json")) {
-      return objectMapper.readValue(is, ProfileAssociation.class);
+    try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "job_profile_post.json")) {
+      return objectMapper.readValue(is, JobProfilePost.class);
     }
   }
 }

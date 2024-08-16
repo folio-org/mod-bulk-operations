@@ -35,16 +35,8 @@ class DataImportProfilesBuilderTest extends BaseTest  {
 
   @Test
   @SneakyThrows
-  void shouldGetJobProfile() {
-    var jobProfile = dataImportProfilesBuilder.getJobProfile();
-    assertNotNull(jobProfile);
-  }
-
-
-  @Test
-  @SneakyThrows
-  void shouldGetProfileAssociation() {
-    var profileAssociation = dataImportProfilesBuilder.getProfileAssociation();
-    assertNotNull(profileAssociation);
+  void shouldGetJobProfilePost() {
+    var jobProfilePost = dataImportProfilesBuilder.getJobProfilePost();
+    assertNotNull(jobProfilePost);
   }
 }

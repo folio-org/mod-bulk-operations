@@ -1,0 +1,27 @@
+{
+  "id": "32d3ad5b-5add-11ef-b358-90ccdf1e3d2b",
+  "profile": {
+    "id": "32d3ad5b-5add-11ef-b358-90ccdf1e3d2b",
+    "name": "Bulk operations data import job profile",
+    "description": "Bulk operations data import job profile",
+    "dataType": "MARC"
+  },
+  "addedRelations": [{
+    "masterProfileId": null,
+    "masterWrapperId": null,
+    "masterProfileType": "JOB_PROFILE",
+    "detailProfileId": "71a3cf35-5a2b-11ef-ae95-90ccdf1e3d2b",
+    "detailWrapperId": null,
+    "detailProfileType": "MATCH_PROFILE",
+    "order": 0
+  }, {
+    "masterProfileId": null,
+    "masterWrapperId": null,
+    "masterProfileType": "JOB_PROFILE",
+    "detailProfileId": "36b9d6a0-5adb-11ef-a765-90ccdf1e3d2b",
+    "detailWrapperId": null,
+    "detailProfileType": "ACTION_PROFILE",
+    "order": 1
+  }
+  ]
+}

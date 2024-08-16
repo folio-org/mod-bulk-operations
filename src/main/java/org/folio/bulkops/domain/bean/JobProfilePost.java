@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 
+import java.util.List;
+
 @Data
 @With
 @Builder(toBuilder = true)
@@ -19,4 +21,7 @@ public class JobProfilePost {
 
   @JsonProperty("profile")
   private JobProfile profile;
+
+  @JsonProperty("addedRelations")
+  private List<ProfileAssociation> addedRelations;
 }
