@@ -21,6 +21,8 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
+import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
+import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
@@ -76,7 +78,6 @@ import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.Utils;
-import org.folio.querytool.domain.dto.SubmitQuery;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
@@ -160,7 +161,7 @@ public class BulkOperationService {
 
         } catch (Exception e) {
           log.error(ERROR_STARTING_BULK_OPERATION + e.getCause());
-          errorMessage = format(FILE_UPLOADING_FAILED_REASON, e.getMessage());
+          errorMessage = ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION;
         }
       }
       operation.setApproach(MANUAL);
@@ -177,7 +178,7 @@ public class BulkOperationService {
         operation.setLinkToTriggeringCsvFile(linkToTriggeringFile);
       } catch (Exception e) {
         log.error(ERROR_STARTING_BULK_OPERATION + e);
-        errorMessage = format(FILE_UPLOADING_FAILED_REASON, e.getMessage());
+        errorMessage = ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION;
       }
     }
 
@@ -194,21 +195,16 @@ public class BulkOperationService {
   }
 
   public BulkOperation triggerByQuery(UUID userId, QueryRequest queryRequest) {
-    var submitQuery = new SubmitQuery()
-      .fqlQuery(queryRequest.getFqlQuery())
-      .entityTypeId(queryRequest.getEntityTypeId());
-    var queryId = queryService.executeQuery(submitQuery);
-    var entityType = entityTypeService.getEntityTypeById(submitQuery.getEntityTypeId());
     return bulkOperationRepository.save(BulkOperation.builder()
         .id(UUID.randomUUID())
-        .entityType(entityType)
+        .entityType(entityTypeService.getEntityTypeById(queryRequest.getEntityTypeId()))
         .approach(QUERY)
         .identifierType(IdentifierType.ID)
         .status(EXECUTING_QUERY)
         .startTime(LocalDateTime.now())
         .userId(userId)
-        .fqlQuery(submitQuery.getFqlQuery())
-        .fqlQueryId(queryId)
+        .fqlQuery(queryRequest.getFqlQuery())
+        .fqlQueryId(queryRequest.getQueryId())
         .userFriendlyQuery(queryRequest.getUserFriendlyQuery())
       .build());
   }
@@ -298,7 +294,7 @@ public class BulkOperationService {
         .withEndTime(LocalDateTime.now()));
       operation.setStatus(OperationStatusType.FAILED);
       operation.setEndTime(LocalDateTime.now());
-      operation.setErrorMessage("Confirm changes operation failed, reason: " + e.getMessage());
+      operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
     } finally {
       bulkOperationRepository.save(operation);
     }
@@ -352,7 +348,7 @@ public class BulkOperationService {
         .withEndTime(LocalDateTime.now()));
       operation.setStatus(OperationStatusType.FAILED);
       operation.setEndTime(LocalDateTime.now());
-      operation.setErrorMessage("Confirm changes operation failed, reason: " + e.getMessage());
+      operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
     } finally {
       bulkOperationRepository.save(operation);
     }
@@ -482,13 +478,10 @@ public class BulkOperationService {
 
     var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operationId);
     operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
+    operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operationId));
 
     if (!FAILED.equals(operation.getStatus())) {
       operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
-    }
-    var operationOpt = bulkOperationRepository.findById(operation.getId());
-    if (operationOpt.isPresent()) {
-      operation.setCommittedNumOfErrors(operationOpt.get().getCommittedNumOfErrors());
     }
     bulkOperationRepository.save(operation);
   }

@@ -1,5 +1,6 @@
 package org.folio.bulkops.controller;
 
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
@@ -94,6 +95,11 @@ public class BulkOperationController implements BulkOperationsApi {
   public ResponseEntity<BulkOperationRuleCollection> postContentUpdates(UUID operationId, BulkOperationRuleCollection bulkOperationRuleCollection) {
     var operation = bulkOperationService.getBulkOperationOrThrow(operationId);
     var rules = ruleService.saveRules(bulkOperationRuleCollection);
+
+    if (INSTANCE_MARC.equals(operation.getEntityType())) {
+      operation.setEntityType(INSTANCE);
+      bulkOperationRepository.save(operation);
+    }
 
     bulkOperationService.clearOperationProcessing(operation);
 
