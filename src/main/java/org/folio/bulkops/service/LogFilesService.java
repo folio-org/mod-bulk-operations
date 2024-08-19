@@ -83,6 +83,10 @@ public class LogFilesService {
       remoteFileSystemClient.remove(bulkOperation.getLinkToMatchedRecordsCsvFile());
       bulkOperation.setLinkToMatchedRecordsCsvFile(null);
     }
+    if (isNotEmpty(bulkOperation.getLinkToMatchedRecordsMarcFile())) {
+      remoteFileSystemClient.remove(bulkOperation.getLinkToMatchedRecordsMarcFile());
+      bulkOperation.setLinkToMatchedRecordsMarcFile(null);
+    }
     if (isNotEmpty(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
       remoteFileSystemClient.remove(bulkOperation.getLinkToMatchedRecordsJsonFile());
       bulkOperation.setLinkToMatchedRecordsJsonFile(null);
@@ -102,6 +106,10 @@ public class LogFilesService {
     if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsCsvFile())) {
       remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsCsvFile());
       bulkOperation.setLinkToModifiedRecordsCsvFile(null);
+    }
+    if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
+      remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsMarcFile());
+      bulkOperation.setLinkToModifiedRecordsMarcFile(null);
     }
   }
 }
