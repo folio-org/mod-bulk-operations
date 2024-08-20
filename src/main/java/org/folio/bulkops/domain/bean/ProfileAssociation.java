@@ -34,4 +34,7 @@ public class ProfileAssociation {
 
   @JsonProperty("order")
   private Integer order;
+
+  @JsonProperty("reactTo")
+  private String reactTo;
 }

@@ -23,9 +23,16 @@ public class DataImportProfilesBuilder {
     }
   }
 
-  public ActionProfile getActionProfile() throws IOException {
+  public ActionProfile getActionProfileToUpdateInstance() throws IOException {
     var objectMapper = new ObjectMapper();
-    try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "action_profile.json")) {
+    try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "action_update_instance_profile.json")) {
+      return objectMapper.readValue(is, ActionProfile.class);
+    }
+  }
+
+  public ActionProfile getActionProfileToUpdateSrs() throws IOException {
+    var objectMapper = new ObjectMapper();
+    try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "action_update_srs_profile.json")) {
       return objectMapper.readValue(is, ActionProfile.class);
     }
   }
@@ -37,12 +44,15 @@ public class DataImportProfilesBuilder {
     }
   }
 
-  public JobProfilePost getJobProfilePost(MatchProfile matchProfile, ActionProfile actionProfile) throws IOException {
+  public JobProfilePost getJobProfilePost(MatchProfile matchProfile, ActionProfile actionProfileToUpdateInstance, ActionProfile actionProfileToUpdateSrs) throws IOException {
     var objectMapper = new ObjectMapper();
     try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "job_profile_post.json")) {
       var jobProfilePost = objectMapper.readValue(is, JobProfilePost.class);
       jobProfilePost.getAddedRelations().get(0).setDetailProfileId(matchProfile.getId());
-      jobProfilePost.getAddedRelations().get(1).setDetailProfileId(actionProfile.getId());
+      jobProfilePost.getAddedRelations().get(1).setMasterProfileId(matchProfile.getId());
+      jobProfilePost.getAddedRelations().get(1).setDetailProfileId(actionProfileToUpdateInstance.getId());
+      jobProfilePost.getAddedRelations().get(2).setMasterProfileId(matchProfile.getId());
+      jobProfilePost.getAddedRelations().get(2).setDetailProfileId(actionProfileToUpdateSrs.getId());
       return jobProfilePost;
     }
   }

@@ -1,4 +1,44 @@
 {
-  "name": "Bulk operations data import match profile",
-  "description": "Bulk operations data import match profile"
+  "name" : "Bulk operations data import match profile",
+  "description" : "Bulk operations data import match profile",
+  "incomingRecordType" : "MARC_BIBLIOGRAPHIC",
+  "existingRecordType" : "MARC_BIBLIOGRAPHIC",
+  "matchDetails" : [ {
+    "incomingRecordType" : "MARC_BIBLIOGRAPHIC",
+    "existingRecordType" : "MARC_BIBLIOGRAPHIC",
+    "incomingMatchExpression" : {
+      "dataValueType" : "VALUE_FROM_RECORD",
+      "fields" : [ {
+        "label" : "field",
+        "value" : "999"
+      }, {
+        "label" : "indicator1",
+        "value" : "f"
+      }, {
+        "label" : "indicator2",
+        "value" : "f"
+      }, {
+        "label" : "recordSubfield",
+        "value" : "i"
+      } ]
+    },
+    "matchCriterion" : "EXACTLY_MATCHES",
+    "existingMatchExpression" : {
+      "dataValueType" : "VALUE_FROM_RECORD",
+      "fields" : [ {
+        "label" : "field",
+        "value" : "999"
+      }, {
+        "label" : "indicator1",
+        "value" : "f"
+      }, {
+        "label" : "indicator2",
+        "value" : "f"
+      }, {
+        "label" : "recordSubfield",
+        "value" : "i"
+      } ]
+    }
+  } ],
+  "hidden" : false
 }

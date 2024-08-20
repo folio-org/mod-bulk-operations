@@ -24,8 +24,15 @@ class DataImportProfilesBuilderTest extends BaseTest  {
 
   @Test
   @SneakyThrows
-  void shouldGetActionProfile() {
-    var actionProfile = dataImportProfilesBuilder.getActionProfile();
+  void shouldGetActionProfileToUpdateInstance() {
+    var actionProfile = dataImportProfilesBuilder.getActionProfileToUpdateInstance();
+    assertNotNull(actionProfile);
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldGetActionProfileToUpdateSrs() {
+    var actionProfile = dataImportProfilesBuilder.getActionProfileToUpdateSrs();
     assertNotNull(actionProfile);
   }
 
@@ -39,11 +46,15 @@ class DataImportProfilesBuilderTest extends BaseTest  {
   @Test
   @SneakyThrows
   void shouldGetJobProfilePost() {
-    var actionProfile = ActionProfile.builder().id("action_profile_id").build();
+    var actionProfileUpdateInstance = ActionProfile.builder().id("action_profile_update_instance_id").build();
+    var actionProfileUpdateSrs = ActionProfile.builder().id("action_profile_update_srs_id").build();
     var matchProfile = MatchProfile.builder().id("match_profile_id").build();
-    var jobProfilePost = dataImportProfilesBuilder.getJobProfilePost(matchProfile, actionProfile);
+    var jobProfilePost = dataImportProfilesBuilder.getJobProfilePost(matchProfile, actionProfileUpdateInstance, actionProfileUpdateSrs);
     assertNotNull(jobProfilePost);
     assertEquals("match_profile_id", jobProfilePost.getAddedRelations().get(0).getDetailProfileId());
-    assertEquals("action_profile_id", jobProfilePost.getAddedRelations().get(1).getDetailProfileId());
+    assertEquals("action_profile_update_instance_id", jobProfilePost.getAddedRelations().get(1).getDetailProfileId());
+    assertEquals("match_profile_id", jobProfilePost.getAddedRelations().get(1).getMasterProfileId());
+    assertEquals("action_profile_update_srs_id", jobProfilePost.getAddedRelations().get(2).getDetailProfileId());
+    assertEquals("match_profile_id", jobProfilePost.getAddedRelations().get(2).getMasterProfileId());
   }
 }

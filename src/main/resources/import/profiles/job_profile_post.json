@@ -6,6 +6,7 @@
   },
   "addedRelations": [{
     "masterProfileId": null,
+    "detailProfileId": null,
     "masterWrapperId": null,
     "masterProfileType": "JOB_PROFILE",
     "detailWrapperId": null,
@@ -13,11 +14,22 @@
     "order": 0
   }, {
     "masterProfileId": null,
+    "detailProfileId": null,
     "masterWrapperId": null,
-    "masterProfileType": "JOB_PROFILE",
+    "masterProfileType": "MATCH_PROFILE",
     "detailWrapperId": null,
     "detailProfileType": "ACTION_PROFILE",
-    "order": 1
-  }
+    "order": 0,
+    "reactTo": "MATCH"
+  }, {
+      "masterProfileId": null,
+      "detailProfileId": null,
+      "masterWrapperId": null,
+      "masterProfileType": "MATCH_PROFILE",
+      "detailWrapperId": null,
+      "detailProfileType": "ACTION_PROFILE",
+      "order": 1,
+      "reactTo": "MATCH"
+    }
   ]
 }
