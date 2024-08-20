@@ -177,8 +177,7 @@
             "metadata-provider.logs.get",
             "converter-storage.matchprofile.post",
             "converter-storage.actionprofile.post",
-            "converter-storage.mappingprofile.post",
-            "converter-storage.profileassociation.post"
+            "converter-storage.mappingprofile.post"
           ]
         },
         {

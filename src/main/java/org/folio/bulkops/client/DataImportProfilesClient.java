@@ -29,7 +29,4 @@ public interface DataImportProfilesClient {
 
   @PostMapping(value = "/mappingProfiles")
   void createMappingProfile(@RequestBody MatchProfilePost matchProfilePost);
-
-  @PostMapping(value = "/profileAssociations")
-  void createProfileAssociations(@RequestBody ProfileAssociation profileAssociation);
 }
