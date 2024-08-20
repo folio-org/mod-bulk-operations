@@ -1,5 +1,4 @@
 {
-  "id": "1ad71022-5adc-11ef-8224-90ccdf1e3d2b",
   "name": "Bulk operations data import mapping profile",
   "description": "Bulk operations data import mapping profile",
   "incomingRecordType": "MARC_BIBLIOGRAPHIC",

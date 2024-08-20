@@ -5,6 +5,7 @@ import org.folio.bulkops.configs.FeignClientConfiguration;
 import org.folio.bulkops.domain.bean.ActionProfilePost;
 import org.folio.bulkops.domain.bean.JobProfileCollection;
 import org.folio.bulkops.domain.bean.JobProfilePost;
+import org.folio.bulkops.domain.bean.MappingProfilePost;
 import org.folio.bulkops.domain.bean.MatchProfilePost;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
@@ -18,14 +19,14 @@ public interface DataImportProfilesClient {
   JobProfileCollection getJobProfiles();
 
   @PostMapping(value = "/jobProfiles")
-  void createJobProfile(@RequestBody JobProfilePost jobProfilePost);
+  JobProfilePost createJobProfile(@RequestBody JobProfilePost jobProfilePost);
 
   @PostMapping(value = "/matchProfiles")
-  void createMatchProfile(@RequestBody MatchProfilePost matchProfilePost);
+  MatchProfilePost createMatchProfile(@RequestBody MatchProfilePost matchProfilePost);
 
   @PostMapping(value = "/actionProfiles")
-  void createActionProfile(@RequestBody ActionProfilePost actionProfilePost);
+  ActionProfilePost createActionProfile(@RequestBody ActionProfilePost actionProfilePost);
 
   @PostMapping(value = "/mappingProfiles")
-  void createMappingProfile(@RequestBody MatchProfilePost matchProfilePost);
+  MappingProfilePost createMappingProfile(@RequestBody MappingProfilePost mappingProfilePost);
 }

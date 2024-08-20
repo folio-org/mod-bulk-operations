@@ -18,5 +18,5 @@ public class MappingProfilePost {
   private String id;
 
   @JsonProperty("profile")
-  private MatchProfile profile;
+  private MappingProfile profile;
 }

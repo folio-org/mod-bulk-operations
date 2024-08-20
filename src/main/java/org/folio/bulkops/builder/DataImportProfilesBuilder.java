@@ -37,10 +37,13 @@ public class DataImportProfilesBuilder {
     }
   }
 
-  public JobProfilePost getJobProfilePost() throws IOException {
+  public JobProfilePost getJobProfilePost(MatchProfile matchProfile, ActionProfile actionProfile) throws IOException {
     var objectMapper = new ObjectMapper();
     try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "job_profile_post.json")) {
-      return objectMapper.readValue(is, JobProfilePost.class);
+      var jobProfilePost = objectMapper.readValue(is, JobProfilePost.class);
+      jobProfilePost.getAddedRelations().get(0).setDetailProfileId(matchProfile.getId());
+      jobProfilePost.getAddedRelations().get(1).setDetailProfileId(actionProfile.getId());
+      return jobProfilePost;
     }
   }
 }
