@@ -509,7 +509,7 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToOriginalCsv = bulkOperationId + "/origin.csv";
       var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
       var pathToInstanceMarc = "src/test/resources/files/instance_marc.mrc";
-      var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-Marc-Records-instance_marc.mrc";
+      var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-instance_marc.mrc";
 
       when(bulkOperationRepository.findById(any(UUID.class)))
         .thenReturn(Optional.of(BulkOperation.builder()
