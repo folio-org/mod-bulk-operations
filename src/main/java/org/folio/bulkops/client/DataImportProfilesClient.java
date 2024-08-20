@@ -6,7 +6,6 @@ import org.folio.bulkops.domain.bean.ActionProfilePost;
 import org.folio.bulkops.domain.bean.JobProfileCollection;
 import org.folio.bulkops.domain.bean.JobProfilePost;
 import org.folio.bulkops.domain.bean.MatchProfilePost;
-import org.folio.bulkops.domain.bean.ProfileAssociation;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
