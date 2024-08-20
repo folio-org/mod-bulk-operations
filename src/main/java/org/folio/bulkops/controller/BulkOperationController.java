@@ -8,11 +8,13 @@ import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
+import static org.folio.bulkops.util.Constants.CSV_EXTENSION;
 import static org.folio.bulkops.util.Constants.NON_PRINTING_DELIMITER;
 import static org.folio.bulkops.util.Constants.SPLIT_NOTE_ENTITIES;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.codehaus.plexus.util.FileUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
@@ -162,7 +164,9 @@ public class BulkOperationController implements BulkOperationsApi {
       return ResponseEntity.ok().build();
     } else {
       try (var is = remoteFileSystemClient.get(path)) {
-        var content = ArrayUtils.removeAllOccurrences(is.readAllBytes(), (byte) NON_PRINTING_DELIMITER);
+        var content = CSV_EXTENSION.equalsIgnoreCase(FilenameUtils.getExtension(path)) ?
+          ArrayUtils.removeAllOccurrences(is.readAllBytes(), (byte) NON_PRINTING_DELIMITER) :
+          is.readAllBytes();
         var entityType = bulkOperation.getEntityType().getValue();
         if (isDownloadPreview(fileContentType) && SPLIT_NOTE_ENTITIES.contains(entityType)) {
           content = noteProcessorFactory.getNoteProcessor(entityType).processNotes(content);
