@@ -284,8 +284,9 @@ class ErrorServiceTest extends BaseTest {
     }
   }
 
-  @Test
-  void testSaveErrorsFromDataImport() {
+  @ParameterizedTest
+  @EnumSource(value = IdentifierType.class, names = { "ID", "INSTANCE_HRID" })
+  void testSaveErrorsFromDataImport(IdentifierType identifierType) {
     final var dataImportJobId = UUID.randomUUID();
     final var sourceRecordId = UUID.randomUUID().toString();
     final var dataExportJobId = UUID.randomUUID();
@@ -300,7 +301,7 @@ class ErrorServiceTest extends BaseTest {
       var bulkOperationId = bulkOperationRepository.save(BulkOperation.builder()
           .id(UUID.randomUUID())
           .status(COMPLETED_WITH_ERRORS)
-          .identifierType(IdentifierType.ID)
+          .identifierType(identifierType)
           .committedNumOfErrors(1)
           .dataExportJobId(dataExportJobId)
           .build())
