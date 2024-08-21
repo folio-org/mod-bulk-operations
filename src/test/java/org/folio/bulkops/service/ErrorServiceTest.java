@@ -8,6 +8,7 @@ import static org.folio.bulkops.service.ErrorService.IDENTIFIER;
 import static org.folio.bulkops.service.ErrorService.LINK;
 import static org.folio.bulkops.util.Constants.CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -26,9 +27,16 @@ import java.util.UUID;
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.BulkEditClient;
+import org.folio.bulkops.client.MetadataProviderClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.client.SrsClient;
+import org.folio.bulkops.domain.bean.ExternalIdsHolder;
+import org.folio.bulkops.domain.bean.JobLogEntry;
+import org.folio.bulkops.domain.bean.JobLogEntryCollection;
+import org.folio.bulkops.domain.bean.SrsRecord;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.Errors;
+import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -72,6 +80,12 @@ class ErrorServiceTest extends BaseTest {
 
   @MockBean
   private BulkEditClient bulkEditClient;
+
+  @MockBean
+  private MetadataProviderClient metadataProviderClient;
+
+  @MockBean
+  private SrsClient srsClient;
 
   private UUID bulkOperationId;
 
@@ -263,6 +277,35 @@ class ErrorServiceTest extends BaseTest {
       assertThat(errors.getErrors().get(0).getParameters().get(0).getValue(), equalTo("789"));
       assertThat(errors.getErrors().get(0).getParameters().get(1).getKey(), equalTo(LINK));
       assertThat(errors.getErrors().get(0).getParameters().get(1).getValue(), equalTo(link));
+    }
+  }
+
+  @Test
+  void testSaveErrorsFromDataImport() {
+    final var dataImportJobId = UUID.randomUUID();
+    final var sourceRecordId = UUID.randomUUID().toString();
+    final var dataExportJobId = UUID.randomUUID();
+    final var instanceId = UUID.randomUUID().toString();
+    when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE))
+      .thenReturn(new JobLogEntryCollection().withEntries(List.of(new JobLogEntry()
+        .withError("some MARC error").withSourceRecordId(sourceRecordId))));
+    when(srsClient.getSrsRecordById(sourceRecordId)).thenReturn(new SrsRecord().withExternalIdsHolder(
+      new ExternalIdsHolder().withInstanceHrid("instance HRID").withInstanceId(instanceId)));
+
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var bulkOperationId = bulkOperationRepository.save(BulkOperation.builder()
+          .id(UUID.randomUUID())
+          .status(COMPLETED_WITH_ERRORS)
+          .identifierType(IdentifierType.ID)
+          .committedNumOfErrors(1)
+          .dataExportJobId(dataExportJobId)
+          .build())
+        .getId();
+      errorService.saveErrorsFromDataImport(bulkOperationId, dataImportJobId);
+      var errors = errorService.getErrorsPreviewByBulkOperationId(bulkOperationId, 1);
+
+      assertThat(errors.getErrors(), hasSize(1));
+      assertEquals("some MARC error", errors.getErrors().get(0).getMessage());
     }
   }
 
