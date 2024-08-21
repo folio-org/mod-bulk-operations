@@ -1,0 +1,12 @@
+{
+  "name" : "Bulk operations data import update srs mapping profile",
+  "description" : "Bulk operations data import update srs mapping profile",
+  "incomingRecordType" : "MARC_BIBLIOGRAPHIC",
+  "existingRecordType" : "MARC_BIBLIOGRAPHIC",
+  "mappingDetails" : {
+    "name" : "marcBib",
+    "recordType" : "MARC_BIBLIOGRAPHIC",
+    "marcMappingOption" : "UPDATE"
+  },
+  "hidden" : false
+}

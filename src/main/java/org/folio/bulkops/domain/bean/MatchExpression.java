@@ -14,14 +14,11 @@ import java.util.List;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class JobProfilePost {
+public class MatchExpression {
 
-  @JsonProperty("id")
-  private String id;
+  @JsonProperty("dataValueType")
+  private String dataValueType;
 
-  @JsonProperty("profile")
-  private JobProfile profile;
-
-  @JsonProperty("addedRelations")
-  private List<ProfileAssociation> addedRelations;
+  @JsonProperty("fields")
+  private List<Field> fields;
 }

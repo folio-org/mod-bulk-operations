@@ -7,23 +7,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 
-import java.util.List;
-
 @Data
 @With
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class MatchProfile {
-
-  @JsonProperty("id")
-  private String id;
-
-  @JsonProperty("name")
-  private String name;
-
-  @JsonProperty("description")
-  private String description;
+public class MatchDetail {
 
   @JsonProperty("incomingRecordType")
   private String incomingRecordType;
@@ -31,9 +20,12 @@ public class MatchProfile {
   @JsonProperty("existingRecordType")
   private String existingRecordType;
 
-  @JsonProperty("matchDetails")
-  private List<MatchDetail> matchDetails;
+  @JsonProperty("incomingMatchExpression")
+  private MatchExpression incomingMatchExpression;
 
-  @JsonProperty("hidden")
-  private Boolean hidden;
+  @JsonProperty("matchCriterion")
+  private String matchCriterion;
+
+  @JsonProperty("existingMatchExpression")
+  private MatchExpression existingMatchExpression;
 }
