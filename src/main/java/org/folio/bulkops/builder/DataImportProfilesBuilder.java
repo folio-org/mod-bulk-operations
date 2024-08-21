@@ -26,7 +26,7 @@ public class DataImportProfilesBuilder {
 
   public ActionProfilePost getActionProfilePostToUpdateInstance(MappingProfile mappingProfileToUpdateInstance) throws IOException {
     var objectMapper = new ObjectMapper();
-    try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "action_update_instance_profile.json")) {
+    try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "action_update_instance_profile_post.json")) {
       var actionProfile = objectMapper.readValue(is, ActionProfilePost.class);
       actionProfile.getAddedRelations().get(0).setDetailProfileId(mappingProfileToUpdateInstance.getId());
       return actionProfile;
@@ -35,7 +35,7 @@ public class DataImportProfilesBuilder {
 
   public ActionProfilePost getActionProfilePostToUpdateSrs(MappingProfile mappingProfileToUpdateSrs) throws IOException {
     var objectMapper = new ObjectMapper();
-    try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "action_update_srs_profile.json")) {
+    try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "action_update_srs_profile_post.json")) {
       var actionProfile = objectMapper.readValue(is, ActionProfilePost.class);
       actionProfile.getAddedRelations().get(0).setDetailProfileId(mappingProfileToUpdateSrs.getId());
       return actionProfile;
