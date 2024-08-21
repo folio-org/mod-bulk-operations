@@ -298,7 +298,7 @@ class ErrorServiceTest extends BaseTest {
       new ExternalIdsHolder().withInstanceHrid("instance HRID").withInstanceId(instanceId)));
 
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var bulkOperationId = bulkOperationRepository.save(BulkOperation.builder()
+      var operationId = bulkOperationRepository.save(BulkOperation.builder()
           .id(UUID.randomUUID())
           .status(COMPLETED_WITH_ERRORS)
           .identifierType(identifierType)
@@ -306,8 +306,8 @@ class ErrorServiceTest extends BaseTest {
           .dataExportJobId(dataExportJobId)
           .build())
         .getId();
-      errorService.saveErrorsFromDataImport(bulkOperationId, dataImportJobId);
-      var errors = errorService.getErrorsPreviewByBulkOperationId(bulkOperationId, 1);
+      errorService.saveErrorsFromDataImport(operationId, dataImportJobId);
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1);
 
       assertThat(errors.getErrors(), hasSize(1));
       assertEquals("some MARC error", errors.getErrors().get(0).getMessage());
@@ -323,7 +323,7 @@ class ErrorServiceTest extends BaseTest {
         Request.create(Request.HttpMethod.GET, "url", Map.of(), null, null, null), null, null));
 
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var bulkOperationId = bulkOperationRepository.save(BulkOperation.builder()
+      var operationId = bulkOperationRepository.save(BulkOperation.builder()
           .id(UUID.randomUUID())
           .status(COMPLETED_WITH_ERRORS)
           .identifierType(IdentifierType.ID)
@@ -332,7 +332,7 @@ class ErrorServiceTest extends BaseTest {
           .build())
         .getId();
 
-      assertThrows(DataImportException.class, () -> errorService.saveErrorsFromDataImport(bulkOperationId, dataImportJobId));
+      assertThrows(DataImportException.class, () -> errorService.saveErrorsFromDataImport(operationId, dataImportJobId));
     }
   }
 
