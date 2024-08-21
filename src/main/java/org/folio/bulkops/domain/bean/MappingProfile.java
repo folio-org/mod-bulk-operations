@@ -24,8 +24,14 @@ public class MappingProfile {
   private String description;
 
   @JsonProperty("incomingRecordType")
-  private String incomingRecordType = "MARC_BIBLIOGRAPHIC";
+  private String incomingRecordType;
 
   @JsonProperty("existingRecordType")
-  private String existingRecordType = "INSTANCE";
+  private String existingRecordType;
+
+  @JsonProperty("mappingDetails")
+  private MappingDetails mappingDetails;
+
+  @JsonProperty("hidden")
+  private Boolean hidden;
 }

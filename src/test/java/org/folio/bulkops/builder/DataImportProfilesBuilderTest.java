@@ -3,6 +3,7 @@ package org.folio.bulkops.builder;
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.ActionProfile;
+import org.folio.bulkops.domain.bean.MappingProfile;
 import org.folio.bulkops.domain.bean.MatchProfile;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,22 +25,33 @@ class DataImportProfilesBuilderTest extends BaseTest  {
 
   @Test
   @SneakyThrows
-  void shouldGetActionProfileToUpdateInstance() {
-    var actionProfile = dataImportProfilesBuilder.getActionProfileToUpdateInstance();
-    assertNotNull(actionProfile);
+  void shouldGetActionProfilePostToUpdateInstance() {
+    var mappingProfileUpdateInstance = MappingProfile.builder().id("mapping_profile_update_instance_id").build();
+    var actionProfilePost = dataImportProfilesBuilder.getActionProfilePostToUpdateInstance(mappingProfileUpdateInstance);
+    assertNotNull(actionProfilePost);
+    assertEquals("mapping_profile_update_instance_id", actionProfilePost.getAddedRelations().get(0).getDetailProfileId());
   }
 
   @Test
   @SneakyThrows
-  void shouldGetActionProfileToUpdateSrs() {
-    var actionProfile = dataImportProfilesBuilder.getActionProfileToUpdateSrs();
-    assertNotNull(actionProfile);
+  void shouldGetActionProfilePostToUpdateSrs() {
+    var mappingProfileUpdateSrs = MappingProfile.builder().id("mapping_profile_update_srs_id").build();
+    var actionProfilePost = dataImportProfilesBuilder.getActionProfilePostToUpdateSrs(mappingProfileUpdateSrs);
+    assertNotNull(actionProfilePost);
+    assertEquals("mapping_profile_update_srs_id", actionProfilePost.getAddedRelations().get(0).getDetailProfileId());
   }
 
   @Test
   @SneakyThrows
-  void shouldGetMappingProfile() {
-    var mappingProfile = dataImportProfilesBuilder.getMappingProfile();
+  void shouldGetMappingProfileToUpdateSrs() {
+    var mappingProfile = dataImportProfilesBuilder.getMappingProfileToUpdateSrs();
+    assertNotNull(mappingProfile);
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldGetMappingProfileToUpdateInstance() {
+    var mappingProfile = dataImportProfilesBuilder.getMappingProfileToUpdateInstance();
     assertNotNull(mappingProfile);
   }
 

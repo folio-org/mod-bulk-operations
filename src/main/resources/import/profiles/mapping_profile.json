@@ -1,6 +1,0 @@
-{
-  "name": "Bulk operations data import mapping profile",
-  "description": "Bulk operations data import mapping profile",
-  "incomingRecordType": "MARC_BIBLIOGRAPHIC",
-  "existingRecordType": "INSTANCE"
-}

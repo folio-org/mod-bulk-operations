@@ -3,25 +3,26 @@ package org.folio.bulkops.domain.bean;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 
 import java.util.List;
 
-@Data
 @With
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class ActionProfilePost {
+public class MappingDetails {
 
-  @JsonProperty("id")
-  private String id;
+  @JsonProperty("name")
+  private String name;
 
-  @JsonProperty("profile")
-  private ActionProfile profile;
+  @JsonProperty("recordType")
+  private String recordType;
 
-  @JsonProperty("addedRelations")
-  private List<ProfileAssociation> addedRelations;
+  @JsonProperty("marcMappingOption")
+  private String marcMappingOption;
+
+  @JsonProperty("mappingFields")
+  private List<MappingFields> mappingFields;
 }
