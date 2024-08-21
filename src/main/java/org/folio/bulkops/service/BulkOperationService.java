@@ -78,7 +78,6 @@ import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.Utils;
-import org.folio.querytool.domain.dto.SubmitQuery;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
@@ -130,7 +129,7 @@ public class BulkOperationService {
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
   private static final String PREVIEW_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-%s.csv";
-  private static final String PREVIEW_MARC_PATH_TEMPLATE = "%s/%s-Updates-Preview-Marc-Records-%s.mrc";
+  private static final String PREVIEW_MARC_PATH_TEMPLATE = "%s/%s-Updates-Preview-%s.mrc";
   private static final String CHANGED_JSON_PATH_TEMPLATE = "%s/json/%s-Changed-Records-%s.json";
   private static final String CHANGED_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-%s.csv";
 
@@ -196,21 +195,16 @@ public class BulkOperationService {
   }
 
   public BulkOperation triggerByQuery(UUID userId, QueryRequest queryRequest) {
-    var submitQuery = new SubmitQuery()
-      .fqlQuery(queryRequest.getFqlQuery())
-      .entityTypeId(queryRequest.getEntityTypeId());
-    var queryId = queryService.executeQuery(submitQuery);
-    var entityType = entityTypeService.getEntityTypeById(submitQuery.getEntityTypeId());
     return bulkOperationRepository.save(BulkOperation.builder()
         .id(UUID.randomUUID())
-        .entityType(entityType)
+        .entityType(entityTypeService.getEntityTypeById(queryRequest.getEntityTypeId()))
         .approach(QUERY)
         .identifierType(IdentifierType.ID)
         .status(EXECUTING_QUERY)
         .startTime(LocalDateTime.now())
         .userId(userId)
-        .fqlQuery(submitQuery.getFqlQuery())
-        .fqlQueryId(queryId)
+        .fqlQuery(queryRequest.getFqlQuery())
+        .fqlQueryId(queryRequest.getQueryId())
         .userFriendlyQuery(queryRequest.getUserFriendlyQuery())
       .build());
   }

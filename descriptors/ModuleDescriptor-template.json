@@ -178,7 +178,6 @@
             "converter-storage.matchprofile.post",
             "converter-storage.actionprofile.post",
             "converter-storage.mappingprofile.post",
-            "converter-storage.profileassociation.post",
             "source-storage.sourceRecords.get"
           ]
         },

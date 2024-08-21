@@ -42,7 +42,9 @@ class LogFilesServiceTest extends BaseTest {
         .id(UUID.randomUUID())
         .linkToTriggeringCsvFile("some/path/records.csv")
         .linkToMatchedRecordsJsonFile("some/path/records.csv")
+        .linkToMatchedRecordsMarcFile("some/path/records.mrc")
         .linkToModifiedRecordsCsvFile("some/path/records.csv")
+        .linkToModifiedRecordsMarcFile("some/path/records.mrc")
         .linkToModifiedRecordsJsonFile("some/path/records.csv")
         .linkToPreviewRecordsJsonFile("some/path/records.csv")
         .linkToCommittedRecordsJsonFile("some/path/records.csv")
@@ -50,13 +52,16 @@ class LogFilesServiceTest extends BaseTest {
         .linkToMatchedRecordsErrorsCsvFile("some/path/records.csv")
         .linkToCommittedRecordsErrorsCsvFile("some/path/records.csv")
         .linkToCommittedRecordsCsvFile("some/path/records.csv")
+        .linkToCommittedRecordsMarcFile("some/path/records.mrc")
         .endTime(back31days)
         .build()).getId();
       nonOldBulkOperationId = bulkOperationRepository.save(BulkOperation.builder()
         .id(UUID.randomUUID())
         .linkToTriggeringCsvFile("some/path/records.csv")
         .linkToMatchedRecordsJsonFile("some/path/records.csv")
+        .linkToMatchedRecordsMarcFile("some/path/records.mrc")
         .linkToModifiedRecordsCsvFile("some/path/records.csv")
+        .linkToModifiedRecordsMarcFile("some/path/records.mrc")
         .linkToModifiedRecordsJsonFile("some/path/records.csv")
         .linkToPreviewRecordsJsonFile("some/path/records.csv")
         .linkToCommittedRecordsJsonFile("some/path/records.csv")
@@ -64,6 +69,7 @@ class LogFilesServiceTest extends BaseTest {
         .linkToMatchedRecordsErrorsCsvFile("some/path/records.csv")
         .linkToCommittedRecordsErrorsCsvFile("some/path/records.csv")
         .linkToCommittedRecordsCsvFile("some/path/records.csv")
+        .linkToCommittedRecordsMarcFile("some/path/records.mrc")
         .endTime(back29days)
         .build()).getId();
     }
@@ -129,6 +135,8 @@ class LogFilesServiceTest extends BaseTest {
     assertNotNull(operation.getLinkToCommittedRecordsJsonFile());
     assertNotNull(operation.getLinkToMatchedRecordsJsonFile());
     assertNotNull(operation.getLinkToMatchedRecordsCsvFile());
+    assertNotNull(operation.getLinkToMatchedRecordsMarcFile());
+    assertNotNull(operation.getLinkToModifiedRecordsMarcFile());
     assertNotNull(operation.getLinkToTriggeringCsvFile());
     assertNotNull(operation.getLinkToModifiedRecordsCsvFile());
     assertNotNull(operation.getLinkToCommittedRecordsErrorsCsvFile());

@@ -51,7 +51,6 @@ import java.util.Optional;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.BulkEditClient;
@@ -84,7 +83,6 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.MarcAction;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.Parameter;
-import org.folio.bulkops.domain.dto.QueryRequest;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -100,7 +98,6 @@ import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.ErrorCode;
-import org.folio.querytool.domain.dto.SubmitQuery;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.RemoteStorageWriter;
 import org.folio.s3.exception.S3ClientException;
@@ -154,13 +151,7 @@ class BulkOperationServiceTest extends BaseTest {
   private ItemReferenceService itemReferenceService;
 
   @MockBean
-  private NoteTableUpdater noteTableUpdater;
-
-  @MockBean
   private QueryService queryService;
-
-  @MockBean
-  private EntityTypeService entityTypeService;
 
   @MockBean
   private ConsortiaService consortiaService;
@@ -518,7 +509,7 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToOriginalCsv = bulkOperationId + "/origin.csv";
       var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
       var pathToInstanceMarc = "src/test/resources/files/instance_marc.mrc";
-      var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-Marc-Records-instance_marc.mrc";
+      var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-instance_marc.mrc";
 
       when(bulkOperationRepository.findById(any(UUID.class)))
         .thenReturn(Optional.of(BulkOperation.builder()
@@ -1368,34 +1359,6 @@ class BulkOperationServiceTest extends BaseTest {
     if (nonNull(testData.expectedErrorMessage)) {
       verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage));
     }
-  }
-
-  @Test
-  void testQueryExecution() {
-    var fqlQueryId = UUID.randomUUID();
-    var entityTypeId = UUID.randomUUID();
-    var query = "query";
-    var queryRequest = new QueryRequest()
-      .fqlQuery(query)
-      .userFriendlyQuery(query)
-      .entityTypeId(entityTypeId);
-    var submitQuery = new SubmitQuery()
-      .fqlQuery(query)
-      .entityTypeId(entityTypeId);
-    when(queryService.executeQuery(submitQuery)).thenReturn(fqlQueryId);
-    when(entityTypeService.getEntityTypeById(entityTypeId)).thenReturn(ITEM);
-
-    bulkOperationService.triggerByQuery(UUID.randomUUID(), queryRequest);
-
-    verify(queryService).executeQuery(submitQuery);
-    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository).save(operationCaptor.capture());
-    var operation = operationCaptor.getValue();
-    Assertions.assertThat(operation.getEntityType()).isEqualTo(ITEM);
-    Assertions.assertThat(operation.getIdentifierType()).isEqualTo(IdentifierType.ID);
-    Assertions.assertThat(operation.getStatus()).isEqualTo(EXECUTING_QUERY);
-    Assertions.assertThat(operation.getFqlQueryId()).isEqualTo(fqlQueryId);
-    Assertions.assertThat(operation.getFqlQuery()).isEqualTo(query);
   }
 
   @Test

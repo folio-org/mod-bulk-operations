@@ -23,6 +23,16 @@ public class ActionProfile {
   @JsonProperty("description")
   private String description;
 
+  @JsonProperty("action")
+  private String action;
+
   @JsonProperty("folioRecord")
-  private String folioRecord = "INSTANCE";
+  private String folioRecord;
+
+  @JsonProperty("hidden")
+  private Boolean hidden;
+
+  @JsonProperty("remove9Subfields")
+  private Boolean remove9Subfields;
+
 }

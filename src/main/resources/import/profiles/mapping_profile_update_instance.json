@@ -1,0 +1,185 @@
+{
+  "name" : "Bulk operations data import update instance mapping profile",
+  "description" : "Bulk operations data import update instance mapping profile",
+  "incomingRecordType" : "MARC_BIBLIOGRAPHIC",
+  "existingRecordType" : "INSTANCE",
+  "mappingDetails" : {
+    "name" : "instance",
+    "recordType" : "INSTANCE",
+    "mappingFields" : [ {
+      "name" : "discoverySuppress",
+      "enabled" : "true",
+      "required" : false,
+      "path" : "instance.discoverySuppress"
+    }, {
+      "name" : "staffSuppress",
+      "enabled" : "true",
+      "required" : false,
+      "path" : "instance.staffSuppress"
+    }, {
+      "name" : "previouslyHeld",
+      "enabled" : "true",
+      "required" : false,
+      "path" : "instance.previouslyHeld"
+    }, {
+      "name" : "hrid",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.hrid"
+    }, {
+      "name" : "source",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.source"
+    }, {
+      "name" : "catalogedDate",
+      "enabled" : "true",
+      "required" : false,
+      "path" : "instance.catalogedDate"
+    }, {
+      "name" : "statusId",
+      "enabled" : "true",
+      "required" : false,
+      "path" : "instance.statusId",
+      "acceptedValues" : {
+        "26f5208e-110a-4394-be29-1569a8c84a65" : "Uncataloged",
+        "52a2ff34-2a12-420d-8539-21aa8d3cf5d8" : "Batch Loaded",
+        "f5cc2ab6-bb92-4cab-b83f-5a3d09261a41" : "Not yet assigned",
+        "2a340d34-6b70-443a-bb1b-1b8d1c65d862" : "Other",
+        "9634a5ab-9228-4703-baf2-4d12ebc77d56" : "Cataloged",
+        "daf2681c-25af-4202-a3fa-e58fdf806183" : "Temporary"
+      }
+    }, {
+      "name" : "modeOfIssuanceId",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.modeOfIssuanceId"
+    }, {
+      "name" : "statisticalCodeIds",
+      "enabled" : "true",
+      "required" : false,
+      "path" : "instance.statisticalCodeIds[]"
+    }, {
+      "name" : "administrativeNotes",
+      "enabled" : "true",
+      "required" : false,
+      "path" : "instance.administrativeNotes[]"
+    }, {
+      "name" : "title",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.title"
+    }, {
+      "name" : "alternativeTitles",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.alternativeTitles[]"
+    }, {
+      "name" : "indexTitle",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.indexTitle"
+    }, {
+      "name" : "series",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.series[]"
+    }, {
+      "name" : "precedingTitles",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.precedingTitles[]"
+    }, {
+      "name" : "succeedingTitles",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.succeedingTitles[]"
+    }, {
+      "name" : "identifiers",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.identifiers[]"
+    }, {
+      "name" : "contributors",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.contributors[]"
+    }, {
+      "name" : "publication",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.publication[]"
+    }, {
+      "name" : "editions",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.editions[]"
+    }, {
+      "name" : "physicalDescriptions",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.physicalDescriptions[]"
+    }, {
+      "name" : "instanceTypeId",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.instanceTypeId"
+    }, {
+      "name" : "natureOfContentTermIds",
+      "enabled" : "true",
+      "required" : false,
+      "path" : "instance.natureOfContentTermIds[]"
+    }, {
+      "name" : "instanceFormatIds",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.instanceFormatIds[]"
+    }, {
+      "name" : "languages",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.languages[]"
+    }, {
+      "name" : "publicationFrequency",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.publicationFrequency[]"
+    }, {
+      "name" : "publicationRange",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.publicationRange[]"
+    }, {
+      "name" : "notes",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.notes[]"
+    }, {
+      "name" : "electronicAccess",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.electronicAccess[]"
+    }, {
+      "name" : "subjects",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.subjects[]"
+    }, {
+      "name" : "classifications",
+      "enabled" : "false",
+      "required" : false,
+      "path" : "instance.classifications[]"
+    }, {
+      "name" : "parentInstances",
+      "enabled" : "true",
+      "required" : false,
+      "path" : "instance.parentInstances[]"
+    }, {
+      "name" : "childInstances",
+      "enabled" : "true",
+      "required" : false,
+      "path" : "instance.childInstances[]"
+    } ]
+  },
+  "hidden" : false
+}
