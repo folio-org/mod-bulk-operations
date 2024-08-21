@@ -23,7 +23,10 @@ import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import feign.FeignException;
+import feign.Request;
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.BulkEditClient;
@@ -42,6 +45,7 @@ import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.domain.entity.BulkOperationProcessingContent;
+import org.folio.bulkops.exception.DataImportException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
@@ -306,6 +310,28 @@ class ErrorServiceTest extends BaseTest {
 
       assertThat(errors.getErrors(), hasSize(1));
       assertEquals("some MARC error", errors.getErrors().get(0).getMessage());
+    }
+  }
+
+  @Test
+  void testDataImportException() {
+    final var dataImportJobId = UUID.randomUUID();
+    final var dataExportJobId = UUID.randomUUID();
+    when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE))
+      .thenThrow(new FeignException.FeignClientException(403, "some error msg",
+        Request.create(Request.HttpMethod.GET, "url", Map.of(), null, null, null), null, null));
+
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var bulkOperationId = bulkOperationRepository.save(BulkOperation.builder()
+          .id(UUID.randomUUID())
+          .status(COMPLETED_WITH_ERRORS)
+          .identifierType(IdentifierType.ID)
+          .committedNumOfErrors(1)
+          .dataExportJobId(dataExportJobId)
+          .build())
+        .getId();
+
+      assertThrows(DataImportException.class, () -> errorService.saveErrorsFromDataImport(bulkOperationId, dataImportJobId));
     }
   }
 
