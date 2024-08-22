@@ -21,13 +21,17 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
+import org.folio.bulkops.client.MetadataProviderClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.Errors;
+import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.exception.DataImportException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -49,6 +53,8 @@ public class ErrorService {
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final BulkOperationExecutionContentRepository executionContentRepository;
   private final BulkEditClient bulkEditClient;
+  private final MetadataProviderClient metadataProviderClient;
+  private final SrsClient srsClient;
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
     if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
@@ -87,6 +93,34 @@ public class ErrorService {
       return getExecutionErrors(bulkOperationId, limit);
     } else {
       throw new NotFoundException("Errors preview is not available");
+    }
+  }
+
+  public void saveErrorsFromDataImport(UUID bulkOperationId, UUID dataImportJobId) {
+    log.info("Saving errors from DataImport, bulkOperationId = {}, dataImportJobId = {}", bulkOperationId, dataImportJobId);
+    var bulkOperation = operationRepository.findById(bulkOperationId)
+      .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
+    var identifierType = bulkOperation.getIdentifierType();
+    try {
+      var jobLogEntries = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE);
+      jobLogEntries.getEntries().stream().filter(entry -> !entry.getError().isEmpty()).forEach(errorEntry -> {
+        String identifier = EMPTY;
+        try {
+          if (identifierType == IdentifierType.ID) {
+            identifier = srsClient.getSrsRecordById(errorEntry.getSourceRecordId()).getExternalIdsHolder().getInstanceId();
+          } else if (identifierType == IdentifierType.INSTANCE_HRID) {
+            identifier = srsClient.getSrsRecordById(errorEntry.getSourceRecordId()).getExternalIdsHolder().getInstanceHrid();
+          }
+        } catch (Exception e) {
+          log.error("Problem with retrieving SRS record {}", errorEntry.getSourceRecordId());
+          log.error(e);
+        }
+        saveError(bulkOperationId, identifier, errorEntry.getError());
+      });
+    } catch (Exception e) {
+      log.error("Problem with retrieving logs from MetadataProvider");
+      log.error(e);
+      throw new DataImportException(e);
     }
   }
 
