@@ -29,7 +29,6 @@ import org.marc4j.marc.impl.DataFieldImpl;
 import org.marc4j.marc.impl.SubfieldImpl;
 import org.springframework.stereotype.Component;
 
-import java.text.SimpleDateFormat;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
