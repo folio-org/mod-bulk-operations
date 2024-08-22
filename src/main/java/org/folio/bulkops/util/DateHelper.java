@@ -7,9 +7,10 @@ public class DateHelper {
 
   private DateHelper() {}
 
-  private static final SimpleDateFormat marcDateFormatter = new SimpleDateFormat("yyyyMMddHHmmss.SSS");
+  private static final String MARC_DATE_TIME_PATTERN = "yyyyMMddHHmmss.SSS";
 
   public static String getDateTimeForMarc(Date date) {
+    var marcDateFormatter = new SimpleDateFormat(MARC_DATE_TIME_PATTERN);
     var dateAsStr = marcDateFormatter.format(date);
     return dateAsStr.substring(0, dateAsStr.length() - 2);
   }
