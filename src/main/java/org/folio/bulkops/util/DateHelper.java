@@ -8,7 +8,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class DateHelper {
 
-  private static final SimpleDateFormat marcDateFormatter = new SimpleDateFormat("yyyyMMddHHmmss.SSS");
+  private final SimpleDateFormat marcDateFormatter = new SimpleDateFormat("yyyyMMddHHmmss.SSS");
 
   public static String getDateTimeForMarc(Date date) {
     var dateAsStr = marcDateFormatter.format(date);
