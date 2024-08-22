@@ -46,9 +46,6 @@ public class MarcInstanceDataProcessor {
     bulkOperationMarcRuleCollection.getBulkOperationMarcRules().forEach(bulkOperationMarcRule -> {
       try {
         applyRuleToRecord(bulkOperationMarcRule, marcRecord);
-        marcRecord.getControlFields().stream()
-          .filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst()
-          .ifPresent(dateTimeControlField -> dateTimeControlField.setData(DateHelper.getDateTimeForMarc(currentDate)));
       } catch (Exception e) {
         log.error(String.format("MARC record HRID=%s error: %s", marcRecord.getControlNumber(), e.getMessage()));
         var identifier = HRID.equals(operation.getIdentifierType()) ?
@@ -57,6 +54,9 @@ public class MarcInstanceDataProcessor {
         errorService.saveError(operation.getId(), identifier, e.getMessage());
       }
     });
+    marcRecord.getControlFields().stream()
+      .filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst()
+      .ifPresent(dateTimeControlField -> dateTimeControlField.setData(DateHelper.getDateTimeForMarc(currentDate)));
   }
 
   private void applyRuleToRecord(BulkOperationMarcRule rule, Record marcRecord) throws BulkOperationException {
