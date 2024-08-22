@@ -19,6 +19,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class DateHelper {
   private static final DateFormat dateFormat;
+  private static final SimpleDateFormat marcDateFormatter =  new SimpleDateFormat("yyyyMMddHHmmss.SSS");
 
   static {
     dateFormat = new SimpleDateFormat(DATE_TIME_PATTERN);
@@ -35,5 +36,10 @@ public class DateHelper {
       return Date.from(localDateTime.atZone(ZoneOffset.UTC).toInstant());
     }
     return null;
+  }
+
+  public String getDateTimeForMarc(Date date) {
+    var dateAsStr = marcDateFormatter.format(date);
+    return dateAsStr.substring(0, dateAsStr.length() - 2);
   }
 }

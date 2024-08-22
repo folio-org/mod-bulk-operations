@@ -21,6 +21,7 @@ import org.folio.bulkops.domain.dto.MarcDataType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.service.ErrorService;
+import org.folio.bulkops.util.DateHelper;
 import org.marc4j.marc.DataField;
 import org.marc4j.marc.Record;
 import org.marc4j.marc.Subfield;
@@ -28,19 +29,27 @@ import org.marc4j.marc.impl.DataFieldImpl;
 import org.marc4j.marc.impl.SubfieldImpl;
 import org.springframework.stereotype.Component;
 
+import java.text.SimpleDateFormat;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 @Log4j2
 public class MarcInstanceDataProcessor {
+
+  private static final String DATE_TIME_CONTROL_FIELD = "005";
+
   private final ErrorService errorService;
 
-  public void update(BulkOperation operation, Record marcRecord, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection) {
+  public void update(BulkOperation operation, Record marcRecord, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection, Date currentDate) {
     bulkOperationMarcRuleCollection.getBulkOperationMarcRules().forEach(bulkOperationMarcRule -> {
       try {
         applyRuleToRecord(bulkOperationMarcRule, marcRecord);
+        marcRecord.getControlFields().stream()
+          .filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst()
+          .ifPresent(dateTimeControlField -> dateTimeControlField.setData(DateHelper.getDateTimeForMarc(currentDate)));
       } catch (Exception e) {
         log.error(String.format("MARC record HRID=%s error: %s", marcRecord.getControlNumber(), e.getMessage()));
         var identifier = HRID.equals(operation.getIdentifierType()) ?

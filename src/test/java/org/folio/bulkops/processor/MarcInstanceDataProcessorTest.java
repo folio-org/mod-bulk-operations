@@ -30,6 +30,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -90,7 +91,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, new Date());
 
     var dataFields = marcRecord.getDataFields();
     assertThat(dataFields).hasSize(6);
@@ -139,7 +140,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, new Date());
 
     var dataFields = marcRecord.getDataFields();
     assertThat(dataFields).hasSize(2);
@@ -191,7 +192,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, new Date());
 
     var dataFields = marcRecord.getDataFields();
     assertThat(dataFields).hasSize(4);
@@ -247,7 +248,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndReplaceRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, new Date());
 
     var dataFields = marcRecord.getDataFields();
     assertThat(dataFields).hasSize(5);
@@ -314,7 +315,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, new Date());
 
     var dataFields = marcRecord.getDataFields();
     assertThat(dataFields).hasSize(4);
@@ -388,7 +389,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, new Date());
 
     var identifier = isInstanceId ? instanceId : hrid;
     verify(errorService).saveError(bulkOperationId, identifier, errorMessage);
@@ -428,7 +429,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, new Date());
 
     var errorMessageTemplate = FIND.equals(updateActionType1) && nonNull(updateActionType2) ?
       "Action FIND + %s is not supported yet." :
@@ -490,7 +491,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, new Date());
 
     var dataFields = marcRecord.getDataFields();
     assertThat(dataFields).hasSize(3);
