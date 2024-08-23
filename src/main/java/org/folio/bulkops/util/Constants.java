@@ -22,6 +22,8 @@ public class Constants {
   public static final String DATE_WITHOUT_TIME_PATTERN = "yyyy-MM-dd";
   public static final DateTimeFormatter DATE_WITHOUT_TIME_FORMATTER = DateTimeFormatter.ofPattern(DATE_WITHOUT_TIME_PATTERN);
 
+  public static final String DATE_TIME_CONTROL_FIELD = "005";
+
   public static final char SPACE_CHAR = ' ';
 
   public static final int ITEM_NOTE_POSITION = 31;

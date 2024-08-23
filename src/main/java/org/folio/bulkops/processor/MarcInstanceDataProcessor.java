@@ -7,6 +7,7 @@ import static org.folio.bulkops.domain.dto.MarcDataType.VALUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
+import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
 import static org.folio.bulkops.util.Constants.FIELD_999;
 import static org.folio.bulkops.util.Constants.INDICATOR_F;
 import static org.folio.bulkops.util.Constants.SPACE_CHAR;
@@ -14,6 +15,7 @@ import static org.folio.bulkops.util.Constants.SPACE_CHAR;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.MarcActionDataInner;
@@ -38,11 +40,10 @@ import java.util.List;
 @Log4j2
 public class MarcInstanceDataProcessor {
 
-  private static final String DATE_TIME_CONTROL_FIELD = "005";
-
   private final ErrorService errorService;
 
   public void update(BulkOperation operation, Record marcRecord, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection, Date currentDate) {
+    var initialRecord = marcRecord.toString();
     bulkOperationMarcRuleCollection.getBulkOperationMarcRules().forEach(bulkOperationMarcRule -> {
       try {
         applyRuleToRecord(bulkOperationMarcRule, marcRecord);
@@ -54,9 +55,12 @@ public class MarcInstanceDataProcessor {
         errorService.saveError(operation.getId(), identifier, e.getMessage());
       }
     });
-    marcRecord.getControlFields().stream()
-      .filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst()
-      .ifPresent(dateTimeControlField -> dateTimeControlField.setData(DateHelper.getDateTimeForMarc(currentDate)));
+    var updatedRecord = marcRecord.toString();
+    if (!StringUtils.equals(initialRecord, updatedRecord)) {
+      marcRecord.getControlFields().stream()
+        .filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst()
+        .ifPresent(dateTimeControlField -> dateTimeControlField.setData(DateHelper.getDateTimeForMarc(currentDate)));
+    }
   }
 
   private void applyRuleToRecord(BulkOperationMarcRule rule, Record marcRecord) throws BulkOperationException {
