@@ -11,7 +11,7 @@ class DateHelperTest {
 
   @Test
   @SneakyThrows
-  void getDateTimeForMarc() {
+  void getDateTimeForMarcTest() {
     var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
     var simpleDateFormat = new SimpleDateFormat(pattern);
     var date = simpleDateFormat.parse("2024/01/01 10:02:02.454");

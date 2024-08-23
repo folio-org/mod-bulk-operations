@@ -591,4 +591,56 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     assertThat(dataFields.get(1)).hasToString("510 11$atext a$btext b$1text 1");
     assertThat(dataFields.get(2).getTag()).isEqualTo("550");
   }
+
+  @Test
+  @SneakyThrows
+  void shouldNotChange005FieldIfRulesAreNotApplied() {
+    var bulkOperationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(bulkOperationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    var dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('b', "text b"));
+    marcRecord.addVariableField(dataField);
+
+    var findAndAppendRule = new BulkOperationMarcRule()
+      .bulkOperationId(bulkOperationId)
+      .tag("900")
+      .ind1("1")
+      .ind2("\\")
+      .subfield("b")
+      .actions(List.of(
+        new MarcAction()
+          .name(FIND)
+          .data(Collections.singletonList(new MarcActionDataInner()
+            .key(MarcDataType.VALUE)
+            .value("text b"))),
+        new MarcAction()
+          .name(UpdateActionType.APPEND)
+          .data(List.of(
+            new MarcActionDataInner()
+              .key(MarcDataType.VALUE)
+              .value("text a"),
+            new MarcActionDataInner()
+              .key(MarcDataType.SUBFIELD)
+              .value("a")))));
+    var rules = new BulkOperationMarcRuleCollection()
+      .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
+      .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules, new Date());
+
+    var dateTimeControlFieldOpt = marcRecord.getControlFields().stream().filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst();
+    assertTrue(dateTimeControlFieldOpt.isPresent());
+    var marcUpdateDateTime = dateTimeControlFieldOpt.get().getData();
+    assertThat(marcUpdateDateTime).isEqualTo("20240101100202.4");
+  }
+
 }
