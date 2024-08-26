@@ -5,8 +5,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADDITIONAL_SUBFIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
+import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 
+import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
@@ -23,13 +26,16 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.marc4j.marc.impl.ControlFieldImpl;
 import org.marc4j.marc.impl.DataFieldImpl;
+import org.marc4j.marc.impl.LeaderImpl;
 import org.marc4j.marc.impl.RecordImpl;
 import org.marc4j.marc.impl.SubfieldImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,13 +46,22 @@ class MarcInstanceDataProcessorTest extends BaseTest {
   private MarcInstanceDataProcessor processor;
 
   @Test
+  @SneakyThrows
   void shouldApplyFindAndAppendRule() {
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
     var bulkOperationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
       .id(bulkOperationId)
       .identifierType(IdentifierType.ID)
       .build();
     var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
     var dataField = new DataFieldImpl("500", '1', ' ');
     dataField.addSubfield(new SubfieldImpl('b', "text b"));
     marcRecord.addVariableField(dataField);
@@ -90,7 +105,12 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, date);
+
+    var dateTimeControlFieldOpt = marcRecord.getControlFields().stream().filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst();
+    assertTrue(dateTimeControlFieldOpt.isPresent());
+    var marcUpdateDateTime = dateTimeControlFieldOpt.get().getData();
+    assertThat(marcUpdateDateTime).isEqualTo("20240101111212.4");
 
     var dataFields = marcRecord.getDataFields();
     assertThat(dataFields).hasSize(6);
@@ -104,13 +124,22 @@ class MarcInstanceDataProcessorTest extends BaseTest {
   }
 
   @Test
+  @SneakyThrows
   void shouldApplyFindAndRemoveField() {
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
     var bulkOperationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
       .id(bulkOperationId)
       .identifierType(IdentifierType.ID)
       .build();
     var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
     var dataField = new DataFieldImpl("500", '1', '1');
     dataField.addSubfield(new SubfieldImpl('a', "text a"));
     marcRecord.addVariableField(dataField);
@@ -139,7 +168,12 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, date);
+
+    var dateTimeControlFieldOpt = marcRecord.getControlFields().stream().filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst();
+    assertTrue(dateTimeControlFieldOpt.isPresent());
+    var marcUpdateDateTime = dateTimeControlFieldOpt.get().getData();
+    assertThat(marcUpdateDateTime).isEqualTo("20240101111212.4");
 
     var dataFields = marcRecord.getDataFields();
     assertThat(dataFields).hasSize(2);
@@ -149,13 +183,22 @@ class MarcInstanceDataProcessorTest extends BaseTest {
   }
 
   @Test
+  @SneakyThrows
   void shouldApplyFindAndRemoveSubfield() {
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
     var bulkOperationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
       .id(bulkOperationId)
       .identifierType(IdentifierType.ID)
       .build();
     var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
     var dataField = new DataFieldImpl("500", '1', '1');
     dataField.addSubfield(new SubfieldImpl('a', "text a"));
     dataField.addSubfield(new SubfieldImpl('b', "text b"));
@@ -191,7 +234,12 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, date);
+
+    var dateTimeControlFieldOpt = marcRecord.getControlFields().stream().filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst();
+    assertTrue(dateTimeControlFieldOpt.isPresent());
+    var marcUpdateDateTime = dateTimeControlFieldOpt.get().getData();
+    assertThat(marcUpdateDateTime).isEqualTo("20240101111212.4");
 
     var dataFields = marcRecord.getDataFields();
     assertThat(dataFields).hasSize(4);
@@ -203,13 +251,22 @@ class MarcInstanceDataProcessorTest extends BaseTest {
   }
 
   @Test
+  @SneakyThrows
   void shouldApplyFindAndReplaceRule() {
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
     var bulkOperationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
       .id(bulkOperationId)
       .identifierType(IdentifierType.ID)
       .build();
     var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
     var dataField = new DataFieldImpl("500", '1', ' ');
     dataField.addSubfield(new SubfieldImpl('a', "old value"));
     marcRecord.addVariableField(dataField);
@@ -247,7 +304,12 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndReplaceRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, date);
+
+    var dateTimeControlFieldOpt = marcRecord.getControlFields().stream().filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst();
+    assertTrue(dateTimeControlFieldOpt.isPresent());
+    var marcUpdateDateTime = dateTimeControlFieldOpt.get().getData();
+    assertThat(marcUpdateDateTime).isEqualTo("20240101111212.4");
 
     var dataFields = marcRecord.getDataFields();
     assertThat(dataFields).hasSize(5);
@@ -273,13 +335,22 @@ class MarcInstanceDataProcessorTest extends BaseTest {
   }
 
   @Test
+  @SneakyThrows
   void shouldApplyRemoveAllRule() {
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
     var bulkOperationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
       .id(bulkOperationId)
       .identifierType(IdentifierType.ID)
       .build();
     var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
     var dataField = new DataFieldImpl("500", '1', ' ');
     dataField.addSubfield(new SubfieldImpl('a', "text a"));
     marcRecord.addVariableField(dataField);
@@ -314,7 +385,12 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, date);
+
+    var dateTimeControlFieldOpt = marcRecord.getControlFields().stream().filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst();
+    assertTrue(dateTimeControlFieldOpt.isPresent());
+    var marcUpdateDateTime = dateTimeControlFieldOpt.get().getData();
+    assertThat(marcUpdateDateTime).isEqualTo("20240101111212.4");
 
     var dataFields = marcRecord.getDataFields();
     assertThat(dataFields).hasSize(4);
@@ -358,6 +434,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     var dataField999 = new DataFieldImpl("999", 'f', 'f');
     dataField999.addSubfield(new SubfieldImpl('i', instanceId));
     var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
     marcRecord.addVariableField(controlNumberField);
     marcRecord.addVariableField(dataField500);
     if (isInstanceId) {
@@ -388,7 +465,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, new Date());
 
     var identifier = isInstanceId ? instanceId : hrid;
     verify(errorService).saveError(bulkOperationId, identifier, errorMessage);
@@ -409,6 +486,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     var hrid = "inst000001";
     var controlNumberField = new ControlFieldImpl("001", hrid);
     var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
     marcRecord.addVariableField(controlNumberField);
 
     var actions = new ArrayList<MarcAction>();
@@ -428,7 +506,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, new Date());
 
     var errorMessageTemplate = FIND.equals(updateActionType1) && nonNull(updateActionType2) ?
       "Action FIND + %s is not supported yet." :
@@ -438,13 +516,22 @@ class MarcInstanceDataProcessorTest extends BaseTest {
   }
 
   @Test
+  @SneakyThrows
   void shouldApplyAddToExistingRule() {
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
     var bulkOperationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
       .id(bulkOperationId)
       .identifierType(IdentifierType.ID)
       .build();
     var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
     var dataField = new DataFieldImpl("500", '1', '1');
     dataField.addSubfield(new SubfieldImpl('a', "text a"));
     marcRecord.addVariableField(dataField);
@@ -490,7 +577,11 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
       .totalRecords(1);
 
-    processor.update(operation, marcRecord, rules);
+    processor.update(operation, marcRecord, rules, date);
+    var dateTimeControlFieldOpt = marcRecord.getControlFields().stream().filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst();
+    assertTrue(dateTimeControlFieldOpt.isPresent());
+    var marcUpdateDateTime = dateTimeControlFieldOpt.get().getData();
+    assertThat(marcUpdateDateTime).isEqualTo("20240101111212.4");
 
     var dataFields = marcRecord.getDataFields();
     assertThat(dataFields).hasSize(3);
@@ -500,4 +591,56 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     assertThat(dataFields.get(1)).hasToString("510 11$atext a$btext b$1text 1");
     assertThat(dataFields.get(2).getTag()).isEqualTo("550");
   }
+
+  @Test
+  @SneakyThrows
+  void shouldNotChange005FieldIfRulesAreNotApplied() {
+    var bulkOperationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(bulkOperationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    var dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('b', "text b"));
+    marcRecord.addVariableField(dataField);
+
+    var findAndAppendRule = new BulkOperationMarcRule()
+      .bulkOperationId(bulkOperationId)
+      .tag("900")
+      .ind1("1")
+      .ind2("\\")
+      .subfield("b")
+      .actions(List.of(
+        new MarcAction()
+          .name(FIND)
+          .data(Collections.singletonList(new MarcActionDataInner()
+            .key(MarcDataType.VALUE)
+            .value("text b"))),
+        new MarcAction()
+          .name(UpdateActionType.APPEND)
+          .data(List.of(
+            new MarcActionDataInner()
+              .key(MarcDataType.VALUE)
+              .value("text a"),
+            new MarcActionDataInner()
+              .key(MarcDataType.SUBFIELD)
+              .value("a")))));
+    var rules = new BulkOperationMarcRuleCollection()
+      .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
+      .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules, new Date());
+
+    var dateTimeControlFieldOpt = marcRecord.getControlFields().stream().filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst();
+    assertTrue(dateTimeControlFieldOpt.isPresent());
+    var marcUpdateDateTime = dateTimeControlFieldOpt.get().getData();
+    assertThat(marcUpdateDateTime).isEqualTo("20240101100202.4");
+  }
+
 }

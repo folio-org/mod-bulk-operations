@@ -34,6 +34,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -316,11 +317,12 @@ public class BulkOperationService {
     var processedNumOfRecords = 0;
     var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
     var modifiedMarcFileName = String.format(PREVIEW_MARC_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
+    var currentDate = new Date();
     try (var writerForModifiedPreviewMarcFile = remoteFileSystemClient.marcWriter(modifiedMarcFileName)) {
       var matchedRecordsReader = new MarcStreamReader(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile()));
       while (matchedRecordsReader.hasNext()) {
         var marcRecord = matchedRecordsReader.next();
-        marcInstanceDataProcessor.update(operation, marcRecord, ruleCollection);
+        marcInstanceDataProcessor.update(operation, marcRecord, ruleCollection, currentDate);
         writerForModifiedPreviewMarcFile.writeRecord(marcRecord);
 
         processedNumOfRecords++;

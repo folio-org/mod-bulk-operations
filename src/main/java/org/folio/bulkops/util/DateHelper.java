@@ -1,39 +1,18 @@
 package org.folio.bulkops.util;
 
-import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.util.Constants.DATE_TIME_PATTERN;
-import static org.folio.bulkops.util.Constants.UTC;
-
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.TimeZone;
 
-import lombok.experimental.UtilityClass;
-
-@UtilityClass
 public class DateHelper {
-  private static final DateFormat dateFormat;
 
-  static {
-    dateFormat = new SimpleDateFormat(DATE_TIME_PATTERN);
-    dateFormat.setTimeZone(TimeZone.getTimeZone(UTC));
-  }
+  private DateHelper() {}
 
-  public static String dateToString(Date date) {
-    return nonNull(date) ? dateFormat.format(date) : EMPTY;
-  }
+  private static final String MARC_DATE_TIME_PATTERN = "yyyyMMddHHmmss.SSS";
+  private static final int REMOVE_MILLISECONDS_CHARACTERS_COUNT = 2;
 
-  public static Date dateFromString(String date) {
-    if (isNotEmpty(date)) {
-      LocalDateTime localDateTime = LocalDateTime.parse(date, DateTimeFormatter.ofPattern(DATE_TIME_PATTERN));
-      return Date.from(localDateTime.atZone(ZoneOffset.UTC).toInstant());
-    }
-    return null;
+  public static String getDateTimeForMarc(Date date) {
+    var marcDateFormatter = new SimpleDateFormat(MARC_DATE_TIME_PATTERN);
+    var dateAsStr = marcDateFormatter.format(date);
+    return dateAsStr.substring(0, dateAsStr.length() - REMOVE_MILLISECONDS_CHARACTERS_COUNT);
   }
 }
