@@ -7,21 +7,16 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 
-import java.util.List;
-
 @Data
 @With
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class JobProfilePost {
+public class ExternalIdsHolder {
 
-  @JsonProperty("id")
-  private String id;
+  @JsonProperty("instanceId")
+  private String instanceId;
 
-  @JsonProperty("profile")
-  private JobProfile profile;
-
-  @JsonProperty("addedRelations")
-  private List<ProfileAssociation> addedRelations;
+  @JsonProperty("instanceHrid")
+  private String instanceHrid;
 }

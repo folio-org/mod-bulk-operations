@@ -20,6 +20,7 @@ import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Set;
 
@@ -65,8 +66,18 @@ public class FolioInstanceDataProcessor extends AbstractDataProcessor<ExtendedIn
 
   @Override
   public ExtendedInstance clone(ExtendedInstance extendedInstance) {
-    var instance = extendedInstance.getEntity().toBuilder().build();
-    return ExtendedInstance.builder().tenantId(extendedInstance.getTenantId()).entity(instance).build();
+    var instance = extendedInstance.getEntity();
+    var clone = extendedInstance.getEntity().toBuilder().build();
+    if (instance.getAdministrativeNotes() != null) {
+      clone.setAdministrativeNotes(new ArrayList<>(instance.getAdministrativeNotes()));
+    }
+    if (instance.getInstanceNotes() != null) {
+      clone.setInstanceNotes(new ArrayList<>(
+        instance.getInstanceNotes().stream()
+        .map(instanceNote -> instanceNote.toBuilder().build())
+        .toList()));
+    }
+    return ExtendedInstance.builder().tenantId(extendedInstance.getTenantId()).entity(clone).build();
   }
 
   @Override
