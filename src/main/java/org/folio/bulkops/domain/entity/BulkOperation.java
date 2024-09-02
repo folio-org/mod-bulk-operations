@@ -1,8 +1,10 @@
 package org.folio.bulkops.domain.entity;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.Column;
 import org.folio.bulkops.domain.converter.PostgresUUIDConverter;
 import org.folio.bulkops.domain.dto.ApproachType;
@@ -21,6 +23,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.folio.bulkops.domain.dto.TenantNotePair;
+import org.hibernate.annotations.Type;
 
 @Data
 @Builder
@@ -83,4 +87,9 @@ public class BulkOperation {
   private UUID fqlQueryId;
   private String fqlQuery;
   private String userFriendlyQuery;
+
+  @Type(JsonBinaryType.class)
+  @Column(columnDefinition = "jsonb[]")
+  private List<TenantNotePair> tenantNotePairs;
+  private List<String> usedTenants;
 }

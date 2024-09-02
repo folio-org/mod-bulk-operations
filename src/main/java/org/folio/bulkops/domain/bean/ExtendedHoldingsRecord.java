@@ -47,4 +47,9 @@ public class ExtendedHoldingsRecord implements BulkOperationsEntity, ElectronicA
   public List<ElectronicAccess> getElectronicAccess() {
     return entity.getElectronicAccess();
   }
+
+  @Override
+  public void setTenantToNotes() {
+    entity.getNotes().forEach(note -> note.setTenantId(tenantId));
+  }
 }

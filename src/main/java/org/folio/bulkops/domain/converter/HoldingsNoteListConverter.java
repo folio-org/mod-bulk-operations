@@ -38,7 +38,9 @@ public class HoldingsNoteListConverter extends BaseConverter<List<HoldingsNote>>
       .map(note -> String.join(ARRAY_DELIMITER,
         escape(HoldingsReferenceHelper.service().getNoteTypeNameById(note.getHoldingsNoteTypeId())),
         escape(note.getNote()),
-        booleanToStringNullSafe(note.getStaffOnly())))
+        booleanToStringNullSafe(note.getStaffOnly()),
+        note.getTenantId(),
+        note.getHoldingsNoteTypeId()))
       .collect(Collectors.joining(ITEM_DELIMITER));
   }
 

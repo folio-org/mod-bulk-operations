@@ -50,7 +50,7 @@ class HoldingsNotesProcessorTest {
     when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(true);
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
 
-    var notesTypes = holdingsNotesProcessor.getNoteTypeNames();
+    var notesTypes = holdingsNotesProcessor.getNoteTypeNames(null);
     assertTrue(notesTypes.contains(noteType1.getName()));
     assertTrue(notesTypes.contains(noteType2.getName()));
   }

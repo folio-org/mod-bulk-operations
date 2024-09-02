@@ -33,6 +33,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.InstanceNoteTypesClient;
 import org.folio.bulkops.domain.bean.Instance;
+import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.client.HoldingsNoteTypeClient;
@@ -81,32 +82,32 @@ public class PreviewService {
     var entityType = operation.getEntityType();
     var clazz = resolveEntityClass(operation.getEntityType());
     return switch (step) {
-      case UPLOAD -> buildPreviewFromCsvFile(operation.getLinkToMatchedRecordsCsvFile(), clazz, offset, limit);
+      case UPLOAD -> buildPreviewFromCsvFile(operation.getLinkToMatchedRecordsCsvFile(), clazz, offset, limit, operation);
       case EDIT -> {
         var bulkOperationId = operation.getId();
         if (INSTANCE_MARC.equals(operation.getEntityType())) {
           var rules = ruleService.getMarcRules(bulkOperationId);
           var options = getChangedOptionsSet(rules);
-          yield buildPreviewFromMarcFile(operation.getLinkToModifiedRecordsMarcFile(), clazz, offset, limit, options);
+          yield buildPreviewFromMarcFile(operation.getLinkToModifiedRecordsMarcFile(), clazz, offset, limit, options, operation.getStatus());
         } else {
           var rules = ruleService.getRules(bulkOperationId);
           var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
-          yield buildPreviewFromCsvFile(operation.getLinkToModifiedRecordsCsvFile(), clazz, offset, limit, options);
+          yield buildPreviewFromCsvFile(operation.getLinkToModifiedRecordsCsvFile(), clazz, offset, limit, options, operation);
         }
       }
       case COMMIT -> {
         if (MANUAL == operation.getApproach()) {
-          yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit);
+          yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit, operation);
         } else {
           var bulkOperationId = operation.getId();
           if (INSTANCE_MARC.equals(operation.getEntityType())) {
             var rules = ruleService.getMarcRules(bulkOperationId);
             var options = getChangedOptionsSet(rules);
-            yield buildPreviewFromMarcFile(operation.getLinkToCommittedRecordsMarcFile(), clazz, offset, limit, options);
+            yield buildPreviewFromMarcFile(operation.getLinkToCommittedRecordsMarcFile(), clazz, offset, limit, options, operation.getStatus());
           } else {
             var rules = ruleService.getRules(bulkOperationId);
             var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
-            yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit, options);
+            yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit, options, operation);
           }
         }
       }
@@ -212,25 +213,29 @@ public class PreviewService {
     }
   }
 
-  private UnifiedTable buildPreviewFromCsvFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit, Set<String> forceVisible) {
+  private UnifiedTable buildPreviewFromCsvFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset,
+                                               int limit, Set<String> forceVisible, BulkOperation bulkOperation) {
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz, forceVisible);
-    return populatePreview(pathToFile, clazz, offset, limit, table, forceVisible);
+    return populatePreview(pathToFile, clazz, offset, limit, table, forceVisible, bulkOperation);
   }
 
-  private UnifiedTable buildPreviewFromCsvFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit) {
+  private UnifiedTable buildPreviewFromCsvFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset,
+                                               int limit, BulkOperation bulkOperation) {
     var table =  UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
-    return populatePreview(pathToFile, clazz, offset, limit, table, emptySet());
+    return populatePreview(pathToFile, clazz, offset, limit, table, emptySet(), bulkOperation);
   }
 
-  private UnifiedTable buildPreviewFromMarcFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit, Set<String> forceVisible) {
+  private UnifiedTable buildPreviewFromMarcFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset,
+                                                int limit, Set<String> forceVisible, OperationStatusType status) {
     var table =  UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
-    noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible);
+    noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible, status);
     return isNotEmpty(pathToFile) ?
       populatePreviewFromMarc(pathToFile, offset, limit, table) :
       table.rows(Collections.emptyList());
   }
 
-  private UnifiedTable populatePreview(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit, UnifiedTable table, Set<String> forceVisible) {
+  private UnifiedTable populatePreview(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit,
+                                       UnifiedTable table, Set<String> forceVisible, BulkOperation bulkOperation) {
     var parser = new RFC4180ParserBuilder().build();
 
     try (Reader reader = new InputStreamReader(remoteFileSystemClient.get(pathToFile))) {
@@ -245,7 +250,7 @@ public class PreviewService {
           row.setRow(new ArrayList<>(Arrays.asList(line)));
           table.addRowsItem(row);
         }
-      processNoteFields(table, clazz, forceVisible);
+      processNoteFields(table, clazz, forceVisible, bulkOperation);
       table.getRows().forEach(row -> {
         var rowData = row.getRow().stream()
           .map(s -> isEmpty(s) ? s : s.replace(ELECTRONIC_ACCESS_HEADINGS, EMPTY))
@@ -275,13 +280,13 @@ public class PreviewService {
     return table;
   }
 
-  private void processNoteFields(UnifiedTable table, Class<? extends BulkOperationsEntity> clazz, Set<String> forceVisible) {
+  private void processNoteFields(UnifiedTable table, Class<? extends BulkOperationsEntity> clazz, Set<String> forceVisible, BulkOperation bulkOperation) {
     if (clazz == Item.class) {
-      noteTableUpdater.extendTableWithItemNotesTypes(table, forceVisible);
+      noteTableUpdater.extendTableWithItemNotesTypes(table, forceVisible, bulkOperation);
     } else if (clazz == HoldingsRecord.class) {
-      noteTableUpdater.extendTableWithHoldingsNotesTypes(table, forceVisible);
+      noteTableUpdater.extendTableWithHoldingsNotesTypes(table, forceVisible, bulkOperation);
     } else if (clazz == Instance.class) {
-      noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible);
+      noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible, bulkOperation.getStatus());
     }
   }
 }

@@ -169,7 +169,7 @@ public class BulkOperationController implements BulkOperationsApi {
           is.readAllBytes();
         var entityType = bulkOperation.getEntityType().getValue();
         if (isDownloadPreview(fileContentType) && SPLIT_NOTE_ENTITIES.contains(entityType)) {
-          content = noteProcessorFactory.getNoteProcessor(entityType).processNotes(content);
+          content = noteProcessorFactory.getNoteProcessor(entityType).processNotes(content, bulkOperation);
         }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);

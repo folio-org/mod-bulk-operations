@@ -224,6 +224,8 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "itemNoteTypes")
   public List<NoteType> getAllItemNoteTypes(String tenantId) {
-    return itemNoteTypeClient.getNoteTypes(Integer.MAX_VALUE).getItemNoteTypes();
+    var noteTypes = itemNoteTypeClient.getNoteTypes(Integer.MAX_VALUE).getItemNoteTypes();
+    noteTypes.forEach(noteType -> noteType.setTenantId(tenantId));
+    return noteTypes;
   }
 }

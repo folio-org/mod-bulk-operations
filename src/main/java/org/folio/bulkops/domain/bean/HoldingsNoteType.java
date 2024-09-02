@@ -25,5 +25,6 @@ public class HoldingsNoteType {
 
   @JsonProperty("metadata")
   private Metadata metadata;
+  private String tenantId;
 }
 

@@ -19,7 +19,6 @@ import org.folio.bulkops.domain.converter.CirculationNoteListConverter;
 import org.folio.bulkops.domain.converter.DamagedStatusConverter;
 import org.folio.bulkops.domain.converter.DateWithoutTimeConverter;
 import org.folio.bulkops.domain.converter.EffectiveCallNumberComponentsConverter;
-import org.folio.bulkops.domain.converter.ElectronicAccessListConverter;
 import org.folio.bulkops.domain.converter.ItemElectronicAccessListConverter;
 import org.folio.bulkops.domain.converter.ItemLocationConverter;
 import org.folio.bulkops.domain.converter.ItemNoteListConverter;

@@ -17,11 +17,13 @@ import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.HoldingsType;
 import org.folio.bulkops.domain.bean.IllPolicy;
 import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.bulkops.exception.NotFoundException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 import static java.lang.String.format;
@@ -181,6 +183,8 @@ public class HoldingsReferenceService {
 
   @Cacheable(cacheNames = "holdingsNoteTypes")
   public List<HoldingsNoteType> getAllHoldingsNoteTypes(String tenantId) {
-    return holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE).getHoldingsNoteTypes();
+    var noteTypes = holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE).getHoldingsNoteTypes();
+    noteTypes.forEach(nt -> nt.setTenantId(tenantId));
+    return noteTypes;
   }
 }

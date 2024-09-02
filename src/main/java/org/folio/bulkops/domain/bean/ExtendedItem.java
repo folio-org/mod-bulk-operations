@@ -39,4 +39,9 @@ public class ExtendedItem implements BulkOperationsEntity {
   public String getTenant() {
     return tenantId;
   }
+
+  @Override
+  public void setTenantToNotes() {
+    entity.getNotes().forEach(note -> note.setTenantId(tenantId));
+  }
 }
