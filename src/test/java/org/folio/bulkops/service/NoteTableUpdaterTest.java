@@ -393,4 +393,26 @@ class NoteTableUpdaterTest {
     assertEquals(2, enriched.size());
     assertEquals("Other text (staff only)", enriched.get(1));
   }
+
+  @Test
+  void shouldUpdateNoteTypeNamesWithTenants_whenNoteIdsAreDifferent() {
+
+    List<NoteType> noteTypesFromUserTenants = List.of(
+      NoteType.builder().name("Binding").tenantId("memberA").id("id1").build(),
+      NoteType.builder().name("Binding").tenantId("memberB").id("id2").build());
+    noteTableUpdater.updateNoteTypeNamesWithTenants(noteTypesFromUserTenants);
+
+    noteTypesFromUserTenants.forEach(noteType -> assertEquals("Binding (" + noteType.getTenantId() + ")", noteType.getName()));
+  }
+
+  @Test
+  void shouldNotUpdateNoteTypeNamesWithTenants_whenNoteIdsAreTheSame() {
+
+    List<NoteType> noteTypesFromUserTenants = List.of(
+      NoteType.builder().name("Binding").tenantId("memberA").id("id1").build(),
+      NoteType.builder().name("Binding").tenantId("memberB").id("id1").build());
+    noteTableUpdater.updateNoteTypeNamesWithTenants(noteTypesFromUserTenants);
+
+    noteTypesFromUserTenants.forEach(noteType -> assertEquals("Binding", noteType.getName()));
+  }
 }
