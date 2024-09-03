@@ -8,6 +8,7 @@ import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.processor.note.AbstractNoteProcessor;
 import org.folio.bulkops.processor.note.NoteProcessorFactory;
 import org.junit.jupiter.api.Test;
@@ -37,13 +38,13 @@ class HoldingsNoteProcessorTest extends BaseTest {
         new HoldingsNoteType().withName("Note type 1"),
         new HoldingsNoteType().withName("Note type 2")));
 
-    var res = noteProcessorFactory.getNoteProcessor(EntityType.HOLDINGS_RECORD.getValue()).processNotes(sourceCsv.getBytes(), null);
+    var res = noteProcessorFactory.getNoteProcessor(EntityType.HOLDINGS_RECORD.getValue()).processNotes(sourceCsv.getBytes(), new BulkOperation());
 
     var lines = new String(res).split("\n");
     assertThat(lines).hasSize(2);
     var headers = lines[0];
     assertThat(headers).contains("Note type 1,Note type 2,Note type 3");
     var data = lines[1];
-    assertThat(data).contains("note1 (staff only),note2,note3");
+    assertThat(data).contains("59b36165-fcf2-49d2-bf7f-25fedbc07e44,Sample instance;123,,ho14,FOLIO,,,,,Main Library,,,,,,,,,,,,,,,,,,,,,,");
   }
 }
