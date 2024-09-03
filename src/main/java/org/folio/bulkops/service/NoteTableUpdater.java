@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static java.lang.Boolean.TRUE;
 import static java.util.Objects.isNull;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -20,7 +21,6 @@ import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.InstanceNoteType;
-import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 
@@ -73,12 +73,13 @@ public class NoteTableUpdater {
       for (var usedTenant : usedTenants) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(usedTenant, folioModuleMetadata, folioExecutionContext))) {
           var noteTypesFromUsedTenant = holdingsReferenceService.getAllHoldingsNoteTypes(usedTenant);
-          cacheManager.getCache("holdingsNoteTypes").invalidate();
+          ofNullable(cacheManager.getCache("holdingsNoteTypes")).ifPresent(cache -> cache.invalidate());
           noteTypesFromUsedTenants.addAll(noteTypesFromUsedTenant);
         }
       }
       var noteTypes = noteTypesFromUsedTenants.stream().map(note -> new NoteType().withName(note.getName())
         .withTenantId(note.getTenantId()).withId(note.getId())).toList();
+      updateNoteTypesFromUsedTenants(noteTypes);
       tenantNotePairs.addAll(getTenantNotePairs(bulkOperation, noteTypes));
       noteTypeNamesSet.addAll(noteTypes.stream().map(NoteType::getName).collect(Collectors.toSet()));
     }
@@ -99,10 +100,11 @@ public class NoteTableUpdater {
       for (var usedTenant : usedTenants) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(usedTenant, folioModuleMetadata, folioExecutionContext))) {
           var noteTypesFromUsedTenant = itemReferenceService.getAllItemNoteTypes(usedTenant);
-          cacheManager.getCache("itemNoteTypes").invalidate();
+          ofNullable(cacheManager.getCache("itemNoteTypes")).ifPresent(cache -> cache.invalidate());
           noteTypesFromUsedTenants.addAll(noteTypesFromUsedTenant);
         }
       }
+      updateNoteTypesFromUsedTenants(noteTypesFromUsedTenants);
       tenantNotePairs.addAll(getTenantNotePairs(bulkOperation, noteTypesFromUsedTenants));
       noteTypeNamesSet.addAll(noteTypesFromUsedTenants.stream().map(NoteType::getName).collect(Collectors.toSet()));
     }
@@ -111,7 +113,7 @@ public class NoteTableUpdater {
     unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), ITEM_NOTE_POSITION, noteTypeNames, tenantNotePairs)));
   }
 
-  public void extendTableWithInstanceNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible, OperationStatusType status) {
+  public void extendTableWithInstanceNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible) {
     var noteTypeNames = instanceReferenceService.getAllInstanceNoteTypes().stream()
       .map(InstanceNoteType::getName)
       .sorted()
@@ -119,7 +121,7 @@ public class NoteTableUpdater {
 
     if (!noteTypeNames.isEmpty()) {
       extendHeadersWithNoteTypeNames(INSTANCE_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
-      unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), INSTANCE_NOTE_POSITION, noteTypeNames, Collections.EMPTY_LIST)));
+      unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), INSTANCE_NOTE_POSITION, noteTypeNames, Collections.emptyList())));
     }
   }
 
@@ -180,23 +182,20 @@ public class NoteTableUpdater {
     return usedTenants;
   }
 
-  public List<TenantNotePair> getTenantNotePairs(BulkOperation bulkOperation, List<NoteType> noteTypesFromUsedTenants) {
+  public void updateNoteTypesFromUsedTenants(List<NoteType> noteTypesFromUsedTenants) {
+    noteTypesFromUsedTenants.stream().collect(Collectors.groupingBy(NoteType::getName))
+      .values().stream().filter(noteTypes -> noteTypes.stream().map(NoteType::getId).distinct().count() > 1)
+      .flatMap(List::stream).distinct().forEach(note -> note.setName(note.getName() + " (" + note.getTenantId() + ")"));
+  }
+
+  private List<TenantNotePair> getTenantNotePairs(BulkOperation bulkOperation, List<NoteType> noteTypesFromUsedTenants) {
     var tenantNotePairs = bulkOperation.getTenantNotePairs();
-    var updatedNoteTypes = updateNoteTypesFromUsedTenants(noteTypesFromUsedTenants);
     if (isNull(tenantNotePairs)) {
-      tenantNotePairs = updatedNoteTypes.stream().map(note -> new TenantNotePair().tenantId(note.getTenantId())
+      tenantNotePairs = noteTypesFromUsedTenants.stream().map(note -> new TenantNotePair().tenantId(note.getTenantId())
         .noteTypeName(note.getName())).toList();
       bulkOperation.setTenantNotePairs(tenantNotePairs);
       bulkOperationRepository.save(bulkOperation);
     }
     return tenantNotePairs;
-  }
-
-  public List<NoteType> updateNoteTypesFromUsedTenants(List<NoteType> noteTypesFromUsedTenants) {
-    var updatedNoteTypes = noteTypesFromUsedTenants.stream().collect(Collectors.groupingBy(NoteType::getName))
-      .values().stream().filter(noteTypes -> noteTypes.stream().map(NoteType::getId).distinct().count() > 1)
-      .flatMap(List::stream).distinct().toList();
-    updatedNoteTypes.forEach(note -> note.setName(note.getName() + " (" + note.getTenantId() + ")"));
-    return updatedNoteTypes;
   }
 }

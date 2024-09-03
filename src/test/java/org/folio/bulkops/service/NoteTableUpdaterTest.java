@@ -11,7 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -22,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
@@ -36,7 +34,6 @@ import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
 import org.folio.spring.FolioExecutionContext;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -392,7 +389,7 @@ class NoteTableUpdaterTest {
     var noteTypeWithEscapedSpecialCharacters = SpecialCharacterEscaper.escape("O|;:ther");
     var row = new ArrayList<>(List.of("Note;Note text;false;tenant;6c8e4b97-4224-4155-8b13-07e29aca88ad|" + noteTypeWithEscapedSpecialCharacters + ";Other text;true;tenant;6c8e4b97-4224-4155-8b13-07e29aca88ad"));
     var noteTypeNames = List.of("Note", "O|;:ther");
-    var enriched = noteTableUpdater.enrichWithNotesByType(row, 0, noteTypeNames, Collections.EMPTY_LIST);
+    var enriched = noteTableUpdater.enrichWithNotesByType(row, 0, noteTypeNames, Collections.emptyList());
     assertEquals(2, enriched.size());
     assertEquals("Other text (staff only)", enriched.get(1));
   }

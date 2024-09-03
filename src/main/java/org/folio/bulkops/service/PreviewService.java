@@ -88,7 +88,7 @@ public class PreviewService {
         if (INSTANCE_MARC.equals(operation.getEntityType())) {
           var rules = ruleService.getMarcRules(bulkOperationId);
           var options = getChangedOptionsSet(rules);
-          yield buildPreviewFromMarcFile(operation.getLinkToModifiedRecordsMarcFile(), clazz, offset, limit, options, operation.getStatus());
+          yield buildPreviewFromMarcFile(operation.getLinkToModifiedRecordsMarcFile(), clazz, offset, limit, options);
         } else {
           var rules = ruleService.getRules(bulkOperationId);
           var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
@@ -103,7 +103,7 @@ public class PreviewService {
           if (INSTANCE_MARC.equals(operation.getEntityType())) {
             var rules = ruleService.getMarcRules(bulkOperationId);
             var options = getChangedOptionsSet(rules);
-            yield buildPreviewFromMarcFile(operation.getLinkToCommittedRecordsMarcFile(), clazz, offset, limit, options, operation.getStatus());
+            yield buildPreviewFromMarcFile(operation.getLinkToCommittedRecordsMarcFile(), clazz, offset, limit, options);
           } else {
             var rules = ruleService.getRules(bulkOperationId);
             var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
@@ -226,9 +226,9 @@ public class PreviewService {
   }
 
   private UnifiedTable buildPreviewFromMarcFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset,
-                                                int limit, Set<String> forceVisible, OperationStatusType status) {
+                                                int limit, Set<String> forceVisible) {
     var table =  UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
-    noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible, status);
+    noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible);
     return isNotEmpty(pathToFile) ?
       populatePreviewFromMarc(pathToFile, offset, limit, table) :
       table.rows(Collections.emptyList());
@@ -286,7 +286,7 @@ public class PreviewService {
     } else if (clazz == HoldingsRecord.class) {
       noteTableUpdater.extendTableWithHoldingsNotesTypes(table, forceVisible, bulkOperation);
     } else if (clazz == Instance.class) {
-      noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible, bulkOperation.getStatus());
+      noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible);
     }
   }
 }

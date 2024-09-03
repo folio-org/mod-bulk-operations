@@ -461,14 +461,6 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(0).getRow().get(23), equalTo("Ethan Feld, the worst baseball player in the history of the game, finds himself recruited by a 100-year-old scout to help a band of fairies triumph over an ancient enemy. 2nd"));
   }
 
-  @Test
-  void testPreview() {
-    BulkOperation bulkOperation = buildBulkOperation("", HOLDINGS_RECORD, UPLOAD);
-    bulkOperation.setId(UUID.randomUUID());
-    var table = previewService.getPreview(bulkOperation, UPLOAD, 0, 100);
-    System.out.println(table);
-  }
-
   private String getPathToContentUpdateRequest(org.folio.bulkops.domain.dto.EntityType entityType) {
     if (USER == entityType) {
       return "src/test/resources/files/rules/content_update_users.json";

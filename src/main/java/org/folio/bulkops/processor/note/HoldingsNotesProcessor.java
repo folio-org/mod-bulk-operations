@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static java.util.Optional.ofNullable;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_POSITION;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
@@ -44,7 +45,7 @@ public class HoldingsNotesProcessor extends AbstractNoteProcessor {
       for (var usedTenant : usedTenants) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(usedTenant, folioModuleMetadata, folioExecutionContext))) {
           var noteTypesFromUsedTenant = holdingsReferenceService.getAllHoldingsNoteTypes(usedTenant);
-          cacheManager.getCache("holdingsNoteTypes").invalidate();
+          ofNullable(cacheManager.getCache("holdingsNoteTypes")).ifPresent(cache -> cache.invalidate());
           noteTypesFromUsedTenants.addAll(noteTypesFromUsedTenant);
         }
       }

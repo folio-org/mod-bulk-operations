@@ -6,7 +6,6 @@ import static org.mockito.Mockito.when;
 
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
-import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.processor.note.AbstractNoteProcessor;

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static java.util.Optional.ofNullable;
 import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
@@ -43,7 +44,7 @@ public class ItemNoteProcessor extends AbstractNoteProcessor {
       for (var usedTenant : usedTenants) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(usedTenant, folioModuleMetadata, folioExecutionContext))) {
           var noteTypesFromUsedTenant = itemReferenceService.getAllItemNoteTypes(usedTenant);
-          cacheManager.getCache("itemNoteTypes").invalidate();
+          ofNullable(cacheManager.getCache("itemNoteTypes")).ifPresent(cache -> cache.invalidate());
           noteTypesFromUsedTenants.addAll(noteTypesFromUsedTenant);
         }
       }
