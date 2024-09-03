@@ -10,6 +10,7 @@ import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
+import org.springframework.cache.Cache;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ public class HoldingsNotesProcessor extends AbstractNoteProcessor {
       for (var usedTenant : usedTenants) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(usedTenant, folioModuleMetadata, folioExecutionContext))) {
           var noteTypesFromUsedTenant = holdingsReferenceService.getAllHoldingsNoteTypes(usedTenant);
-          ofNullable(cacheManager.getCache("holdingsNoteTypes")).ifPresent(cache -> cache.invalidate());
+          ofNullable(cacheManager.getCache("holdingsNoteTypes")).ifPresent(Cache::invalidate);
           noteTypesFromUsedTenants.addAll(noteTypesFromUsedTenant);
         }
       }
