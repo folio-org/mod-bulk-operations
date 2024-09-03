@@ -257,9 +257,9 @@ class NoteTableUpdaterTest {
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(holdingsReferenceService.getAllHoldingsNoteTypes("central")).thenReturn(List.of());
     when(holdingsReferenceService.getAllHoldingsNoteTypes("member"))
-      .thenReturn(List.of(HoldingsNoteType.builder().name("Action note").build(),
-        HoldingsNoteType.builder().name("Note").build(),
-        HoldingsNoteType.builder().name("Other").build()));
+      .thenReturn(List.of(HoldingsNoteType.builder().name("Action note").tenantId("member").build(),
+        HoldingsNoteType.builder().name("Note").tenantId("member").build(),
+        HoldingsNoteType.builder().name("Other").tenantId("member").build()));
     when(cacheManager.getCache("holdingsNoteTypes")).thenReturn(cache);
 
     noteTableUpdater.extendTableWithHoldingsNotesTypes(table, Set.of("Action note", "Other"), new BulkOperation());
