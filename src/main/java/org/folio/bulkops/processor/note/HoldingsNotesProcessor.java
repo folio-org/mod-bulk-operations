@@ -52,7 +52,7 @@ public class HoldingsNotesProcessor extends AbstractNoteProcessor {
       }
       var noteTypes = noteTypesFromUsedTenants.stream().map(note -> new NoteType().withName(note.getName())
         .withTenantId(note.getTenantId()).withId(note.getId())).toList();
-      noteTableUpdater.updateNoteTypesFromUsedTenants(noteTypes);
+      noteTableUpdater.updateNoteTypeNamesWithTenants(noteTypes);
       noteTypeNamesSet.addAll(noteTypes.stream().map(NoteType::getName).collect(Collectors.toSet()));
     }
     return noteTypeNamesSet.stream().sorted().toList();

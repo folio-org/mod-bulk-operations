@@ -49,7 +49,7 @@ public class ItemNoteProcessor extends AbstractNoteProcessor {
           noteTypesFromUsedTenants.addAll(noteTypesFromUsedTenant);
         }
       }
-      noteTableUpdater.updateNoteTypesFromUsedTenants(noteTypesFromUsedTenants);
+      noteTableUpdater.updateNoteTypeNamesWithTenants(noteTypesFromUsedTenants);
       noteTypeNamesSet.addAll(noteTypesFromUsedTenants.stream().map(NoteType::getName).collect(Collectors.toSet()));
     }
     return noteTypeNamesSet.stream().sorted().toList();

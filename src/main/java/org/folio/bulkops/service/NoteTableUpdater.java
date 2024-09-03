@@ -80,7 +80,7 @@ public class NoteTableUpdater {
       }
       var noteTypes = noteTypesFromUsedTenants.stream().map(note -> new NoteType().withName(note.getName())
         .withTenantId(note.getTenantId()).withId(note.getId())).toList();
-      updateNoteTypesFromUsedTenants(noteTypes);
+      updateNoteTypeNamesWithTenants(noteTypes);
       tenantNotePairs.addAll(getTenantNotePairs(bulkOperation, noteTypes));
       noteTypeNamesSet.addAll(noteTypes.stream().map(NoteType::getName).collect(Collectors.toSet()));
     }
@@ -105,7 +105,7 @@ public class NoteTableUpdater {
           noteTypesFromUsedTenants.addAll(noteTypesFromUsedTenant);
         }
       }
-      updateNoteTypesFromUsedTenants(noteTypesFromUsedTenants);
+      updateNoteTypeNamesWithTenants(noteTypesFromUsedTenants);
       tenantNotePairs.addAll(getTenantNotePairs(bulkOperation, noteTypesFromUsedTenants));
       noteTypeNamesSet.addAll(noteTypesFromUsedTenants.stream().map(NoteType::getName).collect(Collectors.toSet()));
     }
@@ -183,7 +183,7 @@ public class NoteTableUpdater {
     return usedTenants;
   }
 
-  public void updateNoteTypesFromUsedTenants(List<NoteType> noteTypesFromUsedTenants) {
+  public void updateNoteTypeNamesWithTenants(List<NoteType> noteTypesFromUsedTenants) {
     noteTypesFromUsedTenants.stream().collect(Collectors.groupingBy(NoteType::getName))
       .values().stream().filter(noteTypes -> noteTypes.stream().map(NoteType::getId).distinct().count() > 1)
       .flatMap(List::stream).distinct().forEach(note -> note.setName(note.getName() + " (" + note.getTenantId() + ")"));
