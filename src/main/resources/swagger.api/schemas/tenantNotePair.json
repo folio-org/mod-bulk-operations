@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "NoteType name for which (tenantId)",
+  "type": "object",
+  "properties": {
+    "tenantId": {
+      "description": "ID of tenant required to show after Note type name",
+      "type": "string"
+    },
+    "noteTypeName": {
+      "description": "Note type name for which tenant ID is required to show",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "tenantId",
+    "noteTypeName"
+  ]
+}

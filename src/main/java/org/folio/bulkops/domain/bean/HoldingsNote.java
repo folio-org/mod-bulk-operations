@@ -25,5 +25,6 @@ public class HoldingsNote {
 
   @JsonProperty("staffOnly")
   private Boolean staffOnly;
+  private String tenantId;
 }
 

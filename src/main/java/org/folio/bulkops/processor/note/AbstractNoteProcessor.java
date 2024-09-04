@@ -3,8 +3,10 @@ package org.folio.bulkops.processor.note;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.RFC4180ParserBuilder;
 import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.service.NoteTableUpdater;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -21,15 +23,21 @@ public abstract class AbstractNoteProcessor {
 
   private static final int FIRST_LINE = 1;
 
-  private NoteTableUpdater noteTableUpdater;
+  protected NoteTableUpdater noteTableUpdater;
+  protected CacheManager cacheManager;
 
   @Autowired
   private void setNoteTableUpdater(NoteTableUpdater noteTableUpdater) {
     this.noteTableUpdater = noteTableUpdater;
   }
 
-  public byte[] processNotes(byte[] input) {
-    List<String> noteTypeNames = getNoteTypeNames();
+  @Autowired
+  private void setCacheManager(CacheManager cacheManager) {
+    this.cacheManager = cacheManager;
+  }
+
+  public byte[] processNotes(byte[] input, BulkOperation bulkOperation) {
+    List<String> noteTypeNames = getNoteTypeNames(bulkOperation);
     var noteTypeHeaders = noteTypeNames.stream()
       .map(noteTableUpdater::concatNotePostfixIfRequired)
       .toList();
@@ -47,7 +55,7 @@ public abstract class AbstractNoteProcessor {
             .map(this::processSpecialCharacters)
             .toArray(String[]::new);
         } else {
-          line = processNotesData(line, noteTypeNames);
+          line = processNotesData(line, noteTypeNames, bulkOperation);
         }
         stringWriter.write(String.join(",", line) + "\n");
       }
@@ -59,12 +67,12 @@ public abstract class AbstractNoteProcessor {
     }
   }
 
-  protected abstract List<String> getNoteTypeNames();
+  protected abstract List<String> getNoteTypeNames(BulkOperation bulkOperation);
 
   protected abstract int getNotePosition();
 
-  private String[] processNotesData(String[] line, List<String> noteTypeNames) {
-    return noteTableUpdater.enrichWithNotesByType(new ArrayList<>(Arrays.asList(line)), getNotePosition(), noteTypeNames).stream()
+  private String[] processNotesData(String[] line, List<String> noteTypeNames, BulkOperation bulkOperation) {
+    return noteTableUpdater.enrichWithNotesByType(new ArrayList<>(Arrays.asList(line)), getNotePosition(), noteTypeNames, bulkOperation.getTenantNotePairs()).stream()
       .map(this::processSpecialCharacters)
       .toArray(String[]::new);
   }

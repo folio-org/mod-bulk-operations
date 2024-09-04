@@ -165,6 +165,21 @@
       "userFriendlyQuery": {
         "description": "User-friendly FQL query string",
         "type": "string"
+      },
+      "tenantNotePairs": {
+        "description": "NoteType name for which (tenantId)",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "$ref": "tenantNotePair.json"
+        }
+      },
+      "usedTenants": {
+        "description": "Used tenants",
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     },
     "additionalProperties": false,

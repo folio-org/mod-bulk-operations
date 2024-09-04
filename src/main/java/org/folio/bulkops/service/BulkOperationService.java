@@ -260,6 +260,7 @@ public class BulkOperationService {
           } else {
             var tenantIdOfEntity = modified.getPreview().getTenant();
             try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
+              modified.getPreview().setTenantToNotes();
               writeToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity());
             }
           }
