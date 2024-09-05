@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -176,7 +177,7 @@ public class NoteTableUpdater {
     List<String> usedTenants = bulkOperation.getUsedTenants();
     if (isNull(usedTenants)) {
       usedTenants = unifiedTable.getRows().stream().flatMap(row -> Arrays.stream(row.getRow().get(notesPosition)
-        .split(ITEM_DELIMITER_PATTERN))).map(items -> items.trim().split(ARRAY_DELIMITER)).filter(noteFields -> nonNull(noteFields))
+        .split(ITEM_DELIMITER_PATTERN))).map(items -> items.trim().split(ARRAY_DELIMITER))
         .map(noteFields -> noteFields[TENANT_POS]).distinct().toList();
       bulkOperation.setUsedTenants(usedTenants);
       bulkOperationRepository.save(bulkOperation);
