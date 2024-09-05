@@ -18,9 +18,10 @@ import org.folio.bulkops.exception.EntityFormatException;
 import org.folio.bulkops.service.HoldingsReferenceHelper;
 
 public class HoldingsNoteListConverter extends BaseConverter<List<HoldingsNote>> {
-  private static final int NUMBER_OF_HOLDINGS_NOTE_ELEMENTS = 3;
+  private static final int NUMBER_OF_HOLDINGS_NOTE_ELEMENTS = 5;
   private static final int HOLDINGS_NOTE_NOTE_TYPE_INDEX = 0;
   private static final int HOLDINGS_NOTE_NOTE_INDEX = 1;
+  private static final int TENANT_INDEX = 3;
   private static final int HOLDINGS_NOTE_STAFF_ONLY_INDEX = 2;
 
   @Override
@@ -57,6 +58,7 @@ public class HoldingsNoteListConverter extends BaseConverter<List<HoldingsNote>>
       .holdingsNoteTypeId(HoldingsReferenceHelper.service().getNoteTypeIdByName(restore(tokens[HOLDINGS_NOTE_NOTE_TYPE_INDEX])))
       .note(restore(tokens[HOLDINGS_NOTE_NOTE_INDEX]))
       .staffOnly(ObjectUtils.isEmpty(tokens[HOLDINGS_NOTE_STAFF_ONLY_INDEX]) ? null : Boolean.parseBoolean(tokens[HOLDINGS_NOTE_STAFF_ONLY_INDEX]))
+      .tenantId(tokens[TENANT_INDEX])
       .build();
   }
 }
