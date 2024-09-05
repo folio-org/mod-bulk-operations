@@ -38,7 +38,9 @@ public class ItemNoteListConverter extends BaseConverter<List<ItemNote>> {
       .map(itemNote -> String.join(ARRAY_DELIMITER,
         escape(ItemReferenceHelper.service().getNoteTypeNameById(itemNote.getItemNoteTypeId())),
         escape(itemNote.getNote()),
-        escape(booleanToStringNullSafe(itemNote.getStaffOnly()))))
+        escape(booleanToStringNullSafe(itemNote.getStaffOnly())),
+        itemNote.getTenantId(),
+        itemNote.getItemNoteTypeId()))
       .collect(Collectors.joining(ITEM_DELIMITER));
   }
 

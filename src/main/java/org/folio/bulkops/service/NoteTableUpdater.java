@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static java.lang.Boolean.TRUE;
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
@@ -154,7 +155,7 @@ public class NoteTableUpdater {
         var noteFields = note.trim().split(ARRAY_DELIMITER);
         if (noteFields.length == NUMBER_OF_NOTE_FIELDS) {
           var restored = noteFields[NOTE_TYPE_POS];
-          if (tenantNotePairs.stream().anyMatch(noteWithTenant -> noteWithTenant.getTenantId().equals(noteFields[TENANT_POS]) &&
+          if (nonNull(tenantNotePairs) && tenantNotePairs.stream().anyMatch(noteWithTenant -> noteWithTenant.getTenantId().equals(noteFields[TENANT_POS]) &&
             noteWithTenant.getNoteTypeName().equals(noteFields[NOTE_TYPE_POS] + " (" + noteFields[TENANT_POS] + ")"))) {
             restored += " (" + noteFields[TENANT_POS] + ")";
           }
