@@ -250,7 +250,6 @@ public class PreviewService {
           row.setRow(new ArrayList<>(Arrays.asList(line)));
           table.addRowsItem(row);
         }
-        log.info("unifiedtable: {}", table);
       processNoteFields(table, clazz, forceVisible, bulkOperation);
       table.getRows().forEach(row -> {
         var rowData = row.getRow().stream()
@@ -260,7 +259,6 @@ public class PreviewService {
       });
       return table;
     } catch (Exception e) {
-      e.printStackTrace();
       log.error(e.getMessage());
     }
     return table;
