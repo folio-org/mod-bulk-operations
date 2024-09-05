@@ -178,6 +178,7 @@ public class NoteTableUpdater {
     if (isNull(usedTenants)) {
       usedTenants = unifiedTable.getRows().stream().flatMap(row -> Arrays.stream(row.getRow().get(notesPosition)
         .split(ITEM_DELIMITER_PATTERN))).map(items -> items.trim().split(ARRAY_DELIMITER))
+        .filter(noteFields -> noteFields.length == NUMBER_OF_NOTE_FIELDS)
         .map(noteFields -> noteFields[TENANT_POS]).distinct().toList();
       bulkOperation.setUsedTenants(usedTenants);
       bulkOperationRepository.save(bulkOperation);
