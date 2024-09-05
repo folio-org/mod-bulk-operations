@@ -52,7 +52,6 @@ public class NoteTableUpdater {
   private static final int NOTE_VALUE_POS = 1;
   private static final int STAFF_ONLY_FLAG_POS = 2;
   private static final int TENANT_POS = 3;
-  private static final int HOLDINGS_NOTE_TYPE_ID_POS = 4;
 
   private final ItemReferenceService itemReferenceService;
   private final HoldingsReferenceService holdingsReferenceService;
@@ -177,7 +176,8 @@ public class NoteTableUpdater {
     List<String> usedTenants = bulkOperation.getUsedTenants();
     if (isNull(usedTenants)) {
       usedTenants = unifiedTable.getRows().stream().flatMap(row -> Arrays.stream(row.getRow().get(notesPosition)
-        .split(ITEM_DELIMITER_PATTERN))).map(items -> items.trim().split(ARRAY_DELIMITER)).map(noteFields -> noteFields[TENANT_POS]).distinct().toList();
+        .split(ITEM_DELIMITER_PATTERN))).map(items -> items.trim().split(ARRAY_DELIMITER)).filter(noteFields -> nonNull(noteFields))
+        .map(noteFields -> noteFields[TENANT_POS]).distinct().toList();
       bulkOperation.setUsedTenants(usedTenants);
       bulkOperationRepository.save(bulkOperation);
     }
