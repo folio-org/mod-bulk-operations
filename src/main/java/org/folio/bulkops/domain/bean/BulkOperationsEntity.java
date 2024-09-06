@@ -19,6 +19,9 @@ public interface BulkOperationsEntity {
     return StringUtils.EMPTY;
   }
   @JsonIgnore
-  default void setTenantToNotes(){
+  default void setTenantToNotes() {
+  }
+  @JsonIgnore
+  default void setTenant(String tenantId) {
   }
 }

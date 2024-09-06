@@ -199,9 +199,12 @@ public class NoteTableUpdater {
   }
 
   public void updateNoteTypeNamesWithTenants(List<NoteType> noteTypesFromUsedTenants) {
-    noteTypesFromUsedTenants.stream().collect(Collectors.groupingBy(NoteType::getName))
-      .values().stream().filter(noteTypes -> noteTypes.stream().map(NoteType::getId).distinct().count() > 1)
-      .flatMap(List::stream).distinct().forEach(note -> note.setName(note.getName() + " (" + note.getTenantId() + ")"));
+    var numOfAllTenants = noteTypesFromUsedTenants.stream().map(NoteType::getTenantId).distinct().count();
+    var noteTypesPresentInAllTenants = noteTypesFromUsedTenants.stream()
+      .collect(Collectors.groupingBy(noteType -> noteType.getId() + noteType.getName())).values().stream().filter(noteTypes -> noteTypes
+        .stream().map(NoteType::getName).count() == numOfAllTenants).flatMap(List::stream).collect(Collectors.toSet());
+    noteTypesFromUsedTenants.stream().filter(noteType -> !noteTypesPresentInAllTenants.contains(noteType)).distinct()
+      .forEach(note -> note.setName(note.getName() + " (" + note.getTenantId() + ")"));
   }
 
   private List<TenantNotePair> getTenantNotePairs(BulkOperation bulkOperation, List<NoteType> noteTypesFromUsedTenants) {
