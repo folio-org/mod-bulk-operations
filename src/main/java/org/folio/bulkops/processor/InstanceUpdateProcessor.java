@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.ItemClient;
-import org.folio.bulkops.client.SearchConsortiumHoldings;
+import org.folio.bulkops.client.SearchConsortium;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ConsortiumHolding;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
@@ -54,7 +54,7 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedIns
   private final RuleService ruleService;
   private final HoldingsClient holdingsClient;
   private final ItemClient itemClient;
-  private final SearchConsortiumHoldings searchConsortiumHoldings;
+  private final SearchConsortium searchConsortium;
   private final ErrorService errorService;
   private final HoldingsReferenceService holdingsReferenceService;
   private final ConsortiaService consortiaService;
@@ -94,7 +94,7 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedIns
         itemsUpdated = suppressItemsIfRequired(holdings, shouldApplyToItems, instance.getDiscoverySuppress());
       } else {
         var instance = extendedInstance.getEntity();
-        var consortiumHoldings = searchConsortiumHoldings.getHoldingsById(UUID.fromString(instance.getId())).getHoldings();
+        var consortiumHoldings = searchConsortium.getHoldingsById(UUID.fromString(instance.getId())).getHoldings();
         Map<String, List<String>> consortiaHoldingsIdsPerTenant = consortiumHoldings.stream()
           .filter(h -> !folioExecutionContext.getTenantId().equals(h.getTenantId()))
           .collect(Collectors.groupingBy(ConsortiumHolding::getTenantId, Collectors.mapping(ConsortiumHolding::getId, Collectors.toList())));

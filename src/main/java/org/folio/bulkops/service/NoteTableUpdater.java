@@ -18,10 +18,16 @@ import static org.folio.bulkops.util.Constants.STAFF_ONLY;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 import lombok.RequiredArgsConstructor;
+import org.folio.bulkops.client.SearchConsortium;
+import org.folio.bulkops.domain.bean.ConsortiumHolding;
+import org.folio.bulkops.domain.bean.ConsortiumItem;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
+import org.folio.bulkops.domain.bean.IdentifierType;
 import org.folio.bulkops.domain.bean.NoteType;
+import org.folio.bulkops.domain.bean.UploadIdentifiers;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.InstanceNoteType;
+import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.TenantNotePair;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 
@@ -40,8 +46,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -62,6 +68,7 @@ public class NoteTableUpdater {
   private final ConsortiaService consortiaService;
   private final BulkOperationRepository bulkOperationRepository;
   private final CacheManager cacheManager;
+  private final SearchConsortium searchConsortium;
 
   public void extendTableWithHoldingsNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible, BulkOperation bulkOperation) {
     var noteTypeNamesSet = new HashSet<>(holdingsReferenceService.getAllHoldingsNoteTypes(folioExecutionContext.getTenantId()).stream()
@@ -71,7 +78,7 @@ public class NoteTableUpdater {
     List<TenantNotePair> tenantNotePairs = new ArrayList<>();
     if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
       noteTypeNamesSet.clear();
-      var usedTenants = getUsedTenants(unifiedTable, bulkOperation, HOLDINGS_NOTE_POSITION);
+      var usedTenants = getUsedTenants(unifiedTable, bulkOperation, true);
       for (var usedTenant : usedTenants) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(usedTenant, folioModuleMetadata, folioExecutionContext))) {
           var noteTypesFromUsedTenant = holdingsReferenceService.getAllHoldingsNoteTypes(usedTenant);
@@ -98,7 +105,7 @@ public class NoteTableUpdater {
     List<TenantNotePair> tenantNotePairs = new ArrayList<>();
     if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
       noteTypeNamesSet.clear();
-      var usedTenants = getUsedTenants(unifiedTable, bulkOperation, ITEM_NOTE_POSITION);
+      var usedTenants = getUsedTenants(unifiedTable, bulkOperation, false);
       for (var usedTenant : usedTenants) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(usedTenant, folioModuleMetadata, folioExecutionContext))) {
           var noteTypesFromUsedTenant = itemReferenceService.getAllItemNoteTypes(usedTenant);
@@ -173,13 +180,18 @@ public class NoteTableUpdater {
     return list;
   }
 
-  public List<String> getUsedTenants(UnifiedTable unifiedTable, BulkOperation bulkOperation, int notesPosition) {
+  public List<String> getUsedTenants(UnifiedTable unifiedTable, BulkOperation bulkOperation, boolean holdings) {
     List<String> usedTenants = bulkOperation.getUsedTenants();
     if (isNull(usedTenants)) {
-      usedTenants = unifiedTable.getRows().stream().flatMap(row -> Arrays.stream(row.getRow().get(notesPosition)
-        .split(ITEM_DELIMITER_PATTERN))).map(items -> items.trim().split(ARRAY_DELIMITER))
-        .filter(noteFields -> noteFields.length == NUMBER_OF_NOTE_FIELDS)
-        .map(noteFields -> noteFields[TENANT_POS]).distinct().toList();
+      if (holdings) {
+        usedTenants = searchConsortium.getHoldingsByIdentifiers(UploadIdentifiers.builder().identifierType("id")
+            .identifierValues(unifiedTable.getRows().stream().map(Row::getRow).map(r -> UUID.fromString(r.get(0)))
+              .toList()).build()).getHoldings().stream().map(ConsortiumHolding::getTenantId).distinct().toList();
+      } else {
+        usedTenants = searchConsortium.getItemsByIdentifiers(UploadIdentifiers.builder().identifierType("id")
+          .identifierValues(unifiedTable.getRows().stream().map(Row::getRow).map(r -> UUID.fromString(r.get(0)))
+            .toList()).build()).getItems().stream().map(ConsortiumItem::getTenantId).distinct().toList();
+      }
       bulkOperation.setUsedTenants(usedTenants);
       bulkOperationRepository.save(bulkOperation);
     }
