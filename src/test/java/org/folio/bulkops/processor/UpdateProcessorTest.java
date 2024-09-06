@@ -426,7 +426,7 @@ class UpdateProcessorTest extends BaseTest {
       .sourceId(sourceId).discoverySuppress(false).build();
     var consortiumHolding = new ConsortiumHolding(holdingRecord.getId(), "memberTenant", instanceId);
     var consortiumHolding2 = new ConsortiumHolding(UUID.randomUUID().toString(), "memberTenant2", instanceId);
-    var consortiumHoldingCollection = new ConsortiumHoldingCollection();
+    var consortiumHoldingCollection = ConsortiumHoldingCollection.builder().build();
     consortiumHoldingCollection.setHoldings(List.of(consortiumHolding, consortiumHolding2));
     var affiliatedTenants = List.of("memberTenant");
 
