@@ -23,7 +23,6 @@ import org.folio.bulkops.client.SearchConsortium;
 import org.folio.bulkops.domain.bean.ConsortiumHolding;
 import org.folio.bulkops.domain.bean.ConsortiumItem;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
-import org.folio.bulkops.domain.bean.IdentifierType;
 import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.bean.UploadIdentifiers;
 import org.folio.bulkops.domain.dto.Cell;
@@ -44,7 +43,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -56,7 +54,8 @@ import java.util.stream.Collectors;
 @Log4j2
 public class NoteTableUpdater {
   private static final int NON_EXISTING_POSITION = -1;
-  private static final int NUMBER_OF_NOTE_FIELDS = 5;
+  private static final int NUMBER_OF_NOTE_FIELDS_FOR_HOLDINGS_AND_ITEMS = 5;
+  private static final int NUMBER_OF_NOTE_FIELDS_FOR_INSTANCES = 3;
   private static final int NOTE_TYPE_POS = 0;
   private static final int NOTE_VALUE_POS = 1;
   private static final int STAFF_ONLY_FLAG_POS = 2;
@@ -160,10 +159,11 @@ public class NoteTableUpdater {
     log.info("list: {}, noteTypeNames: {}, pairs: {}", list, noteTypeNames, tenantNotePairs);
     var notesArray = new String[noteTypeNames.size()];
     var notesString = list.get(notesPosition);
+    var numOfNoteFields = nonNull(tenantNotePairs) ? NUMBER_OF_NOTE_FIELDS_FOR_HOLDINGS_AND_ITEMS : NUMBER_OF_NOTE_FIELDS_FOR_INSTANCES;
     if (isNotEmpty(notesString)) {
       for (var note : notesString.split(ITEM_DELIMITER_PATTERN)) {
         var noteFields = note.trim().split(ARRAY_DELIMITER);
-        if (noteFields.length == NUMBER_OF_NOTE_FIELDS) {
+        if (noteFields.length == numOfNoteFields) {
           var restored = noteFields[NOTE_TYPE_POS];
           if (nonNull(tenantNotePairs) && tenantNotePairs.stream().anyMatch(noteWithTenant -> noteWithTenant.getTenantId().equals(noteFields[TENANT_POS]) &&
             noteWithTenant.getNoteTypeName().equals(noteFields[NOTE_TYPE_POS] + " (" + noteFields[TENANT_POS] + ")"))) {
