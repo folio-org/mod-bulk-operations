@@ -37,7 +37,7 @@ public class ItemNoteListConverter extends BaseConverter<List<ItemNote>> {
     return  object.stream()
       .filter(Objects::nonNull)
       .map(itemNote -> String.join(ARRAY_DELIMITER,
-        escape(ItemReferenceHelper.service().getNoteTypeNameById(itemNote.getItemNoteTypeId())),
+        escape(ItemReferenceHelper.service().getNoteTypeNameById(itemNote.getItemNoteTypeId(), itemNote.getTenantId())),
         escape(itemNote.getNote()),
         escape(booleanToStringNullSafe(itemNote.getStaffOnly())),
         itemNote.getTenantId(),

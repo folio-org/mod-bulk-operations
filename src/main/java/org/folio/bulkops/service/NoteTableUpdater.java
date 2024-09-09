@@ -100,7 +100,6 @@ public class NoteTableUpdater {
   }
 
   public void extendTableWithItemNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible, BulkOperation bulkOperation) {
-    log.info("extendTableWithItemNotesTypes table: {}", unifiedTable);
     var noteTypeNamesSet = new HashSet<>(itemReferenceService.getAllItemNoteTypes(folioExecutionContext.getTenantId()).stream()
       .map(NoteType::getName)
       .toList());
@@ -112,9 +111,7 @@ public class NoteTableUpdater {
       for (var usedTenant : usedTenants) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(usedTenant, folioModuleMetadata, folioExecutionContext))) {
           var noteTypesFromUsedTenant = itemReferenceService.getAllItemNoteTypes(usedTenant);
-          log.info("noteTypesFromUsedTenant: {}, {}", noteTypesFromUsedTenant, usedTenant);
           ofNullable(cacheManager.getCache("itemNoteTypes")).ifPresent(Cache::invalidate);
-          log.info("after invalidate: noteTypesFromUsedTenant: {}, {}", noteTypesFromUsedTenant, usedTenant);
           noteTypesFromUsedTenants.addAll(noteTypesFromUsedTenant);
         }
       }

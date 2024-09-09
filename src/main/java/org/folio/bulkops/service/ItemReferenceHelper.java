@@ -28,8 +28,8 @@ public class ItemReferenceHelper implements InitializingBean {
     return itemReferenceService.getDamagedStatusByName(name);
   }
 
-  public String getNoteTypeNameById(String noteTypeId) {
-    return itemReferenceService.getNoteTypeNameById(noteTypeId);
+  public String getNoteTypeNameById(String noteTypeId, String tenantId) {
+    return itemReferenceService.getNoteTypeNameById(noteTypeId, tenantId);
   }
 
   public String getNoteTypeIdByName(String name) {
