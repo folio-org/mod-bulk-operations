@@ -16,6 +16,7 @@ import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 import static org.folio.bulkops.domain.dto.IdentifierType.BARCODE;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationType.UPDATE;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -275,6 +276,26 @@ class BulkOperationControllerTest extends BaseTest {
 
     verify(ruleService).saveMarcRules(any(BulkOperationMarcRuleCollection.class));
     verify(bulkOperationService).clearOperationProcessing(bulkOperation);
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldGetUsedTenants() {
+    var bulkoperationId = UUID.fromString("1910fae2-08c7-46e8-a73b-fc35d2639734");
+
+    var bulkOperation = BulkOperation.builder()
+      .id(bulkoperationId).usedTenants(List.of("member1", "member2")).build();
+
+    when(bulkOperationService.getOperationById(bulkoperationId))
+      .thenReturn(bulkOperation);
+
+    var res = mockMvc.perform(get(String.format("/bulk-operations/used-tenants/%s", bulkoperationId))
+        .headers(defaultHeaders())
+        .contentType(APPLICATION_JSON))
+      .andExpect(status().isOk())
+      .andReturn();
+
+    assertEquals("[\"member1\",\"member2\"]", res.getResponse().getContentAsString());
   }
 
   private static Stream<Arguments> fileContentTypeToNoteTypeCollection() {

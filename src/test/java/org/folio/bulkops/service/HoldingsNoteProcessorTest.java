@@ -44,6 +44,6 @@ class HoldingsNoteProcessorTest extends BaseTest {
     var headers = lines[0];
     assertThat(headers).contains("Note type 1,Note type 2,Note type 3");
     var data = lines[1];
-    assertThat(data).contains("59b36165-fcf2-49d2-bf7f-25fedbc07e44,Sample instance;123,,ho14,FOLIO,,,,,Main Library,,,,,,,,,,,,,,,,,,,,,,");
+    assertThat(data).contains("59b36165-fcf2-49d2-bf7f-25fedbc07e44,Sample instance;123,,ho14,FOLIO,,,,,Main Library,,,,,,,,,,,,,,,note1 (staff only),note2,note3,,,,,");
   }
 }

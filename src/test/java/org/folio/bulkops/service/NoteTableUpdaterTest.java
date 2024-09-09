@@ -453,4 +453,30 @@ class NoteTableUpdaterTest {
     Assertions.assertThat(noteTypesFromUserTenants.stream().filter(note -> note.getName().equals("Binding2 (memberB)")).count()).isEqualTo(1);
     Assertions.assertThat(noteTypesFromUserTenants.stream().filter(note -> note.getName().equals("Binding3 (memberC)")).count()).isEqualTo(1);
   }
+
+  @Test
+  void getUsedTenantsTest() {
+    var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Item.class);
+    var row = Arrays.stream(new String[table.getHeader().size()]).collect(Collectors.toCollection(ArrayList::new));
+    row.set(0, UUID.randomUUID().toString());
+    row.set(HOLDINGS_NOTE_POSITION, "Action note;Action note text;true;tenantId;3e095251-4e9a-4484-8473-d5580abeccd0|Note;Note text;false;tenantId;3e095251-4e9a-4484-8473-d5580abeccd0|Other;Other text;true;tenantId;3e095251-4e9a-4484-8473-d5580abeccd0");
+    table.setRows(List.of(new Row().row(row)));
+    ConsortiumHoldingCollection collection = new ConsortiumHoldingCollection();
+    ConsortiumHolding holding = new ConsortiumHolding();
+    holding.setTenantId("member");
+    holding.setId(UUID.randomUUID().toString());
+    ConsortiumHolding holding2 = new ConsortiumHolding();
+    holding2.setTenantId("member");
+    holding2.setId(UUID.randomUUID().toString());
+    ConsortiumHolding holding3 = new ConsortiumHolding();
+    holding3.setTenantId("member2");
+    holding3.setId(UUID.randomUUID().toString());
+    collection.setHoldings(List.of(holding, holding2, holding3));
+
+    when(searchConsortium.getHoldingsByIdentifiers(any(UploadIdentifiers.class)))
+      .thenReturn(collection);
+
+    var usedTenants = noteTableUpdater.getUsedTenants(table, new BulkOperation(), true);
+    Assertions.assertThat(usedTenants).hasSize(2);
+  }
 }
