@@ -125,6 +125,11 @@ class NoteTableUpdaterTest {
     row.set(ITEM_NOTE_POSITION, "Action note;Action note text;false;member;60b1f73e-bbf2-4807-806b-3166620a7aaa|Note;Note text;false;member;60b1f73e-bbf2-4807-806b-3166620a7aaa|Other;Other text;false;member;60b1f73e-bbf2-4807-806b-3166620a7aaa");
     table.setRows(List.of(new Row().row(row)));
     row.set(0, UUID.randomUUID().toString());
+    ConsortiumItemCollection consortiumItemCollection = new ConsortiumItemCollection();
+    ConsortiumItem consortiumItem = new ConsortiumItem();
+    consortiumItem.setId(UUID.randomUUID().toString());
+    consortiumItem.setTenantId("member");
+    consortiumItemCollection.setItems(List.of(consortiumItem));
 
     var expectedTableSize = table.getHeader().size() + 2;
 
@@ -138,8 +143,7 @@ class NoteTableUpdaterTest {
         NoteType.builder().name("Other").tenantId("member").build()));
     when(cacheManager.getCache("itemNoteTypes")).thenReturn(cache);
     when(searchConsortium.getItemsByIdentifiers(any(UploadIdentifiers.class)))
-      .thenReturn(ConsortiumItemCollection.builder()
-        .items(List.of(ConsortiumItem.builder().id(UUID.randomUUID().toString()).tenantId("member").build())).build());
+      .thenReturn(consortiumItemCollection);
 
     noteTableUpdater.extendTableWithItemNotesTypes(table, Set.of("Action note", "Other"), new BulkOperation());
 
@@ -265,6 +269,11 @@ class NoteTableUpdaterTest {
     row.set(0, UUID.randomUUID().toString());
     row.set(HOLDINGS_NOTE_POSITION, "Action note;Action note text;false;member;3e095251-4e9a-4484-8473-d5580abeccd0|Note;Note text;false;member;3e095251-4e9a-4484-8473-d5580abeccd0|Other;Other text;false;member;3e095251-4e9a-4484-8473-d5580abeccd0");
     table.setRows(List.of(new Row().row(row)));
+    ConsortiumHoldingCollection consortiumHoldingCollection = new ConsortiumHoldingCollection();
+    ConsortiumHolding consortiumHolding = new ConsortiumHolding();
+    consortiumHolding.setId(UUID.randomUUID().toString());
+    consortiumHolding.setTenantId("member");
+    consortiumHoldingCollection.setHoldings(List.of(consortiumHolding));
 
     var expectedTableSize = table.getHeader().size() + 2;
 
@@ -278,8 +287,7 @@ class NoteTableUpdaterTest {
         HoldingsNoteType.builder().name("Other").tenantId("member").build()));
     when(cacheManager.getCache("holdingsNoteTypes")).thenReturn(cache);
     when(searchConsortium.getHoldingsByIdentifiers(any(UploadIdentifiers.class)))
-      .thenReturn(ConsortiumHoldingCollection.builder()
-        .holdings(List.of(ConsortiumHolding.builder().id(UUID.randomUUID().toString()).tenantId("member").build())).build());
+      .thenReturn(consortiumHoldingCollection);
 
     noteTableUpdater.extendTableWithHoldingsNotesTypes(table, Set.of("Action note", "Other"), new BulkOperation());
 
