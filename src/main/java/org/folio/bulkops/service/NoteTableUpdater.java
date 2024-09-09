@@ -18,6 +18,7 @@ import static org.folio.bulkops.util.Constants.STAFF_ONLY;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.SearchConsortium;
 import org.folio.bulkops.domain.bean.ConsortiumHolding;
 import org.folio.bulkops.domain.bean.ConsortiumItem;
@@ -52,6 +53,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+@Log4j2
 public class NoteTableUpdater {
   private static final int NON_EXISTING_POSITION = -1;
   private static final int NUMBER_OF_NOTE_FIELDS = 5;
@@ -155,6 +157,7 @@ public class NoteTableUpdater {
   }
 
   public List<String> enrichWithNotesByType(List<String> list, int notesPosition, List<String> noteTypeNames, List<TenantNotePair> tenantNotePairs) {
+    log.info("list: {}, noteTypeNames: {}, pairs: {}", list, noteTypeNames, tenantNotePairs);
     var notesArray = new String[noteTypeNames.size()];
     var notesString = list.get(notesPosition);
     if (isNotEmpty(notesString)) {
@@ -166,7 +169,9 @@ public class NoteTableUpdater {
             noteWithTenant.getNoteTypeName().equals(noteFields[NOTE_TYPE_POS] + " (" + noteFields[TENANT_POS] + ")"))) {
             restored += " (" + noteFields[TENANT_POS] + ")";
           }
+          log.info("restored: {}, noteFields: {}", restored, Arrays.toString(noteFields));
           var position = noteTypeNames.indexOf(SpecialCharacterEscaper.restore(restored));
+          log.info("position: {}", position);
           if (position != NON_EXISTING_POSITION) {
             var staffOnlyPostfix = TRUE.equals(Boolean.parseBoolean(noteFields[STAFF_ONLY_FLAG_POS])) ? SPACE + STAFF_ONLY : EMPTY;
             var value = SpecialCharacterEscaper.restore(noteFields[NOTE_VALUE_POS]) + staffOnlyPostfix;

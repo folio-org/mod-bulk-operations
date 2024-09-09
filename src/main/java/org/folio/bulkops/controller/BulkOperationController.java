@@ -56,6 +56,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -212,6 +213,12 @@ public class BulkOperationController implements BulkOperationsApi {
     log.info("Cancelling bulk operation id={}", operationId);
     bulkOperationService.cancelOperationById(operationId);
     return new ResponseEntity<>(HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<List<String>> getListUsedTenants(UUID operationId) {
+    var bulkOperation = bulkOperationService.getOperationById(operationId);
+    return new ResponseEntity<>(bulkOperation.getUsedTenants(), HttpStatus.OK);
   }
 
   @Override
