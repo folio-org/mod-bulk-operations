@@ -31,6 +31,7 @@ import static org.mockito.Mockito.when;
 import static org.testcontainers.shaded.org.hamcrest.MatcherAssert.assertThat;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.containsString;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.equalTo;
+import static org.testcontainers.shaded.org.hamcrest.Matchers.hasSize;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.is;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.notNullValue;
 
@@ -42,6 +43,7 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1390,7 +1392,7 @@ class BulkOperationServiceTest extends BaseTest {
   @ParameterizedTest
   @EnumSource(OperationStatusType.class)
   @SneakyThrows
-  void shouldWriteToCsvAfterConverterException(OperationStatusType operationStatusType) {
+  void shouldWriteBeanToCsvAfterConverterException(OperationStatusType operationStatusType) {
     var item = Item.builder()
       .id(UUID.randomUUID().toString())
       .barcode("barcode")
@@ -1408,12 +1410,15 @@ class BulkOperationServiceTest extends BaseTest {
 
     try (var stringWriter = new StringWriter()) {
       var writer = new BulkOperationsEntityCsvWriter(stringWriter, Item.class);
-      bulkOperationService.writeToCsv(operation, writer, item);
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
+      bulkOperationService.writeBeanToCsv(operation, writer, item, bulkOperationExecutionContents);
       assertThat(stringWriter.toString(), containsString("FAILED"));
       if (APPLY_CHANGES.equals(operation.getStatus())) {
-        verify(errorService, times(0)).saveError(any(), any(), any());
+        assertThat(bulkOperationExecutionContents, hasSize(0));
       } else {
-        verify(errorService).saveError(any(), any(), any());
+        assertThat(bulkOperationExecutionContents, hasSize(1));
+        assertThat(bulkOperationExecutionContents.get(0).getBulkOperationId(), equalTo(operation.getId()));
+        assertThat(bulkOperationExecutionContents.get(0).getState(), equalTo(StateType.FAILED));
       }
     }
   }
