@@ -184,9 +184,13 @@ public class NoteTableUpdater {
     List<String> usedTenants = bulkOperation.getUsedTenants();
     if (isNull(usedTenants)) {
       if (holdings) {
-        usedTenants = searchConsortium.getHoldingsByIdentifiers(UploadIdentifiers.builder().identifierType("id")
+        try {
+          usedTenants = searchConsortium.getHoldingsByIdentifiers(UploadIdentifiers.builder().identifierType("id")
             .identifierValues(unifiedTable.getRows().stream().map(Row::getRow).map(r -> UUID.fromString(r.get(0)))
               .toList()).build()).getHoldings().stream().map(ConsortiumHolding::getTenantId).distinct().toList();
+        } catch (Exception exc) {
+          exc.printStackTrace();
+        }
       } else {
         usedTenants = searchConsortium.getItemsByIdentifiers(UploadIdentifiers.builder().identifierType("id")
           .identifierValues(unifiedTable.getRows().stream().map(Row::getRow).map(r -> UUID.fromString(r.get(0)))
