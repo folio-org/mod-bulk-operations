@@ -156,7 +156,6 @@ public class NoteTableUpdater {
   }
 
   public List<String> enrichWithNotesByType(List<String> list, int notesPosition, List<String> noteTypeNames, List<TenantNotePair> tenantNotePairs) {
-    log.info("list: {}, noteTypeNames: {}, pairs: {}", list, noteTypeNames, tenantNotePairs);
     var notesArray = new String[noteTypeNames.size()];
     var notesString = list.get(notesPosition);
     var numOfNoteFields = nonNull(tenantNotePairs) ? NUMBER_OF_NOTE_FIELDS_FOR_HOLDINGS_AND_ITEMS : NUMBER_OF_NOTE_FIELDS_FOR_INSTANCES;
@@ -169,9 +168,7 @@ public class NoteTableUpdater {
             noteWithTenant.getNoteTypeName().equals(noteFields[NOTE_TYPE_POS] + " (" + noteFields[TENANT_POS] + ")"))) {
             restored += " (" + noteFields[TENANT_POS] + ")";
           }
-          log.info("restored: {}, noteFields: {}", restored, Arrays.toString(noteFields));
           var position = noteTypeNames.indexOf(SpecialCharacterEscaper.restore(restored));
-          log.info("position: {}", position);
           if (position != NON_EXISTING_POSITION) {
             var staffOnlyPostfix = TRUE.equals(Boolean.parseBoolean(noteFields[STAFF_ONLY_FLAG_POS])) ? SPACE + STAFF_ONLY : EMPTY;
             var value = SpecialCharacterEscaper.restore(noteFields[NOTE_VALUE_POS]) + staffOnlyPostfix;
