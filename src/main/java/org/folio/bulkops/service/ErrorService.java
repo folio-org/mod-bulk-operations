@@ -70,6 +70,10 @@ public class ErrorService {
       .build());
   }
 
+  public void saveError(BulkOperationExecutionContent bulkOperationExecutionContent) {
+    executionContentRepository.save(bulkOperationExecutionContent);
+  }
+
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage) {
     saveError(bulkOperationId, identifier, errorMessage, null, null);
   }

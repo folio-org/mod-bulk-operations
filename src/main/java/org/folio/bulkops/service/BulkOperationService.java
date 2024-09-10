@@ -34,7 +34,9 @@ import java.io.Reader;
 import java.io.Writer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -51,6 +53,7 @@ import org.folio.bulkops.domain.bean.ExportType;
 import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
+import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.converter.BulkOperationsEntityCsvWriter;
@@ -65,6 +68,7 @@ import org.folio.bulkops.domain.dto.QueryRequest;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
+import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.ConverterException;
@@ -252,19 +256,20 @@ public class BulkOperationService {
       while (iterator.hasNext()) {
         var original = iterator.next();
         var modified = processUpdate(original, operation, ruleCollection, extendedClazz);
-
+        List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
         if (Objects.nonNull(modified)) {
           // Prepare CSV for download and preview
-          if (!consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId()) || clazz == User.class) {
-            writeToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity());
+          if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId()) || clazz == User.class) {
+            writeBeanToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity(), bulkOperationExecutionContents);
           } else {
             var tenantIdOfEntity = modified.getPreview().getTenant();
             try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
               modified.getPreview().setTenantToNotes();
-              writeToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity());
+              writeBeanToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity(), bulkOperationExecutionContents);
             }
           }
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
+          bulkOperationExecutionContents.forEach(errorService::saveError);
           writerForModifiedJsonFile.write(modifiedRecord);
         }
 
@@ -357,16 +362,21 @@ public class BulkOperationService {
     }
   }
 
-  public void writeToCsv(BulkOperation operation, BulkOperationsEntityCsvWriter csvWriter, BulkOperationsEntity bean) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
+  public void writeBeanToCsv(BulkOperation operation, BulkOperationsEntityCsvWriter csvWriter, BulkOperationsEntity bean, List<BulkOperationExecutionContent> bulkOperationExecutionContents) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
     try {
       csvWriter.write(bean);
     } catch (ConverterException e) {
       if (APPLY_CHANGES.equals(operation.getStatus())) {
         log.error("Record {}, field: {}, converter exception: {}", bean.getIdentifier(operation.getIdentifierType()), e.getField().getName(), e.getMessage());
       } else {
-        errorService.saveError(operation.getId(), bean.getIdentifier(operation.getIdentifierType()), format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()));
+        bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
+          .identifier(bean.getIdentifier(operation.getIdentifierType()))
+          .bulkOperationId(operation.getId())
+          .state(StateType.FAILED)
+          .errorMessage(format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()))
+          .build());
       }
-      writeToCsv(operation, csvWriter, bean);
+      writeBeanToCsv(operation, csvWriter, bean, bulkOperationExecutionContents);
     }
   }
 
@@ -374,7 +384,7 @@ public class BulkOperationService {
     var processor = dataProcessorFactory.getProcessorFromFactory(entityClass);
     UpdatedEntityHolder<BulkOperationsEntity> modified = null;
     try {
-      if (!consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId()) || entityClass == User.class) {
+      if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId()) || entityClass == User.class) {
         modified = processor.process(original.getRecordBulkOperationEntity().getIdentifier(operation.getIdentifierType()), original, rules);
       } else {
         var tenantIdOfEntity = original.getTenant();
@@ -430,6 +440,7 @@ public class BulkOperationService {
         while (hasNextRecord(originalFileIterator, modifiedFileIterator)) {
           var original = originalFileIterator.next();
           var modified = modifiedFileIterator.next();
+          List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
 
           processedNumOfRecords++;
 
@@ -438,16 +449,17 @@ public class BulkOperationService {
             if (result != original) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
-              if (!consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId()) || entityClass == User.class ) {
-                writeToCsv(operation, csvWriter, result.getRecordBulkOperationEntity());
+              if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId()) || entityClass == User.class ) {
+                writeBeanToCsv(operation, csvWriter, result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
               } else {
                 var tenantIdOfEntity = result.getTenant();
                 try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
                   result.getRecordBulkOperationEntity().setTenant(tenantIdOfEntity);
                   result.getRecordBulkOperationEntity().setTenantToNotes();
-                  writeToCsv(operation, csvWriter, result.getRecordBulkOperationEntity());
+                  writeBeanToCsv(operation, csvWriter, result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
                 }
               }
+              bulkOperationExecutionContents.forEach(errorService::saveError);
             }
           } catch (OptimisticLockingException e) {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLinkToFailedEntity());
@@ -489,6 +501,10 @@ public class BulkOperationService {
       operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
     }
     bulkOperationRepository.save(operation);
+  }
+
+  private boolean isCurrentTenantNotCentral(String tenantId) {
+    return !consortiaService.isCurrentTenantCentralTenant(tenantId);
   }
 
   public BulkOperation startBulkOperation(UUID bulkOperationId, UUID xOkapiUserId, BulkOperationStart bulkOperationStart) {
