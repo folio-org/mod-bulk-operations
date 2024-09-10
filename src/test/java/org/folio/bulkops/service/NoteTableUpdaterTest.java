@@ -416,7 +416,7 @@ class NoteTableUpdaterTest {
     var noteTypeWithEscapedSpecialCharacters = SpecialCharacterEscaper.escape("O|;:ther");
     var row = new ArrayList<>(List.of("Note;Note text;false;tenant;6c8e4b97-4224-4155-8b13-07e29aca88ad|" + noteTypeWithEscapedSpecialCharacters + ";Other text;true;tenant;6c8e4b97-4224-4155-8b13-07e29aca88ad"));
     var noteTypeNames = List.of("Note", "O|;:ther");
-    var enriched = noteTableUpdater.enrichWithNotesByType(row, 0, noteTypeNames, Collections.emptyList());
+    var enriched = noteTableUpdater.enrichWithNotesByType(row, 0, noteTypeNames, Collections.emptyList(), false);
     assertEquals(2, enriched.size());
     assertEquals("Other text (staff only)", enriched.get(1));
   }

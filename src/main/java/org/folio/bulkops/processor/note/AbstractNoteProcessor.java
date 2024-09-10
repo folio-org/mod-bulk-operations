@@ -3,6 +3,7 @@ package org.folio.bulkops.processor.note;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.RFC4180ParserBuilder;
 import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.service.NoteTableUpdater;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,7 +73,9 @@ public abstract class AbstractNoteProcessor {
   protected abstract int getNotePosition();
 
   private String[] processNotesData(String[] line, List<String> noteTypeNames, BulkOperation bulkOperation) {
-    return noteTableUpdater.enrichWithNotesByType(new ArrayList<>(Arrays.asList(line)), getNotePosition(), noteTypeNames, bulkOperation.getTenantNotePairs()).stream()
+    return noteTableUpdater.enrichWithNotesByType(new ArrayList<>(Arrays.asList(line)), getNotePosition(), noteTypeNames,
+        bulkOperation.getTenantNotePairs(), bulkOperation.getEntityType() == EntityType.INSTANCE ||
+          bulkOperation.getEntityType() == EntityType.INSTANCE_MARC).stream()
       .map(this::processSpecialCharacters)
       .toArray(String[]::new);
   }

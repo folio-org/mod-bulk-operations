@@ -95,7 +95,7 @@ public class NoteTableUpdater {
     }
     var noteTypeNames = noteTypeNamesSet.stream().sorted().toList();
     extendHeadersWithNoteTypeNames(HOLDINGS_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
-    unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), HOLDINGS_NOTE_POSITION, noteTypeNames, tenantNotePairs)));
+    unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), HOLDINGS_NOTE_POSITION, noteTypeNames, tenantNotePairs, false)));
   }
 
   public void extendTableWithItemNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible, BulkOperation bulkOperation) {
@@ -120,7 +120,7 @@ public class NoteTableUpdater {
     }
     var noteTypeNames = noteTypeNamesSet.stream().sorted().toList();
     extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
-    unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), ITEM_NOTE_POSITION, noteTypeNames, tenantNotePairs)));
+    unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), ITEM_NOTE_POSITION, noteTypeNames, tenantNotePairs, false)));
   }
 
   public void extendTableWithInstanceNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible) {
@@ -131,7 +131,7 @@ public class NoteTableUpdater {
 
     if (!noteTypeNames.isEmpty()) {
       extendHeadersWithNoteTypeNames(INSTANCE_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
-      unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), INSTANCE_NOTE_POSITION, noteTypeNames, null)));
+      unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), INSTANCE_NOTE_POSITION, noteTypeNames, null, true)));
     }
   }
 
@@ -155,10 +155,11 @@ public class NoteTableUpdater {
     headers.addAll(notesInitialPosition, cellsToInsert);
   }
 
-  public List<String> enrichWithNotesByType(List<String> list, int notesPosition, List<String> noteTypeNames, List<TenantNotePair> tenantNotePairs) {
+  public List<String> enrichWithNotesByType(List<String> list, int notesPosition, List<String> noteTypeNames,
+                                            List<TenantNotePair> tenantNotePairs, boolean forInstances) {
     var notesArray = new String[noteTypeNames.size()];
     var notesString = list.get(notesPosition);
-    var numOfNoteFields = nonNull(tenantNotePairs) ? NUMBER_OF_NOTE_FIELDS_FOR_HOLDINGS_AND_ITEMS : NUMBER_OF_NOTE_FIELDS_FOR_INSTANCES;
+    var numOfNoteFields = !forInstances ? NUMBER_OF_NOTE_FIELDS_FOR_HOLDINGS_AND_ITEMS : NUMBER_OF_NOTE_FIELDS_FOR_INSTANCES;
     if (isNotEmpty(notesString)) {
       for (var note : notesString.split(ITEM_DELIMITER_PATTERN)) {
         var noteFields = note.trim().split(ARRAY_DELIMITER);
