@@ -210,8 +210,8 @@ class OpenCSVConverterTest extends BaseTest {
         .materialsSpecification("Materials")
         .publicNote("note").build()))
       .withFormerIds(Collections.singletonList("Former identifier"))
-      .withNotes(List.of(ItemNote.builder().itemNoteTypeId("Item@Note@NameX").note("note").staffOnly(true).build(),
-        ItemNote.builder().itemNoteTypeId("Item@Note@Name_2").note("provenance").staffOnly(false).build()))
+      .withNotes(List.of(ItemNote.builder().itemNoteTypeId("Item@Note@NameX").note("note").staffOnly(true).tenantId("tenant").build(),
+        ItemNote.builder().itemNoteTypeId("Item@Note@Name_2").note("provenance").staffOnly(false).tenantId("tenant").build()))
       .withStatisticalCodes(List.of("1c622d0f-2e91-4c30-ba43-2750f9735f51"))
       .withTags(Tags.builder().tagList(Collections.emptyList()).build())
       .withYearCaption(List.of("2001/11/12"))

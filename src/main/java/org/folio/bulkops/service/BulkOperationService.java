@@ -454,6 +454,8 @@ public class BulkOperationService {
               } else {
                 var tenantIdOfEntity = result.getTenant();
                 try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
+                  result.getRecordBulkOperationEntity().setTenant(tenantIdOfEntity);
+                  result.getRecordBulkOperationEntity().setTenantToNotes();
                   writeBeanToCsv(operation, csvWriter, result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
                 }
               }

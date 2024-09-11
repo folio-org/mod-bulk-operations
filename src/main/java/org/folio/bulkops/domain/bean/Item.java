@@ -327,6 +327,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @Valid
   private List<CirculationNote> circulationNotes;
 
+  @JsonProperty("tenantId")
+  private String tenantId;
+
   @Override
   public String getIdentifier(IdentifierType identifierType) {
     return switch (identifierType) {
@@ -346,5 +349,15 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   public Boolean getDiscoverySuppress() {
     return isNull(discoverySuppress) ? FALSE : discoverySuppress;
+  }
+
+  @Override
+  public void setTenantToNotes() {
+    getNotes().forEach(note -> note.setTenantId(tenantId));
+  }
+
+  @Override
+  public void setTenant(String tenantId) {
+    this.tenantId = tenantId;
   }
 }

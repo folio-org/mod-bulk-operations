@@ -29,7 +29,7 @@ class HoldingsNoteProcessorTest extends BaseTest {
   @Test
   void shouldEnrichPreviewWithHoldingsRecordsNoteTypeColumns() {
     var sourceCsv = "Holdings UUID,\"Instance (Title, Publisher, Publication date)\",Suppress from discovery,Holdings HRID,Source,Former holdings Id,Holdings type,Statistical codes,Administrative note,Holdings permanent location,Holdings temporary location,Shelving title,Holdings copy number,Holdings level call number type,Holdings level call number prefix,Holdings level call number,Holdings level call number suffix,Number of items,Holdings statement,Holdings statement for supplements,Holdings statement for indexes,ILL policy,Digitization policy,Retention policy,Notes,Electronic access,Acquisition method,Order format,Receipt status,Tags\n" +
-      "59b36165-fcf2-49d2-bf7f-25fedbc07e44,Sample instance;123,,ho14,FOLIO,,,,,Main Library,,,,,,,,,,,,,,,Note type 3;note3;false|Note type 1;note1;true|Note type 2;note2;false,,,,,";
+      "59b36165-fcf2-49d2-bf7f-25fedbc07e44,Sample instance;123,,ho14,FOLIO,,,,,Main Library,,,,,,,,,,,,,,,Note type 3;note3;false;tenant;0a93bcb7-c0bc-462b-b078-8eedfbaf3f0a|Note type 1;note1;true;tenant;0a93bcb7-c0bc-462b-b078-8eedfbaf3f0a|Note type 2;note2;false;tenant;0a93bcb7-c0bc-462b-b078-8eedfbaf3f0a,,,,,";
 
     when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
     when(holdingsReferenceService.getAllHoldingsNoteTypes(any()))
@@ -44,6 +44,6 @@ class HoldingsNoteProcessorTest extends BaseTest {
     var headers = lines[0];
     assertThat(headers).contains("Note type 1,Note type 2,Note type 3");
     var data = lines[1];
-    assertThat(data).contains("59b36165-fcf2-49d2-bf7f-25fedbc07e44,Sample instance;123,,ho14,FOLIO,,,,,Main Library,,,,,,,,,,,,,,,,,,,,,,");
+    assertThat(data).contains("59b36165-fcf2-49d2-bf7f-25fedbc07e44,Sample instance;123,,ho14,FOLIO,,,,,Main Library,,,,,,,,,,,,,,,note1 (staff only),note2,note3,,,,,");
   }
 }

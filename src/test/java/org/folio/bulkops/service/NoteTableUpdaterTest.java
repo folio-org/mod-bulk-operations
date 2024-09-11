@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -21,12 +22,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.assertj.core.api.Assertions;
+import org.folio.bulkops.client.SearchConsortium;
+import org.folio.bulkops.domain.bean.ConsortiumHolding;
+import org.folio.bulkops.domain.bean.ConsortiumHoldingCollection;
+import org.folio.bulkops.domain.bean.ConsortiumItem;
+import org.folio.bulkops.domain.bean.ConsortiumItemCollection;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.NoteType;
+import org.folio.bulkops.domain.bean.UploadIdentifiers;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -66,6 +75,8 @@ class NoteTableUpdaterTest {
   private CacheManager cacheManager;
   @Mock
   private Cache cache;
+  @Mock
+  private SearchConsortium searchConsortium;
 
   @InjectMocks
   private NoteTableUpdater noteTableUpdater;
@@ -113,6 +124,12 @@ class NoteTableUpdaterTest {
     var row = Arrays.stream(new String[table.getHeader().size()]).collect(Collectors.toCollection(ArrayList::new));
     row.set(ITEM_NOTE_POSITION, "Action note;Action note text;false;member;60b1f73e-bbf2-4807-806b-3166620a7aaa|Note;Note text;false;member;60b1f73e-bbf2-4807-806b-3166620a7aaa|Other;Other text;false;member;60b1f73e-bbf2-4807-806b-3166620a7aaa");
     table.setRows(List.of(new Row().row(row)));
+    row.set(0, UUID.randomUUID().toString());
+    ConsortiumItemCollection consortiumItemCollection = new ConsortiumItemCollection();
+    ConsortiumItem consortiumItem = new ConsortiumItem();
+    consortiumItem.setId(UUID.randomUUID().toString());
+    consortiumItem.setTenantId("member");
+    consortiumItemCollection.setItems(List.of(consortiumItem));
 
     var expectedTableSize = table.getHeader().size() + 2;
 
@@ -125,6 +142,8 @@ class NoteTableUpdaterTest {
         NoteType.builder().name("Note").tenantId("member").build(),
         NoteType.builder().name("Other").tenantId("member").build()));
     when(cacheManager.getCache("itemNoteTypes")).thenReturn(cache);
+    when(searchConsortium.getItemsByIdentifiers(any(UploadIdentifiers.class)))
+      .thenReturn(consortiumItemCollection);
 
     noteTableUpdater.extendTableWithItemNotesTypes(table, Set.of("Action note", "Other"), new BulkOperation());
 
@@ -247,8 +266,14 @@ class NoteTableUpdaterTest {
     headers.put("tenant", List.of("central"));
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Item.class);
     var row = Arrays.stream(new String[table.getHeader().size()]).collect(Collectors.toCollection(ArrayList::new));
+    row.set(0, UUID.randomUUID().toString());
     row.set(HOLDINGS_NOTE_POSITION, "Action note;Action note text;false;member;3e095251-4e9a-4484-8473-d5580abeccd0|Note;Note text;false;member;3e095251-4e9a-4484-8473-d5580abeccd0|Other;Other text;false;member;3e095251-4e9a-4484-8473-d5580abeccd0");
     table.setRows(List.of(new Row().row(row)));
+    ConsortiumHoldingCollection consortiumHoldingCollection = new ConsortiumHoldingCollection();
+    ConsortiumHolding consortiumHolding = new ConsortiumHolding();
+    consortiumHolding.setId(UUID.randomUUID().toString());
+    consortiumHolding.setTenantId("member");
+    consortiumHoldingCollection.setHoldings(List.of(consortiumHolding));
 
     var expectedTableSize = table.getHeader().size() + 2;
 
@@ -261,6 +286,8 @@ class NoteTableUpdaterTest {
         HoldingsNoteType.builder().name("Note").tenantId("member").build(),
         HoldingsNoteType.builder().name("Other").tenantId("member").build()));
     when(cacheManager.getCache("holdingsNoteTypes")).thenReturn(cache);
+    when(searchConsortium.getHoldingsByIdentifiers(any(UploadIdentifiers.class)))
+      .thenReturn(consortiumHoldingCollection);
 
     noteTableUpdater.extendTableWithHoldingsNotesTypes(table, Set.of("Action note", "Other"), new BulkOperation());
 
@@ -389,30 +416,67 @@ class NoteTableUpdaterTest {
     var noteTypeWithEscapedSpecialCharacters = SpecialCharacterEscaper.escape("O|;:ther");
     var row = new ArrayList<>(List.of("Note;Note text;false;tenant;6c8e4b97-4224-4155-8b13-07e29aca88ad|" + noteTypeWithEscapedSpecialCharacters + ";Other text;true;tenant;6c8e4b97-4224-4155-8b13-07e29aca88ad"));
     var noteTypeNames = List.of("Note", "O|;:ther");
-    var enriched = noteTableUpdater.enrichWithNotesByType(row, 0, noteTypeNames, Collections.emptyList());
+    var enriched = noteTableUpdater.enrichWithNotesByType(row, 0, noteTypeNames, Collections.emptyList(), false);
     assertEquals(2, enriched.size());
     assertEquals("Other text (staff only)", enriched.get(1));
   }
 
   @Test
   void shouldUpdateNoteTypeNamesWithTenants_whenNoteIdsAreDifferent() {
-
     List<NoteType> noteTypesFromUserTenants = List.of(
       NoteType.builder().name("Binding").tenantId("memberA").id("id1").build(),
       NoteType.builder().name("Binding").tenantId("memberB").id("id2").build());
     noteTableUpdater.updateNoteTypeNamesWithTenants(noteTypesFromUserTenants);
-
     noteTypesFromUserTenants.forEach(noteType -> assertEquals("Binding (" + noteType.getTenantId() + ")", noteType.getName()));
   }
 
   @Test
   void shouldNotUpdateNoteTypeNamesWithTenants_whenNoteIdsAreTheSame() {
-
     List<NoteType> noteTypesFromUserTenants = List.of(
       NoteType.builder().name("Binding").tenantId("memberA").id("id1").build(),
       NoteType.builder().name("Binding").tenantId("memberB").id("id1").build());
     noteTableUpdater.updateNoteTypeNamesWithTenants(noteTypesFromUserTenants);
-
     noteTypesFromUserTenants.forEach(noteType -> assertEquals("Binding", noteType.getName()));
+  }
+
+  @Test
+  void shouldUpdateNoteTypeNamesWithTenants_whenThereAreNoteTypesInAllTenants() {
+    List<NoteType> noteTypesFromUserTenants = List.of(
+      NoteType.builder().name("Binding").tenantId("memberA").id("id1").build(),
+      NoteType.builder().name("Binding").tenantId("memberB").id("id1").build(),
+      NoteType.builder().name("Binding2").tenantId("memberB").id("id2").build(),
+      NoteType.builder().name("Binding").tenantId("memberC").id("id1").build(),
+      NoteType.builder().name("Binding3").tenantId("memberC").id("id1").build()
+    );
+    noteTableUpdater.updateNoteTypeNamesWithTenants(noteTypesFromUserTenants);
+    Assertions.assertThat(noteTypesFromUserTenants.stream().filter(note -> note.getName().equals("Binding")).count()).isEqualTo(3);
+    Assertions.assertThat(noteTypesFromUserTenants.stream().filter(note -> note.getName().equals("Binding2 (memberB)")).count()).isEqualTo(1);
+    Assertions.assertThat(noteTypesFromUserTenants.stream().filter(note -> note.getName().equals("Binding3 (memberC)")).count()).isEqualTo(1);
+  }
+
+  @Test
+  void getUsedTenantsTest() {
+    var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Item.class);
+    var row = Arrays.stream(new String[table.getHeader().size()]).collect(Collectors.toCollection(ArrayList::new));
+    row.set(0, UUID.randomUUID().toString());
+    row.set(HOLDINGS_NOTE_POSITION, "Action note;Action note text;true;tenantId;3e095251-4e9a-4484-8473-d5580abeccd0|Note;Note text;false;tenantId;3e095251-4e9a-4484-8473-d5580abeccd0|Other;Other text;true;tenantId;3e095251-4e9a-4484-8473-d5580abeccd0");
+    table.setRows(List.of(new Row().row(row)));
+    ConsortiumHoldingCollection collection = new ConsortiumHoldingCollection();
+    ConsortiumHolding holding = new ConsortiumHolding();
+    holding.setTenantId("member");
+    holding.setId(UUID.randomUUID().toString());
+    ConsortiumHolding holding2 = new ConsortiumHolding();
+    holding2.setTenantId("member");
+    holding2.setId(UUID.randomUUID().toString());
+    ConsortiumHolding holding3 = new ConsortiumHolding();
+    holding3.setTenantId("member2");
+    holding3.setId(UUID.randomUUID().toString());
+    collection.setHoldings(List.of(holding, holding2, holding3));
+
+    when(searchConsortium.getHoldingsByIdentifiers(any(UploadIdentifiers.class)))
+      .thenReturn(collection);
+
+    var usedTenants = noteTableUpdater.getUsedTenants(table, new BulkOperation(), true);
+    Assertions.assertThat(usedTenants).hasSize(2);
   }
 }

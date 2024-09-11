@@ -555,6 +555,33 @@ paths:
               schema:
                 type: string
                 example: Internal server error
+  /bulk-operations/used-tenants/{operationId}:
+    get:
+      description: Get a list of used tenants
+      operationId: getListUsedTenants
+      parameters:
+        - in: path
+          name: operationId
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+          description: UUID of the Bulk Operation
+      responses:
+        '200':
+          description: Collection of used tenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '500':
+          description: Internal server errors, e.g. due to misconfiguration
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Internal server error
 components:
   schemas:
     bulkOperationCollection:

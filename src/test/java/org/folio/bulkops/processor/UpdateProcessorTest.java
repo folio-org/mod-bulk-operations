@@ -24,7 +24,7 @@ import java.util.UUID;
 
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.ItemClient;
-import org.folio.bulkops.client.SearchConsortiumHoldings;
+import org.folio.bulkops.client.SearchConsortium;
 import org.folio.bulkops.domain.bean.ConsortiumHolding;
 import org.folio.bulkops.domain.bean.ConsortiumHoldingCollection;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
@@ -91,7 +91,7 @@ class UpdateProcessorTest extends BaseTest {
   @MockBean
   private ConsortiaService consortiaService;
   @MockBean
-  private SearchConsortiumHoldings searchConsortiumHoldings;
+  private SearchConsortium searchConsortium;
 
   @Test
   void shouldUpdateHoldingsRecord() {
@@ -438,7 +438,7 @@ class UpdateProcessorTest extends BaseTest {
     when(userClient.getUserById(userId)).thenReturn(user);
     when(consortiaService.isCurrentTenantCentralTenant("diku")).thenReturn(true);
     when(consortiaService.getAffiliatedTenants(any(), any())).thenReturn(affiliatedTenants);
-    when(searchConsortiumHoldings.getHoldingsById(UUID.fromString(instanceId))).thenReturn(consortiumHoldingCollection);
+    when(searchConsortium.getHoldingsById(UUID.fromString(instanceId))).thenReturn(consortiumHoldingCollection);
     when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()
       .bulkOperationRules(Collections.singletonList(rule))
       .totalRecords(1));

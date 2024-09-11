@@ -19,10 +19,11 @@ import org.folio.bulkops.exception.EntityFormatException;
 import org.folio.bulkops.service.ItemReferenceHelper;
 
 public class ItemNoteListConverter extends BaseConverter<List<ItemNote>> {
-  private static final int NUMBER_OF_ITEM_NOTE_COMPONENTS = 3;
+  private static final int NUMBER_OF_ITEM_NOTE_COMPONENTS = 5;
   private static final int NOTE_TYPE_NAME_INDEX = 0;
   private static final int NOTE_INDEX = 1;
-  private static final int STAFF_ONLY_OFFSET = 1;
+  private static final int TENANT_INDEX = 3;
+  private static final int STAFF_ONLY_OFFSET = 3;
 
   @Override
   public List<ItemNote> convertToObject(String value) {
@@ -36,9 +37,11 @@ public class ItemNoteListConverter extends BaseConverter<List<ItemNote>> {
     return  object.stream()
       .filter(Objects::nonNull)
       .map(itemNote -> String.join(ARRAY_DELIMITER,
-        escape(ItemReferenceHelper.service().getNoteTypeNameById(itemNote.getItemNoteTypeId())),
+        escape(ItemReferenceHelper.service().getNoteTypeNameById(itemNote.getItemNoteTypeId(), itemNote.getTenantId())),
         escape(itemNote.getNote()),
-        escape(booleanToStringNullSafe(itemNote.getStaffOnly()))))
+        escape(booleanToStringNullSafe(itemNote.getStaffOnly())),
+        itemNote.getTenantId(),
+        itemNote.getItemNoteTypeId()))
       .collect(Collectors.joining(ITEM_DELIMITER));
   }
 
@@ -55,6 +58,7 @@ public class ItemNoteListConverter extends BaseConverter<List<ItemNote>> {
           .map(SpecialCharacterEscaper::restore)
           .collect(Collectors.joining(";")))
         .staffOnly(Boolean.valueOf(tokens[tokens.length - STAFF_ONLY_OFFSET]))
+        .tenantId(tokens[TENANT_INDEX])
         .build();
     }
     return null;

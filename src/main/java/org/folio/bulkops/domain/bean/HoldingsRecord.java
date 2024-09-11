@@ -253,6 +253,9 @@ public class HoldingsRecord implements BulkOperationsEntity {
   @JsonProperty("itemBarcode")
   private String itemBarcode;
 
+  @JsonProperty("tenantId")
+  private String tenantId;
+
   @Override
   public String getIdentifier(IdentifierType identifierType) {
     return switch (identifierType) {
@@ -270,5 +273,15 @@ public class HoldingsRecord implements BulkOperationsEntity {
 
   public Boolean getDiscoverySuppress() {
     return isNull(discoverySuppress) ? FALSE : discoverySuppress;
+  }
+
+  @Override
+  public void setTenantToNotes() {
+    getNotes().forEach(note -> note.setTenantId(tenantId));
+  }
+
+  @Override
+  public void setTenant(String tenantId) {
+    this.tenantId = tenantId;
   }
 }

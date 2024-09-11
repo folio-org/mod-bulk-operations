@@ -248,6 +248,12 @@
           "pathPattern": "/bulk-operations/{operationId}/cancel",
           "permissionsRequired": ["bulk-operations.item.cancel.post"],
           "modulePermissions": [ ]
+        },
+        {
+          "methods": [ "GET" ],
+          "pathPattern": "/bulk-operations/used-tenants/{operationId}",
+          "permissionsRequired": ["bulk-operations.used.tenants.get"],
+          "modulePermissions": [ ]
         }
       ]
     },
@@ -366,6 +372,11 @@
       "description" : "Cancel operation by id"
     },
     {
+      "permissionName": "bulk-operations.used.tenants.get",
+      "displayName" : "get used tenants by operation id",
+      "description" : "Get used tenants by operation id"
+    },
+    {
       "permissionName" : "bulk-operations.all",
       "displayName" : "bulk-operations all",
       "description" : "All permissions for bulk-operations module",
@@ -384,7 +395,8 @@
         "bulk-operations.list-users.collection.get",
         "bulk-operations.files.item.delete",
         "bulk-operations.item.cancel.post",
-        "bulk-operations.item.query.post"
+        "bulk-operations.item.query.post",
+        "bulk-operations.used.tenants.get"
       ]
     }
   ],

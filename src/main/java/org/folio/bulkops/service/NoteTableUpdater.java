@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static java.lang.Boolean.TRUE;
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
@@ -17,10 +18,16 @@ import static org.folio.bulkops.util.Constants.STAFF_ONLY;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.client.SearchConsortium;
+import org.folio.bulkops.domain.bean.ConsortiumHolding;
+import org.folio.bulkops.domain.bean.ConsortiumItem;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.NoteType;
+import org.folio.bulkops.domain.bean.UploadIdentifiers;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.InstanceNoteType;
+import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.TenantNotePair;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 
@@ -36,22 +43,23 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+@Log4j2
 public class NoteTableUpdater {
   private static final int NON_EXISTING_POSITION = -1;
-  private static final int NUMBER_OF_NOTE_FIELDS = 5;
+  private static final int NUMBER_OF_NOTE_FIELDS_FOR_HOLDINGS_AND_ITEMS = 5;
+  private static final int NUMBER_OF_NOTE_FIELDS_FOR_INSTANCES = 3;
   private static final int NOTE_TYPE_POS = 0;
   private static final int NOTE_VALUE_POS = 1;
   private static final int STAFF_ONLY_FLAG_POS = 2;
   private static final int TENANT_POS = 3;
-  private static final int HOLDINGS_NOTE_TYPE_ID_POS = 4;
 
   private final ItemReferenceService itemReferenceService;
   private final HoldingsReferenceService holdingsReferenceService;
@@ -61,6 +69,7 @@ public class NoteTableUpdater {
   private final ConsortiaService consortiaService;
   private final BulkOperationRepository bulkOperationRepository;
   private final CacheManager cacheManager;
+  private final SearchConsortium searchConsortium;
 
   public void extendTableWithHoldingsNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible, BulkOperation bulkOperation) {
     var noteTypeNamesSet = new HashSet<>(holdingsReferenceService.getAllHoldingsNoteTypes(folioExecutionContext.getTenantId()).stream()
@@ -70,7 +79,7 @@ public class NoteTableUpdater {
     List<TenantNotePair> tenantNotePairs = new ArrayList<>();
     if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
       noteTypeNamesSet.clear();
-      var usedTenants = getUsedTenants(unifiedTable, bulkOperation, HOLDINGS_NOTE_POSITION);
+      var usedTenants = getUsedTenants(unifiedTable, bulkOperation, true);
       for (var usedTenant : usedTenants) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(usedTenant, folioModuleMetadata, folioExecutionContext))) {
           var noteTypesFromUsedTenant = holdingsReferenceService.getAllHoldingsNoteTypes(usedTenant);
@@ -86,7 +95,7 @@ public class NoteTableUpdater {
     }
     var noteTypeNames = noteTypeNamesSet.stream().sorted().toList();
     extendHeadersWithNoteTypeNames(HOLDINGS_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
-    unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), HOLDINGS_NOTE_POSITION, noteTypeNames, tenantNotePairs)));
+    unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), HOLDINGS_NOTE_POSITION, noteTypeNames, tenantNotePairs, false)));
   }
 
   public void extendTableWithItemNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible, BulkOperation bulkOperation) {
@@ -97,7 +106,7 @@ public class NoteTableUpdater {
     List<TenantNotePair> tenantNotePairs = new ArrayList<>();
     if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
       noteTypeNamesSet.clear();
-      var usedTenants = getUsedTenants(unifiedTable, bulkOperation, ITEM_NOTE_POSITION);
+      var usedTenants = getUsedTenants(unifiedTable, bulkOperation, false);
       for (var usedTenant : usedTenants) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(usedTenant, folioModuleMetadata, folioExecutionContext))) {
           var noteTypesFromUsedTenant = itemReferenceService.getAllItemNoteTypes(usedTenant);
@@ -111,7 +120,7 @@ public class NoteTableUpdater {
     }
     var noteTypeNames = noteTypeNamesSet.stream().sorted().toList();
     extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
-    unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), ITEM_NOTE_POSITION, noteTypeNames, tenantNotePairs)));
+    unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), ITEM_NOTE_POSITION, noteTypeNames, tenantNotePairs, false)));
   }
 
   public void extendTableWithInstanceNotesTypes(UnifiedTable unifiedTable, Set<String> forceVisible) {
@@ -122,7 +131,7 @@ public class NoteTableUpdater {
 
     if (!noteTypeNames.isEmpty()) {
       extendHeadersWithNoteTypeNames(INSTANCE_NOTE_POSITION, unifiedTable.getHeader(), noteTypeNames, forceVisible);
-      unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), INSTANCE_NOTE_POSITION, noteTypeNames, Collections.emptyList())));
+      unifiedTable.getRows().forEach(row -> row.setRow(enrichWithNotesByType(row.getRow(), INSTANCE_NOTE_POSITION, noteTypeNames, null, true)));
     }
   }
 
@@ -146,15 +155,17 @@ public class NoteTableUpdater {
     headers.addAll(notesInitialPosition, cellsToInsert);
   }
 
-  public List<String> enrichWithNotesByType(List<String> list, int notesPosition, List<String> noteTypeNames, List<TenantNotePair> tenantNotePairs) {
+  public List<String> enrichWithNotesByType(List<String> list, int notesPosition, List<String> noteTypeNames,
+                                            List<TenantNotePair> tenantNotePairs, boolean forInstances) {
     var notesArray = new String[noteTypeNames.size()];
     var notesString = list.get(notesPosition);
+    var numOfNoteFields = !forInstances ? NUMBER_OF_NOTE_FIELDS_FOR_HOLDINGS_AND_ITEMS : NUMBER_OF_NOTE_FIELDS_FOR_INSTANCES;
     if (isNotEmpty(notesString)) {
       for (var note : notesString.split(ITEM_DELIMITER_PATTERN)) {
         var noteFields = note.trim().split(ARRAY_DELIMITER);
-        if (noteFields.length == NUMBER_OF_NOTE_FIELDS) {
+        if (noteFields.length == numOfNoteFields) {
           var restored = noteFields[NOTE_TYPE_POS];
-          if (tenantNotePairs.stream().anyMatch(noteWithTenant -> noteWithTenant.getTenantId().equals(noteFields[TENANT_POS]) &&
+          if (nonNull(tenantNotePairs) && tenantNotePairs.stream().anyMatch(noteWithTenant -> noteWithTenant.getTenantId().equals(noteFields[TENANT_POS]) &&
             noteWithTenant.getNoteTypeName().equals(noteFields[NOTE_TYPE_POS] + " (" + noteFields[TENANT_POS] + ")"))) {
             restored += " (" + noteFields[TENANT_POS] + ")";
           }
@@ -172,11 +183,18 @@ public class NoteTableUpdater {
     return list;
   }
 
-  public List<String> getUsedTenants(UnifiedTable unifiedTable, BulkOperation bulkOperation, int notesPosition) {
+  public List<String> getUsedTenants(UnifiedTable unifiedTable, BulkOperation bulkOperation, boolean holdings) {
     List<String> usedTenants = bulkOperation.getUsedTenants();
     if (isNull(usedTenants)) {
-      usedTenants = unifiedTable.getRows().stream().flatMap(row -> Arrays.stream(row.getRow().get(notesPosition)
-        .split(ITEM_DELIMITER_PATTERN))).map(items -> items.trim().split(ARRAY_DELIMITER)).map(noteFields -> noteFields[TENANT_POS]).distinct().toList();
+      if (holdings) {
+        usedTenants = searchConsortium.getHoldingsByIdentifiers(UploadIdentifiers.builder().identifierType("id")
+          .identifierValues(unifiedTable.getRows().stream().map(Row::getRow).map(r -> UUID.fromString(r.get(0)))
+            .toList()).build()).getHoldings().stream().map(ConsortiumHolding::getTenantId).distinct().toList();
+      } else {
+        usedTenants = searchConsortium.getItemsByIdentifiers(UploadIdentifiers.builder().identifierType("id")
+          .identifierValues(unifiedTable.getRows().stream().map(Row::getRow).map(r -> UUID.fromString(r.get(0)))
+            .toList()).build()).getItems().stream().map(ConsortiumItem::getTenantId).distinct().toList();
+      }
       bulkOperation.setUsedTenants(usedTenants);
       bulkOperationRepository.save(bulkOperation);
     }
@@ -184,9 +202,12 @@ public class NoteTableUpdater {
   }
 
   public void updateNoteTypeNamesWithTenants(List<NoteType> noteTypesFromUsedTenants) {
-    noteTypesFromUsedTenants.stream().collect(Collectors.groupingBy(NoteType::getName))
-      .values().stream().filter(noteTypes -> noteTypes.stream().map(NoteType::getId).distinct().count() > 1)
-      .flatMap(List::stream).distinct().forEach(note -> note.setName(note.getName() + " (" + note.getTenantId() + ")"));
+    var numOfAllTenants = noteTypesFromUsedTenants.stream().map(NoteType::getTenantId).distinct().count();
+    var noteTypesPresentInAllTenants = noteTypesFromUsedTenants.stream()
+      .collect(Collectors.groupingBy(noteType -> noteType.getId() + noteType.getName())).values().stream().filter(noteTypes -> noteTypes
+        .stream().map(NoteType::getName).count() == numOfAllTenants).flatMap(List::stream).collect(Collectors.toSet());
+    noteTypesFromUsedTenants.stream().filter(noteType -> !noteTypesPresentInAllTenants.contains(noteType)).distinct()
+      .forEach(note -> note.setName(note.getName() + " (" + note.getTenantId() + ")"));
   }
 
   private List<TenantNotePair> getTenantNotePairs(BulkOperation bulkOperation, List<NoteType> noteTypesFromUsedTenants) {
