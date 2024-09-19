@@ -700,7 +700,6 @@ public class BulkOperationService {
 
   private void processDataImportResult(BulkOperation operation) {
     var dataImportJobExecution = metadataProviderService.getDataImportJobExecutionByJobProfileId(operation.getDataImportJobProfileId());
-    log.info("job execution: {}", dataImportJobExecution);
     operation.setProcessedNumOfRecords(dataImportJobExecution.getProgress().getCurrent());
     if (COMMITTED.equals(dataImportJobExecution.getStatus())) {
       operation.setStatus(COMPLETED);

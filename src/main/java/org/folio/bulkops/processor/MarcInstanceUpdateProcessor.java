@@ -54,7 +54,6 @@ public class MarcInstanceUpdateProcessor {
     try (var is = remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
       var jobProfile = createJobProfile();
       var uploadDefinition = uploadMarcFile(bulkOperation, is.readAllBytes());
-      log.info("Upload definition: {}", uploadDefinition);
       dataImportClient.uploadFileDefinitionsProcessFiles(UploadFileDefinitionProcessFiles.builder()
           .uploadFileDefinition(uploadDefinition)
           .jobProfileInfo(JobProfileInfo.builder().id(jobProfile.getId()).dataType(MARC).build())
