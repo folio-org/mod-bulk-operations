@@ -2,7 +2,8 @@
   "profile": {
     "name": "Bulk operations data import job profile",
     "description": "Bulk operations data import job profile",
-    "dataType": "MARC"
+    "dataType": "MARC",
+    "hidden": true
   },
   "addedRelations": [{
     "masterProfileId": null,
@@ -22,14 +23,14 @@
     "order": 0,
     "reactTo": "MATCH"
   }, {
-      "masterProfileId": null,
-      "detailProfileId": null,
-      "masterWrapperId": null,
-      "masterProfileType": "MATCH_PROFILE",
-      "detailWrapperId": null,
-      "detailProfileType": "ACTION_PROFILE",
-      "order": 1,
-      "reactTo": "MATCH"
-    }
+    "masterProfileId": null,
+    "detailProfileId": null,
+    "masterWrapperId": null,
+    "masterProfileType": "MATCH_PROFILE",
+    "detailWrapperId": null,
+    "detailProfileType": "ACTION_PROFILE",
+    "order": 1,
+    "reactTo": "MATCH"
+  }
   ]
 }

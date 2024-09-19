@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "JobExecution error status Enum",
+  "type": "string",
+  "additionalProperties": false,
+  "enum": [
+    "SNAPSHOT_UPDATE_ERROR",
+    "RECORD_UPDATE_ERROR",
+    "FILE_PROCESSING_ERROR",
+    "INSTANCE_CREATING_ERROR",
+    "PROFILE_SNAPSHOT_CREATING_ERROR"
+  ]
+}

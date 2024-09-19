@@ -25,4 +25,7 @@ public class JobProfile {
 
   @JsonProperty("dataType")
   private String dataType;
+
+  @JsonProperty("hidden")
+  private Boolean hidden;
 }

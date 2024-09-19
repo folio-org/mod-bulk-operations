@@ -22,6 +22,7 @@ import static org.folio.bulkops.service.Marc21ReferenceProvider.getLanguageByCod
 import static org.folio.bulkops.service.Marc21ReferenceProvider.getNoteTypeByTag;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
+import static org.folio.bulkops.util.Constants.MARC;
 
 import lombok.RequiredArgsConstructor;
 import org.marc4j.marc.ControlField;
@@ -51,7 +52,7 @@ public class MarcToUnifiedTableRowMapper {
   private void setSourceMarc(List<String> rowData, List<String> headers) {
     var index = headers.indexOf(INSTANCE_SOURCE);
     if (index != -1) {
-      rowData.set(index, "MARC");
+      rowData.set(index, MARC);
     }
   }
 

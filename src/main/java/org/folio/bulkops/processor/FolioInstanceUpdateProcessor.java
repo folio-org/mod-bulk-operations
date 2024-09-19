@@ -8,6 +8,7 @@ import static org.folio.bulkops.util.Constants.APPLY_TO_HOLDINGS;
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.GET_HOLDINGS_BY_INSTANCE_ID_QUERY;
 import static org.folio.bulkops.util.Constants.GET_ITEMS_BY_HOLDING_ID_QUERY;
+import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.RuleUtils.fetchParameters;
@@ -45,7 +46,7 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedInstance> {
+public class FolioInstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedInstance> {
   private static final String ERROR_MESSAGE_TEMPLATE = "No change in value for instance required, %s associated records have been updated.";
   private static final String ERROR_NO_AFFILIATION_TO_EDIT_HOLDINGS = "User %s does not have required affiliation to edit the holdings record - %s on the tenant %s";
 
@@ -169,7 +170,7 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedIns
   private List<HoldingsRecord> getHoldingsSourceFolioByInstanceId(String instanceId) {
     return holdingsClient.getByQuery(format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE)
       .getHoldingsRecords().stream()
-      .filter(holdingsRecord -> !"MARC".equals(holdingsReferenceService.getSourceById(holdingsRecord.getSourceId(), folioExecutionContext.getTenantId()).getName()))
+      .filter(holdingsRecord -> !MARC.equals(holdingsReferenceService.getSourceById(holdingsRecord.getSourceId(), folioExecutionContext.getTenantId()).getName()))
       .toList();
   }
 

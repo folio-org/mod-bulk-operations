@@ -100,14 +100,16 @@ public class ErrorService {
     }
   }
 
-  public void saveErrorsFromDataImport(UUID bulkOperationId, UUID dataImportJobId) {
+  public int saveErrorsFromDataImport(UUID bulkOperationId, UUID dataImportJobId) {
     log.info("Saving errors from DataImport, bulkOperationId = {}, dataImportJobId = {}", bulkOperationId, dataImportJobId);
     var bulkOperation = operationRepository.findById(bulkOperationId)
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
     var identifierType = bulkOperation.getIdentifierType();
     try {
-      var jobLogEntries = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE);
-      jobLogEntries.getEntries().stream().filter(entry -> !entry.getError().isEmpty()).forEach(errorEntry -> {
+      var jobLogEntries = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE)
+        .getEntries().stream().filter(entry -> !entry.getError().isEmpty())
+          .toList();
+      jobLogEntries.forEach(errorEntry -> {
         String identifier = EMPTY;
         try {
           if (identifierType == IdentifierType.ID) {
@@ -116,14 +118,13 @@ public class ErrorService {
             identifier = srsClient.getSrsRecordById(errorEntry.getSourceRecordId()).getExternalIdsHolder().getInstanceHrid();
           }
         } catch (Exception e) {
-          log.error("Problem with retrieving SRS record {}", errorEntry.getSourceRecordId());
-          log.error(e);
+          log.error("Problem with retrieving SRS record {}", errorEntry.getSourceRecordId(), e);
         }
         saveError(bulkOperationId, identifier, errorEntry.getError());
       });
+      return jobLogEntries.size();
     } catch (Exception e) {
-      log.error("Problem with retrieving logs from MetadataProvider");
-      log.error(e);
+      log.error("Problem with retrieving logs from MetadataProvider", e);
       throw new DataImportException(e);
     }
   }

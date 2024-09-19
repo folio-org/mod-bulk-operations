@@ -9,6 +9,9 @@ import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
+import static org.folio.bulkops.domain.dto.DataImportStatus.COMMITTED;
+import static org.folio.bulkops.domain.dto.DataImportStatus.ERROR;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
@@ -130,6 +133,8 @@ public class BulkOperationService {
   private final FolioModuleMetadata folioModuleMetadata;
   private final FolioExecutionContext folioExecutionContext;
   private final ConsortiaService consortiaService;
+  private final MarcUpdateService marcUpdateService;
+  private final MetadataProviderService metadataProviderService;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
@@ -215,7 +220,7 @@ public class BulkOperationService {
   }
 
   public void confirm(BulkOperation operation)  {
-    if (operation.getEntityType() == EntityType.INSTANCE_MARC) {
+    if (operation.getEntityType() == INSTANCE_MARC) {
       confirmForInstanceMarc(operation);
       return;
     }
@@ -406,6 +411,11 @@ public class BulkOperationService {
     operation.setTotalNumOfRecords(operation.getMatchedNumOfRecords());
 
     operation = bulkOperationRepository.save(operation);
+
+    if (operation.getEntityType() == INSTANCE_MARC) {
+      marcUpdateService.commitForInstanceMarc(operation);
+      return;
+    }
 
     if (StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsJsonFile())) {
       var entityClass = resolveEntityClass(operation.getEntityType());
@@ -678,11 +688,28 @@ public class BulkOperationService {
         var execution = executionRepository.findByBulkOperationId(bulkOperationId);
         if (execution.isPresent() && StatusType.ACTIVE.equals(execution.get().getStatus())) {
           operation.setProcessedNumOfRecords(execution.get().getProcessedRecords());
+          if (INSTANCE_MARC.equals(operation.getEntityType()) && nonNull(operation.getDataImportJobProfileId())) {
+            processDataImportResult(operation);
+          }
         }
-        yield operation;
+        yield bulkOperationRepository.save(operation);
       }
       default -> operation;
     };
+  }
+
+  private void processDataImportResult(BulkOperation operation) {
+    var dataImportJobExecution = metadataProviderService.getDataImportJobExecutionByJobProfileId(operation.getDataImportJobProfileId());
+    log.info("job execution: {}", dataImportJobExecution);
+    operation.setProcessedNumOfRecords(dataImportJobExecution.getProgress().getCurrent());
+    if (COMMITTED.equals(dataImportJobExecution.getStatus())) {
+      operation.setStatus(COMPLETED);
+    } else if (ERROR.equals(dataImportJobExecution.getStatus())) {
+      var errorsCount = errorService.saveErrorsFromDataImport(operation.getId(), dataImportJobExecution.getId());
+      errorService.uploadErrorsToStorage(operation.getId());
+      operation.setCommittedNumOfErrors(errorsCount);
+      operation.setStatus(COMPLETED_WITH_ERRORS);
+    }
   }
 
   public BulkOperation getBulkOperationOrThrow(UUID operationId) {

@@ -24,4 +24,7 @@ public class UploadFileDefinition {
 
   @JsonProperty("fileDefinitions")
   private List<FileDefinition> fileDefinitions = new ArrayList<>();
+
+  @JsonProperty("metadata")
+  private Metadata metadata;
 }

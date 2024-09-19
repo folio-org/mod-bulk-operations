@@ -4,7 +4,7 @@
     "description": "Bulk operations data import update instance action profile",
     "action" : "UPDATE",
     "folioRecord" : "INSTANCE",
-    "hidden" : false,
+    "hidden" : true,
     "remove9Subfields" : true
   } ,
   "addedRelations": [{
