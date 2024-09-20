@@ -16,15 +16,14 @@ import org.springframework.stereotype.Component;
 
 import lombok.extern.log4j.Log4j2;
 
+import static java.util.Objects.nonNull;
+import static java.util.Optional.ofNullable;
+
 @Log4j2
 @Component
 public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> implements DataProcessor<T> {
   @Autowired
   private ErrorService errorService;
-  @Autowired
-  private ConsortiaService consortiaService;
-  @Autowired
-  private FolioExecutionContext folioExecutionContext;
 
   @Override
   public UpdatedEntityHolder process(String identifier, T entity, BulkOperationRuleCollection rules) {
@@ -35,14 +34,14 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
       var details = rule.getRuleDetails();
       var option = details.getOption();
       var tenantsFromRule = rule.getRuleDetails().getTenants();
-      if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId()) && !tenantsFromRule.isEmpty() && !tenantsFromRule.contains(entity.getTenant())) {
+      if (nonNull(tenantsFromRule) && !tenantsFromRule.isEmpty() && !tenantsFromRule.contains(entity.getTenant())) {
         errorService.saveError(rule.getBulkOperationId(), identifier,
           String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
             entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
       }
       for (Action action : details.getActions()) {
         var tenantsFromAction = action.getTenants();
-        if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId()) && !tenantsFromAction.isEmpty() && !tenantsFromAction.contains(entity.getTenant())) {
+        if (nonNull(tenantsFromAction) && !tenantsFromAction.isEmpty() && !tenantsFromAction.contains(entity.getTenant())) {
           errorService.saveError(rule.getBulkOperationId(), identifier,
             String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
               entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
