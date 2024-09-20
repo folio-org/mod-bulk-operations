@@ -27,7 +27,7 @@ import java.time.LocalDateTime;
 @Log4j2
 @RequiredArgsConstructor
 public class MarcUpdateService {
-  private static final String CHANGED_MARC_PATH_TEMPLATE = "%s/%s-Changed-Records-%s.mrc";
+  public static final String CHANGED_MARC_PATH_TEMPLATE = "%s/%s-Changed-Records-%s.mrc";
 
   private final BulkOperationExecutionRepository executionRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
@@ -49,17 +49,20 @@ public class MarcUpdateService {
         bulkOperation.setLinkToCommittedRecordsMarcFile(prepareCommittedFile(bulkOperation));
         bulkOperationRepository.save(bulkOperation);
         updateProcessor.updateMarcRecords(bulkOperation);
+        execution = execution
+          .withStatus(StatusType.COMPLETED)
+          .withEndTime(LocalDateTime.now());
       } catch (Exception e) {
         log.error("Error while updating marc file", e);
         execution = execution
           .withStatus(StatusType.FAILED)
           .withEndTime(LocalDateTime.now());
-        executionRepository.save(execution);
         bulkOperation.setStatus(FAILED);
         bulkOperation.setEndTime(LocalDateTime.now());
         bulkOperation.setErrorMessage(e.getMessage());
         bulkOperationRepository.save(bulkOperation);
       }
+      executionRepository.save(execution);
     }
   }
 
