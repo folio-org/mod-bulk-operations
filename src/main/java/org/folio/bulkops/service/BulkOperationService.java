@@ -689,8 +689,8 @@ public class BulkOperationService {
         if (execution.isPresent()) {
           if (StatusType.ACTIVE.equals(execution.get().getStatus())) {
             var processedNumOfRecords = INSTANCE_MARC.equals(operation.getEntityType()) ?
-              execution.get().getProcessedRecords() :
-              getDataImportProcessedNumOfRecords(operation);
+              getDataImportProcessedNumOfRecords(operation) :
+              execution.get().getProcessedRecords();
             operation.setProcessedNumOfRecords(processedNumOfRecords);
           } else if (INSTANCE_MARC.equals(operation.getEntityType()) && nonNull(operation.getDataImportJobProfileId())) {
             processDataImportResult(operation);
