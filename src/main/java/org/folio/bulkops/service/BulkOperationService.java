@@ -704,7 +704,9 @@ public class BulkOperationService {
 
   private void processDataImportResult(BulkOperation operation) {
     var dataImportJobExecution = metadataProviderService.getDataImportJobExecutionByJobProfileId(operation.getDataImportJobProfileId());
-    operation.setProcessedNumOfRecords(dataImportJobExecution.getProgress().getCurrent());
+    var processedNumOfRecords = dataImportJobExecution.getProgress().getCurrent();
+    operation.setProcessedNumOfRecords(processedNumOfRecords);
+    operation.setCommittedNumOfRecords(processedNumOfRecords);
     if (Set.of(COMMITTED, ERROR).contains(dataImportJobExecution.getStatus())) {
       errorService.saveErrorsFromDataImport(operation.getId(), dataImportJobExecution.getId());
       operation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(operation.getId()));
