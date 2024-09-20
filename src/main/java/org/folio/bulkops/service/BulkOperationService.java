@@ -701,13 +701,11 @@ public class BulkOperationService {
   private void processDataImportResult(BulkOperation operation) {
     var dataImportJobExecution = metadataProviderService.getDataImportJobExecutionByJobProfileId(operation.getDataImportJobProfileId());
     operation.setProcessedNumOfRecords(dataImportJobExecution.getProgress().getCurrent());
-    if (COMMITTED.equals(dataImportJobExecution.getStatus())) {
-      operation.setStatus(COMPLETED);
-    } else if (ERROR.equals(dataImportJobExecution.getStatus())) {
-      var errorsCount = errorService.saveErrorsFromDataImport(operation.getId(), dataImportJobExecution.getId());
-      errorService.uploadErrorsToStorage(operation.getId());
-      operation.setCommittedNumOfErrors(errorsCount);
-      operation.setStatus(COMPLETED_WITH_ERRORS);
+    if (Set.of(COMMITTED, ERROR).contains(dataImportJobExecution.getStatus())) {
+      errorService.saveErrorsFromDataImport(operation.getId(), dataImportJobExecution.getId());
+      operation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(operation.getId()));
+      operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operation.getId()));
+      operation.setStatus(operation.getCommittedNumOfErrors() == 0 ? COMPLETED : COMPLETED_WITH_ERRORS);
     }
   }
 

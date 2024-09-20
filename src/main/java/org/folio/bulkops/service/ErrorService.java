@@ -100,7 +100,7 @@ public class ErrorService {
     }
   }
 
-  public int saveErrorsFromDataImport(UUID bulkOperationId, UUID dataImportJobId) {
+  public void saveErrorsFromDataImport(UUID bulkOperationId, UUID dataImportJobId) {
     log.info("Saving errors from DataImport, bulkOperationId = {}, dataImportJobId = {}", bulkOperationId, dataImportJobId);
     var bulkOperation = operationRepository.findById(bulkOperationId)
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
@@ -122,7 +122,6 @@ public class ErrorService {
         }
         saveError(bulkOperationId, identifier, errorEntry.getError());
       });
-      return jobLogEntries.size();
     } catch (Exception e) {
       log.error("Problem with retrieving logs from MetadataProvider", e);
       throw new DataImportException(e);
