@@ -21,6 +21,12 @@
         "items": {
           "$ref": "action_parameter.json#/Parameter"
         }
+      },
+      "tenants": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     },
     "required": [
