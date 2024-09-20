@@ -686,9 +686,13 @@ public class BulkOperationService {
       }
       case APPLY_CHANGES -> {
         var execution = executionRepository.findByBulkOperationId(bulkOperationId);
-        if (execution.isPresent() && StatusType.ACTIVE.equals(execution.get().getStatus())) {
-          operation.setProcessedNumOfRecords(execution.get().getProcessedRecords());
-          if (INSTANCE_MARC.equals(operation.getEntityType()) && nonNull(operation.getDataImportJobProfileId())) {
+        if (execution.isPresent()) {
+          if (StatusType.ACTIVE.equals(execution.get().getStatus())) {
+            var processedNumOfRecords = INSTANCE_MARC.equals(operation.getEntityType()) ?
+              execution.get().getProcessedRecords() :
+              getDataImportProcessedNumOfRecords(operation);
+            operation.setProcessedNumOfRecords(processedNumOfRecords);
+          } else if (INSTANCE_MARC.equals(operation.getEntityType()) && nonNull(operation.getDataImportJobProfileId())) {
             processDataImportResult(operation);
           }
         }
@@ -707,6 +711,11 @@ public class BulkOperationService {
       operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operation.getId()));
       operation.setStatus(operation.getCommittedNumOfErrors() == 0 ? COMPLETED : COMPLETED_WITH_ERRORS);
     }
+  }
+
+  private int getDataImportProcessedNumOfRecords(BulkOperation operation) {
+    return metadataProviderService.getDataImportJobExecutionByJobProfileId(operation.getDataImportJobProfileId())
+      .getProgress().getCurrent();
   }
 
   public BulkOperation getBulkOperationOrThrow(UUID operationId) {
