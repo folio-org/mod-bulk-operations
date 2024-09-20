@@ -384,6 +384,26 @@
       "description" : "Get used tenants by operation id"
     },
     {
+      "permissionName": "bulk-operations.item.inventory.get",
+      "displayName" : "bulk edit inventory read permissions",
+      "description" : "Bulk edit inventory read permissions"
+    },
+    {
+      "permissionName": "bulk-operations.item.users.get",
+      "displayName" : "bulk edit users read permissions",
+      "description" : "Bulk edit users read permissions"
+    },
+    {
+      "permissionName": "bulk-operations.item.inventory.put",
+      "displayName" : "bulk edit inventory write permissions",
+      "description" : "Bulk edit inventory write permissions"
+    },
+    {
+      "permissionName": "bulk-operations.item.users.put",
+      "displayName" : "bulk edit users write permissions",
+      "description" : "Bulk edit users write permissions"
+    },
+    {
       "permissionName" : "bulk-operations.all",
       "displayName" : "bulk-operations all",
       "description" : "All permissions for bulk-operations module",
