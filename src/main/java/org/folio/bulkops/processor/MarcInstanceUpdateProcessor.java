@@ -50,7 +50,7 @@ public class MarcInstanceUpdateProcessor {
   private final BulkOperationRepository bulkOperationRepository;
   private final DataImportRestS3UploadClient dataImportRestS3UploadClient;
 
-  public void updateMarcRecords(BulkOperation bulkOperation) throws Exception {
+  public void updateMarcRecords(BulkOperation bulkOperation) throws IOException {
     try (var is = remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
       var jobProfile = createJobProfile();
       var uploadDefinition = uploadMarcFile(bulkOperation, is.readAllBytes());

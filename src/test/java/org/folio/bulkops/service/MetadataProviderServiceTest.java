@@ -43,7 +43,8 @@ class MetadataProviderServiceTest extends BaseTest {
     when(metadataProviderClient.getJobExecutionsByJobProfileIdAndSubordinationType(any(UUID.class), anyString()))
       .thenThrow(new NotFoundException("not found"));
 
-    var throwable = assertThrows(NotFoundException.class, () -> metadataProviderService.getDataImportJobExecutionByJobProfileId(UUID.randomUUID()));
+    var id = UUID.randomUUID();
+    var throwable = assertThrows(NotFoundException.class, () -> metadataProviderService.getDataImportJobExecutionByJobProfileId(id));
     assertThat(throwable.getMessage()).isEqualTo("not found");
   }
 }
