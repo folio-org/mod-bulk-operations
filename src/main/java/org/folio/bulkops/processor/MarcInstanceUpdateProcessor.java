@@ -28,7 +28,7 @@ import org.folio.bulkops.domain.bean.UploadFileDefinition;
 import org.folio.bulkops.domain.bean.UploadFileDefinitionProcessFiles;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.folio.bulkops.util.DateHelper;
+import org.folio.bulkops.util.MarcDateHelper;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -101,7 +101,7 @@ public class MarcInstanceUpdateProcessor {
   }
 
   private String addPostfixToName(String name, Date date) {
-    return String.format(POSTFIX_PATTERN, isEmpty(name) ? EMPTY : name, DateHelper.getDateTimeForMarc(date));
+    return String.format(POSTFIX_PATTERN, isEmpty(name) ? EMPTY : name, MarcDateHelper.getDateTimeForMarc(date));
   }
 
   private UploadFileDefinition uploadMarcFile(BulkOperation bulkOperation, byte[] content) {
