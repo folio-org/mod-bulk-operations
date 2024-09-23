@@ -52,6 +52,7 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
         }
         log.error(String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
           entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
+        continue;
       }
       for (Action action : details.getActions()) {
         var tenantsFromAction = action.getTenants();
@@ -66,6 +67,7 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
           }
           log.error(String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
             entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
+          continue;
         }
         try {
           updater(option, action).apply(preview);
