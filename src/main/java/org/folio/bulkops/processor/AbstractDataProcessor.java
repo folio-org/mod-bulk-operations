@@ -8,19 +8,30 @@ import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.RuleValidationException;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import lombok.extern.log4j.Log4j2;
 
 import static java.util.Objects.nonNull;
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 @Log4j2
 @Component
 public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> implements DataProcessor<T> {
   @Autowired
   private ErrorService errorService;
+  @Autowired
+  private FolioExecutionContext folioExecutionContext;
+  @Autowired
+  private FolioModuleMetadata folioModuleMetadata;
+  @Autowired
+  private ConsortiaService consortiaService;
 
   @Override
   public UpdatedEntityHolder process(String identifier, T entity, BulkOperationRuleCollection rules) {
@@ -34,9 +45,11 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
       log.info("tenantsFromRule: {}, entity.tenant: {}, entity.identifier: {}",
         tenantsFromRule, entity.getTenant(), entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID));
       if (nonNull(tenantsFromRule) && !tenantsFromRule.isEmpty() && !tenantsFromRule.contains(entity.getTenant())) {
-        errorService.saveError(rule.getBulkOperationId(), identifier,
-          String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-            entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
+        try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(consortiaService.getCentralTenantId(folioExecutionContext.getTenantId()), folioModuleMetadata, folioExecutionContext))) {
+          errorService.saveError(rule.getBulkOperationId(), identifier,
+            String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
+              entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
+        }
         log.error(String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
           entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
       }
@@ -45,9 +58,12 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
         log.info("tenantsFromAction: {}, entity.tenant: {}, entity.identifier: {}",
           tenantsFromAction, entity.getTenant(), entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID));
         if (nonNull(tenantsFromAction) && !tenantsFromAction.isEmpty() && !tenantsFromAction.contains(entity.getTenant())) {
-          errorService.saveError(rule.getBulkOperationId(), identifier,
-            String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-              entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
+          log.info("current tenant: {}", consortiaService.getCentralTenantId(folioExecutionContext.getTenantId()));
+          try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(consortiaService.getCentralTenantId(folioExecutionContext.getTenantId()), folioModuleMetadata, folioExecutionContext))) {
+            errorService.saveError(rule.getBulkOperationId(), identifier,
+              String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
+                entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
+          }
           log.error(String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
             entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
         }
