@@ -582,7 +582,7 @@ paths:
               schema:
                 type: string
                 example: Internal server error
-  /permissions-self-check:
+  /bulk-operations/permissions-self-check:
     get:
       description: Get users permissions
       operationId: getUsersPermissions
