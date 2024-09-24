@@ -26,7 +26,6 @@ import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
-import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;

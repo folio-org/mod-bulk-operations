@@ -27,12 +27,10 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> implements DataProcessor<T> {
   @Autowired
   private ErrorService errorService;
-  @Autowired
-  protected FolioExecutionContext folioExecutionContext;
-  @Autowired
   private FolioModuleMetadata folioModuleMetadata;
-  @Autowired
   private ConsortiaService consortiaService;
+
+  protected FolioExecutionContext folioExecutionContext;
 
   @Override
   public UpdatedEntityHolder process(String identifier, T entity, BulkOperationRuleCollection rules) {
@@ -111,4 +109,19 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
    * @return true if objects are equal, otherwise - false
    */
   public abstract boolean compare(T first, T second);
+
+  @Autowired
+  public void setFolioExecutionContext(FolioExecutionContext folioExecutionContext) {
+    this.folioExecutionContext = folioExecutionContext;
+  }
+
+  @Autowired
+  public void setFolioModuleMetadata(FolioModuleMetadata folioModuleMetadata) {
+    this.folioModuleMetadata = folioModuleMetadata;
+  }
+
+  @Autowired
+  public void setConsortiaService(ConsortiaService consortiaService) {
+    this.consortiaService = consortiaService;
+  }
 }
