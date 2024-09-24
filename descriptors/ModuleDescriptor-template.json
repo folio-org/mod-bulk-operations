@@ -170,15 +170,18 @@
             "consortium-search.holdings.collection.get",
             "data-import.uploaddefinitions.post",
             "data-import.upload.file.post",
-            "data-import.uploaddefinitions.files.post",
-            "converter-storage.jobprofile.get",
+            "data-import.uploadDefinitions.files.item.post",
+            "data-import.uploadDefinitions.processFiles.item.post",
+            "converter-storage.jobprofile.collection.get",
+            "converter-storage.jobprofile.item.get",
             "converter-storage.jobprofile.post",
-            "metadata-provider.jobexecutions.get",
-            "metadata-provider.logs.get",
+            "metadata-provider.jobExecutions.collection.get",
+            "metadata-provider.journalRecords.collection.get",
+            "metadata-provider.jobLogEntries.collection.get",
             "converter-storage.matchprofile.post",
             "converter-storage.actionprofile.post",
             "converter-storage.mappingprofile.post",
-            "source-storage.sourceRecords.get"
+            "source-storage.source-records.item.get"
           ]
         },
         {
