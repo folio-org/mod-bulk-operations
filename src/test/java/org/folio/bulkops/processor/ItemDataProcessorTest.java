@@ -908,7 +908,8 @@ class ItemDataProcessorTest extends BaseTest {
       var loanTypeFromMemberB = UUID.randomUUID().toString();
       var actionTenants = List.of("memberB");
       var itemId = UUID.randomUUID().toString();
-      var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId)).tenantId("memberA").build();
+      var initPermanentLoanTypeId = UUID.randomUUID().toString();
+      var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId).withPermanentLoanType(new LoanType().withId(initPermanentLoanTypeId))).tenantId("memberA").build();
 
       var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, loanTypeFromMemberB, actionTenants, List.of()));
       var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
@@ -916,6 +917,7 @@ class ItemDataProcessorTest extends BaseTest {
       var result = processor.process(IDENTIFIER, extendedItem, rules);
 
       assertNotNull(result);
+      assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType().getId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
         itemId, "memberA", "PERMANENT_LOAN_TYPE").trim());
@@ -933,7 +935,8 @@ class ItemDataProcessorTest extends BaseTest {
       var adminNoteFromMemberB = UUID.randomUUID().toString();
       var ruleTenants = List.of("memberB");
       var itemId = UUID.randomUUID().toString();
-      var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId)).tenantId("memberA").build();
+      var initPermanentLoanTypeId = UUID.randomUUID().toString();
+      var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId).withPermanentLoanType(new LoanType().withId(initPermanentLoanTypeId))).tenantId("memberA").build();
 
       var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, adminNoteFromMemberB, List.of(), ruleTenants));
       var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
@@ -941,6 +944,7 @@ class ItemDataProcessorTest extends BaseTest {
       var result = processor.process(IDENTIFIER, extendedItem, rules);
 
       assertNotNull(result);
+      assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType().getId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
         itemId, "memberA", "PERMANENT_LOAN_TYPE").trim());
@@ -950,16 +954,22 @@ class ItemDataProcessorTest extends BaseTest {
   @Test
   void testShouldUpdateItemWithLoanType_whenLoanTypeFromTenantAmongRuleTenants() {
 
-    var adminNoteFromMemberB = UUID.randomUUID().toString();
+    var permanentLoanTypeFromMemberB = UUID.randomUUID().toString();
+
+    when(loanTypeClient.getLoanTypeById(permanentLoanTypeFromMemberB)).thenReturn(new LoanType().withId(permanentLoanTypeFromMemberB));
+    when(itemReferenceService.getLoanTypeById(permanentLoanTypeFromMemberB)).thenReturn(new LoanType().withId(permanentLoanTypeFromMemberB));
+
     var ruleTenants = List.of("memberB", "memberA");
     var itemId = UUID.randomUUID().toString();
-    var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId)).tenantId("memberA").build();
+    var initPermanentLoanTypeId = UUID.randomUUID().toString();
+    var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId).withPermanentLoanType(new LoanType().withId(initPermanentLoanTypeId))).tenantId("memberA").build();
 
-    var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, adminNoteFromMemberB, List.of(), ruleTenants));
+    var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, permanentLoanTypeFromMemberB, List.of(), ruleTenants));
 
     var result = processor.process(IDENTIFIER, extendedItem, rules);
 
     assertNotNull(result);
+    assertEquals(permanentLoanTypeFromMemberB, result.getUpdated().getEntity().getPermanentLoanType().getId());
 
     verifyNoInteractions(errorService);
   }

@@ -28,6 +28,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -47,17 +51,22 @@ import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ElectronicAccessService;
 import org.folio.bulkops.service.ErrorService;
+import org.folio.bulkops.util.FolioExecutionContextUtil;
+import org.folio.spring.FolioExecutionContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import feign.FeignException;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 
 class HoldingsDataProcessorTest extends BaseTest {
 
@@ -70,6 +79,10 @@ class HoldingsDataProcessorTest extends BaseTest {
   ErrorService errorService;
   @MockBean
   ElectronicAccessService electronicAccessService;
+  @MockBean
+  private ConsortiaService consortiaService;
+  @SpyBean
+  private FolioExecutionContext folioExecutionContext;
 
   private DataProcessor<ExtendedHoldingsRecord> processor;
 
@@ -705,6 +718,80 @@ class HoldingsDataProcessorTest extends BaseTest {
         assertEquals(initialElectronicAccess.getPublicNote(), unmodified.getPublicNote());
       }
     }
+  }
+
+  @Test
+  void testShouldNotUpdateHoldingWithPermanentLocation_whenLocationFromOtherTenantThanActionTenants() {
+    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
+
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
+      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any())).thenReturn(folioExecutionContext);
+
+      var permLocationFromMemberB = UUID.randomUUID().toString();
+      var actionTenants = List.of("memberB");
+      var holdId = UUID.randomUUID().toString();
+      var initPermLocation = UUID.randomUUID().toString();
+      var extendedHolding = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withId(holdId).withPermanentLocationId(initPermLocation)).tenantId("memberA").build();
+
+      var rules = rules(rule(PERMANENT_LOCATION, REPLACE_WITH, permLocationFromMemberB, actionTenants, List.of()));
+      var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
+
+      var result = processor.process(IDENTIFIER, extendedHolding, rules);
+
+      assertNotNull(result);
+      assertEquals(initPermLocation, result.getUpdated().getEntity().getPermanentLocationId());
+
+      verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
+        holdId, "memberA", "PERMANENT_LOCATION").trim());
+    }
+  }
+
+  @Test
+  void testShouldNotUpdateHoldingWithPermanentLocation_whenLocationFromOtherTenantThanRuleTenants() {
+    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
+
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
+      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any())).thenReturn(folioExecutionContext);
+
+      var adminNoteFromMemberB = UUID.randomUUID().toString();
+      var ruleTenants = List.of("memberB");
+      var holdId = UUID.randomUUID().toString();
+      var initPermLocation = UUID.randomUUID().toString();
+      var extendedHolding = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withId(holdId).withPermanentLocationId(initPermLocation)).tenantId("memberA").build();
+
+      var rules = rules(rule(PERMANENT_LOCATION, REPLACE_WITH, adminNoteFromMemberB, List.of(), ruleTenants));
+      var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
+
+      var result = processor.process(IDENTIFIER, extendedHolding, rules);
+
+      assertNotNull(result);
+      assertEquals(initPermLocation, result.getUpdated().getEntity().getPermanentLocationId());
+
+      verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
+        holdId, "memberA", "PERMANENT_LOCATION").trim());
+    }
+  }
+
+  @Test
+  void testShouldUpdateHoldingWithLoanType_whenLoanTypeFromTenantAmongRuleTenants() {
+
+    var locationIdFromMemberB = UUID.randomUUID().toString();
+
+    var ruleTenants = List.of("memberB", "memberA");
+    var holdId = UUID.randomUUID().toString();
+    var initPermLocation = UUID.randomUUID().toString();
+    var extendedHold = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withId(holdId).withPermanentLocationId(initPermLocation)).tenantId("memberA").build();
+
+    var rules = rules(rule(PERMANENT_LOCATION, REPLACE_WITH, locationIdFromMemberB, List.of(), ruleTenants));
+
+    var result = processor.process(IDENTIFIER, extendedHold, rules);
+
+    assertNotNull(result);
+    assertEquals(locationIdFromMemberB, result.getUpdated().getEntity().getPermanentLocationId());
+
+    verifyNoInteractions(errorService);
   }
 
   private HoldingsRecord buildHoldingsWithElectronicAccess() {
