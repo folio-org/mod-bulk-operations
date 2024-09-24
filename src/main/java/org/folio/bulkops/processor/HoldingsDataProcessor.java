@@ -50,7 +50,6 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
   private final HoldingsNotesUpdater holdingsNotesUpdater;
   private final ElectronicAccessUpdaterFactory electronicAccessUpdaterFactory;
   private final ElectronicAccessReferenceService electronicAccessReferenceService;
-  private final FolioExecutionContext folioExecutionContext;
 
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");

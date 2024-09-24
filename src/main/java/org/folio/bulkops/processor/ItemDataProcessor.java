@@ -39,7 +39,6 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
   private final HoldingsReferenceService holdingsReferenceService;
   private final ItemReferenceService itemReferenceService;
   private final ItemsNotesUpdater itemsNotesUpdater;
-  private final FolioExecutionContext folioExecutionContext;
 
   @Override
   public Validator<UpdateOptionType, Action> validator(ExtendedItem extendedItem) {
