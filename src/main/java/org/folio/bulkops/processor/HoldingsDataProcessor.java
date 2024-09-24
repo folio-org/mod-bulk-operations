@@ -1,6 +1,7 @@
 package org.folio.bulkops.processor;
 
 import static java.lang.String.format;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
@@ -16,6 +17,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_UR
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
+import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -25,15 +27,16 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.RuleValidationException;
+import org.folio.bulkops.exception.RuleValidationTenantsException;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
 import org.folio.bulkops.service.ElectronicAccessReferenceService;
-import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;
@@ -55,8 +58,8 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
   @Override
-  public Validator<UpdateOptionType, Action> validator(ExtendedHoldingsRecord extendedHoldingsRecord) {
-    return (option, action) -> {
+  public Validator<UpdateOptionType, Action, BulkOperationRule> validator(ExtendedHoldingsRecord extendedHoldingsRecord) {
+    return (option, action, rule) -> {
       try {
         if ("MARC".equals(holdingsReferenceService.getSourceById(extendedHoldingsRecord.getEntity().getSourceId(), folioExecutionContext.getTenantId()).getName())) {
           throw new RuleValidationException("Holdings records that have source \"MARC\" cannot be changed");
@@ -69,6 +72,10 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
       }
       if (PERMANENT_LOCATION == option && CLEAR_FIELD == action.getType()) {
         throw new RuleValidationException("Permanent location cannot be cleared");
+      } else if (nonNull(rule.getRuleDetails().getTenants()) && !rule.getRuleDetails().getTenants().isEmpty() && !rule.getRuleDetails().getTenants().contains(extendedHoldingsRecord.getTenant())
+        ||
+        nonNull(action.getTenants()) && !action.getTenants().isEmpty() && !action.getTenants().contains(extendedHoldingsRecord.getTenant())) {
+        throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE, extendedHoldingsRecord.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedHoldingsRecord.getTenant(), option.getValue()));
       }
     };
   }

@@ -1,7 +1,6 @@
 package org.folio.bulkops.processor;
 
 import static java.util.Objects.isNull;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.bean.InventoryItemStatus.NameEnum.AVAILABLE;
 import static org.folio.bulkops.domain.bean.InventoryItemStatus.NameEnum.MISSING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
@@ -38,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -898,7 +898,7 @@ class ItemDataProcessorTest extends BaseTest {
   }
 
   @Test
-  void testShouldNotUpdateItemWithLoanType_whenLoanTypeFromAnotherTenant() {
+  void testShouldNotUpdateItemWithLoanType_whenLoanTypeFromOtherTenantThanActionTenants() {
     when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
 
@@ -906,16 +906,16 @@ class ItemDataProcessorTest extends BaseTest {
       when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any())).thenReturn(folioExecutionContext);
 
       var loanTypeFromMemberB = UUID.randomUUID().toString();
-      var allowedTenants = List.of("memberB");
+      var actionTenants = List.of("memberB");
       var itemId = UUID.randomUUID().toString();
       var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId)).tenantId("memberA").build();
 
-      var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, loanTypeFromMemberB, allowedTenants, List.of()));
+      var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, loanTypeFromMemberB, actionTenants, List.of()));
       var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
 
       var result = processor.process(IDENTIFIER, extendedItem, rules);
 
-      assertThat(result.isShouldBeUpdated()).isFalse();
+      assertNotNull(result);
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
         itemId, "memberA", "PERMANENT_LOAN_TYPE").trim());
@@ -923,7 +923,7 @@ class ItemDataProcessorTest extends BaseTest {
   }
 
   @Test
-  void testShouldNotUpdateItemWithAdministrativeNote_whenNoteFromAnotherTenant() {
+  void testShouldNotUpdateItemWithLoanType_whenLoanTypeFromOtherTenantThanRuleTenants() {
     when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
 
@@ -931,19 +931,36 @@ class ItemDataProcessorTest extends BaseTest {
       when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any())).thenReturn(folioExecutionContext);
 
       var adminNoteFromMemberB = UUID.randomUUID().toString();
-      var allowedTenants = List.of("memberB");
+      var ruleTenants = List.of("memberB");
       var itemId = UUID.randomUUID().toString();
       var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId)).tenantId("memberA").build();
 
-      var rules = rules(rule(ADMINISTRATIVE_NOTE, REPLACE_WITH, adminNoteFromMemberB, List.of(), allowedTenants));
+      var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, adminNoteFromMemberB, List.of(), ruleTenants));
       var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
 
       var result = processor.process(IDENTIFIER, extendedItem, rules);
 
-      assertThat(result.isShouldBeUpdated()).isFalse();
+      assertNotNull(result);
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-        itemId, "memberA", "ADMINISTRATIVE_NOTE").trim());
+        itemId, "memberA", "PERMANENT_LOAN_TYPE").trim());
     }
+  }
+
+  @Test
+  void testShouldUpdateItemWithLoanType_whenLoanTypeFromTenantAmongRuleTenants() {
+
+    var adminNoteFromMemberB = UUID.randomUUID().toString();
+    var ruleTenants = List.of("memberB", "memberA");
+    var itemId = UUID.randomUUID().toString();
+    var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId)).tenantId("memberA").build();
+
+    var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, adminNoteFromMemberB, List.of(), ruleTenants));
+
+    var result = processor.process(IDENTIFIER, extendedItem, rules);
+
+    assertNotNull(result);
+
+    verifyNoInteractions(errorService);
   }
 }

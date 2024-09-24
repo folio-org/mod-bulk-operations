@@ -16,6 +16,7 @@ import java.util.Objects;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.service.UserReferenceService;
@@ -33,8 +34,8 @@ public class UserDataProcessor extends AbstractDataProcessor<User> {
   private final UserReferenceService userReferenceService;
 
   @Override
-  public Validator<UpdateOptionType, Action> validator(User entity) {
-    return (option, action) -> {
+  public Validator<UpdateOptionType, Action, BulkOperationRule> validator(User entity) {
+    return (option, action, rule) -> {
       if (EXPIRATION_DATE == option) {
         if (action.getType() != REPLACE_WITH) {
           throw new RuleValidationException(

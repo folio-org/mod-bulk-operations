@@ -2,6 +2,7 @@ package org.folio.bulkops.processor;
 
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
@@ -10,6 +11,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
+import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -22,8 +24,10 @@ import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
+import org.folio.bulkops.exception.RuleValidationTenantsException;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
 import org.springframework.stereotype.Component;
@@ -40,8 +44,8 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
   private final ItemsNotesUpdater itemsNotesUpdater;
 
   @Override
-  public Validator<UpdateOptionType, Action> validator(ExtendedItem extendedItem) {
-    return (option, action) -> {
+  public Validator<UpdateOptionType, Action, BulkOperationRule> validator(ExtendedItem extendedItem) {
+    return (option, action, rule) -> {
       if (CLEAR_FIELD == action.getType() && STATUS == option) {
         throw new RuleValidationException("Status field can not be cleared");
       } else if (CLEAR_FIELD == action.getType() && PERMANENT_LOAN_TYPE == option) {
@@ -59,6 +63,10 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
             .getValue()).contains(action.getUpdated())) {
         throw new RuleValidationException(
             format("New status value \"%s\" is not allowed", action.getUpdated()));
+      } else if (nonNull(rule.getRuleDetails().getTenants()) && !rule.getRuleDetails().getTenants().isEmpty() && !rule.getRuleDetails().getTenants().contains(extendedItem.getTenant())
+        ||
+        nonNull(action.getTenants()) && !action.getTenants().isEmpty() && !action.getTenants().contains(extendedItem.getTenant())) {
+        throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE, extendedItem.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedItem.getTenant(), option.getValue()));
       }
     };
   }
