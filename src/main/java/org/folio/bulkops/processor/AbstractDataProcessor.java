@@ -50,6 +50,7 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
           errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
         } catch (RuleValidationTenantsException e) {
           try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(consortiaService.getCentralTenantId(folioExecutionContext.getTenantId()), folioModuleMetadata, folioExecutionContext))) {
+            log.info("current tenant: {}", folioExecutionContext.getTenantId());
             errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
           }
           log.error(e.getMessage());
