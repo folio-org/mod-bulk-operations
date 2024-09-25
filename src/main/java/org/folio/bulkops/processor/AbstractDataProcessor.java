@@ -43,9 +43,9 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
       var option = details.getOption();
       for (Action action : details.getActions()) {
         try {
-          updater(option, action).apply(preview);
+          updater(option, action, entity, rule).apply(preview);
           validator(entity).validate(option, action, rule);
-          updater(option, action).apply(updated);
+          updater(option, action, entity, rule).apply(updated);
         } catch (RuleValidationException e) {
           errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
         } catch (RuleValidationTenantsException e) {
@@ -69,7 +69,7 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
    * Returns validator
    *
    * @param entity entity of type {@link T} to validate
-   * @return true if {@link UpdateOptionType} and {@link Action} can be applied to entity
+   * @return true if {@link UpdateOptionType} and {@link Action}, and {@link BulkOperationRule} can be applied to entity
    */
   public abstract Validator<UpdateOptionType, Action, BulkOperationRule> validator(T entity);
 
@@ -78,9 +78,11 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
    *
    * @param option {@link UpdateOptionType} for update
    * @param action {@link Action} for update
+   * @param action {@link T} for update
+   * @param action {@link BulkOperationRule} for update
    * @return updater
    */
-  public abstract Updater<T> updater(UpdateOptionType option, Action action);
+  public abstract Updater<T> updater(UpdateOptionType option, Action action, T entity, BulkOperationRule rule) throws RuleValidationTenantsException;
 
   /**
    * Clones object of type {@link T}
