@@ -26,7 +26,9 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
+import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.processor.check.PermissionsValidator;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.HoldingsReferenceService;
@@ -48,6 +50,7 @@ import java.util.stream.Collectors;
 public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedInstance> {
   private static final String ERROR_MESSAGE_TEMPLATE = "No change in value for instance required, %s associated records have been updated.";
   private static final String ERROR_NO_AFFILIATION_TO_EDIT_HOLDINGS = "User %s does not have required affiliation to edit the holdings record - %s on the tenant %s";
+  private static final String NO_INSTANCE_WRITE_PERMISSIONS_TEMPLATE = "User %s does not have required permission to edit the instance record - %s=%s on the tenant ";
 
   private final InstanceClient instanceClient;
   private final UserClient userClient;
@@ -60,9 +63,12 @@ public class InstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedIns
   private final ConsortiaService consortiaService;
   private final FolioModuleMetadata folioModuleMetadata;
   private final FolioExecutionContext folioExecutionContext;
+  private final PermissionsValidator permissionsValidator;
 
   @Override
   public void updateRecord(ExtendedInstance extendedInstance) {
+    permissionsValidator.checkIfBulkEditWritePermissionExists(extendedInstance.getTenantId(), EntityType.INSTANCE,
+      NO_INSTANCE_WRITE_PERMISSIONS_TEMPLATE + extendedInstance.getTenantId());
     var instance = extendedInstance.getEntity();
     instanceClient.updateInstance(instance.withIsbn(null).withIssn(null), instance.getId());
   }

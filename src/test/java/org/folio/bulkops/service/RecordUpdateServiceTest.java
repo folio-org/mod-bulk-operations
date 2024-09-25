@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -26,6 +27,7 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.OptimisticLockingException;
 import org.folio.bulkops.processor.ItemUpdateProcessor;
+import org.folio.bulkops.processor.check.PermissionsValidator;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.EntityPathResolver;
@@ -53,6 +55,8 @@ class RecordUpdateServiceTest extends BaseTest {
   private ConsortiaService consortiaService;
   @MockBean
   private BulkOperationRepository bulkOperationRepository;
+  @MockBean
+  private PermissionsValidator permissionsValidator;
   @SpyBean
   private ItemUpdateProcessor itemUpdateProcessor;
   @SpyBean
@@ -74,6 +78,7 @@ class RecordUpdateServiceTest extends BaseTest {
       .build();
 
     when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
+    doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(anyString(), any(), anyString());
 
     var result = recordUpdateService.updateEntity(extendedOriginalItem, extendedModifiedItem, operation);
 
@@ -114,6 +119,7 @@ class RecordUpdateServiceTest extends BaseTest {
       .build());
 
     when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
+    doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(anyString(), any(), anyString());
     doThrow(feignException).when(itemClient).updateItem(any(Item.class), any(String.class));
     when(holdingsClient.getHoldingById("cb475fa9-aa07-4bbf-8382-b0b1426f9a20")).thenReturn(HoldingsRecord.builder().instanceId("f3e3bd0f-1d95-4f25-9df1-7eb39a2957e3").build());
 

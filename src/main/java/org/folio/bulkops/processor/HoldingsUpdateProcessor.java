@@ -17,7 +17,9 @@ import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
+import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.processor.check.PermissionsValidator;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.RuleService;
@@ -35,6 +37,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class HoldingsUpdateProcessor extends AbstractUpdateProcessor<ExtendedHoldingsRecord> {
   private static final String ERROR_MESSAGE_TEMPLATE = "No change in value for holdings record required, associated %s item(s) have been updated.";
+  private static final String NO_HOLDING_WRITE_PERMISSIONS_TEMPLATE = "User %s does not have required permission to edit the holdings record - %s=%s on the tenant ";
 
   private final HoldingsClient holdingsClient;
   private final ItemClient itemClient;
@@ -43,12 +46,15 @@ public class HoldingsUpdateProcessor extends AbstractUpdateProcessor<ExtendedHol
   private final FolioModuleMetadata folioModuleMetadata;
   private final FolioExecutionContext folioExecutionContext;
   private final ConsortiaService consortiaService;
+  private final PermissionsValidator permissionsValidator;
 
   @Override
   public void updateRecord(ExtendedHoldingsRecord extendedHoldingsRecord) {
     var holdingsRecord = extendedHoldingsRecord.getEntity();
     if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
       var tenantId = extendedHoldingsRecord.getTenantId();
+      permissionsValidator.checkIfBulkEditWritePermissionExists(tenantId, EntityType.HOLDINGS_RECORD,
+        NO_HOLDING_WRITE_PERMISSIONS_TEMPLATE + tenantId);
       try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
         holdingsClient.updateHoldingsRecord(
           holdingsRecord.withInstanceHrid(null).withItemBarcode(null).withInstanceTitle(null),
@@ -56,6 +62,8 @@ public class HoldingsUpdateProcessor extends AbstractUpdateProcessor<ExtendedHol
         );
       }
     } else {
+      permissionsValidator.checkIfBulkEditWritePermissionExists(folioExecutionContext.getTenantId(), EntityType.HOLDINGS_RECORD,
+        NO_HOLDING_WRITE_PERMISSIONS_TEMPLATE + folioExecutionContext.getTenantId());
       holdingsClient.updateHoldingsRecord(
         holdingsRecord.withInstanceHrid(null).withItemBarcode(null).withInstanceTitle(null),
         holdingsRecord.getId()
