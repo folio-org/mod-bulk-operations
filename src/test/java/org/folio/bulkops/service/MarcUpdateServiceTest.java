@@ -1,8 +1,10 @@
 package org.folio.bulkops.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.service.MarcUpdateService.CHANGED_MARC_PATH_TEMPLATE;
+import static org.folio.bulkops.service.MarcUpdateService.MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -16,12 +18,15 @@ import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.StatusType;
+import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.processor.MarcInstanceUpdateProcessor;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.marc4j.marc.Record;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -127,5 +132,25 @@ class MarcUpdateServiceTest extends BaseTest {
 
     verify(bulkOperationRepository).save(bulkOperationArgumentCaptor.capture());
     assertThat(bulkOperationArgumentCaptor.getValue().getStatus()).isEqualTo(FAILED);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = IdentifierType.class, names = {"ID", "HRID"}, mode = EnumSource.Mode.INCLUDE)
+  @SneakyThrows
+  void shouldSaveErrorsForFolioInstances(IdentifierType identifierType) {
+    var bulkOperation = BulkOperation.builder()
+      .id(UUID.randomUUID())
+      .linkToMatchedRecordsJsonFile("matched.mrc")
+      .identifierType(identifierType)
+      .build();
+    when(remoteFileSystemClient.get("matched.mrc"))
+      .thenReturn(new FileInputStream("src/test/resources/files/extended_instances.json"));
+
+    marcUpdateService.saveErrorsForFolioInstances(bulkOperation);
+
+    verify(errorService).saveError(any(UUID.class), identifierArgumentCaptor.capture(),
+      errorMessageArgumentCaptor.capture());
+    assertThat(errorMessageArgumentCaptor.getValue()).isEqualTo(MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY);
+    assertThat(identifierArgumentCaptor.getValue()).isEqualTo(HRID.equals(identifierType) ? "hrid2" : "139ed15a-edba-4cde-8f92-810a4cec7770");
   }
 }
