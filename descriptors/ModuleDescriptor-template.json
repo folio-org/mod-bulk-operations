@@ -169,6 +169,7 @@
             "consortia.user-tenants.collection.get",
             "consortium-search.holdings.collection.get",
             "data-import.uploaddefinitions.post",
+            "data-import.uploaddefinitions.get",
             "data-import.upload.file.post",
             "data-import.uploaddefinitions.files.post",
             "converter-storage.jobprofile.get",
@@ -178,7 +179,10 @@
             "converter-storage.matchprofile.post",
             "converter-storage.actionprofile.post",
             "converter-storage.mappingprofile.post",
-            "source-storage.sourceRecords.get"
+            "source-storage.sourceRecords.get",
+            "data-import.splitconfig.get",
+            "data-import.uploadUrl.get",
+            "data-import.assembleStorageFile.post"
           ]
         },
         {
@@ -214,7 +218,10 @@
             "bulk-edit.item.post",
             "bulk-edit.start.item.post",
             "data-export.job.item.post",
-            "data-export.job.item.get"
+            "data-export.job.item.get",
+            "metadata-provider.jobexecutions.get",
+            "metadata-provider.logs.get",
+            "source-storage.sourceRecords.get"
           ]
         },
         {
@@ -532,6 +539,18 @@
     {
       "id": "contributor-types",
       "version": "2.0"
+    },
+    {
+      "id": "data-import-converter-storage",
+      "version": "1.4"
+    },
+    {
+      "id": "source-manager-job-executions",
+      "version": "3.3"
+    },
+    {
+      "id": "metadata-provider-job-execution-logs",
+      "version": "1.0"
     }
   ],
   "launchDescriptor": {

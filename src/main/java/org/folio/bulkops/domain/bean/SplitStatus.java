@@ -5,18 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.With;
 
 @Data
-@With
-@Builder(toBuilder = true)
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class JobProfileInfo {
+public class SplitStatus {
 
-  @JsonProperty("id")
-  private String id;
-
-  @JsonProperty("dataType")
-  private String dataType;
+  @JsonProperty("splitStatus")
+  private Boolean splitStatus;
 }

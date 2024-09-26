@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Collection of execution jobs",
+  "DataImportJobExecutionCollection": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "jobExecutions": {
+        "description": "List of execution jobs",
+        "type": "array",
+        "items": {
+          "type": "object",
+          "$ref": "data_import_job_execution.json#/DataImportJobExecution"
+        }
+      },
+      "totalRecords": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "jobExecutions",
+      "totalRecords"
+    ]
+  }
+}

@@ -14,7 +14,7 @@ import lombok.With;
 @AllArgsConstructor
 public class UploadFileDefinitionProcessFiles {
 
-  @JsonProperty("uploadFileDefinition")
+  @JsonProperty("uploadDefinition")
   private UploadFileDefinition uploadFileDefinition;
 
   @JsonProperty("jobProfileInfo")

@@ -81,7 +81,7 @@ class UpdateProcessorTest extends BaseTest {
   @Autowired
   private UserUpdateProcessor userUpdateProcessor;
   @Autowired
-  private InstanceUpdateProcessor instanceUpdateProcessor;
+  private FolioInstanceUpdateProcessor folioInstanceUpdateProcessor;
   @Autowired
   private FolioModuleMetadata folioModuleMetadata;
   @SpyBean
@@ -269,7 +269,7 @@ class UpdateProcessorTest extends BaseTest {
       .build();
     var extendedInstance = ExtendedInstance.builder().entity(instance).build();
 
-    instanceUpdateProcessor.updateRecord(extendedInstance);
+    folioInstanceUpdateProcessor.updateRecord(extendedInstance);
 
     verify(instanceClient).updateInstance(instance, instance.getId());
   }
@@ -322,7 +322,7 @@ class UpdateProcessorTest extends BaseTest {
         .totalRecords(2)
         .build());
 
-    instanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
+    folioInstanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
 
     verify(holdingsClient, times("folio_id".equals(sourceId) && applyToHoldings ? 1 : 0)).updateHoldingsRecord(any(HoldingsRecord.class), anyString());
   }
@@ -381,7 +381,7 @@ class UpdateProcessorTest extends BaseTest {
         .totalRecords(2)
         .build());
 
-    instanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
+    folioInstanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
 
     verify(itemClient, times("folio_id".equals(sourceId) && applyToItems ? 1 : 0)).updateItem(any(Item.class), anyString());
   }
@@ -451,7 +451,7 @@ class UpdateProcessorTest extends BaseTest {
     when(itemClient.getByQuery(String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingRecord.getId()), Integer.MAX_VALUE))
       .thenReturn(itemCollection);
 
-    instanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
+    folioInstanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
     verify(errorService).saveError(eq(operationId), eq(instanceId), anyString());
     verify(holdingsClient).updateHoldingsRecord(any(HoldingsRecord.class), eq(holdingRecord.getId()));
     verify(itemClient).updateItem(any(Item.class), eq(item.getId()));
