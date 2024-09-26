@@ -328,9 +328,9 @@ public class BulkOperationService {
     var processedNumOfRecords = 0;
     var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
     var modifiedMarcFileName = String.format(PREVIEW_MARC_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
-    var currentDate = new Date();
     try (var writerForModifiedPreviewMarcFile = remoteFileSystemClient.marcWriter(modifiedMarcFileName)) {
       var matchedRecordsReader = new MarcStreamReader(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile()));
+      var currentDate = new Date();
       while (matchedRecordsReader.hasNext()) {
         var marcRecord = matchedRecordsReader.next();
         marcInstanceDataProcessor.update(operation, marcRecord, ruleCollection, currentDate);

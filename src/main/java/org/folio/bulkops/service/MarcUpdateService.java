@@ -16,12 +16,14 @@ import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.processor.MarcInstanceUpdateProcessor;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.util.MarcDateHelper;
 import org.marc4j.MarcStreamReader;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Service
 @Log4j2
@@ -74,6 +76,7 @@ public class MarcUpdateService {
       var matchedRecordsReader = new MarcStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile()));
       var modifiedRecordsReader = new MarcStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile()));
 
+      var currentDate = new Date();
       while (matchedRecordsReader.hasNext() && modifiedRecordsReader.hasNext()) {
         var originalRecord = matchedRecordsReader.next();
         var modifiedRecord = modifiedRecordsReader.next();
@@ -84,6 +87,7 @@ public class MarcUpdateService {
             fetchInstanceUuidOrElseHrid(originalRecord);
           errorService.saveError(bulkOperation.getId(), identifier, MSG_NO_CHANGE_REQUIRED);
         } else {
+          MarcDateHelper.updateDateTimeControlField(modifiedRecord, currentDate);
           writerForResultMarcFile.writeRecord(modifiedRecord);
         }
       }

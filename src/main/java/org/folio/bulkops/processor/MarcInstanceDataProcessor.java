@@ -7,7 +7,6 @@ import static org.folio.bulkops.domain.dto.MarcDataType.VALUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
-import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
 import static org.folio.bulkops.util.Constants.SPACE_CHAR;
 import static org.folio.bulkops.util.MarcHelper.fetchInstanceUuidOrElseHrid;
 
@@ -22,7 +21,7 @@ import org.folio.bulkops.domain.dto.MarcDataType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.service.ErrorService;
-import org.folio.bulkops.util.DateHelper;
+import org.folio.bulkops.util.MarcDateHelper;
 import org.marc4j.marc.DataField;
 import org.marc4j.marc.Record;
 import org.marc4j.marc.Subfield;
@@ -56,9 +55,7 @@ public class MarcInstanceDataProcessor {
     });
     var updatedRecord = marcRecord.toString();
     if (!StringUtils.equals(initialRecord, updatedRecord)) {
-      marcRecord.getControlFields().stream()
-        .filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst()
-        .ifPresent(dateTimeControlField -> dateTimeControlField.setData(DateHelper.getDateTimeForMarc(currentDate)));
+      MarcDateHelper.updateDateTimeControlField(marcRecord, currentDate);
     }
   }
 
