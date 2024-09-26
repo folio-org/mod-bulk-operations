@@ -34,6 +34,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -55,20 +59,27 @@ import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
+import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
+import org.folio.bulkops.util.FolioExecutionContextUtil;
+import org.folio.spring.FolioExecutionContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import lombok.SneakyThrows;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 
 class ItemDataProcessorTest extends BaseTest {
 
@@ -80,6 +91,10 @@ class ItemDataProcessorTest extends BaseTest {
   private HoldingsReferenceService holdingsReferenceService;
   @MockBean
   private ItemReferenceService itemReferenceService;
+  @SpyBean
+  private FolioExecutionContext folioExecutionContext;
+  @MockBean
+  private ConsortiaService consortiaService;
 
   private DataProcessor<ExtendedItem> processor;
 
@@ -325,9 +340,9 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(ITEM_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(extendedItem);
+    processor.updater(ITEM_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter)), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
 
     assertTrue(item.getNotes().get(0).getStaffOnly());
   }
@@ -341,9 +356,9 @@ class ItemDataProcessorTest extends BaseTest {
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(ITEM_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(extendedItem);
+    processor.updater(ITEM_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter)), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
 
     assertFalse(item.getNotes().get(0).getStaffOnly());
   }
@@ -357,15 +372,15 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(extendedItem);
+    processor.updater(CHECK_IN_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter)), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertTrue(item.getCirculationNotes().get(0).getStaffOnly());
 
     circulationNote.setStaffOnly(false);
     circulationNote.setNoteType(CirculationNote.NoteTypeEnum.OUT);
 
-    processor.updater(CHECK_OUT_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(extendedItem);
+    processor.updater(CHECK_OUT_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter)), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertTrue(item.getCirculationNotes().get(0).getStaffOnly());
   }
 
@@ -378,15 +393,15 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(extendedItem);
+    processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter)), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertFalse(item.getCirculationNotes().get(0).getStaffOnly());
 
     circulationNote.setStaffOnly(true);
     circulationNote.setNoteType(CirculationNote.NoteTypeEnum.OUT);
 
-    processor.updater(CHECK_OUT_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter))).apply(extendedItem);
+    processor.updater(CHECK_OUT_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter)), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertFalse(item.getCirculationNotes().get(0).getStaffOnly());
   }
 
@@ -396,9 +411,9 @@ class ItemDataProcessorTest extends BaseTest {
     var administrativeNote = "administrative note";
     var item = new Item().withAdministrativeNotes(List.of(administrativeNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(REMOVE_ALL)).apply(extendedItem);
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(REMOVE_ALL), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertTrue(item.getAdministrativeNotes().isEmpty());
   }
 
@@ -409,14 +424,14 @@ class ItemDataProcessorTest extends BaseTest {
     var checkOutNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.OUT);
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_ALL)).apply(extendedItem);
+    processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_ALL), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
 
     item.setCirculationNotes(List.of(checkInNote, checkOutNote));
-    processor.updater(CHECK_OUT_NOTE, new Action().type(REMOVE_ALL)).apply(extendedItem);
+    processor.updater(CHECK_OUT_NOTE, new Action().type(REMOVE_ALL), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
   }
@@ -427,10 +442,10 @@ class ItemDataProcessorTest extends BaseTest {
     var checkInNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN);
     var item = new Item().withCirculationNotes(List.of(checkInNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_ALL)).apply(extendedItem);
-    processor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING)).apply(extendedItem);
+    processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_ALL), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
+    processor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
   }
@@ -444,10 +459,10 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).parameters(List.of(parameter)).initial("Action note")).apply(extendedItem);
-    processor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter))).apply(extendedItem);
+    processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).parameters(List.of(parameter)).initial("Action note"), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
+    processor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(1, item.getNotes().size());
     assertEquals("typeId1", item.getNotes().get(0).getItemNoteTypeId());
   }
@@ -462,9 +477,9 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(ITEM_NOTE, new Action().type(REMOVE_ALL).parameters(List.of(parameter))).apply(extendedItem);
+    processor.updater(ITEM_NOTE, new Action().type(REMOVE_ALL).parameters(List.of(parameter)), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(1, item.getNotes().size());
     assertEquals("typeId2", item.getNotes().get(0).getItemNoteTypeId());
   }
@@ -476,13 +491,13 @@ class ItemDataProcessorTest extends BaseTest {
     var administrativeNote2 = "administrative note 2";
     var item = new Item();
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote1)).apply(extendedItem);
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote1), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(1, item.getAdministrativeNotes().size());
     assertEquals(administrativeNote1, item.getAdministrativeNotes().get(0));
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote2)).apply(extendedItem);
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote2), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(2, item.getAdministrativeNotes().size());
   }
 
@@ -493,22 +508,22 @@ class ItemDataProcessorTest extends BaseTest {
     var checkOutNote = "checkOutNote";
     var item = new Item();
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(ADD_TO_EXISTING).updated(checkInNote)).apply(extendedItem);
+    processor.updater(CHECK_IN_NOTE, new Action().type(ADD_TO_EXISTING).updated(checkInNote), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals(checkInNote, item.getCirculationNotes().get(0).getNote());
     assertEquals(false, item.getCirculationNotes().get(0).getStaffOnly());
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
 
-    processor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING).updated(checkOutNote)).apply(extendedItem);
+    processor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING).updated(checkOutNote), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(2, item.getCirculationNotes().size());
     assertEquals(checkOutNote, item.getCirculationNotes().get(1).getNote());
     assertEquals(false, item.getCirculationNotes().get(1).getStaffOnly());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(1).getNoteType());
 
     List<Parameter> params = Collections.singletonList(new Parameter().key(STAFF_ONLY_NOTE_PARAMETER_KEY).value("true"));
-    processor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING).parameters(params).updated(checkOutNote)).apply(extendedItem);
+    processor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING).parameters(params).updated(checkOutNote), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(3, item.getCirculationNotes().size());
     assertEquals(checkOutNote, item.getCirculationNotes().get(2).getNote());
     assertEquals(true, item.getCirculationNotes().get(2).getStaffOnly());
@@ -526,16 +541,16 @@ class ItemDataProcessorTest extends BaseTest {
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
 
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(itemNote1)).apply(extendedItem);
+    processor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(itemNote1), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
 
     assertEquals(1, item.getNotes().size());
     assertEquals("typeId1", item.getNotes().get(0).getItemNoteTypeId());
     assertEquals(itemNote1, item.getNotes().get(0).getNote());
 
     parameter.setValue("typeId2");
-    processor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(itemNote2)).apply(extendedItem);
+    processor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(itemNote2), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
 
     assertEquals(2, item.getNotes().size());
     assertEquals("typeId2", item.getNotes().get(1).getItemNoteTypeId());
@@ -549,12 +564,12 @@ class ItemDataProcessorTest extends BaseTest {
     var administrativeNote2 = "administrative note 2";
     var item = new Item().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("administrative note")).apply(extendedItem);
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("administrative note"), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(2, item.getAdministrativeNotes().size());
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial(administrativeNote2)).apply(extendedItem);
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial(administrativeNote2), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(1, item.getAdministrativeNotes().size());
     assertEquals(administrativeNote1, item.getAdministrativeNotes().get(0));
   }
@@ -568,17 +583,17 @@ class ItemDataProcessorTest extends BaseTest {
       .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("circ note");
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note")).apply(extendedItem);
+    processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note"), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(2, item.getCirculationNotes().size());
-    processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("circ note")).apply(extendedItem);
+    processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("circ note"), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals("circ note", item.getCirculationNotes().get(0).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
 
     item.setCirculationNotes(List.of(checkInNote, checkOutNote));
-    processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("circ note")).apply(extendedItem);
+    processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("circ note"), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals("circ note", item.getCirculationNotes().get(0).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
@@ -595,16 +610,16 @@ class ItemDataProcessorTest extends BaseTest {
     parameter.setValue("typeId1");
     var item = new Item().withNotes(List.of(itemNote1, itemNote2, itemNote3));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("itemNote")
-      .parameters(List.of(parameter))).apply(extendedItem);
+      .parameters(List.of(parameter)), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(3, item.getNotes().size());
     processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("itemNote1")
-      .parameters(List.of(parameter))).apply(extendedItem);
+      .parameters(List.of(parameter)), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(2, item.getNotes().size());
     processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("itemNote2")
-      .parameters(List.of(parameter))).apply(extendedItem);
+      .parameters(List.of(parameter)), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(1, item.getNotes().size());
   }
 
@@ -616,10 +631,10 @@ class ItemDataProcessorTest extends BaseTest {
     var administrativeNote3 = "administrative note 3";
     var item = new Item().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REPLACE)
-      .initial(administrativeNote1).updated(administrativeNote3)).apply(extendedItem);
+      .initial(administrativeNote1).updated(administrativeNote3), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(2, item.getAdministrativeNotes().size());
     assertEquals(administrativeNote3, item.getAdministrativeNotes().get(0));
     assertEquals(administrativeNote2, item.getAdministrativeNotes().get(1));
@@ -634,10 +649,10 @@ class ItemDataProcessorTest extends BaseTest {
       .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note");
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
-      .initial("note").updated("note 2")).apply(extendedItem);
+      .initial("note").updated("note 2"), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(2, item.getCirculationNotes().size());
     assertEquals("note 2", item.getCirculationNotes().get(0).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
@@ -647,7 +662,7 @@ class ItemDataProcessorTest extends BaseTest {
     checkInNote.setNote("note");
 
     processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REPLACE)
-      .initial("note").updated("note 2")).apply(extendedItem);
+      .initial("note").updated("note 2"), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(2, item.getCirculationNotes().size());
     assertEquals("note", item.getCirculationNotes().get(0).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
@@ -665,10 +680,10 @@ class ItemDataProcessorTest extends BaseTest {
     parameter.setValue("typeId1");
     var item = new Item().withNotes(List.of(itemNote1, itemNote2));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REPLACE).parameters(List.of(parameter))
-      .initial("itemNote1").updated("itemNote3")).apply(extendedItem);
+      .initial("itemNote1").updated("itemNote3"), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
 
     assertEquals("itemNote3", item.getNotes().get(0).getNote());
     assertEquals("itemNote1", item.getNotes().get(1).getNote());
@@ -680,10 +695,10 @@ class ItemDataProcessorTest extends BaseTest {
     var administrativeNote = "note";
     var item = new Item().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote)));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
-      .updated(CHECK_IN_NOTE_TYPE)).apply(extendedItem);
+      .updated(CHECK_IN_NOTE_TYPE), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(0, item.getAdministrativeNotes().size());
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals("note", item.getCirculationNotes().get(0).getNote());
@@ -693,7 +708,7 @@ class ItemDataProcessorTest extends BaseTest {
     item.setAdministrativeNotes(List.of(administrativeNote));
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
-      .updated(CHECK_OUT_NOTE_TYPE)).apply(extendedItem);
+      .updated(CHECK_OUT_NOTE_TYPE), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(0, item.getAdministrativeNotes().size());
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals("note", item.getCirculationNotes().get(0).getNote());
@@ -703,7 +718,7 @@ class ItemDataProcessorTest extends BaseTest {
     item.setAdministrativeNotes(List.of(administrativeNote));
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
-      .updated("typeId")).apply(extendedItem);
+      .updated("typeId"), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
 
     assertEquals(0, item.getAdministrativeNotes().size());
     assertEquals(1, item.getNotes().size());
@@ -720,10 +735,10 @@ class ItemDataProcessorTest extends BaseTest {
       .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note 2").withStaffOnly(true);
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
     processor.updater(CHECK_IN_NOTE, new Action().type(CHANGE_TYPE)
-      .updated(CHECK_OUT_NOTE_TYPE)).apply(extendedItem);
+      .updated(CHECK_OUT_NOTE_TYPE), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(2, item.getCirculationNotes().size());
     assertEquals("note", item.getCirculationNotes().get(0).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
@@ -732,7 +747,7 @@ class ItemDataProcessorTest extends BaseTest {
     checkInNote.setNoteType(CirculationNote.NoteTypeEnum.IN);
 
     processor.updater(CHECK_IN_NOTE, new Action().type(CHANGE_TYPE)
-      .updated(ADMINISTRATIVE_NOTE_TYPE)).apply(extendedItem);
+      .updated(ADMINISTRATIVE_NOTE_TYPE), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
     assertEquals(1, item.getAdministrativeNotes().size());
@@ -742,7 +757,7 @@ class ItemDataProcessorTest extends BaseTest {
     item.setCirculationNotes(List.of(checkInNote, checkOutNote));
 
     processor.updater(CHECK_IN_NOTE, new Action().type(CHANGE_TYPE)
-      .updated("typeId")).apply(extendedItem);
+      .updated("typeId"), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
     assertEquals(1, item.getNotes().size());
@@ -761,9 +776,9 @@ class ItemDataProcessorTest extends BaseTest {
     parameter.setValue("typeId1");
     var item = new Item().withNotes(List.of(itemNote1, itemNote2));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(ADMINISTRATIVE_NOTE_TYPE).parameters(List.of(parameter))).apply(extendedItem);
+    processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(ADMINISTRATIVE_NOTE_TYPE).parameters(List.of(parameter)), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
 
     assertEquals(1, item.getAdministrativeNotes().size());
     assertEquals("itemNote1", item.getAdministrativeNotes().get(0));
@@ -773,7 +788,7 @@ class ItemDataProcessorTest extends BaseTest {
     item.setAdministrativeNotes(null);
     item.setNotes(List.of(itemNote1, itemNote2));
 
-    processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(CHECK_IN_NOTE_TYPE).parameters(List.of(parameter))).apply(extendedItem);
+    processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(CHECK_IN_NOTE_TYPE).parameters(List.of(parameter)), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals("itemNote1", item.getCirculationNotes().get(0).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
@@ -784,7 +799,7 @@ class ItemDataProcessorTest extends BaseTest {
     item.setCirculationNotes(null);
     item.setNotes(List.of(itemNote1, itemNote2));
 
-    processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(CHECK_OUT_NOTE_TYPE).parameters(List.of(parameter))).apply(extendedItem);
+    processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(CHECK_OUT_NOTE_TYPE).parameters(List.of(parameter)), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals("itemNote1", item.getCirculationNotes().get(0).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
@@ -795,7 +810,7 @@ class ItemDataProcessorTest extends BaseTest {
     item.setCirculationNotes(null);
     item.setNotes(List.of(itemNote1, itemNote2));
 
-    processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated("typeId3").parameters(List.of(parameter))).apply(extendedItem);
+    processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated("typeId3").parameters(List.of(parameter)), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(2, item.getNotes().size());
     assertEquals("itemNote1", item.getNotes().get(0).getNote());
     assertEquals("typeId3", item.getNotes().get(0).getItemNoteTypeId());
@@ -812,9 +827,9 @@ class ItemDataProcessorTest extends BaseTest {
       .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note 2").withStaffOnly(true);
     var item = new Item().withCirculationNotes(new ArrayList<>(List.of(checkInNote, checkOutNote)));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(DUPLICATE).updated(CHECK_OUT_NOTE_TYPE)).apply(extendedItem);
+    processor.updater(CHECK_IN_NOTE, new Action().type(DUPLICATE).updated(CHECK_OUT_NOTE_TYPE), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(3, item.getCirculationNotes().size());
     assertEquals(2, item.getCirculationNotes().stream().filter(circNote -> circNote.getNoteType() == CirculationNote.NoteTypeEnum.OUT).count());
     var duplicated = item.getCirculationNotes().stream().filter(circNote ->
@@ -822,7 +837,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertTrue(duplicated.isPresent());
     assertTrue(duplicated.get().getStaffOnly());
 
-    processor.updater(CHECK_OUT_NOTE, new Action().type(DUPLICATE).updated(CHECK_IN_NOTE_TYPE)).apply(extendedItem);
+    processor.updater(CHECK_OUT_NOTE, new Action().type(DUPLICATE).updated(CHECK_IN_NOTE_TYPE), extendedItem, new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails())).apply(extendedItem);
     assertEquals(5, item.getCirculationNotes().size());
     assertEquals(3, item.getCirculationNotes().stream().filter(circNote -> circNote.getNoteType() == CirculationNote.NoteTypeEnum.IN).count());
 
@@ -838,7 +853,7 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Test
   void testClone() {
-    var processor = new ItemDataProcessor(holdingsReferenceService, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), folioExecutionContext);
+    var processor = new ItemDataProcessor(holdingsReferenceService, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()));
     var administrativeNotes = new ArrayList<String>();
     administrativeNotes.add("note1");
     var item1 = new Item().withId("id")
@@ -882,5 +897,82 @@ class ItemDataProcessorTest extends BaseTest {
     extendedItem2.getEntity().getNotes().add(itemNote2);
 
     assertFalse(processor.compare(extendedItem1, extendedItem2));
+  }
+
+  @Test
+  void testShouldNotUpdateItemWithLoanType_whenLoanTypeFromOtherTenantThanActionTenants() {
+    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
+
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
+      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any())).thenReturn(folioExecutionContext);
+
+      var loanTypeFromMemberB = UUID.randomUUID().toString();
+      var actionTenants = List.of("memberB");
+      var itemId = UUID.randomUUID().toString();
+      var initPermanentLoanTypeId = UUID.randomUUID().toString();
+      var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId).withPermanentLoanType(new LoanType().withId(initPermanentLoanTypeId))).tenantId("memberA").build();
+
+      var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, loanTypeFromMemberB, actionTenants, List.of()));
+      var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
+
+      var result = processor.process(IDENTIFIER, extendedItem, rules);
+
+      assertNotNull(result);
+      assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType().getId());
+
+      verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
+        itemId, "memberA", "PERMANENT_LOAN_TYPE").trim());
+    }
+  }
+
+  @Test
+  void testShouldNotUpdateItemWithLoanType_whenLoanTypeFromOtherTenantThanRuleTenants() {
+    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
+
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
+      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any())).thenReturn(folioExecutionContext);
+
+      var adminNoteFromMemberB = UUID.randomUUID().toString();
+      var ruleTenants = List.of("memberB");
+      var itemId = UUID.randomUUID().toString();
+      var initPermanentLoanTypeId = UUID.randomUUID().toString();
+      var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId).withPermanentLoanType(new LoanType().withId(initPermanentLoanTypeId))).tenantId("memberA").build();
+
+      var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, adminNoteFromMemberB, List.of(), ruleTenants));
+      var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
+
+      var result = processor.process(IDENTIFIER, extendedItem, rules);
+
+      assertNotNull(result);
+      assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType().getId());
+
+      verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
+        itemId, "memberA", "PERMANENT_LOAN_TYPE").trim());
+    }
+  }
+
+  @Test
+  void testShouldUpdateItemWithLoanType_whenLoanTypeFromTenantAmongRuleTenants() {
+
+    var permanentLoanTypeFromMemberB = UUID.randomUUID().toString();
+
+    when(loanTypeClient.getLoanTypeById(permanentLoanTypeFromMemberB)).thenReturn(new LoanType().withId(permanentLoanTypeFromMemberB));
+    when(itemReferenceService.getLoanTypeById(permanentLoanTypeFromMemberB)).thenReturn(new LoanType().withId(permanentLoanTypeFromMemberB));
+
+    var ruleTenants = List.of("memberB", "memberA");
+    var itemId = UUID.randomUUID().toString();
+    var initPermanentLoanTypeId = UUID.randomUUID().toString();
+    var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId).withPermanentLoanType(new LoanType().withId(initPermanentLoanTypeId))).tenantId("memberA").build();
+
+    var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, permanentLoanTypeFromMemberB, List.of(), ruleTenants));
+
+    var result = processor.process(IDENTIFIER, extendedItem, rules);
+
+    assertNotNull(result);
+    assertEquals(permanentLoanTypeFromMemberB, result.getUpdated().getEntity().getPermanentLoanType().getId());
+
+    verifyNoInteractions(errorService);
   }
 }

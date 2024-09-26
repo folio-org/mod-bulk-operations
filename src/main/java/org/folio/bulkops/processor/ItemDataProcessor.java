@@ -2,6 +2,7 @@ package org.folio.bulkops.processor;
 
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
@@ -10,6 +11,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
+import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -22,11 +24,12 @@ import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
+import org.folio.bulkops.exception.RuleValidationTenantsException;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
-import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;
@@ -39,11 +42,10 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
   private final HoldingsReferenceService holdingsReferenceService;
   private final ItemReferenceService itemReferenceService;
   private final ItemsNotesUpdater itemsNotesUpdater;
-  private final FolioExecutionContext folioExecutionContext;
 
   @Override
-  public Validator<UpdateOptionType, Action> validator(ExtendedItem extendedItem) {
-    return (option, action) -> {
+  public Validator<UpdateOptionType, Action, BulkOperationRule> validator(ExtendedItem extendedItem) {
+    return (option, action, rule) -> {
       if (CLEAR_FIELD == action.getType() && STATUS == option) {
         throw new RuleValidationException("Status field can not be cleared");
       } else if (CLEAR_FIELD == action.getType() && PERMANENT_LOAN_TYPE == option) {
@@ -66,7 +68,10 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
   }
 
   @Override
-  public Updater<ExtendedItem> updater(UpdateOptionType option, Action action) {
+  public Updater<ExtendedItem> updater(UpdateOptionType option, Action action, ExtendedItem entity, BulkOperationRule rule) throws RuleValidationTenantsException {
+    if (ruleTenantsAreNotValid(rule, action, entity)) {
+      throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE, entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
+    }
     if (REPLACE_WITH == action.getType()) {
       return switch (option) {
         case PERMANENT_LOAN_TYPE ->
@@ -155,6 +160,13 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
     } else {
       return isNull(item.getTemporaryLocation()) ? item.getPermanentLocation() : item.getTemporaryLocation();
     }
+  }
+
+  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, ExtendedItem extendedItem) {
+    var ruleTenants = rule.getRuleDetails().getTenants();
+    var actionTenants = action.getTenants();
+    return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedItem.getTenant()) ||
+      nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedItem.getTenant());
   }
 }
 
