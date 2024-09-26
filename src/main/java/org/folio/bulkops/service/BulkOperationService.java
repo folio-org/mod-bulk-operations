@@ -413,6 +413,7 @@ public class BulkOperationService {
     operation = bulkOperationRepository.save(operation);
 
     if (operation.getEntityType() == INSTANCE_MARC) {
+      marcUpdateService.saveErrorsForFolioInstances(operation);
       marcUpdateService.commitForInstanceMarc(operation);
       return;
     }

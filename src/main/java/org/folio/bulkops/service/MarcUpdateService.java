@@ -2,14 +2,18 @@ package org.folio.bulkops.service;
 
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
+import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.MarcHelper.fetchInstanceUuidOrElseHrid;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
@@ -30,12 +34,14 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class MarcUpdateService {
   public static final String CHANGED_MARC_PATH_TEMPLATE = "%s/%s-Changed-Records-%s.mrc";
+  public static final String MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY = "Bulk edit of MARC fields is supported only for instance with MARC source.";
 
   private final BulkOperationExecutionRepository executionRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final MarcInstanceUpdateProcessor updateProcessor;
   private final ErrorService errorService;
   private final BulkOperationRepository bulkOperationRepository;
+  private final ObjectMapper objectMapper;
 
   public void commitForInstanceMarc(BulkOperation bulkOperation) {
     if (StringUtils.isNotEmpty(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
@@ -92,6 +98,23 @@ public class MarcUpdateService {
         }
       }
       return resultMarcFileName;
+    }
+  }
+
+  public void saveErrorsForFolioInstances(BulkOperation bulkOperation) {
+    try (var readerForMatchedJsonFile = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
+      var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), ExtendedInstance.class);
+      while (iterator.hasNext()) {
+        var instance = iterator.next().getEntity();
+        if (!MARC.equals(instance.getSource())) {
+          var identifier = HRID.equals(bulkOperation.getIdentifierType()) ?
+            instance.getHrid() :
+            instance.getId();
+          errorService.saveError(bulkOperation.getId(), identifier, MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY);
+        }
+      }
+    } catch (Exception e) {
+      log.error("Failed to save errors for folio instances", e);
     }
   }
 }
