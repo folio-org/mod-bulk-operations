@@ -3,7 +3,7 @@ package org.folio.bulkops.processor;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.dto.EntityType;
-import org.folio.bulkops.processor.check.PermissionsValidator;
+import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;

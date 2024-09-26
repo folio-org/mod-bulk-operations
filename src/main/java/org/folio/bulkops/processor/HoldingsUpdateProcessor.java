@@ -19,7 +19,7 @@ import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
-import org.folio.bulkops.processor.check.PermissionsValidator;
+import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.RuleService;

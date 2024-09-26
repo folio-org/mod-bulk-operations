@@ -1,4 +1,4 @@
-package org.folio.bulkops.processor.check;
+package org.folio.bulkops.processor.permissions.check;
 
 import java.util.List;
 
