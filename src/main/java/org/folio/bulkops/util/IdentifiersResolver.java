@@ -1,5 +1,6 @@
 package org.folio.bulkops.util;
 
+import lombok.experimental.UtilityClass;
 import org.folio.bulkops.domain.dto.IdentifierType;
 
 import java.util.EnumMap;
@@ -17,6 +18,7 @@ import static org.folio.bulkops.domain.dto.IdentifierType.ISSN;
 import static org.folio.bulkops.domain.dto.IdentifierType.ITEM_BARCODE;
 import static org.folio.bulkops.domain.dto.IdentifierType.USER_NAME;
 
+@UtilityClass
 public class IdentifiersResolver {
   private static final EnumMap<IdentifierType, String> identifiersMap = new EnumMap<>(IdentifierType.class);
 
