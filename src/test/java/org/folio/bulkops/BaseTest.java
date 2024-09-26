@@ -298,6 +298,14 @@ public abstract class BaseTest {
     return rule(option, action, null, updated);
   }
 
+  public static BulkOperationRule rule(UpdateOptionType option, UpdateActionType action, String updated,
+                                       List<String> actionsTenants, List<String> ruleTenants) {
+    var rule = rule(option, action, null, updated);
+    rule.getRuleDetails().setTenants(ruleTenants);
+    rule.getRuleDetails().getActions().get(0).setTenants(actionsTenants);
+    return rule;
+  }
+
   public BulkOperation buildBulkOperation(String fileName, org.folio.bulkops.domain.dto.EntityType entityType, org.folio.bulkops.domain.dto.BulkOperationStep step) {
     return switch (step) {
       case UPLOAD -> BulkOperation.builder()
