@@ -28,7 +28,7 @@ public class PermissionsValidator {
 
   private boolean isBulkEditWritePermissionExists(String tenantId, EntityType entityType) {
     var readPermissionForEntity = requiredPermissionResolver.getWritePermission(entityType);
-    var userPermissions = permissionsProvider.getUserPermissions(tenantId);
+    var userPermissions = permissionsProvider.getUserPermissions(tenantId, folioExecutionContext.getUserId());
     var isWritePermissionsExist = false;
     if (entityType == EntityType.USER) {
       isWritePermissionsExist = userPermissions.contains(readPermissionForEntity) && userPermissions.contains(BULK_EDIT_USERS_WRITE_PERMISSION);

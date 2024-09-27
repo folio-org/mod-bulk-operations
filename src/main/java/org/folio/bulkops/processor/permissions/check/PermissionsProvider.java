@@ -1,6 +1,7 @@
 package org.folio.bulkops.processor.permissions.check;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.folio.bulkops.client.PermissionsSelfCheckClient;
 import org.folio.spring.FolioExecutionContext;
@@ -22,7 +23,7 @@ public class PermissionsProvider {
   private final FolioModuleMetadata folioModuleMetadata;
 
   @Cacheable(cacheNames = "userPermissions")
-  public List<String> getUserPermissions(String tenantId) {
+  public List<String> getUserPermissions(String tenantId, UUID userId) {
     try (var ignored =  new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return permissionsSelfCheckClient.getUserPermissionsForSelfCheck();
     }
