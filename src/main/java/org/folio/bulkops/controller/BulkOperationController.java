@@ -158,7 +158,9 @@ public class BulkOperationController implements BulkOperationsApi {
         bulkOperation.getLinkToModifiedRecordsMarcFile() :
         bulkOperation.getLinkToModifiedRecordsCsvFile();
     } else if (fileContentType == COMMITTED_RECORDS_FILE) {
-      path = bulkOperation.getLinkToCommittedRecordsCsvFile();
+      path = INSTANCE_MARC.equals(bulkOperation.getEntityType()) ?
+        bulkOperation.getLinkToCommittedRecordsMarcFile() :
+        bulkOperation.getLinkToCommittedRecordsCsvFile();
     } else if (fileContentType == COMMITTING_CHANGES_ERROR_FILE) {
       path = bulkOperation.getLinkToCommittedRecordsErrorsCsvFile();
     } else {

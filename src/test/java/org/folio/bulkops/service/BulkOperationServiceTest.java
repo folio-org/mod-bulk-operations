@@ -1186,13 +1186,25 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldReturnBulkOperationById(OperationStatusType statusType) {
     var operationId = UUID.randomUUID();
 
+    var bulkOperation = BulkOperation.builder()
+      .id(operationId)
+      .status(statusType)
+      .totalNumOfRecords(10)
+      .processedNumOfRecords(0)
+      .build();
+
+    var experctedBulkOperation = BulkOperation.builder()
+      .id(operationId)
+      .status(statusType)
+      .totalNumOfRecords(10)
+      .processedNumOfRecords(5)
+      .build();
+
     when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(BulkOperation.builder()
-        .id(operationId)
-        .status(statusType)
-        .totalNumOfRecords(10)
-        .processedNumOfRecords(0)
-        .build()));
+      .thenReturn(Optional.of(bulkOperation));
+
+    when(bulkOperationRepository.save(experctedBulkOperation))
+      .thenReturn(experctedBulkOperation);
 
     when(dataProcessingRepository.findById(operationId))
       .thenReturn(Optional.of(BulkOperationDataProcessing.builder()

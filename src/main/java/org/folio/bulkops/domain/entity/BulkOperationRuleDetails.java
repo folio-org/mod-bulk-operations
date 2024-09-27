@@ -45,4 +45,6 @@ public class BulkOperationRuleDetails {
   @Type(JsonBinaryType.class)
   @Column(columnDefinition = "jsonb")
   private List<Parameter> parameters;
+
+  private List<String> tenants;
 }

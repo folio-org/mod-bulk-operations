@@ -8,5 +8,5 @@
     "recordType" : "MARC_BIBLIOGRAPHIC",
     "marcMappingOption" : "UPDATE"
   },
-  "hidden" : false
+  "hidden" : true
 }

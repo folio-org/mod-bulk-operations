@@ -638,6 +638,8 @@ components:
       $ref: 'schemas/query-request.json#/QueryRequest'
     bulkOperationMarcRuleCollection:
       $ref: 'schemas/bulk_operation_marc_rule_collection.json#/BulkOperationMarcRuleCollection'
+    dataImportJobExecutionCollection:
+      $ref: 'schemas/data_import_job_execution_collection.json#/DataImportJobExecutionCollection'
     UUID:
       type: string
       format: uuid
