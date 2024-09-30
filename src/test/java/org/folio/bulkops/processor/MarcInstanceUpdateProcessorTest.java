@@ -101,6 +101,14 @@ class MarcInstanceUpdateProcessorTest extends BaseTest {
         .id(UUID.randomUUID().toString())
         .fileDefinitions(Collections.singletonList(FileDefinition.builder().id(UUID.randomUUID().toString()).build()))
         .build());
+    when(dataImportUploadClient.uploadFileDefinitionsFiles(anyString(), anyString(), any(byte[].class)))
+      .thenReturn(UploadFileDefinition.builder()
+        .id(UUID.randomUUID().toString())
+        .fileDefinitions(Collections.singletonList(FileDefinition.builder()
+          .id(UUID.randomUUID().toString())
+          .name("name")
+          .build()))
+        .build());
 
     marcInstanceUpdateProcessor.updateMarcRecords(bulkOperation);
 
