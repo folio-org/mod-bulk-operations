@@ -123,7 +123,7 @@ public class MarcInstanceUpdateProcessor {
         new AssembleStorageFileRequestBody(uploadUrlResponse.getUploadId(), uploadUrlResponse.getKey(), List.of(etag)));
       uploadDefinition = dataImportClient.getUploadDefinitionById(uploadDefinitionId);
     } else {
-      dataImportUploadClient.uploadFileDefinitionsFiles(uploadDefinitionId, fileDefinitionId, content);
+      uploadDefinition = dataImportUploadClient.uploadFileDefinitionsFiles(uploadDefinitionId, fileDefinitionId, content);
     }
     return uploadDefinition;
   }
