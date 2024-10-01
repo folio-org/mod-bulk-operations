@@ -26,7 +26,7 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 @Component
 @Log4j2
 @AllArgsConstructor
-public class HoldingsNotesProcessor extends AbstractNoteProcessor {
+public class HoldingsNotesProcessor extends CsvDownloadPreProcessor {
 
   private final HoldingsReferenceService holdingsReferenceService;
   private final FolioExecutionContext folioExecutionContext;

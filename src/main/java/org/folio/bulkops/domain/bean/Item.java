@@ -320,15 +320,18 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private String holdingsRecordId;
 
+  @JsonProperty("tenantId")
+  @CsvCustomBindByName(column = "Tenant", converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 44, converter = StringConverter.class)
+  @UnifiedTableCell(visible = false)
+  private String tenantId;
+
   @JsonProperty("_version")
   private Integer version;
 
   @JsonProperty("circulationNotes")
   @Valid
   private List<CirculationNote> circulationNotes;
-
-  @JsonProperty("tenantId")
-  private String tenantId;
 
   @Override
   public String getIdentifier(IdentifierType identifierType) {

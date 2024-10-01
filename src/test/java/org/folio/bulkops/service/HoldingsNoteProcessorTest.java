@@ -8,7 +8,7 @@ import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
-import org.folio.bulkops.processor.note.AbstractNoteProcessor;
+import org.folio.bulkops.processor.note.CsvDownloadPreProcessor;
 import org.folio.bulkops.processor.note.NoteProcessorFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ class HoldingsNoteProcessorTest extends BaseTest {
   @MockBean
   private ConsortiaService consortiaService;
   @Autowired
-  private AbstractNoteProcessor holdingsNotesProcessor;
+  private CsvDownloadPreProcessor holdingsNotesProcessor;
   @Autowired
   private NoteProcessorFactory noteProcessorFactory;
 
@@ -37,7 +37,7 @@ class HoldingsNoteProcessorTest extends BaseTest {
         new HoldingsNoteType().withName("Note type 1"),
         new HoldingsNoteType().withName("Note type 2")));
 
-    var res = noteProcessorFactory.getNoteProcessor(EntityType.HOLDINGS_RECORD.getValue()).processNotes(sourceCsv.getBytes(), new BulkOperation());
+    var res = noteProcessorFactory.getNoteProcessor(EntityType.HOLDINGS_RECORD.getValue()).processCsvContent(sourceCsv.getBytes(), new BulkOperation());
 
     var lines = new String(res).split("\n");
     assertThat(lines).hasSize(2);

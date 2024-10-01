@@ -25,7 +25,7 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 @Log4j2
 @Component
 @AllArgsConstructor
-public class ItemNoteProcessor extends AbstractNoteProcessor {
+public class ItemNoteProcessor extends CsvDownloadPreProcessor {
 
   private final ItemReferenceService itemReferenceService;
   private final FolioExecutionContext folioExecutionContext;

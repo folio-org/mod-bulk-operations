@@ -73,6 +73,10 @@ public class PreviewService {
   private final HoldingsNoteTypeClient holdingsNoteTypeClient;
   private final InstanceNoteTypesClient instanceNoteTypesClient;
   private final MarcToUnifiedTableRowMapper marcToUnifiedTableRowMapper;
+  private final TenantTableUpdater tenantTableUpdater;
+
+  private static final int ITEM_TENANT_POSITION = 44;
+  private static final int HOLDINGS_RECORD_TENANT_POSITION = 30;
 
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -256,6 +260,9 @@ public class PreviewService {
           .toList();
         row.setRow(SpecialCharacterEscaper.restore(rowData));
       });
+      if (clazz == Item.class || clazz == HoldingsRecord.class) {
+        tenantTableUpdater.updateTenantHeaderAndRow(table);
+      }
       return table;
     } catch (Exception e) {
       log.error(e.getMessage());
