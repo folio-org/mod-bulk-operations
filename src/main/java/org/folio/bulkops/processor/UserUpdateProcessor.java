@@ -21,7 +21,7 @@ public class UserUpdateProcessor extends AbstractUpdateProcessor<User> {
 
   @Override
   public void updateRecord(User user) {
-    permissionsValidator.checkIfBulkEditWritePermissionExists(folioExecutionContext.getTenantId(), EntityType.ITEM,
+    permissionsValidator.checkIfBulkEditWritePermissionExists(folioExecutionContext.getTenantId(), EntityType.USER,
       NO_USER_WRITE_PERMISSIONS_TEMPLATE + folioExecutionContext.getTenantId());
     userClient.updateUser(user, user.getId());
   }
