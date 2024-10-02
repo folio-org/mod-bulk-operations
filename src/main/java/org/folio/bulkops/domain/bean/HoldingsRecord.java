@@ -287,9 +287,4 @@ public class HoldingsRecord implements BulkOperationsEntity {
   public void setTenant(String tenantId) {
     this.tenantId = tenantId;
   }
-
-  @Override
-  public String getTenant() {
-    return tenantId;
-  }
 }

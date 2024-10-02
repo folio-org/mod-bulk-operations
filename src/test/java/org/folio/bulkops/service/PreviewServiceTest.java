@@ -169,6 +169,7 @@ class PreviewServiceTest extends BaseTest {
         headers = getHeaders(Item.class);
         noteTableUpdater.extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, headers , List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"), emptySet());
       }
+      headers.remove(headers.size() - 1);
       assertThat(table.getHeader(), equalTo(headers));
     } else if (INSTANCE.equals(entityType)) {
       if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
