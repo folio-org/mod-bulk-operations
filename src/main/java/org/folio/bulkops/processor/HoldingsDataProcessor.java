@@ -76,8 +76,8 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     };
   }
 
-  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity, BulkOperationRule rule) throws RuleValidationTenantsException {
-    if (ruleTenantsAreNotValid(rule, action, entity)) {
+  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity, BulkOperationRule rule, boolean forPreview) throws RuleValidationTenantsException {
+    if (!forPreview && ruleTenantsAreNotValid(rule, action, entity)) {
       throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE, entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
     }
     if (isElectronicAccessUpdate(option)) {

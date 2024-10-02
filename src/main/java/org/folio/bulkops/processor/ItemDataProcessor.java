@@ -68,8 +68,8 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
   }
 
   @Override
-  public Updater<ExtendedItem> updater(UpdateOptionType option, Action action, ExtendedItem entity, BulkOperationRule rule) throws RuleValidationTenantsException {
-    if (ruleTenantsAreNotValid(rule, action, entity)) {
+  public Updater<ExtendedItem> updater(UpdateOptionType option, Action action, ExtendedItem entity, BulkOperationRule rule, boolean forPreview) throws RuleValidationTenantsException {
+    if (!forPreview && ruleTenantsAreNotValid(rule, action, entity)) {
       throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE, entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
     }
     if (REPLACE_WITH == action.getType()) {

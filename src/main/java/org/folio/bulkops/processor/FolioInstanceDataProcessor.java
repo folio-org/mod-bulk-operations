@@ -46,7 +46,7 @@ public class FolioInstanceDataProcessor extends AbstractDataProcessor<ExtendedIn
   }
 
   @Override
-  public Updater<ExtendedInstance> updater(UpdateOptionType option, Action action, ExtendedInstance entity, BulkOperationRule rule) {
+  public Updater<ExtendedInstance> updater(UpdateOptionType option, Action action, ExtendedInstance entity, BulkOperationRule rule, boolean forPreview) {
     if (STAFF_SUPPRESS.equals(option)) {
       if (SET_TO_TRUE.equals(action.getType())) {
         return extendedInstance -> extendedInstance.getEntity().setStaffSuppress(true);
