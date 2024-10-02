@@ -75,6 +75,7 @@ import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.OptimisticLockingException;
+import org.folio.bulkops.exception.RuleValidationTenantsException;
 import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.processor.DataProcessorFactory;
 import org.folio.bulkops.processor.MarcInstanceDataProcessor;
@@ -461,6 +462,12 @@ public class BulkOperationService {
               }
               bulkOperationExecutionContents.forEach(errorService::saveError);
             }
+          } catch (RuleValidationTenantsException e) {
+            try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(consortiaService.getCentralTenantId(folioExecutionContext.getTenantId()), folioModuleMetadata, folioExecutionContext))) {
+              log.info("current tenant: {}", folioExecutionContext.getTenantId());
+              errorService.saveError(operationId, e.getIdentifier(), e.getMessage());
+            }
+            log.error(e.getMessage());
           } catch (OptimisticLockingException e) {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLinkToFailedEntity());
           } catch (Exception e) {
