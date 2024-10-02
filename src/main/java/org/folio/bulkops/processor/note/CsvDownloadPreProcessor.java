@@ -73,17 +73,9 @@ public abstract class CsvDownloadPreProcessor {
           line = headers.stream()
             .map(this::processSpecialCharacters)
             .toArray(String[]::new);
-          if (isTypeWithTenant) {
-            if (isConsortiaTenant) {
-              line[line.length - 1] = TENANT_VALUE_IN_CONSORTIA_FOR_MEMBER;
-            } else {
-              line = Arrays.copyOf(line, line.length - 1);
-            }
-          }
+          processTenantInHeaders(line, isConsortiaTenant, isTypeWithTenant);
         } else {
-          if (isTypeWithTenant && !isConsortiaTenant) {
-            line = Arrays.copyOf(line, line.length - 1);
-          }
+          line = processTenantInRows(line, isConsortiaTenant, isTypeWithTenant);
           line = processNotesData(line, noteTypeNames, bulkOperation);
         }
         stringWriter.write(String.join(",", line) + "\n");
@@ -106,6 +98,26 @@ public abstract class CsvDownloadPreProcessor {
           bulkOperation.getEntityType() == EntityType.INSTANCE_MARC).stream()
       .map(this::processSpecialCharacters)
       .toArray(String[]::new);
+  }
+
+  private String[] processTenantInHeaders(String[] line, boolean isConsortiaTenant, boolean isTypeWithTenant) {
+    if (isTypeWithTenant) {
+      int tenantPosition = line.length - 1;
+      if (isConsortiaTenant) {
+        line[tenantPosition] = TENANT_VALUE_IN_CONSORTIA_FOR_MEMBER;
+      } else {
+        line = Arrays.copyOf(line, tenantPosition);
+      }
+    }
+    return line;
+  }
+
+  private String[] processTenantInRows(String[] line, boolean isConsortiaTenant, boolean isTypeWithTenant) {
+    if (isTypeWithTenant && !isConsortiaTenant) {
+      int tenantPosition = line.length - 1;
+      line = Arrays.copyOf(line, tenantPosition);
+    }
+    return line;
   }
 
   private String processSpecialCharacters(String line) {

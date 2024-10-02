@@ -2,6 +2,9 @@ package org.folio.bulkops.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;
@@ -16,7 +19,10 @@ public class TenantTableUpdater {
   private final FolioExecutionContext folioExecutionContext;
   private final ConsortiaService consortiaService;
 
-  public void updateTenantHeaderAndRow(UnifiedTable unifiedTable) {
+  public void updateTenantHeaderAndRow(UnifiedTable unifiedTable, Class<? extends BulkOperationsEntity> clazz) {
+    if (!(clazz == Item.class || clazz == HoldingsRecord.class)) {
+      return;
+    }
     int tenantPosition = unifiedTable.getHeader().size() - 1;
     if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
       var header = unifiedTable.getHeader().get(tenantPosition);

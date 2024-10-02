@@ -5,9 +5,7 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.entity.BulkOperation;
-import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.HoldingsReferenceService;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.cache.Cache;
@@ -29,9 +27,7 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 public class HoldingsNotesProcessor extends CsvDownloadPreProcessor {
 
   private final HoldingsReferenceService holdingsReferenceService;
-  private final FolioExecutionContext folioExecutionContext;
   private final FolioModuleMetadata folioModuleMetadata;
-  private final ConsortiaService consortiaService;
 
   @Override
   public List<String> getNoteTypeNames(BulkOperation bulkOperation) {
