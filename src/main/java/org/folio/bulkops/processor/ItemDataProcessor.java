@@ -63,15 +63,14 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
             .getValue()).contains(action.getUpdated())) {
         throw new RuleValidationException(
             format("New status value \"%s\" is not allowed", action.getUpdated()));
+      } else if (ruleTenantsAreNotValid(rule, action, extendedItem)) {
+        throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE, extendedItem.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedItem.getTenant(), option.getValue()));
       }
     };
   }
 
   @Override
-  public Updater<ExtendedItem> updater(UpdateOptionType option, Action action, ExtendedItem entity, BulkOperationRule rule, boolean forPreview) throws RuleValidationTenantsException {
-    if (!forPreview && ruleTenantsAreNotValid(rule, action, entity)) {
-      throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE, entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
-    }
+  public Updater<ExtendedItem> updater(UpdateOptionType option, Action action, ExtendedItem entity) throws RuleValidationTenantsException {
     if (REPLACE_WITH == action.getType()) {
       return switch (option) {
         case PERMANENT_LOAN_TYPE ->
