@@ -18,4 +18,10 @@ public class Subject {
 
   @JsonProperty("authorityId")
   private String authorityId;
+
+  @JsonProperty("sourceId")
+  private String sourceId;
+
+  @JsonProperty("typeId")
+  private String typeId;
 }
