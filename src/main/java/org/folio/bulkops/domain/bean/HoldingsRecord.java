@@ -229,7 +229,6 @@ public class HoldingsRecord implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private Tags tags;
 
-  @JsonProperty("tenantId")
   @CsvCustomBindByName(column = "Tenant", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 30, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
