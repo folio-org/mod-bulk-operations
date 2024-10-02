@@ -63,6 +63,8 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
             .getValue()).contains(action.getUpdated())) {
         throw new RuleValidationException(
             format("New status value \"%s\" is not allowed", action.getUpdated()));
+      } else if (ruleTenantsAreNotValid(rule, action, extendedItem)) {
+        throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE, extendedItem.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedItem.getTenant(), option.getValue()));
       }
     };
   }
@@ -157,6 +159,13 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
     } else {
       return isNull(item.getTemporaryLocation()) ? item.getPermanentLocation() : item.getTemporaryLocation();
     }
+  }
+
+  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, ExtendedItem extendedItem) {
+    var ruleTenants = rule.getRuleDetails().getTenants();
+    var actionTenants = action.getTenants();
+    return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedItem.getTenant()) ||
+      nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedItem.getTenant());
   }
 }
 

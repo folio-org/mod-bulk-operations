@@ -48,6 +48,12 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
           updater(option, action, entity).apply(updated);
         } catch (RuleValidationException e) {
           errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
+        } catch (RuleValidationTenantsException e) {
+          try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(consortiaService.getCentralTenantId(folioExecutionContext.getTenantId()), folioModuleMetadata, folioExecutionContext))) {
+            log.info("current tenant: {}", folioExecutionContext.getTenantId());
+            errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
+          }
+          log.error(e.getMessage());
         } catch (Exception e) {
           log.error(String.format("%s id=%s, error: %s", updated.getRecordBulkOperationEntity().getClass().getSimpleName(), "id", e.getMessage()));
           errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());

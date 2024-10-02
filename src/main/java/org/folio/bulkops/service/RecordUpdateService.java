@@ -1,20 +1,16 @@
 package org.folio.bulkops.service;
 
 import static java.lang.String.format;
-import static java.util.Objects.nonNull;
-import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
-import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.OptimisticLockingException;
-import org.folio.bulkops.exception.RuleValidationTenantsException;
 import org.folio.bulkops.processor.UpdateProcessorFactory;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.util.EntityPathResolver;
@@ -27,21 +23,8 @@ public class RecordUpdateService {
   private final UpdateProcessorFactory updateProcessorFactory;
   private final BulkOperationExecutionContentRepository executionContentRepository;
   private final EntityPathResolver entityPathResolver;
-  private final RuleService ruleService;
 
-  public BulkOperationsEntity updateEntity(BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation) throws RuleValidationTenantsException {
-    var rules = ruleService.getRules(operation.getId());
-    for (org.folio.bulkops.domain.dto.BulkOperationRule rule : rules.getBulkOperationRules()) {
-      var details = rule.getRuleDetails();
-      var option = details.getOption();
-      for (org.folio.bulkops.domain.dto.Action action : details.getActions()) {
-        if (ruleTenantsAreNotValid(rule, action, modified)) {
-          throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE,
-            modified.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), modified.getTenant(), option.getValue()),
-            modified.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID));
-        }
-      }
-    }
+  public BulkOperationsEntity updateEntity(BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation) {
     var isEqual = original.hashCode() == modified.hashCode() && original.equals(modified);
     var updater = updateProcessorFactory.getProcessorFromFactory(resolveExtendedEntityClass(operation.getEntityType()));
     if (!isEqual) {
@@ -64,12 +47,5 @@ public class RecordUpdateService {
     }
     updater.updateAssociatedRecords(modified, operation, isEqual);
     return isEqual ? original : modified;
-  }
-
-  private boolean ruleTenantsAreNotValid(org.folio.bulkops.domain.dto.BulkOperationRule rule, org.folio.bulkops.domain.dto.Action action, BulkOperationsEntity entity) {
-    var ruleTenants = rule.getRuleDetails().getTenants();
-    var actionTenants = action.getTenants();
-    return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(entity.getTenant()) ||
-      nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(entity.getTenant());
   }
 }

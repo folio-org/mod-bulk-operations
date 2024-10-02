@@ -15,7 +15,6 @@ import static org.mockito.Mockito.when;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
-import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.ExtendedItem;
@@ -60,7 +59,6 @@ class RecordUpdateServiceTest extends BaseTest {
   private ErrorService errorService;
 
   @Test
-  @SneakyThrows
   void testUpdateNonEqualEntity() {
     var original = Item.builder()
       .id(UUID.randomUUID().toString())
@@ -85,7 +83,6 @@ class RecordUpdateServiceTest extends BaseTest {
   }
 
   @Test
-  @SneakyThrows
   void testUpdateNonModifiedEntity() {
     var original = Item.builder()
       .id(UUID.randomUUID().toString())
@@ -108,7 +105,6 @@ class RecordUpdateServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @SneakyThrows
   @ValueSource(strings = {"[409 Conflict] during [PUT] to [http://inventory/items/23f2c8e1-bd5d-4f27-9398-a688c998808a] [ItemClient#updateItem(Item,String)]: [ERROR: Cannot update record 23f2c8e1-bd5d-4f27-9398-a688c998808a because it has been changed (optimistic locking): Stored _version is 13, _version of request is 12 (23F09)]",
     "[409 Conflict] during [PUT] to [http://inventory/items/23f2c8e1-bd5d-4f27-9398-a688c998808a] [ItemClient#updateItem(Item,String)]: [ERROR: Cannot update record 23f2c8e1-bd5d-4f27-9398-a688c998808a because it has been changed (optimistic locking): S"})
   void testUpdateModifiedEntityWithOptimisticLockingError(String responseErrorMessage) {
