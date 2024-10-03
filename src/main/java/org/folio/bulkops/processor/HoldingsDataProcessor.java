@@ -190,6 +190,10 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
   private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, ExtendedHoldingsRecord extendedHolding) {
     var ruleTenants = rule.getRuleDetails().getTenants();
     var actionTenants = action.getTenants();
+    if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
+      ruleTenants.retainAll(actionTenants);
+      return !ruleTenants.contains(extendedHolding.getTenant());
+    }
     return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedHolding.getTenant()) ||
       nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedHolding.getTenant());
   }
