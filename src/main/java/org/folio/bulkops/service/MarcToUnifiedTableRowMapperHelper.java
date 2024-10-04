@@ -8,8 +8,6 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
-import static org.folio.bulkops.service.Marc21ReferenceProvider.getSubfieldsByTag;
-import static org.folio.bulkops.service.Marc21ReferenceProvider.isStaffOnlyNote;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Constants.STAFF_ONLY;
@@ -40,6 +38,7 @@ public class MarcToUnifiedTableRowMapperHelper {
   private static final String PUNCTUATION_TO_REMOVE = ";:,/+= ";
 
   private final InstanceReferenceService instanceReferenceService;
+  private final Marc21ReferenceProvider referenceProvider;
 
   public String resolveModeOfIssuance(Leader leader) {
     return switch (leader.getImplDefined1()[0]) {
@@ -53,7 +52,7 @@ public class MarcToUnifiedTableRowMapperHelper {
   public String fetchLanguages(DataField dataField) {
     return dataField.getSubfields('a').stream()
       .map(Subfield::getData)
-      .map(Marc21ReferenceProvider::getLanguageByCode)
+      .map(referenceProvider::getLanguageByCode)
       .collect(Collectors.joining(ITEM_DELIMITER_SPACED));
   }
 
@@ -156,7 +155,7 @@ public class MarcToUnifiedTableRowMapperHelper {
   }
 
   public String fetchNotes(DataField dataField) {
-    return trimPeriod(subfieldsToString(dataField.getSubfields(getSubfieldsByTag(dataField.getTag())))) + (isStaffOnlyNote(dataField) ? SPACE + STAFF_ONLY : EMPTY);
+    return trimPeriod(subfieldsToString(dataField.getSubfields(referenceProvider.getSubfieldsByTag(dataField.getTag())))) + (referenceProvider.isStaffOnlyNote(dataField) ? SPACE + STAFF_ONLY : EMPTY);
   }
 
   public List<Subfield> getSubfieldsByOrderedCodes(DataField dataField, String subfields) {
