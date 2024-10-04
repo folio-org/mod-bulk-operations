@@ -79,6 +79,7 @@ public class PreviewService {
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
   public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset, int limit) {
+    referenceProvider.updateMappingRules();
     var entityType = operation.getEntityType();
     var clazz = resolveEntityClass(operation.getEntityType());
     return switch (step) {
@@ -270,7 +271,6 @@ public class PreviewService {
       .toList();
     var reader = new MarcStreamReader(remoteFileSystemClient.get(pathToFile));
     var counter = 0;
-    referenceProvider.updateMappingRules();
     while (reader.hasNext() && counter < offset + limit) {
       counter++;
       var marcRecord = reader.next();

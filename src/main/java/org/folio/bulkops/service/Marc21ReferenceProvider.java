@@ -10,7 +10,6 @@ import org.folio.bulkops.client.MappingRulesClient;
 import org.marc4j.marc.DataField;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +24,7 @@ import java.util.stream.IntStream;
 @Log4j2
 public class Marc21ReferenceProvider {
   public static final String GENERAL_NOTE = "General note";
+  private static final String LOCAL_NOTES = "Local notes";
   private static final Pattern UNDESIRED_LOCAL_NOTE_TAGS = Pattern.compile("59[1-9]");
 
   private static final Map<String, String> languages = new HashMap<>();
@@ -35,6 +35,7 @@ public class Marc21ReferenceProvider {
     "510", "511", "513", "514", "515", "516", "518", "520", "521", "522", "524", "525", "526", "530", "532", "533",
     "534", "535", "536", "538", "540", "541", "542", "544", "545", "546", "547", "550", "552", "555", "556", "561",
     "562", "563", "565", "567", "580", "581", "583", "584", "585", "586", "588", "590");
+  private final Set<String> localNoteTags = Set.of("591", "592", "593", "594", "595", "596", "597", "598", "599");
   private Map<String, String> instanceNoteTypes = new HashMap<>();
   private Map<String, String> instanceNoteSubfields = new HashMap<>();
   private Set<String> staffOnlyNotes = new HashSet<>();
@@ -572,19 +573,21 @@ public class Marc21ReferenceProvider {
         staffOnlyNotes.add(tag);
       }
     });
-    log.info("Note types: {}", instanceNoteTypes);
-    log.info("Note subfields: {}", instanceNoteSubfields);
-    log.info("Staff only notes: {}", staffOnlyNotes);
+
+    localNoteTags.forEach(tag -> {
+      instanceNoteTypes.put(tag, instanceNoteTypes.getOrDefault(tag, LOCAL_NOTES));
+      instanceNoteSubfields.put(tag, instanceNoteSubfields.getOrDefault(tag, "a"));
+    });
   }
 
   private String fetchNoteType(DocumentContext context, String tag) {
-    var path = String.format("$.%s[*].entity[*].rules[*].conditions[?(@.type == 'set_note_type_id')].parameter.name", tag);
+    var path = String.format("$..%s[*].entity[*].rules[*].conditions[?(@.type == 'set_note_type_id')].parameter.name", tag);
     var res = context.read(path, List.class);
     return res.isEmpty() ? EMPTY : res.get(0).toString();
   }
 
   private String fetchSubfields(DocumentContext context, String tag) {
-    var path = String.format("$.%s[*].entity[?(@.target == 'notes.note')].subfield[*]", tag);
+    var path = String.format("$..%s[*].entity[?(@.target == 'notes.note')].subfield[*]", tag);
     var res = context.read(path, List.class);
     return IntStream.range(0, res.size())
       .mapToObj(i -> res.get(i).toString())
@@ -592,7 +595,7 @@ public class Marc21ReferenceProvider {
   }
 
   private boolean isStaffOnly(DocumentContext context, String tag) {
-    var path = String.format("$.%s[*].entity[?(@.target == 'notes.staffOnly')].rules[*].conditions[*].type", tag);
+    var path = String.format("$..%s[*].entity[?(@.target == 'notes.staffOnly')].rules[*].conditions[*].type", tag);
     var res = context.read(path, List.class);
     return !res.isEmpty() && "set_note_staff_only_via_indicator".equals(res.get(0));
   }
