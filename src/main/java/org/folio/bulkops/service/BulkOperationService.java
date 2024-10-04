@@ -9,6 +9,9 @@ import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
+import static org.folio.bulkops.domain.dto.DataImportStatus.COMMITTED;
+import static org.folio.bulkops.domain.dto.DataImportStatus.ERROR;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
@@ -48,6 +51,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExportType;
 import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
@@ -76,12 +80,14 @@ import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.OptimisticLockingException;
 import org.folio.bulkops.exception.ServerErrorException;
+import org.folio.bulkops.exception.WritePermissionDoesNotExist;
 import org.folio.bulkops.processor.DataProcessorFactory;
 import org.folio.bulkops.processor.MarcInstanceDataProcessor;
 import org.folio.bulkops.processor.UpdatedEntityHolder;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.util.IdentifiersResolver;
 import org.folio.bulkops.util.Utils;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
@@ -130,6 +136,9 @@ public class BulkOperationService {
   private final FolioModuleMetadata folioModuleMetadata;
   private final FolioExecutionContext folioExecutionContext;
   private final ConsortiaService consortiaService;
+  private final UserClient userClient;
+  private final MarcUpdateService marcUpdateService;
+  private final MetadataProviderService metadataProviderService;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
@@ -215,7 +224,7 @@ public class BulkOperationService {
   }
 
   public void confirm(BulkOperation operation)  {
-    if (operation.getEntityType() == EntityType.INSTANCE_MARC) {
+    if (operation.getEntityType() == INSTANCE_MARC) {
       confirmForInstanceMarc(operation);
       return;
     }
@@ -323,9 +332,9 @@ public class BulkOperationService {
     var processedNumOfRecords = 0;
     var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
     var modifiedMarcFileName = String.format(PREVIEW_MARC_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
-    var currentDate = new Date();
     try (var writerForModifiedPreviewMarcFile = remoteFileSystemClient.marcWriter(modifiedMarcFileName)) {
       var matchedRecordsReader = new MarcStreamReader(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile()));
+      var currentDate = new Date();
       while (matchedRecordsReader.hasNext()) {
         var marcRecord = matchedRecordsReader.next();
         marcInstanceDataProcessor.update(operation, marcRecord, ruleCollection, currentDate);
@@ -407,6 +416,12 @@ public class BulkOperationService {
 
     operation = bulkOperationRepository.save(operation);
 
+    if (operation.getEntityType() == INSTANCE_MARC) {
+      marcUpdateService.saveErrorsForFolioInstances(operation);
+      marcUpdateService.commitForInstanceMarc(operation);
+      return;
+    }
+
     if (StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsJsonFile())) {
       var entityClass = resolveEntityClass(operation.getEntityType());
       var extendedClass = resolveExtendedEntityClass(operation.getEntityType());
@@ -463,6 +478,10 @@ public class BulkOperationService {
             }
           } catch (OptimisticLockingException e) {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLinkToFailedEntity());
+          } catch (WritePermissionDoesNotExist e) {
+            var userName = userClient.getUserById(folioExecutionContext.getUserId().toString()).getUsername();
+            var errorMessage = String.format(e.getMessage(), userName, IdentifiersResolver.resolve(operation.getIdentifierType()), original.getIdentifier(operation.getIdentifierType()))  ;
+            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), errorMessage);
           } catch (Exception e) {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage());
           }
@@ -676,13 +695,38 @@ public class BulkOperationService {
       }
       case APPLY_CHANGES -> {
         var execution = executionRepository.findByBulkOperationId(bulkOperationId);
-        if (execution.isPresent() && StatusType.ACTIVE.equals(execution.get().getStatus())) {
-          operation.setProcessedNumOfRecords(execution.get().getProcessedRecords());
+        if (execution.isPresent()) {
+          if (StatusType.ACTIVE.equals(execution.get().getStatus())) {
+            var processedNumOfRecords = INSTANCE_MARC.equals(operation.getEntityType()) ?
+              getDataImportProcessedNumOfRecords(operation) :
+              execution.get().getProcessedRecords();
+            operation.setProcessedNumOfRecords(processedNumOfRecords);
+          } else if (INSTANCE_MARC.equals(operation.getEntityType()) && nonNull(operation.getDataImportJobProfileId())) {
+            processDataImportResult(operation);
+          }
         }
-        yield operation;
+        yield bulkOperationRepository.save(operation);
       }
       default -> operation;
     };
+  }
+
+  private void processDataImportResult(BulkOperation operation) {
+    var dataImportJobExecution = metadataProviderService.getDataImportJobExecutionByJobProfileId(operation.getDataImportJobProfileId());
+    var processedNumOfRecords = dataImportJobExecution.getProgress().getCurrent();
+    operation.setProcessedNumOfRecords(processedNumOfRecords);
+    operation.setCommittedNumOfRecords(processedNumOfRecords);
+    if (Set.of(COMMITTED, ERROR).contains(dataImportJobExecution.getStatus())) {
+      errorService.saveErrorsFromDataImport(operation.getId(), dataImportJobExecution.getId());
+      operation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(operation.getId()));
+      operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operation.getId()));
+      operation.setStatus(operation.getCommittedNumOfErrors() == 0 ? COMPLETED : COMPLETED_WITH_ERRORS);
+    }
+  }
+
+  private int getDataImportProcessedNumOfRecords(BulkOperation operation) {
+    return metadataProviderService.getDataImportJobExecutionByJobProfileId(operation.getDataImportJobProfileId())
+      .getProgress().getCurrent();
   }
 
   public BulkOperation getBulkOperationOrThrow(UUID operationId) {

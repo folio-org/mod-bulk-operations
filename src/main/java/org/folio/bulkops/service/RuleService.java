@@ -47,6 +47,7 @@ public class RuleService {
           .initialValue(action.getInitial())
           .updatedValue(action.getUpdated())
           .parameters(action.getParameters())
+          .tenants(action.getTenants())
           .build()));
     });
     return ruleCollection;
@@ -72,7 +73,8 @@ public class RuleService {
             .type(details.getUpdateAction())
             .initial(details.getInitialValue())
             .updated(details.getUpdatedValue())
-            .parameters(details.getParameters()))
+            .parameters(details.getParameters())
+            .tenants(details.getTenants()))
           .toList()));
   }
 

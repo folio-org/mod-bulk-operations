@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "bulk-operations",
-      "version": "1.2",
+      "version": "1.3",
       "handlers": [
         {
           "methods": [ "POST" ],
@@ -169,6 +169,7 @@
             "consortia.user-tenants.collection.get",
             "consortium-search.holdings.collection.get",
             "data-import.uploaddefinitions.post",
+            "data-import.uploaddefinitions.get",
             "data-import.upload.file.post",
             "data-import.uploadDefinitions.files.item.post",
             "data-import.uploadDefinitions.processFiles.item.post",
@@ -181,6 +182,11 @@
             "converter-storage.matchprofile.post",
             "converter-storage.actionprofile.post",
             "converter-storage.mappingprofile.post",
+            "source-storage.sourceRecords.get",
+            "bulk-operations.permissions-self-check.get",
+            "data-import.splitconfig.get",
+            "data-import.uploadUrl.get",
+            "data-import.assembleStorageFile.post"
             "source-storage.source-records.item.get"
           ]
         },
@@ -217,7 +223,10 @@
             "bulk-edit.item.post",
             "bulk-edit.start.item.post",
             "data-export.job.item.post",
-            "data-export.job.item.get"
+            "data-export.job.item.get",
+            "metadata-provider.jobexecutions.get",
+            "metadata-provider.logs.get",
+            "source-storage.sourceRecords.get"
           ]
         },
         {
@@ -257,6 +266,12 @@
           "pathPattern": "/bulk-operations/used-tenants/{operationId}",
           "permissionsRequired": ["bulk-operations.used.tenants.get"],
           "modulePermissions": [ ]
+        },
+        {
+          "methods": [ "GET" ],
+          "pathPattern": "/bulk-operations/permissions-self-check",
+          "permissionsRequired": ["bulk-operations.permissions-self-check.get"],
+          "modulePermissions": ["perms.users.get"]
         }
       ]
     },
@@ -400,6 +415,11 @@
       "description" : "Bulk edit users write permissions"
     },
     {
+      "permissionName" : "bulk-operations.permissions-self-check.get",
+      "displayName" : "Set of users permissions for self check",
+      "description" : "Set of users permissions for self check"
+    },
+    {
       "permissionName" : "bulk-operations.all",
       "displayName" : "bulk-operations all",
       "description" : "All permissions for bulk-operations module",
@@ -419,7 +439,8 @@
         "bulk-operations.files.item.delete",
         "bulk-operations.item.cancel.post",
         "bulk-operations.item.query.post",
-        "bulk-operations.used.tenants.get"
+        "bulk-operations.used.tenants.get",
+        "bulk-operations.permissions-self-check.get"
       ]
     }
   ],
@@ -494,7 +515,7 @@
     },
     {
       "id": "bulk-edit",
-      "version": "4.0"
+      "version": "4.1"
     },
     {
       "id": "data-export-spring",
@@ -535,6 +556,23 @@
     {
       "id": "contributor-types",
       "version": "2.0"
+    },
+    {
+      "id": "permissions",
+      "version": "5.6"
+    },
+    {
+
+      "id": "data-import-converter-storage",
+      "version": "1.4"
+    },
+    {
+      "id": "source-manager-job-executions",
+      "version": "3.3"
+    },
+    {
+      "id": "metadata-provider-job-execution-logs",
+      "version": "1.0"
     }
   ],
   "launchDescriptor": {

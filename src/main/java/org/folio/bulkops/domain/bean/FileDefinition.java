@@ -24,4 +24,10 @@ public class FileDefinition {
 
   @JsonProperty("name")
   private String name;
+
+  @JsonProperty("sourcePath")
+  private String sourcePath;
+
+  @JsonProperty("status")
+  private String status;
 }

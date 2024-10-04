@@ -95,6 +95,7 @@ import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
@@ -158,6 +159,8 @@ class BulkOperationServiceTest extends BaseTest {
   @MockBean
   private ConsortiaService consortiaService;
 
+  @MockBean
+  private PermissionsValidator permissionsValidator;
   @Test
   @SneakyThrows
   void shouldUploadIdentifiers() {
@@ -854,6 +857,8 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToUserJson = "src/test/resources/files/user.json";
       var pathToModifiedUserJson = "src/test/resources/files/modified-user.json";
 
+      doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(anyString(), any(), anyString());
+
       when(bulkOperationRepository.findById(any(UUID.class)))
         .thenReturn(Optional.of(BulkOperation.builder()
           .id(bulkOperationId)
@@ -1181,13 +1186,25 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldReturnBulkOperationById(OperationStatusType statusType) {
     var operationId = UUID.randomUUID();
 
+    var bulkOperation = BulkOperation.builder()
+      .id(operationId)
+      .status(statusType)
+      .totalNumOfRecords(10)
+      .processedNumOfRecords(0)
+      .build();
+
+    var experctedBulkOperation = BulkOperation.builder()
+      .id(operationId)
+      .status(statusType)
+      .totalNumOfRecords(10)
+      .processedNumOfRecords(5)
+      .build();
+
     when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(BulkOperation.builder()
-        .id(operationId)
-        .status(statusType)
-        .totalNumOfRecords(10)
-        .processedNumOfRecords(0)
-        .build()));
+      .thenReturn(Optional.of(bulkOperation));
+
+    when(bulkOperationRepository.save(experctedBulkOperation))
+      .thenReturn(experctedBulkOperation);
 
     when(dataProcessingRepository.findById(operationId))
       .thenReturn(Optional.of(BulkOperationDataProcessing.builder()
@@ -1352,6 +1369,8 @@ class BulkOperationServiceTest extends BaseTest {
         .build());
     when(executionRepository.save(any()))
       .thenReturn(new BulkOperationExecution());
+
+    doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(anyString(), any(), anyString());
 
     bulkOperationService.commit(operation);
 

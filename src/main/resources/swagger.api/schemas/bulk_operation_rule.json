@@ -22,6 +22,12 @@
             "description": "Option to change",
             "$ref": "update_option_type.json#/UpdateOptionType"
           },
+          "tenants": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "actions": {
             "type": "array",
             "items": {

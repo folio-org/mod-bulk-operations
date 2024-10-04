@@ -12,6 +12,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,11 +42,13 @@ import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
+import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.ConsortiaService;
@@ -81,7 +84,7 @@ class UpdateProcessorTest extends BaseTest {
   @Autowired
   private UserUpdateProcessor userUpdateProcessor;
   @Autowired
-  private InstanceUpdateProcessor instanceUpdateProcessor;
+  private FolioInstanceUpdateProcessor folioInstanceUpdateProcessor;
   @Autowired
   private FolioModuleMetadata folioModuleMetadata;
   @SpyBean
@@ -92,6 +95,8 @@ class UpdateProcessorTest extends BaseTest {
   private ConsortiaService consortiaService;
   @MockBean
   private SearchConsortium searchConsortium;
+  @MockBean
+  private PermissionsValidator permissionsValidator;
 
   @Test
   void shouldUpdateHoldingsRecord() {
@@ -100,7 +105,9 @@ class UpdateProcessorTest extends BaseTest {
         .withInstanceId(UUID.randomUUID().toString());
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).build();
 
+    doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(anyString(), any(), anyString());
     when(ruleService.getRules(isA(UUID.class))).thenReturn(new BulkOperationRuleCollection());
+
     holdingsUpdateProcessor.updateRecord(extendedHoldingsRecord);
 
     verify(holdingsClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
@@ -115,6 +122,7 @@ class UpdateProcessorTest extends BaseTest {
     HashMap<String, Collection<String>> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, List.of("diku"));
 
+    doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(eq("tenantId"), eq(EntityType.HOLDINGS_RECORD), anyString());
     when(ruleService.getRules(isA(UUID.class))).thenReturn(new BulkOperationRuleCollection());
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
@@ -226,6 +234,8 @@ class UpdateProcessorTest extends BaseTest {
       .withId(UUID.randomUUID().toString())
       .withHoldingsRecordId(UUID.randomUUID().toString());
     var extendedItem = ExtendedItem.builder().entity(item).build();
+
+    doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(anyString(), eq(EntityType.ITEM), anyString());
     itemUpdateProcessor.updateRecord(extendedItem);
 
     verify(itemClient).updateItem(item, item.getId());
@@ -240,6 +250,7 @@ class UpdateProcessorTest extends BaseTest {
     HashMap<String, Collection<String>> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, List.of("diku"));
 
+    doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(eq("tenantId"), eq(EntityType.ITEM), anyString());
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
     when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
@@ -256,6 +267,8 @@ class UpdateProcessorTest extends BaseTest {
         .withPatronGroup(UUID.randomUUID().toString())
         .withUsername("sample_user");
 
+    doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(anyString(), eq(EntityType.USER), anyString());
+
     userUpdateProcessor.updateRecord(user);
 
     verify(userClient).updateUser(user, user.getId());
@@ -268,8 +281,9 @@ class UpdateProcessorTest extends BaseTest {
       .title("Title")
       .build();
     var extendedInstance = ExtendedInstance.builder().entity(instance).build();
+    doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(anyString(), eq(EntityType.INSTANCE), anyString());
 
-    instanceUpdateProcessor.updateRecord(extendedInstance);
+    folioInstanceUpdateProcessor.updateRecord(extendedInstance);
 
     verify(instanceClient).updateInstance(instance, instance.getId());
   }
@@ -322,7 +336,7 @@ class UpdateProcessorTest extends BaseTest {
         .totalRecords(2)
         .build());
 
-    instanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
+    folioInstanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
 
     verify(holdingsClient, times("folio_id".equals(sourceId) && applyToHoldings ? 1 : 0)).updateHoldingsRecord(any(HoldingsRecord.class), anyString());
   }
@@ -381,7 +395,7 @@ class UpdateProcessorTest extends BaseTest {
         .totalRecords(2)
         .build());
 
-    instanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
+    folioInstanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
 
     verify(itemClient, times("folio_id".equals(sourceId) && applyToItems ? 1 : 0)).updateItem(any(Item.class), anyString());
   }
@@ -451,7 +465,7 @@ class UpdateProcessorTest extends BaseTest {
     when(itemClient.getByQuery(String.format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingRecord.getId()), Integer.MAX_VALUE))
       .thenReturn(itemCollection);
 
-    instanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
+    folioInstanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
     verify(errorService).saveError(eq(operationId), eq(instanceId), anyString());
     verify(holdingsClient).updateHoldingsRecord(any(HoldingsRecord.class), eq(holdingRecord.getId()));
     verify(itemClient).updateItem(any(Item.class), eq(item.getId()));

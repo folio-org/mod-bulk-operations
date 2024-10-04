@@ -62,9 +62,9 @@ public class DataImportProfilesBuilder {
       var jobProfilePost = objectMapper.readValue(is, JobProfilePost.class);
       jobProfilePost.getAddedRelations().get(0).setDetailProfileId(matchProfile.getId());
       jobProfilePost.getAddedRelations().get(1).setMasterProfileId(matchProfile.getId());
-      jobProfilePost.getAddedRelations().get(1).setDetailProfileId(actionProfileToUpdateInstance.getId());
+      jobProfilePost.getAddedRelations().get(1).setDetailProfileId(actionProfileToUpdateSrs.getId());
       jobProfilePost.getAddedRelations().get(2).setMasterProfileId(matchProfile.getId());
-      jobProfilePost.getAddedRelations().get(2).setDetailProfileId(actionProfileToUpdateSrs.getId());
+      jobProfilePost.getAddedRelations().get(2).setDetailProfileId(actionProfileToUpdateInstance.getId());
       return jobProfilePost;
     }
   }
