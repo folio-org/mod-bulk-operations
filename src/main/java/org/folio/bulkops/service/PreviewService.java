@@ -79,7 +79,6 @@ public class PreviewService {
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
   public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset, int limit) {
-    referenceProvider.updateMappingRules();
     var entityType = operation.getEntityType();
     var clazz = resolveEntityClass(operation.getEntityType());
     return switch (step) {
@@ -87,6 +86,7 @@ public class PreviewService {
       case EDIT -> {
         var bulkOperationId = operation.getId();
         if (INSTANCE_MARC.equals(operation.getEntityType())) {
+          referenceProvider.updateMappingRules();
           var rules = ruleService.getMarcRules(bulkOperationId);
           var options = getChangedOptionsSet(rules);
           yield buildPreviewFromMarcFile(operation.getLinkToModifiedRecordsMarcFile(), clazz, offset, limit, options);
@@ -102,6 +102,7 @@ public class PreviewService {
         } else {
           var bulkOperationId = operation.getId();
           if (INSTANCE_MARC.equals(operation.getEntityType())) {
+            referenceProvider.updateMappingRules();
             var rules = ruleService.getMarcRules(bulkOperationId);
             var options = getChangedOptionsSet(rules);
             yield buildPreviewFromMarcFile(operation.getLinkToCommittedRecordsMarcFile(), clazz, offset, limit, options);
