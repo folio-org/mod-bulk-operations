@@ -73,7 +73,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
       if (PERMANENT_LOCATION == option && CLEAR_FIELD == action.getType()) {
         throw new RuleValidationException("Permanent location cannot be cleared");
       }
-      if (ruleTenantsAreNotValid(rule, action, extendedHoldingsRecord)) {
+      if (ruleTenantsAreNotValid(rule, action, option, extendedHoldingsRecord)) {
         throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE, extendedHoldingsRecord.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedHoldingsRecord.getTenant(), option.getValue()));
       }
     };
@@ -187,12 +187,16 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     return ExtendedHoldingsRecord.class;
   }
 
-  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, ExtendedHoldingsRecord extendedHolding) {
+  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, UpdateOptionType option, ExtendedHoldingsRecord extendedHolding) {
     var ruleTenants = rule.getRuleDetails().getTenants();
     var actionTenants = action.getTenants();
     if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
       ruleTenants.retainAll(actionTenants);
       return !ruleTenants.contains(extendedHolding.getTenant());
+    }
+    if (nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
+      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && action.getType() == UpdateActionType.FIND_AND_REPLACE) {
+      return true;
     }
     return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedHolding.getTenant()) ||
       nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedHolding.getTenant());
