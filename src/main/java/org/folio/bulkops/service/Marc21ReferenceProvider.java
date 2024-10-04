@@ -592,9 +592,9 @@ public class Marc21ReferenceProvider {
   }
 
   private boolean isStaffOnly(DocumentContext context, String tag) {
-    var path = String.format("$.%s[*].entity[?(@.target == 'notes.staffOnly')].rules[0].value", tag);
-    var res = context.read(path, ArrayList.class);
-    return !res.isEmpty() && "true".equals(res.get(0));
+    var path = String.format("$.%s[*].entity[?(@.target == 'notes.staffOnly')].rules[*].conditions[*].type", tag);
+    var res = context.read(path, List.class);
+    return !res.isEmpty() && "set_note_staff_only_via_indicator".equals(res.get(0));
   }
 
   public String getLanguageByCode(String code) {
