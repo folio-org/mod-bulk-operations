@@ -202,6 +202,7 @@ public class PreviewService {
 
   private String resolveAndGetItemTypeById(Class<? extends BulkOperationsEntity> clazz, String value) {
     if (clazz == HoldingsRecord.class) {
+      log.info("334_resolveAndGetItemTypeById: {}, {}", clazz, value);
       return holdingsNoteTypeClient.getNoteTypeById(value).getName();
     } else if (clazz == Item.class) {
       return itemNoteTypeClient.getNoteTypeById(value).getName();
