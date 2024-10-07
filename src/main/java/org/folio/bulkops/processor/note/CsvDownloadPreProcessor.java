@@ -53,7 +53,7 @@ public abstract class CsvDownloadPreProcessor {
   }
 
   public byte[] processCsvContent(byte[] input, BulkOperation bulkOperation) {
-    boolean isConsortiaTenant = consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId());
+    boolean isCentralTenant = consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId());
     boolean isTypeWithTenant = bulkOperation.getEntityType() == EntityType.ITEM || bulkOperation.getEntityType() == EntityType.HOLDINGS_RECORD;
 
     List<String> noteTypeNames = getNoteTypeNames(bulkOperation);
@@ -73,9 +73,9 @@ public abstract class CsvDownloadPreProcessor {
           line = headers.stream()
             .map(this::processSpecialCharacters)
             .toArray(String[]::new);
-          processTenantInHeaders(line, isConsortiaTenant, isTypeWithTenant);
+          processTenantInHeaders(line, isCentralTenant, isTypeWithTenant);
         } else {
-          line = processTenantInRows(line, isConsortiaTenant, isTypeWithTenant);
+          line = processTenantInRows(line, isCentralTenant, isTypeWithTenant);
           line = processNotesData(line, noteTypeNames, bulkOperation);
         }
         stringWriter.write(String.join(",", line) + "\n");
@@ -100,10 +100,10 @@ public abstract class CsvDownloadPreProcessor {
       .toArray(String[]::new);
   }
 
-  protected String[] processTenantInHeaders(String[] line, boolean isConsortiaTenant, boolean isTypeWithTenant) {
+  protected String[] processTenantInHeaders(String[] line, boolean isCentralTenant, boolean isTypeWithTenant) {
     if (isTypeWithTenant) {
       int tenantPosition = line.length - 1;
-      if (isConsortiaTenant) {
+      if (isCentralTenant) {
         line[tenantPosition] = TENANT_VALUE_IN_CONSORTIA_FOR_MEMBER;
       } else {
         line = Arrays.copyOf(line, tenantPosition);
@@ -112,8 +112,8 @@ public abstract class CsvDownloadPreProcessor {
     return line;
   }
 
-  protected String[] processTenantInRows(String[] line, boolean isConsortiaTenant, boolean isTypeWithTenant) {
-    if (isTypeWithTenant && !isConsortiaTenant) {
+  protected String[] processTenantInRows(String[] line, boolean isCentralTenant, boolean isTypeWithTenant) {
+    if (isTypeWithTenant && !isCentralTenant) {
       int tenantPosition = line.length - 1;
       line = Arrays.copyOf(line, tenantPosition);
     }
