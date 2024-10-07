@@ -151,10 +151,13 @@ public class PreviewService {
           }
 
           if (initial.isPresent()) {
-            log.info("initial.isPresent() {},{}", folioExecutionContext.getTenantId(), initial.get());
-            var type = resolveAndGetItemTypeById(clazz, initial.get());
-            if (StringUtils.isNotEmpty(type)) {
-              forceVisibleOptions.add(type);
+            try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(
+              getTenantForNoteType(bulkOperation, initial.get()).orElseGet(folioExecutionContext::getTenantId), folioModuleMetadata, folioExecutionContext))) {
+              log.info("initial.isPresent() {},{}", folioExecutionContext.getTenantId(), initial.get());
+              var type = resolveAndGetItemTypeById(clazz, initial.get());
+              if (StringUtils.isNotEmpty(type)) {
+                forceVisibleOptions.add(type);
+              }
             }
           } else {
             forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option, entityType));
