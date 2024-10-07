@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
@@ -53,6 +54,7 @@ public class TenantTableUpdaterTest {
 
     when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
     when(consortiaService.isCurrentTenantCentralTenant(anyString())).thenReturn(false);
+    when(consortiaService.getCentralTenantId(anyString())).thenReturn(StringUtils.EMPTY);
 
     tableUpdater.updateTenantInHeaderAndRows(table, entityClass);
 
@@ -62,7 +64,7 @@ public class TenantTableUpdaterTest {
 
   @ParameterizedTest
   @MethodSource("getEntityClassesWithTenant")
-  void updateTenantInHeaderAndRowForConsortiaTest(Class<? extends BulkOperationsEntity> entityClass) {
+  void updateTenantInHeaderAndRowForConsortiaCentralTenantTest(Class<? extends BulkOperationsEntity> entityClass) {
     var table = new UnifiedTable();
     var cell = new Cell();
     cell.setValue("Tenant");
@@ -74,6 +76,30 @@ public class TenantTableUpdaterTest {
 
     when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
     when(consortiaService.isCurrentTenantCentralTenant(anyString())).thenReturn(true);
+
+    tableUpdater.updateTenantInHeaderAndRows(table, entityClass);
+
+    var actualTenantHeaderValue = table.getHeader().get(0).getValue();
+    assertEquals("Member", actualTenantHeaderValue);
+    var actualTenantRowValue = table.getRows().get(0).getRow().get(0);
+    assertEquals("value", actualTenantRowValue);
+  }
+
+  @ParameterizedTest
+  @MethodSource("getEntityClassesWithTenant")
+  void updateTenantInHeaderAndRowForConsortiaMemberTest(Class<? extends BulkOperationsEntity> entityClass) {
+    var table = new UnifiedTable();
+    var cell = new Cell();
+    cell.setValue("Tenant");
+    var headers = List.of(cell);
+    table.setHeader(headers);
+    var row = new Row();
+    row.setRow(new ArrayList<>(List.of("value")));
+    table.setRows(List.of(row));
+
+    when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
+    when(consortiaService.isCurrentTenantCentralTenant(anyString())).thenReturn(false);
+    when(consortiaService.getCentralTenantId(anyString())).thenReturn("member");
 
     tableUpdater.updateTenantInHeaderAndRows(table, entityClass);
 

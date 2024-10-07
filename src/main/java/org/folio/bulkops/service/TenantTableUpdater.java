@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
@@ -24,7 +25,7 @@ public class TenantTableUpdater {
       return;
     }
     int tenantPosition = unifiedTable.getHeader().size() - 1;
-    if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+    if (isNeedUpdateTablePreview()) {
       var header = unifiedTable.getHeader().get(tenantPosition);
       header.setValue(TENANT_VALUE_IN_CONSORTIA_FOR_MEMBER);
     } else {
@@ -33,4 +34,10 @@ public class TenantTableUpdater {
       unifiedTable.getRows().forEach(row -> row.getRow().remove(tenantPosition));
     }
   }
+
+  private boolean isNeedUpdateTablePreview() {
+    return consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId()) ||
+      StringUtils.isNotEmpty(consortiaService.getCentralTenantId(folioExecutionContext.getTenantId()));
+  }
+
 }

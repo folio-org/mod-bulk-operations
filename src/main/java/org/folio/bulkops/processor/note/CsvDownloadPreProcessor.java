@@ -3,6 +3,7 @@ package org.folio.bulkops.processor.note;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.RFC4180ParserBuilder;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.service.ConsortiaService;
@@ -53,7 +54,8 @@ public abstract class CsvDownloadPreProcessor {
   }
 
   public byte[] processCsvContent(byte[] input, BulkOperation bulkOperation) {
-    boolean isCentralTenant = consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId());
+    boolean isCentralOrMemberTenant = consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())
+        || StringUtils.isNotEmpty(consortiaService.getCentralTenantId(folioExecutionContext.getTenantId()));
     boolean isTypeWithTenant = bulkOperation.getEntityType() == EntityType.ITEM || bulkOperation.getEntityType() == EntityType.HOLDINGS_RECORD;
 
     List<String> noteTypeNames = getNoteTypeNames(bulkOperation);
@@ -73,9 +75,9 @@ public abstract class CsvDownloadPreProcessor {
           line = headers.stream()
             .map(this::processSpecialCharacters)
             .toArray(String[]::new);
-          processTenantInHeaders(line, isCentralTenant, isTypeWithTenant);
+          processTenantInHeaders(line, isCentralOrMemberTenant, isTypeWithTenant);
         } else {
-          line = processTenantInRows(line, isCentralTenant, isTypeWithTenant);
+          line = processTenantInRows(line, isCentralOrMemberTenant, isTypeWithTenant);
           line = processNotesData(line, noteTypeNames, bulkOperation);
         }
         stringWriter.write(String.join(",", line) + "\n");
@@ -100,10 +102,10 @@ public abstract class CsvDownloadPreProcessor {
       .toArray(String[]::new);
   }
 
-  protected String[] processTenantInHeaders(String[] line, boolean isCentralTenant, boolean isTypeWithTenant) {
+  protected String[] processTenantInHeaders(String[] line, boolean isCentralOrMemberTenant, boolean isTypeWithTenant) {
     if (isTypeWithTenant) {
       int tenantPosition = line.length - 1;
-      if (isCentralTenant) {
+      if (isCentralOrMemberTenant) {
         line[tenantPosition] = TENANT_VALUE_IN_CONSORTIA_FOR_MEMBER;
       } else {
         line = Arrays.copyOf(line, tenantPosition);
@@ -112,8 +114,8 @@ public abstract class CsvDownloadPreProcessor {
     return line;
   }
 
-  protected String[] processTenantInRows(String[] line, boolean isCentralTenant, boolean isTypeWithTenant) {
-    if (isTypeWithTenant && !isCentralTenant) {
+  protected String[] processTenantInRows(String[] line, boolean isCentralOrMemberTenant, boolean isTypeWithTenant) {
+    if (isTypeWithTenant && !isCentralOrMemberTenant) {
       int tenantPosition = line.length - 1;
       line = Arrays.copyOf(line, tenantPosition);
     }
