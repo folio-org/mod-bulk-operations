@@ -165,14 +165,16 @@ public class PreviewService {
 
           var updated = action.getUpdated();
           if (UUID_REGEX.matcher(updated).matches()) {
-            try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(
-              getTenantForNoteType(bulkOperation, updated).orElseGet(folioExecutionContext::getTenantId), folioModuleMetadata, folioExecutionContext))) {
-              log.info("UUID_REGEX.matcher(updated).matches() {},{}", folioExecutionContext.getTenantId(), updated);
+            var noteTypeName = getNoteTypeNameById(bulkOperation, updated);
+            if (noteTypeName.isPresent()) {
+              forceVisibleOptions.add(noteTypeName.get());
+            } else {
               var type = resolveAndGetItemTypeById(clazz, updated);
               if (StringUtils.isNotEmpty(type)) {
                 forceVisibleOptions.add(type);
               }
             }
+            log.info("UUID_REGEX.matcher(updated) {}, {}, {}", noteTypeName, updated, folioExecutionContext.getTenantId());
           } else {
             forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(UpdateOptionType.fromValue(updated), entityType));
           }
@@ -182,9 +184,11 @@ public class PreviewService {
         } else if (ITEM_NOTE == option) {
           var initial = action.getParameters().stream().filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
           initial.ifPresent(id -> {
-            try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(
-              getTenantForNoteType(bulkOperation, id).orElseGet(folioExecutionContext::getTenantId), folioModuleMetadata, folioExecutionContext))) {
-              log.info("ITEM_NOTE == option {}, {}", bulkOperation.getTenantNotePairs(), folioExecutionContext.getTenantId());
+            var noteTypeName = getNoteTypeNameById(bulkOperation, id);
+            log.info("HOLDINGS_NOTE == option {}, {}", noteTypeName, id);
+            if (noteTypeName.isPresent()) {
+              forceVisibleOptions.add(noteTypeName.get());
+            } else {
               var type = resolveAndGetItemTypeById(clazz, id);
               if (StringUtils.isNotEmpty(type)) {
                 forceVisibleOptions.add(type);
@@ -194,9 +198,11 @@ public class PreviewService {
         } else if (HOLDINGS_NOTE == option) {
           var initial = action.getParameters().stream().filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
           initial.ifPresent(id -> {
-            try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(
-              getTenantForNoteType(bulkOperation, id).orElseGet(folioExecutionContext::getTenantId), folioModuleMetadata, folioExecutionContext))) {
-              log.info("HOLDINGS_NOTE == option {}, {}", bulkOperation.getTenantNotePairs(), folioExecutionContext.getTenantId());
+            var noteTypeName = getNoteTypeNameById(bulkOperation, id);
+            log.info("HOLDINGS_NOTE == option {}, {}", noteTypeName, id);
+            if (noteTypeName.isPresent()) {
+              forceVisibleOptions.add(noteTypeName.get());
+            } else {
               var type = resolveAndGetItemTypeById(clazz, id);
               if (StringUtils.isNotEmpty(type)) {
                 forceVisibleOptions.add(type);
@@ -323,5 +329,10 @@ public class PreviewService {
   private Optional<String> getTenantForNoteType(BulkOperation bulkOperation, String noteTypeId) {
     return bulkOperation.getTenantNotePairs().stream().filter(pair -> pair.getNoteTypeId().equals(noteTypeId))
       .map(pair -> pair.getTenantId()).findFirst();
+  }
+
+  private Optional<String> getNoteTypeNameById(BulkOperation bulkOperation, String noteTypeId) {
+    return bulkOperation.getTenantNotePairs().stream().filter(pair -> pair.getNoteTypeId().equals(noteTypeId))
+      .map(pair -> pair.getNoteTypeName()).findFirst();
   }
 }
