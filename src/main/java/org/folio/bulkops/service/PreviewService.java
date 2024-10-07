@@ -165,10 +165,13 @@ public class PreviewService {
 
           var updated = action.getUpdated();
           if (UUID_REGEX.matcher(updated).matches()) {
-            log.info("UUID_REGEX.matcher(updated).matches() {},{}", folioExecutionContext.getTenantId(), updated);
-            var type = resolveAndGetItemTypeById(clazz, updated);
-            if (StringUtils.isNotEmpty(type)) {
-              forceVisibleOptions.add(type);
+            try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(
+              getTenantForNoteType(bulkOperation, updated).orElseGet(folioExecutionContext::getTenantId), folioModuleMetadata, folioExecutionContext))) {
+              log.info("UUID_REGEX.matcher(updated).matches() {},{}", folioExecutionContext.getTenantId(), updated);
+              var type = resolveAndGetItemTypeById(clazz, updated);
+              if (StringUtils.isNotEmpty(type)) {
+                forceVisibleOptions.add(type);
+              }
             }
           } else {
             forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(UpdateOptionType.fromValue(updated), entityType));
