@@ -319,6 +319,6 @@ public class PreviewService {
 
   private Optional<String> getTenantForNoteType(BulkOperation bulkOperation, String noteTypeId) {
     return bulkOperation.getTenantNotePairs().stream().filter(pair -> pair.getNoteTypeId().equals(noteTypeId))
-      .map(pair -> pair.getNoteTypeName()).findFirst();
+      .map(pair -> pair.getTenantId()).findFirst();
   }
 }
