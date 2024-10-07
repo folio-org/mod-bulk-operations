@@ -13,36 +13,46 @@ class CsvDownloadPreProcessorTest {
   @Test
   void processTenantInHeadersTest() {
     var downloadPreProcessor = new TestCsvDownloadPreProcessor();
-    var headers = new String[]{"Test", "Tenant"};
+    var headers = new String[] {"Test", "Tenant"};
 
-    var expected = Arrays.stream(new String[]{"Test", "Member"}).toList();
+    var expected = Arrays.stream(new String[] {"Test", "Member"}).toList();
     var actual = downloadPreProcessor.processTenantInHeaders(headers, true, true);
     assertEquals(expected, Arrays.stream(actual).toList());
 
-    expected = Arrays.stream(new String[]{"Test"}).toList();
+    expected = Arrays.stream(new String[] {"Test"}).toList();
     actual = downloadPreProcessor.processTenantInHeaders(headers, false, true);
     assertEquals(expected, Arrays.stream(actual).toList());
 
-    headers = new String[]{"Test", "Header"};
+    headers = new String[] {"Test", "Header"};
     expected = Arrays.stream(headers).toList();
     actual = downloadPreProcessor.processTenantInHeaders(headers, true, false);
+    assertEquals(expected, Arrays.stream(actual).toList());
+
+    headers = new String[] {"Test", "Header"};
+    expected = Arrays.stream(headers).toList();
+    actual = downloadPreProcessor.processTenantInHeaders(headers, false, false);
     assertEquals(expected, Arrays.stream(actual).toList());
   }
 
   @Test
   void processTenantInRowsTest() {
     var downloadPreProcessor = new TestCsvDownloadPreProcessor();
-    var row = new String[]{"value", "tenantId"};
+    var row = new String[] {"value", "tenantId"};
 
     var expected = Arrays.stream(row).toList();
     var actual = downloadPreProcessor.processTenantInRows(row, true, true);
     assertEquals(expected, Arrays.stream(actual).toList());
 
-    expected = Arrays.stream( new String[]{"value"}).toList();
+    expected = Arrays.stream( new String[] {"value"}).toList();
     actual = downloadPreProcessor.processTenantInRows(row, false, true);
     assertEquals(expected, Arrays.stream(actual).toList());
 
-    row = new String[]{"value1", "value2"};
+    row = new String[] {"value1", "value2"};
+    expected = Arrays.stream(row).toList();
+    actual = downloadPreProcessor.processTenantInRows(row, true, false);
+    assertEquals(expected, Arrays.stream(actual).toList());
+
+    row = new String[] {"value1", "value2"};
     expected = Arrays.stream(row).toList();
     actual = downloadPreProcessor.processTenantInRows(row, false, false);
     assertEquals(expected, Arrays.stream(actual).toList());
