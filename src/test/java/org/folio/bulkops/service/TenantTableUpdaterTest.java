@@ -41,7 +41,7 @@ public class TenantTableUpdaterTest {
 
   @ParameterizedTest
   @MethodSource("getEntityClassesWithTenant")
-  void updateTenantHeaderAndRowInNotConsortiaTest(Class<? extends BulkOperationsEntity> entityClass) {
+  void updateTenantInHeaderAndRowForNotConsortiaTest(Class<? extends BulkOperationsEntity> entityClass) {
     var table = new UnifiedTable();
     var cell = new Cell();
     cell.setValue("Tenant");
@@ -54,7 +54,7 @@ public class TenantTableUpdaterTest {
     when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
     when(consortiaService.isCurrentTenantCentralTenant(anyString())).thenReturn(false);
 
-    tableUpdater.updateTenantHeaderAndRow(table, entityClass);
+    tableUpdater.updateTenantInHeaderAndRows(table, entityClass);
 
     assertEquals(0, table.getHeader().size());
     assertEquals(0, table.getRows().get(0).getRow().size());
@@ -62,7 +62,7 @@ public class TenantTableUpdaterTest {
 
   @ParameterizedTest
   @MethodSource("getEntityClassesWithTenant")
-  void updateTenantHeaderAndRowInConsortiaTest(Class<? extends BulkOperationsEntity> entityClass) {
+  void updateTenantInHeaderAndRowForConsortiaTest(Class<? extends BulkOperationsEntity> entityClass) {
     var table = new UnifiedTable();
     var cell = new Cell();
     cell.setValue("Tenant");
@@ -75,7 +75,7 @@ public class TenantTableUpdaterTest {
     when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
     when(consortiaService.isCurrentTenantCentralTenant(anyString())).thenReturn(true);
 
-    tableUpdater.updateTenantHeaderAndRow(table, entityClass);
+    tableUpdater.updateTenantInHeaderAndRows(table, entityClass);
 
     var actualTenantHeaderValue = table.getHeader().get(0).getValue();
     assertEquals("Member", actualTenantHeaderValue);
@@ -84,7 +84,7 @@ public class TenantTableUpdaterTest {
   }
 
   @Test
-  void updateTenantHeaderAndRowInConsortiaIfTypeDoesNotHaveTenantTest() {
+  void updateTenantInHeaderAndRowForConsortiaIfTypeDoesNotHaveTenantTest() {
     var table = new UnifiedTable();
     var cell = new Cell();
     cell.setValue("Header");
@@ -94,7 +94,7 @@ public class TenantTableUpdaterTest {
     row.setRow(new ArrayList<>(List.of("value")));
     table.setRows(List.of(row));
 
-    tableUpdater.updateTenantHeaderAndRow(table, Instance.class);
+    tableUpdater.updateTenantInHeaderAndRows(table, Instance.class);
 
     verify(folioExecutionContext, never()).getTenantId();
     verify(consortiaService, never()).isCurrentTenantCentralTenant(anyString());
