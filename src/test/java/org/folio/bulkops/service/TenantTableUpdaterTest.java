@@ -30,7 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class TenantTableUpdaterTest {
+class TenantTableUpdaterTest {
 
   @Mock
   private FolioExecutionContext folioExecutionContext;
