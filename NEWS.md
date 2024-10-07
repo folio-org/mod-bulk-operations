@@ -7,6 +7,7 @@ This release includes FQM Integration, separate notes by note type, updating Sup
 * [UXPROD-3903](https://folio-org.atlassian.net/browse/UXPROD-3903) - Support `data-export-spring` interface 2.0. Breaking change in `data-export-spring` does not impact mod-bulk-operations use
 * [MODBULKOPS-197](https://issues.folio.org/browse/MODBULKOPS-197) - Accommodate changes in holdings records schema
 * [MODBULKOPS-181](https://issues.folio.org/browse/MODBULKOPS-181) - Always include column with edited properties on Are you sure form
+* [MODBULKOPS-361](https://folio-org.atlassian.net/browse/MODBULKOPS-361) Update `data-import-converter-storage` to `v1.5`, `source-manager-job-executions` to `v3.4`, `metadata-provider-job-execution-logs` to `v1.1`
 
 ### Stories
 * [MODBULKOPS-230](https://issues.folio.org/browse/MODBULKOPS-230) - FQM Integration - Instances
