@@ -151,6 +151,7 @@ public class PreviewService {
           }
 
           if (initial.isPresent()) {
+            log.info("initial.isPresent() {},{}", folioExecutionContext.getTenantId(), initial.get());
             var type = resolveAndGetItemTypeById(clazz, initial.get());
             if (StringUtils.isNotEmpty(type)) {
               forceVisibleOptions.add(type);
@@ -161,6 +162,7 @@ public class PreviewService {
 
           var updated = action.getUpdated();
           if (UUID_REGEX.matcher(updated).matches()) {
+            log.info("UUID_REGEX.matcher(updated).matches() {},{}", folioExecutionContext.getTenantId(), updated);
             var type = resolveAndGetItemTypeById(clazz, updated);
             if (StringUtils.isNotEmpty(type)) {
               forceVisibleOptions.add(type);
@@ -198,6 +200,7 @@ public class PreviewService {
         } else if (INSTANCE_NOTE == option) {
           var initial = action.getParameters().stream().filter(p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
           initial.ifPresent(id -> {
+            log.info("else if (INSTANCE_NOTE == option)");
             var type = resolveAndGetItemTypeById(clazz, id);
             if (StringUtils.isNotEmpty(type)) {
               forceVisibleOptions.add(type);
@@ -223,7 +226,7 @@ public class PreviewService {
 
   private String resolveAndGetItemTypeById(Class<? extends BulkOperationsEntity> clazz, String value) {
     if (clazz == HoldingsRecord.class) {
-      log.info("334_resolveAndGetItemTypeById: {}, {}", clazz, value);
+      log.info("334_resolveAndGetItemTypeById: {}, {}, {}", clazz, value, folioExecutionContext.getTenantId());
       return holdingsNoteTypeClient.getNoteTypeById(value).getName();
     } else if (clazz == Item.class) {
       return itemNoteTypeClient.getNoteTypeById(value).getName();
