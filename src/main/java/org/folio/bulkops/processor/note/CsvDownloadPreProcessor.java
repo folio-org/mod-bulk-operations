@@ -100,7 +100,7 @@ public abstract class CsvDownloadPreProcessor {
       .toArray(String[]::new);
   }
 
-  private String[] processTenantInHeaders(String[] line, boolean isConsortiaTenant, boolean isTypeWithTenant) {
+  protected String[] processTenantInHeaders(String[] line, boolean isConsortiaTenant, boolean isTypeWithTenant) {
     if (isTypeWithTenant) {
       int tenantPosition = line.length - 1;
       if (isConsortiaTenant) {
@@ -112,7 +112,7 @@ public abstract class CsvDownloadPreProcessor {
     return line;
   }
 
-  private String[] processTenantInRows(String[] line, boolean isConsortiaTenant, boolean isTypeWithTenant) {
+  protected String[] processTenantInRows(String[] line, boolean isConsortiaTenant, boolean isTypeWithTenant) {
     if (isTypeWithTenant && !isConsortiaTenant) {
       int tenantPosition = line.length - 1;
       line = Arrays.copyOf(line, tenantPosition);
