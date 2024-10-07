@@ -44,11 +44,11 @@ public abstract class CsvDownloadPreProcessor {
   }
 
   @Autowired
-  private void setFolioExecutionContext(FolioExecutionContext folioExecutionContext) {
+  protected void setFolioExecutionContext(FolioExecutionContext folioExecutionContext) {
     this.folioExecutionContext = folioExecutionContext;
   }
   @Autowired
-  private void setConsortiaService(ConsortiaService consortiaService) {
+  protected void setConsortiaService(ConsortiaService consortiaService) {
     this.consortiaService = consortiaService;
   }
 
