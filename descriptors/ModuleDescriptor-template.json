@@ -451,11 +451,11 @@
     },
     {
       "id": "instance-storage",
-      "version": "9.0 10.0"
+      "version": "9.0 10.0 11.0"
     },
     {
       "id": "inventory",
-      "version": "12.0 13.0"
+      "version": "12.0 13.0 14.0"
     },
     {
       "id": "locations",
