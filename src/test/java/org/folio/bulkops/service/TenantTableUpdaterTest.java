@@ -42,7 +42,7 @@ class TenantTableUpdaterTest {
 
   @ParameterizedTest
   @MethodSource("getEntityClassesWithTenant")
-  void updateTenantInHeaderAndRowForNotConsortiaTest(Class<? extends BulkOperationsEntity> entityClass) {
+  void updateTenantInHeadersAndRowsForNotConsortiaTest(Class<? extends BulkOperationsEntity> entityClass) {
     var table = new UnifiedTable();
     var cell = new Cell();
     cell.setValue("Tenant");
@@ -56,7 +56,7 @@ class TenantTableUpdaterTest {
     when(consortiaService.isCurrentTenantCentralTenant(anyString())).thenReturn(false);
     when(consortiaService.getCentralTenantId(anyString())).thenReturn(StringUtils.EMPTY);
 
-    tableUpdater.updateTenantInHeaderAndRows(table, entityClass);
+    tableUpdater.updateTenantInHeadersAndRows(table, entityClass);
 
     assertEquals(0, table.getHeader().size());
     assertEquals(0, table.getRows().get(0).getRow().size());
@@ -64,7 +64,7 @@ class TenantTableUpdaterTest {
 
   @ParameterizedTest
   @MethodSource("getEntityClassesWithTenant")
-  void updateTenantInHeaderAndRowForConsortiaCentralTenantTest(Class<? extends BulkOperationsEntity> entityClass) {
+  void updateTenantInHeadersAndRowsForConsortiaCentralTenantTest(Class<? extends BulkOperationsEntity> entityClass) {
     var table = new UnifiedTable();
     var cell = new Cell();
     cell.setValue("Tenant");
@@ -77,7 +77,7 @@ class TenantTableUpdaterTest {
     when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
     when(consortiaService.isCurrentTenantCentralTenant(anyString())).thenReturn(true);
 
-    tableUpdater.updateTenantInHeaderAndRows(table, entityClass);
+    tableUpdater.updateTenantInHeadersAndRows(table, entityClass);
 
     var actualTenantHeaderValue = table.getHeader().get(0).getValue();
     assertEquals("Member", actualTenantHeaderValue);
@@ -87,7 +87,7 @@ class TenantTableUpdaterTest {
 
   @ParameterizedTest
   @MethodSource("getEntityClassesWithTenant")
-  void updateTenantInHeaderAndRowForConsortiaMemberTest(Class<? extends BulkOperationsEntity> entityClass) {
+  void updateTenantInHeadersAndRowsForConsortiaMemberTest(Class<? extends BulkOperationsEntity> entityClass) {
     var table = new UnifiedTable();
     var cell = new Cell();
     cell.setValue("Tenant");
@@ -99,9 +99,9 @@ class TenantTableUpdaterTest {
 
     when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
     when(consortiaService.isCurrentTenantCentralTenant(anyString())).thenReturn(false);
-    when(consortiaService.getCentralTenantId(anyString())).thenReturn("member");
+    when(consortiaService.getCentralTenantId(anyString())).thenReturn("central");
 
-    tableUpdater.updateTenantInHeaderAndRows(table, entityClass);
+    tableUpdater.updateTenantInHeadersAndRows(table, entityClass);
 
     var actualTenantHeaderValue = table.getHeader().get(0).getValue();
     assertEquals("Member", actualTenantHeaderValue);
@@ -110,7 +110,7 @@ class TenantTableUpdaterTest {
   }
 
   @Test
-  void updateTenantInHeaderAndRowForConsortiaIfTypeDoesNotHaveTenantTest() {
+  void updateTenantInHeadersAndRowsForConsortiaIfTypeDoesNotHaveTenantTest() {
     var table = new UnifiedTable();
     var cell = new Cell();
     cell.setValue("Header");
@@ -120,7 +120,7 @@ class TenantTableUpdaterTest {
     row.setRow(new ArrayList<>(List.of("value")));
     table.setRows(List.of(row));
 
-    tableUpdater.updateTenantInHeaderAndRows(table, Instance.class);
+    tableUpdater.updateTenantInHeadersAndRows(table, Instance.class);
 
     verify(folioExecutionContext, never()).getTenantId();
     verify(consortiaService, never()).isCurrentTenantCentralTenant(anyString());

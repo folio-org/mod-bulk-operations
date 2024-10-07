@@ -257,7 +257,7 @@ public class PreviewService {
           .toList();
         row.setRow(SpecialCharacterEscaper.restore(rowData));
       });
-      tenantTableUpdater.updateTenantInHeaderAndRows(table, clazz);
+      tenantTableUpdater.updateTenantInHeadersAndRows(table, clazz);
       return table;
     } catch (Exception e) {
       log.error(e.getMessage());

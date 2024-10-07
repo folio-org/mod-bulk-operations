@@ -20,7 +20,7 @@ public class TenantTableUpdater {
   private final FolioExecutionContext folioExecutionContext;
   private final ConsortiaService consortiaService;
 
-  public void updateTenantInHeaderAndRows(UnifiedTable unifiedTable, Class<? extends BulkOperationsEntity> clazz) {
+  public void updateTenantInHeadersAndRows(UnifiedTable unifiedTable, Class<? extends BulkOperationsEntity> clazz) {
     if (!(clazz == Item.class || clazz == HoldingsRecord.class)) {
       return;
     }
