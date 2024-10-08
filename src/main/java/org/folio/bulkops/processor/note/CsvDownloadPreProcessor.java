@@ -3,7 +3,6 @@ package org.folio.bulkops.processor.note;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.RFC4180ParserBuilder;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.service.ConsortiaService;
@@ -54,8 +53,7 @@ public abstract class CsvDownloadPreProcessor {
   }
 
   public byte[] processCsvContent(byte[] input, BulkOperation bulkOperation) {
-    boolean isCentralOrMemberTenant = consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())
-        || StringUtils.isNotEmpty(consortiaService.getCentralTenantId(folioExecutionContext.getTenantId()));
+    boolean isCentralOrMemberTenant = consortiaService.isCurrentTenantInConsortia(folioExecutionContext.getTenantId());
     boolean isTypeWithTenant = bulkOperation.getEntityType() == EntityType.ITEM || bulkOperation.getEntityType() == EntityType.HOLDINGS_RECORD;
 
     List<String> noteTypeNames = getNoteTypeNames(bulkOperation);

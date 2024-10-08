@@ -1,6 +1,5 @@
 package org.folio.bulkops.service;
 
-import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
@@ -53,8 +52,7 @@ class TenantTableUpdaterTest {
     table.setRows(List.of(row));
 
     when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
-    when(consortiaService.isCurrentTenantCentralTenant(anyString())).thenReturn(false);
-    when(consortiaService.getCentralTenantId(anyString())).thenReturn(StringUtils.EMPTY);
+    when(consortiaService.isCurrentTenantInConsortia(anyString())).thenReturn(false);
 
     tableUpdater.updateTenantInHeadersAndRows(table, entityClass);
 
@@ -75,7 +73,7 @@ class TenantTableUpdaterTest {
     table.setRows(List.of(row));
 
     when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
-    when(consortiaService.isCurrentTenantCentralTenant(anyString())).thenReturn(true);
+    when(consortiaService.isCurrentTenantInConsortia(anyString())).thenReturn(true);
 
     tableUpdater.updateTenantInHeadersAndRows(table, entityClass);
 
@@ -98,8 +96,7 @@ class TenantTableUpdaterTest {
     table.setRows(List.of(row));
 
     when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
-    when(consortiaService.isCurrentTenantCentralTenant(anyString())).thenReturn(false);
-    when(consortiaService.getCentralTenantId(anyString())).thenReturn("central");
+    when(consortiaService.isCurrentTenantInConsortia(anyString())).thenReturn(true);
 
     tableUpdater.updateTenantInHeadersAndRows(table, entityClass);
 
@@ -123,7 +120,7 @@ class TenantTableUpdaterTest {
     tableUpdater.updateTenantInHeadersAndRows(table, Instance.class);
 
     verify(folioExecutionContext, never()).getTenantId();
-    verify(consortiaService, never()).isCurrentTenantCentralTenant(anyString());
+    verify(consortiaService, never()).isCurrentTenantInConsortia(anyString());
   }
 
   private static Stream<Arguments> getEntityClassesWithTenant() {

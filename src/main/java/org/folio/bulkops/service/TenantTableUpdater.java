@@ -2,7 +2,6 @@ package org.folio.bulkops.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
@@ -36,8 +35,6 @@ public class TenantTableUpdater {
   }
 
   private boolean isNeedUpdateTablePreview() {
-    return consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId()) ||
-      StringUtils.isNotEmpty(consortiaService.getCentralTenantId(folioExecutionContext.getTenantId()));
+    return consortiaService.isCurrentTenantInConsortia(folioExecutionContext.getTenantId());
   }
-
 }
