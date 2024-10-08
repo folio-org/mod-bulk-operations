@@ -71,7 +71,6 @@ public class MarcInstanceUpdateProcessor {
         bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(bulkOperation.getId()));
         bulkOperation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(bulkOperation.getId()));
         bulkOperation.setStatus(bulkOperation.getCommittedNumOfErrors() == 0 ? COMPLETED : COMPLETED_WITH_ERRORS);
-        errorService.uploadErrorsToStorage(bulkOperation.getId());
       }
       bulkOperationRepository.save(bulkOperation);
     }
