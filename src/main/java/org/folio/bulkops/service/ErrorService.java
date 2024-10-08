@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
@@ -109,8 +110,7 @@ public class ErrorService {
     try {
       var jobLogEntries = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE)
         .getEntries().stream()
-        .filter(Objects::nonNull)
-        .filter(entry -> !entry.getError().isEmpty())
+        .filter(entry -> nonNull(entry.getError()) && !entry.getError().isEmpty())
           .toList();
       jobLogEntries.forEach(errorEntry -> {
         String identifier = EMPTY;
