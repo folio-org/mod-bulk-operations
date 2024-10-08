@@ -73,7 +73,7 @@ public abstract class CsvDownloadPreProcessor {
           line = headers.stream()
             .map(this::processSpecialCharacters)
             .toArray(String[]::new);
-          processTenantInHeaders(line, isCentralOrMemberTenant, isTypeWithTenant);
+          line = processTenantInHeaders(line, isCentralOrMemberTenant, isTypeWithTenant);
         } else {
           line = processTenantInRows(line, isCentralOrMemberTenant, isTypeWithTenant);
           line = processNotesData(line, noteTypeNames, bulkOperation);
