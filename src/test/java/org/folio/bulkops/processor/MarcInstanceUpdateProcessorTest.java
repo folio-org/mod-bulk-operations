@@ -1,6 +1,9 @@
 package org.folio.bulkops.processor;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
@@ -29,6 +32,7 @@ import org.folio.bulkops.domain.bean.UploadFileDefinition;
 import org.folio.bulkops.domain.bean.UploadUrlResponse;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.service.ErrorService;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
@@ -39,6 +43,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.util.Collections;
 import java.util.UUID;
@@ -56,6 +61,8 @@ class MarcInstanceUpdateProcessorTest extends BaseTest {
   private BulkOperationRepository bulkOperationRepository;
   @MockBean
   private DataImportRestS3UploadClient dataImportRestS3UploadClient;
+  @MockBean
+  private ErrorService errorService;
 
   @Captor
   private ArgumentCaptor<BulkOperation> bulkOperationCaptor;
@@ -127,5 +134,29 @@ class MarcInstanceUpdateProcessorTest extends BaseTest {
 
     verify(bulkOperationRepository).save(bulkOperationCaptor.capture());
     assertThat(bulkOperationCaptor.getValue().getDataImportJobProfileId()).isEqualTo(jobProfileId);
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {0, 1})
+  @SneakyThrows
+  void shouldNotUploadEmptyFile(int numOfErrors) {
+    var operationId = UUID.randomUUID();
+    var bulkOperation = BulkOperation.builder()
+      .id(operationId)
+      .linkToCommittedRecordsMarcFile("committed.mrc").build();
+
+    when(remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsMarcFile()))
+      .thenReturn(new ByteArrayInputStream(EMPTY.getBytes()));
+    when(errorService.getCommittedNumOfErrors(operationId)).thenReturn(numOfErrors);
+
+    marcInstanceUpdateProcessor.updateMarcRecords(bulkOperation);
+
+    verify(errorService).uploadErrorsToStorage(operationId);
+
+    verify(bulkOperationRepository).save(bulkOperationCaptor.capture());
+    assertThat(bulkOperationCaptor.getValue().getLinkToCommittedRecordsMarcFile()).isNull();
+
+    var expectedStatus = numOfErrors == 0 ? COMPLETED : COMPLETED_WITH_ERRORS;
+    assertThat(bulkOperationCaptor.getValue().getStatus()).isEqualTo(expectedStatus);
   }
 }
