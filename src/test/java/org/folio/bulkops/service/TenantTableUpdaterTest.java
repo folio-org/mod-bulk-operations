@@ -62,30 +62,7 @@ class TenantTableUpdaterTest {
 
   @ParameterizedTest
   @MethodSource("getEntityClassesWithTenant")
-  void updateTenantInHeadersAndRowsForConsortiaCentralTenantTest(Class<? extends BulkOperationsEntity> entityClass) {
-    var table = new UnifiedTable();
-    var cell = new Cell();
-    cell.setValue("Tenant");
-    var headers = List.of(cell);
-    table.setHeader(headers);
-    var row = new Row();
-    row.setRow(new ArrayList<>(List.of("value")));
-    table.setRows(List.of(row));
-
-    when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
-    when(consortiaService.isCurrentTenantInConsortia(anyString())).thenReturn(true);
-
-    tableUpdater.updateTenantInHeadersAndRows(table, entityClass);
-
-    var actualTenantHeaderValue = table.getHeader().get(0).getValue();
-    assertEquals("Member", actualTenantHeaderValue);
-    var actualTenantRowValue = table.getRows().get(0).getRow().get(0);
-    assertEquals("value", actualTenantRowValue);
-  }
-
-  @ParameterizedTest
-  @MethodSource("getEntityClassesWithTenant")
-  void updateTenantInHeadersAndRowsForConsortiaMemberTest(Class<? extends BulkOperationsEntity> entityClass) {
+  void updateTenantInHeadersAndRowsForConsortiaTest(Class<? extends BulkOperationsEntity> entityClass) {
     var table = new UnifiedTable();
     var cell = new Cell();
     cell.setValue("Tenant");
