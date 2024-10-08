@@ -1,25 +1,44 @@
 package org.folio.bulkops.service;
 
-import lombok.experimental.UtilityClass;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.client.MappingRulesClient;
 import org.marc4j.marc.DataField;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-@UtilityClass
+@Component
+@RequiredArgsConstructor
+@Log4j2
 public class Marc21ReferenceProvider {
   public static final String GENERAL_NOTE = "General note";
   private static final String LOCAL_NOTES = "Local notes";
-  private static final String ABCDU3 = "abcdu3";
   private static final Pattern UNDESIRED_LOCAL_NOTE_TAGS = Pattern.compile("59[1-9]");
 
   private static final Map<String, String> languages = new HashMap<>();
-  private static final Map<String, String> instanceNoteTypes = new HashMap<>();
-  private static final Map<String, String> instanceNoteSubfields = new HashMap<>();
-  private static final Set<String> staffOnlyNotes;
+
+  private final MappingRulesClient mappingRulesClient;
+
+  private final Set<String> noteTags = Set.of("255", "500", "501", "502", "504", "505", "506", "507", "508",
+    "510", "511", "513", "514", "515", "516", "518", "520", "521", "522", "524", "525", "526", "530", "532", "533",
+    "534", "535", "536", "538", "540", "541", "542", "544", "545", "546", "547", "550", "552", "555", "556", "561",
+    "562", "563", "565", "567", "580", "581", "583", "584", "585", "586", "588", "590");
+  private final Set<String> localNoteTags = Set.of("591", "592", "593", "594", "595", "596", "597", "598", "599");
+  private Map<String, String> instanceNoteTypes = new HashMap<>();
+  private Map<String, String> instanceNoteSubfields = new HashMap<>();
+  private Set<String> staffOnlyNotes = new HashSet<>();
 
   static {
     languages.put("aar", "Afar");
@@ -538,153 +557,66 @@ public class Marc21ReferenceProvider {
     languages.put("zun", "Zuni");
     languages.put("zxx", "No linguistic content");
     languages.put("zza", "Zaza");
-
-    instanceNoteTypes.put("255", "Cartographic Mathematical Data");
-    instanceNoteTypes.put("500", GENERAL_NOTE);
-    instanceNoteTypes.put("501", "With note");
-    instanceNoteTypes.put("502", "Dissertation note");
-    instanceNoteTypes.put("504", "Bibliography note");
-    instanceNoteTypes.put("505", "Formatted Contents Note");
-    instanceNoteTypes.put("506", "Restrictions on Access note");
-    instanceNoteTypes.put("507", "Scale note for graphic material");
-    instanceNoteTypes.put("508", "Creation / Production Credits note");
-    instanceNoteTypes.put("510", "Citation / References note");
-    instanceNoteTypes.put("511", "Participant or Performer note");
-    instanceNoteTypes.put("513", "Type of report and period covered note");
-    instanceNoteTypes.put("514", "Data quality note");
-    instanceNoteTypes.put("515", "Numbering peculiarities note");
-    instanceNoteTypes.put("516", "Type of computer file or data note");
-    instanceNoteTypes.put("518", "Date / time and place of an event note");
-    instanceNoteTypes.put("520", "Summary");
-    instanceNoteTypes.put("521", "Target Audience note");
-    instanceNoteTypes.put("522", "Geographic Coverage note");
-    instanceNoteTypes.put("524", "Preferred Citation of Described Materials note");
-    instanceNoteTypes.put("525", "Supplement note");
-    instanceNoteTypes.put("526", "Study Program Information note");
-    instanceNoteTypes.put("530", "Additional Physical Form Available note");
-    instanceNoteTypes.put("532", "Accessibility note");
-    instanceNoteTypes.put("533", "Reproduction note");
-    instanceNoteTypes.put("534", "Original Version note");
-    instanceNoteTypes.put("535", "Location of Originals / Duplicates note");
-    instanceNoteTypes.put("536", "Funding Information Note");
-    instanceNoteTypes.put("538", "System Details note");
-    instanceNoteTypes.put("540", "Terms Governing Use and Reproduction note");
-    instanceNoteTypes.put("541", "Immediate Source of Acquisition note");
-    instanceNoteTypes.put("542", "Information related to Copyright Status");
-    instanceNoteTypes.put("544", "Location of Other Archival Materials note");
-    instanceNoteTypes.put("545", "Biographical or Historical Data");
-    instanceNoteTypes.put("546", "Language note");
-    instanceNoteTypes.put("547", "Former Title Complexity note");
-    instanceNoteTypes.put("550", "Issuing Body note");
-    instanceNoteTypes.put("552", "Entity and Attribute Information note");
-    instanceNoteTypes.put("555", "Cumulative Index / Finding Aides notes");
-    instanceNoteTypes.put("556", "Information About Documentation note");
-    instanceNoteTypes.put("561", "Ownership and Custodial History note");
-    instanceNoteTypes.put("562", "Copy and Version Identification note");
-    instanceNoteTypes.put("563", "Binding Information note");
-    instanceNoteTypes.put("565", "Case File Characteristics note");
-    instanceNoteTypes.put("567", "Methodology note");
-    instanceNoteTypes.put("580", "Linking Entry Complexity note");
-    instanceNoteTypes.put("581", "Publications About Described Materials note");
-    instanceNoteTypes.put("583", "Action note");
-    instanceNoteTypes.put("584", "Accumulation and Frequency of Use note");
-    instanceNoteTypes.put("585", "Exhibitions note");
-    instanceNoteTypes.put("586", "Awards note");
-    instanceNoteTypes.put("588", "Source of Description note");
-    instanceNoteTypes.put("590", LOCAL_NOTES);
-    instanceNoteTypes.put("591", LOCAL_NOTES);
-    instanceNoteTypes.put("592", LOCAL_NOTES);
-    instanceNoteTypes.put("593", LOCAL_NOTES);
-    instanceNoteTypes.put("594", LOCAL_NOTES);
-    instanceNoteTypes.put("595", LOCAL_NOTES);
-    instanceNoteTypes.put("596", LOCAL_NOTES);
-    instanceNoteTypes.put("597", LOCAL_NOTES);
-    instanceNoteTypes.put("598", LOCAL_NOTES);
-    instanceNoteTypes.put("599", LOCAL_NOTES);
-
-    instanceNoteSubfields.put("255", "abcdefg");
-    instanceNoteSubfields.put("500", "a35");
-    instanceNoteSubfields.put("501", "a5");
-    instanceNoteSubfields.put("502", "abcdgo");
-    instanceNoteSubfields.put("504", "ab");
-    instanceNoteSubfields.put("505", "a35");
-    instanceNoteSubfields.put("506", "abcdefu235");
-    instanceNoteSubfields.put("507", "ab");
-    instanceNoteSubfields.put("508", "a");
-    instanceNoteSubfields.put("510", "abcux3");
-    instanceNoteSubfields.put("511", "a");
-    instanceNoteSubfields.put("513", "ab");
-    instanceNoteSubfields.put("514", "abcdefghijkmuz");
-    instanceNoteSubfields.put("515", "a");
-    instanceNoteSubfields.put("516", "a");
-    instanceNoteSubfields.put("518", "adop23");
-    instanceNoteSubfields.put("520", "abcu23");
-    instanceNoteSubfields.put("521", "ab3");
-    instanceNoteSubfields.put("522", "a");
-    instanceNoteSubfields.put("524", "a23");
-    instanceNoteSubfields.put("525", "a");
-    instanceNoteSubfields.put("526", "abcdxz5");
-    instanceNoteSubfields.put("530", ABCDU3);
-    instanceNoteSubfields.put("532", "a");
-    instanceNoteSubfields.put("533", "abcdefmn35");
-    instanceNoteSubfields.put("534", "abcefklmnoptxz3");
-    instanceNoteSubfields.put("535", "abcdg3");
-    instanceNoteSubfields.put("536", "abcdefgh");
-    instanceNoteSubfields.put("538", "au35");
-    instanceNoteSubfields.put("540", "abcdu35");
-    instanceNoteSubfields.put("541", "abcdefhno35");
-    instanceNoteSubfields.put("542", "abcdefghijklmnopqrsu3");
-    instanceNoteSubfields.put("544", "abcden3");
-    instanceNoteSubfields.put("545", "abu");
-    instanceNoteSubfields.put("546", "ab3");
-    instanceNoteSubfields.put("547", "a");
-    instanceNoteSubfields.put("550", "a");
-    instanceNoteSubfields.put("552", "abcdefghijklmnopuz");
-    instanceNoteSubfields.put("555", ABCDU3);
-    instanceNoteSubfields.put("556", "az");
-    instanceNoteSubfields.put("561", ABCDU3);
-    instanceNoteSubfields.put("562", "abcde35");
-    instanceNoteSubfields.put("563", "au35");
-    instanceNoteSubfields.put("565", "abcde3");
-    instanceNoteSubfields.put("567", "ab2");
-    instanceNoteSubfields.put("580", "a");
-    instanceNoteSubfields.put("581", "az3");
-    instanceNoteSubfields.put("583", "abcdefhijklnouxz235");
-    instanceNoteSubfields.put("584", "ab35");
-    instanceNoteSubfields.put("585", "a35");
-    instanceNoteSubfields.put("586", "a3");
-    instanceNoteSubfields.put("588", "a5");
-    instanceNoteSubfields.put("590", "a");
-    instanceNoteSubfields.put("591", "a");
-    instanceNoteSubfields.put("592", "a");
-    instanceNoteSubfields.put("593", "a");
-    instanceNoteSubfields.put("594", "a");
-    instanceNoteSubfields.put("595", "a");
-    instanceNoteSubfields.put("596", "a");
-    instanceNoteSubfields.put("597", "a");
-    instanceNoteSubfields.put("598", "a");
-    instanceNoteSubfields.put("599", "a");
-
-    staffOnlyNotes = Set.of("541", "542", "561", "583", "590");
   }
 
-  public static String getLanguageByCode(String code) {
+  public void updateMappingRules() {
+    var documentContext = JsonPath.parse(mappingRulesClient.getMarcBibMappingRules());
+
+    instanceNoteTypes = new HashMap<>();
+    instanceNoteSubfields = new HashMap<>();
+    staffOnlyNotes = new HashSet<>();
+
+    noteTags.forEach(tag -> {
+      instanceNoteTypes.put(tag, fetchNoteType(documentContext, tag));
+      instanceNoteSubfields.put(tag, fetchSubfields(documentContext, tag));
+      if (isStaffOnly(documentContext, tag)) {
+        staffOnlyNotes.add(tag);
+      }
+    });
+
+    localNoteTags.forEach(tag -> {
+      instanceNoteTypes.put(tag, instanceNoteTypes.getOrDefault(tag, LOCAL_NOTES));
+      instanceNoteSubfields.put(tag, instanceNoteSubfields.getOrDefault(tag, "a"));
+    });
+  }
+
+  private String fetchNoteType(DocumentContext context, String tag) {
+    var path = String.format("$..%s[*].entity[*].rules[*].conditions[?(@.type == 'set_note_type_id')].parameter.name", tag);
+    var res = context.read(path, List.class);
+    return res.isEmpty() ? EMPTY : res.get(0).toString();
+  }
+
+  private String fetchSubfields(DocumentContext context, String tag) {
+    var path = String.format("$..%s[*].entity[?(@.target == 'notes.note')].subfield[*]", tag);
+    var res = context.read(path, List.class);
+    return IntStream.range(0, res.size())
+      .mapToObj(i -> res.get(i).toString())
+      .collect(Collectors.joining(EMPTY));
+  }
+
+  private boolean isStaffOnly(DocumentContext context, String tag) {
+    var path = String.format("$..%s[*].entity[?(@.target == 'notes.staffOnly')].rules[*].conditions[*].type", tag);
+    var res = context.read(path, List.class);
+    return !res.isEmpty() && "set_note_staff_only_via_indicator".equals(res.get(0));
+  }
+
+  public String getLanguageByCode(String code) {
     return languages.getOrDefault(code, code);
   }
 
-  public static String getNoteTypeByTag(String tag) {
+  public String getNoteTypeByTag(String tag) {
     return instanceNoteTypes.getOrDefault(tag, GENERAL_NOTE);
   }
 
-  public static String getSubfieldsByTag(String tag) {
+  public String getSubfieldsByTag(String tag) {
     return instanceNoteSubfields.getOrDefault(tag, "a");
   }
 
-  public static boolean isStaffOnlyNote(DataField dataField) {
+  public boolean isStaffOnlyNote(DataField dataField) {
     return staffOnlyNotes.contains(dataField.getTag()) && '0' == dataField.getIndicator1();
   }
 
-  public static Set<String> getMappedNoteTags() {
+  public Set<String> getMappedNoteTags() {
     return instanceNoteTypes.keySet().stream()
       .filter(s -> !UNDESIRED_LOCAL_NOTE_TAGS.matcher(s).matches())
       .collect(Collectors.toSet());

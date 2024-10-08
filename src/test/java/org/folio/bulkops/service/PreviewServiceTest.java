@@ -27,6 +27,8 @@ import static org.testcontainers.shaded.org.hamcrest.Matchers.hasSize;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +38,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.client.MappingRulesClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.HoldingsNoteTypeCollection;
@@ -94,6 +97,8 @@ class PreviewServiceTest extends BaseTest {
   private InstanceReferenceService instanceReferenceService;
   @MockBean
   private ConsortiaService consortiaService;
+  @MockBean
+  private MappingRulesClient mappingRulesClient;
   @Autowired
   private NoteTableUpdater noteTableUpdater;
 
@@ -146,6 +151,9 @@ class PreviewServiceTest extends BaseTest {
 
     when(holdingsNoteTypeClient.getNoteTypeById("e19eabab-a85c-4aef-a7b2-33bd9acef24e")).thenReturn(new HoldingsNoteType().withName("Reproduction"));
     when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
+
+    when(mappingRulesClient.getMarcBibMappingRules())
+      .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
 
     var bulkOperationRuleCollection = objectMapper.readValue(new FileInputStream(getPathToContentUpdateRequest(entityType)), BulkOperationRuleCollection.class);
     when(ruleService.getRules(any(UUID.class))).thenReturn(bulkOperationRuleCollection);
@@ -206,6 +214,9 @@ class PreviewServiceTest extends BaseTest {
 
     when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
 
+    when(mappingRulesClient.getMarcBibMappingRules())
+      .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+
     var table = previewService.getPreview(bulkOperation, COMMIT, offset, limit);
 
     assertThat(table.getRows(), hasSize(limit));
@@ -238,6 +249,8 @@ class PreviewServiceTest extends BaseTest {
     when(itemNoteTypeClient.getNoteTypeById("c3a539b9-9576-4e3a-b6de-d910200b2919")).thenReturn(new NoteType().withName("Reproduction"));
     when(itemNoteTypeClient.getNoteTypeById("87c450be-2033-41fb-80ba-dd2409883681")).thenReturn(new NoteType().withName("Custom"));
     when(itemNoteTypeClient.getNoteTypeById("8d0a5eca-25de-4391-81a9-236eeefdd20b")).thenReturn(new NoteType().withName("Note"));
+    when(mappingRulesClient.getMarcBibMappingRules())
+      .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
 
     var table = previewService.getPreview(bulkOperation, UPLOAD, offset, limit);
 
@@ -330,8 +343,10 @@ class PreviewServiceTest extends BaseTest {
   @EnumSource(value = org.folio.bulkops.domain.dto.OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED" }, mode = EnumSource.Mode.EXCLUDE)
   @SneakyThrows
   void shouldReturnOnlyHeadersIfPreviewIsNotAvailable(org.folio.bulkops.domain.dto.OperationStatusType status) {
-
     var bulkOperation = BulkOperation.builder().entityType(USER).status(status).build();
+
+    when(mappingRulesClient.getMarcBibMappingRules())
+      .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
 
     var table = previewService.getPreview(bulkOperation, org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD, 0, 10);
     assertEquals(0, table.getRows().size());
@@ -343,6 +358,7 @@ class PreviewServiceTest extends BaseTest {
   CHANGE_TYPE     | INSTANCE_NOTE | INSTANCE_NOTE_TYPE_ID_KEY
   ADD_TO_EXISTING | INSTANCE_NOTE | INSTANCE_NOTE_TYPE_ID_KEY
     """, delimiter = '|')
+  @SneakyThrows
   void shouldSetForceVisibleForUpdatedInstanceNotes(UpdateActionType actionType, UpdateOptionType updateOption,
                                                     String key) {
     var operationId = UUID.randomUUID();
@@ -380,6 +396,8 @@ class PreviewServiceTest extends BaseTest {
         new HoldingsNoteType().withName("old note type"), new HoldingsNoteType().withName("new note type"))).withTotalRecords(2));
     when(remoteFileSystemClient.get(pathToCsv))
       .thenReturn(new ByteArrayInputStream(",,,,,,,,,,".getBytes()));
+    when(mappingRulesClient.getMarcBibMappingRules())
+      .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
 
     var table = previewService.getPreview(operation, COMMIT, 0, 10);
 
@@ -434,6 +452,8 @@ class PreviewServiceTest extends BaseTest {
     when(instanceReferenceService.getInstanceFormatsByCode("cz"))
       .thenReturn(InstanceFormats.builder()
         .formats(Collections.singletonList(InstanceFormat.builder().name("computer -- other").code("cz").source("rdacarrier").build())).build());
+    when(mappingRulesClient.getMarcBibMappingRules())
+      .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
 
     var res = previewService.getPreview(bulkOperation, step, 0, 10);
 
