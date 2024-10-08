@@ -13,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -107,7 +108,9 @@ public class ErrorService {
     var identifierType = bulkOperation.getIdentifierType();
     try {
       var jobLogEntries = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE)
-        .getEntries().stream().filter(entry -> !entry.getError().isEmpty())
+        .getEntries().stream()
+        .filter(Objects::nonNull)
+        .filter(entry -> !entry.getError().isEmpty())
           .toList();
       jobLogEntries.forEach(errorEntry -> {
         String identifier = EMPTY;

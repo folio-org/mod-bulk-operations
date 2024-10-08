@@ -1,10 +1,12 @@
 package org.folio.bulkops.service;
 
+import static java.util.Objects.nonNull;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.MetadataProviderClient;
 import org.folio.bulkops.domain.dto.DataImportJobExecution;
-import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.domain.dto.DataImportProgress;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -17,11 +19,15 @@ public class MetadataProviderService {
   private final MetadataProviderClient metadataProviderClient;
 
   public DataImportJobExecution getDataImportJobExecutionByJobProfileId(UUID dataImportJobProfileId) {
-    var executions = metadataProviderClient.getJobExecutionsByJobProfileIdAndSubordinationType(dataImportJobProfileId, COMPOSITE_PARENT);
+    var executions = metadataProviderClient.getJobExecutionsByJobProfileIdAndSubordinationType(dataImportJobProfileId, COMPOSITE_PARENT)
+        .getJobExecutions().stream()
+        .filter(jobExecution -> nonNull(jobExecution.getJobProfileInfo()))
+        .filter(jobExecution -> jobExecution.getJobProfileInfo().getId().equals(dataImportJobProfileId))
+        .toList();
     log.info("executions: {}", executions);
-    if (executions.getJobExecutions().isEmpty()) {
-      throw new NotFoundException("Job execution not found by jobProfileId " + dataImportJobProfileId);
-    }
-    return executions.getJobExecutions().get(0);
+
+    return executions.isEmpty() ?
+      new DataImportJobExecution().progress(new DataImportProgress().current(0).total(0)) :
+      executions.get(0);
   }
 }
