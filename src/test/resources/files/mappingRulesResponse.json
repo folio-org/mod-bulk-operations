@@ -1,0 +1,587 @@
+{
+  "500": [
+    {
+      "entity": [
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "set_note_type_id",
+                  "parameter": {
+                    "name": "General note"
+                  }
+                }
+              ]
+            }
+          ],
+          "target": "notes.instanceNoteTypeId",
+          "subfield": [
+            "a",
+            "3",
+            "5"
+          ],
+          "description": "Instance note type id",
+          "applyRulesOnConcatenatedData": true
+        },
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "trim_period"
+                }
+              ]
+            }
+          ],
+          "target": "notes.note",
+          "subfield": [
+            "a",
+            "3",
+            "5"
+          ],
+          "description": "General Note",
+          "applyRulesOnConcatenatedData": true
+        },
+        {
+          "rules": [
+            {
+              "value": "false",
+              "conditions": []
+            }
+          ],
+          "target": "notes.staffOnly",
+          "subfield": [
+            "a",
+            "3",
+            "5"
+          ],
+          "description": "If true, determines that the note should not be visible for others than staff"
+        }
+      ]
+    }
+  ],
+  "520": [
+    {
+      "entity": [
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "set_note_type_id",
+                  "parameter": {
+                    "name": "Summary"
+                  }
+                }
+              ]
+            }
+          ],
+          "target": "notes.instanceNoteTypeId",
+          "subfield": [
+            "a",
+            "b",
+            "c",
+            "u",
+            "2",
+            "3"
+          ],
+          "description": "Instance note type id",
+          "applyRulesOnConcatenatedData": true
+        },
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "trim_period"
+                }
+              ]
+            }
+          ],
+          "target": "notes.note",
+          "subfield": [
+            "a",
+            "b",
+            "c",
+            "u",
+            "2",
+            "3"
+          ],
+          "description": "Summary, Etc.",
+          "applyRulesOnConcatenatedData": true
+        },
+        {
+          "rules": [
+            {
+              "value": "false",
+              "conditions": []
+            }
+          ],
+          "target": "notes.staffOnly",
+          "subfield": [
+            "a",
+            "b",
+            "c",
+            "u",
+            "2",
+            "3"
+          ],
+          "description": "If true, determines that the note should not be visible for others than staff"
+        }
+      ]
+    }
+  ],
+  "541": [
+    {
+      "entity": [
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "set_note_type_id",
+                  "parameter": {
+                    "name": "Immediate Source of Acquisition note"
+                  }
+                }
+              ]
+            }
+          ],
+          "target": "notes.instanceNoteTypeId",
+          "subfield": [
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "h",
+            "n",
+            "o",
+            "3",
+            "5"
+          ],
+          "description": "Instance note type id",
+          "applyRulesOnConcatenatedData": true
+        },
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "trim_period"
+                }
+              ]
+            }
+          ],
+          "target": "notes.note",
+          "subfield": [
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "h",
+            "n",
+            "o",
+            "3",
+            "5"
+          ],
+          "description": "Immediate Source of Acquisition Note",
+          "applyRulesOnConcatenatedData": true
+        },
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "set_note_staff_only_via_indicator"
+                }
+              ]
+            }
+          ],
+          "target": "notes.staffOnly",
+          "subfield": [
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "h",
+            "n",
+            "o",
+            "3",
+            "5"
+          ],
+          "description": "If true, determines that the note should not be visible for others than staff",
+          "applyRulesOnConcatenatedData": true
+        }
+      ]
+    }
+  ],
+  "542": [
+    {
+      "entity": [
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "set_note_type_id",
+                  "parameter": {
+                    "name": "Information related to Copyright Status"
+                  }
+                }
+              ]
+            }
+          ],
+          "target": "notes.instanceNoteTypeId",
+          "subfield": [
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "m",
+            "n",
+            "o",
+            "p",
+            "q",
+            "r",
+            "s",
+            "u",
+            "3"
+          ],
+          "description": "Instance note type id",
+          "applyRulesOnConcatenatedData": true
+        },
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "trim_period"
+                }
+              ]
+            }
+          ],
+          "target": "notes.note",
+          "subfield": [
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "m",
+            "n",
+            "o",
+            "p",
+            "q",
+            "r",
+            "s",
+            "u",
+            "3"
+          ],
+          "description": "Information Relating to Copyright Status",
+          "applyRulesOnConcatenatedData": true
+        },
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "set_note_staff_only_via_indicator"
+                }
+              ]
+            }
+          ],
+          "target": "notes.staffOnly",
+          "subfield": [
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "g",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "m",
+            "n",
+            "o",
+            "p",
+            "q",
+            "r",
+            "s",
+            "u",
+            "3"
+          ],
+          "description": "If true, determines that the note should not be visible for others than staff",
+          "applyRulesOnConcatenatedData": true
+        }
+      ]
+    }
+  ],
+  "561": [
+    {
+      "entity": [
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "set_note_type_id",
+                  "parameter": {
+                    "name": "Ownership and Custodial History note"
+                  }
+                }
+              ]
+            }
+          ],
+          "target": "notes.instanceNoteTypeId",
+          "subfield": [
+            "a",
+            "u",
+            "3",
+            "5"
+          ],
+          "description": "Instance note type id",
+          "applyRulesOnConcatenatedData": true
+        },
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "trim_period"
+                }
+              ]
+            }
+          ],
+          "target": "notes.note",
+          "subfield": [
+            "a",
+            "u",
+            "3",
+            "5"
+          ],
+          "description": "Ownership and Custodial History",
+          "applyRulesOnConcatenatedData": true
+        },
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "set_note_staff_only_via_indicator"
+                }
+              ]
+            }
+          ],
+          "target": "notes.staffOnly",
+          "subfield": [
+            "a",
+            "u",
+            "3",
+            "5"
+          ],
+          "description": "If true, determines that the note should not be visible for others than staff",
+          "applyRulesOnConcatenatedData": true
+        }
+      ]
+    }
+  ],
+  "583": [
+    {
+      "entity": [
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "set_note_type_id",
+                  "parameter": {
+                    "name": "Action note"
+                  }
+                }
+              ]
+            }
+          ],
+          "target": "notes.instanceNoteTypeId",
+          "subfield": [
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "n",
+            "o",
+            "u",
+            "x",
+            "z",
+            "2",
+            "3",
+            "5"
+          ],
+          "description": "Instance note type id",
+          "applyRulesOnConcatenatedData": true
+        },
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "trim_period"
+                }
+              ]
+            }
+          ],
+          "target": "notes.note",
+          "subfield": [
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "n",
+            "o",
+            "u",
+            "x",
+            "z",
+            "2",
+            "3",
+            "5"
+          ],
+          "description": "Action Note",
+          "applyRulesOnConcatenatedData": true
+        },
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "set_note_staff_only_via_indicator"
+                }
+              ]
+            }
+          ],
+          "target": "notes.staffOnly",
+          "subfield": [
+            "a",
+            "b",
+            "c",
+            "d",
+            "e",
+            "f",
+            "h",
+            "i",
+            "j",
+            "k",
+            "l",
+            "n",
+            "o",
+            "u",
+            "x",
+            "z",
+            "2",
+            "3",
+            "5"
+          ],
+          "description": "If true, determines that the note should not be visible for others than staff",
+          "applyRulesOnConcatenatedData": true
+        }
+      ]
+    }
+  ],
+  "590": [
+    {
+      "entity": [
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "set_note_type_id",
+                  "parameter": {
+                    "name": "Local notes"
+                  }
+                }
+              ]
+            }
+          ],
+          "target": "notes.instanceNoteTypeId",
+          "subfield": [
+            "a"
+          ],
+          "description": "Instance note type id",
+          "applyRulesOnConcatenatedData": true
+        },
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "trim_period"
+                }
+              ]
+            }
+          ],
+          "target": "notes.note",
+          "subfield": [
+            "a"
+          ],
+          "description": "Local notes",
+          "applyRulesOnConcatenatedData": true
+        },
+        {
+          "rules": [
+            {
+              "conditions": [
+                {
+                  "type": "set_note_staff_only_via_indicator"
+                }
+              ]
+            }
+          ],
+          "target": "notes.staffOnly",
+          "subfield": [
+            "a"
+          ],
+          "description": "If the 1st indicator equals 0, determines that the note should not be visible for others than staff"
+        }
+      ]
+    }
+  ]
+}
