@@ -235,7 +235,8 @@
             "inventory-storage.item-note-types.collection.get",
             "consortia.consortium.item.get",
             "user-tenants.collection.get",
-            "consortia.user-tenants.collection.get"
+            "consortia.user-tenants.collection.get",
+            "metadata-provider.jobexecutions.get"
           ]
         },
         {
