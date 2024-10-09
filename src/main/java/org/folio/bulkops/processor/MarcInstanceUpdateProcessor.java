@@ -3,6 +3,8 @@ package org.folio.bulkops.processor;
 import static java.lang.Boolean.TRUE;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.util.Constants.MARC;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ import org.folio.bulkops.domain.bean.UploadFileDefinition;
 import org.folio.bulkops.domain.bean.UploadFileDefinitionProcessFiles;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.util.MarcDateHelper;
 import org.springframework.stereotype.Component;
 
@@ -49,18 +52,26 @@ public class MarcInstanceUpdateProcessor {
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final BulkOperationRepository bulkOperationRepository;
   private final DataImportRestS3UploadClient dataImportRestS3UploadClient;
+  private final ErrorService errorService;
 
   public void updateMarcRecords(BulkOperation bulkOperation) throws IOException {
     try (var is = remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
-      var jobProfile = createJobProfile();
-      var uploadDefinition = uploadMarcFile(bulkOperation, is.readAllBytes());
-      dataImportClient.uploadFileDefinitionsProcessFiles(UploadFileDefinitionProcessFiles.builder()
-          .uploadFileDefinition(uploadDefinition)
-          .jobProfileInfo(JobProfileInfo.builder().id(jobProfile.getId()).dataType(MARC).build())
-          .build(),
-        uploadDefinition.getFileDefinitions().get(0).getId());
-
-      bulkOperation.setDataImportJobProfileId(UUID.fromString(jobProfile.getId()));
+      var content = is.readAllBytes();
+      if (content.length != 0) {
+        var jobProfile = createJobProfile();
+        var uploadDefinition = uploadMarcFile(bulkOperation, content);
+        dataImportClient.uploadFileDefinitionsProcessFiles(UploadFileDefinitionProcessFiles.builder()
+            .uploadFileDefinition(uploadDefinition)
+            .jobProfileInfo(JobProfileInfo.builder().id(jobProfile.getId()).dataType(MARC).build())
+            .build(),
+          uploadDefinition.getFileDefinitions().get(0).getId());
+        bulkOperation.setDataImportJobProfileId(UUID.fromString(jobProfile.getId()));
+      } else {
+        bulkOperation.setLinkToCommittedRecordsMarcFile(null);
+        bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(bulkOperation.getId()));
+        bulkOperation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(bulkOperation.getId()));
+        bulkOperation.setStatus(bulkOperation.getCommittedNumOfErrors() == 0 ? COMPLETED : COMPLETED_WITH_ERRORS);
+      }
       bulkOperationRepository.save(bulkOperation);
     }
   }
