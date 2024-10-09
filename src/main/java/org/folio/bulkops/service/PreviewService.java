@@ -73,6 +73,7 @@ public class PreviewService {
   private final HoldingsNoteTypeClient holdingsNoteTypeClient;
   private final InstanceNoteTypesClient instanceNoteTypesClient;
   private final MarcToUnifiedTableRowMapper marcToUnifiedTableRowMapper;
+  private final Marc21ReferenceProvider referenceProvider;
 
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -85,6 +86,7 @@ public class PreviewService {
       case EDIT -> {
         var bulkOperationId = operation.getId();
         if (INSTANCE_MARC.equals(operation.getEntityType())) {
+          referenceProvider.updateMappingRules();
           var rules = ruleService.getMarcRules(bulkOperationId);
           var options = getChangedOptionsSet(rules);
           yield buildPreviewFromMarcFile(operation.getLinkToModifiedRecordsMarcFile(), clazz, offset, limit, options);
@@ -100,6 +102,7 @@ public class PreviewService {
         } else {
           var bulkOperationId = operation.getId();
           if (INSTANCE_MARC.equals(operation.getEntityType())) {
+            referenceProvider.updateMappingRules();
             var rules = ruleService.getMarcRules(bulkOperationId);
             var options = getChangedOptionsSet(rules);
             yield buildPreviewFromMarcFile(operation.getLinkToCommittedRecordsMarcFile(), clazz, offset, limit, options);
@@ -195,8 +198,8 @@ public class PreviewService {
   private Set<String> getChangedOptionsSet(BulkOperationMarcRuleCollection rules) {
     Set<String> forceVisibleOptions = new HashSet<>();
     rules.getBulkOperationMarcRules()
-      .stream().filter(rule -> Marc21ReferenceProvider.getMappedNoteTags().contains(rule.getTag()))
-      .forEach(rule -> forceVisibleOptions.add(Marc21ReferenceProvider.getNoteTypeByTag(rule.getTag())));
+      .stream().filter(rule -> referenceProvider.getMappedNoteTags().contains(rule.getTag()))
+      .forEach(rule -> forceVisibleOptions.add(referenceProvider.getNoteTypeByTag(rule.getTag())));
     return forceVisibleOptions;
   }
 
