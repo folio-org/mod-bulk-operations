@@ -6,8 +6,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.mockito.Mockito.when;
 
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.client.MappingRulesClient;
 import org.folio.bulkops.domain.bean.InstanceFormat;
 import org.folio.bulkops.domain.bean.InstanceFormats;
 import org.folio.bulkops.domain.bean.InstanceType;
@@ -25,11 +27,17 @@ import org.marc4j.marc.impl.SubfieldImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 
 class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
   @MockBean
   private InstanceReferenceService instanceReferenceService;
+  @MockBean
+  private MappingRulesClient mappingRulesClient;
+  @Autowired
+  private Marc21ReferenceProvider marc21ReferenceProvider;
   @Autowired
   private MarcToUnifiedTableRowMapperHelper mapperHelper;
 
@@ -290,10 +298,15 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
   }
 
   @Test
+  @SneakyThrows
   void shouldFetchNotes() {
     var dataField = new DataFieldImpl("520", ' ', ' ');
     dataField.addSubfield(new SubfieldImpl('a', "subfield a."));
     dataField.addSubfield(new SubfieldImpl('b', "subfield b."));
+
+    when(mappingRulesClient.getMarcBibMappingRules())
+      .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+    marc21ReferenceProvider.updateMappingRules();
 
     var res = mapperHelper.fetchNotes(dataField);
 

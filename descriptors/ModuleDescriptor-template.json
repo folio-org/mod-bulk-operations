@@ -68,7 +68,8 @@
             "inventory-storage.instance-formats.item.get",
             "consortia.consortium.item.get",
             "user-tenants.collection.get",
-            "consortia.user-tenants.collection.get"
+            "consortia.user-tenants.collection.get",
+            "mapping-rules.get"
           ]
         },
         {
@@ -234,7 +235,8 @@
             "inventory-storage.item-note-types.collection.get",
             "consortia.consortium.item.get",
             "user-tenants.collection.get",
-            "consortia.user-tenants.collection.get"
+            "consortia.user-tenants.collection.get",
+            "metadata-provider.jobexecutions.get"
           ]
         },
         {
@@ -569,6 +571,10 @@
     {
       "id": "metadata-provider-job-execution-logs",
       "version": "1.0"
+    },
+    {
+      "id": "mapping-rules-provider",
+      "version": "2.0"
     }
   ],
   "launchDescriptor": {
