@@ -5,7 +5,9 @@ import com.opencsv.RFC4180ParserBuilder;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.NoteTableUpdater;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 
@@ -18,14 +20,18 @@ import java.util.List;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.folio.bulkops.service.TenantTableUpdater.TENANT_VALUE_IN_CONSORTIA_FOR_MEMBER;
 
 @Log4j2
-public abstract class AbstractNoteProcessor {
+public abstract class CsvDownloadPreProcessor {
 
   private static final int FIRST_LINE = 1;
 
   protected NoteTableUpdater noteTableUpdater;
   protected CacheManager cacheManager;
+
+  protected FolioExecutionContext folioExecutionContext;
+  protected ConsortiaService consortiaService;
 
   @Autowired
   private void setNoteTableUpdater(NoteTableUpdater noteTableUpdater) {
@@ -37,7 +43,19 @@ public abstract class AbstractNoteProcessor {
     this.cacheManager = cacheManager;
   }
 
-  public byte[] processNotes(byte[] input, BulkOperation bulkOperation) {
+  @Autowired
+  protected void setFolioExecutionContext(FolioExecutionContext folioExecutionContext) {
+    this.folioExecutionContext = folioExecutionContext;
+  }
+  @Autowired
+  protected void setConsortiaService(ConsortiaService consortiaService) {
+    this.consortiaService = consortiaService;
+  }
+
+  public byte[] processCsvContent(byte[] input, BulkOperation bulkOperation) {
+    boolean isCentralOrMemberTenant = consortiaService.isCurrentTenantInConsortia(folioExecutionContext.getTenantId());
+    boolean isTypeWithTenant = bulkOperation.getEntityType() == EntityType.ITEM || bulkOperation.getEntityType() == EntityType.HOLDINGS_RECORD;
+
     List<String> noteTypeNames = getNoteTypeNames(bulkOperation);
     var noteTypeHeaders = noteTypeNames.stream()
       .map(noteTableUpdater::concatNotePostfixIfRequired)
@@ -55,7 +73,9 @@ public abstract class AbstractNoteProcessor {
           line = headers.stream()
             .map(this::processSpecialCharacters)
             .toArray(String[]::new);
+          line = processTenantInHeaders(line, isCentralOrMemberTenant, isTypeWithTenant);
         } else {
+          line = processTenantInRows(line, isCentralOrMemberTenant, isTypeWithTenant);
           line = processNotesData(line, noteTypeNames, bulkOperation);
         }
         stringWriter.write(String.join(",", line) + "\n");
@@ -78,6 +98,26 @@ public abstract class AbstractNoteProcessor {
           bulkOperation.getEntityType() == EntityType.INSTANCE_MARC).stream()
       .map(this::processSpecialCharacters)
       .toArray(String[]::new);
+  }
+
+  protected String[] processTenantInHeaders(String[] line, boolean isCentralOrMemberTenant, boolean isTypeWithTenant) {
+    if (isTypeWithTenant) {
+      int tenantPosition = line.length - 1;
+      if (isCentralOrMemberTenant) {
+        line[tenantPosition] = TENANT_VALUE_IN_CONSORTIA_FOR_MEMBER;
+      } else {
+        line = Arrays.copyOf(line, tenantPosition);
+      }
+    }
+    return line;
+  }
+
+  protected String[] processTenantInRows(String[] line, boolean isCentralOrMemberTenant, boolean isTypeWithTenant) {
+    if (isTypeWithTenant && !isCentralOrMemberTenant) {
+      int tenantPosition = line.length - 1;
+      line = Arrays.copyOf(line, tenantPosition);
+    }
+    return line;
   }
 
   private String processSpecialCharacters(String line) {

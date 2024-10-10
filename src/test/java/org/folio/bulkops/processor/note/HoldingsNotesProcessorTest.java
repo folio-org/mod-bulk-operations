@@ -64,6 +64,9 @@ class HoldingsNotesProcessorTest {
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(cacheManager.getCache("holdingsNoteTypes")).thenReturn(cache);
 
+    holdingsNotesProcessor.setFolioExecutionContext(folioExecutionContext);
+    holdingsNotesProcessor.setConsortiaService(consortiaService);
+
     var bulkOperation = new BulkOperation();
     bulkOperation.setUsedTenants(List.of("central", "member"));
     var notesTypes = holdingsNotesProcessor.getNoteTypeNames(bulkOperation);

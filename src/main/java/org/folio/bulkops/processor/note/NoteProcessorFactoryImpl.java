@@ -14,7 +14,7 @@ public class NoteProcessorFactoryImpl implements NoteProcessorFactory {
   private final HoldingsNotesProcessor holdingsNotesProcessor;
 
   @Override
-  public AbstractNoteProcessor getNoteProcessor(String entityType) {
+  public CsvDownloadPreProcessor getNoteProcessor(String entityType) {
     return switch (entityType) {
       case ITEM_TYPE -> itemNoteProcessor;
       case HOLDING_TYPE -> holdingsNotesProcessor;

@@ -73,6 +73,7 @@ public class PreviewService {
   private final HoldingsNoteTypeClient holdingsNoteTypeClient;
   private final InstanceNoteTypesClient instanceNoteTypesClient;
   private final MarcToUnifiedTableRowMapper marcToUnifiedTableRowMapper;
+  private final TenantTableUpdater tenantTableUpdater;
   private final Marc21ReferenceProvider referenceProvider;
 
   private static final Pattern UUID_REGEX =
@@ -259,6 +260,7 @@ public class PreviewService {
           .toList();
         row.setRow(SpecialCharacterEscaper.restore(rowData));
       });
+      tenantTableUpdater.updateTenantInHeadersAndRows(table, clazz);
       return table;
     } catch (Exception e) {
       log.error(e.getMessage());

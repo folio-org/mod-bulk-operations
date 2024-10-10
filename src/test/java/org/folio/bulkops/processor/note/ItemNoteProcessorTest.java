@@ -64,6 +64,9 @@ class ItemNoteProcessorTest {
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(cacheManager.getCache("itemNoteTypes")).thenReturn(cache);
 
+    itemNoteProcessor.setFolioExecutionContext(folioExecutionContext);
+    itemNoteProcessor.setConsortiaService(consortiaService);
+
     var bulkOperation = new BulkOperation();
     bulkOperation.setUsedTenants(List.of("central", "member"));
     var notesTypes = itemNoteProcessor.getNoteTypeNames(bulkOperation);
