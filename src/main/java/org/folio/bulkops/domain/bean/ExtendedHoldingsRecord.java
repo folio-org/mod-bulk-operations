@@ -35,6 +35,7 @@ public class ExtendedHoldingsRecord implements BulkOperationsEntity, ElectronicA
 
   @Override
   public BulkOperationsEntity getRecordBulkOperationEntity() {
+    entity.setTenant(tenantId);
     return entity;
   }
 

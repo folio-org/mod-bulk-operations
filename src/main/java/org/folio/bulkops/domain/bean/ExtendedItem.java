@@ -32,6 +32,7 @@ public class ExtendedItem implements BulkOperationsEntity {
 
   @Override
   public BulkOperationsEntity getRecordBulkOperationEntity() {
+    entity.setTenant(tenantId);
     return entity;
   }
 

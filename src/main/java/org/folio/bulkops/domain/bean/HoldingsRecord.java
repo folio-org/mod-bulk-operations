@@ -229,6 +229,11 @@ public class HoldingsRecord implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private Tags tags;
 
+  @CsvCustomBindByName(column = "Tenant", converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 30, converter = StringConverter.class)
+  @UnifiedTableCell(visible = false)
+  private String tenantId;
+
   @JsonProperty("_version")
   private Integer version;
 
@@ -252,9 +257,6 @@ public class HoldingsRecord implements BulkOperationsEntity {
 
   @JsonProperty("itemBarcode")
   private String itemBarcode;
-
-  @JsonProperty("tenantId")
-  private String tenantId;
 
   @Override
   public String getIdentifier(IdentifierType identifierType) {
