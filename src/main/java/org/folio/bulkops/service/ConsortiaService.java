@@ -51,4 +51,9 @@ public class ConsortiaService {
   public boolean isCurrentTenantCentralTenant(String currentTenantId) {
     return getCentralTenantId(currentTenantId).equals(context.getTenantId());
   }
+
+  @Cacheable(value = "isCurrentTenantInConsortia")
+  public boolean isCurrentTenantInConsortia(String currentTenantId) {
+    return StringUtils.isNotEmpty(getCentralTenantId(currentTenantId));
+  }
 }

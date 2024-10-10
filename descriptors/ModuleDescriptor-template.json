@@ -235,7 +235,8 @@
             "inventory-storage.item-note-types.collection.get",
             "consortia.consortium.item.get",
             "user-tenants.collection.get",
-            "consortia.user-tenants.collection.get"
+            "consortia.user-tenants.collection.get",
+            "metadata-provider.jobexecutions.get"
           ]
         },
         {
@@ -452,11 +453,11 @@
     },
     {
       "id": "instance-storage",
-      "version": "9.0 10.0"
+      "version": "9.0 10.0 11.0"
     },
     {
       "id": "inventory",
-      "version": "12.0 13.0"
+      "version": "12.0 13.0 14.0"
     },
     {
       "id": "locations",
