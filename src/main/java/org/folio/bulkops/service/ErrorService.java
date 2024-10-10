@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
@@ -13,6 +14,7 @@ import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -106,8 +108,11 @@ public class ErrorService {
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
     var identifierType = bulkOperation.getIdentifierType();
     try {
-      var jobLogEntries = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE);
-      jobLogEntries.getEntries().stream().filter(entry -> !entry.getError().isEmpty()).forEach(errorEntry -> {
+      var jobLogEntries = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE)
+        .getEntries().stream()
+        .filter(entry -> nonNull(entry.getError()) && !entry.getError().isEmpty())
+          .toList();
+      jobLogEntries.forEach(errorEntry -> {
         String identifier = EMPTY;
         try {
           if (identifierType == IdentifierType.ID) {
@@ -116,14 +121,12 @@ public class ErrorService {
             identifier = srsClient.getSrsRecordById(errorEntry.getSourceRecordId()).getExternalIdsHolder().getInstanceHrid();
           }
         } catch (Exception e) {
-          log.error("Problem with retrieving SRS record {}", errorEntry.getSourceRecordId());
-          log.error(e);
+          log.error("Problem with retrieving SRS record {}", errorEntry.getSourceRecordId(), e);
         }
         saveError(bulkOperationId, identifier, errorEntry.getError());
       });
     } catch (Exception e) {
-      log.error("Problem with retrieving logs from MetadataProvider");
-      log.error(e);
+      log.error("Problem with retrieving logs from MetadataProvider", e);
       throw new DataImportException(e);
     }
   }

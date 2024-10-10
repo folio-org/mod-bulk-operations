@@ -16,4 +16,7 @@ public class JobProfileInfo {
 
   @JsonProperty("id")
   private String id;
+
+  @JsonProperty("dataType")
+  private String dataType;
 }

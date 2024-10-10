@@ -18,6 +18,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.codehaus.plexus.util.FileUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.client.UserPermissionsClient;
 import org.folio.bulkops.domain.dto.BulkOperationCollection;
 import org.folio.bulkops.domain.dto.BulkOperationDto;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -42,6 +43,7 @@ import org.folio.bulkops.service.ListUsersService;
 import org.folio.bulkops.service.LogFilesService;
 import org.folio.bulkops.service.PreviewService;
 import org.folio.bulkops.service.RuleService;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.core.io.ByteArrayResource;
@@ -76,6 +78,8 @@ public class BulkOperationController implements BulkOperationsApi {
   private final ListUsersService listUsersService;
   private final NoteProcessorFactory noteProcessorFactory;
   private final BulkOperationRepository bulkOperationRepository;
+  private final UserPermissionsClient userPermissionsClient;
+  private final FolioExecutionContext folioExecutionContext;
 
   @Override
   public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(String query, Integer offset, Integer limit) {
@@ -154,7 +158,9 @@ public class BulkOperationController implements BulkOperationsApi {
         bulkOperation.getLinkToModifiedRecordsMarcFile() :
         bulkOperation.getLinkToModifiedRecordsCsvFile();
     } else if (fileContentType == COMMITTED_RECORDS_FILE) {
-      path = bulkOperation.getLinkToCommittedRecordsCsvFile();
+      path = INSTANCE_MARC.equals(bulkOperation.getEntityType()) ?
+        bulkOperation.getLinkToCommittedRecordsMarcFile() :
+        bulkOperation.getLinkToCommittedRecordsCsvFile();
     } else if (fileContentType == COMMITTING_CHANGES_ERROR_FILE) {
       path = bulkOperation.getLinkToCommittedRecordsErrorsCsvFile();
     } else {
@@ -170,7 +176,7 @@ public class BulkOperationController implements BulkOperationsApi {
           is.readAllBytes();
         var entityType = bulkOperation.getEntityType().getValue();
         if (isDownloadPreview(fileContentType) && SPLIT_NOTE_ENTITIES.contains(entityType)) {
-          content = noteProcessorFactory.getNoteProcessor(entityType).processNotes(content, bulkOperation);
+          content = noteProcessorFactory.getNoteProcessor(entityType).processCsvContent(content, bulkOperation);
         }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
@@ -224,5 +230,11 @@ public class BulkOperationController implements BulkOperationsApi {
   @Override
   public ResponseEntity<BulkOperationDto> triggerBulkEditByQuery(UUID xOkapiUserId, QueryRequest queryRequest) {
     return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.triggerByQuery(xOkapiUserId, queryRequest)), HttpStatus.OK);
+  }
+
+  @Override
+  public ResponseEntity<List<String>> getUsersPermissions() {
+    var permissions = userPermissionsClient.getPermissions(folioExecutionContext.getUserId().toString());
+    return new ResponseEntity<>(permissions.getPermissionNames(), HttpStatus.OK);
   }
 }

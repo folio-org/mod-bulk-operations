@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+
+  <changeSet id="06-08-2024_update_bulk_operation_table_add_di_job_profile_id" author="firebird">
+    <sqlFile path="06-08-2024_update_bulk_operation_table_add_di_job_profile_id.sql" relativeToChangelogFile="true" />
+  </changeSet>
+
+</databaseChangeLog>

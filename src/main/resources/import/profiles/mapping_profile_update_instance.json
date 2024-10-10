@@ -181,5 +181,5 @@
       "path" : "instance.childInstances[]"
     } ]
   },
-  "hidden" : false
+  "hidden" : true
 }

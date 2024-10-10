@@ -7,10 +7,8 @@ import static org.folio.bulkops.domain.dto.MarcDataType.VALUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
-import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
-import static org.folio.bulkops.util.Constants.FIELD_999;
-import static org.folio.bulkops.util.Constants.INDICATOR_F;
 import static org.folio.bulkops.util.Constants.SPACE_CHAR;
+import static org.folio.bulkops.util.MarcHelper.fetchInstanceUuidOrElseHrid;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -23,7 +21,7 @@ import org.folio.bulkops.domain.dto.MarcDataType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.service.ErrorService;
-import org.folio.bulkops.util.DateHelper;
+import org.folio.bulkops.util.MarcDateHelper;
 import org.marc4j.marc.DataField;
 import org.marc4j.marc.Record;
 import org.marc4j.marc.Subfield;
@@ -57,9 +55,7 @@ public class MarcInstanceDataProcessor {
     });
     var updatedRecord = marcRecord.toString();
     if (!StringUtils.equals(initialRecord, updatedRecord)) {
-      marcRecord.getControlFields().stream()
-        .filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst()
-        .ifPresent(dateTimeControlField -> dateTimeControlField.setData(DateHelper.getDateTimeForMarc(currentDate)));
+      MarcDateHelper.updateDateTimeControlField(marcRecord, currentDate);
     }
   }
 
@@ -166,15 +162,6 @@ public class MarcInstanceDataProcessor {
 
   private char fetchIndicatorValue(String s) {
     return "\\".equals(s) ? SPACE_CHAR : s.charAt(0);
-  }
-
-  private String fetchInstanceUuidOrElseHrid(Record marcRecord) {
-    return marcRecord.getDataFields().stream()
-      .filter(f -> FIELD_999.equals(f.getTag()) && INDICATOR_F == f.getIndicator1() && INDICATOR_F == f.getIndicator2())
-      .findFirst()
-      .map(f -> f.getSubfield('i'))
-      .map(Subfield::getData)
-      .orElse(marcRecord.getControlNumber());
   }
 
   private String fetchActionDataValue(MarcDataType dataType, List<MarcActionDataInner> actionData) throws BulkOperationException {

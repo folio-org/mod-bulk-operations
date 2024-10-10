@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Job Execution Dto Schema",
+  "DataImportJobExecution": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "description": "Unique identifier",
+        "type": "string",
+        "format": "uuid"
+      },
+      "hrId": {
+        "description": "Human readable id",
+        "type": "integer"
+      },
+      "parentJobId": {
+        "description": "Id of the parent JobExecution entity",
+        "type": "string",
+        "format": "uuid"
+      },
+      "subordinationType": {
+        "description": "Type of subordination to another JobExecution entities",
+        "type": "string",
+        "enum": [
+          "CHILD",
+          "PARENT_SINGLE",
+          "PARENT_MULTIPLE",
+          "COMPOSITE_PARENT",
+          "COMPOSITE_CHILD"
+        ]
+      },
+      "jobProfileInfo": {
+        "description": "Related JobProfile information",
+        "type": "object",
+        "$ref": "data_import_profile_info.json#/ProfileInfo"
+      },
+      "sourcePath": {
+        "description": "Path to the file",
+        "type": "string"
+      },
+      "fileName": {
+        "description": "File name",
+        "type": "string"
+      },
+      "runBy": {
+        "description": "First and last name of the user that triggered the job execution",
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "description": "First name",
+            "type": "string"
+          },
+          "lastName": {
+            "description": "Last name",
+            "type": "string"
+          }
+        }
+      },
+      "progress": {
+        "description": "Execution progress of the job",
+        "type": "object",
+        "$ref": "data_import_progress.json#/DataImportProgress"
+      },
+      "startedDate": {
+        "description": "Date and time when the job execution started",
+        "type": "string",
+        "format": "date-time"
+      },
+      "completedDate": {
+        "description": "Date and time when the job execution completed",
+        "type": "string",
+        "format": "date-time"
+      },
+      "status": {
+        "description": "Current status of the job execution",
+        "type": "string",
+        "$ref": "data_import_status.json"
+      },
+      "errorStatus": {
+        "description": "Status that describe error state of job execution",
+        "type": "string",
+        "$ref": "data_import_error_status.json"
+      },
+      "userId": {
+        "description": "ID of the user who created the JobExecution",
+        "type": "string",
+        "format": "uuid"
+      },
+      "jobPartNumber": {
+        "description": "The order number of the chunk job for COMPOSITE jobs",
+        "type": "integer",
+        "default": 1
+      },
+      "totalJobParts": {
+        "description": "The total number of chunk jobs for COMPOSITE jobs",
+        "type": "integer",
+        "default": 1
+      },
+      "totalRecordsInFile": {
+        "description": "The total number of records in the source file for COMPOSITE_PARENT jobs",
+        "type": "integer",
+        "default": 0
+      }
+    },
+    "required": [
+      "id",
+      "parentJobId",
+      "subordinationType",
+      "status",
+      "uiStatus",
+      "userId"
+    ]
+  }
+}

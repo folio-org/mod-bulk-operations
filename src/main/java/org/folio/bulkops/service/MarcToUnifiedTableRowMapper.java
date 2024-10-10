@@ -18,10 +18,9 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SERIES_STATEMENTS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SOURCE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_UUID;
 import static org.folio.bulkops.service.Marc21ReferenceProvider.GENERAL_NOTE;
-import static org.folio.bulkops.service.Marc21ReferenceProvider.getLanguageByCode;
-import static org.folio.bulkops.service.Marc21ReferenceProvider.getNoteTypeByTag;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
+import static org.folio.bulkops.util.Constants.MARC;
 
 import lombok.RequiredArgsConstructor;
 import org.marc4j.marc.ControlField;
@@ -38,6 +37,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MarcToUnifiedTableRowMapper {
   private final MarcToUnifiedTableRowMapperHelper helper;
+  private final Marc21ReferenceProvider referenceProvider;
 
   public List<String> processRecord(Record rec, List<String> headers) {
     var rowData = new ArrayList<>(Arrays.asList(new String[headers.size()]));
@@ -51,7 +51,7 @@ public class MarcToUnifiedTableRowMapper {
   private void setSourceMarc(List<String> rowData, List<String> headers) {
     var index = headers.indexOf(INSTANCE_SOURCE);
     if (index != -1) {
-      rowData.set(index, "MARC");
+      rowData.set(index, MARC);
     }
   }
 
@@ -72,7 +72,7 @@ public class MarcToUnifiedTableRowMapper {
       } else if ("008".equals(controlField.getTag())) {
         var index = headers.indexOf(INSTANCE_LANGUAGES);
         if (index != -1) {
-          rowData.set(index, getLanguageByCode(controlField.getData().substring(35, 38)));
+          rowData.set(index, referenceProvider.getLanguageByCode(controlField.getData().substring(35, 38)));
         }
       }
     });
@@ -94,7 +94,7 @@ public class MarcToUnifiedTableRowMapper {
         case "800", "810", "811", "830" -> processSeries(rowData, dataField, headers);
         case "999" -> processInstanceId(rowData, dataField, headers);
         default -> {
-          if (Marc21ReferenceProvider.getMappedNoteTags().contains(tag)) {
+          if (referenceProvider.getMappedNoteTags().contains(tag)) {
             processInstanceNotes(rowData, dataField, headers);
           }
         }
@@ -217,7 +217,7 @@ public class MarcToUnifiedTableRowMapper {
 
   private void processInstanceNotes(List<String> rowData, DataField dataField, List<String> headers) {
     var tag = dataField.getTag();
-    var index = !headers.contains(getNoteTypeByTag(tag)) ? headers.indexOf(GENERAL_NOTE) : headers.indexOf(getNoteTypeByTag(tag));
+    var index = !headers.contains(referenceProvider.getNoteTypeByTag(tag)) ? headers.indexOf(GENERAL_NOTE) : headers.indexOf(referenceProvider.getNoteTypeByTag(tag));
     if (index != -1) {
       var notes = helper.fetchNotes(dataField);
       rowData.set(index, isNotEmpty(rowData.get(index)) ?

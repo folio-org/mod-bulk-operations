@@ -92,4 +92,6 @@ public class BulkOperation {
   @Column(columnDefinition = "jsonb[]")
   private List<TenantNotePair> tenantNotePairs;
   private List<String> usedTenants;
+
+  private UUID dataImportJobProfileId;
 }

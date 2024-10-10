@@ -4,7 +4,7 @@
     "description": "Bulk operations data import update srs action profile",
     "action" : "UPDATE",
     "folioRecord" : "MARC_BIBLIOGRAPHIC",
-    "hidden" : false,
+    "hidden" : true,
     "remove9Subfields" : true
   },
   "addedRelations": [{
