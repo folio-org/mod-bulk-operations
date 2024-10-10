@@ -7,6 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.dto.TenantNotePair;
+
+import java.util.List;
 
 @Data
 @With
@@ -42,7 +45,17 @@ public class ExtendedItem implements BulkOperationsEntity {
   }
 
   @Override
-  public void setTenantToNotes() {
-    entity.getNotes().forEach(note -> note.setTenantId(tenantId));
+  public void setTenantToNotes(List<TenantNotePair> tenantNotePairs) {
+    entity.getNotes().forEach(note -> {
+      var tenantNotePair = tenantNotePairs.stream()
+        .filter(pair -> pair.getNoteTypeId().equals(note.getItemNoteTypeId()))
+        .findFirst();
+      if (tenantNotePair.isPresent()) {
+        note.setTenantId(tenantNotePair.get().getTenantId());
+        note.setItemNoteTypeName(tenantNotePair.get().getNoteTypeName());
+      } else {
+        note.setTenantId(tenantId);
+      }
+    });
   }
 }

@@ -1,24 +1,34 @@
 package org.folio.bulkops.domain.converter;
 
+import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.booleanToStringNullSafe;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.exception.EntityFormatException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.service.HoldingsReferenceHelper;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.scope.FolioExecutionContextSetter;
+import org.springframework.stereotype.Component;
 
+@Log4j2
 public class HoldingsNoteListConverter extends BaseConverter<List<HoldingsNote>> {
   private static final int NUMBER_OF_HOLDINGS_NOTE_ELEMENTS = 5;
   private static final int HOLDINGS_NOTE_NOTE_TYPE_INDEX = 0;
@@ -39,16 +49,21 @@ public class HoldingsNoteListConverter extends BaseConverter<List<HoldingsNote>>
     var str = object.stream()
       .filter(Objects::nonNull)
       .map(note -> {
-        try {
-          return String.join(ARRAY_DELIMITER,
-            escape(HoldingsReferenceHelper.service().getNoteTypeNameById(note.getHoldingsNoteTypeId())),
-            escape(note.getNote()),
-            booleanToStringNullSafe(note.getStaffOnly()),
-            note.getTenantId(),
-            note.getHoldingsNoteTypeId());
-        } catch (NotFoundException e) {
-          return "";
+        var noteTypeName = note.getHoldingsNoteTypeName();
+        if (isNull(noteTypeName)) {
+          try {
+            noteTypeName = HoldingsReferenceHelper.service().getNoteTypeNameById(note.getHoldingsNoteTypeId());
+          } catch (NotFoundException e) {
+            log.error("Holding note type with id = {} not found : {}", note.getHoldingsNoteTypeId(), e.getMessage());
+            noteTypeName = "";
+          }
         }
+        return String.join(ARRAY_DELIMITER,
+          escape(noteTypeName),
+          escape(note.getNote()),
+          booleanToStringNullSafe(note.getStaffOnly()),
+          note.getTenantId(),
+          note.getHoldingsNoteTypeId());
       })
       .collect(Collectors.joining(ITEM_DELIMITER));
     return str;

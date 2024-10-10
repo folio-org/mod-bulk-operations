@@ -1,5 +1,6 @@
 package org.folio.bulkops.domain.converter;
 
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.restore;
@@ -13,12 +14,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.exception.EntityFormatException;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.service.HoldingsReferenceHelper;
 import org.folio.bulkops.service.ItemReferenceHelper;
 
+@Log4j2
 public class ItemNoteListConverter extends BaseConverter<List<ItemNote>> {
   private static final int NUMBER_OF_ITEM_NOTE_COMPONENTS = 5;
   private static final int NOTE_TYPE_NAME_INDEX = 0;
@@ -38,16 +42,21 @@ public class ItemNoteListConverter extends BaseConverter<List<ItemNote>> {
     return  object.stream()
       .filter(Objects::nonNull)
       .map(itemNote -> {
-        try {
+        var noteTypeName = itemNote.getItemNoteTypeName();
+        if (isNull(noteTypeName)) {
+          try {
+            noteTypeName = ItemReferenceHelper.service().getNoteTypeNameById(itemNote.getItemNoteTypeId(), itemNote.getTenantId());
+          } catch (NotFoundException e) {
+            log.error("Item note type with id = {} not found : {}", itemNote.getItemNoteTypeId(), e.getMessage());
+            noteTypeName = "";
+          }
+        }
           return String.join(ARRAY_DELIMITER,
-            escape(ItemReferenceHelper.service().getNoteTypeNameById(itemNote.getItemNoteTypeId(), itemNote.getTenantId())),
+            escape(noteTypeName),
             escape(itemNote.getNote()),
             escape(booleanToStringNullSafe(itemNote.getStaffOnly())),
             itemNote.getTenantId(),
             itemNote.getItemNoteTypeId());
-        } catch (NotFoundException e) {
-          return "";
-        }
       })
       .collect(Collectors.joining(ITEM_DELIMITER));
   }
