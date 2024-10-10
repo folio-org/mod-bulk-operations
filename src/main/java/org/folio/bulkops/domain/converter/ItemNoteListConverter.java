@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.exception.EntityFormatException;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.service.ItemReferenceHelper;
 
 public class ItemNoteListConverter extends BaseConverter<List<ItemNote>> {
@@ -36,12 +37,18 @@ public class ItemNoteListConverter extends BaseConverter<List<ItemNote>> {
   public String convertToString(List<ItemNote> object) {
     return  object.stream()
       .filter(Objects::nonNull)
-      .map(itemNote -> String.join(ARRAY_DELIMITER,
-        escape(ItemReferenceHelper.service().getNoteTypeNameById(itemNote.getItemNoteTypeId(), itemNote.getTenantId())),
-        escape(itemNote.getNote()),
-        escape(booleanToStringNullSafe(itemNote.getStaffOnly())),
-        itemNote.getTenantId(),
-        itemNote.getItemNoteTypeId()))
+      .map(itemNote -> {
+        try {
+          return String.join(ARRAY_DELIMITER,
+            escape(ItemReferenceHelper.service().getNoteTypeNameById(itemNote.getItemNoteTypeId(), itemNote.getTenantId())),
+            escape(itemNote.getNote()),
+            escape(booleanToStringNullSafe(itemNote.getStaffOnly())),
+            itemNote.getTenantId(),
+            itemNote.getItemNoteTypeId());
+        } catch (NotFoundException e) {
+          return "";
+        }
+      })
       .collect(Collectors.joining(ITEM_DELIMITER));
   }
 

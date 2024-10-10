@@ -14,7 +14,9 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.domain.bean.HoldingsNote;
+import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.exception.EntityFormatException;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.service.HoldingsReferenceHelper;
 
 public class HoldingsNoteListConverter extends BaseConverter<List<HoldingsNote>> {
@@ -34,15 +36,22 @@ public class HoldingsNoteListConverter extends BaseConverter<List<HoldingsNote>>
 
   @Override
   public String convertToString(List<HoldingsNote> object) {
-    return object.stream()
+    var str = object.stream()
       .filter(Objects::nonNull)
-      .map(note -> String.join(ARRAY_DELIMITER,
-        escape(HoldingsReferenceHelper.service().getNoteTypeNameById(note.getHoldingsNoteTypeId())),
-        escape(note.getNote()),
-        booleanToStringNullSafe(note.getStaffOnly()),
-        note.getTenantId(),
-        note.getHoldingsNoteTypeId()))
+      .map(note -> {
+        try {
+          return String.join(ARRAY_DELIMITER,
+            escape(HoldingsReferenceHelper.service().getNoteTypeNameById(note.getHoldingsNoteTypeId())),
+            escape(note.getNote()),
+            booleanToStringNullSafe(note.getStaffOnly()),
+            note.getTenantId(),
+            note.getHoldingsNoteTypeId());
+        } catch (NotFoundException e) {
+          return "";
+        }
+      })
       .collect(Collectors.joining(ITEM_DELIMITER));
+    return str;
   }
 
   private HoldingsNote restoreHoldingsNote(String s) {

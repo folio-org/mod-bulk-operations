@@ -31,4 +31,5 @@
   <include file="changes/18-06-2024_updates_for_editing_marc.xml" relativeToChangelogFile="true"/>
   <include file="changes/29-08-2024_add_used_tenants.xml" relativeToChangelogFile="true"/>
   <include file="changes/20-09-2024_add_tenants_to_rules.xml" relativeToChangelogFile="true"/>
+  <include file="changes/09-10-2024-modify-tenants-in-rules.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
