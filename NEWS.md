@@ -1,5 +1,8 @@
 ## v2.1.0 - Unreleased
 
+### Technical tasks
+* [MODBULKOPS-361](https://folio-org.atlassian.net/browse/MODBULKOPS-361) Rename module permissions
+
 ## v2.0.0 - Released 2024/03/19
 This release includes FQM Integration, separate notes by note type, updating Suppress from discovery flag and Staff suppress flag
 
