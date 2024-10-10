@@ -19,6 +19,7 @@ class BulkOperationsEntityCsvWriterTest {
   void shouldSplitCirculationNotesForItem() {
     var pathToExpectedCsv = "src/test/resources/files/item_with_split_circ_notes.csv";
     var item = Item.builder()
+      .tenantId("tenantId")
       .circulationNotes(List.of(
         CirculationNote.builder().noteType(IN).note("Check in note 1").staffOnly(true).build(),
         CirculationNote.builder().noteType(OUT).note("Check out note 1").staffOnly(true).build(),
