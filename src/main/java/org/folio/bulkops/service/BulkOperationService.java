@@ -720,6 +720,7 @@ public class BulkOperationService {
       errorService.saveErrorsFromDataImport(operation.getId(), dataImportJobExecution.getId());
       operation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(operation.getId()));
       operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operation.getId()));
+      operation.setEndTime(LocalDateTime.now());
       operation.setStatus(operation.getCommittedNumOfErrors() == 0 ? COMPLETED : COMPLETED_WITH_ERRORS);
     }
   }
