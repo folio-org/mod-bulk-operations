@@ -31,6 +31,7 @@ import org.folio.bulkops.domain.converter.StringListConverter;
 import org.folio.bulkops.domain.converter.TagsConverter;
 import org.folio.bulkops.domain.dto.DataType;
 import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.dto.TenantNotePair;
 
 import java.util.Date;
 import java.util.List;
@@ -354,8 +355,12 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   }
 
   @Override
-  public void setTenantToNotes() {
-    getNotes().forEach(note -> note.setTenantId(tenantId));
+  public void setTenantToNotes(List<TenantNotePair> tenantNotePairs) {
+    getNotes().forEach(note -> note.setTenantId(
+      tenantNotePairs.stream()
+        .filter(pair -> pair.getNoteTypeId().equals(note.getItemNoteTypeId()))
+        .map(pair -> pair.getTenantId()).findFirst().orElseGet(() -> tenantId)
+    ));
   }
 
   @Override

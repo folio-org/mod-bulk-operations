@@ -143,6 +143,7 @@ public class NoteTableUpdater {
 
   public void extendHeadersWithNoteTypeNames(int notesInitialPosition, List<Cell> headers, List<String> noteTypeNames, Set<String> forceVisible) {
     var headerToReplace = headers.get(notesInitialPosition);
+    log.info("extendHeadersWithNoteTypeNames {}", noteTypeNames, forceVisible);
     var cellsToInsert = noteTypeNames.stream()
       .map(name -> new Cell()
         .value(concatNotePostfixIfRequired(name))
@@ -214,7 +215,7 @@ public class NoteTableUpdater {
     var tenantNotePairs = bulkOperation.getTenantNotePairs();
     if (isNull(tenantNotePairs)) {
       tenantNotePairs = noteTypesFromUsedTenants.stream().map(note -> new TenantNotePair().tenantId(note.getTenantId())
-        .noteTypeName(note.getName())).toList();
+        .noteTypeName(note.getName()).noteTypeId(note.getId())).toList();
       bulkOperation.setTenantNotePairs(tenantNotePairs);
       bulkOperationRepository.save(bulkOperation);
     }

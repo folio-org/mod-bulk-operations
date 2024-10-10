@@ -19,6 +19,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOV
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
+import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -74,13 +75,13 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
       if (PERMANENT_LOCATION == option && CLEAR_FIELD == action.getType()) {
         throw new RuleValidationException("Permanent location cannot be cleared");
       }
+      if (ruleTenantsAreNotValid(rule, action, option, extendedHoldingsRecord)) {
+        throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE, extendedHoldingsRecord.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedHoldingsRecord.getTenant(), option.getValue()));
+      }
     };
   }
 
-  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity, BulkOperationRule rule) throws RuleValidationTenantsException {
-    if (ruleTenantsAreNotValid(rule, action, entity)) {
-      throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE, entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
-    }
+  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity) throws RuleValidationTenantsException {
     if (isElectronicAccessUpdate(option)) {
       return (Updater<ExtendedHoldingsRecord>) electronicAccessUpdaterFactory.updater(option, action);
     } else if (REPLACE_WITH == action.getType()) {
@@ -188,9 +189,17 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     return ExtendedHoldingsRecord.class;
   }
 
-  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, ExtendedHoldingsRecord extendedHolding) {
+  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, UpdateOptionType option, ExtendedHoldingsRecord extendedHolding) {
     var ruleTenants = rule.getRuleDetails().getTenants();
     var actionTenants = action.getTenants();
+    if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
+      ruleTenants.retainAll(actionTenants);
+      return !ruleTenants.contains(extendedHolding.getTenant());
+    }
+    if (nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
+      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && action.getType() == UpdateActionType.FIND_AND_REPLACE) {
+      return true;
+    }
     return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedHolding.getTenant()) ||
       nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedHolding.getTenant());
   }

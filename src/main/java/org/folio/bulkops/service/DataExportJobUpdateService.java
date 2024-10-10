@@ -114,6 +114,7 @@ public class DataExportJobUpdateService {
       operation.setEndTime(LocalDateTime.ofInstant(jobUpdate.getEndTime().toInstant(), UTC_ZONE));
 
     } catch (Exception e) {
+      e.printStackTrace();
       var msg = "Failed to download origin file, reason: " + e;
       log.error(msg);
       operation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);

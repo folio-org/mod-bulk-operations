@@ -102,17 +102,19 @@ public class HoldingsReferenceService {
     return callNumberTypes.getCallNumberTypes().get(0).getId();
   }
 
-  @Cacheable(cacheNames = "holdingsNoteTypesNames")
+//  @Cacheable(cacheNames = "holdingsNoteTypesNames")
   public String getNoteTypeNameById(String id, String tenantId) {
     try {
+      log.info("334_getNoteTypeNameById: {}, {}", tenantId, id);
       return holdingsNoteTypeClient.getNoteTypeById(id).getName();
     } catch (Exception e) {
       throw new NotFoundException(format("Note type not found by id=%s", id));
     }
   }
 
-  @Cacheable(cacheNames = "holdingsNoteTypes")
+//  @Cacheable(cacheNames = "holdingsNoteTypes")
   public String getNoteTypeIdByName(String name, String tenantId) {
+    log.info("334_getNoteTypeIdByName: {}, {}", name, tenantId);
     var noteTypes = holdingsNoteTypeClient.getNoteTypesByQuery(format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (noteTypes.getHoldingsNoteTypes().isEmpty()) {
       throw new NotFoundException(format("Note type not found by name=%s", name));
@@ -179,8 +181,9 @@ public class HoldingsReferenceService {
     return statisticalCodes.getStatisticalCodes().get(0);
   }
 
-  @Cacheable(cacheNames = "holdingsNoteTypes")
+//  @Cacheable(cacheNames = "holdingsNoteTypes")
   public List<HoldingsNoteType> getAllHoldingsNoteTypes(String tenantId) {
+    log.info("334_getAllHoldingsNoteTypes: {}", tenantId);
     var noteTypes = holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE).getHoldingsNoteTypes();
     noteTypes.forEach(nt -> nt.setTenantId(tenantId));
     return noteTypes;

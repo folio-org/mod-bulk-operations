@@ -302,7 +302,7 @@ public abstract class BaseTest {
                                        List<String> actionsTenants, List<String> ruleTenants) {
     var rule = rule(option, action, null, updated);
     rule.getRuleDetails().setTenants(ruleTenants);
-    rule.getRuleDetails().getActions().get(0).setTenants(actionsTenants);
+    rule.getRuleDetails().getActions().forEach(act -> act.setTenants(actionsTenants));
     return rule;
   }
 

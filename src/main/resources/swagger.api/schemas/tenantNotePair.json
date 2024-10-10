@@ -10,11 +10,16 @@
     "noteTypeName": {
       "description": "Note type name for which tenant ID is required to show",
       "type": "string"
+    },
+    "noteTypeId": {
+      "description": "Note type id for which tenant ID is required to show",
+      "type": "string"
     }
   },
   "additionalProperties": false,
   "required": [
     "tenantId",
-    "noteTypeName"
+    "noteTypeName",
+    "noteTypeId"
   ]
 }

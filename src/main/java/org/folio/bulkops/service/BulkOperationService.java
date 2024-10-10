@@ -273,7 +273,7 @@ public class BulkOperationService {
           } else {
             var tenantIdOfEntity = modified.getPreview().getTenant();
             try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
-              modified.getPreview().setTenantToNotes();
+              modified.getPreview().setTenantToNotes(operation.getTenantNotePairs());
               writeBeanToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity(), bulkOperationExecutionContents);
             }
           }
@@ -470,7 +470,7 @@ public class BulkOperationService {
                 var tenantIdOfEntity = result.getTenant();
                 try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
                   result.getRecordBulkOperationEntity().setTenant(tenantIdOfEntity);
-                  result.getRecordBulkOperationEntity().setTenantToNotes();
+                  result.getRecordBulkOperationEntity().setTenantToNotes(operation.getTenantNotePairs());
                   writeBeanToCsv(operation, csvWriter, result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
                 }
               }
