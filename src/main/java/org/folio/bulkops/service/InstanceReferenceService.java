@@ -164,7 +164,7 @@ public class InstanceReferenceService {
   public ContributorTypeCollection getContributorTypesByName(String name) {
     return isNull(name) ?
       new ContributorTypeCollection().contributorTypes(Collections.emptyList()).totalRecords(0) :
-      contributorTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, name), 1);
+      contributorTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
   }
 
   @Cacheable(cacheNames = "contributorTypesByCode")
