@@ -79,7 +79,6 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
    * @param option {@link UpdateOptionType} for update
    * @param action {@link Action} for update
    * @param action {@link T} for update
-   * @param action {@link BulkOperationRule} for update
    * @return updater
    */
   public abstract Updater<T> updater(UpdateOptionType option, Action action, T entity) throws RuleValidationTenantsException;
