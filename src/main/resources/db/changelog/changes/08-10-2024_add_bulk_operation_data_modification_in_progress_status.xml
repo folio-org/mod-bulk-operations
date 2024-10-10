@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+
+  <changeSet id="08-10-2024_add_bulk_operation_data_modification_in_progress_status" author="firebird">
+    <sqlFile path="08-10-2024_add_bulk_operation_data_modification_in_progress_status.sql" relativeToChangelogFile="true" />
+  </changeSet>
+
+</databaseChangeLog>
