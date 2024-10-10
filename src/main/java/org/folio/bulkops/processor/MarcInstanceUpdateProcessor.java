@@ -35,6 +35,7 @@ import org.folio.bulkops.util.MarcDateHelper;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -70,6 +71,7 @@ public class MarcInstanceUpdateProcessor {
         bulkOperation.setLinkToCommittedRecordsMarcFile(null);
         bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(bulkOperation.getId()));
         bulkOperation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(bulkOperation.getId()));
+        bulkOperation.setEndTime(LocalDateTime.now());
         bulkOperation.setStatus(bulkOperation.getCommittedNumOfErrors() == 0 ? COMPLETED : COMPLETED_WITH_ERRORS);
       }
       bulkOperationRepository.save(bulkOperation);
