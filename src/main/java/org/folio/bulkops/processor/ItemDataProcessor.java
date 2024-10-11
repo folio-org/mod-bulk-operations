@@ -64,14 +64,15 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
             .getValue()).contains(action.getUpdated())) {
         throw new RuleValidationException(
             format("New status value \"%s\" is not allowed", action.getUpdated()));
-      } else if (ruleTenantsAreNotValid(rule, action, option, extendedItem)) {
-        throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE, extendedItem.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedItem.getTenant(), option.getValue()));
       }
+//      if (ruleTenantsAreNotValid(rule, action, option, extendedItem)) {
+//        throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE, extendedItem.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedItem.getTenant(), option.getValue()));
+//      }
     };
   }
 
   @Override
-  public Updater<ExtendedItem> updater(UpdateOptionType option, Action action, ExtendedItem entity) throws RuleValidationTenantsException {
+  public Updater<ExtendedItem> updater(UpdateOptionType option, Action action, ExtendedItem entity, BulkOperationRule rule) throws RuleValidationTenantsException {
     if (REPLACE_WITH == action.getType()) {
       return switch (option) {
         case PERMANENT_LOAN_TYPE ->
@@ -112,7 +113,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
         };
       };
     }
-    var notesUpdaterOptional = itemsNotesUpdater.updateNotes(action, option);
+    var notesUpdaterOptional = isNull(rule) ? itemsNotesUpdater.updateNotes(action, option) : itemsNotesUpdater.updateNotes(action, option, rule, entity);
     if (notesUpdaterOptional.isPresent()) return notesUpdaterOptional.get();
     return item -> {
       throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
@@ -162,19 +163,19 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
     }
   }
 
-  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, UpdateOptionType option, ExtendedItem extendedItem) {
-    var ruleTenants = rule.getRuleDetails().getTenants();
-    var actionTenants = action.getTenants();
-    if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
-      ruleTenants.retainAll(actionTenants);
-      return !ruleTenants.contains(extendedItem.getTenant());
-    }
-    if (nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
-      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && action.getType() == org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE) {
-      return true;
-    }
-    return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedItem.getTenant()) ||
-      nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedItem.getTenant());
-  }
+//  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, UpdateOptionType option, ExtendedItem extendedItem) {
+//    var ruleTenants = rule.getRuleDetails().getTenants();
+//    var actionTenants = action.getTenants();
+//    if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
+//      ruleTenants.retainAll(actionTenants);
+//      return !ruleTenants.contains(extendedItem.getTenant());
+//    }
+//    if (nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
+//      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && action.getType() == org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE) {
+//      return true;
+//    }
+//    return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedItem.getTenant()) ||
+//      nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedItem.getTenant());
+//  }
 }
 

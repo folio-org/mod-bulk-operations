@@ -19,6 +19,7 @@ import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
+import org.folio.bulkops.exception.RuleValidationTenantsException;
 import org.folio.bulkops.service.UserReferenceService;
 import org.springframework.stereotype.Component;
 
@@ -64,7 +65,7 @@ public class UserDataProcessor extends AbstractDataProcessor<User> {
   }
 
   @Override
-  public Updater<User> updater(UpdateOptionType option, Action action, User entity) {
+  public Updater<User> updater(UpdateOptionType option, Action action, User entity, BulkOperationRule rule) {
     return switch (option) {
       case PATRON_GROUP -> user -> user.setPatronGroup(action.getUpdated());
       case EXPIRATION_DATE -> user -> {

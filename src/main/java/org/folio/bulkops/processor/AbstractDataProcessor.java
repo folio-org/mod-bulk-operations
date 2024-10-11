@@ -43,9 +43,9 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
       var option = details.getOption();
       for (Action action : details.getActions()) {
         try {
-          updater(option, action, entity).apply(preview);
-          validator(entity).validate(option, action, rule);
-          updater(option, action, entity).apply(updated);
+          updater(option, action, entity, null).apply(preview);
+          validator(entity).validate(option, action, rule); // TODO remove rule?
+          updater(option, action, entity, rule).apply(updated);
         } catch (RuleValidationException e) {
           errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
         } catch (RuleValidationTenantsException e) {
@@ -79,9 +79,10 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
    * @param option {@link UpdateOptionType} for update
    * @param action {@link Action} for update
    * @param action {@link T} for update
+   * @param action {@link BulkOperationRule} rule for update
    * @return updater
    */
-  public abstract Updater<T> updater(UpdateOptionType option, Action action, T entity) throws RuleValidationTenantsException;
+  public abstract Updater<T> updater(UpdateOptionType option, Action action, T entity, BulkOperationRule rule) throws RuleValidationTenantsException;
 
   /**
    * Clones object of type {@link T}

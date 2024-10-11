@@ -19,6 +19,7 @@ import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
+import org.folio.bulkops.exception.RuleValidationTenantsException;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -46,7 +47,7 @@ public class FolioInstanceDataProcessor extends AbstractDataProcessor<ExtendedIn
   }
 
   @Override
-  public Updater<ExtendedInstance> updater(UpdateOptionType option, Action action, ExtendedInstance entity) {
+  public Updater<ExtendedInstance> updater(UpdateOptionType option, Action action, ExtendedInstance entity, BulkOperationRule rule) {
     if (STAFF_SUPPRESS.equals(option)) {
       if (SET_TO_TRUE.equals(action.getType())) {
         return extendedInstance -> extendedInstance.getEntity().setStaffSuppress(true);

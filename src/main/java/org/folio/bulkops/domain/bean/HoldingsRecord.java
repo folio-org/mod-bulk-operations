@@ -40,7 +40,7 @@ import org.folio.bulkops.domain.dto.TenantNotePair;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("holdingsRecord")
-@EqualsAndHashCode(exclude = {"metadata", "instanceId", "permanentLocation", "effectiveLocationId", "illPolicy", "instanceHrid", "itemBarcode"})
+@EqualsAndHashCode(exclude = {"metadata", "instanceId", "permanentLocation", "effectiveLocationId", "illPolicy", "instanceHrid", "itemBarcode", "tenantId"})
 public class HoldingsRecord implements BulkOperationsEntity {
 
   @JsonProperty("id")

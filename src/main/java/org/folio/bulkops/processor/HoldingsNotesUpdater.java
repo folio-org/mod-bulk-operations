@@ -6,8 +6,11 @@ import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.Parameter;
+import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.exception.RuleValidationTenantsException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -15,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toCollection;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
@@ -24,7 +28,9 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_URL_RELATIONSHIP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
+import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
 import static org.folio.bulkops.util.Constants.STAFF_ONLY_NOTE_PARAMETER_KEY;
 
 @Component
@@ -33,6 +39,15 @@ public class HoldingsNotesUpdater {
 
   public static final String HOLDINGS_NOTE_TYPE_ID_KEY = "HOLDINGS_NOTE_TYPE_ID_KEY";
   private final AdministrativeNotesUpdater administrativeNotesUpdater;
+
+  public Optional<Updater<ExtendedHoldingsRecord>> updateNotes(Action action, UpdateOptionType option, BulkOperationRule rule,
+                                                               ExtendedHoldingsRecord entity) throws RuleValidationTenantsException {
+    if (ruleTenantsAreNotValid(rule, action, option, entity)) {
+      throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE,
+        entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
+    }
+    return updateNotes(action, option);
+  }
 
   public Optional<Updater<ExtendedHoldingsRecord>> updateNotes(Action action, UpdateOptionType option) {
     if ((MARK_AS_STAFF_ONLY == action.getType() || REMOVE_MARK_AS_STAFF_ONLY == action.getType()) && option == HOLDINGS_NOTE){
@@ -160,6 +175,21 @@ public class HoldingsNotesUpdater {
 
   private Optional<Parameter> getTypeIdParameterOptional(List<Parameter> parameters) {
     return parameters.stream().filter(parameter -> StringUtils.equals(parameter.getKey(), HOLDINGS_NOTE_TYPE_ID_KEY)).findFirst();
+  }
+
+  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, UpdateOptionType option, ExtendedHoldingsRecord extendedHolding) {
+    var ruleTenants = rule.getRuleDetails().getTenants();
+    var actionTenants = action.getTenants();
+    if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
+      ruleTenants.retainAll(actionTenants);
+      return !ruleTenants.contains(extendedHolding.getTenant());
+    }
+    if (nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
+      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && action.getType() == UpdateActionType.FIND_AND_REPLACE) {
+      return true;
+    }
+    return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedHolding.getTenant()) ||
+      nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedHolding.getTenant());
   }
 
 }

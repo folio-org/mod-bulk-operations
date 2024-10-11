@@ -47,7 +47,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("item")
-@EqualsAndHashCode(exclude = {"effectiveCallNumberComponents", "effectiveLocation", "boundWithTitles", "holdingsData"})
+@EqualsAndHashCode(exclude = {"effectiveCallNumberComponents", "effectiveLocation", "boundWithTitles", "holdingsData", "tenantId"})
 public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("id")
