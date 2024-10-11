@@ -4,9 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.entity.BulkOperation;
-import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ItemReferenceService;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.cache.Cache;
@@ -25,12 +23,10 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 @Log4j2
 @Component
 @AllArgsConstructor
-public class ItemNoteProcessor extends AbstractNoteProcessor {
+public class ItemNoteProcessor extends CsvDownloadPreProcessor {
 
   private final ItemReferenceService itemReferenceService;
-  private final FolioExecutionContext folioExecutionContext;
   private final FolioModuleMetadata folioModuleMetadata;
-  private final ConsortiaService consortiaService;
 
   @Override
   public List<String> getNoteTypeNames(BulkOperation bulkOperation) {
