@@ -169,6 +169,7 @@
             "user-tenants.collection.get",
             "consortia.user-tenants.collection.get",
             "consortium-search.holdings.collection.get",
+            "consortium-search.holdings.batch.collection.get",
             "data-import.uploaddefinitions.post",
             "data-import.uploadDefinitions.item.get",
             "data-import.upload.file.post",
