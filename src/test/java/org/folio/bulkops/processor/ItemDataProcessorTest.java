@@ -913,7 +913,7 @@ class ItemDataProcessorTest extends BaseTest {
       assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType().getId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-        itemId, "memberA", "PERMANENT_LOAN_TYPE").trim());
+        itemId, "memberA", "permanent loan type").trim());
     }
   }
 
@@ -940,7 +940,7 @@ class ItemDataProcessorTest extends BaseTest {
       assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType().getId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-        itemId, "memberA", "PERMANENT_LOAN_TYPE").trim());
+        itemId, "memberA", "permanent loan type").trim());
     }
   }
 
@@ -994,7 +994,7 @@ class ItemDataProcessorTest extends BaseTest {
       assertEquals(initPermLocation, result.getUpdated().getEntity().getPermanentLocation().getId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-        itemId, "memberA", "PERMANENT_LOAN_TYPE").trim());
+        itemId, "memberA", "permanent loan type").trim());
     }
   }
 }
