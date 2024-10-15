@@ -3,6 +3,7 @@ package org.folio.bulkops.processor.note;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.RFC4180ParserBuilder;
 import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.domain.bean.UserTenant;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.service.ConsortiaService;
@@ -16,7 +17,9 @@ import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -53,9 +56,12 @@ public abstract class CsvDownloadPreProcessor {
   }
 
   public byte[] processCsvContent(byte[] input, BulkOperation bulkOperation) {
+    Map<String, UserTenant> userTenants = new HashMap<>();
     boolean isCentralOrMemberTenant = consortiaService.isCurrentTenantInConsortia(folioExecutionContext.getTenantId());
     boolean isTypeWithTenant = bulkOperation.getEntityType() == EntityType.ITEM || bulkOperation.getEntityType() == EntityType.HOLDINGS_RECORD;
-
+    if (isCentralOrMemberTenant && isTypeWithTenant) {
+      userTenants = consortiaService.getUserTenants(folioExecutionContext.getTenantId(), folioExecutionContext.getUserId().toString());
+    }
     List<String> noteTypeNames = getNoteTypeNames(bulkOperation);
     var noteTypeHeaders = noteTypeNames.stream()
       .map(noteTableUpdater::concatNotePostfixIfRequired)
@@ -112,10 +118,14 @@ public abstract class CsvDownloadPreProcessor {
     return line;
   }
 
-  protected String[] processTenantInRows(String[] line, boolean isCentralOrMemberTenant, boolean isTypeWithTenant) {
+  protected String[] processTenantInRows(String[] line, boolean isCentralOrMemberTenant, boolean isTypeWithTenant, Map<String, UserTenant> userTenants) {
+    int tenantPosition = line.length - 1;
     if (isTypeWithTenant && !isCentralOrMemberTenant) {
-      int tenantPosition = line.length - 1;
       line = Arrays.copyOf(line, tenantPosition);
+    }
+    if (isTypeWithTenant && isCentralOrMemberTenant) {
+      var tenantId = userTenants.get(line[te])
+      var tenantName = userTenants.get()
     }
     return line;
   }

@@ -12,7 +12,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,6 +49,18 @@ public class ConsortiaService {
     }
     return new ArrayList<>();
   }
+
+  @Cacheable(value = "getUserTenants")
+  public Map<String, UserTenant> getUserTenants(String currentTenantId, String userId) {
+    var consortia = consortiumClient.getConsortia();
+    var consortiaList = consortia.getConsortia();
+    if (!consortiaList.isEmpty()) {
+      var userTenants = consortiumClient.getConsortiaUserTenants(consortiaList.get(0).getId(), userId, Integer.MAX_VALUE);
+      return userTenants.getUserTenants().stream().collect(Collectors.toMap(UserTenant::getTenantId, userTenant -> userTenant));
+    }
+    return new HashMap<>();
+  }
+
 
   @Cacheable(value = "isCurrentTenantCentralTenant")
   public boolean isCurrentTenantCentralTenant(String currentTenantId) {
