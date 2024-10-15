@@ -19,7 +19,6 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_URL_RELATIONSHIP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.EMAIL_ADDRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
@@ -776,7 +775,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   }
 
   @Test
-  void testShouldNotUpdateHoldingWithPermanentLoanType_whenIntersectionRuleAndActionTenantsGivesNothing() {
+  void testShouldNotUpdateHoldingWithPermanentLocation_whenIntersectionRuleAndActionTenantsGivesNothing() {
     when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
 
@@ -792,7 +791,7 @@ class HoldingsDataProcessorTest extends BaseTest {
       actionTenants.add("memberA");
       List<String> ruleTenants = new ArrayList<>();
       ruleTenants.add("memberB");
-      var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, permLocationFromMemberB, actionTenants, ruleTenants));
+      var rules = rules(rule(PERMANENT_LOCATION, REPLACE_WITH, permLocationFromMemberB, actionTenants, ruleTenants));
       var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
 
       var result = processor.process(IDENTIFIER, extendedHolding, rules);
@@ -801,7 +800,7 @@ class HoldingsDataProcessorTest extends BaseTest {
       assertEquals(initPermLocation, result.getUpdated().getEntity().getPermanentLocationId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-        holdId, "memberA", "PERMANENT_LOAN_TYPE").trim());
+        holdId, "memberA", "PERMANENT_LOCATION").trim());
     }
   }
 

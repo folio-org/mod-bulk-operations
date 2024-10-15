@@ -100,4 +100,16 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
    * @return true if objects are equal, otherwise - false
    */
   public abstract boolean compare(T first, T second);
+
+  public String getRecordPropertyName(UpdateOptionType optionType) {
+    return switch (optionType) {
+      case HOLDINGS_NOTE, ITEM_NOTE -> "note type";
+      case PERMANENT_LOAN_TYPE -> "permanent loan type";
+      case TEMPORARY_LOAN_TYPE -> "temporary loan type";
+      case PERMANENT_LOCATION -> "permanent location";
+      case TEMPORARY_LOCATION -> "temporary location";
+      case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> "URL relationship";
+      default -> optionType.getValue();
+    };
+  }
 }
