@@ -143,7 +143,7 @@ public class NoteTableUpdater {
 
   public void extendHeadersWithNoteTypeNames(int notesInitialPosition, List<Cell> headers, List<String> noteTypeNames, Set<String> forceVisible) {
     var headerToReplace = headers.get(notesInitialPosition);
-    log.info("extendHeadersWithNoteTypeNames {}", noteTypeNames, forceVisible);
+    log.info("extendHeadersWithNoteTypeNames {}, {}", noteTypeNames, forceVisible);
     var cellsToInsert = noteTypeNames.stream()
       .map(name -> new Cell()
         .value(concatNotePostfixIfRequired(name))

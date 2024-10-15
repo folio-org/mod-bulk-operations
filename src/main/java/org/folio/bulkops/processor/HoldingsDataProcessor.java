@@ -1,7 +1,6 @@
 package org.folio.bulkops.processor;
 
 import static java.lang.String.format;
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
@@ -19,7 +18,6 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import static org.folio.bulkops.util.Constants.MARC;
-import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
 import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
 
 import java.util.ArrayList;
@@ -61,8 +59,8 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
   @Override
-  public Validator<UpdateOptionType, Action, BulkOperationRule> validator(ExtendedHoldingsRecord extendedHoldingsRecord) {
-    return (option, action, rule) -> {
+  public Validator<UpdateOptionType, Action> validator(ExtendedHoldingsRecord extendedHoldingsRecord) {
+    return (option, action) -> {
       try {
         if (MARC.equals(holdingsReferenceService.getSourceById(extendedHoldingsRecord.getEntity().getSourceId(), folioExecutionContext.getTenantId()).getName())) {
           throw new RuleValidationException("Holdings records that have source \"MARC\" cannot be changed");
@@ -76,14 +74,15 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
       if (PERMANENT_LOCATION == option && CLEAR_FIELD == action.getType()) {
         throw new RuleValidationException("Permanent location cannot be cleared");
       }
-//      if (ruleTenantsAreNotValid(rule, action, option, extendedHoldingsRecord)) {
-//        throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE, extendedHoldingsRecord.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedHoldingsRecord.getTenant(), option.getValue()));
-//      }
     };
   }
 
   public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity,
                                                  BulkOperationRule rule) throws RuleValidationTenantsException {
+    if (nonNull(rule) && ruleTenantsAreNotValid(rule, action, option, entity)) {
+      throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE,
+        entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
+    }
     if (isElectronicAccessUpdate(option)) {
       return (Updater<ExtendedHoldingsRecord>) electronicAccessUpdaterFactory.updater(option, action);
     } else if (REPLACE_WITH == action.getType()) {
@@ -107,7 +106,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     } else if (isSetDiscoverySuppressFalse(action.getType(), option)) {
       return extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().setDiscoverySuppress(false);
     }
-    var notesUpdaterOptional = isNull(rule) ? holdingsNotesUpdater.updateNotes(action, option) : holdingsNotesUpdater.updateNotes(action, option, rule, entity);
+    var notesUpdaterOptional = holdingsNotesUpdater.updateNotes(action, option);
     if (notesUpdaterOptional.isPresent()) return notesUpdaterOptional.get();
     return holding -> {
       throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
@@ -191,18 +190,18 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     return ExtendedHoldingsRecord.class;
   }
 
-//  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, UpdateOptionType option, ExtendedHoldingsRecord extendedHolding) {
-//    var ruleTenants = rule.getRuleDetails().getTenants();
-//    var actionTenants = action.getTenants();
-//    if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
-//      ruleTenants.retainAll(actionTenants);
-//      return !ruleTenants.contains(extendedHolding.getTenant());
-//    }
-//    if (nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
-//      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && action.getType() == UpdateActionType.FIND_AND_REPLACE) {
-//      return true;
-//    }
-//    return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedHolding.getTenant()) ||
-//      nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedHolding.getTenant());
-//  }
+  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, UpdateOptionType option, ExtendedHoldingsRecord extendedHolding) {
+    var ruleTenants = rule.getRuleDetails().getTenants();
+    var actionTenants = action.getTenants();
+    if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
+      ruleTenants.retainAll(actionTenants);
+      return !ruleTenants.contains(extendedHolding.getTenant());
+    }
+    if (nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
+      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && action.getType() == UpdateActionType.FIND_AND_REPLACE) {
+      return true;
+    }
+    return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedHolding.getTenant()) ||
+      nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedHolding.getTenant());
+  }
 }

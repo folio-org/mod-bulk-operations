@@ -19,7 +19,6 @@ import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
-import org.folio.bulkops.exception.RuleValidationTenantsException;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -34,8 +33,8 @@ public class FolioInstanceDataProcessor extends AbstractDataProcessor<ExtendedIn
   private final InstanceNotesUpdaterFactory instanceNotesUpdaterFactory;
 
   @Override
-  public Validator<UpdateOptionType, Action, BulkOperationRule> validator(ExtendedInstance extendedInstance) {
-    return (option, action, rule) -> {
+  public Validator<UpdateOptionType, Action> validator(ExtendedInstance extendedInstance) {
+    return (option, action) -> {
       if (CLEAR_FIELD.equals(action.getType()) && Set.of(STAFF_SUPPRESS, SUPPRESS_FROM_DISCOVERY).contains(option)) {
         throw new RuleValidationException("Suppress flag cannot be cleared.");
       } else if (INSTANCE_NOTE.equals(option) && !"FOLIO".equals(extendedInstance.getEntity().getSource())) {

@@ -2,13 +2,11 @@ package org.folio.bulkops.service;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
-import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_URL_RELATIONSHIP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
@@ -16,7 +14,6 @@ import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDINGS_NOTE_TYP
 import static org.folio.bulkops.processor.InstanceNotesUpdaterFactory.INSTANCE_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.processor.ItemsNotesUpdater.ITEM_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 
 import java.io.InputStreamReader;
@@ -38,8 +35,6 @@ import org.folio.bulkops.client.InstanceNoteTypesClient;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
-import org.folio.bulkops.domain.dto.BulkOperationRule;
-import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.client.HoldingsNoteTypeClient;
 import org.folio.bulkops.client.ItemNoteTypeClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
@@ -55,12 +50,10 @@ import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
-import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
 import org.folio.bulkops.util.UpdateOptionTypeToFieldResolver;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
-import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.marc4j.MarcStreamReader;
 import org.springframework.stereotype.Service;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -331,11 +324,6 @@ public class PreviewService {
     } else if (clazz == Instance.class) {
       noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible);
     }
-  }
-
-  private Optional<String> getTenantForNoteType(BulkOperation bulkOperation, String noteTypeId) {
-    return bulkOperation.getTenantNotePairs().stream().filter(pair -> pair.getNoteTypeId().equals(noteTypeId))
-      .map(pair -> pair.getTenantId()).findFirst();
   }
 
   private Optional<String> getNoteTypeNameById(BulkOperation bulkOperation, String noteTypeId) {

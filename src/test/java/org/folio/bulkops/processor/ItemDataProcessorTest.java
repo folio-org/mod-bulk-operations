@@ -59,8 +59,6 @@ import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
-import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
-import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;

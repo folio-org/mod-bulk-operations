@@ -44,7 +44,7 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
       for (Action action : details.getActions()) {
         try {
           updater(option, action, entity, null).apply(preview);
-          validator(entity).validate(option, action, rule); // TODO remove rule?
+          validator(entity).validate(option, action);
           updater(option, action, entity, rule).apply(updated);
         } catch (RuleValidationException e) {
           errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
@@ -69,9 +69,9 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
    * Returns validator
    *
    * @param entity entity of type {@link T} to validate
-   * @return true if {@link UpdateOptionType} and {@link Action}, and {@link BulkOperationRule} can be applied to entity
+   * @return true if {@link UpdateOptionType} and {@link Action} can be applied to entity
    */
-  public abstract Validator<UpdateOptionType, Action, BulkOperationRule> validator(T entity);
+  public abstract Validator<UpdateOptionType, Action> validator(T entity);
 
   /**
    * Returns {@link Consumer<T>} for applying changes for entity of type {@link T}

@@ -102,7 +102,7 @@ public class HoldingsReferenceService {
     return callNumberTypes.getCallNumberTypes().get(0).getId();
   }
 
-//  @Cacheable(cacheNames = "holdingsNoteTypesNames")
+  @Cacheable(cacheNames = "holdingsNoteTypesNames")
   public String getNoteTypeNameById(String id, String tenantId) {
     try {
       log.info("334_getNoteTypeNameById: {}, {}", tenantId, id);
@@ -112,7 +112,7 @@ public class HoldingsReferenceService {
     }
   }
 
-//  @Cacheable(cacheNames = "holdingsNoteTypes")
+  @Cacheable(cacheNames = "holdingsNoteTypes")
   public String getNoteTypeIdByName(String name, String tenantId) {
     log.info("334_getNoteTypeIdByName: {}, {}", name, tenantId);
     var noteTypes = holdingsNoteTypeClient.getNoteTypesByQuery(format(QUERY_PATTERN_NAME, encode(name)), 1);
@@ -181,7 +181,7 @@ public class HoldingsReferenceService {
     return statisticalCodes.getStatisticalCodes().get(0);
   }
 
-//  @Cacheable(cacheNames = "holdingsNoteTypes")
+  @Cacheable(cacheNames = "holdingsNoteTypes")
   public List<HoldingsNoteType> getAllHoldingsNoteTypes(String tenantId) {
     log.info("334_getAllHoldingsNoteTypes: {}", tenantId);
     var noteTypes = holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE).getHoldingsNoteTypes();

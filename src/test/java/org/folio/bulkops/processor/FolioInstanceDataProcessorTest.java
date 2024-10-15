@@ -385,7 +385,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
     var validator = ((FolioInstanceDataProcessor) processor).validator(extendedInstance);
 
-    assertThrows(RuleValidationException.class, () -> validator.validate(INSTANCE_NOTE, new Action().type(actionType), new BulkOperationRule()));
+    assertThrows(RuleValidationException.class, () -> validator.validate(INSTANCE_NOTE, new Action().type(actionType)));
   }
 
   @Test
@@ -398,6 +398,6 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
     var validator = ((FolioInstanceDataProcessor) processor).validator(extendedInstance);
 
-    assertThrows(RuleValidationException.class, () -> validator.validate(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE), new BulkOperationRule()));
+    assertThrows(RuleValidationException.class, () -> validator.validate(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)));
   }
 }

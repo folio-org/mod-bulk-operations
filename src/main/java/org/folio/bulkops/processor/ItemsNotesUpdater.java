@@ -47,15 +47,6 @@ public class ItemsNotesUpdater {
 
   private final AdministrativeNotesUpdater administrativeNotesUpdater;
 
-  public Optional<Updater<ExtendedItem>> updateNotes(Action action, UpdateOptionType option, BulkOperationRule rule,
-                                                     ExtendedItem entity) throws RuleValidationTenantsException {
-    if (ruleTenantsAreNotValid(rule, action, option, entity)) {
-      throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE,
-        entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
-    }
-    return updateNotes(action, option);
-  }
-
   public Optional<Updater<ExtendedItem>> updateNotes(Action action, UpdateOptionType option){
     if (MARK_AS_STAFF_ONLY == action.getType() || REMOVE_MARK_AS_STAFF_ONLY == action.getType()) {
       return setStaffOnly(action, option);
@@ -346,20 +337,5 @@ public class ItemsNotesUpdater {
         notesWithTypeForChange.forEach(note -> note.setItemNoteTypeId(noteTypeToUse));
       }
     }
-  }
-
-  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, UpdateOptionType option, ExtendedItem extendedItem) {
-    var ruleTenants = rule.getRuleDetails().getTenants();
-    var actionTenants = action.getTenants();
-    if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
-      ruleTenants.retainAll(actionTenants);
-      return !ruleTenants.contains(extendedItem.getTenant());
-    }
-    if (nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
-      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && action.getType() == org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE) {
-      return true;
-    }
-    return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedItem.getTenant()) ||
-      nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedItem.getTenant());
   }
 }
