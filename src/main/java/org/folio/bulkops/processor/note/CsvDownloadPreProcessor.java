@@ -60,7 +60,7 @@ public abstract class CsvDownloadPreProcessor {
     boolean isCentralOrMemberTenant = consortiaService.isCurrentTenantInConsortia(folioExecutionContext.getTenantId());
     boolean isTypeWithTenant = bulkOperation.getEntityType() == EntityType.ITEM || bulkOperation.getEntityType() == EntityType.HOLDINGS_RECORD;
     if (isCentralOrMemberTenant && isTypeWithTenant) {
-      userTenants = consortiaService.getUserTenants(folioExecutionContext.getTenantId(), folioExecutionContext.getUserId().toString());
+      userTenants = consortiaService.getUserTenantsPerId(folioExecutionContext.getTenantId(), folioExecutionContext.getUserId().toString());
     }
     List<String> noteTypeNames = getNoteTypeNames(bulkOperation);
     var noteTypeHeaders = noteTypeNames.stream()

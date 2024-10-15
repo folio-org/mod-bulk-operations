@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
@@ -74,4 +75,30 @@ class ConsortiaServiceTest {
 
     assertEquals(expected, actual);
   }
+
+  @Test
+  void shouldReturnUserTenantsPerId() {
+    var consortia = new Consortia();
+    consortia.setId("consortiaId");
+    var consortiaCollection = new ConsortiaCollection();
+    consortiaCollection.setConsortia(List.of(consortia));
+
+    var userTenant = new UserTenant();
+    userTenant.setCentralTenantId("centralTenantId");
+    userTenant.setTenantId("memberTenantId");
+    userTenant.setTenantName("memberTenantName");
+    var userTenantCollection = new UserTenantCollection();
+    userTenantCollection.setUserTenants(List.of(userTenant));
+
+    when(consortiumClient.getConsortia()).thenReturn(consortiaCollection);
+    when(consortiumClient.getConsortiaUserTenants("consortiaId", "userId", Integer.MAX_VALUE)).thenReturn(userTenantCollection);
+
+
+    var actual = consortiaService.getUserTenantsPerId("currentTenantId", "userId");
+
+    assertTrue(actual.containsKey("memberTenantId"));
+    var tenant = actual.get("memberTenantId");
+    assertEquals("memberTenantName", tenant.getTenantName());
+  }
+
 }

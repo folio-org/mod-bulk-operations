@@ -50,8 +50,8 @@ public class ConsortiaService {
     return new ArrayList<>();
   }
 
-  @Cacheable(value = "getUserTenants")
-  public Map<String, UserTenant> getUserTenants(String currentTenantId, String userId) {
+  @Cacheable(value = "getUserTenantsPerIdCache")
+  public Map<String, UserTenant> getUserTenantsPerId(String currentTenantId, String userId) {
     var consortia = consortiumClient.getConsortia();
     var consortiaList = consortia.getConsortia();
     if (!consortiaList.isEmpty()) {
@@ -60,7 +60,6 @@ public class ConsortiaService {
     }
     return new HashMap<>();
   }
-
 
   @Cacheable(value = "isCurrentTenantCentralTenant")
   public boolean isCurrentTenantCentralTenant(String currentTenantId) {
