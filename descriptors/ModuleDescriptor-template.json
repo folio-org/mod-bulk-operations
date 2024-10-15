@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "bulk-operations",
-      "version": "1.3",
+      "version": "1.4",
       "handlers": [
         {
           "methods": [ "POST" ],
@@ -169,6 +169,7 @@
             "user-tenants.collection.get",
             "consortia.user-tenants.collection.get",
             "consortium-search.holdings.collection.get",
+            "consortium-search.holdings.batch.collection.get",
             "data-import.uploaddefinitions.post",
             "data-import.uploaddefinitions.get",
             "data-import.upload.file.post",

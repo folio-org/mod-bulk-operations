@@ -16,6 +16,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION_IN_PROGRESS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
@@ -113,7 +114,7 @@ import lombok.extern.log4j.Log4j2;
 @RequiredArgsConstructor
 public class BulkOperationService {
   public static final String FILE_UPLOADING_FAILED_REASON = "File uploading failed, reason: %s";
-  public static final String STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS = "Step %s is not applicable for bulk operation status %s";
+  public static final String STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS = "Step %s is not applicable for bulk operation status %s";
   public static final String ERROR_STARTING_BULK_OPERATION = "Error starting Bulk Operation: ";
   @Value("${application.file-uploading.max-retry-count}")
   private int maxRetryCount;
@@ -224,6 +225,10 @@ public class BulkOperationService {
   }
 
   public void confirm(BulkOperation operation)  {
+
+    operation.setStatus(DATA_MODIFICATION_IN_PROGRESS);
+    bulkOperationRepository.save(operation);
+
     if (operation.getEntityType() == INSTANCE_MARC) {
       confirmForInstanceMarc(operation);
       return;
@@ -558,14 +563,14 @@ public class BulkOperationService {
         }
         return operation;
       } else {
-        throw new BadRequestException(format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
+        throw new BadRequestException(format(STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
       }
     } else if (BulkOperationStep.COMMIT == step) {
       if (REVIEW_CHANGES.equals(operation.getStatus())) {
         executor.execute(getRunnableWithCurrentFolioContext(() -> commit(operation)));
         return operation;
       } else {
-        throw new BadRequestException(format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
+        throw new BadRequestException(format(STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
       }
     } else {
       throw new IllegalOperationStateException("Bulk operation cannot be started, reason: invalid state: " + operation.getStatus());
@@ -598,7 +603,7 @@ public class BulkOperationService {
           }
         }
       } else {
-        throw new BadRequestException(format(STEP_S_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
+        throw new BadRequestException(format(STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
       }
     } catch (Exception e) {
       log.error(ERROR_STARTING_BULK_OPERATION + e.getCause());
