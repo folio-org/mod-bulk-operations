@@ -81,7 +81,7 @@ public abstract class CsvDownloadPreProcessor {
             .toArray(String[]::new);
           line = processTenantInHeaders(line, isCentralOrMemberTenant, isTypeWithTenant);
         } else {
-          line = processTenantInRows(line, isCentralOrMemberTenant, isTypeWithTenant);
+          line = processTenantInRows(line, isCentralOrMemberTenant, isTypeWithTenant, userTenants);
           line = processNotesData(line, noteTypeNames, bulkOperation);
         }
         stringWriter.write(String.join(",", line) + "\n");
@@ -120,12 +120,16 @@ public abstract class CsvDownloadPreProcessor {
 
   protected String[] processTenantInRows(String[] line, boolean isCentralOrMemberTenant, boolean isTypeWithTenant, Map<String, UserTenant> userTenants) {
     int tenantPosition = line.length - 1;
-    if (isTypeWithTenant && !isCentralOrMemberTenant) {
-      line = Arrays.copyOf(line, tenantPosition);
-    }
-    if (isTypeWithTenant && isCentralOrMemberTenant) {
-      var tenantId = userTenants.get(line[te])
-      var tenantName = userTenants.get()
+    if (isTypeWithTenant) {
+      if (isCentralOrMemberTenant) {
+        var tenantId = line[tenantPosition];
+        var tenant = userTenants.get(tenantId);
+        if (tenant != null) {
+          line[tenantPosition] = tenant.getTenantName();
+        }
+      } else {
+        line = Arrays.copyOf(line, tenantPosition);
+      }
     }
     return line;
   }
