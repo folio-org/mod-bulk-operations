@@ -1,10 +1,13 @@
 package org.folio.bulkops.processor.note;
 
+import org.folio.bulkops.domain.bean.UserTenant;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -37,24 +40,29 @@ class CsvDownloadPreProcessorTest {
   @Test
   void processTenantInRowsTest() {
     var downloadPreProcessor = new TestCsvDownloadPreProcessor();
+    Map<String, UserTenant> userTenants = new HashMap<>();
+    var userTenant = new UserTenant();
+    userTenant.setTenantId("tenantId");
+    userTenant.setTenantName("tenantName");
+    userTenants.put("tenantId", userTenant);
     var row = new String[] {"value", "tenantId"};
 
-    var expected = Arrays.stream(row).toList();
-    var actual = downloadPreProcessor.processTenantInRows(row, true, true);
+    var expected = Arrays.stream(new String[] {"value", "tenantName"}).toList();
+    var actual = downloadPreProcessor.processTenantInRows(row, true, true, userTenants);
     assertEquals(expected, Arrays.stream(actual).toList());
 
     expected = Arrays.stream( new String[] {"value"}).toList();
-    actual = downloadPreProcessor.processTenantInRows(row, false, true);
+    actual = downloadPreProcessor.processTenantInRows(row, false, true, userTenants);
     assertEquals(expected, Arrays.stream(actual).toList());
 
     row = new String[] {"value1", "value2"};
     expected = Arrays.stream(row).toList();
-    actual = downloadPreProcessor.processTenantInRows(row, true, false);
+    actual = downloadPreProcessor.processTenantInRows(row, true, false, userTenants);
     assertEquals(expected, Arrays.stream(actual).toList());
 
     row = new String[] {"value1", "value2"};
     expected = Arrays.stream(row).toList();
-    actual = downloadPreProcessor.processTenantInRows(row, false, false);
+    actual = downloadPreProcessor.processTenantInRows(row, false, false, userTenants);
     assertEquals(expected, Arrays.stream(actual).toList());
   }
 
