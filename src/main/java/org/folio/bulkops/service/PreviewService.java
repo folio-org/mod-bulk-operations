@@ -184,7 +184,6 @@ public class PreviewService {
           var initial = action.getParameters().stream().filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
           initial.ifPresent(id -> {
             var noteTypeName = getNoteTypeNameById(bulkOperation, id);
-            log.info("HOLDINGS_NOTE == option {}, {}", noteTypeName, id);
             if (noteTypeName.isPresent()) {
               forceVisibleOptions.add(noteTypeName.get());
             } else {
@@ -198,7 +197,6 @@ public class PreviewService {
           var initial = action.getParameters().stream().filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
           initial.ifPresent(id -> {
             var noteTypeName = getNoteTypeNameById(bulkOperation, id);
-            log.info("HOLDINGS_NOTE == option {}, {}", noteTypeName, id);
             if (noteTypeName.isPresent()) {
               forceVisibleOptions.add(noteTypeName.get());
             } else {

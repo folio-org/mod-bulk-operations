@@ -16,8 +16,10 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDI
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_URL_RELATIONSHIP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.EMAIL_ADDRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
@@ -47,8 +49,6 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.dto.Action;
-import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
-import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.NotFoundException;
@@ -746,6 +746,62 @@ class HoldingsDataProcessorTest extends BaseTest {
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
         holdId, "memberA", "PERMANENT_LOCATION").trim());
+    }
+  }
+
+  @Test
+  void testShouldNotUpdateHoldingWithElectronicAccess_whenBothOfRuleAndActionTenantsAreEmpty() {
+    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
+
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
+      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any())).thenReturn(folioExecutionContext);
+
+      var permLocationFromMemberB = UUID.randomUUID().toString();
+      var holdId = UUID.randomUUID().toString();
+      var initPermLocation = UUID.randomUUID().toString();
+      var extendedHolding = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withId(holdId).withPermanentLocationId(initPermLocation)).tenantId("memberA").build();
+
+      var rules = rules(rule(ELECTRONIC_ACCESS_URL_RELATIONSHIP, FIND_AND_REPLACE, permLocationFromMemberB, List.of(), List.of()));
+      var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
+
+      var result = processor.process(IDENTIFIER, extendedHolding, rules);
+
+      assertNotNull(result);
+      assertEquals(initPermLocation, result.getUpdated().getEntity().getPermanentLocationId());
+
+      verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
+        holdId, "memberA", "ELECTRONIC_ACCESS_URL_RELATIONSHIP").trim());
+    }
+  }
+
+  @Test
+  void testShouldNotUpdateHoldingWithPermanentLoanType_whenIntersectionRuleAndActionTenantsGivesNothing() {
+    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
+
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
+      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any())).thenReturn(folioExecutionContext);
+
+      var permLocationFromMemberB = UUID.randomUUID().toString();
+      var holdId = UUID.randomUUID().toString();
+      var initPermLocation = UUID.randomUUID().toString();
+      var extendedHolding = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withId(holdId).withPermanentLocationId(initPermLocation)).tenantId("memberA").build();
+
+      List<String> actionTenants = new ArrayList<>();
+      actionTenants.add("memberA");
+      List<String> ruleTenants = new ArrayList<>();
+      ruleTenants.add("memberB");
+      var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, permLocationFromMemberB, actionTenants, ruleTenants));
+      var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
+
+      var result = processor.process(IDENTIFIER, extendedHolding, rules);
+
+      assertNotNull(result);
+      assertEquals(initPermLocation, result.getUpdated().getEntity().getPermanentLocationId());
+
+      verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
+        holdId, "memberA", "PERMANENT_LOAN_TYPE").trim());
     }
   }
 
