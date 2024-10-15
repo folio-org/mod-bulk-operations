@@ -33,8 +33,8 @@ public class FolioInstanceDataProcessor extends AbstractDataProcessor<ExtendedIn
   private final InstanceNotesUpdaterFactory instanceNotesUpdaterFactory;
 
   @Override
-  public Validator<UpdateOptionType, Action> validator(ExtendedInstance extendedInstance) {
-    return (option, action) -> {
+  public Validator<UpdateOptionType, Action, BulkOperationRule> validator(ExtendedInstance extendedInstance) {
+    return (option, action, rule) -> {
       if (CLEAR_FIELD.equals(action.getType()) && Set.of(STAFF_SUPPRESS, SUPPRESS_FROM_DISCOVERY).contains(option)) {
         throw new RuleValidationException("Suppress flag cannot be cleared.");
       } else if (INSTANCE_NOTE.equals(option) && !"FOLIO".equals(extendedInstance.getEntity().getSource())) {
@@ -46,7 +46,7 @@ public class FolioInstanceDataProcessor extends AbstractDataProcessor<ExtendedIn
   }
 
   @Override
-  public Updater<ExtendedInstance> updater(UpdateOptionType option, Action action, ExtendedInstance entity, BulkOperationRule rule) {
+  public Updater<ExtendedInstance> updater(UpdateOptionType option, Action action, ExtendedInstance entity) {
     if (STAFF_SUPPRESS.equals(option)) {
       if (SET_TO_TRUE.equals(action.getType())) {
         return extendedInstance -> extendedInstance.getEntity().setStaffSuppress(true);

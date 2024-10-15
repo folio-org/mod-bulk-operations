@@ -59,8 +59,8 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
   @Override
-  public Validator<UpdateOptionType, Action> validator(ExtendedHoldingsRecord extendedHoldingsRecord) {
-    return (option, action) -> {
+  public Validator<UpdateOptionType, Action, BulkOperationRule> validator(ExtendedHoldingsRecord extendedHoldingsRecord) {
+    return (option, action, rule) -> {
       try {
         if (MARC.equals(holdingsReferenceService.getSourceById(extendedHoldingsRecord.getEntity().getSourceId(), folioExecutionContext.getTenantId()).getName())) {
           throw new RuleValidationException("Holdings records that have source \"MARC\" cannot be changed");
@@ -74,15 +74,14 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
       if (PERMANENT_LOCATION == option && CLEAR_FIELD == action.getType()) {
         throw new RuleValidationException("Permanent location cannot be cleared");
       }
+      if (nonNull(rule) && ruleTenantsAreNotValid(rule, action, option, extendedHoldingsRecord)) {
+        throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE,
+          extendedHoldingsRecord.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedHoldingsRecord.getTenant(), getRecordPropertyName(option)));
+      }
     };
   }
 
-  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity,
-                                                 BulkOperationRule rule) throws RuleValidationTenantsException {
-    if (nonNull(rule) && ruleTenantsAreNotValid(rule, action, option, entity)) {
-      throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE,
-        entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), getRecordPropertyName(option)));
-    }
+  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity) throws RuleValidationTenantsException {
     if (isElectronicAccessUpdate(option)) {
       return (Updater<ExtendedHoldingsRecord>) electronicAccessUpdaterFactory.updater(option, action);
     } else if (REPLACE_WITH == action.getType()) {
@@ -125,13 +124,13 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
 
       if (Set.of(PERMANENT_LOCATION, TEMPORARY_LOCATION).contains(option)) {
         try {
-          itemReferenceService.getLocationById(newId);
+          itemReferenceService.getLocationById(newId, getTenantFromAction(action));
         } catch (Exception e) {
           throw new RuleValidationException(format("Location %s doesn't exist", newId));
         }
       } else if (ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option)) {
         try {
-          electronicAccessReferenceService.getRelationshipNameById(newId);
+          electronicAccessReferenceService.getRelationshipNameById(newId, getTenantFromAction(action));
         } catch (Exception e) {
           throw new RuleValidationException(format("URL relationship %s doesn't exist", newId));
         }

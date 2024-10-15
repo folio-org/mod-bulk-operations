@@ -7,6 +7,7 @@ import static org.folio.bulkops.util.Constants.BULK_EDIT_CONFIGURATIONS_QUERY_TE
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_CODE;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_USERNAME;
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.encode;
 
 import java.util.Collections;
@@ -32,6 +33,9 @@ import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.bean.ServicePoint;
 import org.folio.bulkops.exception.ConfigurationException;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -60,6 +64,8 @@ public class ItemReferenceService {
   private final LocationClient locationClient;
   private final MaterialTypeClient materialTypeClient;
   private final LoanTypeClient loanTypeClient;
+  private final FolioModuleMetadata folioModuleMetadata;
+  private final FolioExecutionContext folioExecutionContext;
 
   private final ObjectMapper objectMapper;
 
@@ -163,8 +169,8 @@ public class ItemReferenceService {
   }
 
   @Cacheable(cacheNames = "locations")
-  public ItemLocation getLocationById(String id) {
-    try {
+  public ItemLocation getLocationById(String id, String tenantId) {
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return locationClient.getLocationById(id);
     } catch (Exception e) {
       throw new NotFoundException(format("Location was not found by id=%s", id));
@@ -188,8 +194,8 @@ public class ItemReferenceService {
   }
 
   @Cacheable(cacheNames = "loanTypes")
-  public LoanType getLoanTypeById(String id) {
-    try {
+  public LoanType getLoanTypeById(String id, String tenantId) {
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return loanTypeClient.getLoanTypeById(id);
     } catch (Exception e) {
       throw new NotFoundException(format("Loan type not found by id=%s", id));

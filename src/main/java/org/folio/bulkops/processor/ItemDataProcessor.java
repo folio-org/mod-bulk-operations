@@ -45,8 +45,8 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
   private final ItemsNotesUpdater itemsNotesUpdater;
 
   @Override
-  public Validator<UpdateOptionType, Action> validator(ExtendedItem extendedItem) {
-    return (option, action) -> {
+  public Validator<UpdateOptionType, Action, BulkOperationRule> validator(ExtendedItem extendedItem) {
+    return (option, action, rule) -> {
       if (CLEAR_FIELD == action.getType() && STATUS == option) {
         throw new RuleValidationException("Status field can not be cleared");
       } else if (CLEAR_FIELD == action.getType() && PERMANENT_LOAN_TYPE == option) {
@@ -65,28 +65,30 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
         throw new RuleValidationException(
             format("New status value \"%s\" is not allowed", action.getUpdated()));
       }
+      if (nonNull(rule) && ruleTenantsAreNotValid(rule, action, option, extendedItem)) {
+        throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE,
+          extendedItem.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedItem.getTenant(), getRecordPropertyName(option)));
+      }
     };
   }
 
   @Override
-  public Updater<ExtendedItem> updater(UpdateOptionType option, Action action, ExtendedItem entity, BulkOperationRule rule) throws RuleValidationTenantsException {
-    if (nonNull(rule) && ruleTenantsAreNotValid(rule, action, option, entity)) {
-      throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE,
-        entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), getRecordPropertyName(option)));
-    }
+  public Updater<ExtendedItem> updater(UpdateOptionType option, Action action, ExtendedItem entity) throws RuleValidationTenantsException {
     if (REPLACE_WITH == action.getType()) {
       return switch (option) {
         case PERMANENT_LOAN_TYPE ->
-          extendedItem -> extendedItem.getEntity().setPermanentLoanType(itemReferenceService.getLoanTypeById(action.getUpdated()));
+          extendedItem -> extendedItem.getEntity().setPermanentLoanType(
+            itemReferenceService.getLoanTypeById(action.getUpdated(), getTenantFromAction(action)));
         case TEMPORARY_LOAN_TYPE ->
-          extendedItem -> extendedItem.getEntity().setTemporaryLoanType(itemReferenceService.getLoanTypeById(action.getUpdated()));
+          extendedItem -> extendedItem.getEntity().setTemporaryLoanType(
+            itemReferenceService.getLoanTypeById(action.getUpdated(), getTenantFromAction(action)));
         case PERMANENT_LOCATION -> extendedItem -> {
-          extendedItem.getEntity().setPermanentLocation(itemReferenceService.getLocationById(action.getUpdated()));
-          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity()));
+          extendedItem.getEntity().setPermanentLocation(itemReferenceService.getLocationById(action.getUpdated(), getTenantFromAction(action)));
+          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), getTenantFromAction(action)));
         };
         case TEMPORARY_LOCATION -> extendedItem -> {
-          extendedItem.getEntity().setTemporaryLocation(itemReferenceService.getLocationById(action.getUpdated()));
-          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity()));
+          extendedItem.getEntity().setTemporaryLocation(itemReferenceService.getLocationById(action.getUpdated(), getTenantFromAction(action)));
+          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), getTenantFromAction(action)));
         };
         case STATUS -> extendedItem -> extendedItem.getEntity().setStatus(new InventoryItemStatus()
           .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated()))
@@ -103,11 +105,11 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
       return switch (option) {
         case PERMANENT_LOCATION -> extendedItem -> {
           extendedItem.getEntity().setPermanentLocation(null);
-          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity()));
+          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), getTenantFromAction(action)));
         };
         case TEMPORARY_LOCATION -> extendedItem -> {
           extendedItem.getEntity().setTemporaryLocation(null);
-          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity()));
+          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), getTenantFromAction(action)));
         };
         case TEMPORARY_LOAN_TYPE -> extendedItem -> extendedItem.getEntity().setTemporaryLoanType(null);
         default -> item -> {
@@ -115,7 +117,9 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
       };
     }
     var notesUpdaterOptional = itemsNotesUpdater.updateNotes(action, option);
-    if (notesUpdaterOptional.isPresent()) return notesUpdaterOptional.get();
+    if (notesUpdaterOptional.isPresent()) {
+      return notesUpdaterOptional.get();
+    }
     return item -> {
       throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
     };
@@ -154,11 +158,11 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
     return ExtendedItem.class;
   }
 
-  private ItemLocation getEffectiveLocation(Item item) {
+  private ItemLocation getEffectiveLocation(Item item, String tenantId) {
     if (isNull(item.getTemporaryLocation()) && isNull(item.getPermanentLocation())) {
       var holdingsRecord = holdingsReferenceService.getHoldingsRecordById(item.getHoldingsRecordId(), folioExecutionContext.getTenantId());
       var holdingsEffectiveLocationId = isNull(holdingsRecord.getTemporaryLocationId()) ? holdingsRecord.getPermanentLocationId() : holdingsRecord.getTemporaryLocationId();
-      return itemReferenceService.getLocationById(holdingsEffectiveLocationId);
+      return itemReferenceService.getLocationById(holdingsEffectiveLocationId, tenantId);
     } else {
       return isNull(item.getTemporaryLocation()) ? item.getPermanentLocation() : item.getTemporaryLocation();
     }

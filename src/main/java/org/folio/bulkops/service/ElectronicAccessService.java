@@ -9,6 +9,8 @@ import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
 
 import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.exception.EntityFormatException;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,8 @@ public class ElectronicAccessService {
   private static final int ELECTRONIC_ACCESS_LINK_TEXT_INDEX = 2;
   private static final int ELECTRONIC_ACCESS_MATERIAL_SPECIFICATION_INDEX = 3;
   private static final int ELECTRONIC_ACCESS_PUBLIC_NOTE_INDEX = 4;
+
+  private final FolioExecutionContext folioExecutionContext;
 
 
   public String electronicAccessToString(ElectronicAccess access) {
@@ -46,7 +50,7 @@ public class ElectronicAccessService {
 
   private String electronicAccessToString(ElectronicAccess access, String delimiter) {
     return String.join(delimiter,
-      isEmpty(access.getRelationshipId()) ? EMPTY : electronicAccessReferenceService.getRelationshipNameById(access.getRelationshipId()),
+      isEmpty(access.getRelationshipId()) ? EMPTY : electronicAccessReferenceService.getRelationshipNameById(access.getRelationshipId(), folioExecutionContext.getTenantId()),
       isNull(access.getUri()) ? EMPTY : access.getUri(),
       isEmpty(access.getLinkText()) ? EMPTY : access.getLinkText(),
       isEmpty(access.getMaterialsSpecification()) ? EMPTY : access.getMaterialsSpecification(),
