@@ -32,10 +32,11 @@ public class TenantTableUpdater {
       header.setValue(TENANT_VALUE_IN_CONSORTIA_FOR_MEMBER);
       var rows = unifiedTable.getRows();
       rows.forEach(row -> {
-        var tenantId = row.getRow().get(tenantPosition);
+        int last = row.getRow().size() - 1;
+        var tenantId = row.getRow().get(last);
         var tenant = userTenants.get(tenantId);
         if (Objects.nonNull(tenant)) {
-          row.getRow().set(tenantPosition, tenant.getTenantName());
+          row.getRow().set(last, tenant.getTenantName());
         }
       });
     } else {

@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -124,7 +125,7 @@ public abstract class CsvDownloadPreProcessor {
       if (isCentralOrMemberTenant) {
         var tenantId = line[tenantPosition];
         var tenant = userTenants.get(tenantId);
-        if (tenant != null) {
+        if (Objects.nonNull(tenant)) {
           line[tenantPosition] = tenant.getTenantName();
         }
       } else {
