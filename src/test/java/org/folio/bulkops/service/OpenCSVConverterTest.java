@@ -66,6 +66,8 @@ import org.folio.bulkops.domain.bean.UserGroupCollection;
 import org.folio.bulkops.domain.converter.CustomMappingStrategy;
 import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.integration.XOkapiHeaders;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -75,6 +77,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -83,7 +86,9 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -114,10 +119,18 @@ class OpenCSVConverterTest extends BaseTest {
     }
   }
 
+  @SpyBean
+  private FolioExecutionContext folioExecutionContext;
+
   @ParameterizedTest
   @ArgumentsSource(BulkOperationEntityClassProvider.class)
   void shouldConvertEntity(Class<BulkOperationsEntity> clazz) throws IOException {
     initMocks();
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
 
     /* JSON -> Object */
     var bean = objectMapper.readValue(new FileInputStream(getPathToSample(clazz)), clazz);
