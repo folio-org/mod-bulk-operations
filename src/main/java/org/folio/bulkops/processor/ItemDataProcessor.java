@@ -79,32 +79,13 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
     if (REPLACE_WITH == action.getType()) {
       return switch (option) {
         case PERMANENT_LOAN_TYPE ->
-          extendedItem -> {
-          var tenant = getTenantFromAction(action);
-            try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
-              extendedItem.getEntity().setPermanentLoanType(itemReferenceService.getLoanTypeById(action.getUpdated(), tenant));
-            }
-        };
+          extendedItem -> replacePermanentLoanType(action, extendedItem);
         case TEMPORARY_LOAN_TYPE ->
-          extendedItem -> {
-            var tenant = getTenantFromAction(action);
-            try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
-              extendedItem.getEntity().setTemporaryLoanType(itemReferenceService.getLoanTypeById(action.getUpdated(), tenant));
-            }
-          };
-        case PERMANENT_LOCATION -> extendedItem -> {
-          var tenant = getTenantFromAction(action);
-          try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
-            extendedItem.getEntity().setPermanentLocation(itemReferenceService.getLocationById(action.getUpdated(), tenant));
-            extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), tenant));
-          }
-        };
+          extendedItem -> replaceTemporaryLoanType(action, extendedItem);
+        case PERMANENT_LOCATION ->
+          extendedItem -> replacePermanentLocation(action, extendedItem);
         case TEMPORARY_LOCATION -> extendedItem -> {
-          var tenant = getTenantFromAction(action);
-          try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
-            extendedItem.getEntity().setTemporaryLocation(itemReferenceService.getLocationById(action.getUpdated(), tenant));
-            extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), tenant));
-          }
+          replaceTemporaryLocation(action, extendedItem);
         };
         case STATUS -> extendedItem -> extendedItem.getEntity().setStatus(new InventoryItemStatus()
           .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated()))
@@ -197,6 +178,36 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
     }
     return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedItem.getTenant()) ||
       nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedItem.getTenant());
+  }
+
+  private void replacePermanentLoanType(Action action, ExtendedItem extendedItem) {
+    var tenant = getTenantFromAction(action);
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+      extendedItem.getEntity().setPermanentLoanType(itemReferenceService.getLoanTypeById(action.getUpdated(), tenant));
+    }
+  }
+
+  private void replaceTemporaryLoanType(Action action, ExtendedItem extendedItem) {
+    var tenant = getTenantFromAction(action);
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+      extendedItem.getEntity().setTemporaryLoanType(itemReferenceService.getLoanTypeById(action.getUpdated(), tenant));
+    }
+  }
+
+  private void replacePermanentLocation(Action action, ExtendedItem extendedItem) {
+    var tenant = getTenantFromAction(action);
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+      extendedItem.getEntity().setPermanentLocation(itemReferenceService.getLocationById(action.getUpdated(), tenant));
+      extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), tenant));
+    }
+  }
+
+  private void replaceTemporaryLocation(Action action, ExtendedItem extendedItem) {
+    var tenant = getTenantFromAction(action);
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+      extendedItem.getEntity().setTemporaryLocation(itemReferenceService.getLocationById(action.getUpdated(), tenant));
+      extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), tenant));
+    }
   }
 }
 

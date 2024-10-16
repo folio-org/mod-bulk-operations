@@ -10,7 +10,6 @@ import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.exception.EntityFormatException;
 import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.FolioModuleMetadata;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
