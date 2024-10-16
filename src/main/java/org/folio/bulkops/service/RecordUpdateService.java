@@ -25,7 +25,7 @@ public class RecordUpdateService {
   private final BulkOperationExecutionContentRepository executionContentRepository;
   private final EntityPathResolver entityPathResolver;
 
-  public BulkOperationsEntity updateEntity(BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation) {;
+  public BulkOperationsEntity updateEntity(BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation) {
     var entity = modified.getRecordBulkOperationEntity();
     if (Objects.nonNull(entity)) {
       entity.setTenant(null);
