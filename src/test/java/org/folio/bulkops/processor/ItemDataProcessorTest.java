@@ -983,6 +983,21 @@ class ItemDataProcessorTest extends BaseTest {
     verifyNoInteractions(errorService);
   }
 
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+      HOLDINGS_NOTE                      | note type
+      ITEM_NOTE                          | note type
+      PERMANENT_LOAN_TYPE                | permanent loan type
+      TEMPORARY_LOAN_TYPE                | temporary loan type
+      PERMANENT_LOCATION                 | permanent location
+      TEMPORARY_LOCATION                 | temporary location
+      ELECTRONIC_ACCESS_URL_RELATIONSHIP | URL relationship
+    """, delimiter = '|')
+  void testGetRecordPropertyName(UpdateOptionType optionType, String returnValue) {
+    var dataProcessor = (AbstractDataProcessor)processor;
+    assertEquals(returnValue, dataProcessor.getRecordPropertyName(optionType));
+  }
+
   @Test
   void testShouldNotUpdateHoldingWithPermanentLoanType_whenIntersectionRuleAndActionTenantsGivesNothing() {
     when(folioExecutionContext.getTenantId()).thenReturn("memberB");
