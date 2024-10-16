@@ -13,6 +13,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -31,6 +32,7 @@ import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.exception.RuleValidationTenantsException;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;
@@ -77,18 +79,32 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
     if (REPLACE_WITH == action.getType()) {
       return switch (option) {
         case PERMANENT_LOAN_TYPE ->
-          extendedItem -> extendedItem.getEntity().setPermanentLoanType(
-            itemReferenceService.getLoanTypeById(action.getUpdated(), getTenantFromAction(action)));
+          extendedItem -> {
+          var tenant = getTenantFromAction(action);
+            try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+              extendedItem.getEntity().setPermanentLoanType(itemReferenceService.getLoanTypeById(action.getUpdated(), tenant));
+            }
+        };
         case TEMPORARY_LOAN_TYPE ->
-          extendedItem -> extendedItem.getEntity().setTemporaryLoanType(
-            itemReferenceService.getLoanTypeById(action.getUpdated(), getTenantFromAction(action)));
+          extendedItem -> {
+            var tenant = getTenantFromAction(action);
+            try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+              extendedItem.getEntity().setTemporaryLoanType(itemReferenceService.getLoanTypeById(action.getUpdated(), tenant));
+            }
+          };
         case PERMANENT_LOCATION -> extendedItem -> {
-          extendedItem.getEntity().setPermanentLocation(itemReferenceService.getLocationById(action.getUpdated(), getTenantFromAction(action)));
-          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), getTenantFromAction(action)));
+          var tenant = getTenantFromAction(action);
+          try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+            extendedItem.getEntity().setPermanentLocation(itemReferenceService.getLocationById(action.getUpdated(), tenant));
+            extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), tenant));
+          }
         };
         case TEMPORARY_LOCATION -> extendedItem -> {
-          extendedItem.getEntity().setTemporaryLocation(itemReferenceService.getLocationById(action.getUpdated(), getTenantFromAction(action)));
-          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), getTenantFromAction(action)));
+          var tenant = getTenantFromAction(action);
+          try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+            extendedItem.getEntity().setTemporaryLocation(itemReferenceService.getLocationById(action.getUpdated(), tenant));
+            extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), tenant));
+          }
         };
         case STATUS -> extendedItem -> extendedItem.getEntity().setStatus(new InventoryItemStatus()
           .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated()))

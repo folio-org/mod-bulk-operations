@@ -19,6 +19,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOV
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -38,6 +39,7 @@ import org.folio.bulkops.exception.RuleValidationTenantsException;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
 import org.folio.bulkops.service.ElectronicAccessReferenceService;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;
@@ -123,14 +125,16 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
       }
 
       if (Set.of(PERMANENT_LOCATION, TEMPORARY_LOCATION).contains(option)) {
-        try {
-          itemReferenceService.getLocationById(newId, getTenantFromAction(action));
+        var tenant = getTenantFromAction(action);
+        try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+          itemReferenceService.getLocationById(newId, tenant);
         } catch (Exception e) {
           throw new RuleValidationException(format("Location %s doesn't exist", newId));
         }
       } else if (ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option)) {
-        try {
-          electronicAccessReferenceService.getRelationshipNameById(newId, getTenantFromAction(action));
+        var tenant = getTenantFromAction(action);
+        try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+          electronicAccessReferenceService.getRelationshipNameById(newId, tenant);
         } catch (Exception e) {
           throw new RuleValidationException(format("URL relationship %s doesn't exist", newId));
         }

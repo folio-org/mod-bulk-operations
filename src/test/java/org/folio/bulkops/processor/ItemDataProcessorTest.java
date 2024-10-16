@@ -41,13 +41,22 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.domain.bean.*;
+import org.folio.bulkops.domain.bean.CirculationNote;
+import org.folio.bulkops.domain.bean.ExtendedItem;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.InventoryItemStatus;
+import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.ItemNote;
+import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateActionType;
@@ -59,6 +68,7 @@ import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
 import org.folio.bulkops.util.FolioExecutionContextUtil;
 import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.integration.XOkapiHeaders;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -101,6 +111,11 @@ class ItemDataProcessorTest extends BaseTest {
     }
     when(itemReferenceService.getAllowedStatuses(AVAILABLE.getValue()))
       .thenReturn(Collections.singletonList(MISSING.getValue()));
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("tenant"));
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getTenantId()).thenReturn("tenant");
   }
 
   @Test
@@ -114,9 +129,9 @@ class ItemDataProcessorTest extends BaseTest {
   void testClearItemLocationAndLoanType() {
     var holdingsId = UUID.randomUUID().toString();
     var locationId = UUID.randomUUID().toString();
-    when(holdingsReferenceService.getHoldingsRecordById(holdingsId, null))
+    when(holdingsReferenceService.getHoldingsRecordById(holdingsId, "tenant"))
       .thenReturn(new HoldingsRecord().withPermanentLocationId(locationId));
-    when(itemReferenceService.getLocationById(locationId, "diku"))
+    when(itemReferenceService.getLocationById(locationId, "tenant"))
       .thenReturn(new ItemLocation().withId(locationId));
     var item = new Item()
       .withHoldingsRecordId(holdingsId)
@@ -150,7 +165,6 @@ class ItemDataProcessorTest extends BaseTest {
 
     when(itemReferenceService.getLocationById(updatedLocationId, "tenant")).thenReturn(updatedLocation);
     when(itemReferenceService.getLoanTypeById(updatedLoanTypeId, "tenant")).thenReturn(updatedLoanType);
-    when(folioExecutionContext.getTenantId()).thenReturn("tenant");
 
     var item = new Item()
       .withPermanentLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Permanent location"))
@@ -206,7 +220,6 @@ class ItemDataProcessorTest extends BaseTest {
 
     when(holdingsReferenceService.getHoldingsRecordById(holdingsId, "tenant")).thenReturn(new HoldingsRecord().withPermanentLocationId(holdingsLocationId));
     when(itemReferenceService.getLocationById(holdingsLocationId, "tenant")).thenReturn(holdingsLocation);
-    when(folioExecutionContext.getTenantId()).thenReturn("tenant");
 
     var item = new Item()
       .withHoldingsRecordId(holdingsId)
@@ -241,7 +254,6 @@ class ItemDataProcessorTest extends BaseTest {
 
     when(itemReferenceService.getLocationById(newLocationId, "tenant"))
       .thenReturn(newLocation);
-    when(folioExecutionContext.getTenantId()).thenReturn("tenant");
 
     var rules = rules(rule(optionType, REPLACE_WITH, newLocationId));
 

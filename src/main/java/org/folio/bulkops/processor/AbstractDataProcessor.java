@@ -28,7 +28,7 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
   @Autowired
   private ErrorService errorService;
   @Autowired
-  private FolioModuleMetadata folioModuleMetadata;
+  protected FolioModuleMetadata folioModuleMetadata;
   @Autowired
   private ConsortiaService consortiaService;
   @Autowired
