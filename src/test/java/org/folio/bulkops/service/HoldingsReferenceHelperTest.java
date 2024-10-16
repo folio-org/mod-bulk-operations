@@ -3,12 +3,18 @@ package org.folio.bulkops.service;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.*;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.integration.XOkapiHeaders;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -19,6 +25,8 @@ class HoldingsReferenceHelperTest extends BaseTest {
 
   @Autowired
   private HoldingsReferenceHelper holdingsReferenceHelper;
+  @SpyBean
+  private FolioExecutionContext folioExecutionContext;
 
   @Test
   void testGetHoldingsType() {
@@ -39,6 +47,11 @@ class HoldingsReferenceHelperTest extends BaseTest {
 
   @Test
   void testGetLocation() {
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
     when(locationClient.getLocationById("id_1")).thenReturn(new ItemLocation().withName("name_1"));
     var actual = holdingsReferenceHelper.getLocationById("id_1", null);
     assertEquals("name_1", actual.getName());
