@@ -69,7 +69,9 @@
             "consortia.consortium.item.get",
             "user-tenants.collection.get",
             "consortia.user-tenants.collection.get",
-            "mapping-rules.get"
+            "mapping-rules.get",
+            "consortium-search.holdings.batch.collection.get",
+            "consortium-search.items.batch.collection.get"
           ]
         },
         {
@@ -97,7 +99,9 @@
             "inventory-storage.ill-policies.item.get",
             "inventory-storage.holdings-sources.item.get",
             "inventory-storage.statistical-codes.item.get",
-            "inventory-storage.instance-note-types.item.get"
+            "inventory-storage.instance-note-types.item.get",
+            "consortium-search.holdings.batch.collection.get",
+            "consortium-search.items.batch.collection.get"
           ]
         },
         {
@@ -242,7 +246,9 @@
             "consortia.consortium.item.get",
             "user-tenants.collection.get",
             "consortia.user-tenants.collection.get",
-            "metadata-provider.jobexecutions.get"
+            "metadata-provider.jobexecutions.get",
+            "consortium-search.holdings.batch.collection.get",
+            "consortium-search.items.batch.collection.get"
           ]
         },
         {
