@@ -75,7 +75,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
   }
 
   @Override
-  public Updater<ExtendedItem> updater(UpdateOptionType option, Action action, ExtendedItem entity) throws RuleValidationTenantsException {
+  public Updater<ExtendedItem> updater(UpdateOptionType option, Action action, ExtendedItem entity, boolean forPreview) throws RuleValidationTenantsException {
     if (REPLACE_WITH == action.getType()) {
       return switch (option) {
         case PERMANENT_LOAN_TYPE ->

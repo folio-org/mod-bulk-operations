@@ -64,7 +64,7 @@ public class UserDataProcessor extends AbstractDataProcessor<User> {
   }
 
   @Override
-  public Updater<User> updater(UpdateOptionType option, Action action, User entity) {
+  public Updater<User> updater(UpdateOptionType option, Action action, User entity, boolean forPreview) {
     return switch (option) {
       case PATRON_GROUP -> user -> user.setPatronGroup(action.getUpdated());
       case EXPIRATION_DATE -> user -> {

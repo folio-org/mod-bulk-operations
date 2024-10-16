@@ -40,7 +40,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
   @Test
   void testGetLocation() {
     when(locationClient.getLocationById("id_1")).thenReturn(new ItemLocation().withName("name_1"));
-    var actual = holdingsReferenceHelper.getLocationById("id_1");
+    var actual = holdingsReferenceHelper.getLocationById("id_1", null);
     assertEquals("name_1", actual.getName());
 
     when(locationClient.getByQuery("name==\"name_2\"")).thenReturn(new ItemLocationCollection().withLocations(Collections.singletonList(new ItemLocation().withId("id_2"))));
@@ -48,7 +48,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     assertEquals("id_2", actual.getId());
 
     when(locationClient.getLocationById("id_3")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> holdingsReferenceHelper.getLocationById("id_3"));
+    assertThrows(NotFoundException.class, () -> holdingsReferenceHelper.getLocationById("id_3", null));
 
     when(locationClient.getByQuery("name==\"name_4\"")).thenReturn(new ItemLocationCollection().withLocations(Collections.emptyList()));
     assertThrows(NotFoundException.class, () -> holdingsReferenceHelper.getLocationByName("name_4"));

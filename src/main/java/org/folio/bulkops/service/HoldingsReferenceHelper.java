@@ -2,10 +2,19 @@ package org.folio.bulkops.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.bulkops.domain.bean.*;
+import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
+import org.folio.bulkops.domain.bean.HoldingsType;
+import org.folio.bulkops.domain.bean.IllPolicy;
+import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
+
+import static java.util.Objects.isNull;
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 @Component
 @RequiredArgsConstructor
@@ -14,6 +23,7 @@ public class HoldingsReferenceHelper implements InitializingBean {
 
   private final HoldingsReferenceService holdingsReferenceService;
   private final FolioExecutionContext folioExecutionContext;
+  private final FolioModuleMetadata folioModuleMetadata;
 
   public HoldingsType getHoldingsTypeById(String id) {
     return holdingsReferenceService.getHoldingsTypeById(id, folioExecutionContext.getTenantId());
@@ -23,8 +33,13 @@ public class HoldingsReferenceHelper implements InitializingBean {
     return holdingsReferenceService.getHoldingsTypeByName(name, folioExecutionContext.getTenantId());
   }
 
-  public ItemLocation getLocationById(String id) {
-    return holdingsReferenceService.getLocationById(id, folioExecutionContext.getTenantId());
+  public ItemLocation getLocationById(String id, String tenantId) {
+    if (isNull(tenantId)) {
+      tenantId = folioExecutionContext.getTenantId();
+    }
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
+      return holdingsReferenceService.getLocationById(id, tenantId);
+    }
   }
 
   public ItemLocation getLocationByName(String name) {

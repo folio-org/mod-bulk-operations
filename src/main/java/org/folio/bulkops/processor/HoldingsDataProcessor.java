@@ -17,6 +17,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_UR
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
@@ -83,12 +84,17 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     };
   }
 
-  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity) throws RuleValidationTenantsException {
+  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity,
+                                                 boolean forPreview) throws RuleValidationTenantsException {
     if (isElectronicAccessUpdate(option)) {
       return (Updater<ExtendedHoldingsRecord>) electronicAccessUpdaterFactory.updater(option, action);
     } else if (REPLACE_WITH == action.getType()) {
       return extendedHoldingsRecord -> {
         var locationId = action.getUpdated();
+        var tenant = getTenantFromAction(action);
+        if (forPreview) {
+          locationId += ARRAY_DELIMITER + tenant;
+        }
         if (PERMANENT_LOCATION == option) {
           extendedHoldingsRecord.getEntity().setPermanentLocationId(locationId);
           extendedHoldingsRecord.getEntity().setEffectiveLocationId(isEmpty(extendedHoldingsRecord.getEntity().getTemporaryLocationId()) ? locationId : extendedHoldingsRecord.getEntity().getTemporaryLocationId());
