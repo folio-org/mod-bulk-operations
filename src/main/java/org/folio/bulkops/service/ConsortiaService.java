@@ -5,6 +5,8 @@ import org.folio.bulkops.client.ConsortiaClient;
 import org.folio.bulkops.client.ConsortiumClient;
 import org.folio.bulkops.domain.bean.UserTenant;
 import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -17,13 +19,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
+
 @Service
 @RequiredArgsConstructor
 @Log4j2
 public class ConsortiaService {
 
   private final FolioExecutionContext context;
-
+  private final FolioModuleMetadata folioModuleMetadata;
   private final ConsortiaClient consortiaClient;
   private final ConsortiumClient consortiumClient;
 
@@ -52,11 +56,16 @@ public class ConsortiaService {
 
   @Cacheable(value = "getUserTenantsPerIdCache")
   public Map<String, UserTenant> getUserTenantsPerId(String currentTenantId, String userId) {
-    var consortia = consortiumClient.getConsortia();
-    var consortiaList = consortia.getConsortia();
-    if (!consortiaList.isEmpty()) {
-      var userTenants = consortiumClient.getConsortiaUserTenants(consortiaList.get(0).getId(), userId, Integer.MAX_VALUE);
-      return userTenants.getUserTenants().stream().collect(Collectors.toMap(UserTenant::getTenantId, userTenant -> userTenant));
+    var centralTenantId = getCentralTenantId(currentTenantId);
+    if (StringUtils.isNotEmpty(centralTenantId)) {
+      try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(centralTenantId, folioModuleMetadata, context))) {
+        var consortia = consortiumClient.getConsortia();
+        var consortiaList = consortia.getConsortia();
+        if (!consortiaList.isEmpty()) {
+          var userTenants = consortiumClient.getConsortiaUserTenants(consortiaList.get(0).getId(), userId, Integer.MAX_VALUE);
+          return userTenants.getUserTenants().stream().collect(Collectors.toMap(UserTenant::getTenantId, userTenant -> userTenant));
+        }
+      }
     }
     return new HashMap<>();
   }
