@@ -84,9 +84,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
           extendedItem -> replaceTemporaryLoanType(action, extendedItem);
         case PERMANENT_LOCATION ->
           extendedItem -> replacePermanentLocation(action, extendedItem);
-        case TEMPORARY_LOCATION -> extendedItem -> {
-          replaceTemporaryLocation(action, extendedItem);
-        };
+        case TEMPORARY_LOCATION -> extendedItem -> replaceTemporaryLocation(action, extendedItem);
         case STATUS -> extendedItem -> extendedItem.getEntity().setStatus(new InventoryItemStatus()
           .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated()))
           .withDate(new Date()));

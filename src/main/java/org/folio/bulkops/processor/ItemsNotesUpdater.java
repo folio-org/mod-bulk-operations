@@ -42,7 +42,7 @@ public class ItemsNotesUpdater {
 
   private final AdministrativeNotesUpdater administrativeNotesUpdater;
 
-  public Optional<Updater<ExtendedItem>> updateNotes(Action action, UpdateOptionType option){
+  public Optional<Updater<ExtendedItem>> updateNotes(Action action, UpdateOptionType option) {
     if (MARK_AS_STAFF_ONLY == action.getType() || REMOVE_MARK_AS_STAFF_ONLY == action.getType()) {
       return setStaffOnly(action, option);
     } else if (REMOVE_ALL == action.getType()) {

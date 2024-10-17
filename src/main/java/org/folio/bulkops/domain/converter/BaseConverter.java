@@ -58,7 +58,7 @@ public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
     }
     try {
       return convertToString((T) object);
-    } catch (Exception e) {e.printStackTrace();
+    } catch (Exception e) {
       failed = true;
       throw new ConverterException(this.getField(), object, e.getMessage());
     }
