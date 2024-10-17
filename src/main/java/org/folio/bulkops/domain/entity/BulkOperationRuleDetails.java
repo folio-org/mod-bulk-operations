@@ -46,5 +46,6 @@ public class BulkOperationRuleDetails {
   @Column(columnDefinition = "jsonb")
   private List<Parameter> parameters;
 
-  private List<String> tenants;
+  private List<String> actionTenants;
+  private List<String> ruleTenants;
 }

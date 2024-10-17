@@ -1,6 +1,7 @@
 ## v2.1.0 - Unreleased
 
 ### Technical tasks
+* [MODBULKOPS-370](https://folio-org.atlassian.net/browse/MODBULKOPS-370) - Upgrade `holdings-storage` to 8.0
 * [MODBULKOPS-361](https://folio-org.atlassian.net/browse/MODBULKOPS-361) Rename module permissions
 
 ## v2.0.0 - Released 2024/03/19

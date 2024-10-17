@@ -17,10 +17,13 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_UR
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -38,6 +41,7 @@ import org.folio.bulkops.exception.RuleValidationTenantsException;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
 import org.folio.bulkops.service.ElectronicAccessReferenceService;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.stereotype.Component;
 
 import lombok.AllArgsConstructor;
@@ -74,18 +78,27 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
       if (PERMANENT_LOCATION == option && CLEAR_FIELD == action.getType()) {
         throw new RuleValidationException("Permanent location cannot be cleared");
       }
+      if (nonNull(rule) && ruleTenantsAreNotValid(rule, action, option, extendedHoldingsRecord)) {
+        throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE,
+          extendedHoldingsRecord.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedHoldingsRecord.getTenant(), getRecordPropertyName(option)));
+      }
     };
   }
 
-  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity, BulkOperationRule rule) throws RuleValidationTenantsException {
-    if (ruleTenantsAreNotValid(rule, action, entity)) {
-      throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE, entity.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), entity.getTenant(), option.getValue()));
-    }
+  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity,
+                                                 boolean forPreview) throws RuleValidationTenantsException {
     if (isElectronicAccessUpdate(option)) {
+      if (nonNull(entity.getEntity().getElectronicAccess())) {
+        entity.getEntity().getElectronicAccess().forEach(el -> el.setTenantId(getTenantFromAction(action)));
+      }
       return (Updater<ExtendedHoldingsRecord>) electronicAccessUpdaterFactory.updater(option, action);
     } else if (REPLACE_WITH == action.getType()) {
       return extendedHoldingsRecord -> {
         var locationId = action.getUpdated();
+        if (forPreview) {
+        var tenant = getTenantFromAction(action);
+          locationId += ARRAY_DELIMITER + tenant;
+        }
         if (PERMANENT_LOCATION == option) {
           extendedHoldingsRecord.getEntity().setPermanentLocationId(locationId);
           extendedHoldingsRecord.getEntity().setEffectiveLocationId(isEmpty(extendedHoldingsRecord.getEntity().getTemporaryLocationId()) ? locationId : extendedHoldingsRecord.getEntity().getTemporaryLocationId());
@@ -121,15 +134,16 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
         throw new RuleValidationException("UUID has invalid format: %s" + newId);
       }
 
+      var tenant = getTenantFromAction(action);
       if (Set.of(PERMANENT_LOCATION, TEMPORARY_LOCATION).contains(option)) {
-        try {
-          itemReferenceService.getLocationById(newId);
+        try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+          itemReferenceService.getLocationById(newId, tenant);
         } catch (Exception e) {
           throw new RuleValidationException(format("Location %s doesn't exist", newId));
         }
       } else if (ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option)) {
-        try {
-          electronicAccessReferenceService.getRelationshipNameById(newId);
+        try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+          electronicAccessReferenceService.getRelationshipNameById(newId, tenant);
         } catch (Exception e) {
           throw new RuleValidationException(format("URL relationship %s doesn't exist", newId));
         }
@@ -188,10 +202,25 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     return ExtendedHoldingsRecord.class;
   }
 
-  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, ExtendedHoldingsRecord extendedHolding) {
+  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, UpdateOptionType option, ExtendedHoldingsRecord extendedHolding) {
     var ruleTenants = rule.getRuleDetails().getTenants();
     var actionTenants = action.getTenants();
+    if (isThereIntersectionBetween(ruleTenants, actionTenants)) {
+      return !ruleTenants.contains(extendedHolding.getTenant());
+    }
+    if (nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
+      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && action.getType() == UpdateActionType.FIND_AND_REPLACE) {
+      return true;
+    }
     return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedHolding.getTenant()) ||
       nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedHolding.getTenant());
+  }
+
+  private boolean isThereIntersectionBetween(List<String> ruleTenants, List<String> actionTenants) {
+    if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
+      ruleTenants.retainAll(actionTenants);
+      return true;
+    }
+    return false;
   }
 }

@@ -99,6 +99,8 @@ class PreviewServiceTest extends BaseTest {
   private ConsortiaService consortiaService;
   @MockBean
   private MappingRulesClient mappingRulesClient;
+  @MockBean
+  private BulkOperationService bulkOperationService;
   @Autowired
   private NoteTableUpdater noteTableUpdater;
 
@@ -129,6 +131,8 @@ class PreviewServiceTest extends BaseTest {
     var bulkOperation = buildBulkOperation(fileName, entityType, step);
     bulkOperation.setId(operationId);
     bulkOperation.setApproach(approachType);
+    bulkOperation.setStatus(org.folio.bulkops.domain.dto.OperationStatusType.NEW);
+    bulkOperation.setTenantNotePairs(List.of());
     when(bulkOperationRepository.findById(operationId))
       .thenReturn(Optional.of(bulkOperation));
 
@@ -157,6 +161,9 @@ class PreviewServiceTest extends BaseTest {
 
     var bulkOperationRuleCollection = objectMapper.readValue(new FileInputStream(getPathToContentUpdateRequest(entityType)), BulkOperationRuleCollection.class);
     when(ruleService.getRules(any(UUID.class))).thenReturn(bulkOperationRuleCollection);
+    bulkOperation.setTenantNotePairs(List.of());
+    when(bulkOperationService.getBulkOperationOrThrow(any(UUID.class))).thenReturn(bulkOperation);
+    when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(bulkOperation);
 
     var table = previewService.getPreview(bulkOperation, step, offset, limit);
 
@@ -399,6 +406,10 @@ class PreviewServiceTest extends BaseTest {
       .thenReturn(new ByteArrayInputStream(",,,,,,,,,,".getBytes()));
     when(mappingRulesClient.getMarcBibMappingRules())
       .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+    var bulkOperation = new BulkOperation();
+    bulkOperation.setTenantNotePairs(List.of());
+    when(bulkOperationService.getBulkOperationOrThrow(any(UUID.class))).thenReturn(bulkOperation);
+    when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(bulkOperation);
 
     var table = previewService.getPreview(operation, COMMIT, 0, 10);
 

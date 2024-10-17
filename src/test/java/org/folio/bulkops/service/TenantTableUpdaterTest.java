@@ -4,6 +4,7 @@ import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.bean.UserTenant;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.UnifiedTable;
@@ -18,7 +19,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -63,24 +66,32 @@ class TenantTableUpdaterTest {
   @ParameterizedTest
   @MethodSource("getEntityClassesWithTenant")
   void updateTenantInHeadersAndRowsForConsortiaTest(Class<? extends BulkOperationsEntity> entityClass) {
+    Map<String, UserTenant> userTenants = new HashMap<>();
+    var userTenant = new UserTenant();
+    userTenant.setTenantId("tenantId");
+    userTenant.setTenantName("tenantName");
+    userTenants.put("tenantId", userTenant);
+
     var table = new UnifiedTable();
     var cell = new Cell();
     cell.setValue("Tenant");
     var headers = List.of(cell);
     table.setHeader(headers);
     var row = new Row();
-    row.setRow(new ArrayList<>(List.of("value")));
+    row.setRow(new ArrayList<>(List.of("tenantId")));
     table.setRows(List.of(row));
 
     when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
+    when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
     when(consortiaService.isCurrentTenantInConsortia(anyString())).thenReturn(true);
+    when(consortiaService.getUserTenantsPerId(anyString(), anyString())).thenReturn(userTenants);
 
     tableUpdater.updateTenantInHeadersAndRows(table, entityClass);
 
     var actualTenantHeaderValue = table.getHeader().get(0).getValue();
     assertEquals("Member", actualTenantHeaderValue);
     var actualTenantRowValue = table.getRows().get(0).getRow().get(0);
-    assertEquals("value", actualTenantRowValue);
+    assertEquals("tenantName", actualTenantRowValue);
   }
 
   @Test

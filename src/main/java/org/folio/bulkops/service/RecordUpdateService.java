@@ -16,6 +16,8 @@ import org.folio.bulkops.util.EntityPathResolver;
 import org.folio.bulkops.util.Utils;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 @Service
 @RequiredArgsConstructor
 public class RecordUpdateService {
@@ -24,6 +26,10 @@ public class RecordUpdateService {
   private final EntityPathResolver entityPathResolver;
 
   public BulkOperationsEntity updateEntity(BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation) {
+    var entity = modified.getRecordBulkOperationEntity();
+    if (Objects.nonNull(entity)) {
+      entity.setTenant(null);
+    }
     var isEqual = original.hashCode() == modified.hashCode() && original.equals(modified);
     var updater = updateProcessorFactory.getProcessorFromFactory(resolveExtendedEntityClass(operation.getEntityType()));
     if (!isEqual) {
