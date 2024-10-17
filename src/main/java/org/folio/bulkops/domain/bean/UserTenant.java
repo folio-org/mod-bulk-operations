@@ -9,4 +9,5 @@ import lombok.Data;
 public class UserTenant {
   private String centralTenantId;
   private String tenantId;
+  private String tenantName;
 }

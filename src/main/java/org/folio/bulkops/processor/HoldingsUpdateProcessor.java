@@ -51,7 +51,6 @@ public class HoldingsUpdateProcessor extends AbstractUpdateProcessor<ExtendedHol
   @Override
   public void updateRecord(ExtendedHoldingsRecord extendedHoldingsRecord) {
     var holdingsRecord = extendedHoldingsRecord.getEntity();
-    holdingsRecord.setTenant(null);
     if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
       var tenantId = extendedHoldingsRecord.getTenantId();
       permissionsValidator.checkIfBulkEditWritePermissionExists(tenantId, EntityType.HOLDINGS_RECORD,
