@@ -1,5 +1,8 @@
 ## v2.1.0 - Unreleased
 
+### Technical tasks
+* [MODBULKOPS-370](https://folio-org.atlassian.net/browse/MODBULKOPS-370) - Upgrade `holdings-storage` to 8.0
+
 ## v2.0.0 - Released 2024/03/19
 This release includes FQM Integration, separate notes by note type, updating Suppress from discovery flag and Staff suppress flag
 
