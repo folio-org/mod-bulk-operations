@@ -265,6 +265,7 @@ public class PreviewService {
     } catch (Exception e) {
       log.error(e.getMessage());
     }
+    tenantTableUpdater.updateTenantInHeadersAndRows(table, clazz);
     return table;
   }
 
