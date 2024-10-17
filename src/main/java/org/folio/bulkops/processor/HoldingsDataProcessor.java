@@ -87,7 +87,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
   public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity,
                                                  boolean forPreview) throws RuleValidationTenantsException {
     if (isElectronicAccessUpdate(option)) {
-      return (Updater<ExtendedHoldingsRecord>) electronicAccessUpdaterFactory.updater(option, action);
+      return (Updater<ExtendedHoldingsRecord>) electronicAccessUpdaterFactory.updater(option, action, this);
     } else if (REPLACE_WITH == action.getType()) {
       return extendedHoldingsRecord -> {
         var locationId = action.getUpdated();

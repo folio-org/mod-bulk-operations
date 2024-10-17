@@ -16,18 +16,19 @@ import java.util.Objects;
 
 @Component
 public class ElectronicAccessUpdaterFactory {
-  public Updater<? extends ElectronicAccessEntity> updater(UpdateOptionType option, Action action) {
+
+  public Updater<? extends ElectronicAccessEntity> updater(UpdateOptionType option, Action action, HoldingsDataProcessor holdingsDataProcessor) {
     return switch (option) {
-      case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> updateUrlRelationship(option, action);
-      case ELECTRONIC_ACCESS_URI -> updateUri(option, action);
-      case ELECTRONIC_ACCESS_LINK_TEXT -> updateLinkText(option, action);
-      case ELECTRONIC_ACCESS_MATERIALS_SPECIFIED -> updateMaterialsSpecified(option, action);
-      case ELECTRONIC_ACCESS_URL_PUBLIC_NOTE -> updatePublicNote(option, action);
+      case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> updateUrlRelationship(option, action, holdingsDataProcessor);
+      case ELECTRONIC_ACCESS_URI -> updateUri(option, action, holdingsDataProcessor);
+      case ELECTRONIC_ACCESS_LINK_TEXT -> updateLinkText(option, action, holdingsDataProcessor);
+      case ELECTRONIC_ACCESS_MATERIALS_SPECIFIED -> updateMaterialsSpecified(option, action, holdingsDataProcessor);
+      case ELECTRONIC_ACCESS_URL_PUBLIC_NOTE -> updatePublicNote(option, action, holdingsDataProcessor);
       default -> notSupported(option, action);
     };
   }
 
-  private Updater<? extends ElectronicAccessEntity> updateUrlRelationship(UpdateOptionType option, Action action) {
+  private Updater<? extends ElectronicAccessEntity> updateUrlRelationship(UpdateOptionType option, Action action, HoldingsDataProcessor holdingsDataProcessor) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setRelationshipId(null)));
@@ -40,12 +41,15 @@ public class ElectronicAccessUpdaterFactory {
           .filter(electronicAccess -> equalsIgnoreCase(electronicAccess.getRelationshipId(), action.getInitial()))
           .forEach(electronicAccess -> electronicAccess.setRelationshipId(action.getUpdated())));
       case REPLACE_WITH -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
-        .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setRelationshipId(action.getUpdated())));
+        .ifPresent(list -> list.forEach(electronicAccess -> {
+          electronicAccess.setRelationshipId(action.getUpdated());
+          electronicAccess.setTenantId(holdingsDataProcessor.getTenantFromAction(action));
+        }));
       default -> notSupported(option, action);
     };
   }
 
-  private Updater<? extends ElectronicAccessEntity> updateUri(UpdateOptionType option, Action action) {
+  private Updater<? extends ElectronicAccessEntity> updateUri(UpdateOptionType option, Action action, HoldingsDataProcessor holdingsDataProcessor) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setUri(EMPTY)));
@@ -58,12 +62,15 @@ public class ElectronicAccessUpdaterFactory {
           .filter(electronicAccess -> Objects.equals(electronicAccess.getUri(), action.getInitial()))
           .forEach(electronicAccess -> electronicAccess.setUri(isNull(action.getUpdated()) ? EMPTY : action.getUpdated())));
       case REPLACE_WITH -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
-        .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setUri(isNull(action.getUpdated()) ? EMPTY : action.getUpdated())));
+        .ifPresent(list -> list.forEach(electronicAccess -> {
+          electronicAccess.setUri(isNull(action.getUpdated()) ? EMPTY : action.getUpdated());
+          electronicAccess.setTenantId(holdingsDataProcessor.getTenantFromAction(action));
+        }));
       default -> notSupported(option, action);
     };
   }
 
-  private Updater<? extends ElectronicAccessEntity> updateLinkText(UpdateOptionType option, Action action) {
+  private Updater<? extends ElectronicAccessEntity> updateLinkText(UpdateOptionType option, Action action, HoldingsDataProcessor holdingsDataProcessor) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setLinkText(null)));
@@ -76,12 +83,15 @@ public class ElectronicAccessUpdaterFactory {
           .filter(electronicAccess -> Objects.equals(electronicAccess.getLinkText(), action.getInitial()))
           .forEach(electronicAccess -> electronicAccess.setLinkText(action.getUpdated())));
       case REPLACE_WITH -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
-        .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setLinkText(action.getUpdated())));
+        .ifPresent(list -> list.forEach(electronicAccess -> {
+          electronicAccess.setLinkText(action.getUpdated());
+          electronicAccess.setTenantId(holdingsDataProcessor.getTenantFromAction(action));
+        }));
       default -> notSupported(option, action);
     };
   }
 
-  private Updater<? extends ElectronicAccessEntity> updateMaterialsSpecified(UpdateOptionType option, Action action) {
+  private Updater<? extends ElectronicAccessEntity> updateMaterialsSpecified(UpdateOptionType option, Action action, HoldingsDataProcessor holdingsDataProcessor) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setMaterialsSpecification(null)));
@@ -94,12 +104,15 @@ public class ElectronicAccessUpdaterFactory {
           .filter(electronicAccess -> Objects.equals(electronicAccess.getMaterialsSpecification(), action.getInitial()))
           .forEach(electronicAccess -> electronicAccess.setMaterialsSpecification(action.getUpdated())));
       case REPLACE_WITH -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
-        .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setMaterialsSpecification(action.getUpdated())));
+        .ifPresent(list -> list.forEach(electronicAccess -> {
+          electronicAccess.setMaterialsSpecification(action.getUpdated());
+          electronicAccess.setTenantId(holdingsDataProcessor.getTenantFromAction(action));
+        }));
       default -> notSupported(option, action);
     };
   }
 
-  private Updater<? extends ElectronicAccessEntity> updatePublicNote(UpdateOptionType option, Action action) {
+  private Updater<? extends ElectronicAccessEntity> updatePublicNote(UpdateOptionType option, Action action, HoldingsDataProcessor holdingsDataProcessor) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setPublicNote(null)));
@@ -112,7 +125,10 @@ public class ElectronicAccessUpdaterFactory {
           .filter(electronicAccess -> Objects.equals(electronicAccess.getPublicNote(), action.getInitial()))
           .forEach(electronicAccess -> electronicAccess.setPublicNote(action.getUpdated())));
       case REPLACE_WITH -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
-        .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setPublicNote(action.getUpdated())));
+        .ifPresent(list -> list.forEach(electronicAccess -> {
+          electronicAccess.setPublicNote(action.getUpdated());
+          electronicAccess.setTenantId(holdingsDataProcessor.getTenantFromAction(action));
+        }));
       default -> notSupported(option, action);
     };
   }
