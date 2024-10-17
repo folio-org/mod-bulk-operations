@@ -675,6 +675,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
     var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
+    processor.folioExecutionContext = folioExecutionContext;
     var action = new Action().type(REPLACE_WITH).updated(newValue);
 
     processor.updater(option, action, extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
