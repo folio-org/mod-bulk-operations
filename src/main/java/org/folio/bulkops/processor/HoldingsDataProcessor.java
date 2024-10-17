@@ -23,6 +23,7 @@ import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TE
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -94,8 +95,8 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     } else if (REPLACE_WITH == action.getType()) {
       return extendedHoldingsRecord -> {
         var locationId = action.getUpdated();
-        var tenant = getTenantFromAction(action);
         if (forPreview) {
+        var tenant = getTenantFromAction(action);
           locationId += ARRAY_DELIMITER + tenant;
         }
         if (PERMANENT_LOCATION == option) {
@@ -133,15 +134,14 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
         throw new RuleValidationException("UUID has invalid format: %s" + newId);
       }
 
+      var tenant = getTenantFromAction(action);
       if (Set.of(PERMANENT_LOCATION, TEMPORARY_LOCATION).contains(option)) {
-        var tenant = getTenantFromAction(action);
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
           itemReferenceService.getLocationById(newId, tenant);
         } catch (Exception e) {
           throw new RuleValidationException(format("Location %s doesn't exist", newId));
         }
       } else if (ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option)) {
-        var tenant = getTenantFromAction(action);
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
           electronicAccessReferenceService.getRelationshipNameById(newId, tenant);
         } catch (Exception e) {
@@ -205,8 +205,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
   private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, UpdateOptionType option, ExtendedHoldingsRecord extendedHolding) {
     var ruleTenants = rule.getRuleDetails().getTenants();
     var actionTenants = action.getTenants();
-    if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
-      ruleTenants.retainAll(actionTenants);
+    if (isThereIntersectionBetween(ruleTenants, actionTenants)) {
       return !ruleTenants.contains(extendedHolding.getTenant());
     }
     if (nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
@@ -215,5 +214,13 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     }
     return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedHolding.getTenant()) ||
       nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedHolding.getTenant());
+  }
+
+  private boolean isThereIntersectionBetween(List<String> ruleTenants, List<String> actionTenants) {
+    if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
+      ruleTenants.retainAll(actionTenants);
+      return true;
+    }
+    return false;
   }
 }

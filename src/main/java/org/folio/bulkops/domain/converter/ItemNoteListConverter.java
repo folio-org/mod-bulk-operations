@@ -44,11 +44,11 @@ public class ItemNoteListConverter extends BaseConverter<List<ItemNote>> {
       .map(itemNote -> {
         var noteTypeName = itemNote.getItemNoteTypeName();
         if (isNull(noteTypeName)) {
+          noteTypeName = "";
           try {
             noteTypeName = ItemReferenceHelper.service().getNoteTypeNameById(itemNote.getItemNoteTypeId(), itemNote.getTenantId());
           } catch (NotFoundException e) {
             log.error("Item note type with id = {} not found : {}", itemNote.getItemNoteTypeId(), e.getMessage());
-            noteTypeName = "";
           }
         }
           return String.join(ARRAY_DELIMITER,

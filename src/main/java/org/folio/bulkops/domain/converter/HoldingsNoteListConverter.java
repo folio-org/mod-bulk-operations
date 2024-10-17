@@ -46,16 +46,16 @@ public class HoldingsNoteListConverter extends BaseConverter<List<HoldingsNote>>
 
   @Override
   public String convertToString(List<HoldingsNote> object) {
-    var str = object.stream()
+    return object.stream()
       .filter(Objects::nonNull)
       .map(note -> {
         var noteTypeName = note.getHoldingsNoteTypeName();
         if (isNull(noteTypeName)) {
+          noteTypeName = "";
           try {
             noteTypeName = HoldingsReferenceHelper.service().getNoteTypeNameById(note.getHoldingsNoteTypeId());
           } catch (NotFoundException e) {
             log.error("Holding note type with id = {} not found : {}", note.getHoldingsNoteTypeId(), e.getMessage());
-            noteTypeName = "";
           }
         }
         return String.join(ARRAY_DELIMITER,
@@ -64,9 +64,7 @@ public class HoldingsNoteListConverter extends BaseConverter<List<HoldingsNote>>
           booleanToStringNullSafe(note.getStaffOnly()),
           note.getTenantId(),
           note.getHoldingsNoteTypeId());
-      })
-      .collect(Collectors.joining(ITEM_DELIMITER));
-    return str;
+      }).collect(Collectors.joining(ITEM_DELIMITER));
   }
 
   private HoldingsNote restoreHoldingsNote(String s) {
