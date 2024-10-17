@@ -33,6 +33,32 @@
     {
       "bulkOperationId": "3352816d-75b7-4cf7-abdb-333bc063a4c3",
       "rule_details": {
+        "option": "HOLDINGS_NOTE",
+        "actions": [
+          {
+            "type": "ADD_TO_EXISTING",
+            "initial": null,
+            "updated": "666",
+            "parameters": [
+              {
+                "key": "HOLDINGS_NOTE_TYPE_ID_KEY",
+                "value": "e19eabab-a85c-4aef-a7b2-33bd9acef24e"
+              },
+              {
+                "key": "STAFF_ONLY",
+                "value": false,
+                "onlyForActions": [
+                  "ADD_TO_EXISTING"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "bulkOperationId": "3352816d-75b7-4cf7-abdb-333bc063a4c3",
+      "rule_details": {
         "option": "SUPPRESS_FROM_DISCOVERY",
         "actions": [
           {

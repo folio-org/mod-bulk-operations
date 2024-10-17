@@ -16,6 +16,7 @@ import java.util.Objects;
 
 @Component
 public class ElectronicAccessUpdaterFactory {
+
   public Updater<? extends ElectronicAccessEntity> updater(UpdateOptionType option, Action action) {
     return switch (option) {
       case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> updateUrlRelationship(option, action);

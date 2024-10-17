@@ -52,6 +52,8 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
 import org.folio.bulkops.util.UpdateOptionTypeToFieldResolver;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
 import org.marc4j.MarcStreamReader;
 import org.springframework.stereotype.Service;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -73,6 +75,9 @@ public class PreviewService {
   private final HoldingsNoteTypeClient holdingsNoteTypeClient;
   private final InstanceNoteTypesClient instanceNoteTypesClient;
   private final MarcToUnifiedTableRowMapper marcToUnifiedTableRowMapper;
+  private final FolioModuleMetadata folioModuleMetadata;
+  private final FolioExecutionContext folioExecutionContext;
+  private final BulkOperationService bulkOperationService;
   private final TenantTableUpdater tenantTableUpdater;
   private final Marc21ReferenceProvider referenceProvider;
 
@@ -119,6 +124,7 @@ public class PreviewService {
 
   private Set<String> getChangedOptionsSet(UUID bulkOperationId, EntityType entityType, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> clazz) {
     Set<String> forceVisibleOptions = new HashSet<>();
+    var bulkOperation = bulkOperationService.getOperationById(bulkOperationId);
     rules.getBulkOperationRules().forEach(rule -> {
       var option = rule.getRuleDetails().getOption();
       rule.getRuleDetails().getActions().forEach(action -> {
@@ -142,20 +148,32 @@ public class PreviewService {
           }
 
           if (initial.isPresent()) {
-            var type = resolveAndGetItemTypeById(clazz, initial.get());
-            if (StringUtils.isNotEmpty(type)) {
-              forceVisibleOptions.add(type);
+            var noteTypeName = getNoteTypeNameById(bulkOperation, initial.get());
+            if (noteTypeName.isPresent()) {
+              forceVisibleOptions.add(noteTypeName.get());
+            } else {
+              var type = resolveAndGetItemTypeById(clazz, initial.get());
+              if (StringUtils.isNotEmpty(type)) {
+                forceVisibleOptions.add(type);
+              }
             }
+            log.info("initial.isPresent() {},{}", folioExecutionContext.getTenantId(), initial.get());
           } else {
             forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option, entityType));
           }
 
           var updated = action.getUpdated();
           if (UUID_REGEX.matcher(updated).matches()) {
-            var type = resolveAndGetItemTypeById(clazz, updated);
-            if (StringUtils.isNotEmpty(type)) {
-              forceVisibleOptions.add(type);
+            var noteTypeName = getNoteTypeNameById(bulkOperation, updated);
+            if (noteTypeName.isPresent()) {
+              forceVisibleOptions.add(noteTypeName.get());
+            } else {
+              var type = resolveAndGetItemTypeById(clazz, updated);
+              if (StringUtils.isNotEmpty(type)) {
+                forceVisibleOptions.add(type);
+              }
             }
+            log.info("UUID_REGEX.matcher(updated) {}, {}, {}", noteTypeName, updated, folioExecutionContext.getTenantId());
           } else {
             forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(UpdateOptionType.fromValue(updated), entityType));
           }
@@ -165,22 +183,33 @@ public class PreviewService {
         } else if (ITEM_NOTE == option) {
           var initial = action.getParameters().stream().filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
           initial.ifPresent(id -> {
-            var type = resolveAndGetItemTypeById(clazz, id);
-            if (StringUtils.isNotEmpty(type)) {
-              forceVisibleOptions.add(type);
+            var noteTypeName = getNoteTypeNameById(bulkOperation, id);
+            if (noteTypeName.isPresent()) {
+              forceVisibleOptions.add(noteTypeName.get());
+            } else {
+              var type = resolveAndGetItemTypeById(clazz, id);
+              if (StringUtils.isNotEmpty(type)) {
+                forceVisibleOptions.add(type);
+              }
             }
           });
         } else if (HOLDINGS_NOTE == option) {
           var initial = action.getParameters().stream().filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
           initial.ifPresent(id -> {
-            var type = resolveAndGetItemTypeById(clazz, id);
-            if (StringUtils.isNotEmpty(type)) {
-              forceVisibleOptions.add(type);
+            var noteTypeName = getNoteTypeNameById(bulkOperation, id);
+            if (noteTypeName.isPresent()) {
+              forceVisibleOptions.add(noteTypeName.get());
+            } else {
+              var type = resolveAndGetItemTypeById(clazz, id);
+              if (StringUtils.isNotEmpty(type)) {
+                forceVisibleOptions.add(type);
+              }
             }
           });
         } else if (INSTANCE_NOTE == option) {
           var initial = action.getParameters().stream().filter(p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
           initial.ifPresent(id -> {
+            log.info("else if (INSTANCE_NOTE == option)");
             var type = resolveAndGetItemTypeById(clazz, id);
             if (StringUtils.isNotEmpty(type)) {
               forceVisibleOptions.add(type);
@@ -293,5 +322,10 @@ public class PreviewService {
     } else if (clazz == Instance.class) {
       noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible);
     }
+  }
+
+  private Optional<String> getNoteTypeNameById(BulkOperation bulkOperation, String noteTypeId) {
+    return bulkOperation.getTenantNotePairs().stream().filter(pair -> pair.getNoteTypeId().equals(noteTypeId))
+      .map(pair -> pair.getNoteTypeName()).findFirst();
   }
 }

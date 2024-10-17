@@ -9,6 +9,8 @@ import static org.mockito.Mockito.when;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.exception.EntityFormatException;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -17,18 +19,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.github.jknack.handlebars.internal.lang3.StringUtils;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 
 class ElectronicAccessServiceTest extends BaseTest {
   @MockBean
   private ElectronicAccessReferenceService electronicAccessReferenceService;
+  @SpyBean
+  private FolioExecutionContext folioExecutionContext;
 
   @Autowired
   private ElectronicAccessService electronicAccessService;
+  @Autowired
+  private FolioModuleMetadata folioModuleMetadata;
 
   @ParameterizedTest
   @CsvSource(value = { ",,,,", "id,uri,text,specification,note" }, delimiter = ',')
   void testElectronicAccessToString(String relationshipId, String uri, String linkText, String materialsSpecification, String publicNote) {
-    when(electronicAccessReferenceService.getRelationshipNameById("id")).thenReturn("name");
+    when(electronicAccessReferenceService.getRelationshipNameById("id", "tenant")).thenReturn("name");
+    when(folioExecutionContext.getTenantId()).thenReturn("tenant");
+    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
     var actual = electronicAccessService.electronicAccessToString(ElectronicAccess.builder()
       .uri(uri)
       .linkText(linkText)

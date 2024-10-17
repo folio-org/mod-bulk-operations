@@ -8,8 +8,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.dto.TenantNotePair;
 
 import java.util.List;
+import java.util.Optional;
 
 @Data
 @With
@@ -50,7 +52,17 @@ public class ExtendedHoldingsRecord implements BulkOperationsEntity, ElectronicA
   }
 
   @Override
-  public void setTenantToNotes() {
-    entity.getNotes().forEach(note -> note.setTenantId(tenantId));
+  public void setTenantToNotes(List<TenantNotePair> tenantNotePairs) {
+    entity.getNotes().forEach(note -> {
+      var tenantNotePair = tenantNotePairs.stream()
+        .filter(pair -> pair.getNoteTypeId().equals(note.getHoldingsNoteTypeId()))
+        .findFirst();
+      if (tenantNotePair.isPresent()) {
+        note.setTenantId(tenantNotePair.get().getTenantId());
+        note.setHoldingsNoteTypeName(tenantNotePair.get().getNoteTypeName());
+      } else {
+        note.setTenantId(tenantId);
+      }
+    });
   }
 }

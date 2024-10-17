@@ -214,7 +214,7 @@ public class NoteTableUpdater {
     var tenantNotePairs = bulkOperation.getTenantNotePairs();
     if (isNull(tenantNotePairs)) {
       tenantNotePairs = noteTypesFromUsedTenants.stream().map(note -> new TenantNotePair().tenantId(note.getTenantId())
-        .noteTypeName(note.getName())).toList();
+        .noteTypeName(note.getName()).noteTypeId(note.getId())).toList();
       bulkOperation.setTenantNotePairs(tenantNotePairs);
       bulkOperationRepository.save(bulkOperation);
     }

@@ -722,7 +722,7 @@ class BulkOperationServiceTest extends BaseTest {
             .type(UpdateActionType.REPLACE_WITH)
             .updated("Available"))));
 
-      when(itemReferenceService.getLocationById(any())).thenReturn(new ItemLocation()
+      when(itemReferenceService.getLocationById(any(), any())).thenReturn(new ItemLocation()
         .withId("fcd51ce2-1111-48f0-840e-89ffa2288371").withName("Annex"));
 
       when(ruleService.getRules(bulkOperationId))

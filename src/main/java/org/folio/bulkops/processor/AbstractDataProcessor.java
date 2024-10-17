@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.extern.log4j.Log4j2;
 
+import static java.util.Objects.isNull;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 @Log4j2
@@ -27,7 +28,7 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
   @Autowired
   private ErrorService errorService;
   @Autowired
-  private FolioModuleMetadata folioModuleMetadata;
+  protected FolioModuleMetadata folioModuleMetadata;
   @Autowired
   private ConsortiaService consortiaService;
   @Autowired
@@ -43,9 +44,9 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
       var option = details.getOption();
       for (Action action : details.getActions()) {
         try {
-          updater(option, action, entity, rule).apply(preview);
+          updater(option, action, entity, true).apply(preview);
           validator(entity).validate(option, action, rule);
-          updater(option, action, entity, rule).apply(updated);
+          updater(option, action, entity, false).apply(updated);
         } catch (RuleValidationException e) {
           errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
         } catch (RuleValidationTenantsException e) {
@@ -79,10 +80,10 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
    * @param option {@link UpdateOptionType} for update
    * @param action {@link Action} for update
    * @param action {@link T} for update
-   * @param action {@link BulkOperationRule} for update
+   * @param forPreview {@link Boolean} true if for preview, otherwise false
    * @return updater
    */
-  public abstract Updater<T> updater(UpdateOptionType option, Action action, T entity, BulkOperationRule rule) throws RuleValidationTenantsException;
+  public abstract Updater<T> updater(UpdateOptionType option, Action action, T entity, boolean forPreview) throws RuleValidationTenantsException;
 
   /**
    * Clones object of type {@link T}
@@ -100,4 +101,24 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
    * @return true if objects are equal, otherwise - false
    */
   public abstract boolean compare(T first, T second);
+
+  public String getRecordPropertyName(UpdateOptionType optionType) {
+    return switch (optionType) {
+      case HOLDINGS_NOTE, ITEM_NOTE -> "note type";
+      case PERMANENT_LOAN_TYPE -> "permanent loan type";
+      case TEMPORARY_LOAN_TYPE -> "temporary loan type";
+      case PERMANENT_LOCATION -> "permanent location";
+      case TEMPORARY_LOCATION -> "temporary location";
+      case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> "URL relationship";
+      default -> optionType.getValue();
+    };
+  }
+
+  public String getTenantFromAction(Action action) {
+    var actionTenants = action.getTenants();
+    if (isNull(actionTenants) || actionTenants.isEmpty()) {
+      return folioExecutionContext.getTenantId();
+    }
+    return actionTenants.get(0);
+  }
 }

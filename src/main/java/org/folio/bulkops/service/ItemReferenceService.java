@@ -163,7 +163,7 @@ public class ItemReferenceService {
   }
 
   @Cacheable(cacheNames = "locations")
-  public ItemLocation getLocationById(String id) {
+  public ItemLocation getLocationById(String id, String tenantId) {
     try {
       return locationClient.getLocationById(id);
     } catch (Exception e) {
@@ -188,7 +188,7 @@ public class ItemReferenceService {
   }
 
   @Cacheable(cacheNames = "loanTypes")
-  public LoanType getLoanTypeById(String id) {
+  public LoanType getLoanTypeById(String id, String tenantId) {
     try {
       return loanTypeClient.getLoanTypeById(id);
     } catch (Exception e) {

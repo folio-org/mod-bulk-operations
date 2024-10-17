@@ -8,6 +8,7 @@ import org.folio.bulkops.client.ElectronicAccessRelationshipClient;
 import org.folio.bulkops.domain.bean.ElectronicAccessRelationship;
 import org.folio.bulkops.domain.bean.ElectronicAccessRelationshipCollection;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.spring.FolioExecutionContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,6 +21,8 @@ import java.util.Collections;
 class ElectronicAccessReferenceServiceTest {
   @Mock
   private ElectronicAccessRelationshipClient electronicAccessRelationshipClient;
+  @Mock
+  private FolioExecutionContext folioExecutionContext;
   @InjectMocks
   private ElectronicAccessReferenceService electronicAccessReferenceService;
 
@@ -29,7 +32,7 @@ class ElectronicAccessReferenceServiceTest {
     var expectedName = "name";
     when(electronicAccessRelationshipClient.getById(id)).thenReturn(new ElectronicAccessRelationship().withName(expectedName));
 
-    var actualName = electronicAccessReferenceService.getRelationshipNameById(id);
+    var actualName = electronicAccessReferenceService.getRelationshipNameById(id, "diku");
 
     assertEquals(expectedName, actualName);
   }
@@ -38,9 +41,10 @@ class ElectronicAccessReferenceServiceTest {
   void shouldReturnIdIfRelationshipNotFound() {
     var id = "id";
     var expectedName = id;
+
     when(electronicAccessRelationshipClient.getById(id)).thenThrow(new NotFoundException("Not found"));
 
-    var actualName = electronicAccessReferenceService.getRelationshipNameById(id);
+    var actualName = electronicAccessReferenceService.getRelationshipNameById(id, "tenant");
 
     assertEquals(expectedName, actualName);
   }

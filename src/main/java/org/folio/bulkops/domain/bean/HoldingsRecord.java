@@ -32,6 +32,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.With;
+import org.folio.bulkops.domain.dto.TenantNotePair;
 
 @Data
 @With
@@ -39,7 +40,7 @@ import lombok.With;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("holdingsRecord")
-@EqualsAndHashCode(exclude = {"metadata", "instanceId", "permanentLocation", "effectiveLocationId", "illPolicy", "instanceHrid", "itemBarcode"})
+@EqualsAndHashCode(exclude = {"metadata", "instanceId", "permanentLocation", "effectiveLocationId", "illPolicy", "instanceHrid", "itemBarcode", "tenantId"})
 public class HoldingsRecord implements BulkOperationsEntity {
 
   @JsonProperty("id")
@@ -278,8 +279,12 @@ public class HoldingsRecord implements BulkOperationsEntity {
   }
 
   @Override
-  public void setTenantToNotes() {
-    getNotes().forEach(note -> note.setTenantId(tenantId));
+  public void setTenantToNotes(List<TenantNotePair> tenantNotePairs) {
+    getNotes().forEach(note -> note.setTenantId(
+      tenantNotePairs.stream()
+        .filter(pair -> pair.getNoteTypeId().equals(note.getHoldingsNoteTypeId()))
+        .map(pair -> pair.getTenantId()).findFirst().orElseGet(() -> tenantId)
+    ));
   }
 
   @Override

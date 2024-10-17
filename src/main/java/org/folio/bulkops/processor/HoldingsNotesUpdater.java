@@ -161,5 +161,4 @@ public class HoldingsNotesUpdater {
   private Optional<Parameter> getTypeIdParameterOptional(List<Parameter> parameters) {
     return parameters.stream().filter(parameter -> StringUtils.equals(parameter.getKey(), HOLDINGS_NOTE_TYPE_ID_KEY)).findFirst();
   }
-
 }

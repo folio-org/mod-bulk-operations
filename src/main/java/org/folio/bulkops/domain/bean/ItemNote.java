@@ -23,5 +23,6 @@ public class ItemNote {
   @JsonProperty("staffOnly")
   private Boolean staffOnly = false;
   private String tenantId;
+  private String itemNoteTypeName;
 }
 
