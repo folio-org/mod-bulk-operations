@@ -12,10 +12,16 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class PublicationPeriod {
-  @JsonProperty("start")
-  private Integer start;
+public class ChildInstance {
 
-  @JsonProperty("end")
-  private Integer end;
+  @JsonProperty("id")
+  private String id;
+
+  @JsonProperty("subInstanceId")
+  private String subInstanceId;
+
+  @JsonProperty("instanceRelationshipTypeId")
+  private String instanceRelationshipTypeId;
+
 }
+
