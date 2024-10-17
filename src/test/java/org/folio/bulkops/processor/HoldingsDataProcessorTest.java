@@ -602,6 +602,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
 
     var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
+    processor.folioExecutionContext = folioExecutionContext;
     var action = new Action().type(CLEAR_FIELD);
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
 
@@ -630,6 +631,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
     var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
+    processor.folioExecutionContext = folioExecutionContext;
     var action = new Action().type(FIND_AND_REMOVE_THESE).initial(value);
 
     processor.updater(option, action, extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
@@ -703,6 +705,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
     var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
+    processor.folioExecutionContext = folioExecutionContext;
     var action = new Action().type(FIND_AND_REPLACE).initial(initial).updated(updated);
 
     processor.updater(option, action, extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
