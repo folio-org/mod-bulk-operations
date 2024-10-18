@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -48,6 +49,7 @@ import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.dto.UpdateActionType;
+import org.folio.bulkops.domain.dto.TenantNotePair;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
@@ -325,7 +327,7 @@ public class PreviewService {
   }
 
   private Optional<String> getNoteTypeNameById(BulkOperation bulkOperation, String noteTypeId) {
-    return bulkOperation.getTenantNotePairs().stream().filter(pair -> pair.getNoteTypeId().equals(noteTypeId))
-      .map(pair -> pair.getNoteTypeName()).findFirst();
+    return ofNullable(bulkOperation.getTenantNotePairs()).flatMap(pairs -> pairs.stream().filter(pair -> pair.getNoteTypeId().equals(noteTypeId))
+      .map(TenantNotePair::getNoteTypeName).findFirst());
   }
 }
