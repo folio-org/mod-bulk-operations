@@ -207,8 +207,6 @@ public class Instance implements BulkOperationsEntity {
   private List<Classification> classifications;
   @JsonProperty("publication")
   private List<Publication> publications;
-  @JsonProperty("publicationPeriod")
-  private PublicationPeriod publicationPeriod;
   @JsonProperty("electronicAccess")
   private List<ElectronicAccess> electronicAccesses;
   @JsonProperty("statisticalCodeIds")
@@ -227,6 +225,14 @@ public class Instance implements BulkOperationsEntity {
   private String isbn;
   @JsonProperty("ISSN")
   private String issn;
+  @JsonProperty("parentInstances")
+  private List<ParentInstance> parentInstances;
+  @JsonProperty("childInstances")
+  private List<ChildInstance> childInstances;
+  @JsonProperty("dates")
+  private Dates dates;
+  @JsonProperty("isBoundWith")
+  private Boolean isBoundWith = false;
 
 
 
