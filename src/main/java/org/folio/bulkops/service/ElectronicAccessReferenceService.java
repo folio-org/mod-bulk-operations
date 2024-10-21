@@ -24,6 +24,7 @@ public class ElectronicAccessReferenceService {
 
   @Cacheable(cacheNames = "electronicAccessRelationshipNames")
   public String getRelationshipNameById(String id, String tenantId) {
+    log.info("getRelationshipNameById: {}, {}", id, tenantId);
     try {
       return relationshipClient.getById(id).getName();
     } catch (NotFoundException e) {

@@ -143,6 +143,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
         }
       } else if (ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option)) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+          log.info("ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option), tenant: {}", tenant);
           electronicAccessReferenceService.getRelationshipNameById(newId, tenant);
         } catch (Exception e) {
           throw new RuleValidationException(format("URL relationship %s doesn't exist", newId));
