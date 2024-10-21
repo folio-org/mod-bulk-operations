@@ -48,6 +48,7 @@ public class ElectronicAccessService {
   }
 
   private String electronicAccessToString(ElectronicAccess access, String delimiter) {
+    log.info("electronicAccessToString: {}, {}", access.getTenantId(), folioExecutionContext.getTenantId());
     var tenantId = isNull(access.getTenantId()) ? folioExecutionContext.getTenantId() : access.getTenantId();
     return String.join(delimiter,
       isEmpty(access.getRelationshipId()) ? EMPTY : electronicAccessReferenceService.getRelationshipNameById(access.getRelationshipId(), tenantId),
