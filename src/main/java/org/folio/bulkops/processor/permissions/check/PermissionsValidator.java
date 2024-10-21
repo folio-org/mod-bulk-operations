@@ -27,13 +27,13 @@ public class PermissionsValidator {
   }
 
   private boolean isBulkEditWritePermissionExists(String tenantId, EntityType entityType) {
-    var readPermissionForEntity = requiredPermissionResolver.getWritePermission(entityType);
+    var writePermissionForEntity = requiredPermissionResolver.getWritePermission(entityType);
     var userPermissions = permissionsProvider.getUserPermissions(tenantId, folioExecutionContext.getUserId());
     var isWritePermissionsExist = false;
     if (entityType == EntityType.USER) {
-      isWritePermissionsExist = userPermissions.contains(readPermissionForEntity.getValue()) && userPermissions.contains(BULK_EDIT_USERS_WRITE_PERMISSION.getValue());
+      isWritePermissionsExist = userPermissions.contains(writePermissionForEntity.getValue()) && userPermissions.contains(BULK_EDIT_USERS_WRITE_PERMISSION.getValue());
     } else {
-      isWritePermissionsExist = userPermissions.contains(readPermissionForEntity.getValue()) && userPermissions.contains(BULK_EDIT_INVENTORY_WRITE_PERMISSION.getValue());
+      isWritePermissionsExist = userPermissions.contains(writePermissionForEntity.getValue()) && userPermissions.contains(BULK_EDIT_INVENTORY_WRITE_PERMISSION.getValue());
     }
     log.info("isBulkEditWritePermissionExists:: user {} has write permissions {} for {} in tenant {}", folioExecutionContext.getUserId(),
       isWritePermissionsExist, entityType, tenantId);
