@@ -89,7 +89,11 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
                                                  boolean forPreview) throws RuleValidationTenantsException {
     if (isElectronicAccessUpdate(option)) {
       if (nonNull(entity.getEntity().getElectronicAccess())) {
-        entity.getEntity().getElectronicAccess().forEach(el -> el.setTenantId(getTenantFromAction(action)));
+        entity.getEntity().getElectronicAccess().forEach(el -> {
+          var elAccId = el.getRelationshipId();
+          var tenantId = getTenantFromAction(action);
+          el.setRelationshipId(elAccId + ARRAY_DELIMITER + tenantId);
+        });
       }
       return (Updater<ExtendedHoldingsRecord>) electronicAccessUpdaterFactory.updater(option, action);
     } else if (REPLACE_WITH == action.getType()) {

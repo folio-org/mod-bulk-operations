@@ -1,5 +1,6 @@
 package org.folio.bulkops.domain.bean;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
@@ -29,8 +30,5 @@ public class ElectronicAccess {
 
   @JsonProperty("relationshipId")
   private String relationshipId;
-
-  @JsonProperty("tenantId")
-  private String tenantId;
 }
 
