@@ -95,6 +95,8 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
           el.setRelationshipId(elAccId + ARRAY_DELIMITER + tenantId);
         });
       }
+      log.info("updater entity.getElAcc: {}, entity.getEnt.getElAcc: {}",
+        entity.getElectronicAccess(), entity.getEntity().getElectronicAccess());
       return (Updater<ExtendedHoldingsRecord>) electronicAccessUpdaterFactory.updater(option, action);
     } else if (REPLACE_WITH == action.getType()) {
       return extendedHoldingsRecord -> {
