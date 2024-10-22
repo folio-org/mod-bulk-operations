@@ -104,7 +104,7 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
 
   public String getRecordPropertyName(UpdateOptionType optionType) {
     return switch (optionType) {
-      case HOLDINGS_NOTE, ITEM_NOTE -> "note type";
+      case HOLDINGS_NOTE, ITEM_NOTE, ADMINISTRATIVE_NOTE, CHECK_IN_NOTE, CHECK_OUT_NOTE -> "note type";
       case PERMANENT_LOAN_TYPE -> "permanent loan type";
       case TEMPORARY_LOAN_TYPE -> "temporary loan type";
       case PERMANENT_LOCATION -> "permanent location";

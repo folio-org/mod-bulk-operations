@@ -42,12 +42,9 @@ public class ElectronicAccessUpdaterFactory {
       case FIND_AND_REPLACE -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.stream()
           .filter(electronicAccess -> equalsIgnoreCase(electronicAccess.getRelationshipId(), action.getInitial()))
-          .forEach(electronicAccess -> electronicAccess.setRelationshipId(action.getUpdated())));
+          .forEach(electronicAccess -> electronicAccess.setRelationshipId(action.getUpdated() + ARRAY_DELIMITER + electronicAccess.getTenantId())));
       case REPLACE_WITH -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
-        .ifPresent(list -> list.forEach(electronicAccess -> {
-          log.info("REPLACE_WITH elacc: {}", electronicAccess);
-          electronicAccess.setRelationshipId(action.getUpdated() + ARRAY_DELIMITER + electronicAccess.getTenantId());
-        }));
+        .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setRelationshipId(action.getUpdated() + ARRAY_DELIMITER + electronicAccess.getTenantId())));
       default -> notSupported(option, action);
     };
   }
