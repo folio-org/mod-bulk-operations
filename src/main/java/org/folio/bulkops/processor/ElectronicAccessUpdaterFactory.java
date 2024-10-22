@@ -5,7 +5,9 @@ import static java.util.Objects.isNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
+import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.ElectronicAccessEntity;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Component;
 import java.util.Objects;
 
 @Component
+@Log4j2
 public class ElectronicAccessUpdaterFactory {
 
   public Updater<? extends ElectronicAccessEntity> updater(UpdateOptionType option, Action action) {
@@ -41,7 +44,10 @@ public class ElectronicAccessUpdaterFactory {
           .filter(electronicAccess -> equalsIgnoreCase(electronicAccess.getRelationshipId(), action.getInitial()))
           .forEach(electronicAccess -> electronicAccess.setRelationshipId(action.getUpdated())));
       case REPLACE_WITH -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
-        .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setRelationshipId(action.getUpdated())));
+        .ifPresent(list -> list.forEach(electronicAccess -> {
+          log.info("REPLACE_WITH elacc: {}", electronicAccess);
+          electronicAccess.setRelationshipId(action.getUpdated() + ARRAY_DELIMITER + electronicAccess.getTenantId());
+        }));
       default -> notSupported(option, action);
     };
   }

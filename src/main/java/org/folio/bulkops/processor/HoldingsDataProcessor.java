@@ -90,9 +90,8 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     if (isElectronicAccessUpdate(option)) {
       if (nonNull(entity.getEntity().getElectronicAccess())) {
         entity.getEntity().getElectronicAccess().forEach(el -> {
-          var elAccId = el.getRelationshipId();
           var tenantId = getTenantFromAction(action);
-          el.setRelationshipId(elAccId + ARRAY_DELIMITER + tenantId);
+          el.setTenantId(tenantId);
         });
       }
       log.info("updater entity.getElAcc: {}, entity.getEnt.getElAcc: {}",

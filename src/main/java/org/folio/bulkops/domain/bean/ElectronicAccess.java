@@ -30,5 +30,8 @@ public class ElectronicAccess {
 
   @JsonProperty("relationshipId")
   private String relationshipId;
+
+  @JsonIgnore
+  private String tenantId;
 }
 
