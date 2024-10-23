@@ -76,9 +76,7 @@ public class ElectronicAccessService {
   }
 
   private String getRelationshipName(ElectronicAccess access) {
-    log.info("getRelationshipName {}", access.getRelationshipId());
-    var idTenant = access.getRelationshipId().split(ARRAY_DELIMITER);
-    access.setRelationshipId(idTenant[0]);
-    return electronicAccessReferenceService.getRelationshipNameById(idTenant[0], idTenant.length > 1 ? idTenant[1] : null);
+    log.info("getRelationshipName {}, {}", access.getRelationshipId(), access.getTenantId());
+    return electronicAccessReferenceService.getRelationshipNameById(access.getRelationshipId(), access.getTenantId());
   }
 }

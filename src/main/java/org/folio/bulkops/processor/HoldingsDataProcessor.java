@@ -88,20 +88,15 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
   public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity,
                                                  boolean forPreview) throws RuleValidationTenantsException {
     if (isElectronicAccessUpdate(option)) {
-      if (nonNull(entity.getEntity().getElectronicAccess())) {
-        entity.getEntity().getElectronicAccess().forEach(el -> {
-          var tenantId = getTenantFromAction(action);
-          el.setTenantId(tenantId);
-        });
+      if (nonNull(entity.getElectronicAccess())) {
+        entity.getElectronicAccess().forEach(el -> el.setTenantId(getTenantFromAction(action)));
       }
-      log.info("updater entity.getElAcc: {}, entity.getEnt.getElAcc: {}",
-        entity.getElectronicAccess(), entity.getEntity().getElectronicAccess());
       return (Updater<ExtendedHoldingsRecord>) electronicAccessUpdaterFactory.updater(option, action);
     } else if (REPLACE_WITH == action.getType()) {
       return extendedHoldingsRecord -> {
         var locationId = action.getUpdated();
         if (forPreview) {
-        var tenant = getTenantFromAction(action);
+          var tenant = getTenantFromAction(action);
           locationId += ARRAY_DELIMITER + tenant;
         }
         if (PERMANENT_LOCATION == option) {
@@ -151,7 +146,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
           log.info("ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option), tenant: {}", tenant);
           electronicAccessReferenceService.getRelationshipNameById(newId, tenant);
         } catch (Exception e) {
-          throw new RuleValidationException(format("URL relationship %s doesn't exist", newId));
+          throw new RuleValidationException(format("URL relationship %s doesn't exist in tenant %s", newId, tenant));
         }
       }
     }
@@ -190,6 +185,10 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     if (entity.getNotes() != null) {
       var holdingsNotes = entity.getNotes().stream().map(note -> note.toBuilder().build()).toList();
       clone.setNotes(new ArrayList<>(holdingsNotes));
+    }
+    if (entity.getElectronicAccess() != null) {
+      var elAcc = entity.getElectronicAccess().stream().map(el -> el.toBuilder().build()).toList();
+      clone.setElectronicAccess(new ArrayList<>(elAcc));
     }
 
     return ExtendedHoldingsRecord.builder().tenantId(extendedEntity.getTenantId()).entity(clone).build();
