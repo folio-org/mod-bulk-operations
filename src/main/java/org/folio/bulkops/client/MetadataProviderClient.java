@@ -19,6 +19,10 @@ public interface MetadataProviderClient {
   DataImportJobExecutionCollection getJobExecutions(@RequestParam long limit);
 
   @GetMapping(value = "/jobExecutions", produces = MediaType.APPLICATION_JSON_VALUE)
+  DataImportJobExecutionCollection getJobExecutionsByJobProfileId(@RequestParam("profileIdAny") UUID profileId,
+    @RequestParam long limit);
+
+  @GetMapping(value = "/jobExecutions", produces = MediaType.APPLICATION_JSON_VALUE)
   DataImportJobExecutionCollection getJobExecutionsByJobProfileIdAndSubordinationType(@RequestParam("profileIdAny") UUID profileId,
     @RequestParam("subordinationTypeNotAny") String subordinationTypeToExclude);
 

@@ -1,0 +1,1087 @@
+{
+  "records": [
+    {
+      "id": "5b0423d5-42e2-47a8-92d1-0a30c03388de",
+      "externalIdsHolder": {
+        "instanceId": "04f60709-25b3-40a1-b880-79ee2def69eb"
+      },
+      "recordType": "MARC_BIB",
+      "recordState": "ACTUAL",
+      "parsedRecord": {
+        "id": "5b0423d5-42e2-47a8-92d1-0a30c03388de",
+        "content": {
+          "fields": [
+            {
+              "001": "in00000000025"
+            },
+            {
+              "008": "170814m20172019nyua     6    000 1 eng d"
+            },
+            {
+              "005": "20241018100759.7"
+            },
+            {
+              "019": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "964194444"
+                  },
+                  {
+                    "a": "964760322"
+                  },
+                  {
+                    "a": "999445824"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "1302900536"
+                  },
+                  {
+                    "q": "(volume 1 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "1302900544"
+                  },
+                  {
+                    "q": "(volume 2 ;"
+                  },
+                  {
+                    "q": "paperback) test"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "1302901915"
+                  },
+                  {
+                    "q": "(volume 3 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "1302904159"
+                  },
+                  {
+                    "q": "(volume 1 ;"
+                  },
+                  {
+                    "q": "hardcover)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "1302906496"
+                  },
+                  {
+                    "q": "(volume 4 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "1302909886"
+                  },
+                  {
+                    "q": "(volume 5 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "1302912933"
+                  },
+                  {
+                    "q": "(volume 6 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "1302912941"
+                  },
+                  {
+                    "q": "(volume 7 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "1302914464"
+                  },
+                  {
+                    "q": "(volume 8 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "130292110X"
+                  },
+                  {
+                    "q": "(volume 9 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "9781302900533"
+                  },
+                  {
+                    "q": "(volume 1 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "9781302900540"
+                  },
+                  {
+                    "q": "(volume 2 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "9781302901912"
+                  },
+                  {
+                    "q": "(volume 3 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "9781302904159"
+                  },
+                  {
+                    "q": "(volume 1 ;"
+                  },
+                  {
+                    "q": "hardcover)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "9781302906498"
+                  },
+                  {
+                    "q": "(volume 4 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "9781302909888"
+                  },
+                  {
+                    "q": "(volume 5 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "9781302912932"
+                  },
+                  {
+                    "q": "(volume 6 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "9781302912949"
+                  },
+                  {
+                    "q": "(volume 7 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "9781302914462"
+                  },
+                  {
+                    "q": "(volume 8 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "020": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "9781302921101"
+                  },
+                  {
+                    "q": "(volume 9 ;"
+                  },
+                  {
+                    "q": "paperback)"
+                  }
+                ]
+              }
+            },
+            {
+              "035": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "(OCoLC)1000535936"
+                  },
+                  {
+                    "z": "(OCoLC)964194444"
+                  },
+                  {
+                    "z": "(OCoLC)964760322"
+                  },
+                  {
+                    "z": "(OCoLC)999445824"
+                  }
+                ]
+              }
+            },
+            {
+              "035": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "in00000000144"
+                  }
+                ]
+              }
+            },
+            {
+              "040": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "OJ4"
+                  },
+                  {
+                    "b": "eng"
+                  },
+                  {
+                    "e": "rda"
+                  },
+                  {
+                    "c": "OJ4"
+                  },
+                  {
+                    "d": "YDX"
+                  },
+                  {
+                    "d": "FLWMD"
+                  },
+                  {
+                    "d": "JTD"
+                  },
+                  {
+                    "d": "TOP"
+                  },
+                  {
+                    "d": "MYG"
+                  },
+                  {
+                    "d": "OCLCA"
+                  },
+                  {
+                    "d": "NJR"
+                  },
+                  {
+                    "d": "UAB"
+                  },
+                  {
+                    "d": "P@N"
+                  },
+                  {
+                    "d": "NYP"
+                  },
+                  {
+                    "d": "OCLCQ"
+                  },
+                  {
+                    "d": "OCLCF"
+                  },
+                  {
+                    "d": "OCLCA"
+                  },
+                  {
+                    "d": "CNNOR"
+                  },
+                  {
+                    "d": "CCPLG"
+                  },
+                  {
+                    "d": "OCLCA"
+                  },
+                  {
+                    "d": "CCPLG"
+                  },
+                  {
+                    "d": "OCL"
+                  },
+                  {
+                    "d": "OCLCO"
+                  },
+                  {
+                    "d": "OCLCQ"
+                  },
+                  {
+                    "d": "OCLCO"
+                  },
+                  {
+                    "d": "OCLCQ"
+                  },
+                  {
+                    "d": "OCL"
+                  },
+                  {
+                    "d": "OCLCO"
+                  },
+                  {
+                    "d": "JPL"
+                  }
+                ]
+              }
+            },
+            {
+              "043": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "f------"
+                  }
+                ]
+              }
+            },
+            {
+              "050": {
+                "ind1": " ",
+                "ind2": "4",
+                "subfields": [
+                  {
+                    "a": "PN6728.B523"
+                  },
+                  {
+                    "b": "C63 2017"
+                  }
+                ]
+              }
+            },
+            {
+              "050": {
+                "ind1": "1",
+                "ind2": "4",
+                "subfields": [
+                  {
+                    "a": "PN6728.B519338"
+                  },
+                  {
+                    "b": "C63 2017"
+                  }
+                ]
+              }
+            },
+            {
+              "082": {
+                "ind1": "0",
+                "ind2": "4",
+                "subfields": [
+                  {
+                    "a": "741.5/973"
+                  },
+                  {
+                    "2": "23"
+                  }
+                ]
+              }
+            },
+            {
+              "100": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "Coates, Ta-Nehisi,"
+                  },
+                  {
+                    "e": "author."
+                  },
+                  {
+                    "0": "n83073672"
+                  }
+                ]
+              }
+            },
+            {
+              "240": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "240 field"
+                  },
+                  {
+                    "0": "n80030866"
+                  }
+                ]
+              }
+            },
+            {
+              "245": {
+                "ind1": "1",
+                "ind2": "0",
+                "subfields": [
+                  {
+                    "a": "Black Panther test automated linking with all subfields"
+                  }
+                ]
+              }
+            },
+            {
+              "264": {
+                "ind1": " ",
+                "ind2": "1",
+                "subfields": [
+                  {
+                    "a": "New York, NY :"
+                  },
+                  {
+                    "b": "Marvel Worldwide, Inc., a subsidiary of Marvel Entertainment, LLC,"
+                  },
+                  {
+                    "c": "2017-2019."
+                  }
+                ]
+              }
+            },
+            {
+              "300": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "9 volumes :"
+                  },
+                  {
+                    "b": "chiefly color illustrations ;"
+                  },
+                  {
+                    "c": "26-29 cm"
+                  }
+                ]
+              }
+            },
+            {
+              "336": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "still image"
+                  },
+                  {
+                    "b": "sti"
+                  },
+                  {
+                    "2": "rdacontent"
+                  }
+                ]
+              }
+            },
+            {
+              "336": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "text"
+                  },
+                  {
+                    "b": "txt"
+                  },
+                  {
+                    "2": "rdacontent"
+                  }
+                ]
+              }
+            },
+            {
+              "337": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "unmediated"
+                  },
+                  {
+                    "b": "n"
+                  },
+                  {
+                    "2": "rdamedia"
+                  }
+                ]
+              }
+            },
+            {
+              "338": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "volume"
+                  },
+                  {
+                    "b": "nc"
+                  },
+                  {
+                    "2": "rdacarrier"
+                  }
+                ]
+              }
+            },
+            {
+              "500": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "\"Black Panther created by Stan Lee & Jack Kirby.\""
+                  }
+                ]
+              }
+            },
+            {
+              "500": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "new 500"
+                  }
+                ]
+              }
+            },
+            {
+              "505": {
+                "ind1": "0",
+                "ind2": "0",
+                "subfields": [
+                  {
+                    "g": "v. 1."
+                  },
+                  {
+                    "t": "A nation under our feet"
+                  },
+                  {
+                    "g": "v. 2."
+                  },
+                  {
+                    "t": "A nation under our feet. Book two"
+                  },
+                  {
+                    "g": "v. 3."
+                  },
+                  {
+                    "t": "A nation under our feet. Book three"
+                  },
+                  {
+                    "g": "v. 4."
+                  },
+                  {
+                    "t": "Avengers of the new world. Part one"
+                  },
+                  {
+                    "g": "v. 5."
+                  },
+                  {
+                    "t": "Avengers of the new world. Part two."
+                  },
+                  {
+                    "g": "v. 6."
+                  },
+                  {
+                    "t": "The intergalactic empire of Wakanda. Part one --"
+                  },
+                  {
+                    "g": "v. 7."
+                  },
+                  {
+                    "t": "The intergalactic empire of Wakanda. Part two. --"
+                  },
+                  {
+                    "g": "v. 8."
+                  },
+                  {
+                    "t": "The intergalactic empire of Wakanda. Part three --"
+                  },
+                  {
+                    "g": "v. 9"
+                  },
+                  {
+                    "t": "The intergalactic empire of Wakanda. Part four."
+                  }
+                ]
+              }
+            },
+            {
+              "520": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "When a superhuman terrorist group named The People sparks a violent uprising in Wakanda, the kingdom famed for its incredible technology and proud traditions will be thrown into turmoil like never before! Black Panther knows that if Wakanda is to survive, it must adapt--but will he be able to make it through the transition alive? Heavy is the head that wears the cowl!"
+                  }
+                ]
+              }
+            },
+            {
+              "521": {
+                "ind1": "8",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "Rated T for Teen."
+                  }
+                ]
+              }
+            },
+            {
+              "588": {
+                "ind1": "0",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "Volume 1."
+                  }
+                ]
+              }
+            },
+            {
+              "600": {
+                "ind1": "0",
+                "ind2": "0",
+                "subfields": [
+                  {
+                    "a": "Black Panther"
+                  },
+                  {
+                    "c": "(Fictitious character)"
+                  },
+                  {
+                    "0": "n2016004082"
+                  },
+                  {
+                    "4": ".prt"
+                  },
+                  {
+                    "2": "test"
+                  },
+                  {
+                    "i": "comics"
+                  },
+                  {
+                    "v": "TestV"
+                  },
+                  {
+                    "x": "TestX"
+                  },
+                  {
+                    "y": "TestY"
+                  },
+                  {
+                    "z": "TestZ"
+                  }
+                ]
+              }
+            },
+            {
+              "610": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "Radio"
+                  },
+                  {
+                    "0": "4510955"
+                  }
+                ]
+              }
+            },
+            {
+              "611": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "Roma"
+                  },
+                  {
+                    "0": "n79084170"
+                  }
+                ]
+              }
+            },
+            {
+              "630": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "Marvel"
+                  },
+                  {
+                    "0": "n80026955"
+                  }
+                ]
+              }
+            },
+            {
+              "650": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "Oratory"
+                  },
+                  {
+                    "0": "sh85095298"
+                  }
+                ]
+              }
+            },
+            {
+              "651": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "Clear Creek"
+                  },
+                  {
+                    "0": "n79041363"
+                  }
+                ]
+              }
+            },
+            {
+              "655": {
+                "ind1": " ",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "Drama"
+                  },
+                  {
+                    "0": "gf2014026297"
+                  }
+                ]
+              }
+            },
+            {
+              "700": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "BP"
+                  },
+                  {
+                    "e": "artist."
+                  },
+                  {
+                    "0": "n2016004082"
+                  }
+                ]
+              }
+            },
+            {
+              "710": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "Radio"
+                  },
+                  {
+                    "0": "4510955"
+                  }
+                ]
+              }
+            },
+            {
+              "711": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "Roma"
+                  },
+                  {
+                    "c": "(Comic book artist),"
+                  },
+                  {
+                    "e": "colorist."
+                  },
+                  {
+                    "0": "id.loc.gov/authorities/names/n79084170"
+                  }
+                ]
+              }
+            },
+            {
+              "730": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "Marvel"
+                  },
+                  {
+                    "0": "n80026955"
+                  },
+                  {
+                    "e": "letterer."
+                  }
+                ]
+              }
+            },
+            {
+              "800": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "800 field"
+                  },
+                  {
+                    "0": "n2016004082"
+                  }
+                ]
+              }
+            },
+            {
+              "810": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "810 field"
+                  },
+                  {
+                    "0": "4510955"
+                  }
+                ]
+              }
+            },
+            {
+              "811": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "811 field"
+                  },
+                  {
+                    "0": "id.loc.gov/authorities/names/n79084170"
+                  }
+                ]
+              }
+            },
+            {
+              "830": {
+                "ind1": "1",
+                "ind2": " ",
+                "subfields": [
+                  {
+                    "a": "Marvel"
+                  },
+                  {
+                    "0": "n80026955"
+                  }
+                ]
+              }
+            },
+            {
+              "999": {
+                "ind1": "f",
+                "ind2": "f",
+                "subfields": [
+                  {
+                    "i": "04f60709-25b3-40a1-b880-79ee2def69eb"
+                  },
+                  {
+                    "s": "6dab4d03-87c6-484f-bf8e-5118911e0f06"
+                  }
+                ]
+              }
+            }
+          ],
+          "leader": "03989cam a2200769 i 4500"
+        }
+      }
+    }
+  ],
+  "totalRecords": 1
+}

@@ -9,8 +9,6 @@ import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
-import static org.folio.bulkops.domain.dto.DataImportStatus.COMMITTED;
-import static org.folio.bulkops.domain.dto.DataImportStatus.ERROR;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
@@ -66,6 +64,7 @@ import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
+import org.folio.bulkops.domain.dto.DataImportJobExecution;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
@@ -140,6 +139,7 @@ public class BulkOperationService {
   private final UserClient userClient;
   private final MarcUpdateService marcUpdateService;
   private final MetadataProviderService metadataProviderService;
+  private final SrsService srsService;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
@@ -717,22 +717,22 @@ public class BulkOperationService {
   }
 
   private void processDataImportResult(BulkOperation operation) {
-    var dataImportJobExecution = metadataProviderService.getDataImportJobExecutionByJobProfileId(operation.getDataImportJobProfileId());
-    var processedNumOfRecords = dataImportJobExecution.getProgress().getCurrent();
+    var executions = metadataProviderService.getJobExecutions(operation.getDataImportJobProfileId());
+    var processedNumOfRecords = metadataProviderService.calculateProgress(executions).getCurrent();
     operation.setProcessedNumOfRecords(processedNumOfRecords);
     operation.setCommittedNumOfRecords(processedNumOfRecords);
-    if (Set.of(COMMITTED, ERROR).contains(dataImportJobExecution.getStatus())) {
-      errorService.saveErrorsFromDataImport(operation.getId(), dataImportJobExecution.getId());
-      operation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(operation.getId()));
-      operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operation.getId()));
-      operation.setEndTime(LocalDateTime.now());
-      operation.setStatus(operation.getCommittedNumOfErrors() == 0 ? COMPLETED : COMPLETED_WITH_ERRORS);
+    if (metadataProviderService.isDataImportJobCompleted(executions)) {
+      executions.stream()
+        .map(DataImportJobExecution::getId)
+        .forEach(uuid -> errorService.saveErrorsFromDataImport(operation.getId(), uuid));
+      var updatedIds = metadataProviderService.getUpdatedInstanceIds(executions);
+      executor.execute(getRunnableWithCurrentFolioContext(() -> srsService.retrieveMarcInstancesFromSrs(updatedIds, operation)));
     }
   }
 
   private int getDataImportProcessedNumOfRecords(BulkOperation operation) {
-    return metadataProviderService.getDataImportJobExecutionByJobProfileId(operation.getDataImportJobProfileId())
-      .getProgress().getCurrent();
+    var executions = metadataProviderService.getJobExecutions(operation.getDataImportJobProfileId());
+    return metadataProviderService.calculateProgress(executions).getCurrent();
   }
 
   public BulkOperation getBulkOperationOrThrow(UUID operationId) {

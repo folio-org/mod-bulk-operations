@@ -19,4 +19,13 @@ public class JobLogEntry {
 
   @JsonProperty("sourceRecordId")
   private String sourceRecordId;
+
+  @JsonProperty("sourceRecordActionStatus")
+  private String sourceRecordActionStatus;
+
+  @JsonProperty("sourceRecordType")
+  private String sourceRecordType;
+
+  @JsonProperty("relatedInstanceInfo")
+  private RelatedInstanceInfo relatedInstanceInfo;
 }
