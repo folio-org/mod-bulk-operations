@@ -1,10 +1,6 @@
 package org.folio.bulkops.domain.bean;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,11 +12,15 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserPermissions {
+public class Dates {
 
-  @JsonProperty("permissionNames")
-  private List<String> permissionNames = new ArrayList<>();
+  @JsonProperty("dateTypeId")
+  private String dateTypeId;
 
-  @JsonProperty("permissions")
-  private List<String> permissions = new ArrayList<>();
+  @JsonProperty("date1")
+  private String date1;
+
+  @JsonProperty("date2")
+  private String date2;
 }
+
