@@ -20,9 +20,10 @@ import java.util.Objects;
 @Log4j2
 public class ElectronicAccessUpdaterFactory {
 
-  public Updater<? extends ElectronicAccessEntity> updater(UpdateOptionType option, Action action) {
+  public Updater<? extends ElectronicAccessEntity> updater(UpdateOptionType option, Action action, HoldingsDataProcessor processor,
+                                                           boolean forPreview) {
     return switch (option) {
-      case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> updateUrlRelationship(option, action);
+      case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> updateUrlRelationship(option, action, processor, forPreview);
       case ELECTRONIC_ACCESS_URI -> updateUri(option, action);
       case ELECTRONIC_ACCESS_LINK_TEXT -> updateLinkText(option, action);
       case ELECTRONIC_ACCESS_MATERIALS_SPECIFIED -> updateMaterialsSpecified(option, action);
@@ -31,7 +32,8 @@ public class ElectronicAccessUpdaterFactory {
     };
   }
 
-  private Updater<? extends ElectronicAccessEntity> updateUrlRelationship(UpdateOptionType option, Action action) {
+  private Updater<? extends ElectronicAccessEntity> updateUrlRelationship(UpdateOptionType option, Action action,
+                                                                          HoldingsDataProcessor processor, boolean forPreview) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setRelationshipId(null)));
@@ -42,11 +44,19 @@ public class ElectronicAccessUpdaterFactory {
       case FIND_AND_REPLACE -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.stream()
           .filter(electronicAccess -> equalsIgnoreCase(electronicAccess.getRelationshipId(), action.getInitial()))
-          .forEach(electronicAccess -> electronicAccess.setRelationshipId(action.getUpdated())));
+          .forEach(electronicAccess -> electronicAccess.setRelationshipId(getRelationshipId(action, processor, forPreview))));
       case REPLACE_WITH -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
-        .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setRelationshipId(action.getUpdated())));
+        .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setRelationshipId(getRelationshipId(action, processor, forPreview))));
       default -> notSupported(option, action);
     };
+  }
+
+  private String getRelationshipId(Action action, HoldingsDataProcessor processor, boolean forPreview) {
+    var id = action.getUpdated();
+    if (forPreview) {
+      id += ARRAY_DELIMITER + processor.getTenantFromAction(action);
+    }
+    return id;
   }
 
   private Updater<? extends ElectronicAccessEntity> updateUri(UpdateOptionType option, Action action) {

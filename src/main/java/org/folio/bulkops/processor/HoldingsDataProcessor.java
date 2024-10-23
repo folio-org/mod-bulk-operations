@@ -88,10 +88,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
   public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity,
                                                  boolean forPreview) throws RuleValidationTenantsException {
     if (isElectronicAccessUpdate(option)) {
-      if (nonNull(entity.getElectronicAccess())) {
-        entity.getElectronicAccess().forEach(el -> el.setTenantId(getTenantFromAction(action)));
-      }
-      return (Updater<ExtendedHoldingsRecord>) electronicAccessUpdaterFactory.updater(option, action);
+      return (Updater<ExtendedHoldingsRecord>)electronicAccessUpdaterFactory.updater(option, action, this, forPreview);
     } else if (REPLACE_WITH == action.getType()) {
       return extendedHoldingsRecord -> {
         var locationId = action.getUpdated();
@@ -118,10 +115,9 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
       return extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().setDiscoverySuppress(false);
     }
     var notesUpdaterOptional = holdingsNotesUpdater.updateNotes(action, option);
-    if (notesUpdaterOptional.isPresent()) return notesUpdaterOptional.get();
-    return holding -> {
+    return notesUpdaterOptional.orElseGet(() -> holding -> {
       throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
-    };
+    });
   }
 
   private void validateReplacement(UpdateOptionType option, Action action) throws RuleValidationException {
