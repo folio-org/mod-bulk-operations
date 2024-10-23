@@ -233,7 +233,8 @@
             "metadata-provider.jobExecutions.collection.get",
             "metadata-provider.journalRecords.collection.get",
             "metadata-provider.jobLogEntries.collection.get",
-            "source-storage.sourceRecords.get"
+            "source-storage.sourceRecords.get",
+            "source-storage.parsed-records.fetch.collection.post"
           ]
         },
         {
@@ -587,6 +588,10 @@
     {
       "id": "mapping-rules-provider",
       "version": "2.0"
+    },
+    {
+      "id": "source-storage-batch",
+      "version": "1.3"
     }
   ],
   "launchDescriptor": {
