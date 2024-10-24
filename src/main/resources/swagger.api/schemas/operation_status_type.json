@@ -19,8 +19,7 @@
       "FAILED",
       "EXECUTING_QUERY",
       "RETRIEVING_IDENTIFIERS",
-      "SAVED_IDENTIFIERS",
-      "RETRIEVING_FROM_SRS"
+      "SAVED_IDENTIFIERS"
     ]
   }
 }

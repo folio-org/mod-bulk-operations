@@ -21,11 +21,13 @@ public class JobLogEntry {
   private String sourceRecordId;
 
   @JsonProperty("sourceRecordActionStatus")
-  private String sourceRecordActionStatus;
+  private ActionStatus sourceRecordActionStatus;
 
   @JsonProperty("sourceRecordType")
   private String sourceRecordType;
 
   @JsonProperty("relatedInstanceInfo")
   private RelatedInstanceInfo relatedInstanceInfo;
+
+  public enum ActionStatus { CREATED, UPDATED, MULTIPLE, DISCARDED }
 }

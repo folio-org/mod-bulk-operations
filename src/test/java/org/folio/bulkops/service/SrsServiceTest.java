@@ -61,8 +61,8 @@ class SrsServiceTest extends BaseTest {
       .thenReturn(marcWriter);
     when(srsClient.getParsedRecordsInBatch(any(GetParsedRecordsBatchRequestBody.class)))
       .thenReturn(objectMapper.readTree(Files.readString(Path.of("src/test/resources/files/srs_batch_response.json"))));
-    when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(operation));
+    when(bulkOperationRepository.getReferenceById(operationId))
+      .thenReturn(operation);
     when(errorService.uploadErrorsToStorage(operationId))
       .thenReturn("errors.csv");
     when(errorService.getCommittedNumOfErrors(operationId))
@@ -72,10 +72,10 @@ class SrsServiceTest extends BaseTest {
 
     verify(remoteFileSystemClient).remove(linkToCommittedRecordsMarcFile);
     verify(marcWriter).writeRecord(any(Record.class));
-    verify(bulkOperationRepository, times(3))
+    verify(bulkOperationRepository, times(2))
       .save(bulkOperationCaptor.capture());
     var expectedStatus = numOfErrors == 0 ? COMPLETED : COMPLETED_WITH_ERRORS;
-    assertThat(bulkOperationCaptor.getAllValues().get(2).getStatus())
+    assertThat(bulkOperationCaptor.getAllValues().get(1).getStatus())
       .isEqualTo(expectedStatus);
   }
 }

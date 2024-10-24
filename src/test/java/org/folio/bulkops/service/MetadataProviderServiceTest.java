@@ -1,6 +1,8 @@
 package org.folio.bulkops.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.bulkops.domain.bean.JobLogEntry.ActionStatus.DISCARDED;
+import static org.folio.bulkops.domain.bean.JobLogEntry.ActionStatus.UPDATED;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
@@ -125,34 +127,34 @@ class MetadataProviderServiceTest extends BaseTest {
       new DataImportJobExecution().id(id2)
     );
 
-    when(metadataProviderClient.getJobLogEntries(id1.toString(), Integer.MAX_VALUE))
+    when(metadataProviderClient.getJobLogEntries(id1.toString(), 1000))
       .thenReturn(JobLogEntryCollection.builder()
         .entries(List.of(
           JobLogEntry.builder()
-            .sourceRecordActionStatus("UPDATED")
+            .sourceRecordActionStatus(UPDATED)
             .relatedInstanceInfo(RelatedInstanceInfo.builder()
               .idList(List.of(updatedId1))
               .build())
             .build(),
           JobLogEntry.builder()
-            .sourceRecordActionStatus("DISCARDED")
+            .sourceRecordActionStatus(DISCARDED)
             .relatedInstanceInfo(RelatedInstanceInfo.builder()
               .idList(List.of(UUID.randomUUID().toString()))
               .build())
             .build()))
         .totalRecords(1)
         .build());
-    when(metadataProviderClient.getJobLogEntries(id2.toString(), Integer.MAX_VALUE))
+    when(metadataProviderClient.getJobLogEntries(id2.toString(), 1000))
       .thenReturn(JobLogEntryCollection.builder()
         .entries(List.of(
           JobLogEntry.builder()
-            .sourceRecordActionStatus("UPDATED")
+            .sourceRecordActionStatus(UPDATED)
             .relatedInstanceInfo(RelatedInstanceInfo.builder()
               .idList(List.of(updatedId2))
               .build())
             .build(),
           JobLogEntry.builder()
-            .sourceRecordActionStatus("DISCARDED")
+            .sourceRecordActionStatus(DISCARDED)
             .relatedInstanceInfo(RelatedInstanceInfo.builder()
               .idList(List.of(UUID.randomUUID().toString()))
               .build())

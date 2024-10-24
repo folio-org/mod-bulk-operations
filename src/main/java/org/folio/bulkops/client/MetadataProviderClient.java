@@ -31,4 +31,7 @@ public interface MetadataProviderClient {
 
   @GetMapping(value = "/jobLogEntries/{jobExecutionId}", produces = MediaType.APPLICATION_JSON_VALUE)
   JobLogEntryCollection getJobLogEntries(@PathVariable String jobExecutionId, @RequestParam long limit);
+
+  @GetMapping(value = "/jobLogEntries/{jobExecutionId}", produces = MediaType.APPLICATION_JSON_VALUE)
+  JobLogEntryCollection getJobLogEntries(@PathVariable String jobExecutionId, @RequestParam long offset, @RequestParam long limit);
 }

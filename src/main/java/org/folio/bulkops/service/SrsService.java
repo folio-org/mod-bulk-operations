@@ -2,7 +2,6 @@ package org.folio.bulkops.service;
 
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
-import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_FROM_SRS;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -37,8 +36,6 @@ public class SrsService {
     var path = bulkOperation.getLinkToCommittedRecordsMarcFile();
     remoteFileSystemClient.remove(path);
     if (!instanceIds.isEmpty()) {
-      bulkOperation.setStatus(RETRIEVING_FROM_SRS);
-      bulkOperationRepository.save(bulkOperation);
       var offset = 0;
       try (var writer = remoteFileSystemClient.marcWriter(path)) {
         while (offset < instanceIds.size()) {
@@ -67,30 +64,27 @@ public class SrsService {
   }
 
   private Record jsonToMarcRecord(String json) throws IOException {
-    try (var bis = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))) {
-      var reader = new MarcJsonReader(bis);
+    try (var inputStream = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8))) {
+      var reader = new MarcJsonReader(inputStream);
       return reader.next();
     }
   }
 
-  private void updateBulkOperationProgress(BulkOperation bulkOperation, int processed) {
-    var operationOptional = bulkOperationRepository.findById(bulkOperation.getId());
-    if (operationOptional.isPresent()) {
-      var operation = operationOptional.get();
-      operation.setCommittedNumOfRecords(processed);
-      bulkOperationRepository.save(operation);
-    }
+  private void updateBulkOperationProgress(BulkOperation bulkOperation, int processedNumOfRecords) {
+    var operation = bulkOperationRepository.getReferenceById(bulkOperation.getId());
+    operation.setProcessedNumOfRecords(operation.getProcessedNumOfRecords() + processedNumOfRecords);
+    operation.setCommittedNumOfRecords(operation.getTotalNumOfRecords() + processedNumOfRecords);
+    bulkOperationRepository.save(operation);
   }
 
   private void completeBulkOperation(BulkOperation bulkOperation) {
-    var operationOptional = bulkOperationRepository.findById(bulkOperation.getId());
-    if (operationOptional.isPresent()) {
-      var operation = operationOptional.get();
-      operation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(operation.getId()));
-      operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operation.getId()));
-      operation.setEndTime(LocalDateTime.now());
-      operation.setStatus(operation.getCommittedNumOfErrors() == 0 ? COMPLETED : COMPLETED_WITH_ERRORS);
-      bulkOperationRepository.save(operation);
-    }
+    var operation = bulkOperationRepository.getReferenceById(bulkOperation.getId());
+    operation.setTotalNumOfRecords(operation.getMatchedNumOfRecords());
+    operation.setProcessedNumOfRecords(operation.getMatchedNumOfRecords());
+    operation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(operation.getId()));
+    operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operation.getId()));
+    operation.setEndTime(LocalDateTime.now());
+    operation.setStatus(operation.getCommittedNumOfErrors() == 0 ? COMPLETED : COMPLETED_WITH_ERRORS);
+    bulkOperationRepository.save(operation);
   }
 }
