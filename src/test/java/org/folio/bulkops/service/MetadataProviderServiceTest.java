@@ -168,4 +168,53 @@ class MetadataProviderServiceTest extends BaseTest {
     assertThat(ids.get(0)).isEqualTo(updatedId1);
     assertThat(ids.get(1)).isEqualTo(updatedId2);
   }
+
+  @Test
+  void shouldSliceLargeMetadataProviderResponses() {
+    var id1 = UUID.randomUUID();
+    var updatedId1 = UUID.randomUUID().toString();
+    var updatedId2 = UUID.randomUUID().toString();
+    var jobExecutions = List.of(new DataImportJobExecution().id(id1));
+
+    when(metadataProviderClient.getJobLogEntries(id1.toString(), 1000))
+      .thenReturn(JobLogEntryCollection.builder()
+        .entries(List.of(
+          JobLogEntry.builder()
+            .sourceRecordActionStatus(UPDATED)
+            .relatedInstanceInfo(RelatedInstanceInfo.builder()
+              .idList(List.of(updatedId1))
+              .build())
+            .build(),
+          JobLogEntry.builder()
+            .sourceRecordActionStatus(DISCARDED)
+            .relatedInstanceInfo(RelatedInstanceInfo.builder()
+              .idList(List.of(UUID.randomUUID().toString()))
+              .build())
+            .build()))
+        .totalRecords(1010)
+        .build());
+    when(metadataProviderClient.getJobLogEntries(id1.toString(), 1000, 1000))
+      .thenReturn(JobLogEntryCollection.builder()
+        .entries(List.of(
+          JobLogEntry.builder()
+            .sourceRecordActionStatus(UPDATED)
+            .relatedInstanceInfo(RelatedInstanceInfo.builder()
+              .idList(List.of(updatedId2))
+              .build())
+            .build(),
+          JobLogEntry.builder()
+            .sourceRecordActionStatus(DISCARDED)
+            .relatedInstanceInfo(RelatedInstanceInfo.builder()
+              .idList(List.of(UUID.randomUUID().toString()))
+              .build())
+            .build()))
+        .totalRecords(1010)
+        .build());
+
+    var ids = metadataProviderService.getUpdatedInstanceIds(jobExecutions);
+
+    assertThat(ids).hasSize(2);
+    assertThat(ids.get(0)).isEqualTo(updatedId1);
+    assertThat(ids.get(1)).isEqualTo(updatedId2);
+  }
 }
