@@ -20,4 +20,7 @@ public class UserPermissions {
 
   @JsonProperty("permissionNames")
   private List<String> permissionNames = new ArrayList<>();
+
+  @JsonProperty("permissions")
+  private List<String> permissions = new ArrayList<>();
 }

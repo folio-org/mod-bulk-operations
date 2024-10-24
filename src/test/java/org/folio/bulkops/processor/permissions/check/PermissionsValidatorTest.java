@@ -1,8 +1,10 @@
 package org.folio.bulkops.processor.permissions.check;
 
 
-import static org.folio.bulkops.processor.permissions.check.PermissionsValidator.BULK_EDIT_INVENTORY_WRITE_PERMISSION;
-import static org.folio.bulkops.processor.permissions.check.PermissionsValidator.BULK_EDIT_USERS_WRITE_PERMISSION;
+import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_INVENTORY_WRITE_PERMISSION;
+import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_WRITE_PERMISSION;
+import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_ITEMS_ITEM_PUT;
+import static org.folio.bulkops.processor.permissions.check.PermissionEnum.USERS_ITEM_PUT;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.when;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,18 +29,18 @@ class PermissionsValidatorTest {
   @Mock
   private PermissionsProvider permissionsProvider;
   @Mock
-  private RequiredPermissionResolver requiredPermissionResolver;
-  @Mock
   private FolioExecutionContext folioExecutionContext;
+  @Spy
+  private RequiredPermissionResolver requiredPermissionResolver;
+
 
   @InjectMocks
   private PermissionsValidator permissionsValidator;
 
   @Test
   void testCheckIfBulkEditWritePermissionExistsForInventory() {
-    when(permissionsProvider.getUserPermissions(eq("tenant1"), isA(UUID.class))).thenReturn(List.of("write_permission", "not_write_permission", BULK_EDIT_INVENTORY_WRITE_PERMISSION));
+    when(permissionsProvider.getUserPermissions(eq("tenant1"), isA(UUID.class))).thenReturn(List.of(INVENTORY_ITEMS_ITEM_PUT.getValue(), "not_write_permission", BULK_EDIT_INVENTORY_WRITE_PERMISSION.getValue()));
     when(permissionsProvider.getUserPermissions(eq("tenant2"), isA(UUID.class))).thenReturn(List.of("not_write_permission"));
-    when(requiredPermissionResolver.getWritePermission(EntityType.ITEM)).thenReturn("write_permission");
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
 
     Assertions.assertDoesNotThrow(() -> permissionsValidator.checkIfBulkEditWritePermissionExists("tenant1", EntityType.ITEM, "errorMessage"));
@@ -46,9 +49,8 @@ class PermissionsValidatorTest {
 
   @Test
   void testCheckIfBulkEditWritePermissionExistsForUsers() {
-    when(permissionsProvider.getUserPermissions(eq("tenant1"),  isA(UUID.class))).thenReturn(List.of("write_permission", "not_write_permission", BULK_EDIT_USERS_WRITE_PERMISSION));
+    when(permissionsProvider.getUserPermissions(eq("tenant1"),  isA(UUID.class))).thenReturn(List.of(USERS_ITEM_PUT.getValue(), "not_write_permission", BULK_EDIT_USERS_WRITE_PERMISSION.getValue()));
     when(permissionsProvider.getUserPermissions(eq("tenant2"), isA(UUID.class))).thenReturn(List.of("not_write_permission"));
-    when(requiredPermissionResolver.getWritePermission(EntityType.USER)).thenReturn("write_permission");
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
 
     Assertions.assertDoesNotThrow(() -> permissionsValidator.checkIfBulkEditWritePermissionExists("tenant1", EntityType.USER, "errorMessage"));
