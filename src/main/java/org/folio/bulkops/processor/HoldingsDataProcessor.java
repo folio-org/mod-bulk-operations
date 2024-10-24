@@ -212,7 +212,8 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     }
     if (nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
       option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && action.getType() == UpdateActionType.FIND_AND_REPLACE) {
-      return true;
+      return !nonNull(extendedHolding.getElectronicAccess()) ||
+        extendedHolding.getElectronicAccess().stream().noneMatch(el -> el.getRelationshipId().equals(action.getUpdated()));
     }
     return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedHolding.getTenant()) ||
       nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedHolding.getTenant());

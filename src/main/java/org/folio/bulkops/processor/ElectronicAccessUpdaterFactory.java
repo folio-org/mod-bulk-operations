@@ -9,7 +9,6 @@ import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.bulkops.domain.bean.ElectronicAccessEntity;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
