@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 @Log4j2
@@ -43,7 +44,8 @@ public class MarcUpdateService {
   private final BulkOperationRepository bulkOperationRepository;
   private final ObjectMapper objectMapper;
 
-  public void commitForInstanceMarc(BulkOperation bulkOperation) {
+  public void commitForInstanceMarc(UUID bulkOperationId) {
+    var bulkOperation = bulkOperationRepository.getReferenceById(bulkOperationId);
     if (StringUtils.isNotEmpty(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
       bulkOperation.setTotalNumOfRecords(bulkOperation.getTotalNumOfRecords() * 2);
       bulkOperation.setProcessedNumOfRecords(bulkOperation.getProcessedNumOfRecords() * 2);
@@ -105,6 +107,7 @@ public class MarcUpdateService {
 
   public void saveErrorsForFolioInstances(BulkOperation bulkOperation) {
     var numOfFolioInstances = 0;
+    saveProgress(bulkOperation, numOfFolioInstances);
     try (var readerForMatchedJsonFile = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
       var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), ExtendedInstance.class);
       while (iterator.hasNext()) {
