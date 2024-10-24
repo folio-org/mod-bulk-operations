@@ -10,6 +10,7 @@ import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.ElectronicAccessEntity;
+import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.BulkOperationException;
@@ -26,7 +27,7 @@ public class ElectronicAccessUpdaterFactory {
 
   private final FolioExecutionContext folioExecutionContext;
 
-  public Updater<ElectronicAccessEntity> updater(UpdateOptionType option, Action action, boolean forPreview) {
+  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, boolean forPreview) {
     return switch (option) {
       case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> updateUrlRelationship(option, action, forPreview);
       case ELECTRONIC_ACCESS_URI -> updateUri(option, action);
@@ -37,7 +38,7 @@ public class ElectronicAccessUpdaterFactory {
     };
   }
 
-  private Updater<ElectronicAccessEntity> updateUrlRelationship(UpdateOptionType option, Action action, boolean forPreview) {
+  private Updater<ExtendedHoldingsRecord> updateUrlRelationship(UpdateOptionType option, Action action, boolean forPreview) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setRelationshipId(null)));
@@ -63,7 +64,7 @@ public class ElectronicAccessUpdaterFactory {
     return id;
   }
 
-  private Updater<ElectronicAccessEntity> updateUri(UpdateOptionType option, Action action) {
+  private Updater<ExtendedHoldingsRecord> updateUri(UpdateOptionType option, Action action) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setUri(EMPTY)));
@@ -81,7 +82,7 @@ public class ElectronicAccessUpdaterFactory {
     };
   }
 
-  private Updater<ElectronicAccessEntity> updateLinkText(UpdateOptionType option, Action action) {
+  private Updater<ExtendedHoldingsRecord> updateLinkText(UpdateOptionType option, Action action) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setLinkText(null)));
@@ -99,7 +100,7 @@ public class ElectronicAccessUpdaterFactory {
     };
   }
 
-  private Updater<ElectronicAccessEntity> updateMaterialsSpecified(UpdateOptionType option, Action action) {
+  private Updater<ExtendedHoldingsRecord> updateMaterialsSpecified(UpdateOptionType option, Action action) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setMaterialsSpecification(null)));
@@ -117,7 +118,7 @@ public class ElectronicAccessUpdaterFactory {
     };
   }
 
-  private Updater<ElectronicAccessEntity> updatePublicNote(UpdateOptionType option, Action action) {
+  private Updater<ExtendedHoldingsRecord> updatePublicNote(UpdateOptionType option, Action action) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setPublicNote(null)));
@@ -135,7 +136,7 @@ public class ElectronicAccessUpdaterFactory {
     };
   }
 
-  private Updater<ElectronicAccessEntity> notSupported(UpdateOptionType option, Action action) {
+  private Updater<ExtendedHoldingsRecord> notSupported(UpdateOptionType option, Action action) {
     return electronicAccessEntity -> {
       throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
     };
