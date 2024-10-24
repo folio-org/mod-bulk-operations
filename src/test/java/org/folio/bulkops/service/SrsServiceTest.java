@@ -27,7 +27,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 class SrsServiceTest extends BaseTest {
