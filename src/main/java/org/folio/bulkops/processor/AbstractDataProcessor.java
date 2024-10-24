@@ -104,7 +104,7 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
 
   public String getRecordPropertyName(UpdateOptionType optionType) {
     return switch (optionType) {
-      case HOLDINGS_NOTE, ITEM_NOTE -> "note type";
+      case HOLDINGS_NOTE, ITEM_NOTE, ADMINISTRATIVE_NOTE, CHECK_IN_NOTE, CHECK_OUT_NOTE -> "note type";
       case PERMANENT_LOAN_TYPE -> "permanent loan type";
       case TEMPORARY_LOAN_TYPE -> "temporary loan type";
       case PERMANENT_LOCATION -> "permanent location";
@@ -112,13 +112,5 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
       case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> "URL relationship";
       default -> optionType.getValue();
     };
-  }
-
-  public String getTenantFromAction(Action action) {
-    var actionTenants = action.getTenants();
-    if (isNull(actionTenants) || actionTenants.isEmpty()) {
-      return folioExecutionContext.getTenantId();
-    }
-    return actionTenants.get(0);
   }
 }
