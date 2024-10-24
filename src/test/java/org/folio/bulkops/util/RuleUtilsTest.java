@@ -15,8 +15,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class RuleUtilsTest {
 
-  private final static String CURRENT_TENANT = "current_tenant";
-  private final static String TENANT_FROM_UI = "tenant_from_ui";
+  private static final String CURRENT_TENANT = "current_tenant";
+  private static final String TENANT_FROM_UI = "tenant_from_ui";
 
   @Mock
   private FolioExecutionContext folioExecutionContext;

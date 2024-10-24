@@ -26,7 +26,7 @@ public class ElectronicAccessUpdaterFactory {
 
   private final FolioExecutionContext folioExecutionContext;
 
-  public Updater<? extends ElectronicAccessEntity> updater(UpdateOptionType option, Action action, boolean forPreview) {
+  public Updater<ElectronicAccessEntity> updater(UpdateOptionType option, Action action, boolean forPreview) {
     return switch (option) {
       case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> updateUrlRelationship(option, action, forPreview);
       case ELECTRONIC_ACCESS_URI -> updateUri(option, action);
@@ -37,7 +37,7 @@ public class ElectronicAccessUpdaterFactory {
     };
   }
 
-  private Updater<? extends ElectronicAccessEntity> updateUrlRelationship(UpdateOptionType option, Action action, boolean forPreview) {
+  private Updater<ElectronicAccessEntity> updateUrlRelationship(UpdateOptionType option, Action action, boolean forPreview) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setRelationshipId(null)));
@@ -63,7 +63,7 @@ public class ElectronicAccessUpdaterFactory {
     return id;
   }
 
-  private Updater<? extends ElectronicAccessEntity> updateUri(UpdateOptionType option, Action action) {
+  private Updater<ElectronicAccessEntity> updateUri(UpdateOptionType option, Action action) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setUri(EMPTY)));
@@ -81,7 +81,7 @@ public class ElectronicAccessUpdaterFactory {
     };
   }
 
-  private Updater<? extends ElectronicAccessEntity> updateLinkText(UpdateOptionType option, Action action) {
+  private Updater<ElectronicAccessEntity> updateLinkText(UpdateOptionType option, Action action) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setLinkText(null)));
@@ -99,7 +99,7 @@ public class ElectronicAccessUpdaterFactory {
     };
   }
 
-  private Updater<? extends ElectronicAccessEntity> updateMaterialsSpecified(UpdateOptionType option, Action action) {
+  private Updater<ElectronicAccessEntity> updateMaterialsSpecified(UpdateOptionType option, Action action) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setMaterialsSpecification(null)));
@@ -117,7 +117,7 @@ public class ElectronicAccessUpdaterFactory {
     };
   }
 
-  private Updater<? extends ElectronicAccessEntity> updatePublicNote(UpdateOptionType option, Action action) {
+  private Updater<ElectronicAccessEntity> updatePublicNote(UpdateOptionType option, Action action) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setPublicNote(null)));
@@ -135,7 +135,7 @@ public class ElectronicAccessUpdaterFactory {
     };
   }
 
-  private Updater<? extends ElectronicAccessEntity> notSupported(UpdateOptionType option, Action action) {
+  private Updater<ElectronicAccessEntity> notSupported(UpdateOptionType option, Action action) {
     return electronicAccessEntity -> {
       throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
     };
