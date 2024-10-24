@@ -113,13 +113,4 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
       default -> optionType.getValue();
     };
   }
-
-  public String getTenantFromAction(Action action) {
-    log.info("getTenantFromAction: {}", action.getTenants());
-    var actionTenants = action.getTenants();
-    if (isNull(actionTenants) || actionTenants.isEmpty()) {
-      return folioExecutionContext.getTenantId();
-    }
-    return actionTenants.get(0);
-  }
 }

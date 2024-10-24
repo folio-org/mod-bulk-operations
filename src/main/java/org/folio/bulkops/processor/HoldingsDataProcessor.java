@@ -41,6 +41,7 @@ import org.folio.bulkops.exception.RuleValidationTenantsException;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
 import org.folio.bulkops.service.ElectronicAccessReferenceService;
+import org.folio.bulkops.util.RuleUtils;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.stereotype.Component;
 
@@ -88,12 +89,12 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
   public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity,
                                                  boolean forPreview) throws RuleValidationTenantsException {
     if (isElectronicAccessUpdate(option)) {
-      return (Updater<ExtendedHoldingsRecord>)electronicAccessUpdaterFactory.updater(option, action, this, forPreview);
+      return (Updater<ExtendedHoldingsRecord>)electronicAccessUpdaterFactory.updater(option, action, forPreview);
     } else if (REPLACE_WITH == action.getType()) {
       return extendedHoldingsRecord -> {
         var locationId = action.getUpdated();
         if (forPreview) {
-          var tenant = getTenantFromAction(action);
+          var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
           locationId += ARRAY_DELIMITER + tenant;
         }
         if (PERMANENT_LOCATION == option) {
@@ -130,7 +131,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
         throw new RuleValidationException("UUID has invalid format: %s" + newId);
       }
 
-      var tenant = getTenantFromAction(action);
+      var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
       if (Set.of(PERMANENT_LOCATION, TEMPORARY_LOCATION).contains(option)) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
           itemReferenceService.getLocationById(newId, tenant);

@@ -27,6 +27,12 @@
         "items": {
           "type": "string"
         }
+      },
+      "updated_tenants": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
       }
     },
     "required": [

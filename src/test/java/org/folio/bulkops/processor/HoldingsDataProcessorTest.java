@@ -601,7 +601,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void shouldClearElectronicAccessFields(UpdateOptionType option) {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
 
-    var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
+    var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext), null);
     processor.folioExecutionContext = folioExecutionContext;
     var action = new Action().type(CLEAR_FIELD);
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
@@ -630,7 +630,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void shouldFindAndClearExactlyMatchedElectronicAccessFields(UpdateOptionType option, String value) {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
-    var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
+    var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext), null);
     processor.folioExecutionContext = folioExecutionContext;
     var action = new Action().type(FIND_AND_REMOVE_THESE).initial(value);
 
@@ -676,7 +676,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void shouldReplaceElectronicAccessFields(UpdateOptionType option, String newValue) {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
-    var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
+    var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext), null);
     processor.folioExecutionContext = folioExecutionContext;
     var action = new Action().type(REPLACE_WITH).updated(newValue);
 
@@ -704,7 +704,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void shouldFindAndReplaceExactlyMatchedElectronicAccessFields(UpdateOptionType option, String initial, String updated) {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
-    var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(), null);
+    var processor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext), null);
     processor.folioExecutionContext = folioExecutionContext;
     var action = new Action().type(FIND_AND_REPLACE).initial(initial).updated(updated);
 

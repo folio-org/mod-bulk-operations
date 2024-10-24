@@ -48,4 +48,5 @@ public class BulkOperationRuleDetails {
 
   private List<String> actionTenants;
   private List<String> ruleTenants;
+  private List<String> updatedTenants;
 }

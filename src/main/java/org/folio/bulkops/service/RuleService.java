@@ -49,6 +49,7 @@ public class RuleService {
           .parameters(action.getParameters())
           .ruleTenants(bulkOperationRule.getRuleDetails().getTenants())
           .actionTenants(action.getTenants())
+          .updatedTenants(action.getUpdatedTenants())
           .build()));
     });
     return ruleCollection;
@@ -75,7 +76,8 @@ public class RuleService {
             .initial(details.getInitialValue())
             .updated(details.getUpdatedValue())
             .parameters(details.getParameters())
-            .tenants(details.getActionTenants()))
+            .tenants(details.getActionTenants())
+            .updatedTenants(details.getUpdatedTenants()))
           .toList())
         .tenants(entity.getRuleDetails().get(0).getRuleTenants()));
   }

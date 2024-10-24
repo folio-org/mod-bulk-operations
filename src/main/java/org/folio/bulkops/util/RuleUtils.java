@@ -1,11 +1,15 @@
 package org.folio.bulkops.util;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 import lombok.experimental.UtilityClass;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.spring.FolioExecutionContext;
 
 import java.util.List;
 import java.util.Map;
@@ -27,5 +31,14 @@ public class RuleUtils {
       .filter(Objects::nonNull)
       .flatMap(List::stream)
       .collect(Collectors.toMap(Parameter::getKey, Parameter::getValue, (existing, replacement) -> existing));
+  }
+
+  public static String getTenantFromAction(Action action, FolioExecutionContext folioExecutionContext) {
+    var actionTenants = action.getTenants();
+    var updatedTenants = action.getUpdatedTenants();
+    if ((isNull(actionTenants) || actionTenants.isEmpty()) && (isNull(updatedTenants) || updatedTenants.isEmpty())) {
+      return folioExecutionContext.getTenantId();
+    }
+    return nonNull(actionTenants) && !actionTenants.isEmpty() ? actionTenants.get(0) : updatedTenants.get(0);
   }
 }
