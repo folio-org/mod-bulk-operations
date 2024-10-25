@@ -718,7 +718,7 @@ public class BulkOperationService {
       var executions = metadataProviderService.getJobExecutions(operation.getDataImportJobProfileId());
       log.info("Executions: {}", executions);
       var processedNumOfRecords = metadataProviderService.calculateProgress(executions).getCurrent();
-      operation.setProcessedNumOfRecords(operation.getProcessedNumOfRecords() + processedNumOfRecords);
+      operation.setProcessedNumOfRecords(operation.getCommittedNumOfErrors() * 2 + processedNumOfRecords);
       if (metadataProviderService.isDataImportJobCompleted(executions)) {
         executions.stream()
           .map(DataImportJobExecution::getId)

@@ -129,6 +129,7 @@ public class MarcUpdateService {
 
   private void saveProgress(BulkOperation bulkOperation, int numOfFolioInstances) {
     bulkOperation.setProcessedNumOfRecords(numOfFolioInstances);
+    bulkOperation.setCommittedNumOfErrors(numOfFolioInstances);
     bulkOperationRepository.save(bulkOperation);
   }
 }
