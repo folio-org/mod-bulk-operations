@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 @Log4j2
@@ -45,6 +46,8 @@ public class MarcUpdateService {
 
   public void commitForInstanceMarc(BulkOperation bulkOperation) {
     if (StringUtils.isNotEmpty(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
+      bulkOperation.setTotalNumOfRecords(bulkOperation.getTotalNumOfRecords() * 2);
+      bulkOperation.setProcessedNumOfRecords(bulkOperation.getProcessedNumOfRecords() * 2);
 
       var execution = executionRepository.save(BulkOperationExecution.builder()
         .bulkOperationId(bulkOperation.getId())
@@ -102,6 +105,8 @@ public class MarcUpdateService {
   }
 
   public void saveErrorsForFolioInstances(BulkOperation bulkOperation) {
+    var numOfFolioInstances = 0;
+    saveProgress(bulkOperation, numOfFolioInstances);
     try (var readerForMatchedJsonFile = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
       var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), ExtendedInstance.class);
       while (iterator.hasNext()) {
@@ -111,10 +116,20 @@ public class MarcUpdateService {
             instance.getHrid() :
             instance.getId();
           errorService.saveError(bulkOperation.getId(), identifier, MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY);
+          if (++numOfFolioInstances % 100 == 0) {
+            saveProgress(bulkOperation, numOfFolioInstances);
+          }
         }
       }
+      saveProgress(bulkOperation, numOfFolioInstances);
     } catch (Exception e) {
       log.error("Failed to save errors for folio instances", e);
     }
+  }
+
+  private void saveProgress(BulkOperation bulkOperation, int numOfFolioInstances) {
+    bulkOperation.setProcessedNumOfRecords(numOfFolioInstances);
+    bulkOperation.setCommittedNumOfErrors(numOfFolioInstances);
+    bulkOperationRepository.save(bulkOperation);
   }
 }
