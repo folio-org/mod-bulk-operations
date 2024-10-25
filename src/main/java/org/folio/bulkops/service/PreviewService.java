@@ -28,8 +28,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReaderBuilder;
-import com.opencsv.RFC4180ParserBuilder;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.InstanceNoteTypesClient;
@@ -270,7 +270,7 @@ public class PreviewService {
 
   private UnifiedTable populatePreview(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit,
                                        UnifiedTable table, Set<String> forceVisible, BulkOperation bulkOperation) {
-    var parser = new RFC4180ParserBuilder().build();
+    var parser = new CSVParserBuilder().withEscapeChar('\0').build();
 
     try (Reader reader = new InputStreamReader(remoteFileSystemClient.get(pathToFile))) {
       var readerBuilder = new CSVReaderBuilder(reader)

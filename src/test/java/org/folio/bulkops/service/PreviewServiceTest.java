@@ -9,6 +9,7 @@ import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
+import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.service.Marc21ReferenceProvider.GENERAL_NOTE;
@@ -131,7 +132,7 @@ class PreviewServiceTest extends BaseTest {
     var bulkOperation = buildBulkOperation(fileName, entityType, step);
     bulkOperation.setId(operationId);
     bulkOperation.setApproach(approachType);
-    bulkOperation.setStatus(org.folio.bulkops.domain.dto.OperationStatusType.NEW);
+    bulkOperation.setStatus(NEW);
     bulkOperation.setTenantNotePairs(List.of());
     when(bulkOperationRepository.findById(operationId))
       .thenReturn(Optional.of(bulkOperation));
@@ -491,6 +492,42 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(0).getRow().get(21), equalTo("2002-2024"));
     assertThat(res.getRows().get(0).getRow().get(22), equalTo("language note (staff only)"));
     assertThat(res.getRows().get(0).getRow().get(23), equalTo("Ethan Feld, the worst baseball player in the history of the game, finds himself recruited by a 100-year-old scout to help a band of fairies triumph over an ancient enemy. 2nd"));
+  }
+
+  @SneakyThrows
+  @Test
+  void shouldCorrectlyProcessSlashCommaSequence() {
+    var path = "src/test/resources/files/instance_preview_slash_before_comma.csv";
+    var operationId = UUID.randomUUID();
+    var offset = 0;
+    var limit = 5;
+
+    var bulkOperation = buildBulkOperation("instance_preview_slash_before_comma.csv", INSTANCE, UPLOAD);
+    bulkOperation.setId(operationId);
+    bulkOperation.setApproach(ApproachType.IN_APP);
+    bulkOperation.setStatus(NEW);
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(bulkOperation));
+
+    when(remoteFileSystemClient.get(anyString()))
+      .thenReturn(new FileInputStream(path));
+
+    bulkOperation.setTenantNotePairs(List.of());
+    when(bulkOperationService.getBulkOperationOrThrow(any(UUID.class))).thenReturn(bulkOperation);
+    when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(bulkOperation);
+    when(instanceReferenceService.getAllInstanceNoteTypes())
+      .thenReturn(List.of(
+        new InstanceNoteType().name("General note"),
+        new InstanceNoteType().name("Bibliography note"),
+        new InstanceNoteType().name("Accumulation and Frequency of Use note")));
+
+    var table = previewService.getPreview(bulkOperation, UPLOAD, offset, limit);
+
+    assertThat(table.getHeader().size(), equalTo(25));
+    assertThat(table.getRows().get(0).getRow().size(), equalTo(25));
+    assertThat(table.getRows().get(0).getRow().get(22), equalTo("Accumulation and Frequency of Use note text"));
+    assertThat(table.getRows().get(0).getRow().get(23), equalTo("Bibliography note text"));
+    assertThat(table.getRows().get(0).getRow().get(24), equalTo("General note text"));
   }
 
   private String getPathToContentUpdateRequest(org.folio.bulkops.domain.dto.EntityType entityType) {
