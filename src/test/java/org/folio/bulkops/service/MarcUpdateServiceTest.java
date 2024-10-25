@@ -71,6 +71,8 @@ class MarcUpdateServiceTest extends BaseTest {
       .linkToTriggeringCsvFile("triggering.csv")
       .linkToMatchedRecordsMarcFile("matched.mrc")
       .linkToModifiedRecordsMarcFile("modified.mrc")
+      .totalNumOfRecords(1)
+      .processedNumOfRecords(1)
       .build();
     var execution = BulkOperationExecution.builder().bulkOperationId(bulkOperation.getId()).build();
     var pathToCommittedMarcFile = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(), LocalDate.now(), "triggering");
@@ -109,6 +111,8 @@ class MarcUpdateServiceTest extends BaseTest {
       .linkToTriggeringCsvFile("triggering.csv")
       .linkToMatchedRecordsMarcFile("matched.mrc")
       .linkToModifiedRecordsMarcFile("modified.mrc")
+      .totalNumOfRecords(1)
+      .processedNumOfRecords(1)
       .build();
     var execution = BulkOperationExecution.builder().bulkOperationId(bulkOperation.getId()).build();
     var pathToCommittedMarcFile = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(), LocalDate.now(), "triggering");
