@@ -32,6 +32,7 @@ import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.exception.RuleValidationTenantsException;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
+import org.folio.bulkops.util.RuleUtils;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.stereotype.Component;
 
@@ -100,11 +101,11 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
       return switch (option) {
         case PERMANENT_LOCATION -> extendedItem -> {
           extendedItem.getEntity().setPermanentLocation(null);
-          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), getTenantFromAction(action)));
+          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), RuleUtils.getTenantFromAction(action, folioExecutionContext)));
         };
         case TEMPORARY_LOCATION -> extendedItem -> {
           extendedItem.getEntity().setTemporaryLocation(null);
-          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), getTenantFromAction(action)));
+          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), RuleUtils.getTenantFromAction(action, folioExecutionContext)));
         };
         case TEMPORARY_LOAN_TYPE -> extendedItem -> extendedItem.getEntity().setTemporaryLoanType(null);
         default -> item -> {
@@ -179,21 +180,21 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
   }
 
   private void replacePermanentLoanType(Action action, ExtendedItem extendedItem) {
-    var tenant = getTenantFromAction(action);
+    var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
     try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
       extendedItem.getEntity().setPermanentLoanType(itemReferenceService.getLoanTypeById(action.getUpdated(), tenant));
     }
   }
 
   private void replaceTemporaryLoanType(Action action, ExtendedItem extendedItem) {
-    var tenant = getTenantFromAction(action);
+    var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
     try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
       extendedItem.getEntity().setTemporaryLoanType(itemReferenceService.getLoanTypeById(action.getUpdated(), tenant));
     }
   }
 
   private void replacePermanentLocation(Action action, ExtendedItem extendedItem) {
-    var tenant = getTenantFromAction(action);
+    var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
     try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
       extendedItem.getEntity().setPermanentLocation(itemReferenceService.getLocationById(action.getUpdated(), tenant));
       extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), tenant));
@@ -201,7 +202,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
   }
 
   private void replaceTemporaryLocation(Action action, ExtendedItem extendedItem) {
-    var tenant = getTenantFromAction(action);
+    var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
     try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
       extendedItem.getEntity().setTemporaryLocation(itemReferenceService.getLocationById(action.getUpdated(), tenant));
       extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), tenant));

@@ -33,7 +33,7 @@ class ElectronicAccessServiceTest extends BaseTest {
   private FolioModuleMetadata folioModuleMetadata;
 
   @ParameterizedTest
-  @CsvSource(value = { ",,,,", "id,uri,text,specification,note" }, delimiter = ',')
+  @CsvSource(value = { ",,,,", "id;tenant,uri,text,specification,note" }, delimiter = ',')
   void testElectronicAccessToString(String relationshipId, String uri, String linkText, String materialsSpecification, String publicNote) {
     when(electronicAccessReferenceService.getRelationshipNameById("id", "tenant")).thenReturn("name");
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
