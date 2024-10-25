@@ -716,7 +716,6 @@ public class BulkOperationService {
   private void processDataImportResult(BulkOperation operation) {
     if (nonNull(operation.getDataImportJobProfileId())) {
       var executions = metadataProviderService.getJobExecutions(operation.getDataImportJobProfileId());
-      log.info("Executions: {}", executions);
       var processedNumOfRecords = metadataProviderService.calculateProgress(executions).getCurrent();
       operation.setProcessedNumOfRecords(operation.getCommittedNumOfErrors() * 2 + processedNumOfRecords);
       if (metadataProviderService.isDataImportJobCompleted(executions)) {
@@ -724,7 +723,6 @@ public class BulkOperationService {
           .map(DataImportJobExecution::getId)
           .forEach(uuid -> errorService.saveErrorsFromDataImport(operation.getId(), uuid));
         var updatedIds = metadataProviderService.getUpdatedInstanceIds(executions);
-        log.info("UpdatedIds: {}", updatedIds);
         executor.execute(getRunnableWithCurrentFolioContext(() -> srsService.retrieveMarcInstancesFromSrs(updatedIds, operation)));
       }
     }

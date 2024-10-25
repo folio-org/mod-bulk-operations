@@ -75,7 +75,7 @@ public class SrsService {
     var operation = bulkOperationRepository.findById(bulkOperation.getId())
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperation.getId()));
     operation.setProcessedNumOfRecords(operation.getProcessedNumOfRecords() + processedNumOfRecords);
-    operation.setCommittedNumOfRecords(operation.getCommittedNumOfRecords() + processedNumOfRecords);
+    operation.setCommittedNumOfRecords(processedNumOfRecords);
     bulkOperationRepository.save(operation);
   }
 
