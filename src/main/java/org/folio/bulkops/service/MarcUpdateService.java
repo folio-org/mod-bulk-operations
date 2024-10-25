@@ -44,8 +44,7 @@ public class MarcUpdateService {
   private final BulkOperationRepository bulkOperationRepository;
   private final ObjectMapper objectMapper;
 
-  public void commitForInstanceMarc(UUID bulkOperationId) {
-    var bulkOperation = bulkOperationRepository.getReferenceById(bulkOperationId);
+  public void commitForInstanceMarc(BulkOperation bulkOperation) {
     if (StringUtils.isNotEmpty(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
       bulkOperation.setTotalNumOfRecords(bulkOperation.getTotalNumOfRecords() * 2);
       bulkOperation.setProcessedNumOfRecords(bulkOperation.getProcessedNumOfRecords() * 2);
