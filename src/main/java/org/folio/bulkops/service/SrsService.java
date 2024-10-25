@@ -10,6 +10,7 @@ import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.GetParsedRecordsBatchConditions;
 import org.folio.bulkops.domain.bean.GetParsedRecordsBatchRequestBody;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.marc4j.MarcJsonReader;
 import org.marc4j.marc.Record;
@@ -71,14 +72,16 @@ public class SrsService {
   }
 
   private void updateBulkOperationProgress(BulkOperation bulkOperation, int processedNumOfRecords) {
-    var operation = bulkOperationRepository.getReferenceById(bulkOperation.getId());
+    var operation = bulkOperationRepository.findById(bulkOperation.getId())
+      .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperation.getId()));
     operation.setProcessedNumOfRecords(operation.getProcessedNumOfRecords() + processedNumOfRecords);
     operation.setCommittedNumOfRecords(operation.getTotalNumOfRecords() + processedNumOfRecords);
     bulkOperationRepository.save(operation);
   }
 
   private void completeBulkOperation(BulkOperation bulkOperation) {
-    var operation = bulkOperationRepository.getReferenceById(bulkOperation.getId());
+    var operation = bulkOperationRepository.findById(bulkOperation.getId())
+      .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperation.getId()));
     operation.setTotalNumOfRecords(operation.getMatchedNumOfRecords());
     operation.setProcessedNumOfRecords(operation.getMatchedNumOfRecords());
     operation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(operation.getId()));
