@@ -48,7 +48,7 @@ public class ElectronicAccessService {
   }
 
   private String electronicAccessToString(ElectronicAccess access, String delimiter) {
-    log.info("electronicAccessToString: {}, {}", access.getRelationshipId(), folioExecutionContext.getTenantId());
+    log.debug("electronicAccessToString: {}, {}", access.getRelationshipId(), folioExecutionContext.getTenantId());
     return String.join(delimiter,
       isEmpty(access.getRelationshipId()) ? EMPTY : getRelationshipName(access),
       isNull(access.getUri()) ? EMPTY : access.getUri(),
@@ -76,7 +76,7 @@ public class ElectronicAccessService {
   }
 
   private String getRelationshipName(ElectronicAccess access) {
-    log.info("getRelationshipName {}, {}, {}", access.getRelationshipId(), access.getTenantId(), folioExecutionContext.getTenantId());
+    log.debug("getRelationshipName {}, {}, {}", access.getRelationshipId(), access.getTenantId(), folioExecutionContext.getTenantId());
     var idTenant = access.getRelationshipId().split(ARRAY_DELIMITER);
     return electronicAccessReferenceService.getRelationshipNameById(idTenant[0], idTenant.length > 1 ? idTenant[1] : null);
   }
