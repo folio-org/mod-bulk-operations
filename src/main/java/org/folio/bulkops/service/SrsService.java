@@ -36,12 +36,12 @@ public class SrsService {
   public void retrieveMarcInstancesFromSrs(List<String> instanceIds, BulkOperation bulkOperation) {
     var path = bulkOperation.getLinkToCommittedRecordsMarcFile();
     remoteFileSystemClient.remove(path);
+    var fetchedNumOfRecords = 0;
     if (!instanceIds.isEmpty()) {
-      var offset = 0;
       try (var writer = remoteFileSystemClient.marcWriter(path)) {
-        while (offset < instanceIds.size()) {
+        while (fetchedNumOfRecords < instanceIds.size()) {
           var ids = instanceIds.stream()
-            .skip(offset)
+            .skip(fetchedNumOfRecords)
             .limit(SRS_CHUNK_SIZE)
             .toList();
           var marcJsons = srsClient.getParsedRecordsInBatch(new GetParsedRecordsBatchRequestBody(
@@ -52,7 +52,7 @@ public class SrsService {
             var content = srsRec.get("parsedRecord").get("content").toString();
             writer.writeRecord(jsonToMarcRecord(content));
           }
-          offset += ids.size();
+          fetchedNumOfRecords += ids.size();
           updateBulkOperationProgress(bulkOperation, ids.size());
         }
       } catch (IOException e) {
@@ -61,7 +61,7 @@ public class SrsService {
     } else {
       bulkOperation.setLinkToCommittedRecordsMarcFile(null);
     }
-    completeBulkOperation(bulkOperation);
+    completeBulkOperation(bulkOperation, fetchedNumOfRecords);
   }
 
   private Record jsonToMarcRecord(String json) throws IOException {
@@ -75,15 +75,15 @@ public class SrsService {
     var operation = bulkOperationRepository.findById(bulkOperation.getId())
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperation.getId()));
     operation.setProcessedNumOfRecords(operation.getProcessedNumOfRecords() + processedNumOfRecords);
-    operation.setCommittedNumOfRecords(operation.getCommittedNumOfRecords() + processedNumOfRecords);
     bulkOperationRepository.save(operation);
   }
 
-  private void completeBulkOperation(BulkOperation bulkOperation) {
+  private void completeBulkOperation(BulkOperation bulkOperation, int committedNumOfRecords) {
     var operation = bulkOperationRepository.findById(bulkOperation.getId())
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperation.getId()));
     operation.setTotalNumOfRecords(operation.getMatchedNumOfRecords());
     operation.setProcessedNumOfRecords(operation.getMatchedNumOfRecords());
+    operation.setCommittedNumOfRecords(committedNumOfRecords);
     operation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(operation.getId()));
     operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operation.getId()));
     operation.setEndTime(LocalDateTime.now());
