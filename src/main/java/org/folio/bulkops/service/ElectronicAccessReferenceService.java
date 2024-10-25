@@ -24,7 +24,11 @@ public class ElectronicAccessReferenceService {
 
   @Cacheable(cacheNames = "electronicAccessRelationshipNames")
   public String getRelationshipNameById(String id, String tenantId) {
-    try {
+    log.info("getRelationshipNameById: {}, {}", id, tenantId);
+    if (isNull(tenantId)) {
+      tenantId = folioExecutionContext.getTenantId();
+    }
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return relationshipClient.getById(id).getName();
     } catch (NotFoundException e) {
       log.error("Electronic access relationship was not found by id={}", id);

@@ -1,6 +1,7 @@
 package org.folio.bulkops.processor;
 
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
@@ -41,6 +42,7 @@ import org.folio.bulkops.exception.RuleValidationTenantsException;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
 import org.folio.bulkops.service.ElectronicAccessReferenceService;
+import org.folio.bulkops.util.RuleUtils;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.stereotype.Component;
 
@@ -88,15 +90,12 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
   public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity,
                                                  boolean forPreview) throws RuleValidationTenantsException {
     if (isElectronicAccessUpdate(option)) {
-      if (nonNull(entity.getEntity().getElectronicAccess())) {
-        entity.getEntity().getElectronicAccess().forEach(el -> el.setTenantId(getTenantFromAction(action)));
-      }
-      return (Updater<ExtendedHoldingsRecord>) electronicAccessUpdaterFactory.updater(option, action);
+      return electronicAccessUpdaterFactory.updater(option, action, forPreview);
     } else if (REPLACE_WITH == action.getType()) {
       return extendedHoldingsRecord -> {
         var locationId = action.getUpdated();
         if (forPreview) {
-        var tenant = getTenantFromAction(action);
+          var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
           locationId += ARRAY_DELIMITER + tenant;
         }
         if (PERMANENT_LOCATION == option) {
@@ -118,10 +117,9 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
       return extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().setDiscoverySuppress(false);
     }
     var notesUpdaterOptional = holdingsNotesUpdater.updateNotes(action, option);
-    if (notesUpdaterOptional.isPresent()) return notesUpdaterOptional.get();
-    return holding -> {
+    return notesUpdaterOptional.orElseGet(() -> holding -> {
       throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
-    };
+    });
   }
 
   private void validateReplacement(UpdateOptionType option, Action action) throws RuleValidationException {
@@ -134,7 +132,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
         throw new RuleValidationException("UUID has invalid format: %s" + newId);
       }
 
-      var tenant = getTenantFromAction(action);
+      var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
       if (Set.of(PERMANENT_LOCATION, TEMPORARY_LOCATION).contains(option)) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
           itemReferenceService.getLocationById(newId, tenant);
@@ -143,9 +141,10 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
         }
       } else if (ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option)) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+          log.info("ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option), tenant: {}", tenant);
           electronicAccessReferenceService.getRelationshipNameById(newId, tenant);
         } catch (Exception e) {
-          throw new RuleValidationException(format("URL relationship %s doesn't exist", newId));
+          throw new RuleValidationException(format("URL relationship %s doesn't exist in tenant %s", newId, tenant));
         }
       }
     }
@@ -185,6 +184,10 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
       var holdingsNotes = entity.getNotes().stream().map(note -> note.toBuilder().build()).toList();
       clone.setNotes(new ArrayList<>(holdingsNotes));
     }
+    if (entity.getElectronicAccess() != null) {
+      var elAcc = entity.getElectronicAccess().stream().map(el -> el.toBuilder().build()).toList();
+      clone.setElectronicAccess(new ArrayList<>(elAcc));
+    }
 
     return ExtendedHoldingsRecord.builder().tenantId(extendedEntity.getTenantId()).entity(clone).build();
   }
@@ -210,7 +213,8 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     }
     if (nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
       option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && action.getType() == UpdateActionType.FIND_AND_REPLACE) {
-      return true;
+      return isNull(extendedHolding.getElectronicAccess()) ||
+        extendedHolding.getElectronicAccess().stream().noneMatch(el -> el.getRelationshipId().equals(action.getUpdated()));
     }
     return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedHolding.getTenant()) ||
       nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedHolding.getTenant());

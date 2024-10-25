@@ -48,9 +48,9 @@ public class ElectronicAccessService {
   }
 
   private String electronicAccessToString(ElectronicAccess access, String delimiter) {
-    var tenantId = isNull(access.getTenantId()) ? folioExecutionContext.getTenantId() : access.getTenantId();
+    log.debug("electronicAccessToString: {}, {}", access.getRelationshipId(), folioExecutionContext.getTenantId());
     return String.join(delimiter,
-      isEmpty(access.getRelationshipId()) ? EMPTY : electronicAccessReferenceService.getRelationshipNameById(access.getRelationshipId(), tenantId),
+      isEmpty(access.getRelationshipId()) ? EMPTY : getRelationshipName(access),
       isNull(access.getUri()) ? EMPTY : access.getUri(),
       isEmpty(access.getLinkText()) ? EMPTY : access.getLinkText(),
       isEmpty(access.getMaterialsSpecification()) ? EMPTY : access.getMaterialsSpecification(),
@@ -73,5 +73,11 @@ public class ElectronicAccessService {
       throw new EntityFormatException(String.format("Illegal number of electronic access elements: %d, expected: %d", tokens.length, NUMBER_OF_ELECTRONIC_ACCESS_COMPONENTS));
     }
     return null;
+  }
+
+  private String getRelationshipName(ElectronicAccess access) {
+    log.debug("getRelationshipName {}, {}, {}", access.getRelationshipId(), access.getTenantId(), folioExecutionContext.getTenantId());
+    var idTenant = access.getRelationshipId().split(ARRAY_DELIMITER);
+    return electronicAccessReferenceService.getRelationshipNameById(idTenant[0], idTenant.length > 1 ? idTenant[1] : null);
   }
 }
