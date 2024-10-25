@@ -53,7 +53,7 @@ public class SrsService {
             writer.writeRecord(jsonToMarcRecord(content));
           }
           offset += ids.size();
-          updateBulkOperationProgress(bulkOperation, offset);
+          updateBulkOperationProgress(bulkOperation, ids.size());
         }
       } catch (IOException e) {
         log.error("Error updating MARC instances from SRS", e);
@@ -75,7 +75,7 @@ public class SrsService {
     var operation = bulkOperationRepository.findById(bulkOperation.getId())
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperation.getId()));
     operation.setProcessedNumOfRecords(operation.getProcessedNumOfRecords() + processedNumOfRecords);
-    operation.setCommittedNumOfRecords(processedNumOfRecords);
+    operation.setCommittedNumOfRecords(operation.getCommittedNumOfRecords() + processedNumOfRecords);
     bulkOperationRepository.save(operation);
   }
 

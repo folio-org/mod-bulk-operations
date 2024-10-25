@@ -27,6 +27,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 class SrsServiceTest extends BaseTest {
@@ -60,8 +61,8 @@ class SrsServiceTest extends BaseTest {
       .thenReturn(marcWriter);
     when(srsClient.getParsedRecordsInBatch(any(GetParsedRecordsBatchRequestBody.class)))
       .thenReturn(objectMapper.readTree(Files.readString(Path.of("src/test/resources/files/srs_batch_response.json"))));
-    when(bulkOperationRepository.getReferenceById(operationId))
-      .thenReturn(operation);
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(operation));
     when(errorService.uploadErrorsToStorage(operationId))
       .thenReturn("errors.csv");
     when(errorService.getCommittedNumOfErrors(operationId))
