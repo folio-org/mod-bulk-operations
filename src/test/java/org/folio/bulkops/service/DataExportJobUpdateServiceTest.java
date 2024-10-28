@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -8,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -22,9 +24,13 @@ import org.folio.bulkops.domain.bean.BatchStatus;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.Progress;
 import org.folio.bulkops.domain.dto.ApproachType;
+import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -53,6 +59,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     when(bulkOperationRepository.findByDataExportJobId(jobId))
       .thenReturn(Optional.of(BulkOperation.builder()
         .id(bulkOperationId)
+        .entityType(EntityType.USER)
         .approach(approach)
         .build()));
 
@@ -189,5 +196,58 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     assertEquals(0, operation.getProcessedNumOfRecords());
     assertEquals(0, operation.getMatchedNumOfRecords());
     assertEquals(0, operation.getMatchedNumOfErrors());
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldDownloadAndSaveJsonFileForItemEntityType() {
+    var bulkOperation = BulkOperation.builder()
+      .id(UUID.randomUUID())
+      .entityType(EntityType.ITEM)
+      .build();
+    var jobUpdate = Job.builder()
+      .files(List.of("file:fake.csv", "file:fake.csv", "file:src/test/resources/files/item.json", "file:fake.mrc"))
+      .build();
+
+    var jsonFilePath = bulkOperation.getId() + "/json/item.json";
+    when(remoteFileSystemClient.put(any(InputStream.class), eq(jsonFilePath)))
+      .thenReturn(jsonFilePath);
+    when(remoteFileSystemClient.get(jsonFilePath))
+      .thenReturn(new FileInputStream("src/test/resources/files/item.json"));
+
+    var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+
+    var result = dataExportJobUpdateService.downloadAndSaveJsonFile(bulkOperation, jobUpdate);
+
+    assertEquals(jsonFilePath, result);
+    verify(bulkOperationRepository, times(1)).save(bulkOperationCaptor.capture());
+    var savedBulkOperation = bulkOperationCaptor.getValue();
+    Assertions.assertNotNull(savedBulkOperation.getUsedTenants());
+    Assertions.assertFalse(savedBulkOperation.getUsedTenants().isEmpty());
+    Assertions.assertEquals(savedBulkOperation.getUsedTenants().size(), 1);
+    Assertions.assertEquals(savedBulkOperation.getUsedTenants().get(0), "member");
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldFailToDownloadAndSaveJsonFile() {
+
+    var bulkOperation = BulkOperation.builder()
+      .id(UUID.randomUUID())
+      .entityType(EntityType.ITEM)
+      .build();
+
+    var jobUpdate = Job.builder()
+      .files(List.of("file:fake.csv", "file:fake.csv", "file:src/test/resources/files/json.json", "file:fake.mrc"))
+      .build();
+
+    var jsonFilePath = bulkOperation.getId() + "/json/json.json";
+    when(remoteFileSystemClient.put(any(InputStream.class), eq(jsonFilePath)))
+      .thenReturn(jsonFilePath);
+    when(remoteFileSystemClient.get(jsonFilePath))
+      .thenThrow(new NotFoundException("Failed to download file"));
+
+    assertThrows(ServerErrorException.class, () -> dataExportJobUpdateService.downloadAndSaveJsonFile(bulkOperation, jobUpdate));
+    verify(bulkOperationRepository, times(1)).save(any(BulkOperation.class));
   }
 }
