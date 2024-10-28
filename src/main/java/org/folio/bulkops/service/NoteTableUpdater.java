@@ -20,14 +20,10 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.SearchConsortium;
-import org.folio.bulkops.domain.bean.ConsortiumHolding;
-import org.folio.bulkops.domain.bean.ConsortiumItem;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.NoteType;
-import org.folio.bulkops.domain.bean.UploadIdentifiers;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.InstanceNoteType;
-import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.TenantNotePair;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 
@@ -46,7 +42,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component

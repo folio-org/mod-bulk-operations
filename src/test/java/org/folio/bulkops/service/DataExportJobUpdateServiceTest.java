@@ -224,8 +224,8 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     var savedBulkOperation = bulkOperationCaptor.getValue();
     Assertions.assertNotNull(savedBulkOperation.getUsedTenants());
     Assertions.assertFalse(savedBulkOperation.getUsedTenants().isEmpty());
-    Assertions.assertEquals(savedBulkOperation.getUsedTenants().size(), 1);
-    Assertions.assertEquals(savedBulkOperation.getUsedTenants().get(0), "member");
+    Assertions.assertEquals(1, savedBulkOperation.getUsedTenants().size());
+    Assertions.assertEquals("member", savedBulkOperation.getUsedTenants().get(0));
   }
 
   @Test
