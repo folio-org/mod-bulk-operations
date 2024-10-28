@@ -234,7 +234,8 @@
             "metadata-provider.journalRecords.collection.get",
             "metadata-provider.jobLogEntries.collection.get",
             "source-storage.sourceRecords.get",
-            "source-storage.parsed-records.fetch.collection.post"
+            "source-storage.parsed-records.fetch.collection.post",
+            "data-import.splitconfig.get"
           ]
         },
         {
