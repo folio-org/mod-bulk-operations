@@ -238,10 +238,10 @@ class DataExportJobUpdateServiceTest extends BaseTest {
       .build();
 
     var jobUpdate = Job.builder()
-      .files(List.of("file:fake.csv", "file:fake.csv", "file:src/test/resources/files/json.json", "file:fake.mrc"))
+      .files(List.of("file:fake.csv", "file:fake.csv", "file:src/test/resources/files/item.json", "file:fake.mrc"))
       .build();
 
-    var jsonFilePath = bulkOperation.getId() + "/json/json.json";
+    var jsonFilePath = bulkOperation.getId() + "/json/item.json";
     when(remoteFileSystemClient.put(any(InputStream.class), eq(jsonFilePath)))
       .thenReturn(jsonFilePath);
     when(remoteFileSystemClient.get(jsonFilePath))
