@@ -10,8 +10,14 @@ import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_DOWNLOAD_ORIGIN_FILE_FR
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Spliterators;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
@@ -19,12 +25,16 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BatchStatus;
+import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.bean.Progress;
+import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.util.Utils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +56,7 @@ public class DataExportJobUpdateService {
   }
   private final BulkOperationRepository bulkOperationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
+  private final ObjectMapper objectMapper;
 
   @Transactional
   public void handleReceivedJobExecutionUpdate(Job jobExecutionUpdate) {
@@ -127,7 +138,28 @@ public class DataExportJobUpdateService {
 
   public String downloadAndSaveJsonFile(BulkOperation bulkOperation, Job jobUpdate) throws IOException {
     var jsonUrl = jobUpdate.getFiles().get(2);
-    return remoteFileSystemClient.put(new URL(jsonUrl).openStream(), bulkOperation.getId() + "/json/" + FilenameUtils.getName(jsonUrl.split("\\?")[0]));
+    var path = remoteFileSystemClient.put(new URL(jsonUrl).openStream(), bulkOperation.getId() + "/json/" + FilenameUtils.getName(jsonUrl.split("\\?")[0]));
+    if (bulkOperation.getEntityType() == EntityType.ITEM || bulkOperation.getEntityType() == EntityType.HOLDINGS_RECORD) {
+      var clazz = Utils.resolveExtendedEntityClass(bulkOperation.getEntityType());
+      try (var is = remoteFileSystemClient.get(path)) {
+        var parser = objectMapper.createParser(is);
+        bulkOperation.setUsedTenants(
+          StreamSupport.stream(
+              Spliterators.spliteratorUnknownSize(objectMapper.readValues(parser, clazz), 0), false)
+            .map(BulkOperationsEntity::getTenant)
+            .distinct()
+            .toList()
+        );
+      } catch (Exception e) {
+        log.error("Error getting tenants list", e);
+        bulkOperation.setStatus(OperationStatusType.FAILED);
+        bulkOperation.setErrorMessage("Error getting tenants list");
+        throw new ServerErrorException("Error getting tenants list: " + e.getMessage());
+      } finally {
+        bulkOperationRepository.save(bulkOperation);
+      }
+    }
+    return path;
   }
 
   public String downloadAndSaveCsvFile(BulkOperation bulkOperation, Job jobUpdate) throws IOException {
