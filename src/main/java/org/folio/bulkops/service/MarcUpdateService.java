@@ -23,6 +23,7 @@ import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.MarcDateHelper;
 import org.marc4j.MarcStreamReader;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -44,6 +45,7 @@ public class MarcUpdateService {
   private final BulkOperationRepository bulkOperationRepository;
   private final ObjectMapper objectMapper;
 
+  @Transactional
   public void commitForInstanceMarc(BulkOperation bulkOperation) {
     if (StringUtils.isNotEmpty(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
       bulkOperation.setTotalNumOfRecords(bulkOperation.getTotalNumOfRecords() * 2);
