@@ -48,7 +48,7 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
           validator(entity).validate(option, action, rule);
           updater(option, action, entity, false).apply(updated);
         } catch (RuleValidationException e) {
-          log.error(String.format("%s id=%s, error: %s", updated.getRecordBulkOperationEntity().getClass().getSimpleName(), "id", e.getMessage()));
+          log.warn(String.format("Rule validation exception: %s", e.getMessage()));
           errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
         } catch (RuleValidationTenantsException e) {
           try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(consortiaService.getCentralTenantId(folioExecutionContext.getTenantId()), folioModuleMetadata, folioExecutionContext))) {
