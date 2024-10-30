@@ -73,4 +73,5 @@ public class Constants {
   public static final String CSV_EXTENSION = "csv";
 
   public static final String MARC = "MARC";
+  public static final String FOLIO = "FOLIO";
 }
