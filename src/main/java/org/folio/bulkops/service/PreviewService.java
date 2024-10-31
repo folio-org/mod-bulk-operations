@@ -213,7 +213,7 @@ public class PreviewService {
     return FieldUtils.getFieldsListWithAnnotation(Instance.class, CsvCustomBindByName.class).stream()
       .filter(field -> name.equals(field.getAnnotation(CsvCustomBindByName.class).column()))
       .map(field -> field.getAnnotation(CsvCustomBindByPosition.class).position())
-      .findFirst().orElse(0);
+      .findFirst().orElseThrow(() -> new IllegalArgumentException("Field position was not found by name=" + name));
   }
 
   private Set<String> getChangedOptionsSet(UUID bulkOperationId, EntityType entityType, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> clazz) {
