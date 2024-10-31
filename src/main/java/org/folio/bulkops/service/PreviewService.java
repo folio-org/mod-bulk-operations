@@ -198,12 +198,16 @@ public class PreviewService {
   }
 
   private Optional<Record> findMarcRecordByHrid(BulkOperation bulkOperation, String hrid) {
-    var reader = new MarcStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile()));
-    while (reader.hasNext()) {
-      var marcRecord = reader.next();
-      if (hrid.equals(marcRecord.getControlNumber())) {
-        return Optional.of(marcRecord);
+    try (var is = remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
+      var reader = new MarcStreamReader(is);
+      while (reader.hasNext()) {
+        var marcRecord = reader.next();
+        if (hrid.equals(marcRecord.getControlNumber())) {
+          return Optional.of(marcRecord);
+        }
       }
+    } catch (IOException e) {
+      log.error("Failed to read file {}", bulkOperation.getLinkToModifiedRecordsMarcFile(), e);
     }
     log.error("MARC record was not found in file by hrid={}", hrid);
     return Optional.empty();
