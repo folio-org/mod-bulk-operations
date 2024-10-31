@@ -52,6 +52,8 @@ public class Instance implements BulkOperationsEntity {
   public static final String INSTANCE_LANGUAGES = "Languages";
   public static final String INSTANCE_PUBLICATION_FREQUENCY = "Publication frequency";
   public static final String INSTANCE_PUBLICATION_RANGE = "Publication range";
+  public static final String INSTANCE_ADMINISTRATIVE_NOTE = "Administrative note";
+  public static final String INSTANCE_STAFF_SUPPRESS = "Staff suppress";
 
   @JsonProperty("id")
   @CsvCustomBindByName(column = INSTANCE_UUID, converter = StringConverter.class)
@@ -69,7 +71,7 @@ public class Instance implements BulkOperationsEntity {
   private Boolean discoverySuppress;
 
   @JsonProperty("staffSuppress")
-  @CsvCustomBindByName(column = "Staff suppress", converter = BooleanConverter.class)
+  @CsvCustomBindByName(column = INSTANCE_STAFF_SUPPRESS, converter = BooleanConverter.class)
   @CsvCustomBindByPosition(position = 2, converter = BooleanConverter.class)
   @UnifiedTableCell(visible = false)
   private Boolean staffSuppress;
@@ -111,7 +113,7 @@ public class Instance implements BulkOperationsEntity {
   private String modeOfIssuanceId;
 
   @JsonProperty("administrativeNotes")
-  @CsvCustomBindByName(column = "Administrative note", converter = StringListPipedConverter.class)
+  @CsvCustomBindByName(column = INSTANCE_ADMINISTRATIVE_NOTE, converter = StringListPipedConverter.class)
   @CsvCustomBindByPosition(position = 9, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> administrativeNotes;
