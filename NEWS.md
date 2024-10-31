@@ -1,8 +1,49 @@
-## v2.1.0 - Unreleased
+## v2.1.0 - Released
 
 ### Technical tasks
-* [MODBULKOPS-370](https://folio-org.atlassian.net/browse/MODBULKOPS-370) - Upgrade `holdings-storage` to 8.0
+* [MODBULKOPS-384](https://folio-org.atlassian.net/browse/MODBULKOPS-384) Support Eureka permissions model for bulk operations (write operations)
+* [MODBULKOPS-370](https://folio-org.atlassian.net/browse/MODBULKOPS-370) Upgrade `holdings-storage` to 8.0
 * [MODBULKOPS-361](https://folio-org.atlassian.net/browse/MODBULKOPS-361) Rename module permissions
+* [MODBULKOPS-358](https://folio-org.atlassian.net/browse/MODBULKOPS-358) Add permissions to specify bulk-edit operations
+* [MODBULKOPS-350](https://folio-org.atlassian.net/browse/MODBULKOPS-350) API version update
+* [MODBULKOPS-344](https://folio-org.atlassian.net/browse/MODBULKOPS-344) Improve clients invocation logs
+* [MODBULKOPS-331](https://folio-org.atlassian.net/browse/MODBULKOPS-331) Optimisation of FQM query invocation
+* [MODBULKOPS-328](https://folio-org.atlassian.net/browse/MODBULKOPS-328) Update bulk-edit interface version
+* [MODBULKOPS-314](https://folio-org.atlassian.net/browse/MODBULKOPS-314) Central tenant edit permissions handling
+* [MODBULKOPS-306](https://folio-org.atlassian.net/browse/MODBULKOPS-306) Bump the FQM interface dependency versions in mod-bulk-operations
+
+### Stories
+* [MODBULKOPS-375](https://folio-org.atlassian.net/browse/MODBULKOPS-375) Retrieve MARC record from SRS after completion of bulk edit
+* [MODBULKOPS-360](https://folio-org.atlassian.net/browse/MODBULKOPS-360) Include Tentant in columns selection
+* [MODBULKOPS-351](https://folio-org.atlassian.net/browse/MODBULKOPS-351) Synchronize data used for bulk edit of MARC fields between “Bulk edit“ and “Inventory“ apps
+* [MODBULKOPS-329](https://folio-org.atlassian.net/browse/MODBULKOPS-329) Include tenantId in Item's and Holdings' Notes names in ECS
+* [MODBULKOPS-323](https://folio-org.atlassian.net/browse/MODBULKOPS-323) Update 005 in preview records on Are you sure form
+* [MODBULKOPS-313](https://folio-org.atlassian.net/browse/MODBULKOPS-313) Importing errors processing
+* [MODBULKOPS-312](https://folio-org.atlassian.net/browse/MODBULKOPS-312) Data Import client
+* [MODBULKOPS-311](https://folio-org.atlassian.net/browse/MODBULKOPS-311) Import profile creating
+* [MODBULKOPS-308](https://folio-org.atlassian.net/browse/MODBULKOPS-308) Investigate a better way to notify about S3 connectivity issues
+* [MODBULKOPS-279](https://folio-org.atlassian.net/browse/MODBULKOPS-279) FQM flow: tenant information populating
+* [MODBULKOPS-273](https://folio-org.atlassian.net/browse/MODBULKOPS-273) Instances, Items, holding - UpdateProcessor extension to support tenant information
+* [MODBULKOPS-272](https://folio-org.atlassian.net/browse/MODBULKOPS-272) Identifiers flow: entities tenant information support
+* [MODBULKOPS-262](https://folio-org.atlassian.net/browse/MODBULKOPS-262) If the note type name contains special characters, display the note type value
+* [MODBULKOPS-254](https://folio-org.atlassian.net/browse/MODBULKOPS-254) MARC Instance - InstanceDataProcessor extending
+* [MODBULKOPS-249](https://folio-org.atlassian.net/browse/MODBULKOPS-249) MARC Instance - Confirmation screen (MarcInstanceUpdateProcessor)
+* [MODBULKOPS-248](https://folio-org.atlassian.net/browse/MODBULKOPS-248) MARC Instance - Download MARC Preview
+* [MODBULKOPS-246](https://folio-org.atlassian.net/browse/MODBULKOPS-246) MARC Instance - Find and Replace
+* [MODBULKOPS-245](https://folio-org.atlassian.net/browse/MODBULKOPS-245) MARC Instance - Find and Remove Field or Subfield
+* [MODBULKOPS-244](https://folio-org.atlassian.net/browse/MODBULKOPS-244) MARC Instance - Find and Append Subfield
+* [MODBULKOPS-243](https://folio-org.atlassian.net/browse/MODBULKOPS-243) MARC Instance - Add New Field
+* [MODBULKOPS-204](https://folio-org.atlassian.net/browse/MODBULKOPS-204) Item record's column names cleanup
+
+### Bugs
+* [MODBULKOPS-355](https://folio-org.atlassian.net/browse/MODBULKOPS-355) "Are you sure" preview displays outdated values after User changed selection on bulk edit form and clicked "Confirm changes"
+* [MODBULKOPS-348](https://folio-org.atlassian.net/browse/MODBULKOPS-348) For bulk edit of MARC fields “Are you sure“ preview is populated based on .mrc file
+* [MODBULKOPS-345](https://folio-org.atlassian.net/browse/MODBULKOPS-345) Holdings fail to be bulk edited from Central tenant
+* [MODBULKOPS-342](https://folio-org.atlassian.net/browse/MODBULKOPS-342) Incorrect display of Instance notes in the Preview of record matched when order of the notes differ in .csv file and Preview
+* [MODBULKOPS-324](https://folio-org.atlassian.net/browse/MODBULKOPS-324) 404 Not Found error on Confirmation screen when bulk edit Items via Central tenant
+* [MODBULKOPS-321](https://folio-org.atlassian.net/browse/MODBULKOPS-321) "Are you sure" form is uploading for unexpectedly long time when bulk edit is going to complete with many errors
+* [MODBULKOPS-303](https://folio-org.atlassian.net/browse/MODBULKOPS-303) Error accordion disappears after refreshing the page
+* [MODBULKOPS-290](https://folio-org.atlassian.net/browse/MODBULKOPS-290) 422 Unprocessable Entity error for MARC instances with Instance notes
 
 ## v2.0.0 - Released 2024/03/19
 This release includes FQM Integration, separate notes by note type, updating Suppress from discovery flag and Staff suppress flag
