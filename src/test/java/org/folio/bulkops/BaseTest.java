@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -87,6 +88,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -102,12 +104,14 @@ public abstract class BaseTest {
   public static final String BUCKET = "test-bucket";
   public static final String REGION = "us-west-2";
   private static final String MINIO_ENDPOINT;
+  private static final DockerImageName POSTGRES_IMAGE_NAME = DockerImageName.parse(
+      Objects.toString(System.getenv("TESTCONTAINERS_POSTGRES_IMAGE"), "postgres:16-alpine"));
 
   public static final PostgreSQLContainer<?> postgresDBContainer;
   private static final GenericContainer<?> s3;
   public static final RemoteFileSystemClient client;
   static {
-    postgresDBContainer = new PostgreSQLContainer<>("postgres:12");
+    postgresDBContainer = new PostgreSQLContainer<>(POSTGRES_IMAGE_NAME);
     postgresDBContainer.start();
     s3 = new GenericContainer<>("minio/minio:latest")
         .withEnv("MINIO_ACCESS_KEY", S3_ACCESS_KEY)
