@@ -154,7 +154,7 @@ class PreviewServiceTest extends BaseTest {
     when(itemNoteTypeClient.getNoteTypeById("8d0a5eca-25de-4391-81a9-236eeefdd20b")).thenReturn(new NoteType().withName("Note"));
 
     when(holdingsNoteTypeClient.getNoteTypeById("e19eabab-a85c-4aef-a7b2-33bd9acef24e")).thenReturn(new HoldingsNoteType().withName("Reproduction"));
-    when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
+    when(consortiaService.isTenantCentral(any())).thenReturn(false);
 
     when(mappingRulesClient.getMarcBibMappingRules())
       .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));

@@ -89,7 +89,7 @@ class NoteTableUpdaterTest {
     var expectedTableSize = table.getHeader().size() + 2;
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
-    when(consortiaService.isCurrentTenantCentralTenant("tenantId")).thenReturn(false);
+    when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(itemReferenceService.getAllItemNoteTypes("tenantId"))
       .thenReturn(List.of(NoteType.builder().name("Action note").build(),
         NoteType.builder().name("Note").build(),
@@ -131,7 +131,7 @@ class NoteTableUpdaterTest {
 
     var expectedTableSize = table.getHeader().size() + 2;
 
-    when(consortiaService.isCurrentTenantCentralTenant("central")).thenReturn(true);
+    when(consortiaService.isTenantCentral("central")).thenReturn(true);
     when(folioExecutionContext.getTenantId()).thenReturn("central");
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(itemReferenceService.getAllItemNoteTypes("central")).thenReturn(List.of());
@@ -171,7 +171,7 @@ class NoteTableUpdaterTest {
     var expectedTableSize = table.getHeader().size() + 2;
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
-    when(consortiaService.isCurrentTenantCentralTenant("tenantId")).thenReturn(false);
+    when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(itemReferenceService.getAllItemNoteTypes("tenantId"))
       .thenReturn(List.of(NoteType.builder().name("Action note").build(),
         NoteType.builder().name("Note").build(),
@@ -202,7 +202,7 @@ class NoteTableUpdaterTest {
     var expectedTableSize = table.getHeader().size() + 2;
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
-    when(consortiaService.isCurrentTenantCentralTenant("tenantId")).thenReturn(false);
+    when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(itemReferenceService.getAllItemNoteTypes("tenantId"))
       .thenReturn(List.of(NoteType.builder().name("Action note").build(),
         NoteType.builder().name("Note").build(),
@@ -233,7 +233,7 @@ class NoteTableUpdaterTest {
     var expectedTableSize = table.getHeader().size() + 2;
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
-    when(consortiaService.isCurrentTenantCentralTenant("tenantId")).thenReturn(false);
+    when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(holdingsReferenceService.getAllHoldingsNoteTypes("tenantId"))
       .thenReturn(List.of(HoldingsNoteType.builder().name("Action note").build(),
         HoldingsNoteType.builder().name("Note").build(),
@@ -275,7 +275,7 @@ class NoteTableUpdaterTest {
 
     var expectedTableSize = table.getHeader().size() + 2;
 
-    when(consortiaService.isCurrentTenantCentralTenant("central")).thenReturn(true);
+    when(consortiaService.isTenantCentral("central")).thenReturn(true);
     when(folioExecutionContext.getTenantId()).thenReturn("central");
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(holdingsReferenceService.getAllHoldingsNoteTypes("central")).thenReturn(List.of());
@@ -315,7 +315,7 @@ class NoteTableUpdaterTest {
     var expectedTableSize = table.getHeader().size() + 2;
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
-    when(consortiaService.isCurrentTenantCentralTenant("tenantId")).thenReturn(false);
+    when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(holdingsReferenceService.getAllHoldingsNoteTypes("tenantId"))
       .thenReturn(List.of(HoldingsNoteType.builder().name("Action note").build(),
         HoldingsNoteType.builder().name("Note").build(),
@@ -346,7 +346,7 @@ class NoteTableUpdaterTest {
     var expectedTableSize = table.getHeader().size() + 2;
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
-    when(consortiaService.isCurrentTenantCentralTenant("tenantId")).thenReturn(false);
+    when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(holdingsReferenceService.getAllHoldingsNoteTypes("tenantId"))
       .thenReturn(List.of(HoldingsNoteType.builder().name("Action note").tenantId("tenantId").build(),
         HoldingsNoteType.builder().name("Note").tenantId("tenantId").build(),
@@ -374,7 +374,7 @@ class NoteTableUpdaterTest {
     table.setRows(List.of(new Row().row(row)));
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
-    when(consortiaService.isCurrentTenantCentralTenant("tenantId")).thenReturn(false);
+    when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(holdingsReferenceService.getAllHoldingsNoteTypes("tenantId"))
       .thenReturn(List.of(HoldingsNoteType.builder().name("Binding").build(),
         HoldingsNoteType.builder().name("Electronic bookplate").build(),
@@ -395,7 +395,7 @@ class NoteTableUpdaterTest {
     table.setRows(List.of(new Row().row(row)));
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
-    when(consortiaService.isCurrentTenantCentralTenant("tenantId")).thenReturn(false);
+    when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(itemReferenceService.getAllItemNoteTypes("tenantId"))
       .thenReturn(List.of(NoteType.builder().name("Binding").build(),
         NoteType.builder().name("Electronic bookplate").build(),

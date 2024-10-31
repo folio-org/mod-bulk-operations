@@ -398,14 +398,7 @@ public class BulkOperationService {
     var processor = dataProcessorFactory.getProcessorFromFactory(entityClass);
     UpdatedEntityHolder<BulkOperationsEntity> modified = null;
     try {
-      if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId()) || entityClass == User.class) {
         modified = processor.process(original.getRecordBulkOperationEntity().getIdentifier(operation.getIdentifierType()), original, rules);
-      } else {
-        var tenantIdOfEntity = original.getTenant();
-        try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
-          modified = processor.process(original.getRecordBulkOperationEntity().getIdentifier(operation.getIdentifierType()), original, rules);
-        }
-      }
     } catch (Exception e) {
       log.error("Failed to modify entity, reason:" + e.getMessage());
     }
@@ -528,7 +521,7 @@ public class BulkOperationService {
   }
 
   private boolean isCurrentTenantNotCentral(String tenantId) {
-    return !consortiaService.isCurrentTenantCentralTenant(tenantId);
+    return !consortiaService.isTenantCentral(tenantId);
   }
 
   public BulkOperation startBulkOperation(UUID bulkOperationId, UUID xOkapiUserId, BulkOperationStart bulkOperationStart) {

@@ -23,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
@@ -31,6 +32,7 @@ import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.InstanceNote;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.exception.RuleValidationException;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
@@ -53,13 +55,17 @@ class FolioInstanceDataProcessorTest extends BaseTest {
   DataProcessorFactory factory;
   @MockBean
   ErrorService errorService;
+  @MockBean
+  private ConsortiaService consortiaService;
 
   private DataProcessor<ExtendedInstance> processor;
 
   public static final String IDENTIFIER = "123";
 
+
   @BeforeEach
   void setUp() {
+    when(consortiaService.isTenantMember(any(String.class))).thenReturn(false);
     if (isNull(processor)) {
       processor = factory.getProcessorFromFactory(ExtendedInstance.class);
     }
