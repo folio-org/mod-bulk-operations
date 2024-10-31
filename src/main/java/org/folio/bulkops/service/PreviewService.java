@@ -2,10 +2,15 @@ package org.folio.bulkops.service;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
+import static java.util.Objects.isNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ADMINISTRATIVE_NOTE;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_HRID;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SOURCE;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_STAFF_SUPPRESS;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
@@ -15,24 +20,36 @@ import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDINGS_NOTE_TYP
 import static org.folio.bulkops.processor.InstanceNotesUpdaterFactory.INSTANCE_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.processor.ItemsNotesUpdater.ITEM_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
+import static org.folio.bulkops.util.Constants.FOLIO;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReaderBuilder;
+import com.opencsv.bean.CsvCustomBindByName;
+import com.opencsv.bean.CsvCustomBindByPosition;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.folio.bulkops.client.InstanceNoteTypesClient;
+import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
@@ -57,6 +74,7 @@ import org.folio.bulkops.util.UpdateOptionTypeToFieldResolver;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.marc4j.MarcStreamReader;
+import org.marc4j.marc.Record;
 import org.springframework.stereotype.Service;
 import org.folio.bulkops.domain.dto.EntityType;
 
@@ -82,6 +100,7 @@ public class PreviewService {
   private final BulkOperationService bulkOperationService;
   private final TenantTableUpdater tenantTableUpdater;
   private final Marc21ReferenceProvider referenceProvider;
+  private final ObjectMapper objectMapper;
 
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -94,10 +113,7 @@ public class PreviewService {
       case EDIT -> {
         var bulkOperationId = operation.getId();
         if (INSTANCE_MARC.equals(operation.getEntityType())) {
-          referenceProvider.updateMappingRules();
-          var rules = ruleService.getMarcRules(bulkOperationId);
-          var options = getChangedOptionsSet(rules);
-          yield buildPreviewFromMarcFile(operation.getLinkToModifiedRecordsMarcFile(), clazz, offset, limit, options);
+          yield buildCompositePreview(operation, offset, limit);
         } else {
           var rules = ruleService.getRules(bulkOperationId);
           var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
@@ -113,7 +129,9 @@ public class PreviewService {
             referenceProvider.updateMappingRules();
             var rules = ruleService.getMarcRules(bulkOperationId);
             var options = getChangedOptionsSet(rules);
-            yield buildPreviewFromMarcFile(operation.getLinkToCommittedRecordsMarcFile(), clazz, offset, limit, options);
+            var marcTable = buildPreviewFromMarcFile(operation.getLinkToCommittedRecordsMarcFile(), clazz, offset, limit, options);
+            enrichMarcWithAdministrativeData(marcTable, operation);
+            yield marcTable;
           } else {
             var rules = ruleService.getRules(bulkOperationId);
             var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
@@ -122,6 +140,100 @@ public class PreviewService {
         }
       }
     };
+  }
+
+  private UnifiedTable buildCompositePreview(BulkOperation bulkOperation, int offset, int limit) {
+    var csvTable = buildPreviewFromCsvFile(bulkOperation.getLinkToMatchedRecordsCsvFile(), Instance.class, offset, limit, bulkOperation);
+    if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
+      referenceProvider.updateMappingRules();
+      var rules = ruleService.getMarcRules(bulkOperation.getId());
+      var changedOptionsSet = getChangedOptionsSet(rules);
+      var compositeTable = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class);
+      noteTableUpdater.extendTableWithInstanceNotesTypes(compositeTable, changedOptionsSet);
+      var sourcePosition = getCellPositionByName(INSTANCE_SOURCE);
+      var hridPosition = getCellPositionByName(INSTANCE_HRID);
+      var administrativeNotesPosition = getCellPositionByName(INSTANCE_ADMINISTRATIVE_NOTE);
+      var staffSuppressPosition = getCellPositionByName(INSTANCE_STAFF_SUPPRESS);
+      var headers = compositeTable.getHeader().stream()
+        .map(Cell::getValue)
+        .toList();
+      var hrids = csvTable.getRows().stream()
+        .map(row -> row.getRow().get(hridPosition))
+        .toList();
+      var marcRecords = findMarcRecordsByHrids(bulkOperation, hrids);
+      csvTable.getRows().forEach(csvRow -> {
+        if (FOLIO.equals(csvRow.getRow().get(sourcePosition))) {
+          compositeTable.addRowsItem(csvRow);
+        } else {
+          var hrid = csvRow.getRow().get(hridPosition);
+          if (marcRecords.containsKey(hrid)) {
+            var marcRow = new Row().row(marcToUnifiedTableRowMapper.processRecord(marcRecords.get(hrid), headers));
+            marcRow.getRow().set(administrativeNotesPosition, csvRow.getRow().get(administrativeNotesPosition));
+            marcRow.getRow().set(staffSuppressPosition, csvRow.getRow().get(staffSuppressPosition));
+            compositeTable.addRowsItem(marcRow);
+          }
+        }
+      });
+      return compositeTable;
+    }
+    return csvTable;
+  }
+
+  private void enrichMarcWithAdministrativeData(UnifiedTable unifiedTable, BulkOperation bulkOperation) {
+    var hridPosition = getCellPositionByName(INSTANCE_HRID);
+    var administrativeNotesPosition = getCellPositionByName(INSTANCE_ADMINISTRATIVE_NOTE);
+    var staffSuppressPosition = getCellPositionByName(INSTANCE_STAFF_SUPPRESS);
+    var hrids = unifiedTable.getRows().stream()
+      .map(row -> row.getRow().get(hridPosition))
+      .toList();
+    var instances = findInstancesByHrids(bulkOperation, hrids);
+    unifiedTable.getRows().forEach(row -> {
+      var hrid = row.getRow().get(hridPosition);
+      if (instances.containsKey(hrid)) {
+        var instance = instances.get(hrid);
+        row.getRow().set(staffSuppressPosition, isNull(instance.getStaffSuppress()) ? EMPTY : instance.getStaffSuppress().toString());
+        row.getRow().set(administrativeNotesPosition, String.join(ITEM_DELIMITER_SPACED, instance.getAdministrativeNotes()));
+      }
+    });
+  }
+
+  private Map<String, Instance> findInstancesByHrids(BulkOperation bulkOperation, List<String> hrids) {
+    var map = new HashMap<String, Instance>();
+    try (var readerForMatchedJsonFile = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
+      var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), ExtendedInstance.class);
+      while (iterator.hasNext()) {
+        var instance = iterator.next().getEntity();
+        if (hrids.contains(instance.getHrid())) {
+          map.put(instance.getHrid(), instance);
+        }
+      }
+    } catch (IOException e) {
+      log.error("Failed to read json file", e);
+    }
+    return map;
+  }
+
+  private Map<String, Record> findMarcRecordsByHrids(BulkOperation bulkOperation, List<String> hrids) {
+    var map = new HashMap<String, Record>();
+    try (var is = remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
+      var reader = new MarcStreamReader(is);
+      while (reader.hasNext()) {
+        var marcRecord = reader.next();
+        if (hrids.contains(marcRecord.getControlNumber())) {
+          map.put(marcRecord.getControlNumber(), marcRecord);
+        }
+      }
+    } catch (IOException e) {
+      log.error("Failed to read file {}", bulkOperation.getLinkToModifiedRecordsMarcFile(), e);
+    }
+    return map;
+  }
+
+  private int getCellPositionByName(String name) {
+    return FieldUtils.getFieldsListWithAnnotation(Instance.class, CsvCustomBindByName.class).stream()
+      .filter(field -> name.equals(field.getAnnotation(CsvCustomBindByName.class).column()))
+      .map(field -> field.getAnnotation(CsvCustomBindByPosition.class).position())
+      .findFirst().orElseThrow(() -> new IllegalArgumentException("Field position was not found by name=" + name));
   }
 
   private Set<String> getChangedOptionsSet(UUID bulkOperationId, EntityType entityType, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> clazz) {
