@@ -30,7 +30,10 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -154,16 +157,21 @@ public class PreviewService {
       var headers = compositeTable.getHeader().stream()
         .map(Cell::getValue)
         .toList();
+      var hrids = csvTable.getRows().stream()
+        .map(row -> row.getRow().get(hridPosition))
+        .toList();
+      var marcRecords = findMarcRecordsByHrids(bulkOperation, hrids);
       csvTable.getRows().forEach(csvRow -> {
         if (FOLIO.equals(csvRow.getRow().get(sourcePosition))) {
           compositeTable.addRowsItem(csvRow);
         } else {
-          findMarcRecordByHrid(bulkOperation, csvRow.getRow().get(hridPosition)).ifPresent(marcRecord -> {
-            var marcRow = new Row().row(marcToUnifiedTableRowMapper.processRecord(marcRecord, headers));
+          var hrid = csvRow.getRow().get(hridPosition);
+          if (marcRecords.containsKey(hrid)) {
+            var marcRow = new Row().row(marcToUnifiedTableRowMapper.processRecord(marcRecords.get(hrid), headers));
             marcRow.getRow().set(administrativeNotesPosition, csvRow.getRow().get(administrativeNotesPosition));
             marcRow.getRow().set(staffSuppressPosition, csvRow.getRow().get(staffSuppressPosition));
             compositeTable.addRowsItem(marcRow);
-          });
+          }
         }
       });
       return compositeTable;
@@ -175,42 +183,50 @@ public class PreviewService {
     var hridPosition = getCellPositionByName(INSTANCE_HRID);
     var administrativeNotesPosition = getCellPositionByName(INSTANCE_ADMINISTRATIVE_NOTE);
     var staffSuppressPosition = getCellPositionByName(INSTANCE_STAFF_SUPPRESS);
-      unifiedTable.getRows().forEach(row -> findInstanceByHrid(bulkOperation, row.getRow().get(hridPosition)).ifPresent(instance -> {
+    var hrids = unifiedTable.getRows().stream()
+      .map(row -> row.getRow().get(hridPosition))
+      .toList();
+    var instances = findInstancesByHrids(bulkOperation, hrids);
+    unifiedTable.getRows().forEach(row -> {
+      var hrid = row.getRow().get(hridPosition);
+      if (instances.containsKey(hrid)) {
+        var instance = instances.get(hrid);
         row.getRow().set(staffSuppressPosition, isNull(instance.getStaffSuppress()) ? EMPTY : instance.getStaffSuppress().toString());
         row.getRow().set(administrativeNotesPosition, String.join(ITEM_DELIMITER_SPACED, instance.getAdministrativeNotes()));
-      }));
+      }
+    });
   }
 
-  private Optional<Instance> findInstanceByHrid(BulkOperation bulkOperation, String hrid) {
+  private Map<String, Instance> findInstancesByHrids(BulkOperation bulkOperation, List<String> hrids) {
+    var map = new HashMap<String, Instance>();
     try (var readerForMatchedJsonFile = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
       var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), ExtendedInstance.class);
       while (iterator.hasNext()) {
         var instance = iterator.next().getEntity();
-        if (hrid.equals(instance.getHrid())) {
-          return Optional.of(instance);
+        if (hrids.contains(instance.getHrid())) {
+          map.put(instance.getHrid(), instance);
         }
       }
-      log.error("Instance was not found by hrid={}", hrid);
     } catch (IOException e) {
       log.error("Failed to read json file", e);
     }
-    return Optional.empty();
+    return map;
   }
 
-  private Optional<Record> findMarcRecordByHrid(BulkOperation bulkOperation, String hrid) {
+  private Map<String, Record> findMarcRecordsByHrids(BulkOperation bulkOperation, List<String> hrids) {
+    var map = new HashMap<String, Record>();
     try (var is = remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
       var reader = new MarcStreamReader(is);
       while (reader.hasNext()) {
         var marcRecord = reader.next();
-        if (hrid.equals(marcRecord.getControlNumber())) {
-          return Optional.of(marcRecord);
+        if (hrids.contains(marcRecord.getControlNumber())) {
+          map.put(marcRecord.getControlNumber(), marcRecord);
         }
       }
     } catch (IOException e) {
       log.error("Failed to read file {}", bulkOperation.getLinkToModifiedRecordsMarcFile(), e);
     }
-    log.error("MARC record was not found in file by hrid={}", hrid);
-    return Optional.empty();
+    return map;
   }
 
   private int getCellPositionByName(String name) {
