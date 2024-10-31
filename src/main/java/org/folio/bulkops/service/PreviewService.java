@@ -182,7 +182,7 @@ public class PreviewService {
     try (var readerForMatchedJsonFile = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
       var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), ExtendedInstance.class);
       unifiedTable.getRows().forEach(row -> findInstanceByHrid(iterator, row.getRow().get(hridPosition)).ifPresent(instance -> {
-        row.getRow().set(staffSuppressPosition, isNull(instance.getStaffSuppress()) ? FALSE.toString() : instance.getStaffSuppress().toString());
+        row.getRow().set(staffSuppressPosition, isNull(instance.getStaffSuppress()) ? EMPTY : instance.getStaffSuppress().toString());
         row.getRow().set(administrativeNotesPosition, String.join(ITEM_DELIMITER_SPACED, instance.getAdministrativeNotes()));
       }));
     } catch (IOException e) {
@@ -194,9 +194,11 @@ public class PreviewService {
     while (iterator.hasNext()) {
       var instance = iterator.next().getEntity();
       if (hrid.equals(instance.getHrid())) {
+        log.info("Instance hrid={}", hrid);
         return Optional.of(instance);
       }
     }
+    log.error("Instance not found by hrid={}", hrid);
     return Optional.empty();
   }
 
@@ -207,7 +209,7 @@ public class PreviewService {
         return Optional.of(marcRecord);
       }
     }
-    log.error("MARC record was not found in file by HRID={}", hrid);
+    log.error("MARC record was not found in file by hrid={}", hrid);
     return Optional.empty();
   }
 
