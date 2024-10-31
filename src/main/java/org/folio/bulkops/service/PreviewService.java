@@ -1,6 +1,5 @@
 package org.folio.bulkops.service;
 
-import static java.lang.Boolean.FALSE;
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.isNull;
@@ -38,7 +37,6 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReaderBuilder;
@@ -72,7 +70,6 @@ import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
 import org.folio.bulkops.util.UpdateOptionTypeToFieldResolver;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
-import org.marc4j.MarcReader;
 import org.marc4j.MarcStreamReader;
 import org.marc4j.marc.Record;
 import org.springframework.stereotype.Service;
@@ -150,7 +147,6 @@ public class PreviewService {
       var changedOptionsSet = getChangedOptionsSet(rules);
       var compositeTable = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class);
       noteTableUpdater.extendTableWithInstanceNotesTypes(compositeTable, changedOptionsSet);
-      var reader = new MarcStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile()));
       var sourcePosition = getCellPositionByName(INSTANCE_SOURCE);
       var hridPosition = getCellPositionByName(INSTANCE_HRID);
       var administrativeNotesPosition = getCellPositionByName(INSTANCE_ADMINISTRATIVE_NOTE);
@@ -162,7 +158,7 @@ public class PreviewService {
         if (FOLIO.equals(csvRow.getRow().get(sourcePosition))) {
           compositeTable.addRowsItem(csvRow);
         } else {
-          findMarcRecordByHrid(reader, csvRow.getRow().get(hridPosition)).ifPresent(marcRecord -> {
+          findMarcRecordByHrid(bulkOperation, csvRow.getRow().get(hridPosition)).ifPresent(marcRecord -> {
             var marcRow = new Row().row(marcToUnifiedTableRowMapper.processRecord(marcRecord, headers));
             marcRow.getRow().set(administrativeNotesPosition, csvRow.getRow().get(administrativeNotesPosition));
             marcRow.getRow().set(staffSuppressPosition, csvRow.getRow().get(staffSuppressPosition));
@@ -179,30 +175,30 @@ public class PreviewService {
     var hridPosition = getCellPositionByName(INSTANCE_HRID);
     var administrativeNotesPosition = getCellPositionByName(INSTANCE_ADMINISTRATIVE_NOTE);
     var staffSuppressPosition = getCellPositionByName(INSTANCE_STAFF_SUPPRESS);
-    try (var readerForMatchedJsonFile = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
-      var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), ExtendedInstance.class);
-      unifiedTable.getRows().forEach(row -> findInstanceByHrid(iterator, row.getRow().get(hridPosition)).ifPresent(instance -> {
+      unifiedTable.getRows().forEach(row -> findInstanceByHrid(bulkOperation, row.getRow().get(hridPosition)).ifPresent(instance -> {
         row.getRow().set(staffSuppressPosition, isNull(instance.getStaffSuppress()) ? EMPTY : instance.getStaffSuppress().toString());
         row.getRow().set(administrativeNotesPosition, String.join(ITEM_DELIMITER_SPACED, instance.getAdministrativeNotes()));
       }));
+  }
+
+  private Optional<Instance> findInstanceByHrid(BulkOperation bulkOperation, String hrid) {
+    try (var readerForMatchedJsonFile = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
+      var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), ExtendedInstance.class);
+      while (iterator.hasNext()) {
+        var instance = iterator.next().getEntity();
+        if (hrid.equals(instance.getHrid())) {
+          return Optional.of(instance);
+        }
+      }
+      log.error("Instance was not found by hrid={}", hrid);
     } catch (IOException e) {
       log.error("Failed to read json file", e);
     }
-  }
-
-  private Optional<Instance> findInstanceByHrid(MappingIterator<ExtendedInstance> iterator, String hrid) {
-    while (iterator.hasNext()) {
-      var instance = iterator.next().getEntity();
-      if (hrid.equals(instance.getHrid())) {
-        log.info("Instance hrid={}", hrid);
-        return Optional.of(instance);
-      }
-    }
-    log.error("Instance not found by hrid={}", hrid);
     return Optional.empty();
   }
 
-  private Optional<Record> findMarcRecordByHrid(MarcReader reader, String hrid) {
+  private Optional<Record> findMarcRecordByHrid(BulkOperation bulkOperation, String hrid) {
+    var reader = new MarcStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile()));
     while (reader.hasNext()) {
       var marcRecord = reader.next();
       if (hrid.equals(marcRecord.getControlNumber())) {
