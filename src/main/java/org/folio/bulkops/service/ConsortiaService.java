@@ -77,11 +77,11 @@ public class ConsortiaService {
 
   @Cacheable(value = "isTenantMember")
   public boolean isTenantMember(String tenantId) {
-    return isTenantConsortia(tenantId) &&  !isTenantCentral(tenantId);
+    return isTenantInConsortia(tenantId) &&  !isTenantCentral(tenantId);
   }
 
   @Cacheable(value = "isTenantInConsortia")
-  public boolean isTenantConsortia(String tenantId) {
+  public boolean isTenantInConsortia(String tenantId) {
     return StringUtils.isNotEmpty(getCentralTenantId(tenantId));
   }
 }

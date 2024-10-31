@@ -58,7 +58,7 @@ public abstract class CsvDownloadPreProcessor {
 
   public byte[] processCsvContent(byte[] input, BulkOperation bulkOperation) {
     Map<String, UserTenant> userTenants = new HashMap<>();
-    boolean isCentralOrMemberTenant = consortiaService.isTenantConsortia(folioExecutionContext.getTenantId());
+    boolean isCentralOrMemberTenant = consortiaService.isTenantInConsortia(folioExecutionContext.getTenantId());
     boolean isTypeWithTenant = bulkOperation.getEntityType() == EntityType.ITEM || bulkOperation.getEntityType() == EntityType.HOLDINGS_RECORD;
     if (isCentralOrMemberTenant && isTypeWithTenant) {
       userTenants = consortiaService.getUserTenantsPerId(folioExecutionContext.getTenantId(), folioExecutionContext.getUserId().toString());

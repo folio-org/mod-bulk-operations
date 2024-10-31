@@ -55,7 +55,7 @@ class TenantTableUpdaterTest {
     table.setRows(List.of(row));
 
     when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
-    when(consortiaService.isTenantConsortia(anyString())).thenReturn(false);
+    when(consortiaService.isTenantInConsortia(anyString())).thenReturn(false);
 
     tableUpdater.updateTenantInHeadersAndRows(table, entityClass);
 
@@ -83,7 +83,7 @@ class TenantTableUpdaterTest {
 
     when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
-    when(consortiaService.isTenantConsortia(anyString())).thenReturn(true);
+    when(consortiaService.isTenantInConsortia(anyString())).thenReturn(true);
     when(consortiaService.getUserTenantsPerId(anyString(), anyString())).thenReturn(userTenants);
 
     tableUpdater.updateTenantInHeadersAndRows(table, entityClass);
@@ -108,7 +108,7 @@ class TenantTableUpdaterTest {
     tableUpdater.updateTenantInHeadersAndRows(table, Instance.class);
 
     verify(folioExecutionContext, never()).getTenantId();
-    verify(consortiaService, never()).isTenantConsortia(anyString());
+    verify(consortiaService, never()).isTenantInConsortia(anyString());
   }
 
   private static Stream<Arguments> getEntityClassesWithTenant() {
