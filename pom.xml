@@ -41,6 +41,7 @@
     <lombok.mapstruct-binding.version>0.2.0</lombok.mapstruct-binding.version>
     <hibernate-types-52.version>2.10.3</hibernate-types-52.version>
     <folio-s3-client.version>2.2.0</folio-s3-client.version>
+    <folio-module-descriptor-validator.version>1.0.0</folio-module-descriptor-validator.version>
     <opencsv.version>5.7.1</opencsv.version>
     <feign-jackson.version>12.1</feign-jackson.version>
     <aws-sdk-java.version>2.25.12</aws-sdk-java.version>
@@ -493,6 +494,19 @@
         <configuration>
           <groups>integration</groups>
         </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.folio</groupId>
+        <artifactId>folio-module-descriptor-validator</artifactId>
+        <version>${folio-module-descriptor-validator.version}</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>validate</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
     </plugins>
