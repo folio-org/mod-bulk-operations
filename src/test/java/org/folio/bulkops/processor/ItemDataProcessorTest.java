@@ -289,11 +289,14 @@ class ItemDataProcessorTest extends BaseTest {
     assertFalse(actual.shouldBeUpdated);
   }
 
-  @Test
-  void testUpdateAllowedItemStatus() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testUpdateAllowedItemStatus(boolean isMember) {
     var item = new Item()
       .withStatus(new InventoryItemStatus().withName(AVAILABLE));
-    var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
+    var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant_" + isMember).build();
+
+    when(consortiaService.isTenantMember(any())).thenReturn(isMember);
 
     var rules = rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.MISSING.getValue()));
     var result = processor.process(IDENTIFIER, extendedItem, rules);
@@ -302,10 +305,13 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(InventoryItemStatus.NameEnum.MISSING, result.getUpdated().getEntity().getStatus().getName());
   }
 
-  @Test
-  void testUpdateRestrictedItemStatus() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testUpdateRestrictedItemStatus(boolean isMember) {
     var extendedItem = ExtendedItem.builder().entity(new Item()
       .withStatus(new InventoryItemStatus().withName(InventoryItemStatus.NameEnum.AGED_TO_LOST))).tenantId("tenant").build();
+
+    when(consortiaService.isTenantMember(any())).thenReturn(isMember);
 
     var actual = processor.process(IDENTIFIER, extendedItem, rules(rule(STATUS, REPLACE_WITH, InventoryItemStatus.NameEnum.MISSING.getValue())));
     assertNotNull(actual.getUpdated());

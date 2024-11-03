@@ -321,7 +321,7 @@ class UpdateProcessorTest extends BaseTest {
           .key(APPLY_TO_HOLDINGS)
           .value(Boolean.toString(applyToHoldings)))))));
 
-    when(consortiaService.isCurrentTenantCentralTenant(isA(String.class))).thenReturn(false);
+    when(consortiaService.isTenantCentral(isA(String.class))).thenReturn(false);
     when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()
       .bulkOperationRules(Collections.singletonList(rule))
       .totalRecords(1));
@@ -366,7 +366,7 @@ class UpdateProcessorTest extends BaseTest {
       .identifierType(IdentifierType.ID)
       .build();
 
-    when(consortiaService.isCurrentTenantCentralTenant(isA(String.class))).thenReturn(false);
+    when(consortiaService.isTenantCentral(isA(String.class))).thenReturn(false);
     var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
       .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
       .actions(Collections.singletonList(new Action()
@@ -450,7 +450,7 @@ class UpdateProcessorTest extends BaseTest {
     when(folioExecutionContext.getUserId()).thenReturn(UUID.fromString(userId));
     when(folioExecutionContext.getTenantId()).thenReturn("diku");
     when(userClient.getUserById(userId)).thenReturn(user);
-    when(consortiaService.isCurrentTenantCentralTenant("diku")).thenReturn(true);
+    when(consortiaService.isTenantCentral("diku")).thenReturn(true);
     when(consortiaService.getAffiliatedTenants(any(), any())).thenReturn(affiliatedTenants);
     when(searchConsortium.getHoldingsById(UUID.fromString(instanceId))).thenReturn(consortiumHoldingCollection);
     when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()

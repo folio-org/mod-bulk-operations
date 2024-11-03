@@ -51,7 +51,7 @@ public class HoldingsUpdateProcessor extends AbstractUpdateProcessor<ExtendedHol
   @Override
   public void updateRecord(ExtendedHoldingsRecord extendedHoldingsRecord) {
     var holdingsRecord = extendedHoldingsRecord.getEntity();
-    if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+    if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
       var tenantId = extendedHoldingsRecord.getTenantId();
       permissionsValidator.checkIfBulkEditWritePermissionExists(tenantId, EntityType.HOLDINGS_RECORD,
         NO_HOLDING_WRITE_PERMISSIONS_TEMPLATE + tenantId);
@@ -76,7 +76,7 @@ public class HoldingsUpdateProcessor extends AbstractUpdateProcessor<ExtendedHol
     var holdingsRecord = extendedHoldingsRecord.getEntity();
     var bulkOperationRules = ruleService.getRules(operation.getId());
     boolean itemsUpdated;
-    if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+    if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
       var tenantId = extendedHoldingsRecord.getTenantId();
       try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
         itemsUpdated = findRuleByOption(bulkOperationRules, SUPPRESS_FROM_DISCOVERY)

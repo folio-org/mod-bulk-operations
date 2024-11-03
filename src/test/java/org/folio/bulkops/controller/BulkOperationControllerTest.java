@@ -132,7 +132,7 @@ class BulkOperationControllerTest extends BaseTest {
   @ParameterizedTest
   @MethodSource("fileContentTypeToNoteTypeCollection")
   void shouldDownloadFileWithPreview(FileContentType type, org.folio.bulkops.domain.dto.EntityType entityType) throws Exception {
-    when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
+    when(consortiaService.isTenantCentral(any())).thenReturn(false);
 
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = UUID.randomUUID();

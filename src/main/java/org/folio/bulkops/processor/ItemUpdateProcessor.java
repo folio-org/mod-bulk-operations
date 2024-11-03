@@ -29,7 +29,7 @@ public class ItemUpdateProcessor extends AbstractUpdateProcessor<ExtendedItem> {
   @Override
   public void updateRecord(ExtendedItem extendedItem) {
     var item = extendedItem.getEntity();
-    if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+    if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
       var tenantId = extendedItem.getTenantId();
       permissionsValidator.checkIfBulkEditWritePermissionExists(tenantId, EntityType.ITEM,
         NO_ITEM_WRITE_PERMISSIONS_TEMPLATE + tenantId);

@@ -34,7 +34,7 @@ public class ItemNoteProcessor extends CsvDownloadPreProcessor {
       .map(NoteType::getName)
       .filter(Objects::nonNull)
       .toList());
-    if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+    if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
       noteTypeNamesSet.clear();
       List<NoteType> noteTypesFromUsedTenants = new ArrayList<>();
       var usedTenants = bulkOperation.getUsedTenants();

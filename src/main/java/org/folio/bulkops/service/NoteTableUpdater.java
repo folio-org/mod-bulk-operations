@@ -72,7 +72,7 @@ public class NoteTableUpdater {
       .toList());
     List<HoldingsNoteType> noteTypesFromUsedTenants = new ArrayList<>();
     List<TenantNotePair> tenantNotePairs = new ArrayList<>();
-    if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+    if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
       noteTypeNamesSet.clear();
       for (var usedTenant : bulkOperation.getUsedTenants()) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(usedTenant, folioModuleMetadata, folioExecutionContext))) {
@@ -98,7 +98,7 @@ public class NoteTableUpdater {
       .toList());
     List<NoteType> noteTypesFromUsedTenants = new ArrayList<>();
     List<TenantNotePair> tenantNotePairs = new ArrayList<>();
-    if (consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+    if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
       noteTypeNamesSet.clear();
       for (var usedTenant : bulkOperation.getUsedTenants()) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(usedTenant, folioModuleMetadata, folioExecutionContext))) {

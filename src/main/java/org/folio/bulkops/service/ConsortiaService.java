@@ -70,13 +70,18 @@ public class ConsortiaService {
     return new HashMap<>();
   }
 
-  @Cacheable(value = "isCurrentTenantCentralTenant")
-  public boolean isCurrentTenantCentralTenant(String currentTenantId) {
-    return getCentralTenantId(currentTenantId).equals(context.getTenantId());
+  @Cacheable(value = "isTenantCentral")
+  public boolean isTenantCentral(String tenantId) {
+    return tenantId.equals(getCentralTenantId(tenantId));
   }
 
-  @Cacheable(value = "isCurrentTenantInConsortia")
-  public boolean isCurrentTenantInConsortia(String currentTenantId) {
-    return StringUtils.isNotEmpty(getCentralTenantId(currentTenantId));
+  @Cacheable(value = "isTenantMember")
+  public boolean isTenantMember(String tenantId) {
+    return isTenantInConsortia(tenantId) &&  !isTenantCentral(tenantId);
+  }
+
+  @Cacheable(value = "isTenantInConsortia")
+  public boolean isTenantInConsortia(String tenantId) {
+    return StringUtils.isNotEmpty(getCentralTenantId(tenantId));
   }
 }

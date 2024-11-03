@@ -94,7 +94,7 @@ public class FolioInstanceUpdateProcessor extends AbstractUpdateProcessor<Extend
     boolean itemsUpdated = false;
     if (shouldApplyToHoldings || shouldApplyToItems) {
       log.info("Should update associated records: holdings={}, items={}", shouldApplyToHoldings, shouldApplyToItems);
-      if (!consortiaService.isCurrentTenantCentralTenant(folioExecutionContext.getTenantId())) {
+      if (!consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
         var instance = extendedInstance.getEntity();
         var holdings = getHoldingsSourceFolioByInstanceId(instance.getId());
         holdingsUpdated = suppressHoldingsIfRequired(holdings, shouldApplyToHoldings, instance.getDiscoverySuppress());
