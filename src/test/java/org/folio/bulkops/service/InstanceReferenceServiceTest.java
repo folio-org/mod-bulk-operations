@@ -18,7 +18,6 @@ import org.folio.bulkops.domain.bean.InstanceStatuses;
 import org.folio.bulkops.domain.bean.InstanceTypes;
 import org.folio.bulkops.domain.bean.ModesOfIssuance;
 import org.folio.bulkops.domain.bean.NatureOfContentTerms;
-import org.folio.bulkops.domain.dto.ContributorType;
 import org.folio.bulkops.domain.dto.ContributorTypeCollection;
 import org.folio.bulkops.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
