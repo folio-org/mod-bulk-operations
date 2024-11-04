@@ -363,7 +363,7 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToModifiedCsv = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-identifiers.csv";
       var pathToUserJson = "src/test/resources/files/user.json";
 
-      when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
+      when(consortiaService.isTenantCentral(any())).thenReturn(false);
 
       when(bulkOperationRepository.findById(any(UUID.class)))
         .thenReturn(Optional.of(BulkOperation.builder()
@@ -444,7 +444,7 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToOriginalCsv = bulkOperationId + "/origin.csv";
       var pathToUserJson = "src/test/resources/files/user.json";
 
-      when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
+      when(consortiaService.isTenantCentral(any())).thenReturn(false);
 
       when(bulkOperationRepository.findById(any(UUID.class)))
         .thenReturn(Optional.of(BulkOperation.builder()
@@ -688,7 +688,7 @@ class BulkOperationServiceTest extends BaseTest {
       mockHoldingsClient();
       mockLocationClient();
 
-      when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(false);
+      when(consortiaService.isTenantCentral(any())).thenReturn(false);
       when(bulkOperationRepository.findById(bulkOperationId))
         .thenReturn(Optional.of(BulkOperation.builder()
           .id(bulkOperationId)
@@ -1467,7 +1467,7 @@ class BulkOperationServiceTest extends BaseTest {
           .type(UpdateActionType.SET_TO_TRUE))));
     var rulesCollection = new BulkOperationRuleCollection().bulkOperationRules(List.of(rules)).totalRecords(1);
 
-    when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(true);
+    when(consortiaService.isTenantCentral(any())).thenReturn(true);
 
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var modified = bulkOperationService.processUpdate(extendedItem, operation, rulesCollection, ExtendedItem.class);

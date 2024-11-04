@@ -60,7 +60,7 @@ class HoldingsNotesProcessorTest {
     when(holdingsReferenceService.getAllHoldingsNoteTypes("central")).thenReturn(List.of(noteType1));
     when(holdingsReferenceService.getAllHoldingsNoteTypes("member")).thenReturn(List.of(noteType2));
 
-    when(consortiaService.isCurrentTenantCentralTenant(any())).thenReturn(true);
+    when(consortiaService.isTenantCentral(any())).thenReturn(true);
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(cacheManager.getCache("holdingsNoteTypes")).thenReturn(cache);
 

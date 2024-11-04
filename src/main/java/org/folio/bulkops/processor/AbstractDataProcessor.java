@@ -1,8 +1,10 @@
 package org.folio.bulkops.processor;
 
+import java.io.Closeable;
 import java.util.function.Consumer;
 
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -19,7 +21,6 @@ import org.springframework.stereotype.Component;
 
 import lombok.extern.log4j.Log4j2;
 
-import static java.util.Objects.isNull;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 @Log4j2
@@ -44,17 +45,20 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
       var option = details.getOption();
       for (Action action : details.getActions()) {
         try {
-          updater(option, action, entity, true).apply(preview);
-          validator(entity).validate(option, action, rule);
-          updater(option, action, entity, false).apply(updated);
+            var tenantIdOfEntity = entity.getTenant();
+            try (var ignored = isTenantApplicableForProcessingAsMember(entity) ?
+              new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))
+              :  (Closeable) () -> {}) {
+              updater(option, action, entity, true).apply(preview);
+              validator(entity).validate(option, action, rule);
+              updater(option, action, entity, false).apply(updated);
+            }
         } catch (RuleValidationException e) {
           log.warn(String.format("Rule validation exception: %s", e.getMessage()));
           errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
         } catch (RuleValidationTenantsException e) {
-          try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(consortiaService.getCentralTenantId(folioExecutionContext.getTenantId()), folioModuleMetadata, folioExecutionContext))) {
-            log.info("current tenant: {}", folioExecutionContext.getTenantId());
-            errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
-          }
+          log.info("current tenant: {}", folioExecutionContext.getTenantId());
+          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
           log.error(e.getMessage());
         } catch (Exception e) {
           log.error(String.format("%s id=%s, error: %s", updated.getRecordBulkOperationEntity().getClass().getSimpleName(), "id", e.getMessage()));
@@ -80,7 +84,7 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
    *
    * @param option {@link UpdateOptionType} for update
    * @param action {@link Action} for update
-   * @param action {@link T} for update
+   * @param entity {@link T} for update
    * @param forPreview {@link Boolean} true if for preview, otherwise false
    * @return updater
    */
@@ -113,5 +117,9 @@ public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> impl
       case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> "URL relationship";
       default -> optionType.getValue();
     };
+  }
+
+  private boolean isTenantApplicableForProcessingAsMember(T entity) {
+    return entity.getRecordBulkOperationEntity().getClass() != User.class && consortiaService.isTenantMember(entity.getTenant());
   }
 }

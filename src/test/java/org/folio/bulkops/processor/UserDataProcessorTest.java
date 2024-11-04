@@ -4,7 +4,6 @@ import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.Personal;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
-import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.service.ErrorService;
 import org.junit.jupiter.api.BeforeEach;
