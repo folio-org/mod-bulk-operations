@@ -19,7 +19,6 @@ import org.folio.bulkops.client.ModesOfIssuanceClient;
 import org.folio.bulkops.client.NatureOfContentTermsClient;
 import org.folio.bulkops.domain.bean.InstanceFormats;
 import org.folio.bulkops.domain.bean.InstanceTypes;
-import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.domain.dto.ContributorTypeCollection;
 import org.folio.bulkops.domain.dto.InstanceNoteType;
