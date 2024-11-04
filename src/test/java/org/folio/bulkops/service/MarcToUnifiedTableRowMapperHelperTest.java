@@ -117,6 +117,7 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
   720 | act | Actor
   720 | abc | Actor
   720 | abc | Text
+  720 | http://abc/abc | TextEscaped
     """, delimiter = '|')
   void shouldFetchContributorNameType(String tag, String s1, String s2) {
     var dataField = new DataFieldImpl(tag, ' ', ' ');
@@ -135,13 +136,18 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
     when(instanceReferenceService.getContributorTypesByName("Text"))
       .thenReturn(new ContributorTypeCollection()
         .contributorTypes(Collections.emptyList()));
+    when(instanceReferenceService.getContributorTypesByCode("http://abc/abc"))
+      .thenReturn(new ContributorTypeCollection()
+        .contributorTypes(Collections.singletonList(new ContributorType().name("TextEscaped"))));
 
     var res = mapperHelper.fetchContributorType(dataField);
 
     if ("act".equals(s1) || "Actor".equals(s2)) {
       assertThat(res).isEqualTo("Actor");
-    } else {
+    } else if ("abc".equals(s1) || "Actor".equals(s2)) {
       assertThat(res).isEqualTo("Text");
+    } else {
+      assertThat(res).isEqualTo("TextEscaped");
     }
   }
 
