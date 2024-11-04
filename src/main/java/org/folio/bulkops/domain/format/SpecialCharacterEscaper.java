@@ -5,7 +5,6 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.KEY_VALUE_DELIMITER;
-import static org.folio.bulkops.util.Constants.URL_DELIMITER;
 
 import java.util.Collections;
 import java.util.List;
@@ -15,8 +14,8 @@ import org.apache.commons.lang3.StringUtils;
 
 public class SpecialCharacterEscaper {
 
-  private static final String[] SPECIAL_CHARACTERS = {ITEM_DELIMITER , ARRAY_DELIMITER, KEY_VALUE_DELIMITER, URL_DELIMITER};
-  private static final String[] ESCAPED_VALUES = {"%7C", "%3B", "%3A", "%2F"};
+  private static final String[] SPECIAL_CHARACTERS = {ITEM_DELIMITER , ARRAY_DELIMITER, KEY_VALUE_DELIMITER};
+  private static final String[] ESCAPED_VALUES = {"%7C", "%3B", "%3A"};
 
   public static String escape(String initial) {
     if (StringUtils.isEmpty(initial)) return EMPTY;
