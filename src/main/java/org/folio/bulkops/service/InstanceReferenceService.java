@@ -19,6 +19,7 @@ import org.folio.bulkops.client.ModesOfIssuanceClient;
 import org.folio.bulkops.client.NatureOfContentTermsClient;
 import org.folio.bulkops.domain.bean.InstanceFormats;
 import org.folio.bulkops.domain.bean.InstanceTypes;
+import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.domain.dto.ContributorTypeCollection;
 import org.folio.bulkops.domain.dto.InstanceNoteType;
@@ -171,7 +172,7 @@ public class InstanceReferenceService {
   public ContributorTypeCollection getContributorTypesByCode(String code) {
     return isNull(code) ?
       new ContributorTypeCollection().contributorTypes(Collections.emptyList()).totalRecords(0) :
-      contributorTypesClient.getByQuery(String.format(QUERY_PATTERN_CODE, code), 1);
+      contributorTypesClient.getByQuery(String.format(QUERY_PATTERN_CODE, SpecialCharacterEscaper.escape(code)), 1);
   }
 
   @Cacheable(cacheNames = "instanceTypesByNames")
