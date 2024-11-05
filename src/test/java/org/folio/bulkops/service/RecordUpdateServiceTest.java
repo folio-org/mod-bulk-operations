@@ -32,6 +32,8 @@ import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.EntityPathResolver;
 import org.folio.bulkops.util.Utils;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.integration.XOkapiHeaders;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,6 +43,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import java.nio.charset.Charset;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -61,6 +66,8 @@ class RecordUpdateServiceTest extends BaseTest {
   private ItemUpdateProcessor itemUpdateProcessor;
   @SpyBean
   private ErrorService errorService;
+  @SpyBean
+  private FolioExecutionContext folioExecutionContext;
 
   @Test
   void testUpdateNonEqualEntity() {
@@ -117,11 +124,16 @@ class RecordUpdateServiceTest extends BaseTest {
       .reason("null".equals(responseErrorMessage) ? null : responseErrorMessage)
       .request(Request.create(Request.HttpMethod.PUT, "", Map.of(), new byte[]{}, Charset.defaultCharset(), null))
       .build());
+    var tenantId = "diku";
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of(tenantId));
 
     when(consortiaService.isTenantCentral(any())).thenReturn(false);
     doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(anyString(), any(), anyString());
     doThrow(feignException).when(itemClient).updateItem(any(Item.class), any(String.class));
     when(holdingsClient.getHoldingById("cb475fa9-aa07-4bbf-8382-b0b1426f9a20")).thenReturn(HoldingsRecord.builder().instanceId("f3e3bd0f-1d95-4f25-9df1-7eb39a2957e3").build());
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
 
     var original = Item.builder()
       .id("1f5e22ed-92ed-4c65-a603-2a5cb4c6052e")
@@ -129,7 +141,7 @@ class RecordUpdateServiceTest extends BaseTest {
       .holdingsRecordId("cb475fa9-aa07-4bbf-8382-b0b1426f9a20")
       .version(2)
       .build();
-    var extendedOriginalItem = ExtendedItem.builder().entity(original).build();
+    var extendedOriginalItem = ExtendedItem.builder().entity(original).tenantId(tenantId).build();
     var modified = Item.builder()
       .id("1f5e22ed-92ed-4c65-a603-2a5cb4c6052e")
       .barcode("barcode1")
@@ -148,7 +160,7 @@ class RecordUpdateServiceTest extends BaseTest {
       recordUpdateService.updateEntity(extendedOriginalItem, extendedModifiedItem, operation);
     } catch (OptimisticLockingException e) {
       var expectedUiErrorMessage = Utils.getMessageFromFeignException(feignException);
-      var link = entityPathResolver.resolve(operation.getEntityType(), original);
+      var link = entityPathResolver.resolve(operation.getEntityType(), extendedOriginalItem);
       var expectedCsvErrorMessage = format("%s %s", expectedUiErrorMessage, link);
       assertThat(e.getCsvErrorMessage(), Matchers.equalTo(expectedCsvErrorMessage));
       assertThat(e.getUiErrorMessage(), Matchers.equalTo(expectedUiErrorMessage));

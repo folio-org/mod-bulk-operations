@@ -38,7 +38,7 @@ public class RecordUpdateService {
       } catch (FeignException e) {
         if (e.status() == 409 && e.getMessage().contains("optimistic locking")) {
           var message = Utils.getMessageFromFeignException(e);
-          var link = entityPathResolver.resolve(operation.getEntityType(), original.getRecordBulkOperationEntity());
+          var link = entityPathResolver.resolve(operation.getEntityType(), original);
           throw new OptimisticLockingException(format("%s %s", message, link), message, link);
         }
         throw e;

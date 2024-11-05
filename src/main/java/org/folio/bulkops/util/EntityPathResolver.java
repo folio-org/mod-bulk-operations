@@ -8,19 +8,25 @@ import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.stereotype.Component;
 
 import static java.lang.String.format;
 import static org.folio.bulkops.domain.dto.IdentifierType.ID;
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 @Component
 @AllArgsConstructor
 public class EntityPathResolver {
 
   private HoldingsClient holdingsClient;
+  private final FolioModuleMetadata folioModuleMetadata;
+  private final FolioExecutionContext folioExecutionContext;
 
-  public String resolve(EntityType type, BulkOperationsEntity entity) {
-
+  public String resolve(EntityType type, BulkOperationsEntity original) {
+    var entity = original.getRecordBulkOperationEntity();
     switch (type) {
       case USER -> {
         var user = (User) entity;
@@ -35,11 +41,14 @@ public class EntityPathResolver {
         return format("/inventory/view/%s/%s", holding.getInstanceId(), holding.getId());
       }
       case ITEM -> {
-        var item = ((Item) entity);
+        var tenantIdOfEntity = original.getTenant();
+        var item = (Item) entity;
         var holdingId = item.getHoldingsRecordId();
-        var holding =   holdingsClient.getHoldingById(holdingId);
-        var instanceId = holding.getInstanceId();
-        return format("/inventory/view/%s/%s/%s", instanceId, holdingId, item.getId());
+        try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
+          var holding = holdingsClient.getHoldingById(holdingId);
+          var instanceId = holding.getInstanceId();
+          return format("/inventory/view/%s/%s/%s", instanceId, holdingId, item.getId());
+        }
       }
     }
     return entity.getIdentifier(ID);
