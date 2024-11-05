@@ -72,7 +72,7 @@ class SrsServiceTest extends BaseTest {
 
     verify(remoteFileSystemClient).remove(linkToCommittedRecordsMarcFile);
     verify(marcWriter).writeRecord(any(Record.class));
-    verify(bulkOperationRepository, times(2))
+    verify(bulkOperationRepository, times(3))
       .save(bulkOperationCaptor.capture());
     var expectedStatus = numOfErrors == 0 ? COMPLETED : COMPLETED_WITH_ERRORS;
     assertThat(bulkOperationCaptor.getAllValues().get(1).getStatus())
