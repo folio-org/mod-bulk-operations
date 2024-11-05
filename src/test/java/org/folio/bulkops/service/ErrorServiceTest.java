@@ -33,10 +33,7 @@ import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.MetadataProviderClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.SrsClient;
-import org.folio.bulkops.domain.bean.ExternalIdsHolder;
-import org.folio.bulkops.domain.bean.JobLogEntry;
-import org.folio.bulkops.domain.bean.JobLogEntryCollection;
-import org.folio.bulkops.domain.bean.SrsRecord;
+import org.folio.bulkops.domain.bean.*;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.IdentifierType;
@@ -293,7 +290,9 @@ class ErrorServiceTest extends BaseTest {
     final var instanceId = UUID.randomUUID().toString();
     when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE))
       .thenReturn(new JobLogEntryCollection().withEntries(List.of(new JobLogEntry()
-        .withError("some MARC error").withSourceRecordId(sourceRecordId))));
+        .withError("some MARC error").withSourceRecordId(sourceRecordId).withRelatedInstanceInfo(
+          new RelatedInstanceInfo().withIdList(List.of(instanceId)).withHridList(List.of("instance HRID"))
+        ))));
     when(srsClient.getSrsRecordById(sourceRecordId)).thenReturn(new SrsRecord().withExternalIdsHolder(
       new ExternalIdsHolder().withInstanceHrid("instance HRID").withInstanceId(instanceId)));
 
