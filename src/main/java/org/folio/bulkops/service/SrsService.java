@@ -61,6 +61,7 @@ public class SrsService {
     } else {
       bulkOperation.setLinkToCommittedRecordsMarcFile(null);
     }
+    bulkOperationRepository.save(bulkOperation);
     completeBulkOperation(bulkOperation, fetchedNumOfRecords);
   }
 

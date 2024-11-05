@@ -14,7 +14,6 @@ import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -25,7 +24,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.MetadataProviderClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.Errors;
@@ -56,7 +54,6 @@ public class ErrorService {
   private final BulkOperationExecutionContentRepository executionContentRepository;
   private final BulkEditClient bulkEditClient;
   private final MetadataProviderClient metadataProviderClient;
-  private final SrsClient srsClient;
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
     if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
@@ -116,9 +113,11 @@ public class ErrorService {
         String identifier = EMPTY;
         try {
           if (identifierType == IdentifierType.ID) {
-            identifier = srsClient.getSrsRecordById(errorEntry.getSourceRecordId()).getExternalIdsHolder().getInstanceId();
+            var idList = errorEntry.getRelatedInstanceInfo().getIdList();
+            identifier = idList.isEmpty() ? null : idList.get(0);
           } else if (identifierType == IdentifierType.INSTANCE_HRID) {
-            identifier = srsClient.getSrsRecordById(errorEntry.getSourceRecordId()).getExternalIdsHolder().getInstanceHrid();
+            var hridList = errorEntry.getRelatedInstanceInfo().getHridList();
+            identifier = hridList.isEmpty() ? null : hridList.get(0);
           }
         } catch (Exception e) {
           log.error("Problem with retrieving SRS record {}", errorEntry.getSourceRecordId(), e);
