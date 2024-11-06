@@ -298,7 +298,7 @@ class ErrorServiceTest extends BaseTest {
     when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE))
       .thenReturn(new JobLogEntryCollection().withEntries(List.of(new JobLogEntry()
         .withError("some MARC error").withSourceRecordId(sourceRecordId).withRelatedInstanceInfo(
-          relatedInstanceInfo ? instanceInfo : new RelatedInstanceInfo()
+          relatedInstanceInfo ? instanceInfo : new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
         ))));
     when(srsClient.getSrsRecordById(sourceRecordId)).thenReturn(new SrsRecord().withExternalIdsHolder(
       new ExternalIdsHolder().withInstanceHrid("instance HRID").withInstanceId(instanceId)));
