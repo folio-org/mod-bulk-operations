@@ -2,15 +2,24 @@ package org.folio.bulkops.service;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
-import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ADMINISTRATIVE_NOTE;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CATALOGED_DATE;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CONTRIBUTORS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_FORMATS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_HRID;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_LANGUAGES;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_NATURE_OF_CONTENT;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PREVIOUSLY_HELD;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TYPE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SOURCE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_STAFF_SUPPRESS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_STATUS_TERM;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
@@ -21,7 +30,6 @@ import static org.folio.bulkops.processor.InstanceNotesUpdaterFactory.INSTANCE_N
 import static org.folio.bulkops.processor.ItemsNotesUpdater.ITEM_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
 import static org.folio.bulkops.util.Constants.FOLIO;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 
 import java.io.IOException;
@@ -39,17 +47,15 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.CsvCustomBindByPosition;
+import com.opencsv.exceptions.CsvValidationException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.folio.bulkops.client.InstanceNoteTypesClient;
-import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
@@ -100,7 +106,6 @@ public class PreviewService {
   private final BulkOperationService bulkOperationService;
   private final TenantTableUpdater tenantTableUpdater;
   private final Marc21ReferenceProvider referenceProvider;
-  private final ObjectMapper objectMapper;
 
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -152,8 +157,6 @@ public class PreviewService {
       noteTableUpdater.extendTableWithInstanceNotesTypes(compositeTable, changedOptionsSet);
       var sourcePosition = getCellPositionByName(INSTANCE_SOURCE);
       var hridPosition = getCellPositionByName(INSTANCE_HRID);
-      var administrativeNotesPosition = getCellPositionByName(INSTANCE_ADMINISTRATIVE_NOTE);
-      var staffSuppressPosition = getCellPositionByName(INSTANCE_STAFF_SUPPRESS);
       var headers = compositeTable.getHeader().stream()
         .map(Cell::getValue)
         .toList();
@@ -168,8 +171,7 @@ public class PreviewService {
           var hrid = csvRow.getRow().get(hridPosition);
           if (marcRecords.containsKey(hrid)) {
             var marcRow = new Row().row(marcToUnifiedTableRowMapper.processRecord(marcRecords.get(hrid), headers));
-            marcRow.getRow().set(administrativeNotesPosition, csvRow.getRow().get(administrativeNotesPosition));
-            marcRow.getRow().set(staffSuppressPosition, csvRow.getRow().get(staffSuppressPosition));
+            enrichRowWithAdministrativeData(marcRow, csvRow);
             compositeTable.addRowsItem(marcRow);
           }
         }
@@ -181,34 +183,66 @@ public class PreviewService {
 
   private void enrichMarcWithAdministrativeData(UnifiedTable unifiedTable, BulkOperation bulkOperation) {
     var hridPosition = getCellPositionByName(INSTANCE_HRID);
-    var administrativeNotesPosition = getCellPositionByName(INSTANCE_ADMINISTRATIVE_NOTE);
-    var staffSuppressPosition = getCellPositionByName(INSTANCE_STAFF_SUPPRESS);
     var hrids = unifiedTable.getRows().stream()
       .map(row -> row.getRow().get(hridPosition))
       .toList();
-    var instances = findInstancesByHrids(bulkOperation, hrids);
-    unifiedTable.getRows().forEach(row -> {
-      var hrid = row.getRow().get(hridPosition);
-      if (instances.containsKey(hrid)) {
-        var instance = instances.get(hrid);
-        row.getRow().set(staffSuppressPosition, isNull(instance.getStaffSuppress()) ? EMPTY : instance.getStaffSuppress().toString());
-        row.getRow().set(administrativeNotesPosition, String.join(ITEM_DELIMITER_SPACED, instance.getAdministrativeNotes()));
+    var csvRows = findInstanceRowsByHrids(bulkOperation, hrids);
+    unifiedTable.getRows().forEach(marcRow -> {
+      var hrid = marcRow.getRow().get(hridPosition);
+      if (csvRows.containsKey(hrid)) {
+        var csvRow = csvRows.get(hrid);
+        enrichRowWithAdministrativeData(marcRow, csvRow);
       }
     });
   }
 
-  private Map<String, Instance> findInstancesByHrids(BulkOperation bulkOperation, List<String> hrids) {
-    var map = new HashMap<String, Instance>();
-    try (var readerForMatchedJsonFile = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
-      var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), ExtendedInstance.class);
-      while (iterator.hasNext()) {
-        var instance = iterator.next().getEntity();
-        if (hrids.contains(instance.getHrid())) {
-          map.put(instance.getHrid(), instance);
+  private void enrichRowWithAdministrativeData(Row marcRow, Row csvRow) {
+    var positions = getAdministrativeDataFieldPositions();
+    marcRow.getRow().set(positions.get(INSTANCE_STAFF_SUPPRESS), csvRow.getRow().get(positions.get(INSTANCE_STAFF_SUPPRESS)));
+    marcRow.getRow().set(positions.get(INSTANCE_ADMINISTRATIVE_NOTE), csvRow.getRow().get(positions.get(INSTANCE_ADMINISTRATIVE_NOTE)));
+    marcRow.getRow().set(positions.get(INSTANCE_SUPPRESS_FROM_DISCOVERY), csvRow.getRow().get(positions.get(INSTANCE_SUPPRESS_FROM_DISCOVERY)));
+    marcRow.getRow().set(positions.get(INSTANCE_PREVIOUSLY_HELD), csvRow.getRow().get(positions.get(INSTANCE_PREVIOUSLY_HELD)));
+    marcRow.getRow().set(positions.get(INSTANCE_STATUS_TERM), csvRow.getRow().get(positions.get(INSTANCE_STATUS_TERM)));
+    marcRow.getRow().set(positions.get(INSTANCE_NATURE_OF_CONTENT), csvRow.getRow().get(positions.get(INSTANCE_NATURE_OF_CONTENT)));
+    marcRow.getRow().set(positions.get(INSTANCE_FORMATS), csvRow.getRow().get(positions.get(INSTANCE_FORMATS)));
+    marcRow.getRow().set(positions.get(INSTANCE_CONTRIBUTORS), csvRow.getRow().get(positions.get(INSTANCE_CONTRIBUTORS)));
+    marcRow.getRow().set(positions.get(INSTANCE_RESOURCE_TYPE), csvRow.getRow().get(positions.get(INSTANCE_RESOURCE_TYPE)));
+    marcRow.getRow().set(positions.get(INSTANCE_LANGUAGES), csvRow.getRow().get(positions.get(INSTANCE_LANGUAGES)));
+  }
+
+  private Map<String, Integer> getAdministrativeDataFieldPositions() {
+    var positions = new HashMap<String, Integer>();
+    List.of(INSTANCE_STAFF_SUPPRESS,
+        INSTANCE_ADMINISTRATIVE_NOTE,
+        INSTANCE_SUPPRESS_FROM_DISCOVERY,
+        INSTANCE_PREVIOUSLY_HELD,
+        INSTANCE_CATALOGED_DATE,
+        INSTANCE_STATUS_TERM,
+        INSTANCE_NATURE_OF_CONTENT,
+        INSTANCE_FORMATS,
+        INSTANCE_CONTRIBUTORS,
+        INSTANCE_RESOURCE_TYPE,
+        INSTANCE_LANGUAGES)
+      .forEach(name -> positions.put(name, getCellPositionByName(name)));
+    return positions;
+  }
+
+  private Map<String, Row> findInstanceRowsByHrids(BulkOperation bulkOperation, List<String> hrids) {
+    var hridPosition = getCellPositionByName(INSTANCE_HRID);
+    var map = new HashMap<String, Row>();
+    var parser = new CSVParserBuilder().withEscapeChar('\0').build();
+
+    try (var csvReader = new CSVReaderBuilder(new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsCsvFile())))
+      .withCSVParser(parser).build()) {
+      String[] line;
+      while (nonNull(line = csvReader.readNext())) {
+        var hrid = line[hridPosition];
+        if (hrids.contains(hrid)) {
+          map.put(hrid, new Row().row(Arrays.asList(line)));
         }
       }
-    } catch (IOException e) {
-      log.error("Failed to read json file", e);
+    } catch (IOException | CsvValidationException e) {
+      log.error("Failed to read csv file", e);
     }
     return map;
   }
