@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.Column;
+import lombok.Singular;
 import org.folio.bulkops.domain.converter.PostgresUUIDConverter;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -91,6 +92,7 @@ public class BulkOperation {
   @Type(JsonBinaryType.class)
   @Column(columnDefinition = "jsonb[]")
   private List<TenantNotePair> tenantNotePairs;
+  @Singular
   private List<String> usedTenants;
 
   private UUID dataImportJobProfileId;

@@ -47,6 +47,6 @@ public class TenantTableUpdater {
   }
 
   private boolean isNeedUpdateTablePreview() {
-    return consortiaService.isTenantConsortia(folioExecutionContext.getTenantId());
+    return consortiaService.isTenantInConsortia(folioExecutionContext.getTenantId());
   }
 }

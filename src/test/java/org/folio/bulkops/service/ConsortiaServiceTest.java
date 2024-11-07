@@ -2,7 +2,6 @@ package org.folio.bulkops.service;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
@@ -19,6 +18,7 @@ import org.folio.bulkops.domain.bean.UserTenantCollection;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -115,9 +115,77 @@ class ConsortiaServiceTest {
 
     var actual = consortiaService.getUserTenantsPerId("currentTenantId", "userId");
 
-    assertTrue(actual.containsKey("memberTenantId"));
+    Assertions.assertTrue(actual.containsKey("memberTenantId"));
     var tenant = actual.get("memberTenantId");
     assertEquals("memberTenantName", tenant.getTenantName());
   }
 
+  @Test
+  void shouldReturnTrue_whenTenantIsCentral() {
+    var userTenantCollection = new UserTenantCollection();
+    var centralTenant = new UserTenant();
+    centralTenant.setCentralTenantId("centralTenantId");
+    userTenantCollection.setUserTenants(List.of(centralTenant));
+
+    when(consortiaClient.getUserTenantCollection()).thenReturn(userTenantCollection);
+
+    Assertions.assertTrue(consortiaService.isTenantCentral("centralTenantId"));
+  }
+
+  @Test
+  void shouldReturnFalse_whenTenantIsNotCentral() {
+    var userTenantCollection = new UserTenantCollection();
+    var centralTenant = new UserTenant();
+    centralTenant.setCentralTenantId("centralTenantId");
+    userTenantCollection.setUserTenants(List.of(centralTenant));
+
+    when(consortiaClient.getUserTenantCollection()).thenReturn(userTenantCollection);
+
+    Assertions.assertFalse(consortiaService.isTenantCentral("otherTenantId"));
+  }
+
+  @Test
+  void shouldReturnTrue_whenTenantIsMember() {
+    var userTenantCollection = new UserTenantCollection();
+    var centralTenant = new UserTenant();
+    centralTenant.setCentralTenantId("centralTenantId");
+    userTenantCollection.setUserTenants(List.of(centralTenant));
+
+    when(consortiaClient.getUserTenantCollection()).thenReturn(userTenantCollection);
+
+    Assertions.assertTrue(consortiaService.isTenantMember("memberTenantId"));
+  }
+
+  @Test
+  void shouldReturnFalse_whenTenantIsNotMember() {
+    var userTenantCollection = new UserTenantCollection();
+    var centralTenant = new UserTenant();
+    centralTenant.setCentralTenantId("centralTenantId");
+    userTenantCollection.setUserTenants(List.of(centralTenant));
+
+    when(consortiaClient.getUserTenantCollection()).thenReturn(userTenantCollection);
+
+    Assertions.assertFalse(consortiaService.isTenantMember("centralTenantId"));
+  }
+
+  @Test
+  void shouldReturnTrue_whenTenantIsInConsortia() {
+    var userTenantCollection = new UserTenantCollection();
+    var centralTenant = new UserTenant();
+    centralTenant.setCentralTenantId("centralTenantId");
+    userTenantCollection.setUserTenants(List.of(centralTenant));
+
+    when(consortiaClient.getUserTenantCollection()).thenReturn(userTenantCollection);
+
+    Assertions.assertTrue(consortiaService.isTenantInConsortia("centralTenantId"));
+  }
+
+  @Test
+  void shouldReturnFalse_whenTenantIsNotInConsortia() {
+    var userTenantCollection = new UserTenantCollection();
+
+    when(consortiaClient.getUserTenantCollection()).thenReturn(userTenantCollection);
+
+    Assertions.assertFalse(consortiaService.isTenantInConsortia("localTenantId"));
+  }
 }
