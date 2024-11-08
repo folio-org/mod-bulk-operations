@@ -37,6 +37,7 @@ public class SrsService {
     var path = bulkOperation.getLinkToCommittedRecordsMarcFile();
     remoteFileSystemClient.remove(path);
     var fetchedNumOfRecords = 0;
+    var noLinkToCommitted = false;
     if (!instanceIds.isEmpty()) {
       try (var writer = remoteFileSystemClient.marcWriter(path)) {
         while (fetchedNumOfRecords < instanceIds.size()) {
@@ -59,9 +60,9 @@ public class SrsService {
         log.error("Error updating MARC instances from SRS", e);
       }
     } else {
-      bulkOperation.setLinkToCommittedRecordsMarcFile(null);
+      noLinkToCommitted = true;
     }
-    completeBulkOperation(bulkOperation, fetchedNumOfRecords);
+    completeBulkOperation(bulkOperation, fetchedNumOfRecords, noLinkToCommitted);
   }
 
   private Record jsonToMarcRecord(String json) throws IOException {
@@ -78,9 +79,12 @@ public class SrsService {
     bulkOperationRepository.save(operation);
   }
 
-  private void completeBulkOperation(BulkOperation bulkOperation, int committedNumOfRecords) {
+  private void completeBulkOperation(BulkOperation bulkOperation, int committedNumOfRecords, boolean noLinkToCommitted) {
     var operation = bulkOperationRepository.findById(bulkOperation.getId())
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperation.getId()));
+    if (noLinkToCommitted) {
+      bulkOperation.setLinkToCommittedRecordsMarcFile(null);
+    }
     operation.setTotalNumOfRecords(operation.getMatchedNumOfRecords());
     operation.setProcessedNumOfRecords(operation.getMatchedNumOfRecords());
     operation.setCommittedNumOfRecords(committedNumOfRecords);

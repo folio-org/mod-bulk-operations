@@ -15,6 +15,7 @@ import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.GetParsedRecordsBatchRequestBody;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.marc4j.marc.Record;
@@ -77,5 +78,22 @@ class SrsServiceTest extends BaseTest {
     var expectedStatus = numOfErrors == 0 ? COMPLETED : COMPLETED_WITH_ERRORS;
     assertThat(bulkOperationCaptor.getAllValues().get(1).getStatus())
       .isEqualTo(expectedStatus);
+  }
+
+  @SneakyThrows
+  @Test
+  void shouldRemoveLinkToCommittedIfNoIds() {
+    var operationId = UUID.randomUUID();
+    var linkToCommittedRecordsMarcFile = "marcFile.mrc";
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .linkToCommittedRecordsMarcFile(linkToCommittedRecordsMarcFile)
+      .build();
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(operation));
+
+    srsService.retrieveMarcInstancesFromSrs(List.of(), operation);
+
+    assertThat(operation.getLinkToCommittedRecordsMarcFile()).isNull();
   }
 }
