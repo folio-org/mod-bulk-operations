@@ -25,7 +25,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.MetadataProviderClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.Errors;
@@ -41,6 +40,7 @@ import org.folio.bulkops.util.Constants;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -56,7 +56,6 @@ public class ErrorService {
   private final BulkOperationExecutionContentRepository executionContentRepository;
   private final BulkEditClient bulkEditClient;
   private final MetadataProviderClient metadataProviderClient;
-  private final SrsClient srsClient;
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
     if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
@@ -111,18 +110,16 @@ public class ErrorService {
       var jobLogEntries = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE)
         .getEntries().stream()
         .filter(entry -> nonNull(entry.getError()) && !entry.getError().isEmpty())
-          .toList();
+        .toList();
       jobLogEntries.forEach(errorEntry -> {
-        String identifier = EMPTY;
-        try {
-          if (identifierType == IdentifierType.ID) {
-            identifier = srsClient.getSrsRecordById(errorEntry.getSourceRecordId()).getExternalIdsHolder().getInstanceId();
-          } else if (identifierType == IdentifierType.INSTANCE_HRID) {
-            identifier = srsClient.getSrsRecordById(errorEntry.getSourceRecordId()).getExternalIdsHolder().getInstanceHrid();
-          }
-        } catch (Exception e) {
-          log.error("Problem with retrieving SRS record {}", errorEntry.getSourceRecordId(), e);
+        List<String> identifierList = null;
+        var relatedInstanceInfo = errorEntry.getRelatedInstanceInfo();
+        if (identifierType == IdentifierType.ID) {
+          identifierList = relatedInstanceInfo.getIdList();
+        } else if (identifierType == IdentifierType.INSTANCE_HRID) {
+          identifierList = relatedInstanceInfo.getHridList();
         }
+        var identifier = CollectionUtils.isEmpty(identifierList) ? null : identifierList.get(0);
         saveError(bulkOperationId, identifier, errorEntry.getError());
       });
     } catch (Exception e) {

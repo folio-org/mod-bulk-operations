@@ -36,6 +36,7 @@ import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.ExternalIdsHolder;
 import org.folio.bulkops.domain.bean.JobLogEntry;
 import org.folio.bulkops.domain.bean.JobLogEntryCollection;
+import org.folio.bulkops.domain.bean.RelatedInstanceInfo;
 import org.folio.bulkops.domain.bean.SrsRecord;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.Errors;
@@ -57,6 +58,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
@@ -285,15 +287,23 @@ class ErrorServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = IdentifierType.class, names = { "ID", "INSTANCE_HRID" })
-  void testSaveErrorsFromDataImport(IdentifierType identifierType) {
+  @CsvSource(textBlock = """
+      ID            | true
+      INSTANCE_HRID | true
+      ID            | false
+      INSTANCE_HRID | false
+    """, delimiter = '|')
+  void testSaveErrorsFromDataImport(IdentifierType identifierType, boolean relatedInstanceInfo) {
     final var dataImportJobId = UUID.randomUUID();
     final var sourceRecordId = UUID.randomUUID().toString();
     final var dataExportJobId = UUID.randomUUID();
     final var instanceId = UUID.randomUUID().toString();
+    final var instanceInfo = new RelatedInstanceInfo().withIdList(List.of(instanceId)).withHridList(List.of("instance HRID"));
     when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE))
       .thenReturn(new JobLogEntryCollection().withEntries(List.of(new JobLogEntry()
-        .withError("some MARC error").withSourceRecordId(sourceRecordId))));
+        .withError("some MARC error").withSourceRecordId(sourceRecordId).withRelatedInstanceInfo(
+          relatedInstanceInfo ? instanceInfo : new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
+        ))));
     when(srsClient.getSrsRecordById(sourceRecordId)).thenReturn(new SrsRecord().withExternalIdsHolder(
       new ExternalIdsHolder().withInstanceHrid("instance HRID").withInstanceId(instanceId)));
 
