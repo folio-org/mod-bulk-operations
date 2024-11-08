@@ -505,12 +505,12 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(2).getRow().get(10), equalTo("summerland / Michael Chabon."));
     assertThat(res.getRows().get(2).getRow().get(11), equalTo("Mmerland /"));
     assertThat(res.getRows().get(2).getRow().get(12), equalTo("series800 | series810 | series811 | series830"));
-    assertThat(res.getRows().get(2).getRow().get(13), equalTo("Chabon, Michael;Personal name;Artist | Another Contributor;Meeting name;contributor"));
+    assertThat(res.getRows().get(2).getRow().get(13), equalTo("Sample contributor"));
     assertThat(res.getRows().get(2).getRow().get(14), equalTo("1st ed."));
     assertThat(res.getRows().get(2).getRow().get(15), equalTo("500 p. ; 22 cm."));
-    assertThat(res.getRows().get(2).getRow().get(16), equalTo("Text;txt;rdacontent"));
+    assertThat(res.getRows().get(2).getRow().get(16), equalTo("text"));
     assertThat(res.getRows().get(2).getRow().get(18), equalTo("computer -- other"));
-    assertThat(res.getRows().get(2).getRow().get(19), equalTo("English | French"));
+    assertThat(res.getRows().get(2).getRow().get(19), equalTo("eng | fre"));
     assertThat(res.getRows().get(2).getRow().get(20), equalTo("monthly. Jun 10, 2024 | yearly. 2024"));
     assertThat(res.getRows().get(2).getRow().get(21), equalTo("2002-2024"));
     assertThat(res.getRows().get(2).getRow().get(22), equalTo("language note (staff only)"));
@@ -523,11 +523,11 @@ class PreviewServiceTest extends BaseTest {
     var summaryNoteTypeId = "10e2e11b-450f-45c8-b09b-0f819999966e";
     var bulkOperationId = UUID.randomUUID();
     var pathToMarcFile = bulkOperationId + "/" + "file.mrc";
-    var pathToMatchedJsonFile = bulkOperationId + "/" + "file.json";
+    var pathToMatchedCsvFile = bulkOperationId + "/" + "file.csv";
     var bulkOperation = BulkOperation.builder()
       .id(bulkOperationId)
       .entityType(INSTANCE_MARC)
-      .linkToMatchedRecordsJsonFile(pathToMatchedJsonFile)
+      .linkToMatchedRecordsCsvFile(pathToMatchedCsvFile)
       .linkToMatchedRecordsMarcFile(pathToMarcFile)
       .linkToModifiedRecordsMarcFile(pathToMarcFile)
       .linkToCommittedRecordsMarcFile(pathToMarcFile)
@@ -545,8 +545,8 @@ class PreviewServiceTest extends BaseTest {
     when(instanceReferenceService.getAllInstanceNoteTypes())
       .thenReturn(List.of(new InstanceNoteType().name("Summary"), new InstanceNoteType().name(GENERAL_NOTE)));
     when(remoteFileSystemClient.get(pathToMarcFile)).thenReturn(new FileInputStream("src/test/resources/files/preview.mrc"));
-    when(remoteFileSystemClient.get(pathToMatchedJsonFile))
-      .thenReturn(new FileInputStream("src/test/resources/files/instances.json"));
+    when(remoteFileSystemClient.get(pathToMatchedCsvFile))
+      .thenReturn(new FileInputStream("src/test/resources/files/instances_preview.csv"));
     when(instanceReferenceService.getContributorTypesByCode("art"))
       .thenReturn(new ContributorTypeCollection().contributorTypes(
         Collections.singletonList(new ContributorType().name("Artist"))));
@@ -571,20 +571,20 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getHeader().get(23).getForceVisible(), equalTo(Boolean.TRUE));
 
     assertThat(res.getRows().get(0).getRow().get(0), equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
-    assertThat(res.getRows().get(0).getRow().get(2), equalTo("false"));
+    assertThat(res.getRows().get(0).getRow().get(2), equalTo("true"));
     assertThat(res.getRows().get(0).getRow().get(4), equalTo("in00000000002"));
     assertThat(res.getRows().get(0).getRow().get(5), equalTo("MARC"));
     assertThat(res.getRows().get(0).getRow().get(8), equalTo("single unit"));
-    assertThat(res.getRows().get(0).getRow().get(9), equalTo("Note1 | Note2"));
+    assertThat(res.getRows().get(0).getRow().get(9), equalTo("Sample note"));
     assertThat(res.getRows().get(0).getRow().get(10), equalTo("summerland / Michael Chabon."));
     assertThat(res.getRows().get(0).getRow().get(11), equalTo("Mmerland /"));
     assertThat(res.getRows().get(0).getRow().get(12), equalTo("series800 | series810 | series811 | series830"));
-    assertThat(res.getRows().get(0).getRow().get(13), equalTo("Chabon, Michael;Personal name;Artist | Another Contributor;Meeting name;contributor"));
+    assertThat(res.getRows().get(0).getRow().get(13), equalTo("Sample contributor"));
     assertThat(res.getRows().get(0).getRow().get(14), equalTo("1st ed."));
     assertThat(res.getRows().get(0).getRow().get(15), equalTo("500 p. ; 22 cm."));
-    assertThat(res.getRows().get(0).getRow().get(16), equalTo("Text;txt;rdacontent"));
+    assertThat(res.getRows().get(0).getRow().get(16), equalTo("text"));
     assertThat(res.getRows().get(0).getRow().get(18), equalTo("computer -- other"));
-    assertThat(res.getRows().get(0).getRow().get(19), equalTo("English | French"));
+    assertThat(res.getRows().get(0).getRow().get(19), equalTo("eng | fre"));
     assertThat(res.getRows().get(0).getRow().get(20), equalTo("monthly. Jun 10, 2024 | yearly. 2024"));
     assertThat(res.getRows().get(0).getRow().get(21), equalTo("2002-2024"));
     assertThat(res.getRows().get(0).getRow().get(22), equalTo("language note (staff only)"));

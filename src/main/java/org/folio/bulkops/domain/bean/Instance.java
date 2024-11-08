@@ -54,6 +54,11 @@ public class Instance implements BulkOperationsEntity {
   public static final String INSTANCE_PUBLICATION_RANGE = "Publication range";
   public static final String INSTANCE_ADMINISTRATIVE_NOTE = "Administrative note";
   public static final String INSTANCE_STAFF_SUPPRESS = "Staff suppress";
+  public static final String INSTANCE_SUPPRESS_FROM_DISCOVERY = "Suppress from discovery";
+  public static final String INSTANCE_PREVIOUSLY_HELD = "Previously held";
+  public static final String INSTANCE_CATALOGED_DATE = "Cataloged date";
+  public static final String INSTANCE_STATUS_TERM = "Instance status term";
+  public static final String INSTANCE_NATURE_OF_CONTENT = "Nature of content";
 
   @JsonProperty("id")
   @CsvCustomBindByName(column = INSTANCE_UUID, converter = StringConverter.class)
@@ -65,7 +70,7 @@ public class Instance implements BulkOperationsEntity {
   private Integer version;
 
   @JsonProperty("discoverySuppress")
-  @CsvCustomBindByName(column = "Suppress from discovery", converter = BooleanConverter.class)
+  @CsvCustomBindByName(column = INSTANCE_SUPPRESS_FROM_DISCOVERY, converter = BooleanConverter.class)
   @CsvCustomBindByPosition(position = 1, converter = BooleanConverter.class)
   @UnifiedTableCell
   private Boolean discoverySuppress;
@@ -77,7 +82,7 @@ public class Instance implements BulkOperationsEntity {
   private Boolean staffSuppress;
 
   @JsonProperty("previouslyHeld")
-  @CsvCustomBindByName(column = "Previously held", converter = BooleanConverter.class)
+  @CsvCustomBindByName(column = INSTANCE_PREVIOUSLY_HELD, converter = BooleanConverter.class)
   @CsvCustomBindByPosition(position = 3, converter = BooleanConverter.class)
   @UnifiedTableCell(visible = false)
   private Boolean previouslyHeld;
@@ -95,13 +100,13 @@ public class Instance implements BulkOperationsEntity {
   private String source;
 
   @JsonProperty("catalogedDate")
-  @CsvCustomBindByName(column = "Cataloged date", converter = DateWithoutTimeConverter.class)
+  @CsvCustomBindByName(column = INSTANCE_CATALOGED_DATE, converter = DateWithoutTimeConverter.class)
   @CsvCustomBindByPosition(position = 6, converter = DateWithoutTimeConverter.class)
   @UnifiedTableCell(dataType = DataType.DATE_TIME, visible = false)
   private Date catalogedDate;
 
   @JsonProperty("statusId")
-  @CsvCustomBindByName(column = "Instance status term", converter = InstanceStatusConverter.class)
+  @CsvCustomBindByName(column = INSTANCE_STATUS_TERM, converter = InstanceStatusConverter.class)
   @CsvCustomBindByPosition(position = 7, converter = InstanceStatusConverter.class)
   @UnifiedTableCell
   private String statusId;
@@ -161,7 +166,7 @@ public class Instance implements BulkOperationsEntity {
   private String instanceTypeId;
 
   @JsonProperty("natureOfContentTermIds")
-  @CsvCustomBindByName(column = "Nature of content", converter = NatureOfContentTermListConverter.class)
+  @CsvCustomBindByName(column = INSTANCE_NATURE_OF_CONTENT, converter = NatureOfContentTermListConverter.class)
   @CsvCustomBindByPosition(position = 17, converter = NatureOfContentTermListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> natureOfContentTermIds;
