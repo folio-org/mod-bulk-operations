@@ -75,6 +75,7 @@ import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import org.folio.bulkops.util.CSVHelper;
 import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
 import org.folio.bulkops.util.UpdateOptionTypeToFieldResolver;
 import org.folio.spring.FolioExecutionContext;
@@ -231,10 +232,9 @@ public class PreviewService {
     var hridPosition = getCellPositionByName(INSTANCE_HRID);
     var list = new ArrayList<>(hrids);
     var map = new HashMap<String, Row>();
-    var parser = new CSVParserBuilder().withEscapeChar('\0').build();
 
     try (var csvReader = new CSVReaderBuilder(new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsCsvFile())))
-      .withCSVParser(parser).build()) {
+      .withCSVParser(CSVHelper.getCsvParser()).build()) {
       String[] line;
       while (nonNull(line = csvReader.readNext()) && !list.isEmpty()) {
         var hrid = line[hridPosition];
@@ -421,11 +421,9 @@ public class PreviewService {
 
   private UnifiedTable populatePreview(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit,
                                        UnifiedTable table, Set<String> forceVisible, BulkOperation bulkOperation) {
-    var parser = new CSVParserBuilder().withEscapeChar('\0').build();
-
     try (Reader reader = new InputStreamReader(remoteFileSystemClient.get(pathToFile))) {
       var readerBuilder = new CSVReaderBuilder(reader)
-        .withCSVParser(parser);
+        .withCSVParser(CSVHelper.getCsvParser());
       CSVReader csvReader = readerBuilder.build();
         var recordsToSkip = offset + 1;
         csvReader.skip(recordsToSkip);
