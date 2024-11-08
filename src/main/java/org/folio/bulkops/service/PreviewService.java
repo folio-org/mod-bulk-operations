@@ -229,16 +229,18 @@ public class PreviewService {
 
   private Map<String, Row> findInstanceRowsByHrids(BulkOperation bulkOperation, List<String> hrids) {
     var hridPosition = getCellPositionByName(INSTANCE_HRID);
+    var list = new ArrayList<>(hrids);
     var map = new HashMap<String, Row>();
     var parser = new CSVParserBuilder().withEscapeChar('\0').build();
 
     try (var csvReader = new CSVReaderBuilder(new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsCsvFile())))
       .withCSVParser(parser).build()) {
       String[] line;
-      while (nonNull(line = csvReader.readNext())) {
+      while (nonNull(line = csvReader.readNext()) && !list.isEmpty()) {
         var hrid = line[hridPosition];
-        if (hrids.contains(hrid)) {
+        if (list.contains(hrid)) {
           map.put(hrid, new Row().row(Arrays.asList(line)));
+          list.remove(hrid);
         }
       }
     } catch (IOException | CsvValidationException e) {
@@ -249,12 +251,15 @@ public class PreviewService {
 
   private Map<String, Record> findMarcRecordsByHrids(BulkOperation bulkOperation, List<String> hrids) {
     var map = new HashMap<String, Record>();
+    var list = new ArrayList<>(hrids);
     try (var is = remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
       var reader = new MarcStreamReader(is);
-      while (reader.hasNext()) {
+      while (reader.hasNext() && !list.isEmpty()) {
         var marcRecord = reader.next();
-        if (hrids.contains(marcRecord.getControlNumber())) {
-          map.put(marcRecord.getControlNumber(), marcRecord);
+        var hrid = marcRecord.getControlNumber();
+        if (list.contains(hrid)) {
+          map.put(hrid, marcRecord);
+          list.remove(hrid);
         }
       }
     } catch (IOException e) {

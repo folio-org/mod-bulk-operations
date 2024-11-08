@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.LF;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEWED_NO_MARC_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 
@@ -14,7 +15,6 @@ import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -89,7 +89,7 @@ public class ErrorService {
   public Errors getErrorsPreviewByBulkOperationId(UUID bulkOperationId, int limit) {
     var bulkOperation = operationRepository.findById(bulkOperationId)
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
-    if (Set.of(DATA_MODIFICATION, REVIEW_CHANGES).contains(bulkOperation.getStatus()) || COMPLETED_WITH_ERRORS == bulkOperation.getStatus() && noCommittedErrors(bulkOperation)) {
+    if (Set.of(DATA_MODIFICATION, REVIEW_CHANGES, REVIEWED_NO_MARC_RECORDS).contains(bulkOperation.getStatus()) || COMPLETED_WITH_ERRORS == bulkOperation.getStatus() && noCommittedErrors(bulkOperation)) {
       var errors = bulkEditClient.getErrorsPreview(bulkOperation.getDataExportJobId(), limit);
       return new Errors().errors(errors.getErrors().stream()
           .map(this::prepareInternalErrorRepresentation)
