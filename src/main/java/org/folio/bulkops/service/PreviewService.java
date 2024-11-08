@@ -143,16 +143,11 @@ public class PreviewService {
   }
 
   private UnifiedTable buildCompositePreview(BulkOperation bulkOperation, int offset, int limit) {
-    log.info("buildCompositePreview: {}", bulkOperation);
     var csvTable = buildPreviewFromCsvFile(bulkOperation.getLinkToMatchedRecordsCsvFile(), Instance.class, offset, limit, bulkOperation);
-    log.info("csvTable: {}", csvTable);
     if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
       referenceProvider.updateMappingRules();
-      log.info("referenceProvider.updateMappingRules");
       var rules = ruleService.getMarcRules(bulkOperation.getId());
-      log.info("rules: {}", rules);
       var changedOptionsSet = getChangedOptionsSet(rules);
-      log.info("changedOptionsSet: {}", changedOptionsSet);
       var compositeTable = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class);
       noteTableUpdater.extendTableWithInstanceNotesTypes(compositeTable, changedOptionsSet);
       var sourcePosition = getCellPositionByName(INSTANCE_SOURCE);
@@ -166,14 +161,11 @@ public class PreviewService {
         .map(row -> row.getRow().get(hridPosition))
         .toList();
       var marcRecords = findMarcRecordsByHrids(bulkOperation, hrids);
-      log.info("marcRecords: {}", marcRecords);
       csvTable.getRows().forEach(csvRow -> {
         if (FOLIO.equals(csvRow.getRow().get(sourcePosition))) {
-          log.info("FOLIO.equals: {}", csvRow);
           compositeTable.addRowsItem(csvRow);
         } else {
           var hrid = csvRow.getRow().get(hridPosition);
-          log.info("hrid: {}", hrid);
           if (marcRecords.containsKey(hrid)) {
             var marcRow = new Row().row(marcToUnifiedTableRowMapper.processRecord(marcRecords.get(hrid), headers));
             marcRow.getRow().set(administrativeNotesPosition, csvRow.getRow().get(administrativeNotesPosition));
