@@ -380,7 +380,6 @@ public class BulkOperationService {
         .withEndTime(LocalDateTime.now()));
       operation.setStatus(OperationStatusType.REVIEWED_NO_MARC_RECORDS);
       operation.setEndTime(LocalDateTime.now());
-      operation.setErrorMessage("No link to MARC file");
     }
     bulkOperationRepository.save(operation);
   }
