@@ -39,6 +39,7 @@ import org.folio.bulkops.util.Constants;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -108,20 +109,16 @@ public class ErrorService {
       var jobLogEntries = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE)
         .getEntries().stream()
         .filter(entry -> nonNull(entry.getError()) && !entry.getError().isEmpty())
-          .toList();
+        .toList();
       jobLogEntries.forEach(errorEntry -> {
-        String identifier = EMPTY;
-        try {
-          if (identifierType == IdentifierType.ID) {
-            var idList = errorEntry.getRelatedInstanceInfo().getIdList();
-            identifier = idList.isEmpty() ? null : idList.get(0);
-          } else if (identifierType == IdentifierType.INSTANCE_HRID) {
-            var hridList = errorEntry.getRelatedInstanceInfo().getHridList();
-            identifier = hridList.isEmpty() ? null : hridList.get(0);
-          }
-        } catch (Exception e) {
-          log.error("Problem with retrieving SRS record {}", errorEntry.getSourceRecordId(), e);
+        List<String> identifierList = null;
+        var relatedInstanceInfo = errorEntry.getRelatedInstanceInfo();
+        if (identifierType == IdentifierType.ID) {
+          identifierList = relatedInstanceInfo.getIdList();
+        } else if (identifierType == IdentifierType.INSTANCE_HRID) {
+          identifierList = relatedInstanceInfo.getHridList();
         }
+        var identifier = CollectionUtils.isEmpty(identifierList) ? null : identifierList.get(0);
         saveError(bulkOperationId, identifier, errorEntry.getError());
       });
     } catch (Exception e) {
