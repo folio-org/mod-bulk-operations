@@ -542,14 +542,6 @@
     </snapshotRepository>
   </distributionManagement>
 
-  <pluginRepositories>
-    <pluginRepository>
-      <id>folio-nexus</id>
-      <name>FOLIO Maven repository</name>
-      <url>https://repository.folio.org/repository/maven-folio</url>
-    </pluginRepository>
-  </pluginRepositories>
-
   <scm>
     <url>https://github.com/folio-org/${project.artifactId}</url>
     <connection>scm:git:git://github.com/folio-org/${project.artifactId}.git</connection>
