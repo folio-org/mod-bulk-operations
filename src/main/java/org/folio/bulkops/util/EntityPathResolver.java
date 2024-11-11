@@ -44,11 +44,13 @@ public class EntityPathResolver {
         var tenantIdOfEntity = original.getTenant();
         var item = (Item) entity;
         var holdingId = item.getHoldingsRecordId();
+        HoldingsRecord holding;
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
-          var holding = holdingsClient.getHoldingById(holdingId);
-          var instanceId = holding.getInstanceId();
-          return format("/inventory/view/%s/%s/%s", instanceId, holdingId, item.getId());
+          holding = holdingsClient.getHoldingById(holdingId);
         }
+        var instanceId = holding.getInstanceId();
+        return format("/inventory/view/%s/%s/%s", instanceId, holdingId, item.getId());
+
       }
     }
     return entity.getIdentifier(ID);
