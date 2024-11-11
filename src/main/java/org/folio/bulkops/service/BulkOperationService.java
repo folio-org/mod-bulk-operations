@@ -335,45 +335,53 @@ public class BulkOperationService {
       .build());
 
     var processedNumOfRecords = 0;
-    var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
-    var modifiedMarcFileName = String.format(PREVIEW_MARC_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
-    try (var writerForModifiedPreviewMarcFile = remoteFileSystemClient.marcWriter(modifiedMarcFileName)) {
-      var matchedRecordsReader = new MarcStreamReader(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile()));
-      var currentDate = new Date();
-      while (matchedRecordsReader.hasNext()) {
-        var marcRecord = matchedRecordsReader.next();
-        marcInstanceDataProcessor.update(operation, marcRecord, ruleCollection, currentDate);
-        writerForModifiedPreviewMarcFile.writeRecord(marcRecord);
+    if (nonNull(operation.getLinkToMatchedRecordsMarcFile())) {
+      var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
+      var modifiedMarcFileName = String.format(PREVIEW_MARC_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
+      try (var writerForModifiedPreviewMarcFile = remoteFileSystemClient.marcWriter(modifiedMarcFileName)) {
+        var matchedRecordsReader = new MarcStreamReader(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile()));
+        var currentDate = new Date();
+        while (matchedRecordsReader.hasNext()) {
+          var marcRecord = matchedRecordsReader.next();
+          marcInstanceDataProcessor.update(operation, marcRecord, ruleCollection, currentDate);
+          writerForModifiedPreviewMarcFile.writeRecord(marcRecord);
 
-        processedNumOfRecords++;
-        dataProcessing = dataProcessing
-          .withStatus(matchedRecordsReader.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
-          .withEndTime(matchedRecordsReader.hasNext() ? null : LocalDateTime.now());
+          processedNumOfRecords++;
+          dataProcessing = dataProcessing
+            .withStatus(matchedRecordsReader.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
+            .withEndTime(matchedRecordsReader.hasNext() ? null : LocalDateTime.now());
 
-        if (processedNumOfRecords - dataProcessing.getProcessedNumOfRecords() > OPERATION_UPDATING_STEP) {
-          dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
-          dataProcessingRepository.save(dataProcessing);
+          if (processedNumOfRecords - dataProcessing.getProcessedNumOfRecords() > OPERATION_UPDATING_STEP) {
+            dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
+            dataProcessingRepository.save(dataProcessing);
+          }
         }
-      }
-      operation.setLinkToModifiedRecordsMarcFile(modifiedMarcFileName);
-      dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
-      dataProcessingRepository.save(dataProcessing);
+        operation.setLinkToModifiedRecordsMarcFile(modifiedMarcFileName);
+        dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
+        dataProcessingRepository.save(dataProcessing);
 
-      operation.setApproach(IN_APP);
-      operation.setStatus(OperationStatusType.REVIEW_CHANGES);
-      operation.setProcessedNumOfRecords(processedNumOfRecords);
-      bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
-    } catch (Exception e) {
-      log.error(e);
+        operation.setApproach(IN_APP);
+        operation.setStatus(OperationStatusType.REVIEW_CHANGES);
+        operation.setProcessedNumOfRecords(processedNumOfRecords);
+        bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
+      } catch (Exception e) {
+        log.error(e);
+        dataProcessingRepository.save(dataProcessing
+          .withStatus(StatusType.FAILED)
+          .withEndTime(LocalDateTime.now()));
+        operation.setStatus(OperationStatusType.FAILED);
+        operation.setEndTime(LocalDateTime.now());
+        operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
+      }
+    } else {
+      log.error("No link to MARC file, failing operation");
       dataProcessingRepository.save(dataProcessing
         .withStatus(StatusType.FAILED)
         .withEndTime(LocalDateTime.now()));
-      operation.setStatus(OperationStatusType.FAILED);
+      operation.setStatus(OperationStatusType.REVIEWED_NO_MARC_RECORDS);
       operation.setEndTime(LocalDateTime.now());
-      operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
-    } finally {
-      bulkOperationRepository.save(operation);
     }
+    bulkOperationRepository.save(operation);
   }
 
   public void writeBeanToCsv(BulkOperation operation, BulkOperationsEntityCsvWriter csvWriter, BulkOperationsEntity bean, List<BulkOperationExecutionContent> bulkOperationExecutionContents) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {

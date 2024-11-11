@@ -1,7 +1,20 @@
 package org.folio.bulkops.service;
 
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.domain.bean.*;
+import org.folio.bulkops.domain.bean.CallNumberType;
+import org.folio.bulkops.domain.bean.CallNumberTypeCollection;
+import org.folio.bulkops.domain.bean.HoldingsNoteType;
+import org.folio.bulkops.domain.bean.HoldingsNoteTypeCollection;
+import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
+import org.folio.bulkops.domain.bean.HoldingsRecordsSourceCollection;
+import org.folio.bulkops.domain.bean.HoldingsType;
+import org.folio.bulkops.domain.bean.HoldingsTypeCollection;
+import org.folio.bulkops.domain.bean.IllPolicy;
+import org.folio.bulkops.domain.bean.IllPolicyCollection;
+import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.ItemLocationCollection;
+import org.folio.bulkops.domain.bean.StatisticalCode;
+import org.folio.bulkops.domain.bean.StatisticalCodeCollection;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.integration.XOkapiHeaders;
