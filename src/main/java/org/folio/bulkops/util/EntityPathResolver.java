@@ -50,7 +50,6 @@ public class EntityPathResolver {
         }
         var instanceId = holding.getInstanceId();
         return format("/inventory/view/%s/%s/%s", instanceId, holdingId, item.getId());
-
       }
     }
     return entity.getIdentifier(ID);
