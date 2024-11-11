@@ -25,24 +25,24 @@ public class EntityPathResolver {
   private final FolioModuleMetadata folioModuleMetadata;
   private final FolioExecutionContext folioExecutionContext;
 
-  public String resolve(EntityType type, BulkOperationsEntity original) {
-    var entity = original.getRecordBulkOperationEntity();
+  public String resolve(EntityType type, BulkOperationsEntity entity) {
+    var recordEntity = entity.getRecordBulkOperationEntity();
     switch (type) {
       case USER -> {
-        var user = (User) entity;
+        var user = (User) recordEntity;
         return format("/users/%s", user.getId());
       }
       case INSTANCE -> {
-        var instance = (Instance) entity;
+        var instance = (Instance) recordEntity;
         return format("/inventory/view/%s", instance.getId());
       }
       case HOLDINGS_RECORD -> {
-        var holding = (HoldingsRecord) entity;
+        var holding = (HoldingsRecord) recordEntity;
         return format("/inventory/view/%s/%s", holding.getInstanceId(), holding.getId());
       }
       case ITEM -> {
-        var tenantIdOfEntity = original.getTenant();
-        var item = (Item) entity;
+        var tenantIdOfEntity = entity.getTenant();
+        var item = (Item) recordEntity;
         var holdingId = item.getHoldingsRecordId();
         HoldingsRecord holding;
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
@@ -52,6 +52,6 @@ public class EntityPathResolver {
         return format("/inventory/view/%s/%s/%s", instanceId, holdingId, item.getId());
       }
     }
-    return entity.getIdentifier(ID);
+    return recordEntity.getIdentifier(ID);
   }
 }
