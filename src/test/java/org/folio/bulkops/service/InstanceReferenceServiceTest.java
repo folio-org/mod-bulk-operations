@@ -1,11 +1,13 @@
 package org.folio.bulkops.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Utils.encode;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
+import org.folio.bulkops.client.ContributorTypesClient;
 import org.folio.bulkops.client.InstanceFormatsClient;
 import org.folio.bulkops.client.InstanceStatusesClient;
 import org.folio.bulkops.client.InstanceTypesClient;
@@ -16,6 +18,7 @@ import org.folio.bulkops.domain.bean.InstanceStatuses;
 import org.folio.bulkops.domain.bean.InstanceTypes;
 import org.folio.bulkops.domain.bean.ModesOfIssuance;
 import org.folio.bulkops.domain.bean.NatureOfContentTerms;
+import org.folio.bulkops.domain.dto.ContributorTypeCollection;
 import org.folio.bulkops.exception.NotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +41,8 @@ class InstanceReferenceServiceTest {
   private NatureOfContentTermsClient natureOfContentTermsClient;
   @Mock
   private InstanceFormatsClient instanceFormatsClient;
+  @Mock
+  private ContributorTypesClient contributorTypesClient;
   @InjectMocks
   private InstanceReferenceService instanceReferenceService;
 
@@ -109,5 +114,13 @@ class InstanceReferenceServiceTest {
       .totalRecords(0)
       .build());
     assertThrows(NotFoundException.class, () -> instanceReferenceService.getInstanceFormatIdByName(name));
+  }
+
+  @Test
+  void shouldReturnContributorTypesByCodeIfCodeContainsSlashes() {
+    when(contributorTypesClient.getByQuery("code==\"http://code/code\"", 1)).thenReturn(new ContributorTypeCollection().totalRecords(1));
+
+    var res = instanceReferenceService.getContributorTypesByCode("http://code/code");
+    assertThat(res.getTotalRecords()).isEqualTo(1);
   }
 }
