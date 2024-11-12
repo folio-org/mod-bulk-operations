@@ -599,6 +599,10 @@
     {
       "id": "data-import",
       "version": "3.2"
+    },
+    {
+      "id": "user-tenants",
+      "version": "1.0"
     }
   ],
   "optional": [
