@@ -2,7 +2,6 @@ package org.folio.bulkops.client;
 
 import org.folio.bulkops.configs.FeignClientConfiguration;
 import org.folio.bulkops.domain.bean.JobLogEntryCollection;
-import org.folio.bulkops.domain.bean.JournalRecordCollection;
 import org.folio.bulkops.domain.dto.DataImportJobExecutionCollection;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;

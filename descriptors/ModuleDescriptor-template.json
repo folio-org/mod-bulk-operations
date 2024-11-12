@@ -607,16 +607,16 @@
   ],
   "optional": [
     {
+      "id": "users-keycloak",
+      "version": "1.0"
+    },
+    {
       "id": "permissions-users",
       "version": "1.0"
     },
     {
       "id": "consortia",
       "version": "1.1"
-    },
-    {
-      "id": "users-keycloak",
-      "version": "1.0"
     }
   ],
   "launchDescriptor": {
