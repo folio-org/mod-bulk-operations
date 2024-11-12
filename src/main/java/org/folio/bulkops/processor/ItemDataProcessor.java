@@ -30,6 +30,7 @@ import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.exception.RuleValidationTenantsException;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
 import org.folio.bulkops.util.RuleUtils;
@@ -46,6 +47,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
   private final HoldingsReferenceService holdingsReferenceService;
   private final ItemReferenceService itemReferenceService;
   private final ItemsNotesUpdater itemsNotesUpdater;
+  private final ConsortiaService consortiaService;
 
   @Override
   public Validator<UpdateOptionType, Action, BulkOperationRule> validator(ExtendedItem extendedItem) {
@@ -171,8 +173,8 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
       ruleTenants.retainAll(actionTenants);
       return !ruleTenants.contains(extendedItem.getTenant());
     }
-    if (nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
-      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && action.getType() == org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE) {
+    if (consortiaService.isTenantInConsortia(folioExecutionContext.getTenantId()) && nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
+      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && (action.getType() == org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE || action.getType() == org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE)) {
       return true;
     }
     return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedItem.getTenant()) ||
