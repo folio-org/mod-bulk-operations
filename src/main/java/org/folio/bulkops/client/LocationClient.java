@@ -17,8 +17,6 @@ public interface LocationClient {
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   ItemLocationCollection getByQuery(@RequestParam String query);
-  @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-  JsonNode getLocation(@PathVariable String id);
 
   @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
   ItemLocation getLocationById(@PathVariable String id);

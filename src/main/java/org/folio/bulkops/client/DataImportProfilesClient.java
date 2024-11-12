@@ -19,9 +19,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 @FeignClient(name = "data-import-profiles", configuration = FeignClientConfiguration.class)
 public interface DataImportProfilesClient {
 
-  @GetMapping(value = "/jobProfiles", produces = MediaType.APPLICATION_JSON_VALUE)
-  JobProfileCollection getJobProfiles();
-
   @PostMapping(value = "/jobProfiles")
   JobProfile createJobProfile(@RequestBody JobProfilePost jobProfilePost);
 
