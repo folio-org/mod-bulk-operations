@@ -769,6 +769,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void testShouldNotUpdateHoldingWithElectronicAccess_whenBothOfRuleAndActionTenantsAreEmpty() {
     when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
+    when(consortiaService.isTenantInConsortia("memberB")).thenReturn(true);
 
     try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
       when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any())).thenReturn(folioExecutionContext);

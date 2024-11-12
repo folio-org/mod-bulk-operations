@@ -17,6 +17,8 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_UR
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_URL_RELATIONSHIP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.MARC;
@@ -214,9 +216,9 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
       return !ruleTenants.contains(extendedHolding.getTenant());
     }
     if (consortiaService.isTenantInConsortia(folioExecutionContext.getTenantId()) && nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
-      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && (action.getType() == UpdateActionType.FIND_AND_REPLACE || action.getType() == UpdateActionType.FIND_AND_REMOVE_THESE)) {
+      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && (action.getType() == FIND_AND_REPLACE || action.getType() == FIND_AND_REMOVE_THESE)) {
       return isNull(extendedHolding.getElectronicAccess()) ||
-        extendedHolding.getElectronicAccess().stream().noneMatch(el -> el.getRelationshipId().equals(action.getUpdated()));
+        extendedHolding.getElectronicAccess().stream().noneMatch(el -> Objects.equals(el.getRelationshipId(), action.getUpdated()));
     }
     return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedHolding.getTenant()) ||
       nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedHolding.getTenant());

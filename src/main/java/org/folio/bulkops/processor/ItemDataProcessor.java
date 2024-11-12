@@ -12,6 +12,8 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_UR
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
 import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
@@ -174,7 +176,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
       return !ruleTenants.contains(extendedItem.getTenant());
     }
     if (consortiaService.isTenantInConsortia(folioExecutionContext.getTenantId()) && nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
-      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && (action.getType() == org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE || action.getType() == org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE)) {
+      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && (action.getType() == FIND_AND_REPLACE || action.getType() == FIND_AND_REMOVE_THESE)) {
       return true;
     }
     return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedItem.getTenant()) ||
