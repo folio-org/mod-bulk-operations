@@ -217,6 +217,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     }
     if (consortiaService.isTenantInConsortia(folioExecutionContext.getTenantId()) && nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
       option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && (action.getType() == FIND_AND_REPLACE || action.getType() == FIND_AND_REMOVE_THESE)) {
+      log.info("extendedHolding: {}, action: {}", extendedHolding, action);
       return isNull(extendedHolding.getElectronicAccess()) ||
         extendedHolding.getElectronicAccess().stream().noneMatch(el -> Objects.equals(el.getRelationshipId(), action.getUpdated()));
     }
