@@ -591,6 +591,10 @@
     {
       "id": "source-storage-batch",
       "version": "1.3"
+    },
+    {
+      "id": "consortium-search",
+      "version": "2.1"
     }
   ],
   "optional": [
