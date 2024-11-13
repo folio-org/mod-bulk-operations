@@ -9,6 +9,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ER
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEWED_NO_MARC_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
+import static org.folio.bulkops.util.Constants.DATA_IMPORT_ERROR_DISCARDED;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 
 import java.io.ByteArrayInputStream;
@@ -122,7 +123,7 @@ public class ErrorService {
         }
         var identifier = CollectionUtils.isEmpty(identifierList) ? null : identifierList.get(0);
         if (errorEntry.getSourceRecordActionStatus() == JobLogEntry.ActionStatus.DISCARDED && errorEntry.getError().isEmpty()) {
-          errorEntry.setError(""); // To be populated.
+          errorEntry.setError(DATA_IMPORT_ERROR_DISCARDED);
         }
         saveError(bulkOperationId, identifier, errorEntry.getError());
       });
