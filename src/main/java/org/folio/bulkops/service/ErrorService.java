@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.MetadataProviderClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.bean.JobLogEntry;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.Errors;
@@ -109,7 +110,7 @@ public class ErrorService {
     try {
       var jobLogEntries = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE)
         .getEntries().stream()
-        .filter(entry -> nonNull(entry.getError()) && !entry.getError().isEmpty())
+        .filter(entry -> nonNull(entry.getError()))
         .toList();
       jobLogEntries.forEach(errorEntry -> {
         List<String> identifierList = null;
@@ -120,6 +121,9 @@ public class ErrorService {
           identifierList = relatedInstanceInfo.getHridList();
         }
         var identifier = CollectionUtils.isEmpty(identifierList) ? null : identifierList.get(0);
+        if (errorEntry.getSourceRecordActionStatus() == JobLogEntry.ActionStatus.DISCARDED && errorEntry.getError().isEmpty()) {
+          errorEntry.setError(""); // To be populated.
+        }
         saveError(bulkOperationId, identifier, errorEntry.getError());
       });
     } catch (Exception e) {
