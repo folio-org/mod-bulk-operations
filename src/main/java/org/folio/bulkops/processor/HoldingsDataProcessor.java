@@ -215,8 +215,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     if (isThereIntersectionBetween(ruleTenants, actionTenants)) {
       return !ruleTenants.contains(extendedHolding.getTenant());
     }
-    if (consortiaService.isTenantInConsortia(folioExecutionContext.getTenantId()) && nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
-      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && (action.getType() == FIND_AND_REPLACE || action.getType() == FIND_AND_REMOVE_THESE)) {
+    if (areTenantsNotOverlapping(action, option, ruleTenants, actionTenants)) {
       log.info("extendedHolding: {}, action: {}", extendedHolding, action);
       return isNull(extendedHolding.getElectronicAccess()) ||
         extendedHolding.getElectronicAccess().stream().noneMatch(el -> Objects.equals(el.getRelationshipId(), action.getUpdated()));
@@ -231,5 +230,11 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
       return true;
     }
     return false;
+  }
+
+  private boolean areTenantsNotOverlapping(Action action, UpdateOptionType option, List<String> ruleTenants, List<String> actionTenants) {
+    return consortiaService.isTenantInConsortia(folioExecutionContext.getTenantId()) &&
+      nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
+      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && (action.getType() == FIND_AND_REPLACE || action.getType() == FIND_AND_REMOVE_THESE);
   }
 }
