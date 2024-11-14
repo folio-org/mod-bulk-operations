@@ -915,6 +915,35 @@ class HoldingsDataProcessorTest extends BaseTest {
   }
 
   @Test
+  void testShouldNotRemoveHoldingWithElectronicAccess_whenNoTenantsProvidedAndHoldingFromDifferentTenant() {
+    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
+    when(consortiaService.isTenantInConsortia("memberB")).thenReturn(true);
+
+    var initElectronicAccForRecord = UUID.randomUUID().toString();
+    var electronicAccessObj = new ElectronicAccess().withRelationshipId(initElectronicAccForRecord);
+    var holdId = UUID.randomUUID().toString();
+    var extendedHolding = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withId(holdId)
+      .withElectronicAccess(List.of(electronicAccessObj))).tenantId("memberA").build();
+
+    var rules = rules(new org.folio.bulkops.domain.dto.BulkOperationRule()
+      .ruleDetails(new org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails()
+        .option(ELECTRONIC_ACCESS_URL_RELATIONSHIP)
+        .actions(Collections.singletonList(new Action()
+          .type(FIND_AND_REMOVE_THESE)
+          .initial(initElectronicAccForRecord)
+          .updated("").tenants(List.of()))).tenants(List.of())));
+    var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
+
+    var result = processor.process(IDENTIFIER, extendedHolding, rules);
+
+    assertNotNull(result);
+    verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
+      holdId, "memberA", "URL relationship").trim());
+    assertEquals(initElectronicAccForRecord, result.getUpdated().getEntity().getElectronicAccess().get(0).getRelationshipId());
+  }
+
+  @Test
   void testShouldUpdateHoldingWithElectronicAccess_whenElectronicAccessIsSetAndEcs() {
     when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
