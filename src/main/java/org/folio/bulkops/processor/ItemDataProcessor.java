@@ -8,12 +8,9 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_URL_RELATIONSHIP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
-import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
-import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
 import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
@@ -72,7 +69,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
         throw new RuleValidationException(
             format("New status value \"%s\" is not allowed", action.getUpdated()));
       }
-      if (nonNull(rule) && ruleTenantsAreNotValid(rule, action, option, extendedItem)) {
+      if (nonNull(rule) && ruleTenantsAreNotValid(rule, action, extendedItem)) {
         throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE,
           extendedItem.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedItem.getTenant(), getRecordPropertyName(option)));
       }
@@ -168,7 +165,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
     }
   }
 
-  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, UpdateOptionType option, ExtendedItem extendedItem) {
+  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, ExtendedItem extendedItem) {
     var ruleTenants = rule.getRuleDetails().getTenants();
     var actionTenants = action.getTenants();
     if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
