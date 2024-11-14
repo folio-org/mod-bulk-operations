@@ -887,8 +887,8 @@ class HoldingsDataProcessorTest extends BaseTest {
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
     when(consortiaService.isTenantInConsortia("memberB")).thenReturn(true);
     HashMap<String, Collection<String>> headers = new HashMap<>();
-    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
-    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    headers.put(XOkapiHeaders.TENANT, List.of("memberB"));
+    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
     when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
@@ -912,6 +912,40 @@ class HoldingsDataProcessorTest extends BaseTest {
     assertNotNull(result);
     verifyNoInteractions(errorService);
     assertNull(result.getUpdated().getEntity().getElectronicAccess().get(0).getRelationshipId());
+  }
+
+  @Test
+  void testShouldUpdateHoldingWithElectronicAccess_whenElectronicAccessIsSetAndEcs() {
+    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
+    when(consortiaService.isTenantInConsortia("memberB")).thenReturn(true);
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("memberB"));
+    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+
+    var initElectronicAccForRecord = UUID.randomUUID().toString();
+    var electronicAccessObj = new ElectronicAccess().withRelationshipId(initElectronicAccForRecord);
+    var holdId = UUID.randomUUID().toString();
+    var extendedHolding = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withId(holdId)
+      .withElectronicAccess(List.of(electronicAccessObj))).tenantId("memberB").build();
+    var updatedElAcc = initElectronicAccForRecord;
+
+    var rules = rules(new org.folio.bulkops.domain.dto.BulkOperationRule()
+      .ruleDetails(new org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails()
+        .option(ELECTRONIC_ACCESS_URL_RELATIONSHIP)
+        .actions(Collections.singletonList(new Action()
+          .type(FIND_AND_REPLACE)
+          .initial(initElectronicAccForRecord)
+          .updated(updatedElAcc).tenants(List.of()))).tenants(List.of())));
+
+    var result = processor.process(IDENTIFIER, extendedHolding, rules);
+
+    assertNotNull(result);
+    verifyNoInteractions(errorService);
+    assertEquals(updatedElAcc, result.getUpdated().getEntity().getElectronicAccess().get(0).getRelationshipId());
   }
 
   @Test
