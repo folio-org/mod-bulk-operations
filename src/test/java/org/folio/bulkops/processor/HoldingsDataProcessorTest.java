@@ -794,6 +794,32 @@ class HoldingsDataProcessorTest extends BaseTest {
   }
 
   @Test
+  void testShouldNotUpdateHoldingWithElectronicAccess_whenElectronicAccessIsNotSet() {
+    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
+    when(consortiaService.isTenantInConsortia("memberB")).thenReturn(true);
+
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
+      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any())).thenReturn(folioExecutionContext);
+
+      var electronicAccessFromMemberB = UUID.randomUUID().toString();
+      var holdId = UUID.randomUUID().toString();
+      var extendedHolding = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withId(holdId)).tenantId("memberA").build();
+
+      var rules = rules(rule(ELECTRONIC_ACCESS_URL_RELATIONSHIP, FIND_AND_REPLACE, electronicAccessFromMemberB, List.of(), List.of()));
+      var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
+
+      var result = processor.process(IDENTIFIER, extendedHolding, rules);
+
+      assertNotNull(result);
+      assertNull(result.getUpdated().getEntity().getElectronicAccess());
+
+      verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
+        holdId, "memberA", "URL relationship").trim());
+    }
+  }
+
+  @Test
   void testShouldNotUpdateHoldingWithPermanentLocation_whenIntersectionRuleAndActionTenantsGivesNothing() {
     when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
