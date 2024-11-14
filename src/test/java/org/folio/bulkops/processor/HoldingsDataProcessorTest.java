@@ -905,7 +905,7 @@ class HoldingsDataProcessorTest extends BaseTest {
         .actions(Collections.singletonList(new Action()
           .type(FIND_AND_REMOVE_THESE)
           .initial(initElectronicAccForRecord)
-          .updated("").tenants(List.of()))).tenants(List.of())));
+          .updated("").tenants(List.of("memberB")))).tenants(List.of())));
 
     var result = processor.process(IDENTIFIER, extendedHolding, rules);
 
