@@ -37,6 +37,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -881,23 +882,30 @@ class HoldingsDataProcessorTest extends BaseTest {
   }
 
   @Test
-  void testShouldRemoveHoldingWithElectronicAccess_whenElectronicAccessIsSetAndNonEcs() {
+  void testShouldRemoveHoldingWithElectronicAccess_whenElectronicAccessIsSetAndEcs() {
+    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
+    when(consortiaService.isTenantInConsortia("memberB")).thenReturn(true);
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
     when(folioExecutionContext.getTenantId()).thenReturn("diku");
-    when(consortiaService.getCentralTenantId("diku")).thenReturn("");
-    when(consortiaService.isTenantInConsortia("diku")).thenReturn(false);
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
 
     var initElectronicAccForRecord = UUID.randomUUID().toString();
     var electronicAccessObj = new ElectronicAccess().withRelationshipId(initElectronicAccForRecord);
     var holdId = UUID.randomUUID().toString();
     var extendedHolding = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withId(holdId)
-      .withElectronicAccess(List.of(electronicAccessObj))).tenantId("diku").build();
-    var updatedElectronicAccess = UUID.randomUUID().toString();
+      .withElectronicAccess(List.of(electronicAccessObj))).tenantId("memberB").build();
 
-    when(relationshipClient.getById(updatedElectronicAccess)).thenReturn(new ElectronicAccessRelationship().withId(updatedElectronicAccess));
-    when(electronicAccessReferenceService.getRelationshipNameById(updatedElectronicAccess, "diku"))
-      .thenReturn("el acc name");
-
-    var rules = rules(rule(ELECTRONIC_ACCESS_URL_RELATIONSHIP, FIND_AND_REMOVE_THESE, initElectronicAccForRecord, ""));
+    var rules = rules(new org.folio.bulkops.domain.dto.BulkOperationRule()
+      .ruleDetails(new org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails()
+        .option(ELECTRONIC_ACCESS_URL_RELATIONSHIP)
+        .actions(Collections.singletonList(new Action()
+          .type(FIND_AND_REMOVE_THESE)
+          .initial(initElectronicAccForRecord)
+          .updated("").tenants(List.of()))).tenants(List.of())));
 
     var result = processor.process(IDENTIFIER, extendedHolding, rules);
 
