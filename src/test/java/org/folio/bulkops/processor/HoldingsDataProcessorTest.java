@@ -881,6 +881,32 @@ class HoldingsDataProcessorTest extends BaseTest {
   }
 
   @Test
+  void testShouldRemoveHoldingWithElectronicAccess_whenElectronicAccessIsSetAndNonEcs() {
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(consortiaService.getCentralTenantId("diku")).thenReturn("");
+    when(consortiaService.isTenantInConsortia("diku")).thenReturn(false);
+
+    var initElectronicAccForRecord = UUID.randomUUID().toString();
+    var electronicAccessObj = new ElectronicAccess().withRelationshipId(initElectronicAccForRecord);
+    var holdId = UUID.randomUUID().toString();
+    var extendedHolding = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withId(holdId)
+      .withElectronicAccess(List.of(electronicAccessObj))).tenantId("diku").build();
+    var updatedElectronicAccess = UUID.randomUUID().toString();
+
+    when(relationshipClient.getById(updatedElectronicAccess)).thenReturn(new ElectronicAccessRelationship().withId(updatedElectronicAccess));
+    when(electronicAccessReferenceService.getRelationshipNameById(updatedElectronicAccess, "diku"))
+      .thenReturn("el acc name");
+
+    var rules = rules(rule(ELECTRONIC_ACCESS_URL_RELATIONSHIP, FIND_AND_REMOVE_THESE, initElectronicAccForRecord, ""));
+
+    var result = processor.process(IDENTIFIER, extendedHolding, rules);
+
+    assertNotNull(result);
+    verifyNoInteractions(errorService);
+    assertNull(result.getUpdated().getEntity().getElectronicAccess().get(0).getRelationshipId());
+  }
+
+  @Test
   void testShouldNotUpdateHoldingWithElectronicAccess_whenUpdatedNotExists() {
     when(folioExecutionContext.getTenantId()).thenReturn("diku");
     when(consortiaService.getCentralTenantId("diku")).thenReturn("");
