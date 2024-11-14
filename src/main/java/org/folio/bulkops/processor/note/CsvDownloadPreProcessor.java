@@ -8,6 +8,7 @@ import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.NoteTableUpdater;
+import org.folio.bulkops.util.CSVHelper;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -69,7 +70,7 @@ public abstract class CsvDownloadPreProcessor {
       .toList();
 
     try (var reader = new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(input)))
-      .withCSVParser(new RFC4180ParserBuilder().build()).build();
+      .withCSVParser(CSVHelper.getCsvParser()).build();
          var stringWriter = new StringWriter()) {
       String[] line;
       while ((line = reader.readNext()) != null) {
