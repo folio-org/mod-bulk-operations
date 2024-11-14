@@ -63,7 +63,7 @@ public class Constants {
 
   public static final String CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING = "The record cannot be saved because it is not the most recent version. Stored version is %s, bulk edit version is %s.";
   public static final String RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE = "%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.";
-  public static final String DATA_IMPORT_ERROR_DISCARDED = ""; // To be populated.
+  public static final String DATA_IMPORT_ERROR_DISCARDED = "An error occurred during the update operation, possibly due to multiple MARC records linked to the same instance. Please review the inventory for potential data inconsistencies.";
   public static final String ITEM_TYPE = "ITEM";
   public static final String HOLDING_TYPE = "HOLDINGS_RECORD";
   public static final Set<String> SPLIT_NOTE_ENTITIES = Set.of(ITEM_TYPE, HOLDING_TYPE);
