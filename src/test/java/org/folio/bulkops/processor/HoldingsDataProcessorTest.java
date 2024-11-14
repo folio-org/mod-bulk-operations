@@ -774,18 +774,19 @@ class HoldingsDataProcessorTest extends BaseTest {
     try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
       when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any())).thenReturn(folioExecutionContext);
 
-      var permLocationFromMemberB = UUID.randomUUID().toString();
+      var electronicAccessFromMemberB = UUID.randomUUID().toString();
       var holdId = UUID.randomUUID().toString();
-      var initPermLocation = UUID.randomUUID().toString();
-      var extendedHolding = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withId(holdId).withPermanentLocationId(initPermLocation)).tenantId("memberA").build();
+      var initElectronicAccess = UUID.randomUUID().toString();
+      var extendedHolding = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withId(holdId)
+        .withElectronicAccess(List.of(new ElectronicAccess().withRelationshipId(initElectronicAccess)))).tenantId("memberA").build();
 
-      var rules = rules(rule(ELECTRONIC_ACCESS_URL_RELATIONSHIP, FIND_AND_REPLACE, permLocationFromMemberB, List.of(), List.of()));
+      var rules = rules(rule(ELECTRONIC_ACCESS_URL_RELATIONSHIP, FIND_AND_REPLACE, electronicAccessFromMemberB, List.of(), List.of()));
       var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
 
       var result = processor.process(IDENTIFIER, extendedHolding, rules);
 
       assertNotNull(result);
-      assertEquals(initPermLocation, result.getUpdated().getEntity().getPermanentLocationId());
+      assertEquals(initElectronicAccess, result.getUpdated().getEntity().getElectronicAccess().get(0).getRelationshipId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
         holdId, "memberA", "URL relationship").trim());
