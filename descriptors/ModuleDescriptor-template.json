@@ -595,9 +595,21 @@
     {
       "id": "consortium-search",
       "version": "2.1"
+    },
+    {
+      "id": "data-import",
+      "version": "3.2"
+    },
+    {
+      "id": "user-tenants",
+      "version": "1.0"
     }
   ],
   "optional": [
+    {
+      "id": "users-keycloak",
+      "version": "1.0"
+    },
     {
       "id": "permissions-users",
       "version": "1.0"
