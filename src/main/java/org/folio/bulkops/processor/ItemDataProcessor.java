@@ -175,10 +175,6 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
       ruleTenants.retainAll(actionTenants);
       return !ruleTenants.contains(extendedItem.getTenant());
     }
-    if (consortiaService.isTenantInConsortia(folioExecutionContext.getTenantId()) && nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
-      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && (action.getType() == FIND_AND_REPLACE || action.getType() == FIND_AND_REMOVE_THESE)) {
-      return true;
-    }
     return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedItem.getTenant()) ||
       nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedItem.getTenant());
   }
