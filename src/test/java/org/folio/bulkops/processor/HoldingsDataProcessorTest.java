@@ -854,8 +854,8 @@ class HoldingsDataProcessorTest extends BaseTest {
     when(consortiaService.getCentralTenantId("diku")).thenReturn("");
     when(consortiaService.isTenantInConsortia("diku")).thenReturn(false);
     HashMap<String, Collection<String>> headers = new HashMap<>();
-    headers.put(XOkapiHeaders.TENANT, List.of("memberB"));
-    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
     when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
@@ -878,6 +878,30 @@ class HoldingsDataProcessorTest extends BaseTest {
     assertNotNull(result);
     verifyNoInteractions(errorService);
     assertEquals(updatedElectronicAccess, result.getUpdated().getEntity().getElectronicAccess().get(0).getRelationshipId());
+  }
+
+  @Test
+  void testShouldNotUpdateHoldingWithElectronicAccess_whenUpdatedNotExists() {
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(consortiaService.getCentralTenantId("diku")).thenReturn("");
+    when(consortiaService.isTenantInConsortia("diku")).thenReturn(false);
+
+    var initElectronicAccForRecord = UUID.randomUUID().toString();
+    var electronicAccessObj = new ElectronicAccess().withRelationshipId(initElectronicAccForRecord);
+    var holdId = UUID.randomUUID().toString();
+    var extendedHolding = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withId(holdId)
+      .withElectronicAccess(List.of(electronicAccessObj))).tenantId("diku").build();
+    var updatedElectronicAccess = UUID.randomUUID().toString();
+
+    var rules = rules(rule(ELECTRONIC_ACCESS_URL_RELATIONSHIP, REPLACE_WITH, "", updatedElectronicAccess));
+    var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
+
+    var result = processor.process(IDENTIFIER, extendedHolding, rules);
+
+    assertNotNull(result);
+    verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("URL relationship %s doesn't exist in tenant %s",
+      updatedElectronicAccess, "diku").trim());
+    assertEquals(initElectronicAccForRecord, result.getUpdated().getEntity().getElectronicAccess().get(0).getRelationshipId());
   }
 
   @Test
