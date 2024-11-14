@@ -44,6 +44,7 @@ import java.util.UUID;
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
+import org.folio.bulkops.domain.bean.ElectronicAccessRelationship;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
@@ -55,6 +56,7 @@ import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.service.ConsortiaService;
+import org.folio.bulkops.service.ElectronicAccessReferenceService;
 import org.folio.bulkops.service.ElectronicAccessService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.util.FolioExecutionContextUtil;
@@ -86,6 +88,8 @@ class HoldingsDataProcessorTest extends BaseTest {
   ElectronicAccessService electronicAccessService;
   @MockBean
   private ConsortiaService consortiaService;
+  @MockBean
+  private ElectronicAccessReferenceService electronicAccessReferenceService;
   @SpyBean
   private FolioExecutionContext folioExecutionContext;
 
@@ -817,6 +821,63 @@ class HoldingsDataProcessorTest extends BaseTest {
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
         holdId, "memberA", "URL relationship").trim());
     }
+  }
+
+  @Test
+  void testShouldNotUpdateHoldingWithElectronicAccess_whenElectronicAccessIsNotSetAndNonEcs() {
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(consortiaService.getCentralTenantId("diku")).thenReturn("");
+    when(consortiaService.isTenantInConsortia("diku")).thenReturn(false);
+
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
+      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any())).thenReturn(folioExecutionContext);
+
+      var initElectronicAccForRecord = UUID.randomUUID().toString();
+      var initElectronicAccess = UUID.randomUUID().toString();
+      var holdId = UUID.randomUUID().toString();
+      var extendedHolding = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withId(holdId)
+        .withElectronicAccess(List.of(new ElectronicAccess().withRelationshipId(initElectronicAccForRecord)))).tenantId("diku").build();
+      var updatedElectronicAccess = UUID.randomUUID().toString();
+
+      var rules = rules(rule(ELECTRONIC_ACCESS_URL_RELATIONSHIP, FIND_AND_REPLACE, initElectronicAccess, updatedElectronicAccess));
+
+      var result = processor.process(IDENTIFIER, extendedHolding, rules);
+
+      assertNotNull(result);
+      assertEquals(initElectronicAccForRecord, result.getUpdated().getEntity().getElectronicAccess().get(0).getRelationshipId());
+    }
+  }
+
+  @Test
+  void testShouldUpdateHoldingWithElectronicAccess_whenElectronicAccessIsSetAndNonEcs() {
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(consortiaService.getCentralTenantId("diku")).thenReturn("");
+    when(consortiaService.isTenantInConsortia("diku")).thenReturn(false);
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("memberB"));
+    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+
+    var initElectronicAccForRecord = UUID.randomUUID().toString();
+    var electronicAccessObj = new ElectronicAccess().withRelationshipId(initElectronicAccForRecord);
+    var holdId = UUID.randomUUID().toString();
+    var extendedHolding = ExtendedHoldingsRecord.builder().entity(new HoldingsRecord().withId(holdId)
+      .withElectronicAccess(List.of(electronicAccessObj))).tenantId("diku").build();
+    var updatedElectronicAccess = UUID.randomUUID().toString();
+
+    when(relationshipClient.getById(updatedElectronicAccess)).thenReturn(new ElectronicAccessRelationship().withId(updatedElectronicAccess));
+    when(electronicAccessReferenceService.getRelationshipNameById(updatedElectronicAccess, "diku"))
+      .thenReturn("el acc name");
+
+    var rules = rules(rule(ELECTRONIC_ACCESS_URL_RELATIONSHIP, REPLACE_WITH, "", updatedElectronicAccess));
+
+    var result = processor.process(IDENTIFIER, extendedHolding, rules);
+
+    assertNotNull(result);
+    verifyNoInteractions(errorService);
+    assertEquals(updatedElectronicAccess, result.getUpdated().getEntity().getElectronicAccess().get(0).getRelationshipId());
   }
 
   @Test
