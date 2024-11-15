@@ -8,7 +8,6 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_URL_RELATIONSHIP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
@@ -30,6 +29,7 @@ import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.exception.RuleValidationTenantsException;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
 import org.folio.bulkops.util.RuleUtils;
@@ -46,6 +46,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
   private final HoldingsReferenceService holdingsReferenceService;
   private final ItemReferenceService itemReferenceService;
   private final ItemsNotesUpdater itemsNotesUpdater;
+  private final ConsortiaService consortiaService;
 
   @Override
   public Validator<UpdateOptionType, Action, BulkOperationRule> validator(ExtendedItem extendedItem) {
@@ -68,7 +69,7 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
         throw new RuleValidationException(
             format("New status value \"%s\" is not allowed", action.getUpdated()));
       }
-      if (nonNull(rule) && ruleTenantsAreNotValid(rule, action, option, extendedItem)) {
+      if (nonNull(rule) && ruleTenantsAreNotValid(rule, action, extendedItem)) {
         throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE,
           extendedItem.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedItem.getTenant(), getRecordPropertyName(option)));
       }
@@ -164,16 +165,12 @@ public class ItemDataProcessor extends AbstractDataProcessor<ExtendedItem> {
     }
   }
 
-  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, UpdateOptionType option, ExtendedItem extendedItem) {
+  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, ExtendedItem extendedItem) {
     var ruleTenants = rule.getRuleDetails().getTenants();
     var actionTenants = action.getTenants();
     if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
       ruleTenants.retainAll(actionTenants);
       return !ruleTenants.contains(extendedItem.getTenant());
-    }
-    if (nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
-      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && action.getType() == org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE) {
-      return true;
     }
     return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedItem.getTenant()) ||
       nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedItem.getTenant());

@@ -17,6 +17,8 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_UR
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_URL_RELATIONSHIP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.MARC;
@@ -39,6 +41,7 @@ import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.exception.RuleValidationTenantsException;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
 import org.folio.bulkops.service.ElectronicAccessReferenceService;
@@ -60,6 +63,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
   private final HoldingsNotesUpdater holdingsNotesUpdater;
   private final ElectronicAccessUpdaterFactory electronicAccessUpdaterFactory;
   private final ElectronicAccessReferenceService electronicAccessReferenceService;
+  private final ConsortiaService consortiaService;
 
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -211,10 +215,10 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
     if (isThereIntersectionBetween(ruleTenants, actionTenants)) {
       return !ruleTenants.contains(extendedHolding.getTenant());
     }
-    if (nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
-      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && action.getType() == UpdateActionType.FIND_AND_REPLACE) {
+    if (areTenantsNotOverlapping(action, option, ruleTenants, actionTenants)) {
+      log.info("extendedHolding: {}, action: {}", extendedHolding, action);
       return isNull(extendedHolding.getElectronicAccess()) ||
-        extendedHolding.getElectronicAccess().stream().noneMatch(el -> el.getRelationshipId().equals(action.getUpdated()));
+        extendedHolding.getElectronicAccess().stream().noneMatch(el -> Objects.equals(el.getRelationshipId(), action.getUpdated()));
     }
     return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedHolding.getTenant()) ||
       nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedHolding.getTenant());
@@ -226,5 +230,11 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
       return true;
     }
     return false;
+  }
+
+  private boolean areTenantsNotOverlapping(Action action, UpdateOptionType option, List<String> ruleTenants, List<String> actionTenants) {
+    return consortiaService.isTenantInConsortia(folioExecutionContext.getTenantId()) &&
+      nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
+      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && (action.getType() == FIND_AND_REPLACE || action.getType() == FIND_AND_REMOVE_THESE);
   }
 }
