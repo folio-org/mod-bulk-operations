@@ -7,6 +7,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION
 import static org.folio.bulkops.service.ErrorService.IDENTIFIER;
 import static org.folio.bulkops.service.ErrorService.LINK;
 import static org.folio.bulkops.util.Constants.CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING;
+import static org.folio.bulkops.util.Constants.DATA_IMPORT_ERROR_DISCARDED;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -321,6 +322,36 @@ class ErrorServiceTest extends BaseTest {
 
       assertThat(errors.getErrors(), hasSize(1));
       assertEquals("some MARC error", errors.getErrors().get(0).getMessage());
+    }
+  }
+
+  @Test
+  void testSaveErrorsFromDataImport_whenDiscardedAndNoMessage() {
+    final var dataImportJobId = UUID.randomUUID();
+    final var sourceRecordId = UUID.randomUUID().toString();
+    final var dataExportJobId = UUID.randomUUID();
+    final var instanceId = UUID.randomUUID().toString();
+    when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE))
+      .thenReturn(new JobLogEntryCollection().withEntries(List.of(new JobLogEntry()
+        .withSourceRecordActionStatus(JobLogEntry.ActionStatus.DISCARDED).withError("")
+        .withRelatedInstanceInfo(new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())))));
+    when(srsClient.getSrsRecordById(sourceRecordId)).thenReturn(new SrsRecord().withExternalIdsHolder(
+      new ExternalIdsHolder().withInstanceHrid("instance HRID").withInstanceId(instanceId)));
+
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var operationId = bulkOperationRepository.save(BulkOperation.builder()
+          .id(UUID.randomUUID())
+          .status(COMPLETED_WITH_ERRORS)
+          .identifierType(IdentifierType.ID)
+          .committedNumOfErrors(1)
+          .dataExportJobId(dataExportJobId)
+          .build())
+        .getId();
+      errorService.saveErrorsFromDataImport(operationId, dataImportJobId);
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1);
+
+      assertThat(errors.getErrors(), hasSize(1));
+      assertEquals(DATA_IMPORT_ERROR_DISCARDED, errors.getErrors().get(0).getMessage());
     }
   }
 
