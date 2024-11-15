@@ -1,4 +1,16 @@
-## v2.1.1 - Released 2024/11/08
+## v2.1.2 - Released 2024/11/15
+
+This release contains bugfixes.
+
+### Bugs
+* [MODBULKOPS-422](https://folio-org.atlassian.net/browse/MODBULKOPS-422) Missing interface dependencies in module descriptor
+* [MODBULKOPS-407](https://folio-org.atlassian.net/browse/MODBULKOPS-407) Dependency upgrades for Ramsons
+* [MODBULKOPS-402](https://folio-org.atlassian.net/browse/MODBULKOPS-402) Issues with bulk edit of URL relationship on non-ECS and ECS environments
+* [MODBULKOPS-393](https://folio-org.atlassian.net/browse/MODBULKOPS-393) Issues related to display errors from DI on Confirmation screen of bulk edit MARC fields
+* [MODBULKOPS-383](https://folio-org.atlassian.net/browse/MODBULKOPS-383) 404 Not Found error (instead of optimistic locking error) on Confirmation screen when bulk edit Items via Central tenant
+* [MODBULKOPS-322](https://folio-org.atlassian.net/browse/MODBULKOPS-322) Specific case of downloading empty file with matched Holdings records
+
+* ## v2.1.1 - Released 2024/11/08
 
 This release contains bugfixes.
 
@@ -7,7 +19,6 @@ This release contains bugfixes.
 * [MODBULKOPS-393](https://folio-org.atlassian.net/browse/MODBULKOPS-393) Issues related to display errors from DI on Confirmation screen of bulk edit MARC fields
 * [MODBULKOPS-348](https://folio-org.atlassian.net/browse/MODBULKOPS-348) For bulk edit of MARC fields “Are you sure“ preview is populated based on .mrc file
 * [MODBULKOPS-340](https://folio-org.atlassian.net/browse/MODBULKOPS-340) "Something went wrong" error when click "Confirm changes" button while bulk edit of MARC fields
-
 
 ## v2.1.0 - Released 2024/11/01
 
