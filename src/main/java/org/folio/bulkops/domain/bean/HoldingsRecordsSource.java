@@ -28,7 +28,9 @@ public class HoldingsRecordsSource   {
   public enum SourceEnum {
     FOLIO("folio"),
 
-    LOCAL("local");
+    LOCAL("local"),
+
+    CONSORTIUM("consortium");
 
     private String value;
 

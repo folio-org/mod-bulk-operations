@@ -147,6 +147,11 @@ class HoldingsReferenceHelperTest extends BaseTest {
 
     when(holdingsSourceClient.getByQuery("name==\"name_4\"")).thenReturn(new HoldingsRecordsSourceCollection().withHoldingsRecordsSources(Collections.emptyList()));
     assertThrows(NotFoundException.class, () -> holdingsReferenceHelper.getSourceByName("name_4"));
+
+    when(holdingsSourceClient.getById("id_2")).thenReturn(new HoldingsRecordsSource().withName("name_2").withSource(HoldingsRecordsSource.SourceEnum.CONSORTIUM));
+    actual = holdingsReferenceHelper.getSourceById("id_2");
+    assertEquals("name_2", actual.getName());
+    assertEquals("consortium", actual.getSource().getValue());
   }
 
   @Test
