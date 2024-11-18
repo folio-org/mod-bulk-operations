@@ -148,6 +148,8 @@ public class HoldingsReferenceService {
         HoldingsRecordsSource.builder().name(EMPTY).build() :
         holdingsSourceClient.getById(id);
     } catch (Exception e) {
+      log.error("id: {}, tenant: {}", id, tenantId);
+      e.printStackTrace();
       throw new NotFoundException(format("Holdings record source not found by id=%s", id));
     }
   }
