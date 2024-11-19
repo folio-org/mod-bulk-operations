@@ -125,7 +125,9 @@ public class ErrorService {
         if (errorEntry.getSourceRecordActionStatus() == JobLogEntry.ActionStatus.DISCARDED && errorEntry.getError().isEmpty()) {
           errorEntry.setError(DATA_IMPORT_ERROR_DISCARDED);
         }
-        saveError(bulkOperationId, identifier, errorEntry.getError());
+        if (!errorEntry.getError().isEmpty()) {
+          saveError(bulkOperationId, identifier, errorEntry.getError());
+        }
       });
     } catch (Exception e) {
       log.error("Problem with retrieving logs from MetadataProvider", e);

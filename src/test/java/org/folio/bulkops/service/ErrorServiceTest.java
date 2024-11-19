@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.LF;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.service.ErrorService.IDENTIFIER;
@@ -322,6 +323,31 @@ class ErrorServiceTest extends BaseTest {
 
       assertThat(errors.getErrors(), hasSize(1));
       assertEquals("some MARC error", errors.getErrors().get(0).getMessage());
+    }
+  }
+
+  @Test
+  void shouldNotSaveError_IfErrorFromDataImportIsEmpty() {
+    final var dataImportJobId = UUID.randomUUID();
+    final var dataExportJobId = UUID.randomUUID();
+    when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE))
+      .thenReturn(new JobLogEntryCollection().withEntries(List.of(new JobLogEntry()
+        .withError("").withRelatedInstanceInfo(
+          new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
+        ))));
+
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var operationId = bulkOperationRepository.save(BulkOperation.builder()
+          .id(UUID.randomUUID())
+          .status(COMPLETED)
+          .identifierType(IdentifierType.ID)
+          .dataExportJobId(dataExportJobId)
+          .build())
+        .getId();
+      errorService.saveErrorsFromDataImport(operationId, dataImportJobId);
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1);
+
+      assertThat(errors.getErrors(), hasSize(0));
     }
   }
 
