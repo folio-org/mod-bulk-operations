@@ -11,6 +11,7 @@ import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 import static org.folio.bulkops.util.Constants.CSV_EXTENSION;
 import static org.folio.bulkops.util.Constants.NON_PRINTING_DELIMITER;
 import static org.folio.bulkops.util.Constants.SPLIT_NOTE_ENTITIES;
+import static org.folio.bulkops.util.Constants.UTF8_BOM;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -176,6 +177,9 @@ public class BulkOperationController implements BulkOperationsApi {
         if (isDownloadPreview(fileContentType) && SPLIT_NOTE_ENTITIES.contains(entityType)) {
           content = noteProcessorFactory.getNoteProcessor(entityType).processCsvContent(content, bulkOperation);
         }
+        if (CSV_EXTENSION.equalsIgnoreCase(FilenameUtils.getExtension(path))) {
+          content = getCsvContentWithUtf8Bom(content);
+        }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentLength(content.length);
@@ -187,6 +191,10 @@ public class BulkOperationController implements BulkOperationsApi {
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
+  }
+
+  private byte[] getCsvContentWithUtf8Bom(byte[] content) {
+    return ArrayUtils.addAll(UTF8_BOM, content);
   }
 
   private boolean isDownloadPreview(FileContentType fileContentType) {

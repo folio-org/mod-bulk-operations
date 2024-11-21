@@ -75,4 +75,6 @@ public class Constants {
 
   public static final String MARC = "MARC";
   public static final String FOLIO = "FOLIO";
+
+  public static final byte[] UTF8_BOM = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 }

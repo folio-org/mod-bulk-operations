@@ -16,7 +16,10 @@ import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 import static org.folio.bulkops.domain.dto.IdentifierType.BARCODE;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationType.UPDATE;
+import static org.folio.bulkops.util.Constants.UTF8_BOM;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -29,8 +32,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -50,6 +55,8 @@ import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
+import org.folio.bulkops.processor.note.HoldingsNotesProcessor;
+import org.folio.bulkops.processor.note.ItemNoteProcessor;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.BulkOperationService;
 import org.folio.bulkops.service.ConsortiaService;
@@ -73,6 +80,10 @@ class BulkOperationControllerTest extends BaseTest {
   private RemoteFileSystemClient remoteFileSystemClient;
   @MockBean
   private RuleService ruleService;
+  @MockBean
+  private ItemNoteProcessor itemNoteProcessor;
+  @MockBean
+  private HoldingsNotesProcessor holdingsNotesProcessor;
 
   @MockBean
   private ListUsersService listUsersService;
@@ -130,7 +141,7 @@ class BulkOperationControllerTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @MethodSource("fileContentTypeToNoteTypeCollection")
+  @MethodSource("fileContentTypeToEntityTypeCollection")
   void shouldDownloadFileWithPreview(FileContentType type, org.folio.bulkops.domain.dto.EntityType entityType) throws Exception {
     when(consortiaService.isTenantCentral(any())).thenReturn(false);
 
@@ -150,6 +161,43 @@ class BulkOperationControllerTest extends BaseTest {
     }
   }
 
+  @ParameterizedTest
+  @MethodSource("fileContentTypeToEntityTypeCollection")
+  void shouldDownloadCSVFileWithUtf8Bom(FileContentType fileContentType, org.folio.bulkops.domain.dto.EntityType entityType) throws Exception {var content = "content";
+    var csvfileName = "csvFileName.csv";
+    var mrcfileName = "mrcFileName.mrc";
+    var operationId = UUID.randomUUID();
+
+    when(consortiaService.isTenantCentral(any())).thenReturn(false);
+    when(remoteFileSystemClient.get(any(String.class))).thenReturn(new ByteArrayInputStream(content.getBytes()));
+    when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(BulkOperation.builder()
+      .id(UUID.randomUUID())
+      .linkToTriggeringCsvFile(csvfileName)
+      .linkToMatchedRecordsCsvFile(csvfileName)
+      .linkToMatchedRecordsErrorsCsvFile(csvfileName)
+      .linkToModifiedRecordsCsvFile(csvfileName)
+      .linkToCommittedRecordsCsvFile(csvfileName)
+      .linkToCommittedRecordsErrorsCsvFile(csvfileName)
+      .linkToModifiedRecordsMarcFile(mrcfileName)
+      .entityType(entityType)
+      .build());
+    when(itemNoteProcessor.processCsvContent(any(), any())).thenReturn(content.getBytes());
+    when(holdingsNotesProcessor.processCsvContent(any(), any())).thenReturn(content.getBytes());
+
+    var result = mockMvc.perform(get(format("/bulk-operations/%s/download?fileContentType=%s", operationId, fileContentType))
+        .headers(defaultHeaders())
+        .contentType(APPLICATION_JSON))
+      .andExpect(status().isOk()).andReturn();
+    var actual = result.getResponse().getContentAsByteArray();
+
+    if (fileContentType == PROPOSED_CHANGES_FILE && entityType == INSTANCE_MARC) {
+      assertNotEquals(content.getBytes().length + UTF8_BOM.length, actual.length);
+    } else {
+      assertEquals(content.getBytes().length + UTF8_BOM.length, actual.length);
+      var utf8bom = Arrays.copyOfRange(actual, 0, UTF8_BOM.length);
+      assertArrayEquals(UTF8_BOM, utf8bom);
+    }
+  }
 
 
   @Test
@@ -298,7 +346,7 @@ class BulkOperationControllerTest extends BaseTest {
     assertEquals("[\"member1\",\"member2\"]", res.getResponse().getContentAsString());
   }
 
-  private static Stream<Arguments> fileContentTypeToNoteTypeCollection() {
+  private static Stream<Arguments> fileContentTypeToEntityTypeCollection() {
     return Stream.of(
       Arguments.of(TRIGGERING_FILE, ITEM),
       Arguments.of(TRIGGERING_FILE, HOLDINGS_RECORD),
