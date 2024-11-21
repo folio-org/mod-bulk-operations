@@ -143,7 +143,11 @@ class BulkOperationControllerTest extends BaseTest {
   @ParameterizedTest
   @MethodSource("fileContentTypeToEntityTypeCollection")
   void shouldDownloadFileWithPreview(FileContentType type, org.folio.bulkops.domain.dto.EntityType entityType) throws Exception {
+    var content = "content";
     when(consortiaService.isTenantCentral(any())).thenReturn(false);
+    when(remoteFileSystemClient.get(any(String.class))).thenReturn(new ByteArrayInputStream(content.getBytes()));
+    when(itemNoteProcessor.processCsvContent(any(), any())).thenReturn(content.getBytes());
+    when(holdingsNotesProcessor.processCsvContent(any(), any())).thenReturn(content.getBytes());
 
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = UUID.randomUUID();
@@ -163,7 +167,7 @@ class BulkOperationControllerTest extends BaseTest {
 
   @ParameterizedTest
   @MethodSource("fileContentTypeToEntityTypeCollection")
-  void shouldDownloadCSVFileWithUtf8Bom(FileContentType fileContentType, org.folio.bulkops.domain.dto.EntityType entityType) throws Exception {var content = "content";
+  void shouldAddUtf8BomToDownloadedCSV(FileContentType fileContentType, org.folio.bulkops.domain.dto.EntityType entityType) throws Exception {var content = "content";
     var csvfileName = "csvFileName.csv";
     var mrcfileName = "mrcFileName.mrc";
     var operationId = UUID.randomUUID();
