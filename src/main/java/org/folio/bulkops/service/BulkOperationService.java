@@ -312,12 +312,8 @@ public class BulkOperationService {
 
       operation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
 
-      dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
-      dataProcessingRepository.save(dataProcessing);
+      updateProcessed(dataProcessing, operation, processedNumOfRecords);
 
-      operation.setApproach(IN_APP);
-      operation.setStatus(OperationStatusType.REVIEW_CHANGES);
-      operation.setProcessedNumOfRecords(processedNumOfRecords);
       bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
     } catch (S3ClientException e) {
       errorMsg = ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
@@ -335,6 +331,14 @@ public class BulkOperationService {
       }
       bulkOperationRepository.save(operation);
     }
+  }
+
+  private void updateProcessed(BulkOperationDataProcessing dataProcessing, BulkOperation operation, int processedNumOfRecords) {
+    dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
+    dataProcessingRepository.save(dataProcessing);
+    operation.setApproach(IN_APP);
+    operation.setStatus(OperationStatusType.REVIEW_CHANGES);
+    operation.setProcessedNumOfRecords(processedNumOfRecords);
   }
 
   private void confirmForInstanceMarc(BulkOperation operation)  {
@@ -374,12 +378,9 @@ public class BulkOperationService {
           }
         }
         operation.setLinkToModifiedRecordsMarcFile(modifiedMarcFileName);
-        dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
-        dataProcessingRepository.save(dataProcessing);
 
-        operation.setApproach(IN_APP);
-        operation.setStatus(OperationStatusType.REVIEW_CHANGES);
-        operation.setProcessedNumOfRecords(processedNumOfRecords);
+        updateProcessed(dataProcessing, operation, processedNumOfRecords);
+
         bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
       } catch (S3ClientException e) {
         errorMsg = ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
