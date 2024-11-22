@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -35,6 +36,7 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.Utils;
+import org.folio.s3.exception.S3ClientException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -124,12 +126,14 @@ public class DataExportJobUpdateService {
       }
       operation.setEndTime(LocalDateTime.ofInstant(jobUpdate.getEndTime().toInstant(), UTC_ZONE));
 
+    } catch (S3ClientException e) {
+      operation.setErrorMessage(ERROR_NOT_DOWNLOAD_ORIGIN_FILE_FROM_S3);
+      log.error(e);
     } catch (Exception e) {
       var msg = "Failed to download origin file, reason: " + e;
       log.error(msg);
       operation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);
       operation.setEndTime(LocalDateTime.now());
-      operation.setErrorMessage(ERROR_NOT_DOWNLOAD_ORIGIN_FILE_FROM_S3);
       if (ObjectUtils.isNotEmpty(jobUpdate.getProgress())) {
         operation.setMatchedNumOfErrors(isNull(jobUpdate.getProgress().getErrors()) ? 0 : jobUpdate.getProgress().getErrors());
       }
