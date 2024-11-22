@@ -178,7 +178,7 @@ public class BulkOperationService {
         } catch (S3ClientException e) {
           errorMessage = ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION;
         } catch (Exception e) {
-          errorMessage = getUploadingFileError(e);
+          errorMessage = format(FILE_UPLOADING_FAILED_REASON, e.getMessage());
         }
         if (nonNull(errorMessage)) {
           log.error(ERROR_STARTING_BULK_OPERATION + errorMessage);
@@ -199,7 +199,7 @@ public class BulkOperationService {
       } catch (S3ClientException e) {
         errorMessage = ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION;
       } catch (Exception e) {
-        errorMessage = getUploadingFileError(e);
+        errorMessage = format(FILE_UPLOADING_FAILED_REASON, e.getMessage());
       }
       if (nonNull(errorMessage)) {
         log.error(ERROR_STARTING_BULK_OPERATION + errorMessage);
@@ -216,10 +216,6 @@ public class BulkOperationService {
     operation.setUserId(xOkapiUserId);
 
     return bulkOperationRepository.save(operation);
-  }
-
-  private String getUploadingFileError(Exception e) {
-    return format(FILE_UPLOADING_FAILED_REASON, e.getMessage());
   }
 
   public BulkOperation triggerByQuery(UUID userId, QueryRequest queryRequest) {
