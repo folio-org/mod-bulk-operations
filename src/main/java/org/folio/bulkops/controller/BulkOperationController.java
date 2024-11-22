@@ -181,10 +181,7 @@ public class BulkOperationController implements BulkOperationsApi {
           content = noteProcessorFactory.getNoteProcessor(entityType).processCsvContent(content, bulkOperation);
         }
         if (CSV_EXTENSION.equalsIgnoreCase(FilenameUtils.getExtension(path))) {
-          byte[] contentCharsByUtf8BomLen = Arrays.copyOfRange(content, 0, utf8Bom.length);
-          if (!Arrays.equals(utf8Bom, contentCharsByUtf8BomLen)) {
-            content = getCsvContentWithUtf8Bom(content);
-          }
+          content = getCsvContentWithUtf8Bom(content);
         }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
@@ -200,7 +197,11 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   private byte[] getCsvContentWithUtf8Bom(byte[] content) {
-    return ArrayUtils.addAll(utf8Bom, content);
+    var contentCharsByUtf8BomLen = Arrays.copyOfRange(content, 0, utf8Bom.length);
+    if (!Arrays.equals(utf8Bom, contentCharsByUtf8BomLen)) {
+      return ArrayUtils.addAll(utf8Bom, content);
+    }
+    return content;
   }
 
   private boolean isDownloadPreview(FileContentType fileContentType) {
