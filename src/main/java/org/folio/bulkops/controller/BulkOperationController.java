@@ -57,6 +57,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -180,7 +181,10 @@ public class BulkOperationController implements BulkOperationsApi {
           content = noteProcessorFactory.getNoteProcessor(entityType).processCsvContent(content, bulkOperation);
         }
         if (CSV_EXTENSION.equalsIgnoreCase(FilenameUtils.getExtension(path))) {
-          content = getCsvContentWithUtf8Bom(content);
+          byte[] contentCharsByUtf8BomLen = Arrays.copyOfRange(content, 0, utf8Bom.length);
+          if (!Arrays.equals(utf8Bom, contentCharsByUtf8BomLen)) {
+            content = getCsvContentWithUtf8Bom(content);
+          }
         }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
