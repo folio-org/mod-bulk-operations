@@ -354,6 +354,7 @@ public class BulkOperationService {
     if (nonNull(operation.getLinkToMatchedRecordsMarcFile())) {
       var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
       var modifiedMarcFileName = String.format(PREVIEW_MARC_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
+      String errorMsg = null;
       try (var writerForModifiedPreviewMarcFile = remoteFileSystemClient.marcWriter(modifiedMarcFileName)) {
         var matchedRecordsReader = new MarcStreamReader(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile()));
         var currentDate = new Date();
@@ -381,15 +382,19 @@ public class BulkOperationService {
         operation.setProcessedNumOfRecords(processedNumOfRecords);
         bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
       } catch (S3ClientException e) {
-        log.error(e);
-        operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
-      } catch (Exception e) {
-        log.error(e);
-        dataProcessingRepository.save(dataProcessing
-          .withStatus(StatusType.FAILED)
-          .withEndTime(LocalDateTime.now()));
-        operation.setStatus(OperationStatusType.FAILED);
-        operation.setEndTime(LocalDateTime.now());
+        errorMsg = ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
+      } catch (Exception e) {e.printStackTrace();
+        errorMsg = e.getMessage();
+      } finally {
+        if (nonNull(errorMsg)) {
+          operation.setErrorMessage(errorMsg);
+          log.error(errorMsg);
+          dataProcessingRepository.save(dataProcessing
+            .withStatus(StatusType.FAILED)
+            .withEndTime(LocalDateTime.now()));
+          operation.setStatus(OperationStatusType.FAILED);
+          operation.setEndTime(LocalDateTime.now());
+        }
       }
     } else {
       log.error("No link to MARC file, failing operation");

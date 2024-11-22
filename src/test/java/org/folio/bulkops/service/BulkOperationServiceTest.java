@@ -601,7 +601,7 @@ class BulkOperationServiceTest extends BaseTest {
         .thenReturn(BulkOperationDataProcessing.builder()
           .processedNumOfRecords(0)
           .build());
-      when(remoteFileSystemClient.get(pathToModifiedRecordsMarcFileName))
+      when(remoteFileSystemClient.get(pathToMatchedRecordsMarcFile))
         .thenThrow(new S3ClientException("error"));
       when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenReturn(new MarcRemoteStorageWriter(expectedPathToModifiedMarcFile, 8192, remoteFolioS3Client));
 
