@@ -57,6 +57,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -66,6 +67,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Log4j2
 public class BulkOperationController implements BulkOperationsApi {
+
+  private final byte[] utf8Bom = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+
   private final BulkOperationService bulkOperationService;
   private final PreviewService previewService;
   private final BulkOperationMapper bulkOperationMapper;
@@ -176,6 +180,9 @@ public class BulkOperationController implements BulkOperationsApi {
         if (isDownloadPreview(fileContentType) && SPLIT_NOTE_ENTITIES.contains(entityType)) {
           content = noteProcessorFactory.getNoteProcessor(entityType).processCsvContent(content, bulkOperation);
         }
+        if (CSV_EXTENSION.equalsIgnoreCase(FilenameUtils.getExtension(path))) {
+          content = getCsvContentWithUtf8Bom(content);
+        }
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
         headers.setContentLength(content.length);
@@ -187,6 +194,14 @@ public class BulkOperationController implements BulkOperationsApi {
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
+  }
+
+  private byte[] getCsvContentWithUtf8Bom(byte[] content) {
+    var contentCharsByUtf8BomLen = Arrays.copyOfRange(content, 0, utf8Bom.length);
+    if (!Arrays.equals(utf8Bom, contentCharsByUtf8BomLen)) {
+      return ArrayUtils.addAll(utf8Bom, content);
+    }
+    return content;
   }
 
   private boolean isDownloadPreview(FileContentType fileContentType) {
