@@ -11,7 +11,6 @@ import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 import static org.folio.bulkops.util.Constants.CSV_EXTENSION;
 import static org.folio.bulkops.util.Constants.NON_PRINTING_DELIMITER;
 import static org.folio.bulkops.util.Constants.SPLIT_NOTE_ENTITIES;
-import static org.folio.bulkops.util.Constants.UTF8_BOM;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -67,6 +66,9 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Log4j2
 public class BulkOperationController implements BulkOperationsApi {
+
+  private final byte[] UTF8_BOM = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+
   private final BulkOperationService bulkOperationService;
   private final PreviewService previewService;
   private final BulkOperationMapper bulkOperationMapper;

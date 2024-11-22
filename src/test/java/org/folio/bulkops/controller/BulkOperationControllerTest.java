@@ -16,7 +16,6 @@ import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 import static org.folio.bulkops.domain.dto.IdentifierType.BARCODE;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationType.UPDATE;
-import static org.folio.bulkops.util.Constants.UTF8_BOM;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -167,10 +166,12 @@ class BulkOperationControllerTest extends BaseTest {
 
   @ParameterizedTest
   @MethodSource("fileContentTypeToEntityTypeCollection")
-  void shouldAddUtf8BomToDownloadedCSV(FileContentType fileContentType, org.folio.bulkops.domain.dto.EntityType entityType) throws Exception {var content = "content";
+  void shouldAddUtf8BomToDownloadedCSV(FileContentType fileContentType, org.folio.bulkops.domain.dto.EntityType entityType) throws Exception {
+    var content = "content";
     var csvfileName = "csvFileName.csv";
     var mrcfileName = "mrcFileName.mrc";
     var operationId = UUID.randomUUID();
+    byte[] utf8bom = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 
     when(consortiaService.isTenantCentral(any())).thenReturn(false);
     when(remoteFileSystemClient.get(any(String.class))).thenReturn(new ByteArrayInputStream(content.getBytes()));
@@ -195,11 +196,11 @@ class BulkOperationControllerTest extends BaseTest {
     var actual = result.getResponse().getContentAsByteArray();
 
     if (fileContentType == PROPOSED_CHANGES_FILE && entityType == INSTANCE_MARC) {
-      assertNotEquals(content.getBytes().length + UTF8_BOM.length, actual.length);
+      assertNotEquals(content.getBytes().length + utf8bom.length, actual.length);
     } else {
-      assertEquals(content.getBytes().length + UTF8_BOM.length, actual.length);
-      var utf8bom = Arrays.copyOfRange(actual, 0, UTF8_BOM.length);
-      assertArrayEquals(UTF8_BOM, utf8bom);
+      assertEquals(content.getBytes().length + utf8bom.length, actual.length);
+      var actualUtf8bom = Arrays.copyOfRange(actual, 0, utf8bom.length);
+      assertArrayEquals(utf8bom, actualUtf8bom);
     }
   }
 
