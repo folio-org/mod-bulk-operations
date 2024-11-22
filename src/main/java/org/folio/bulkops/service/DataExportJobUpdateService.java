@@ -95,6 +95,7 @@ public class DataExportJobUpdateService {
   }
 
   private void downloadOriginFileAndUpdateBulkOperation(BulkOperation operation, Job jobUpdate) {
+    String errorMsg = null;
     try {
 
       operation.setStatus(OperationStatusType.DATA_MODIFICATION);
@@ -127,15 +128,19 @@ public class DataExportJobUpdateService {
       operation.setEndTime(LocalDateTime.ofInstant(jobUpdate.getEndTime().toInstant(), UTC_ZONE));
 
     } catch (S3ClientException e) {
-      operation.setErrorMessage(ERROR_NOT_DOWNLOAD_ORIGIN_FILE_FROM_S3);
-      log.error(e);
+      errorMsg = ERROR_NOT_DOWNLOAD_ORIGIN_FILE_FROM_S3;
     } catch (Exception e) {
-      var msg = "Failed to download origin file, reason: " + e;
-      log.error(msg);
-      operation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);
-      operation.setEndTime(LocalDateTime.now());
-      if (ObjectUtils.isNotEmpty(jobUpdate.getProgress())) {
-        operation.setMatchedNumOfErrors(isNull(jobUpdate.getProgress().getErrors()) ? 0 : jobUpdate.getProgress().getErrors());
+      errorMsg = e.getMessage();
+    } finally {
+      if (nonNull(errorMsg)) {
+        operation.setErrorMessage(errorMsg);
+        errorMsg = "Failed to download origin file, reason: " + errorMsg;
+        log.error(errorMsg);
+        operation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);
+        operation.setEndTime(LocalDateTime.now());
+        if (ObjectUtils.isNotEmpty(jobUpdate.getProgress())) {
+          operation.setMatchedNumOfErrors(isNull(jobUpdate.getProgress().getErrors()) ? 0 : jobUpdate.getProgress().getErrors());
+        }
       }
     }
   }

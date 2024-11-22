@@ -262,6 +262,8 @@ public class BulkOperationService {
     var modifiedJsonFileName = String.format(PREVIEW_JSON_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
     var modifiedPreviewCsvFileName = String.format(PREVIEW_CSV_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
 
+    String errorMsg = null;
+
     try (var readerForMatchedJsonFile = remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile());
          var writerForModifiedPreviewCsvFile = remoteFileSystemClient.writer(modifiedPreviewCsvFileName);
          var writerForModifiedJsonFile = remoteFileSystemClient.writer(modifiedJsonFileName)) {
@@ -318,16 +320,19 @@ public class BulkOperationService {
       operation.setProcessedNumOfRecords(processedNumOfRecords);
       bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
     } catch (S3ClientException e) {
-      log.error(e);
-      operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
+      errorMsg = ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
     } catch (Exception e) {
-      log.error(e);
-      dataProcessingRepository.save(dataProcessing
-        .withStatus(StatusType.FAILED)
-        .withEndTime(LocalDateTime.now()));
-      operation.setStatus(OperationStatusType.FAILED);
-      operation.setEndTime(LocalDateTime.now());
+      errorMsg = e.getMessage();
     } finally {
+      if (nonNull(errorMsg)) {
+        dataProcessingRepository.save(dataProcessing
+          .withStatus(StatusType.FAILED)
+          .withEndTime(LocalDateTime.now()));
+        operation.setStatus(OperationStatusType.FAILED);
+        operation.setEndTime(LocalDateTime.now());
+        operation.setErrorMessage(errorMsg);
+        log.error(errorMsg);
+      }
       bulkOperationRepository.save(operation);
     }
   }
