@@ -67,7 +67,7 @@ import java.util.UUID;
 @Log4j2
 public class BulkOperationController implements BulkOperationsApi {
 
-  private final byte[] UTF8_BOM = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+  private final byte[] UTF_8_BOM = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 
   private final BulkOperationService bulkOperationService;
   private final PreviewService previewService;
@@ -196,7 +196,7 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   private byte[] getCsvContentWithUtf8Bom(byte[] content) {
-    return ArrayUtils.addAll(UTF8_BOM, content);
+    return ArrayUtils.addAll(UTF_8_BOM, content);
   }
 
   private boolean isDownloadPreview(FileContentType fileContentType) {
