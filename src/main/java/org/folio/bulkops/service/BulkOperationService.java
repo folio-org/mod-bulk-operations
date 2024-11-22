@@ -383,7 +383,7 @@ public class BulkOperationService {
         bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
       } catch (S3ClientException e) {
         errorMsg = ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
-      } catch (Exception e) {e.printStackTrace();
+      } catch (Exception e) {
         errorMsg = e.getMessage();
       } finally {
         if (nonNull(errorMsg)) {
