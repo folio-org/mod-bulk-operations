@@ -223,7 +223,7 @@ class BulkOperationServiceTest extends BaseTest {
     verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
     var capturedBulkOperation = operationCaptor.getValue();
     assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(ErrorCode.ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION));
+    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE));
   }
 
   @Test
@@ -277,7 +277,7 @@ class BulkOperationServiceTest extends BaseTest {
     verify(bulkOperationRepository, times(1)).save(operationCaptor.capture());
     var capturedBulkOperation = operationCaptor.getValue();
     assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(ErrorCode.ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION));
+    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE));
   }
 
   @Test
