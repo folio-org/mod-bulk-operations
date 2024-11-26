@@ -772,9 +772,9 @@ class HoldingsDataProcessorTest extends BaseTest {
 
   @Test
   void testShouldNotUpdateHoldingWithElectronicAccess_whenBothOfRuleAndActionTenantsAreEmpty() {
-    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    when(folioExecutionContext.getTenantId()).thenReturn("central");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
-    when(consortiaService.isTenantInConsortia("memberB")).thenReturn(true);
+    when(consortiaService.isTenantCentral("central")).thenReturn(true);
 
     try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
       when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any())).thenReturn(folioExecutionContext);
@@ -800,9 +800,9 @@ class HoldingsDataProcessorTest extends BaseTest {
 
   @Test
   void testShouldNotUpdateHoldingWithElectronicAccess_whenElectronicAccessIsNotSet() {
-    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    when(folioExecutionContext.getTenantId()).thenReturn("central");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
-    when(consortiaService.isTenantInConsortia("memberB")).thenReturn(true);
+    when(consortiaService.isTenantCentral("central")).thenReturn(true);
 
     try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
       when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any())).thenReturn(folioExecutionContext);
@@ -916,9 +916,9 @@ class HoldingsDataProcessorTest extends BaseTest {
 
   @Test
   void testShouldNotRemoveHoldingWithElectronicAccess_whenNoTenantsProvidedAndHoldingFromDifferentTenant() {
-    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
+    when(folioExecutionContext.getTenantId()).thenReturn("central");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
-    when(consortiaService.isTenantInConsortia("memberB")).thenReturn(true);
+    when(consortiaService.isTenantCentral("central")).thenReturn(true);
 
     var initElectronicAccForRecord = UUID.randomUUID().toString();
     var electronicAccessObj = new ElectronicAccess().withRelationshipId(initElectronicAccForRecord);

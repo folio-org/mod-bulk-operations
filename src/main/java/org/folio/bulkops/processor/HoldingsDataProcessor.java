@@ -233,7 +233,7 @@ public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHolding
   }
 
   private boolean areTenantsNotOverlapping(Action action, UpdateOptionType option, List<String> ruleTenants, List<String> actionTenants) {
-    return consortiaService.isTenantInConsortia(folioExecutionContext.getTenantId()) &&
+    return consortiaService.isTenantCentral(folioExecutionContext.getTenantId()) &&
       nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
       option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && (action.getType() == FIND_AND_REPLACE || action.getType() == FIND_AND_REMOVE_THESE);
   }
