@@ -1,3 +1,12 @@
+## v2.1.3 - Released 2024/11/26
+
+This release contains bugfixes.
+
+### Bugs
+* [MODBULKOPS-393](https://folio-org.atlassian.net/browse/MODBULKOPS-393) Issues related to display errors from DI on Confirmation screen of bulk edit MARC fields
+* [MODBULKOPS-341](https://folio-org.atlassian.net/browse/MODBULKOPS-341) Errors on Confirmation screen when bulk edit Instances on ECS environment and apply changes to Holdings, Items
+* [MODBULKOPS-322](https://folio-org.atlassian.net/browse/MODBULKOPS-322) Specific case of downloading empty file with matched Holdings records
+
 ## v2.1.2 - Released 2024/11/15
 
 This release contains bugfixes.
