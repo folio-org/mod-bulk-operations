@@ -46,7 +46,7 @@ public class SrsService {
             .limit(SRS_CHUNK_SIZE)
             .toList();
           var marcJsons = srsClient.getParsedRecordsInBatch(new GetParsedRecordsBatchRequestBody(
-            new GetParsedRecordsBatchConditions(ids, "INSTANCE"), "MARC_BIB"))
+            new GetParsedRecordsBatchConditions(ids, "INSTANCE"), "MARC_BIB", true))
             .get("records");
           for (var jsonNodeIterator = marcJsons.elements(); jsonNodeIterator.hasNext();) {
             var srsRec = jsonNodeIterator.next();

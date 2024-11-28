@@ -17,4 +17,6 @@ public class GetParsedRecordsBatchRequestBody {
   private GetParsedRecordsBatchConditions conditions;
   @JsonProperty("recordType")
   private String recordType;
+  @JsonProperty("includeDeleted")
+  private boolean includeDeleted;
 }
