@@ -8,7 +8,6 @@ import static org.folio.bulkops.service.MarcUpdateService.MSG_BULK_EDIT_SUPPORTE
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -91,7 +90,7 @@ class MarcUpdateServiceTest extends BaseTest {
     marcUpdateService.commitForInstanceMarc(bulkOperation);
 
     verify(updateProcessor).updateMarcRecords(bulkOperationArgumentCaptor.capture());
-    assertThat(bulkOperationArgumentCaptor.getValue().getLinkToCommittedRecordsMarcFile()).isEqualTo(isNull());
+    assertThat(bulkOperationArgumentCaptor.getValue().getLinkToCommittedRecordsMarcFile()).isNull();
 
     verify(executionRepository, times(2)).save(executionArgumentCaptor.capture());
     assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus()).isEqualTo(StatusType.COMPLETED);
