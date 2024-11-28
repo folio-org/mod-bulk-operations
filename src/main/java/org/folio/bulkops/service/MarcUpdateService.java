@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
-import java.util.UUID;
 
 @Service
 @Log4j2
@@ -60,8 +59,11 @@ public class MarcUpdateService {
 
       try {
         bulkOperation.setLinkToCommittedRecordsMarcFile(prepareCommittedFile(bulkOperation));
-        bulkOperationRepository.save(bulkOperation);
         updateProcessor.updateMarcRecords(bulkOperation);
+        var path = bulkOperation.getLinkToCommittedRecordsMarcFile();
+        remoteFileSystemClient.remove(path);
+        bulkOperation.setLinkToCommittedRecordsMarcFile(null);
+        bulkOperationRepository.save(bulkOperation);
         execution = execution
           .withStatus(StatusType.COMPLETED)
           .withEndTime(LocalDateTime.now());
