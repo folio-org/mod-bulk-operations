@@ -20,6 +20,7 @@ import org.folio.bulkops.domain.dto.MarcActionDataInner;
 import org.folio.bulkops.domain.dto.MarcDataType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.BulkOperationException;
+import org.folio.bulkops.processor.MarcDataProcessor;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.util.MarcDateHelper;
 import org.marc4j.marc.DataField;
@@ -36,7 +37,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Log4j2
-public class MarcInstanceDataProcessor {
+public class MarcInstanceDataProcessor implements MarcDataProcessor {
 
   private final ErrorService errorService;
 
