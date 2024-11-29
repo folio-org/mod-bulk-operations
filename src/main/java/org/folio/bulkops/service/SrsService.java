@@ -2,9 +2,11 @@ package org.folio.bulkops.service;
 
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
+import static org.folio.bulkops.service.MarcUpdateService.CHANGED_MARC_PATH_TEMPLATE;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.io.FilenameUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.GetParsedRecordsBatchConditions;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -34,12 +37,12 @@ public class SrsService {
   private final ErrorService errorService;
 
   public void retrieveMarcInstancesFromSrs(List<String> instanceIds, BulkOperation bulkOperation) {
-    var path = bulkOperation.getLinkToCommittedRecordsMarcFile();
-    remoteFileSystemClient.remove(path);
     var fetchedNumOfRecords = 0;
     var noLinkToCommitted = false;
+    var triggeringFileName = FilenameUtils.getBaseName(bulkOperation.getLinkToTriggeringCsvFile());
+    var committedRecordsMarcFile = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(), LocalDate.now(), triggeringFileName);
     if (!instanceIds.isEmpty()) {
-      try (var writer = remoteFileSystemClient.marcWriter(path)) {
+      try (var writer = remoteFileSystemClient.marcWriter(committedRecordsMarcFile)) {
         while (fetchedNumOfRecords < instanceIds.size()) {
           var ids = instanceIds.stream()
             .skip(fetchedNumOfRecords)
@@ -62,7 +65,8 @@ public class SrsService {
     } else {
       noLinkToCommitted = true;
     }
-    completeBulkOperation(bulkOperation, fetchedNumOfRecords, noLinkToCommitted);
+    committedRecordsMarcFile = noLinkToCommitted ? null : committedRecordsMarcFile;
+    completeBulkOperation(bulkOperation, fetchedNumOfRecords, committedRecordsMarcFile);
   }
 
   private Record jsonToMarcRecord(String json) throws IOException {
@@ -79,12 +83,10 @@ public class SrsService {
     bulkOperationRepository.save(operation);
   }
 
-  private void completeBulkOperation(BulkOperation bulkOperation, int committedNumOfRecords, boolean noLinkToCommitted) {
+  private void completeBulkOperation(BulkOperation bulkOperation, int committedNumOfRecords, String committedRecordsMarcFile) {
     var operation = bulkOperationRepository.findById(bulkOperation.getId())
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperation.getId()));
-    if (noLinkToCommitted) {
-      operation.setLinkToCommittedRecordsMarcFile(null);
-    }
+    operation.setLinkToCommittedRecordsMarcFile(committedRecordsMarcFile);
     operation.setTotalNumOfRecords(operation.getMatchedNumOfRecords());
     operation.setProcessedNumOfRecords(operation.getMatchedNumOfRecords());
     operation.setCommittedNumOfRecords(committedNumOfRecords);
