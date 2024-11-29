@@ -1,4 +1,4 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.folio;
 
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toCollection;
@@ -16,6 +16,8 @@ import org.folio.bulkops.domain.bean.InstanceNote;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.processor.Updater;
+import org.folio.bulkops.processor.folio.AdministrativeNotesUpdater;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;

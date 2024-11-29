@@ -1,8 +1,9 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.folio;
 
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.processor.FolioAbstractUpdateProcessor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.spring.FolioExecutionContext;

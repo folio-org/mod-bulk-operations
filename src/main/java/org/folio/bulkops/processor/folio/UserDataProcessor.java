@@ -1,4 +1,4 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.folio;
 
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
@@ -19,6 +19,9 @@ import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
+import org.folio.bulkops.processor.FolioAbstractDataProcessor;
+import org.folio.bulkops.processor.Updater;
+import org.folio.bulkops.processor.Validator;
 import org.folio.bulkops.service.UserReferenceService;
 import org.springframework.stereotype.Component;
 

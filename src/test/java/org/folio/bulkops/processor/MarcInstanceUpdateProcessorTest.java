@@ -31,6 +31,7 @@ import org.folio.bulkops.domain.bean.SplitStatus;
 import org.folio.bulkops.domain.bean.UploadFileDefinition;
 import org.folio.bulkops.domain.bean.UploadUrlResponse;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.processor.marc.MarcInstanceUpdateProcessor;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.ErrorService;
 import org.junit.jupiter.params.ParameterizedTest;

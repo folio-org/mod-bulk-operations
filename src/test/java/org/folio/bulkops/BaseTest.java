@@ -1,7 +1,7 @@
 package org.folio.bulkops;
 
 import static java.lang.String.format;
-import static org.folio.bulkops.processor.UserDataProcessor.DATE_TIME_FORMAT;
+import static org.folio.bulkops.processor.folio.UserDataProcessor.DATE_TIME_FORMAT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;

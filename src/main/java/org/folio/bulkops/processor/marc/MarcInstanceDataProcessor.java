@@ -1,4 +1,4 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.marc;
 
 import static java.lang.Character.isDigit;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;

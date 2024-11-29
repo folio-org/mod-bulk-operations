@@ -1,8 +1,9 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.folio;
 
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.processor.FolioAbstractUpdateProcessor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;

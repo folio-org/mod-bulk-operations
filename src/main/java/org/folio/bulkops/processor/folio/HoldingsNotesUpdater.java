@@ -1,4 +1,4 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.folio;
 
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -8,6 +8,8 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.processor.Updater;
+import org.folio.bulkops.processor.folio.AdministrativeNotesUpdater;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 

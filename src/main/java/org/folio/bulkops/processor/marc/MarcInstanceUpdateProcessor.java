@@ -1,4 +1,4 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.marc;
 
 import static java.lang.Boolean.TRUE;
 import static org.apache.commons.lang3.StringUtils.EMPTY;

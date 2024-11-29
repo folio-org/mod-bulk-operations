@@ -10,7 +10,7 @@ import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.OptimisticLockingException;
-import org.folio.bulkops.processor.UpdateProcessorFactory;
+import org.folio.bulkops.processor.FolioUpdateProcessorFactory;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.util.EntityPathResolver;
 import org.folio.bulkops.util.Utils;
@@ -21,7 +21,7 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 public class RecordUpdateService {
-  private final UpdateProcessorFactory updateProcessorFactory;
+  private final FolioUpdateProcessorFactory updateProcessorFactory;
   private final BulkOperationExecutionContentRepository executionContentRepository;
   private final EntityPathResolver entityPathResolver;
 

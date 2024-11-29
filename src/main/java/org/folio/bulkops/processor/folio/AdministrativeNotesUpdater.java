@@ -1,4 +1,4 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.folio;
 
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.CirculationNote;
@@ -17,9 +17,9 @@ import java.util.List;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.stream.Collectors.toCollection;
-import static org.folio.bulkops.processor.ItemsNotesUpdater.CHECK_IN_NOTE_TYPE;
-import static org.folio.bulkops.processor.ItemsNotesUpdater.CHECK_OUT_NOTE_TYPE;
-import static org.folio.bulkops.processor.ItemsNotesUpdater.NOTES_TYPES_TO_UPDATE;
+import static org.folio.bulkops.processor.folio.ItemsNotesUpdater.CHECK_IN_NOTE_TYPE;
+import static org.folio.bulkops.processor.folio.ItemsNotesUpdater.CHECK_OUT_NOTE_TYPE;
+import static org.folio.bulkops.processor.folio.ItemsNotesUpdater.NOTES_TYPES_TO_UPDATE;
 
 @Component
 public class AdministrativeNotesUpdater {
