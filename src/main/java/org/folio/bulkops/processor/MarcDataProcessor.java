@@ -7,6 +7,5 @@ import org.marc4j.marc.Record;
 import java.util.Date;
 
 public interface MarcDataProcessor {
-
   void update(BulkOperation operation, Record marcRecord, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection, Date currentDate);
 }
