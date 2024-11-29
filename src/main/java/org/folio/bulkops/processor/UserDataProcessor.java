@@ -28,7 +28,7 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @Component
 @AllArgsConstructor
-public class UserDataProcessor extends AbstractDataProcessor<User> {
+public class UserDataProcessor extends FolioAbstractDataProcessor<User> {
 
   public static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
   private final UserReferenceService userReferenceService;

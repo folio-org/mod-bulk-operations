@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 @Log4j2
 @Component
-public abstract class AbstractUpdateProcessor<T extends BulkOperationsEntity> implements UpdateProcessor<T> {
+public abstract class FolioAbstractUpdateProcessor<T extends BulkOperationsEntity> implements UpdateProcessor<T> {
   @Autowired
   private ErrorService errorService;
 

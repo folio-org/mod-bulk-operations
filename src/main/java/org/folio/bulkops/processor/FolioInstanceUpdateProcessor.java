@@ -48,7 +48,7 @@ import java.util.stream.Collectors;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class FolioInstanceUpdateProcessor extends AbstractUpdateProcessor<ExtendedInstance> {
+public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<ExtendedInstance> {
   private static final String ERROR_MESSAGE_TEMPLATE = "No change in value for instance required, %s associated records have been updated.";
   private static final String ERROR_NO_AFFILIATION_TO_EDIT_HOLDINGS = "User %s does not have required affiliation to edit the holdings record - %s on the tenant %s";
   private static final String NO_INSTANCE_WRITE_PERMISSIONS_TEMPLATE = "User %s does not have required permission to edit the instance record - %s=%s on the tenant ";

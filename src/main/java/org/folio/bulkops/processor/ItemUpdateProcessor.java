@@ -16,7 +16,7 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 
 @Component
 @RequiredArgsConstructor
-public class ItemUpdateProcessor extends AbstractUpdateProcessor<ExtendedItem> {
+public class ItemUpdateProcessor extends FolioAbstractUpdateProcessor<ExtendedItem> {
 
   private static final String NO_ITEM_WRITE_PERMISSIONS_TEMPLATE = "User %s does not have required permission to edit the item record - %s=%s on the tenant ";
 

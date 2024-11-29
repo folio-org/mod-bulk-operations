@@ -1000,7 +1000,7 @@ class ItemDataProcessorTest extends BaseTest {
       ELECTRONIC_ACCESS_URL_RELATIONSHIP | URL relationship
     """, delimiter = '|')
   void testGetRecordPropertyName(UpdateOptionType optionType, String returnValue) {
-    var dataProcessor = (AbstractDataProcessor)processor;
+    var dataProcessor = (FolioAbstractDataProcessor)processor;
     assertEquals(returnValue, dataProcessor.getRecordPropertyName(optionType));
   }
 

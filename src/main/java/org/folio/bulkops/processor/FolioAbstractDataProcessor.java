@@ -25,7 +25,7 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 
 @Log4j2
 @Component
-public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> implements DataProcessor<T> {
+public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity> implements DataProcessor<T> {
   @Autowired
   private ErrorService errorService;
   @Autowired

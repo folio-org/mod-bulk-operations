@@ -55,7 +55,7 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @Component
 @AllArgsConstructor
-public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHoldingsRecord> {
+public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHoldingsRecord> {
 
 
   private final ItemReferenceService itemReferenceService;

@@ -35,7 +35,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class HoldingsUpdateProcessor extends AbstractUpdateProcessor<ExtendedHoldingsRecord> {
+public class HoldingsUpdateProcessor extends FolioAbstractUpdateProcessor<ExtendedHoldingsRecord> {
   private static final String ERROR_MESSAGE_TEMPLATE = "No change in value for holdings record required, associated %s item(s) have been updated.";
   private static final String NO_HOLDING_WRITE_PERMISSIONS_TEMPLATE = "User %s does not have required permission to edit the holdings record - %s=%s on the tenant ";
 
