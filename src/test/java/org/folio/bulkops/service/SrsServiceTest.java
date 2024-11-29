@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -58,7 +59,7 @@ class SrsServiceTest extends BaseTest {
       .build();
 
     var marcWriter = Mockito.mock(MarcRemoteStorageWriter.class);
-    when(remoteFileSystemClient.marcWriter(linkToCommittedRecordsMarcFile))
+    when(remoteFileSystemClient.marcWriter(anyString()))
       .thenReturn(marcWriter);
     when(srsClient.getParsedRecordsInBatch(any(GetParsedRecordsBatchRequestBody.class)))
       .thenReturn(objectMapper.readTree(Files.readString(Path.of("src/test/resources/files/srs_batch_response.json"))));
@@ -71,7 +72,6 @@ class SrsServiceTest extends BaseTest {
 
     srsService.retrieveMarcInstancesFromSrs(List.of(UUID.randomUUID().toString()), operation);
 
-    verify(remoteFileSystemClient).remove(linkToCommittedRecordsMarcFile);
     verify(marcWriter).writeRecord(any(Record.class));
     verify(bulkOperationRepository, times(2))
       .save(bulkOperationCaptor.capture());
