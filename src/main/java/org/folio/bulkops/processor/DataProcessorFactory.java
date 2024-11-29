@@ -18,23 +18,23 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class DataProcessorFactory {
 
-  private DataProcessor<User> userDataProcessor;
-  private DataProcessor<ExtendedItem> itemDataProcessor;
-  private DataProcessor<ExtendedHoldingsRecord> holdingsDataProcessor;
-  private DataProcessor<ExtendedInstance> instanceDataProcessor;
+  private FolioDataProcessor<User> userDataProcessor;
+  private FolioDataProcessor<ExtendedItem> itemDataProcessor;
+  private FolioDataProcessor<ExtendedHoldingsRecord> holdingsDataProcessor;
+  private FolioDataProcessor<ExtendedInstance> instanceDataProcessor;
 
   @Autowired
-  private List<DataProcessor<? extends BulkOperationsEntity>> services;
-  private Map<Class<? extends BulkOperationsEntity>, DataProcessor<? extends BulkOperationsEntity>> pool;
+  private List<FolioDataProcessor<? extends BulkOperationsEntity>> services;
+  private Map<Class<? extends BulkOperationsEntity>, FolioDataProcessor<? extends BulkOperationsEntity>> pool;
 
   @PostConstruct
   private void initPostConstruct() {
-    for (DataProcessor<? extends BulkOperationsEntity> service : services) {
+    for (FolioDataProcessor<? extends BulkOperationsEntity> service : services) {
       pool.put(service.getProcessedType(), service);
     }
   }
 
-  public <T extends BulkOperationsEntity> DataProcessor<T> getProcessorFromFactory(Class<? extends BulkOperationsEntity> clazz) {
-    return (DataProcessor<T>) pool.get(clazz);
+  public <T extends BulkOperationsEntity> FolioDataProcessor<T> getProcessorFromFactory(Class<? extends BulkOperationsEntity> clazz) {
+    return (FolioDataProcessor<T>) pool.get(clazz);
   }
 }

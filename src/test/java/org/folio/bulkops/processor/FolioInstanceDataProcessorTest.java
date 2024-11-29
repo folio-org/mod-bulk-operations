@@ -58,7 +58,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
   @MockBean
   private ConsortiaService consortiaService;
 
-  private DataProcessor<ExtendedInstance> processor;
+  private FolioDataProcessor<ExtendedInstance> processor;
 
   public static final String IDENTIFIER = "123";
 

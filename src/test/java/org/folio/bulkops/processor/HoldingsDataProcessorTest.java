@@ -94,7 +94,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   @SpyBean
   private FolioExecutionContext folioExecutionContext;
 
-  private DataProcessor<ExtendedHoldingsRecord> processor;
+  private FolioDataProcessor<ExtendedHoldingsRecord> processor;
 
   @MockBean
   private BulkOperationExecutionContentRepository bulkOperationExecutionContentRepository;

@@ -36,7 +36,7 @@ class UserDataProcessorTest extends BaseTest {
   @MockBean
   ErrorService errorService;
 
-  private DataProcessor<User> processor;
+  private FolioDataProcessor<User> processor;
 
   @MockBean
   private BulkOperationExecutionContentRepository bulkOperationExecutionContentRepository;

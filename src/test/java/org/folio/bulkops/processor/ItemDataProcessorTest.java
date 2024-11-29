@@ -97,7 +97,7 @@ class ItemDataProcessorTest extends BaseTest {
   @MockBean
   private ConsortiaService consortiaService;
 
-  private DataProcessor<ExtendedItem> processor;
+  private FolioDataProcessor<ExtendedItem> processor;
 
   @MockBean
   private BulkOperationExecutionContentRepository bulkOperationExecutionContentRepository;
