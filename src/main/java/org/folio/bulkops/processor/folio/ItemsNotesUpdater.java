@@ -10,7 +10,6 @@ import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.processor.Updater;
-import org.folio.bulkops.processor.folio.AdministrativeNotesUpdater;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
