@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class MarcRulesValidator {
 
-  private static final String VALID_TAG_REGEXP = "^[59]\\d{2}$";
+  private static final String VALID_TAG_REGEXP = "5\\d{2}|9\\d{2}";
   private static final String NOT_SUPPORTED_BULK_EDIT_FIELD_MESSAGE = "Bulk edit of %s field is not supported";
 
   public void validate(BulkOperationMarcRule bulkOperationMarcRule) throws RuleValidationException {
