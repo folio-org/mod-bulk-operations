@@ -26,14 +26,30 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 @Log4j2
 @Component
 public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity> implements FolioDataProcessor<T> {
-  @Autowired
   private ErrorService errorService;
-  @Autowired
   protected FolioModuleMetadata folioModuleMetadata;
-  @Autowired
   private ConsortiaService consortiaService;
-  @Autowired
   protected FolioExecutionContext folioExecutionContext;
+
+  @Autowired
+  private void setErrorService(ErrorService errorService) {
+    this.errorService = errorService;
+  }
+
+  @Autowired
+  private void setFolioModuleMetadata(FolioModuleMetadata folioModuleMetadata) {
+    this.folioModuleMetadata = folioModuleMetadata;
+  }
+
+  @Autowired
+  private void setConsortiaService(ConsortiaService consortiaService) {
+    this.consortiaService = consortiaService;
+  }
+
+  @Autowired
+  private void setFolioExecutionContext(FolioExecutionContext folioExecutionContext) {
+    this.folioExecutionContext = folioExecutionContext;
+  }
 
   @Override
   public UpdatedEntityHolder process(String identifier, T entity, BulkOperationRuleCollection rules) {
