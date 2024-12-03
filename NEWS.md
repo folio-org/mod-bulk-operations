@@ -1,3 +1,14 @@
+## v2.1.4 - Released 2024/12/03
+
+This release contains bugfixes.
+
+### Bugs
+* [MODBULKOPS-423](https://folio-org.atlassian.net/browse/MODBULKOPS-423) For bulk edit of MARC Instances file with changed records is available for downloading before commit completes
+* [MODBULKOPS-416](https://folio-org.atlassian.net/browse/MODBULKOPS-416) MARC instances set as deleted cannot be previewed or updated
+
+### Technical tasks
+* [MODBULKOPS-424](https://folio-org.atlassian.net/browse/MODBULKOPS-424) Check Data import profile creation and  update mod bulk operation data import job profile
+
 ## v2.1.3 - Released 2024/11/26
 
 This release contains bugfixes.
