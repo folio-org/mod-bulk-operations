@@ -9,7 +9,6 @@ import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.processor.FolioDataProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
@@ -24,7 +23,6 @@ public class DataProcessorFactory {
   private FolioDataProcessor<ExtendedHoldingsRecord> holdingsDataProcessor;
   private FolioDataProcessor<ExtendedInstance> instanceDataProcessor;
 
-  @Autowired
   private List<FolioDataProcessor<? extends BulkOperationsEntity>> services;
   private Map<Class<? extends BulkOperationsEntity>, FolioDataProcessor<? extends BulkOperationsEntity>> pool;
 
