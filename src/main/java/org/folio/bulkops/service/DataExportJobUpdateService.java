@@ -6,16 +6,15 @@ import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.util.Constants.UTC_ZONE;
+import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_DOWNLOAD_ORIGIN_FILE_FROM_S3;
 
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Spliterators;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class DataExportJobUpdateService {
   private static final Map<BatchStatus, JobStatus> JOB_STATUSES = new EnumMap<>(BatchStatus.class);
+  public static final String FAILED_TO_SAVE_ORIGIN_FILE = "Failed to save origin file";
 
   static {
     JOB_STATUSES.put(BatchStatus.COMPLETED, JobStatus.SUCCESSFUL);
@@ -95,7 +95,6 @@ public class DataExportJobUpdateService {
   }
 
   private void downloadOriginFileAndUpdateBulkOperation(BulkOperation operation, Job jobUpdate) {
-    String errorMsg = null;
     try {
 
       operation.setStatus(OperationStatusType.DATA_MODIFICATION);
@@ -128,20 +127,9 @@ public class DataExportJobUpdateService {
       operation.setEndTime(LocalDateTime.ofInstant(jobUpdate.getEndTime().toInstant(), UTC_ZONE));
 
     } catch (S3ClientException e) {
-      errorMsg = ERROR_NOT_DOWNLOAD_ORIGIN_FILE_FROM_S3;
+      handleException(operation, jobUpdate, ERROR_NOT_DOWNLOAD_ORIGIN_FILE_FROM_S3, e);
     } catch (Exception e) {
-      errorMsg = e.getMessage();
-    } finally {
-      if (nonNull(errorMsg)) {
-        operation.setErrorMessage(errorMsg);
-        errorMsg = "Failed to download origin file, reason: " + errorMsg;
-        log.error(errorMsg);
-        operation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);
-        operation.setEndTime(LocalDateTime.now());
-        if (ObjectUtils.isNotEmpty(jobUpdate.getProgress())) {
-          operation.setMatchedNumOfErrors(isNull(jobUpdate.getProgress().getErrors()) ? 0 : jobUpdate.getProgress().getErrors());
-        }
-      }
+      handleException(operation, jobUpdate, FAILED_TO_SAVE_ORIGIN_FILE, e);
     }
   }
 
@@ -181,5 +169,15 @@ public class DataExportJobUpdateService {
     return isEmpty(marcUrl) ?
       null :
       remoteFileSystemClient.put(new URL(marcUrl).openStream(), bulkOperation.getId() + "/" + FilenameUtils.getName(marcUrl.split("\\?")[0]));
+  }
+
+  private void handleException(BulkOperation operation, Job jobUpdate, String message, Exception e) {
+    log.error(message, e);
+    operation.setErrorMessage(format(ERROR_MESSAGE_PATTERN, message, e.getMessage()));
+    operation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);
+    operation.setEndTime(LocalDateTime.now());
+    if (ObjectUtils.isNotEmpty(jobUpdate.getProgress())) {
+      operation.setMatchedNumOfErrors(isNull(jobUpdate.getProgress().getErrors()) ? 0 : jobUpdate.getProgress().getErrors());
+    }
   }
 }

@@ -23,8 +23,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
-import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
-import static org.folio.bulkops.util.ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE;
+import static org.folio.bulkops.util.ErrorCode.*;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
@@ -113,7 +112,7 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @RequiredArgsConstructor
 public class BulkOperationService {
-  public static final String FILE_UPLOADING_FAILED_REASON = "File uploading failed, reason: %s";
+  public static final String FILE_UPLOADING_FAILED = "File uploading failed";
   public static final String STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS = "Step %s is not applicable for bulk operation status %s";
   public static final String ERROR_STARTING_BULK_OPERATION = "Error starting Bulk Operation: ";
   @Value("${application.file-uploading.max-retry-count}")
@@ -186,15 +185,9 @@ public class BulkOperationService {
         operation.setLinkToTriggeringCsvFile(linkToTriggeringFile);
       }
     } catch (S3ClientException e) {
-      log.error(ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, e);
-      operation.setStatus(FAILED);
-      operation.setErrorMessage(format("code: %s, error: %s", ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, e.getMessage()));
-      operation.setEndTime(LocalDateTime.now());
+      handleException(operation, ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, e);
     } catch (Exception e) {
-      log.error(format(FILE_UPLOADING_FAILED_REASON, e.getMessage()));
-      operation.setStatus(FAILED);
-      operation.setErrorMessage(format(FILE_UPLOADING_FAILED_REASON, e.getMessage()));
-      operation.setEndTime(LocalDateTime.now());
+      handleException(operation, FILE_UPLOADING_FAILED, e);
     }
 
     operation.setUserId(xOkapiUserId);
@@ -301,21 +294,9 @@ public class BulkOperationService {
 
       bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
     } catch (S3ClientException e) {
-      log.error(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
-      dataProcessingRepository.save(dataProcessing
-        .withStatus(StatusType.FAILED)
-        .withEndTime(LocalDateTime.now()));
-      operation.setStatus(OperationStatusType.FAILED);
-      operation.setEndTime(LocalDateTime.now());
-      operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
+      handleException(operation, dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
     } catch (Exception e) {
-      log.error(e.getMessage());
-      dataProcessingRepository.save(dataProcessing
-        .withStatus(StatusType.FAILED)
-        .withEndTime(LocalDateTime.now()));
-      operation.setStatus(OperationStatusType.FAILED);
-      operation.setEndTime(LocalDateTime.now());
-      operation.setErrorMessage(e.getMessage());
+      handleException(operation, dataProcessing, "Confirm failed", e);
     } finally {
       bulkOperationRepository.save(operation);
     }
@@ -367,21 +348,9 @@ public class BulkOperationService {
 
         bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
       } catch (S3ClientException e) {
-        dataProcessingRepository.save(dataProcessing
-          .withStatus(StatusType.FAILED)
-          .withEndTime(LocalDateTime.now()));
-        operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
-        operation.setStatus(OperationStatusType.FAILED);
-        operation.setEndTime(LocalDateTime.now());
-        log.error(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
+        handleException(operation, dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
       } catch (Exception e) {
-        dataProcessingRepository.save(dataProcessing
-          .withStatus(StatusType.FAILED)
-          .withEndTime(LocalDateTime.now()));
-        operation.setErrorMessage(e.getMessage());
-        operation.setStatus(OperationStatusType.FAILED);
-        operation.setEndTime(LocalDateTime.now());
-        log.error(e.getMessage());
+        handleException(operation, dataProcessing, "Confirm failed", e);
       }
     } else {
       log.error("No link to MARC file, failing operation");
@@ -418,7 +387,7 @@ public class BulkOperationService {
     try {
         modified = processor.process(original.getRecordBulkOperationEntity().getIdentifier(operation.getIdentifierType()), original, rules);
     } catch (Exception e) {
-      log.error("Failed to modify entity, reason:" + e.getMessage());
+      log.error("Failed to modify entity", e);
     }
     return modified;
   }
@@ -617,8 +586,8 @@ public class BulkOperationService {
         throw new BadRequestException(format(STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
       }
     } catch (Exception e) {
-      log.error(ERROR_STARTING_BULK_OPERATION + e.getCause());
-      errorMessage = format(FILE_UPLOADING_FAILED_REASON, e.getMessage());
+      log.error(ERROR_STARTING_BULK_OPERATION, e);
+      errorMessage = format(ERROR_MESSAGE_PATTERN, FILE_UPLOADING_FAILED, e.getMessage());
     }
     return errorMessage;
   }
@@ -758,5 +727,22 @@ public class BulkOperationService {
       throw new IllegalOperationStateException(String.format("Operation with status %s cannot be cancelled", operation.getStatus()));
     }
     bulkOperationRepository.save(operation);
+  }
+
+  private void handleException(BulkOperation operation, String message, Exception exception) {
+    log.error(message, exception);
+    operation.setErrorMessage(format(ERROR_MESSAGE_PATTERN, message, exception.getMessage()));
+    operation.setStatus(FAILED);
+    operation.setEndTime(LocalDateTime.now());
+  }
+
+  private void handleException(BulkOperation operation, BulkOperationDataProcessing dataProcessing, String message, Exception exception) {
+    dataProcessingRepository.save(dataProcessing
+      .withStatus(StatusType.FAILED)
+      .withEndTime(LocalDateTime.now()));
+    log.error(message, exception);
+    operation.setErrorMessage(format(ERROR_MESSAGE_PATTERN, message, exception.getMessage()));
+    operation.setStatus(OperationStatusType.FAILED);
+    operation.setEndTime(LocalDateTime.now());
   }
 }
