@@ -87,7 +87,7 @@ class MarcInstanceUpdateProcessorTest extends BaseTest {
     var jobProfileId = UUID.randomUUID();
     when(dataImportProfilesClient.createJobProfile(any(JobProfilePost.class)))
       .thenReturn(JobProfile.builder().id(jobProfileId.toString()).build());
-    when(dataImportClient.uploadFileDefinitions(any(UploadFileDefinition.class)))
+    when(dataImportClient.postUploadDefinition(any(UploadFileDefinition.class)))
       .thenReturn(UploadFileDefinition.builder()
         .id(UUID.randomUUID().toString())
         .fileDefinitions(Collections.singletonList(FileDefinition.builder()
