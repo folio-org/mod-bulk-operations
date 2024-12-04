@@ -20,7 +20,6 @@ import org.folio.bulkops.domain.dto.MarcDataType;
 import org.folio.bulkops.domain.dto.MarcSubfieldAction;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
-import org.folio.bulkops.processor.marc.MarcInstanceDataProcessor;
 import org.folio.bulkops.service.ErrorService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
