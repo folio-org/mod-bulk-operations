@@ -696,6 +696,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
 
     processor.update(operation, marcRecord, rules, date);
 
-    verify(errorService).saveError(bulkOperationId, identifier,"Bulk edit of 600 field is not supported");
+    var expectedErrorMessage = "Bulk edit of 600 field is not supported";
+    verify(errorService).saveError(bulkOperationId, identifier, expectedErrorMessage);
   }
 }
