@@ -1,3 +1,7 @@
+## v2.1.5 - Released 2024/12/05
+
+This release has logic to avoid self invocation
+
 ## v2.1.4 - Released 2024/12/03
 
 This release contains bugfixes.
