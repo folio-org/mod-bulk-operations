@@ -7,7 +7,6 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 import lombok.SneakyThrows;
