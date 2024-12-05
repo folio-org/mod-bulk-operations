@@ -193,7 +193,9 @@
             "data-import.splitconfig.get",
             "data-import.uploadUrl.item.get",
             "data-import.assembleStorageFile.post",
-            "source-storage.source-records.item.get"
+            "source-storage.source-records.item.get",
+            "perms.users.get",
+            "permissions.users.item.get"
           ]
         },
         {
