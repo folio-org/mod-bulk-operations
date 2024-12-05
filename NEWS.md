@@ -2,6 +2,9 @@
 
 This release has logic to avoid self invocation
 
+### Bugs
+* [EUREKA-559](https://folio-org.atlassian.net/browse/EUREKA-559) Errors on commit stage in Bulk edit when update Instances and apply changes to Holdings, Items on ECS bugfest Eureka environment
+
 ## v2.1.4 - Released 2024/12/03
 
 This release contains bugfixes.
