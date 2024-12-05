@@ -29,6 +29,7 @@ public class MarcRemoteStorageWriter extends StringWriter {
     byteArrayOutputStream.reset();
   }
 
+  @Override
   public void close() throws IOException {
     marcStreamWriter.close();
     remoteStorageWriter.close();
