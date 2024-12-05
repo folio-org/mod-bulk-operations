@@ -231,6 +231,7 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   @Override
+  @Deprecated
   public ResponseEntity<List<String>> getUsersPermissions() {
     return new ResponseEntity<>(userPermissionsService.getPermissions(), HttpStatus.OK);
   }
