@@ -66,7 +66,7 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
             .uploadFileDefinition(uploadDefinition)
             .jobProfileInfo(JobProfileInfo.builder().id(jobProfile.getId()).dataType(MARC).build())
             .build(),
-          uploadDefinition.getFileDefinitions().get(0).getId());
+          uploadDefinition.getId());
         bulkOperation.setDataImportJobProfileId(UUID.fromString(jobProfile.getId()));
       } else {
         bulkOperation.setLinkToCommittedRecordsMarcFile(null);
@@ -119,7 +119,7 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
   }
 
   private UploadFileDefinition uploadMarcFile(BulkOperation bulkOperation, byte[] content) {
-    var uploadDefinition = dataImportClient.uploadFileDefinitions(UploadFileDefinition.builder()
+    var uploadDefinition = dataImportClient.postUploadDefinition(UploadFileDefinition.builder()
       .fileDefinitions(List.of(FileDefinition.builder()
         .name(FilenameUtils.getName(bulkOperation.getLinkToCommittedRecordsMarcFile()))
         .build()))
