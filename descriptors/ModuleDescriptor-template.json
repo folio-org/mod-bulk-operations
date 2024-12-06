@@ -189,7 +189,6 @@
             "converter-storage.actionprofile.post",
             "converter-storage.mappingprofile.post",
             "source-storage.source-records.item.get",
-            "bulk-operations.permissions-self-check.get",
             "data-import.splitconfig.get",
             "data-import.uploadUrl.item.get",
             "data-import.assembleStorageFile.post",
@@ -280,15 +279,6 @@
           "pathPattern": "/bulk-operations/used-tenants/{operationId}",
           "permissionsRequired": ["bulk-operations.used.tenants.get"],
           "modulePermissions": [ ]
-        },
-        {
-          "methods": [ "GET" ],
-          "pathPattern": "/bulk-operations/permissions-self-check",
-          "permissionsRequired": ["bulk-operations.permissions-self-check.get"],
-          "modulePermissions": [
-            "perms.users.get",
-            "permissions.users.item.get"
-          ]
         }
       ]
     },
@@ -432,11 +422,6 @@
       "description" : "Bulk edit users write permissions"
     },
     {
-      "permissionName" : "bulk-operations.permissions-self-check.get",
-      "displayName" : "Set of users permissions for self check",
-      "description" : "Set of users permissions for self check"
-    },
-    {
       "permissionName" : "bulk-operations.all",
       "displayName" : "bulk-operations all",
       "description" : "All permissions for bulk-operations module",
@@ -456,8 +441,7 @@
         "bulk-operations.files.item.delete",
         "bulk-operations.item.cancel.post",
         "bulk-operations.item.query.post",
-        "bulk-operations.used.tenants.get",
-        "bulk-operations.permissions-self-check.get"
+        "bulk-operations.used.tenants.get"
       ]
     }
   ],
