@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
@@ -14,6 +15,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
+import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -223,7 +225,7 @@ class BulkOperationServiceTest extends BaseTest {
     verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
     var capturedBulkOperation = operationCaptor.getValue();
     assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(ErrorCode.ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION));
+    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, "error")));
   }
 
   @Test
@@ -277,7 +279,7 @@ class BulkOperationServiceTest extends BaseTest {
     verify(bulkOperationRepository, times(1)).save(operationCaptor.capture());
     var capturedBulkOperation = operationCaptor.getValue();
     assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(ErrorCode.ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION));
+    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, "error")));
   }
 
   @Test
@@ -488,7 +490,7 @@ class BulkOperationServiceTest extends BaseTest {
       var capturedBulkOperation = bulkOperationCaptor.getValue();
 
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE));
+      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, "error")));
     }
   }
 
@@ -601,7 +603,7 @@ class BulkOperationServiceTest extends BaseTest {
         .thenReturn(BulkOperationDataProcessing.builder()
           .processedNumOfRecords(0)
           .build());
-      when(remoteFileSystemClient.get(pathToModifiedRecordsMarcFileName))
+      when(remoteFileSystemClient.get(pathToMatchedRecordsMarcFile))
         .thenThrow(new S3ClientException("error"));
       when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenReturn(new MarcRemoteStorageWriter(expectedPathToModifiedMarcFile, 8192, remoteFolioS3Client));
 
@@ -611,7 +613,7 @@ class BulkOperationServiceTest extends BaseTest {
       Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(3)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE));
+      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, "error")));
     }
   }
 
@@ -990,7 +992,7 @@ class BulkOperationServiceTest extends BaseTest {
       when(remoteFileSystemClient.get(pathToModifiedCsv))
         .thenReturn(new FileInputStream(pathToModifiedUserCsv));
 
-      when(groupClient.getByQuery(String.format("group==\"%s\"", "staff"))).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup())));
+      when(groupClient.getByQuery(format("group==\"%s\"", "staff"))).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup())));
 
       when(remoteFileSystemClient.writer(anyString()))
         .thenReturn(new RemoteStorageWriter(pathToTempFile, 8192, remoteFolioS3Client));

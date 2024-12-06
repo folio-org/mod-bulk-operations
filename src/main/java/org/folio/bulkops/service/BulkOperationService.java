@@ -23,8 +23,9 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
+import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
-import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION;
+import static org.folio.bulkops.util.ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
@@ -89,6 +90,7 @@ import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.IdentifiersResolver;
 import org.folio.bulkops.util.Utils;
+import org.folio.s3.exception.S3ClientException;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
@@ -112,7 +114,7 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @RequiredArgsConstructor
 public class BulkOperationService {
-  public static final String FILE_UPLOADING_FAILED_REASON = "File uploading failed, reason: %s";
+  public static final String FILE_UPLOADING_FAILED = "File uploading failed";
   public static final String STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS = "Step %s is not applicable for bulk operation status %s";
   public static final String ERROR_STARTING_BULK_OPERATION = "Error starting Bulk Operation: ";
   @Value("${application.file-uploading.max-retry-count}")
@@ -152,34 +154,13 @@ public class BulkOperationService {
 
   public BulkOperation uploadCsvFile(EntityType entityType, IdentifierType identifierType, boolean manual, UUID operationId, UUID xOkapiUserId, MultipartFile multipartFile) {
 
-    String errorMessage = null;
     BulkOperation operation;
 
-    if (manual) {
-      if (operationId == null) {
-        throw new NotFoundException("File uploading failed, reason: query parameter operationId is required for csv approach");
-      } else {
-
-        operation = bulkOperationRepository.findById(operationId)
-          .orElseThrow(() -> new NotFoundException("Bulk operation was not found by id=" + operationId));
-
-        try {
-          var linkToThePreviewFile = remoteFileSystemClient.put(multipartFile.getInputStream(), String.format(PREVIEW_CSV_PATH_TEMPLATE, operation.getId(), LocalDate.now(), FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile())));
-          operation.setLinkToModifiedRecordsCsvFile(linkToThePreviewFile);
-
-          var numOfLines = remoteFileSystemClient.getNumOfLines(linkToThePreviewFile) - 1;
-          if (operation.getTotalNumOfRecords() == 0) {
-            operation.setTotalNumOfRecords(numOfLines);
-          }
-          operation.setProcessedNumOfRecords(numOfLines);
-          operation.setMatchedNumOfRecords(numOfLines);
-
-        } catch (Exception e) {
-          log.error(ERROR_STARTING_BULK_OPERATION + e.getCause());
-          errorMessage = ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION;
-        }
-      }
-      operation.setApproach(MANUAL);
+    if (manual && operationId == null) {
+      throw new NotFoundException("File uploading failed, reason: query parameter operationId is required for csv approach");
+    } else if (manual) {
+      operation = bulkOperationRepository.findById(operationId)
+        .orElseThrow(() -> new NotFoundException("Bulk operation was not found by id=" + operationId));
     } else {
       operation = bulkOperationRepository.save(BulkOperation.builder()
         .id(UUID.randomUUID())
@@ -188,24 +169,30 @@ public class BulkOperationService {
         .status(NEW)
         .startTime(LocalDateTime.now())
         .build());
-      try {
-        var linkToTriggeringFile = remoteFileSystemClient.put(multipartFile.getInputStream(), operation.getId() + "/" + multipartFile.getOriginalFilename());
-        operation.setLinkToTriggeringCsvFile(linkToTriggeringFile);
-      } catch (Exception e) {
-        log.error(ERROR_STARTING_BULK_OPERATION + e);
-        errorMessage = ERROR_NOT_UPLOAD_FILE_S3_INVALID_CONFIGURATION;
-      }
     }
 
-    if (nonNull(errorMessage)) {
-      log.error(errorMessage);
-      operation.setStatus(FAILED);
-      operation.setErrorMessage(errorMessage);
-      operation.setEndTime(LocalDateTime.now());
+    try {
+      if (manual) {
+        var linkToThePreviewFile = remoteFileSystemClient.put(multipartFile.getInputStream(), String.format(PREVIEW_CSV_PATH_TEMPLATE, operation.getId(), LocalDate.now(), FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile())));
+        operation.setLinkToModifiedRecordsCsvFile(linkToThePreviewFile);
+        var numOfLines = remoteFileSystemClient.getNumOfLines(linkToThePreviewFile) - 1;
+        if (operation.getTotalNumOfRecords() == 0) {
+          operation.setTotalNumOfRecords(numOfLines);
+        }
+        operation.setProcessedNumOfRecords(numOfLines);
+        operation.setMatchedNumOfRecords(numOfLines);
+        operation.setApproach(MANUAL);
+      } else {
+        var linkToTriggeringFile = remoteFileSystemClient.put(multipartFile.getInputStream(), operation.getId() + "/" + multipartFile.getOriginalFilename());
+        operation.setLinkToTriggeringCsvFile(linkToTriggeringFile);
+      }
+    } catch (S3ClientException e) {
+      handleException(operation, ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, e);
+    } catch (Exception e) {
+      handleException(operation, FILE_UPLOADING_FAILED, e);
     }
 
     operation.setUserId(xOkapiUserId);
-
     return bulkOperationRepository.save(operation);
   }
 
@@ -303,19 +290,15 @@ public class BulkOperationService {
 
       dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
       dataProcessingRepository.save(dataProcessing);
-
       operation.setApproach(IN_APP);
       operation.setStatus(OperationStatusType.REVIEW_CHANGES);
       operation.setProcessedNumOfRecords(processedNumOfRecords);
+
       bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
+    } catch (S3ClientException e) {
+      handleException(operation, dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
     } catch (Exception e) {
-      log.error(e);
-      dataProcessingRepository.save(dataProcessing
-        .withStatus(StatusType.FAILED)
-        .withEndTime(LocalDateTime.now()));
-      operation.setStatus(OperationStatusType.FAILED);
-      operation.setEndTime(LocalDateTime.now());
-      operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
+      handleException(operation, dataProcessing, "Confirm failed", e);
     } finally {
       bulkOperationRepository.save(operation);
     }
@@ -338,6 +321,7 @@ public class BulkOperationService {
     if (nonNull(operation.getLinkToMatchedRecordsMarcFile())) {
       var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
       var modifiedMarcFileName = String.format(PREVIEW_MARC_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
+
       try (var writerForModifiedPreviewMarcFile = remoteFileSystemClient.marcWriter(modifiedMarcFileName)) {
         var matchedRecordsReader = new MarcStreamReader(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile()));
         var currentDate = new Date();
@@ -357,21 +341,18 @@ public class BulkOperationService {
           }
         }
         operation.setLinkToModifiedRecordsMarcFile(modifiedMarcFileName);
+
         dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
         dataProcessingRepository.save(dataProcessing);
-
         operation.setApproach(IN_APP);
         operation.setStatus(OperationStatusType.REVIEW_CHANGES);
         operation.setProcessedNumOfRecords(processedNumOfRecords);
+
         bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
+      } catch (S3ClientException e) {
+        handleException(operation, dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
       } catch (Exception e) {
-        log.error(e);
-        dataProcessingRepository.save(dataProcessing
-          .withStatus(StatusType.FAILED)
-          .withEndTime(LocalDateTime.now()));
-        operation.setStatus(OperationStatusType.FAILED);
-        operation.setEndTime(LocalDateTime.now());
-        operation.setErrorMessage(ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE);
+        handleException(operation, dataProcessing, "Confirm failed", e);
       }
     } else {
       log.error("No link to MARC file, failing operation");
@@ -408,7 +389,7 @@ public class BulkOperationService {
     try {
         modified = processor.process(original.getRecordBulkOperationEntity().getIdentifier(operation.getIdentifierType()), original, rules);
     } catch (Exception e) {
-      log.error("Failed to modify entity, reason:" + e.getMessage());
+      log.error("Failed to modify entity", e);
     }
     return modified;
   }
@@ -607,8 +588,8 @@ public class BulkOperationService {
         throw new BadRequestException(format(STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
       }
     } catch (Exception e) {
-      log.error(ERROR_STARTING_BULK_OPERATION + e.getCause());
-      errorMessage = format(FILE_UPLOADING_FAILED_REASON, e.getMessage());
+      log.error(ERROR_STARTING_BULK_OPERATION, e);
+      errorMessage = format(ERROR_MESSAGE_PATTERN, FILE_UPLOADING_FAILED, e.getMessage());
     }
     return errorMessage;
   }
@@ -748,5 +729,22 @@ public class BulkOperationService {
       throw new IllegalOperationStateException(String.format("Operation with status %s cannot be cancelled", operation.getStatus()));
     }
     bulkOperationRepository.save(operation);
+  }
+
+  private void handleException(BulkOperation operation, String message, Exception exception) {
+    log.error(message, exception);
+    operation.setErrorMessage(format(ERROR_MESSAGE_PATTERN, message, exception.getMessage()));
+    operation.setStatus(FAILED);
+    operation.setEndTime(LocalDateTime.now());
+  }
+
+  private void handleException(BulkOperation operation, BulkOperationDataProcessing dataProcessing, String message, Exception exception) {
+    dataProcessingRepository.save(dataProcessing
+      .withStatus(StatusType.FAILED)
+      .withEndTime(LocalDateTime.now()));
+    log.error(message, exception);
+    operation.setErrorMessage(format(ERROR_MESSAGE_PATTERN, message, exception.getMessage()));
+    operation.setStatus(OperationStatusType.FAILED);
+    operation.setEndTime(LocalDateTime.now());
   }
 }
