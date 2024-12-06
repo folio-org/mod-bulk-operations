@@ -23,8 +23,8 @@ public class MarcRemoteStorageWriter extends StringWriter {
     marcStreamWriter = new MarcStreamWriter(byteArrayOutputStream, StandardCharsets.UTF_8.name());
   }
 
-  public void writeRecord(Record record) throws IOException {
-    marcStreamWriter.write(record);
+  public void writeRecord(Record marcRecord) throws IOException {
+    marcStreamWriter.write(marcRecord);
     remoteStorageWriter.write(byteArrayOutputStream.toString(StandardCharsets.UTF_8));
     byteArrayOutputStream.reset();
   }
