@@ -538,7 +538,7 @@ class BulkOperationServiceTest extends BaseTest {
           .build());
       when(remoteFileSystemClient.get(pathToMatchedRecordsMarcFile ))
         .thenReturn(new FileInputStream(pathToInstanceMarc));
-      when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenReturn(new MarcRemoteStorageWriter(expectedPathToModifiedMarcFile, 8192, remoteFolioS3Client));
+      when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenReturn(new MarcRemoteStorageWriter(new RemoteStorageWriter(expectedPathToModifiedMarcFile, 8192, remoteFolioS3Client)));
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
 
@@ -605,7 +605,7 @@ class BulkOperationServiceTest extends BaseTest {
           .build());
       when(remoteFileSystemClient.get(pathToMatchedRecordsMarcFile))
         .thenThrow(new S3ClientException("error"));
-      when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenReturn(new MarcRemoteStorageWriter(expectedPathToModifiedMarcFile, 8192, remoteFolioS3Client));
+      when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenReturn(new MarcRemoteStorageWriter(new RemoteStorageWriter(expectedPathToModifiedMarcFile, 8192, remoteFolioS3Client)));
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
 

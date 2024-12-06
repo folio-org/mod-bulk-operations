@@ -45,6 +45,6 @@ public class RemoteFileSystemClient {
   }
 
   public MarcRemoteStorageWriter marcWriter(String path) {
-    return new MarcRemoteStorageWriter(path, DEFAULT_CHAR_BUFFER_SIZE, remoteFolioS3Client);
+    return new MarcRemoteStorageWriter(writer(path));
   }
 }
