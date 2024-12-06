@@ -88,9 +88,11 @@ public class MarcUpdateService {
     var triggeringFileName = FilenameUtils.getBaseName(bulkOperation.getLinkToTriggeringCsvFile());
     var resultMarcFileName = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(), LocalDate.now(), triggeringFileName);
 
-    try (var writerForResultMarcFile = remoteFileSystemClient.marcWriter(resultMarcFileName)) {
-      var matchedRecordsReader = new MarcStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile()));
-      var modifiedRecordsReader = new MarcStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile()));
+    try (var writerForResultMarcFile = remoteFileSystemClient.marcWriter(resultMarcFileName);
+         var matchedRecordsMarcFileStream = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile());
+         var modifiedRecordsMarcFileStream = remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
+      var matchedRecordsReader = new MarcStreamReader(matchedRecordsMarcFileStream);
+      var modifiedRecordsReader = new MarcStreamReader(modifiedRecordsMarcFileStream);
 
       var currentDate = new Date();
       while (matchedRecordsReader.hasNext() && modifiedRecordsReader.hasNext()) {
