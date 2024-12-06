@@ -1,4 +1,4 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.marc;
 
 import static java.lang.Boolean.TRUE;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -29,6 +29,7 @@ import org.folio.bulkops.domain.bean.MatchProfilePost;
 import org.folio.bulkops.domain.bean.UploadFileDefinition;
 import org.folio.bulkops.domain.bean.UploadFileDefinitionProcessFiles;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.processor.MarcUpdateProcessor;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.util.MarcDateHelper;
@@ -43,7 +44,7 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 @Log4j2
-public class MarcInstanceUpdateProcessor {
+public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
   private static final String POSTFIX_PATTERN = "%s-%s";
 
   private final DataImportClient dataImportClient;

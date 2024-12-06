@@ -1,4 +1,4 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.folio;
 
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
@@ -13,6 +13,7 @@ import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.BulkOperationException;
+import org.folio.bulkops.processor.Updater;
 import org.folio.bulkops.util.RuleUtils;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;

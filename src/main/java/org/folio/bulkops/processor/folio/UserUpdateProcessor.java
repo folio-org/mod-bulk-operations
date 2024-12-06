@@ -1,8 +1,9 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.folio;
 
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.processor.FolioAbstractUpdateProcessor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;
@@ -11,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class UserUpdateProcessor extends AbstractUpdateProcessor<User> {
+public class UserUpdateProcessor extends FolioAbstractUpdateProcessor<User> {
 
   private static final String NO_USER_WRITE_PERMISSIONS_TEMPLATE = "User %s does not have required permission to edit the user record - %s=%s on the tenant ";
 

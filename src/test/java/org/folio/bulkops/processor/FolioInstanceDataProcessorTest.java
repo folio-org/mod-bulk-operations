@@ -14,7 +14,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STAFF_SUPPRESS;
-import static org.folio.bulkops.processor.InstanceNotesUpdaterFactory.INSTANCE_NOTE_TYPE_ID_KEY;
+import static org.folio.bulkops.processor.folio.InstanceNotesUpdaterFactory.INSTANCE_NOTE_TYPE_ID_KEY;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -32,6 +32,10 @@ import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.InstanceNote;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.exception.RuleValidationException;
+import org.folio.bulkops.processor.folio.AdministrativeNotesUpdater;
+import org.folio.bulkops.processor.folio.DataProcessorFactory;
+import org.folio.bulkops.processor.folio.FolioInstanceDataProcessor;
+import org.folio.bulkops.processor.folio.InstanceNotesUpdaterFactory;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
@@ -58,7 +62,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
   @MockBean
   private ConsortiaService consortiaService;
 
-  private DataProcessor<ExtendedInstance> processor;
+  private FolioDataProcessor<ExtendedInstance> processor;
 
   public static final String IDENTIFIER = "123";
 

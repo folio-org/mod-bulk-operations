@@ -1,8 +1,9 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.folio;
 
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.processor.FolioAbstractUpdateProcessor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.spring.FolioExecutionContext;
@@ -16,7 +17,7 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 
 @Component
 @RequiredArgsConstructor
-public class ItemUpdateProcessor extends AbstractUpdateProcessor<ExtendedItem> {
+public class ItemUpdateProcessor extends FolioAbstractUpdateProcessor<ExtendedItem> {
 
   private static final String NO_ITEM_WRITE_PERMISSIONS_TEMPLATE = "User %s does not have required permission to edit the item record - %s=%s on the tenant ";
 

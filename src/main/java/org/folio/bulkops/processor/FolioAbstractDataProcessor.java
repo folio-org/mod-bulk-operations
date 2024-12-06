@@ -17,23 +17,37 @@ import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import lombok.extern.log4j.Log4j2;
 
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 @Log4j2
-@Component
-public abstract class AbstractDataProcessor<T extends BulkOperationsEntity> implements DataProcessor<T> {
-  @Autowired
+public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity> implements FolioDataProcessor<T> {
   private ErrorService errorService;
-  @Autowired
   protected FolioModuleMetadata folioModuleMetadata;
-  @Autowired
   private ConsortiaService consortiaService;
-  @Autowired
   protected FolioExecutionContext folioExecutionContext;
+
+  @Autowired
+  private void setErrorService(ErrorService errorService) {
+    this.errorService = errorService;
+  }
+
+  @Autowired
+  private void setFolioModuleMetadata(FolioModuleMetadata folioModuleMetadata) {
+    this.folioModuleMetadata = folioModuleMetadata;
+  }
+
+  @Autowired
+  private void setConsortiaService(ConsortiaService consortiaService) {
+    this.consortiaService = consortiaService;
+  }
+
+  @Autowired
+  private void setFolioExecutionContext(FolioExecutionContext folioExecutionContext) {
+    this.folioExecutionContext = folioExecutionContext;
+  }
 
   @Override
   public UpdatedEntityHolder process(String identifier, T entity, BulkOperationRuleCollection rules) {
