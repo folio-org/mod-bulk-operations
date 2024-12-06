@@ -26,7 +26,7 @@ import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.OptimisticLockingException;
-import org.folio.bulkops.processor.ItemUpdateProcessor;
+import org.folio.bulkops.processor.folio.ItemUpdateProcessor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;

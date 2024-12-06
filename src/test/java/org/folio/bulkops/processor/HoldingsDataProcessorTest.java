@@ -22,7 +22,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
-import static org.folio.bulkops.processor.HoldingsNotesUpdater.HOLDINGS_NOTE_TYPE_ID_KEY;
+import static org.folio.bulkops.processor.folio.HoldingsNotesUpdater.HOLDINGS_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.util.Constants.STAFF_ONLY_NOTE_PARAMETER_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -55,6 +55,11 @@ import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.processor.folio.AdministrativeNotesUpdater;
+import org.folio.bulkops.processor.folio.DataProcessorFactory;
+import org.folio.bulkops.processor.folio.ElectronicAccessUpdaterFactory;
+import org.folio.bulkops.processor.folio.HoldingsDataProcessor;
+import org.folio.bulkops.processor.folio.HoldingsNotesUpdater;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ElectronicAccessReferenceService;
@@ -94,7 +99,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   @SpyBean
   private FolioExecutionContext folioExecutionContext;
 
-  private DataProcessor<ExtendedHoldingsRecord> processor;
+  private FolioDataProcessor<ExtendedHoldingsRecord> processor;
 
   @MockBean
   private BulkOperationExecutionContentRepository bulkOperationExecutionContentRepository;

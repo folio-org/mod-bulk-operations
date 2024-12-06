@@ -1,4 +1,4 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.marc;
 
 import static java.util.Objects.nonNull;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -643,4 +643,60 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     assertThat(marcUpdateDateTime).isEqualTo("20240101100202.4");
   }
 
+  @Test
+  @SneakyThrows
+  void shouldSaveErrorOnRuleValidationException() {
+    var identifier = "identifier";
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
+    var bulkOperationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(bulkOperationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    var dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('b', "text b"));
+    marcRecord.addVariableField(dataField);
+
+    dataField = new DataFieldImpl("999", 'f', 'f');
+    dataField.addSubfield(new SubfieldImpl('i', identifier));
+    marcRecord.addVariableField(dataField);
+
+    var findAndAppendRule = new BulkOperationMarcRule()
+      .bulkOperationId(bulkOperationId)
+      .tag("600")
+      .ind1("1")
+      .ind2("\\")
+      .subfield("b")
+      .actions(List.of(
+        new MarcAction()
+          .name(FIND)
+          .data(Collections.singletonList(new MarcActionDataInner()
+            .key(MarcDataType.VALUE)
+            .value("text b"))),
+        new MarcAction()
+          .name(UpdateActionType.APPEND)
+          .data(List.of(
+            new MarcActionDataInner()
+              .key(MarcDataType.VALUE)
+              .value("text a"),
+            new MarcActionDataInner()
+              .key(MarcDataType.SUBFIELD)
+              .value("a")))));
+    var rules = new BulkOperationMarcRuleCollection()
+      .bulkOperationMarcRules(Collections.singletonList(findAndAppendRule))
+      .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules, date);
+
+    var expectedErrorMessage = "Bulk edit of 600 field is not supported";
+    verify(errorService).saveError(bulkOperationId, identifier, expectedErrorMessage);
+  }
 }

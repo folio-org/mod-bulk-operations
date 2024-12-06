@@ -1,4 +1,4 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.folio;
 
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
@@ -41,6 +41,9 @@ import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.exception.RuleValidationTenantsException;
+import org.folio.bulkops.processor.FolioAbstractDataProcessor;
+import org.folio.bulkops.processor.Updater;
+import org.folio.bulkops.processor.Validator;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
@@ -55,7 +58,7 @@ import lombok.extern.log4j.Log4j2;
 @Log4j2
 @Component
 @AllArgsConstructor
-public class HoldingsDataProcessor extends AbstractDataProcessor<ExtendedHoldingsRecord> {
+public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHoldingsRecord> {
 
 
   private final ItemReferenceService itemReferenceService;

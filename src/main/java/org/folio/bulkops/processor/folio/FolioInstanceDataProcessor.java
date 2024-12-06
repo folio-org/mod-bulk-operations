@@ -1,4 +1,4 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.folio;
 
 import static java.lang.String.format;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
@@ -19,6 +19,9 @@ import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
+import org.folio.bulkops.processor.FolioAbstractDataProcessor;
+import org.folio.bulkops.processor.Updater;
+import org.folio.bulkops.processor.Validator;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -28,7 +31,7 @@ import java.util.Set;
 @Log4j2
 @Component
 @RequiredArgsConstructor
-public class FolioInstanceDataProcessor extends AbstractDataProcessor<ExtendedInstance> {
+public class FolioInstanceDataProcessor extends FolioAbstractDataProcessor<ExtendedInstance> {
 
   private final InstanceNotesUpdaterFactory instanceNotesUpdaterFactory;
 

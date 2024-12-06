@@ -7,13 +7,15 @@ import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.service.ErrorService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 @Log4j2
-@Component
-public abstract class AbstractUpdateProcessor<T extends BulkOperationsEntity> implements UpdateProcessor<T> {
-  @Autowired
+public abstract class FolioAbstractUpdateProcessor<T extends BulkOperationsEntity> implements FolioUpdateProcessor<T> {
   private ErrorService errorService;
+
+  @Autowired
+  private void setErrorService(ErrorService errorService) {
+    this.errorService = errorService;
+  }
 
   @Override
   public void updateAssociatedRecords(T t, BulkOperation operation, boolean notChanged) {

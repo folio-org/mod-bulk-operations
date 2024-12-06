@@ -1,4 +1,4 @@
-package org.folio.bulkops.processor;
+package org.folio.bulkops.processor.marc;
 
 import static java.lang.Character.isDigit;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
@@ -20,6 +20,8 @@ import org.folio.bulkops.domain.dto.MarcActionDataInner;
 import org.folio.bulkops.domain.dto.MarcDataType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.BulkOperationException;
+import org.folio.bulkops.exception.RuleValidationException;
+import org.folio.bulkops.processor.MarcDataProcessor;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.util.MarcDateHelper;
 import org.marc4j.marc.DataField;
@@ -36,27 +38,35 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Log4j2
-public class MarcInstanceDataProcessor {
+public class MarcInstanceDataProcessor implements MarcDataProcessor {
 
+  private final MarcRulesValidator marcRulesValidator;
   private final ErrorService errorService;
 
   public void update(BulkOperation operation, Record marcRecord, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection, Date currentDate) {
     var initialRecord = marcRecord.toString();
     bulkOperationMarcRuleCollection.getBulkOperationMarcRules().forEach(bulkOperationMarcRule -> {
       try {
+        marcRulesValidator.validate(bulkOperationMarcRule);
         applyRuleToRecord(bulkOperationMarcRule, marcRecord);
+      } catch (RuleValidationException e) {
+        log.warn(String.format("Rule validation exception: %s", e.getMessage()));
+        errorService.saveError(operation.getId(), getIdentifier(operation, marcRecord), e.getMessage());
       } catch (Exception e) {
         log.error(String.format("MARC record HRID=%s error: %s", marcRecord.getControlNumber(), e.getMessage()));
-        var identifier = HRID.equals(operation.getIdentifierType()) ?
-          marcRecord.getControlNumber() :
-          fetchInstanceUuidOrElseHrid(marcRecord);
-        errorService.saveError(operation.getId(), identifier, e.getMessage());
+        errorService.saveError(operation.getId(), getIdentifier(operation, marcRecord), e.getMessage());
       }
     });
     var updatedRecord = marcRecord.toString();
     if (!StringUtils.equals(initialRecord, updatedRecord)) {
       MarcDateHelper.updateDateTimeControlField(marcRecord, currentDate);
     }
+  }
+
+  private String getIdentifier(BulkOperation operation, Record marcRecord) {
+    return HRID.equals(operation.getIdentifierType()) ?
+      marcRecord.getControlNumber() :
+      fetchInstanceUuidOrElseHrid(marcRecord);
   }
 
   private void applyRuleToRecord(BulkOperationMarcRule rule, Record marcRecord) throws BulkOperationException {

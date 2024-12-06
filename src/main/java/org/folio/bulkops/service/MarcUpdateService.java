@@ -17,7 +17,7 @@ import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
-import org.folio.bulkops.processor.MarcInstanceUpdateProcessor;
+import org.folio.bulkops.processor.marc.MarcInstanceUpdateProcessor;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.MarcDateHelper;
