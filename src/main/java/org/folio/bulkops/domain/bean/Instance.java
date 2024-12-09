@@ -100,10 +100,10 @@ public class Instance implements BulkOperationsEntity {
   private String source;
 
   @JsonProperty("catalogedDate")
-  @CsvCustomBindByName(column = INSTANCE_CATALOGED_DATE, converter = DateWithoutTimeConverter.class)
-  @CsvCustomBindByPosition(position = 6, converter = DateWithoutTimeConverter.class)
-  @UnifiedTableCell(dataType = DataType.DATE_TIME, visible = false)
-  private Date catalogedDate;
+  @CsvCustomBindByName(column = INSTANCE_CATALOGED_DATE, converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 6, converter = StringConverter.class)
+  @UnifiedTableCell(visible = false)
+  private String catalogedDate;
 
   @JsonProperty("statusId")
   @CsvCustomBindByName(column = INSTANCE_STATUS_TERM, converter = InstanceStatusConverter.class)

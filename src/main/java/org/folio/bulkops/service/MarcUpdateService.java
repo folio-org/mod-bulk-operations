@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.util.Constants.MARC;
@@ -61,8 +62,10 @@ public class MarcUpdateService {
         bulkOperation.setLinkToCommittedRecordsMarcFile(prepareCommittedFile(bulkOperation));
         updateProcessor.updateMarcRecords(bulkOperation);
         var path = bulkOperation.getLinkToCommittedRecordsMarcFile();
-        remoteFileSystemClient.remove(path);
-        bulkOperation.setLinkToCommittedRecordsMarcFile(null);
+        if (nonNull(path)) {
+          remoteFileSystemClient.remove(path);
+          bulkOperation.setLinkToCommittedRecordsMarcFile(null);
+        }
         bulkOperationRepository.save(bulkOperation);
         execution = execution
           .withStatus(StatusType.COMPLETED)

@@ -8,6 +8,7 @@ import static org.folio.bulkops.service.MarcUpdateService.MSG_BULK_EDIT_SUPPORTE
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -101,6 +102,37 @@ class MarcUpdateServiceTest extends BaseTest {
     verify(errorService).saveError(eq(bulkOperation.getId()), identifierArgumentCaptor.capture(), errorMessageArgumentCaptor.capture());
     assertThat(identifierArgumentCaptor.getValue()).isEqualTo("hrid2");
     assertThat(errorMessageArgumentCaptor.getValue()).isEqualTo(MSG_NO_CHANGE_REQUIRED);
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldCommitInstanceMarcWhenNoChangesRequired() {
+
+    var operation = new BulkOperation();
+    operation.setLinkToModifiedRecordsMarcFile("some link");
+    operation.setLinkToCommittedRecordsMarcFile("marc link");
+    var execution = BulkOperationExecution.builder().bulkOperationId(operation.getId()).build();
+
+    when(remoteFileSystemClient.marcWriter(any()))
+      .thenReturn(mock(MarcRemoteStorageWriter.class));
+    when(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile()))
+      .thenReturn(new FileInputStream("src/test/resources/files/matched.mrc"));
+    when(remoteFileSystemClient.get(operation.getLinkToModifiedRecordsMarcFile()))
+      .thenReturn(new FileInputStream("src/test/resources/files/modified.mrc"));
+    when(executionRepository.save(any(BulkOperationExecution.class)))
+      .thenReturn(execution);
+    doAnswer(invocationOnMock -> {
+      operation.setLinkToCommittedRecordsMarcFile(null);
+      return null;
+    }).when(updateProcessor).updateMarcRecords(operation);
+
+    marcUpdateService.commitForInstanceMarc(operation);
+
+    verify(updateProcessor).updateMarcRecords(bulkOperationArgumentCaptor.capture());
+    assertThat(bulkOperationArgumentCaptor.getValue().getLinkToCommittedRecordsMarcFile()).isNull();
+
+    verify(executionRepository, times(2)).save(executionArgumentCaptor.capture());
+    assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus()).isEqualTo(StatusType.COMPLETED);
   }
 
   @Test

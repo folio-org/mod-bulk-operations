@@ -209,6 +209,7 @@ public class PreviewService {
     marcRow.getRow().set(positions.get(INSTANCE_CONTRIBUTORS), csvRow.getRow().get(positions.get(INSTANCE_CONTRIBUTORS)));
     marcRow.getRow().set(positions.get(INSTANCE_RESOURCE_TYPE), csvRow.getRow().get(positions.get(INSTANCE_RESOURCE_TYPE)));
     marcRow.getRow().set(positions.get(INSTANCE_LANGUAGES), csvRow.getRow().get(positions.get(INSTANCE_LANGUAGES)));
+    marcRow.getRow().set(positions.get(INSTANCE_CATALOGED_DATE), csvRow.getRow().get(positions.get(INSTANCE_CATALOGED_DATE)));
   }
 
   private Map<String, Integer> getAdministrativeDataFieldPositions() {

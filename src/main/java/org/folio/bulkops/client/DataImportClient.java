@@ -23,7 +23,7 @@ public interface DataImportClient {
   UploadUrlResponse getUploadUrl(@RequestParam("filename") String filename);
 
   @PostMapping(value = "/uploadDefinitions", produces = MediaType.APPLICATION_JSON_VALUE)
-  UploadFileDefinition uploadFileDefinitions(@RequestBody UploadFileDefinition uploadFileDefinition);
+  UploadFileDefinition postUploadDefinition(@RequestBody UploadFileDefinition uploadFileDefinition);
 
   @GetMapping(value = "/uploadDefinitions/{uploadDefinitionId}", produces = MediaType.APPLICATION_JSON_VALUE)
   UploadFileDefinition getUploadDefinitionById(@PathVariable String uploadDefinitionId);
