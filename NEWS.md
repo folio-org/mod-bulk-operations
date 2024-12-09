@@ -1,3 +1,13 @@
+## v2.1.6 - Released 2024/12/09
+
+This release contains bugfixes.
+
+### Bugs
+* [MODBULKOPS-434](https://folio-org.atlassian.net/browse/MODBULKOPS-434) For Bulk edit of MARC Instances Confirmation screen fails to display when no changes are required
+* [MODBULKOPS-421](https://folio-org.atlassian.net/browse/MODBULKOPS-421) Cataloged date omitted from Are you sure? form
+* [MODDATAIMP-1124](https://folio-org.atlassian.net/browse/MODDATAIMP-1124) Bulk edit MARC flow fails to commit by User, works only by Admin for single records
+
+
 ## v2.1.5 - Released 2024/12/05
 
 This release has logic to avoid self invocation
