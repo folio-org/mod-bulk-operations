@@ -244,10 +244,4 @@ public class BulkOperationController implements BulkOperationsApi {
   public ResponseEntity<BulkOperationDto> triggerBulkEditByQuery(UUID xOkapiUserId, QueryRequest queryRequest) {
     return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.triggerByQuery(xOkapiUserId, queryRequest)), HttpStatus.OK);
   }
-
-  @Override
-  @Deprecated
-  public ResponseEntity<List<String>> getUsersPermissions() {
-    return new ResponseEntity<>(userPermissionsService.getPermissions(), HttpStatus.OK);
-  }
 }
