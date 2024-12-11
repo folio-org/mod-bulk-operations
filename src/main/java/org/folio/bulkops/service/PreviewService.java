@@ -21,6 +21,7 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_STAFF_SUPPRESS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_STATUS_TERM;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
@@ -117,8 +118,16 @@ public class PreviewService {
       case UPLOAD -> buildPreviewFromCsvFile(operation.getLinkToMatchedRecordsCsvFile(), clazz, offset, limit, operation);
       case EDIT -> {
         var bulkOperationId = operation.getId();
-        if (INSTANCE_MARC.equals(operation.getEntityType())) {
-          yield buildCompositePreview(operation, offset, limit);
+        if (INSTANCE_MARC == operation.getEntityType() || INSTANCE == operation.getEntityType()) {
+          if (isFolioInstanceEditPreview(operation)) {
+            var rules = ruleService.getRules(bulkOperationId);
+            var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
+            yield buildPreviewFromCsvFile(operation.getLinkToModifiedRecordsCsvFile(), clazz, offset, limit, options, operation);
+          } else if (isMarcInstanceEditPreview(operation)) {
+            yield buildCompositePreview(operation, offset, limit, operation.getLinkToMatchedRecordsCsvFile());
+          } else  {
+            yield buildCompositePreview(operation, offset, limit, operation.getLinkToModifiedRecordsCsvFile());
+          }
         } else {
           var rules = ruleService.getRules(bulkOperationId);
           var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
@@ -147,8 +156,19 @@ public class PreviewService {
     };
   }
 
-  private UnifiedTable buildCompositePreview(BulkOperation bulkOperation, int offset, int limit) {
-    var csvTable = buildPreviewFromCsvFile(bulkOperation.getLinkToMatchedRecordsCsvFile(), Instance.class, offset, limit, bulkOperation);
+  private boolean isFolioInstanceEditPreview(BulkOperation operation) {
+    return StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsCsvFile())
+      && StringUtils.isEmpty(operation.getLinkToModifiedRecordsMarcFile());
+  }
+
+  private boolean isMarcInstanceEditPreview(BulkOperation operation) {
+    return StringUtils.isNotEmpty(operation.getLinkToMatchedRecordsCsvFile())
+      && StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsMarcFile())
+      && StringUtils.isEmpty(operation.getLinkToModifiedRecordsCsvFile());
+  }
+
+  private UnifiedTable buildCompositePreview(BulkOperation bulkOperation, int offset, int limit, String csvFileLink) {
+    var csvTable = buildPreviewFromCsvFile(csvFileLink, Instance.class, offset, limit, bulkOperation);
     if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
       referenceProvider.updateMappingRules();
       var rules = ruleService.getMarcRules(bulkOperation.getId());
