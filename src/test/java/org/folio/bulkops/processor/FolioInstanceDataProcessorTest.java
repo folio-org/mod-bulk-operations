@@ -520,4 +520,27 @@ class FolioInstanceDataProcessorTest extends BaseTest {
 
     assertThat(result.getUpdated().getEntity().getStatisticalCodeIds()).isNull();
   }
+
+  @Test
+  void shouldRemoveAllStatisticalCodes() {
+    var statCode1 = UUID.randomUUID().toString();
+    var statCode2 = UUID.randomUUID().toString();
+    var instance = Instance.builder()
+      .id(UUID.randomUUID().toString())
+      .source("FOLIO")
+      .statisticalCodeIds(List.of(statCode1, statCode2))
+      .title("Sample title")
+      .build();
+
+    var rules = rules(new BulkOperationRule()
+      .ruleDetails(new BulkOperationRuleRuleDetails()
+        .option(UpdateOptionType.STATISTICAL_CODE)
+        .actions(Collections.singletonList(new Action()
+          .type(REMOVE_ALL)))));
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+
+    var result = processor.process(IDENTIFIER, extendedInstance, rules);
+
+    assertThat(result.getUpdated().getEntity().getStatisticalCodeIds()).isEmpty();
+  }
 }
