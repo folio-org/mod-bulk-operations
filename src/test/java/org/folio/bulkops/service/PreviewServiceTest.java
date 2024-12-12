@@ -433,9 +433,7 @@ class PreviewServiceTest extends BaseTest {
         .id(bulkOperationId)
         .entityType(INSTANCE_MARC)
         .linkToMatchedRecordsCsvFile(pathToMatchedCsvFile)
-        .linkToMatchedRecordsMarcFile(pathToMarcFile)
         .linkToModifiedRecordsMarcFile(pathToMarcFile)
-        .linkToCommittedRecordsMarcFile(pathToMarcFile)
       .build();
 
     var rules = new BulkOperationMarcRuleCollection()

@@ -121,7 +121,7 @@ public class PreviewService {
             yield getPreviewFromCsvWithChangedOptions(operation, operation.getLinkToModifiedRecordsCsvFile(), offset, limit);
           } else if (isMarcInstanceEditPreview(operation)) {
             yield buildCompositePreview(operation, offset, limit, operation.getLinkToMatchedRecordsCsvFile(), operation.getLinkToModifiedRecordsMarcFile());
-          } else  {
+          } else {
             yield buildCompositePreview(operation, offset, limit, operation.getLinkToModifiedRecordsCsvFile(), operation.getLinkToModifiedRecordsMarcFile());
           }
         } else {
@@ -144,12 +144,7 @@ public class PreviewService {
               enrichMarcWithAdministrativeData(marcTable, operation);
               yield marcTable;
             } else {
-              var linkToCsvFile = StringUtils.isNotEmpty(operation.getLinkToCommittedRecordsCsvFile())
-                ? operation.getLinkToCommittedRecordsCsvFile() : operation.getLinkToMatchedRecordsCsvFile();
-              if (StringUtils.isEmpty(operation.getLinkToCommittedRecordsMarcFile())) {
-                yield getPreviewFromCsvWithChangedOptions(operation, linkToCsvFile, offset, limit);
-              }
-              yield buildCompositePreview(operation, offset, limit, linkToCsvFile, operation.getLinkToCommittedRecordsMarcFile());
+              yield buildCompositePreview(operation, offset, limit, operation.getLinkToCommittedRecordsCsvFile(), operation.getLinkToCommittedRecordsMarcFile());
             }
           } else {
             yield getPreviewFromCsvWithChangedOptions(operation, operation.getLinkToCommittedRecordsCsvFile(), offset, limit);
