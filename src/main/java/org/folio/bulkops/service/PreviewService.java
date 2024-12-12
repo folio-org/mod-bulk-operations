@@ -137,6 +137,7 @@ public class PreviewService {
             if (isFolioInstanceCommitPreview(operation)) {
               yield getPreviewFromCsvWithChangedOptions(operation, operation.getLinkToCommittedRecordsCsvFile(), offset, limit);
             } else if (isMarcInstanceCommitPreview(operation)) {
+              //ToDo Use buildCompositePreview after completion MODBULKOPS-429
               referenceProvider.updateMappingRules();
               var rules = ruleService.getMarcRules(bulkOperationId);
               var options = getChangedOptionsSet(rules);
