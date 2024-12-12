@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.STATISTICAL_CODE;
 import static org.folio.bulkops.util.Constants.STAFF_ONLY_NOTE_PARAMETER_KEY;
 
 import lombok.AllArgsConstructor;
@@ -30,6 +31,7 @@ public class InstanceNotesUpdaterFactory {
 
   public static final String INSTANCE_NOTE_TYPE_ID_KEY = "INSTANCE_NOTE_TYPE_ID_KEY";
   private final AdministrativeNotesUpdater administrativeNotesUpdater;
+  private final StatisticalCodesUpdater statisticalCodesUpdater;
 
   public Optional<Updater<ExtendedInstance>> getUpdater(UpdateOptionType option, Action action) {
     return switch (action.getType()) {
@@ -39,6 +41,7 @@ public class InstanceNotesUpdaterFactory {
       case FIND_AND_REMOVE_THESE -> Optional.of(extendedInstance -> findAndRemove(extendedInstance.getEntity(), action, option));
       case FIND_AND_REPLACE -> Optional.of(extendedInstance -> findAndReplace(extendedInstance.getEntity(), action, option));
       case CHANGE_TYPE -> Optional.of(extendedInstance -> changeNoteType(extendedInstance.getEntity(), action, option));
+      case REMOVE_SOME -> Optional.of(extendedInstance -> removeSome(extendedInstance.getEntity(), action, option));
       default -> Optional.empty();
     };
   }
@@ -57,6 +60,14 @@ public class InstanceNotesUpdaterFactory {
       instance.setAdministrativeNotes(Collections.emptyList());
     } else if (INSTANCE_NOTE.equals(option)) {
       instance.setInstanceNotes(removeNotesByTypeId(instance.getInstanceNotes(), action.getParameters()));
+    } else if (STATISTICAL_CODE.equals(option)) {
+      instance.setStatisticalCodeIds(Collections.emptyList());
+    }
+  }
+
+  private void removeSome(Instance instance, Action action, UpdateOptionType option) {
+    if (STATISTICAL_CODE.equals(option)) {
+      instance.setStatisticalCodeIds(statisticalCodesUpdater.removeSomeStatisticalCodeIds(action.getUpdated(), instance.getStatisticalCodeIds()));
     }
   }
 
@@ -65,6 +76,8 @@ public class InstanceNotesUpdaterFactory {
       instance.setAdministrativeNotes(administrativeNotesUpdater.addToAdministrativeNotes(action.getUpdated(), instance.getAdministrativeNotes()));
     } else if (INSTANCE_NOTE.equals(option)) {
       instance.setInstanceNotes(addToNotesByTypeId(instance.getInstanceNotes(), action.getParameters(), action.getUpdated()));
+    } else if (STATISTICAL_CODE.equals(option)) {
+      instance.setStatisticalCodeIds(statisticalCodesUpdater.addToStatisticalCodeIds(action.getUpdated(), instance.getStatisticalCodeIds()));
     }
   }
 

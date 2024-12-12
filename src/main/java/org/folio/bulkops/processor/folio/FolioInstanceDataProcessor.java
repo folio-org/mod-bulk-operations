@@ -81,6 +81,9 @@ public class FolioInstanceDataProcessor extends FolioAbstractDataProcessor<Exten
         .map(instanceNote -> instanceNote.toBuilder().build())
         .toList()));
     }
+    if (instance.getStatisticalCodeIds() != null) {
+      clone.setStatisticalCodeIds(new ArrayList<>(clone.getStatisticalCodeIds()));
+    }
     return ExtendedInstance.builder().tenantId(extendedInstance.getTenantId()).entity(clone).build();
   }
 

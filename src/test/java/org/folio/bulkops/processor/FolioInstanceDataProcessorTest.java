@@ -15,6 +15,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STAFF_SUPPRESS;
 import static org.folio.bulkops.processor.folio.InstanceNotesUpdaterFactory.INSTANCE_NOTE_TYPE_ID_KEY;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -30,12 +31,14 @@ import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.InstanceNote;
+import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.processor.folio.AdministrativeNotesUpdater;
 import org.folio.bulkops.processor.folio.DataProcessorFactory;
 import org.folio.bulkops.processor.folio.FolioInstanceDataProcessor;
 import org.folio.bulkops.processor.folio.InstanceNotesUpdaterFactory;
+import org.folio.bulkops.processor.folio.StatisticalCodesUpdater;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
@@ -101,7 +104,8 @@ class FolioInstanceDataProcessorTest extends BaseTest {
 
   @Test
   void testClone() {
-    var processor = new FolioInstanceDataProcessor(new InstanceNotesUpdaterFactory(new AdministrativeNotesUpdater()));
+    var processor = new FolioInstanceDataProcessor(new InstanceNotesUpdaterFactory(new AdministrativeNotesUpdater(),
+      new StatisticalCodesUpdater()));
     var instance = Instance.builder()
       .id(UUID.randomUUID().toString())
       .title("Title")
@@ -409,5 +413,39 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var validator = ((FolioInstanceDataProcessor) processor).validator(extendedInstance);
 
     assertThrows(RuleValidationException.class, () -> validator.validate(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE), new BulkOperationRule()));
+  }
+
+  @Test
+  void shouldThrowExceptionIfStatisticalCodeRemoveAllCombinedWithOtherActions() {
+    var validator = ((FolioInstanceDataProcessor) processor).validator();
+    var rules = new BulkOperationRuleCollection();
+    rules.addBulkOperationRulesItem(new BulkOperationRule().ruleDetails(
+      new BulkOperationRuleRuleDetails().actions(List.of(new Action().type(ADD_TO_EXISTING))).option(UpdateOptionType.STATISTICAL_CODE)));
+    rules.addBulkOperationRulesItem(new BulkOperationRule().ruleDetails(
+      new BulkOperationRuleRuleDetails().actions(List.of(new Action().type(REMOVE_ALL))).option(UpdateOptionType.STATISTICAL_CODE)));
+
+    assertThrows(RuleValidationException.class, () -> validator.validate(rules));
+  }
+
+  @Test
+  void shouldAddToExistingMoreThanOneStatisticalCodes() {
+    var statCode1 = UUID.randomUUID().toString();
+    var statCode2 = UUID.randomUUID().toString();
+    var instance = Instance.builder()
+      .id(UUID.randomUUID().toString())
+      .source("FOLIO")
+      .title("Sample title")
+      .build();
+
+    var rules = rules(new BulkOperationRule()
+      .ruleDetails(new BulkOperationRuleRuleDetails()
+        .option(UpdateOptionType.STATISTICAL_CODE)
+        .actions(Collections.singletonList(new Action()
+          .type(ADD_TO_EXISTING).updated(statCode1 + "," + statCode2)))));
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+
+    var result = processor.process(IDENTIFIER, extendedInstance, rules);
+
+    assertEquals("[" + statCode1 + ", " + statCode2 + "]", result.getUpdated().getEntity().getStatisticalCodeIds().toString());
   }
 }

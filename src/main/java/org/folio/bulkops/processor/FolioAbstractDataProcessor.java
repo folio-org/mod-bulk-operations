@@ -20,6 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import lombok.extern.log4j.Log4j2;
 
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.STATISTICAL_CODE;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 @Log4j2
@@ -54,6 +56,14 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
     var holder = UpdatedEntityHolder.builder().build();
     var updated = clone(entity);
     var preview = clone(entity);
+    try {
+      validator().validate(rules);
+    } catch (RuleValidationException e) {
+      log.warn(String.format("Rule validation exception: %s", e.getMessage()));
+      errorService.saveError(rules.getBulkOperationRules().get(0).getBulkOperationId(), identifier, e.getMessage());
+    } catch (Exception e) {
+      log.error(e.getMessage());
+    }
     for (BulkOperationRule rule : rules.getBulkOperationRules()) {
       var details = rule.getRuleDetails();
       var option = details.getOption();
@@ -92,6 +102,14 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
    * @return true if {@link UpdateOptionType} and {@link Action}, and {@link BulkOperationRule} can be applied to entity
    */
   public abstract Validator<UpdateOptionType, Action, BulkOperationRule> validator(T entity);
+
+  public StatisticalCodeValidator<BulkOperationRuleCollection> validator() {
+    return (rules) -> {
+      if (getNumberOfRulesWithStatisticalCode(rules) > 1 && existsRuleWithStatisticalCodeAndRemoveAll(rules)) {
+        throw new RuleValidationException("Combination REMOVE_ALL with other actions is not supported for Statistical code");
+      }
+    };
+  }
 
   /**
    * Returns {@link Consumer<T>} for applying changes for entity of type {@link T}
@@ -135,5 +153,14 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
 
   private boolean isTenantApplicableForProcessingAsMember(T entity) {
     return entity.getRecordBulkOperationEntity().getClass() != User.class && consortiaService.isTenantMember(entity.getTenant());
+  }
+
+  private long getNumberOfRulesWithStatisticalCode(BulkOperationRuleCollection rules) {
+    return rules.getBulkOperationRules().stream().filter(rule -> rule.getRuleDetails().getOption() == STATISTICAL_CODE).count();
+  }
+
+  private boolean existsRuleWithStatisticalCodeAndRemoveAll(BulkOperationRuleCollection rules) {
+    return rules.getBulkOperationRules().stream().anyMatch(rule -> rule.getRuleDetails().getOption() == STATISTICAL_CODE &&
+      rule.getRuleDetails().getActions().stream().anyMatch(act -> act.getType() == REMOVE_ALL));
   }
 }

@@ -19,6 +19,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.PATRON_GROUP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STAFF_SUPPRESS;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.STATISTICAL_CODE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOAN_TYPE;
@@ -83,6 +84,8 @@ public class UpdateOptionTypeToFieldResolver {
       return "Electronic access";
     } else if (INSTANCE_NOTE == type) {
       return "Instance note";
+    } else if (STATISTICAL_CODE == type) {
+      return "Statistical code";
     } else {
       throw new UnsupportedOperationException("There is no matching for Operation Type: " + type);
     }
