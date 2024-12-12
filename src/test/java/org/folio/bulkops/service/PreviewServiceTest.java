@@ -524,7 +524,6 @@ class PreviewServiceTest extends BaseTest {
     var summaryNoteTypeId = "10e2e11b-450f-45c8-b09b-0f819999966e";
     var bulkOperationId = UUID.randomUUID();
     var pathToMarcFile = bulkOperationId + "/" + "file.mrc";
-    var pathToMatchedCsvFile = bulkOperationId + "/" + "file.csv";
     var pathToUpdatedCsvFile = bulkOperationId + "/" + "modified_file.csv";
     var csvChanges = "Sample note for folio and marc instance";
     var bulkOperation = BulkOperation.builder()
