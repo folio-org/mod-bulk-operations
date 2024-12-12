@@ -11,7 +11,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
-public class InstanceStatisticalCodeListConverterTest extends BaseTest {
+class InstanceStatisticalCodeListConverterTest extends BaseTest {
 
   private final String id1 = UUID.randomUUID().toString();
   private final String id2 = UUID.randomUUID().toString();

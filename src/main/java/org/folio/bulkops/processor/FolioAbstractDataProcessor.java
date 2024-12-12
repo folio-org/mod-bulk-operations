@@ -104,7 +104,7 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
   public abstract Validator<UpdateOptionType, Action, BulkOperationRule> validator(T entity);
 
   public StatisticalCodeValidator<BulkOperationRuleCollection> validator() {
-    return (rules) -> {
+    return rules -> {
       if (getNumberOfRulesWithStatisticalCode(rules) > 1 && existsRuleWithStatisticalCodeAndRemoveAll(rules)) {
         throw new RuleValidationException("Combination REMOVE_ALL with other actions is not supported for Statistical code");
       }

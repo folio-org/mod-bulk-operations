@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static java.util.Objects.isNull;
@@ -23,7 +24,7 @@ public class StatisticalCodesUpdater {
   public List<String> removeSomeStatisticalCodeIds(String statisticalCodeIdsFromAction, List<String> existingStatisticalCodeIds) {
     var statisticalCodeIdsToRemove = new ArrayList<>(Arrays.asList(statisticalCodeIdsFromAction.split(",")));
     if (isNull(existingStatisticalCodeIds)) {
-      return null;
+      return Collections.emptyList();
     }
     existingStatisticalCodeIds.removeAll(statisticalCodeIdsToRemove);
     return existingStatisticalCodeIds;
