@@ -112,26 +112,20 @@ public class PreviewService {
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
   public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset, int limit) {
-    var entityType = operation.getEntityType();
     var clazz = resolveEntityClass(operation.getEntityType());
     return switch (step) {
       case UPLOAD -> buildPreviewFromCsvFile(operation.getLinkToMatchedRecordsCsvFile(), clazz, offset, limit, operation);
       case EDIT -> {
-        var bulkOperationId = operation.getId();
         if (INSTANCE_MARC == operation.getEntityType() || INSTANCE == operation.getEntityType()) {
           if (isFolioInstanceEditPreview(operation)) {
-            var rules = ruleService.getRules(bulkOperationId);
-            var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
-            yield buildPreviewFromCsvFile(operation.getLinkToModifiedRecordsCsvFile(), clazz, offset, limit, options, operation);
+            yield getPreviewFromCsvWithChangedOptions(operation, operation.getLinkToModifiedRecordsCsvFile(), offset, limit);
           } else if (isMarcInstanceEditPreview(operation)) {
             yield buildCompositePreview(operation, offset, limit, operation.getLinkToMatchedRecordsCsvFile(), operation.getLinkToModifiedRecordsMarcFile());
           } else  {
             yield buildCompositePreview(operation, offset, limit, operation.getLinkToModifiedRecordsCsvFile(), operation.getLinkToModifiedRecordsMarcFile());
           }
         } else {
-          var rules = ruleService.getRules(bulkOperationId);
-          var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
-          yield buildPreviewFromCsvFile(operation.getLinkToModifiedRecordsCsvFile(), clazz, offset, limit, options, operation);
+          yield getPreviewFromCsvWithChangedOptions(operation, operation.getLinkToModifiedRecordsCsvFile(), offset, limit);
         }
       }
       case COMMIT -> {
@@ -141,9 +135,7 @@ public class PreviewService {
           var bulkOperationId = operation.getId();
           if (INSTANCE_MARC == operation.getEntityType() || INSTANCE == operation.getEntityType()) {
             if (isFolioInstanceCommitPreview(operation)) {
-              var rules = ruleService.getRules(bulkOperationId);
-              var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
-              yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit, options, operation);
+              yield getPreviewFromCsvWithChangedOptions(operation, operation.getLinkToCommittedRecordsCsvFile(), offset, limit);
             } else if (isMarcInstanceCommitPreview(operation)) {
               referenceProvider.updateMappingRules();
               var rules = ruleService.getMarcRules(bulkOperationId);
@@ -152,16 +144,26 @@ public class PreviewService {
               enrichMarcWithAdministrativeData(marcTable, operation);
               yield marcTable;
             } else {
-              yield buildCompositePreview(operation, offset, limit, operation.getLinkToCommittedRecordsCsvFile(), operation.getLinkToCommittedRecordsMarcFile());
+              var linkToCsvFile = StringUtils.isNotEmpty(operation.getLinkToCommittedRecordsCsvFile())
+                ? operation.getLinkToCommittedRecordsCsvFile() : operation.getLinkToMatchedRecordsCsvFile();
+              if (StringUtils.isEmpty(operation.getLinkToCommittedRecordsMarcFile())) {
+                yield getPreviewFromCsvWithChangedOptions(operation, linkToCsvFile, offset, limit);
+              }
+              yield buildCompositePreview(operation, offset, limit, linkToCsvFile, operation.getLinkToCommittedRecordsMarcFile());
             }
           } else {
-            var rules = ruleService.getRules(bulkOperationId);
-            var options = getChangedOptionsSet(bulkOperationId, entityType, rules, clazz);
-            yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit, options, operation);
+            yield getPreviewFromCsvWithChangedOptions(operation, operation.getLinkToCommittedRecordsCsvFile(), offset, limit);
           }
         }
       }
     };
+  }
+
+  private UnifiedTable getPreviewFromCsvWithChangedOptions(BulkOperation operation, String linkToCsvFile, int offset, int limit) {
+    var clazz = resolveEntityClass(operation.getEntityType());
+    var rules = ruleService.getRules(operation.getId());
+    var options = getChangedOptionsSet(operation.getId(), operation.getEntityType(), rules, clazz);
+    return buildPreviewFromCsvFile(linkToCsvFile, clazz, offset, limit, options, operation);
   }
 
   private boolean isFolioInstanceEditPreview(BulkOperation operation) {
