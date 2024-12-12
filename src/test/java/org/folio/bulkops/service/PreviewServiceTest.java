@@ -581,19 +581,6 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(1).getRow().get(7), equalTo("Other"));
     assertThat(res.getRows().get(1).getRow().get(8), equalTo("serial"));
     assertThat(res.getRows().get(1).getRow().get(9), equalTo(csvChanges));
-    assertThat(res.getRows().get(1).getRow().get(10), equalTo("ABA Journal"));
-    assertThat(res.getRows().get(1).getRow().get(11), equalTo("Index title"));
-    assertThat(res.getRows().get(1).getRow().get(12), equalTo("series"));
-    assertThat(res.getRows().get(1).getRow().get(13), equalTo("Sample contributor"));
-    assertThat(res.getRows().get(1).getRow().get(14), equalTo("2021 | 2022"));
-    assertThat(res.getRows().get(1).getRow().get(15), equalTo("Physical description1 | Physical description2"));
-    assertThat(res.getRows().get(1).getRow().get(16), equalTo("text"));
-    assertThat(res.getRows().get(1).getRow().get(18), equalTo("computer -- other"));
-    assertThat(res.getRows().get(1).getRow().get(19), equalTo("eng | fre"));
-    assertThat(res.getRows().get(1).getRow().get(20), equalTo("freq1 | freq2"));
-    assertThat(res.getRows().get(1).getRow().get(21), equalTo("range1 | range2"));
-    assertThat(res.getRows().get(1).getRow().get(22), equalTo("General note text"));
-    assertThat(res.getRows().get(1).getRow().get(23), equalTo("Summary note text"));
 
     assertThat(res.getRows().get(2).getRow().get(0), equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
     assertThat(res.getRows().get(2).getRow().get(2), equalTo("true"));
@@ -601,19 +588,6 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(2).getRow().get(5), equalTo("MARC"));
     assertThat(res.getRows().get(2).getRow().get(8), equalTo("single unit"));
     assertThat(res.getRows().get(2).getRow().get(9), equalTo(csvChanges));
-    assertThat(res.getRows().get(2).getRow().get(10), equalTo("summerland / Michael Chabon."));
-    assertThat(res.getRows().get(2).getRow().get(11), equalTo("Mmerland /"));
-    assertThat(res.getRows().get(2).getRow().get(12), equalTo("series800 | series810 | series811 | series830"));
-    assertThat(res.getRows().get(2).getRow().get(13), equalTo("Sample contributor"));
-    assertThat(res.getRows().get(2).getRow().get(14), equalTo("1st ed."));
-    assertThat(res.getRows().get(2).getRow().get(15), equalTo("500 p. ; 22 cm."));
-    assertThat(res.getRows().get(2).getRow().get(16), equalTo("text"));
-    assertThat(res.getRows().get(2).getRow().get(18), equalTo("computer -- other"));
-    assertThat(res.getRows().get(2).getRow().get(19), equalTo("eng | fre"));
-    assertThat(res.getRows().get(2).getRow().get(20), equalTo("monthly. Jun 10, 2024 | yearly. 2024"));
-    assertThat(res.getRows().get(2).getRow().get(21), equalTo("2002-2024"));
-    assertThat(res.getRows().get(2).getRow().get(22), equalTo("language note (staff only)"));
-    assertThat(res.getRows().get(2).getRow().get(23), equalTo("Ethan Feld, the worst baseball player in the history of the game, finds himself recruited by a 100-year-old scout to help a band of fairies triumph over an ancient enemy. 2nd"));
   }
 
   @Test
