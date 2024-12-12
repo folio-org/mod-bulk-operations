@@ -9,6 +9,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THES
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_MARK_AS_STAFF_ONLY;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_SOME;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
@@ -447,5 +448,76 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
     assertEquals("[" + statCode1 + ", " + statCode2 + "]", result.getUpdated().getEntity().getStatisticalCodeIds().toString());
+  }
+
+  @Test
+  void shouldAddToExistingIfAlreadyPresentStatisticalCodes() {
+    var statCode1 = UUID.randomUUID().toString();
+    var statCode2 = UUID.randomUUID().toString();
+    var instance = Instance.builder()
+      .id(UUID.randomUUID().toString())
+      .source("FOLIO")
+      .title("Sample title")
+      .statisticalCodeIds(List.of(statCode1))
+      .build();
+
+    var rules = rules(new BulkOperationRule()
+      .ruleDetails(new BulkOperationRuleRuleDetails()
+        .option(UpdateOptionType.STATISTICAL_CODE)
+        .actions(Collections.singletonList(new Action()
+          .type(ADD_TO_EXISTING).updated(statCode1 + "," + statCode2)))));
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+
+    var result = processor.process(IDENTIFIER, extendedInstance, rules);
+
+    assertEquals("[" + statCode1 + ", " + statCode1 + ", " + statCode2 + "]",
+      result.getUpdated().getEntity().getStatisticalCodeIds().toString());
+  }
+
+  @Test
+  void shouldRemoveMoreThanOneStatisticalCodes() {
+    var statCode1 = UUID.randomUUID().toString();
+    var statCode2 = UUID.randomUUID().toString();
+    var statCode3 = UUID.randomUUID().toString();
+    var instance = Instance.builder()
+      .id(UUID.randomUUID().toString())
+      .source("FOLIO")
+      .title("Sample title")
+      .statisticalCodeIds(List.of(statCode1, statCode2, statCode3))
+      .build();
+
+    var rules = rules(new BulkOperationRule()
+      .ruleDetails(new BulkOperationRuleRuleDetails()
+        .option(UpdateOptionType.STATISTICAL_CODE)
+        .actions(Collections.singletonList(new Action()
+          .type(REMOVE_SOME).updated(statCode1 + "," + statCode2)))));
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+
+    var result = processor.process(IDENTIFIER, extendedInstance, rules);
+
+    assertThat(result.getUpdated().getEntity().getStatisticalCodeIds()).hasSize(1);
+    assertEquals(statCode3, result.getUpdated().getEntity().getStatisticalCodeIds().get(0));
+  }
+
+  @Test
+  void shouldRemoveNothingIfNoStatisticalCodes() {
+    var statCode1 = UUID.randomUUID().toString();
+    var statCode2 = UUID.randomUUID().toString();
+    var instance = Instance.builder()
+      .id(UUID.randomUUID().toString())
+      .source("FOLIO")
+      .title("Sample title")
+      .build();
+
+    var rules = rules(new BulkOperationRule()
+      .ruleDetails(new BulkOperationRuleRuleDetails()
+        .option(UpdateOptionType.STATISTICAL_CODE)
+        .actions(Collections.singletonList(new Action()
+          .type(REMOVE_SOME).updated(statCode1 + "," + statCode2)))));
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+
+    var result = processor.process(IDENTIFIER, extendedInstance, rules);
+
+    assertThat(result.getUpdated().getEntity().getStatisticalCodeIds()).isNull();
   }
 }
