@@ -1,3 +1,13 @@
+## v2.1.7 - Released 2024/12/13
+
+This release contains optimization of memory utilization, upgrade dependencies.
+
+### Bugs
+* [MODBULKOPS-440](https://folio-org.atlassian.net/browse/MODBULKOPS-440) Upgrade vulnerable dependencies for Ramsons
+
+### Technical tasks
+* [MODBULKOPS-433](https://folio-org.atlassian.net/browse/MODBULKOPS-433) Optimisation of memory utilization
+
 ## v2.1.6 - Released 2024/12/09
 
 This release contains bugfixes.
