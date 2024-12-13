@@ -12,12 +12,17 @@ import static java.util.Objects.isNull;
 @Component
 public class StatisticalCodesUpdater {
 
-  public List<String> addToStatisticalCodeIds(String statisticalCodeIdsFromAction, List<String> existingStatisticalCodeIds) {
+  public List<String> addToStatisticalCodeIds(String statisticalCodeIdsFromAction, List<String> existingStatisticalCodeIds, boolean forPreview) {
     var newStatisticalCodeIds = new ArrayList<>(Arrays.asList(statisticalCodeIdsFromAction.split(",")));
     if (isNull(existingStatisticalCodeIds)) {
-      return newStatisticalCodeIds;
+      return forPreview ? newStatisticalCodeIds : newStatisticalCodeIds.stream().distinct().toList();
     }
-    existingStatisticalCodeIds.addAll(newStatisticalCodeIds);
+    if (forPreview) {
+      existingStatisticalCodeIds.addAll(newStatisticalCodeIds);
+    } else {
+      newStatisticalCodeIds.stream().distinct().filter(newCode -> !existingStatisticalCodeIds.contains(newCode))
+        .forEach(existingStatisticalCodeIds::add);
+    }
     return existingStatisticalCodeIds;
   }
 

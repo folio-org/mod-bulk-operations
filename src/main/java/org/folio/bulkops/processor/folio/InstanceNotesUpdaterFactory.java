@@ -33,11 +33,11 @@ public class InstanceNotesUpdaterFactory {
   private final AdministrativeNotesUpdater administrativeNotesUpdater;
   private final StatisticalCodesUpdater statisticalCodesUpdater;
 
-  public Optional<Updater<ExtendedInstance>> getUpdater(UpdateOptionType option, Action action) {
+  public Optional<Updater<ExtendedInstance>> getUpdater(UpdateOptionType option, Action action, boolean forPreview) {
     return switch (action.getType()) {
       case MARK_AS_STAFF_ONLY, REMOVE_MARK_AS_STAFF_ONLY -> Optional.of(extendedInstance -> setStaffOnly(extendedInstance.getEntity(), action, option));
       case REMOVE_ALL -> Optional.of(extendedInstance -> removeAll(extendedInstance.getEntity(), action, option));
-      case ADD_TO_EXISTING -> Optional.of(extendedInstance -> addToExisting(extendedInstance.getEntity(), action, option));
+      case ADD_TO_EXISTING -> Optional.of(extendedInstance -> addToExisting(extendedInstance.getEntity(), action, option, forPreview));
       case FIND_AND_REMOVE_THESE -> Optional.of(extendedInstance -> findAndRemove(extendedInstance.getEntity(), action, option));
       case FIND_AND_REPLACE -> Optional.of(extendedInstance -> findAndReplace(extendedInstance.getEntity(), action, option));
       case CHANGE_TYPE -> Optional.of(extendedInstance -> changeNoteType(extendedInstance.getEntity(), action, option));
@@ -71,13 +71,13 @@ public class InstanceNotesUpdaterFactory {
     }
   }
 
-  private void addToExisting(Instance instance, Action action, UpdateOptionType option) {
+  private void addToExisting(Instance instance, Action action, UpdateOptionType option, boolean forPreview) {
     if (ADMINISTRATIVE_NOTE.equals(option)) {
       instance.setAdministrativeNotes(administrativeNotesUpdater.addToAdministrativeNotes(action.getUpdated(), instance.getAdministrativeNotes()));
     } else if (INSTANCE_NOTE.equals(option)) {
       instance.setInstanceNotes(addToNotesByTypeId(instance.getInstanceNotes(), action.getParameters(), action.getUpdated()));
     } else if (STATISTICAL_CODE.equals(option)) {
-      instance.setStatisticalCodeIds(statisticalCodesUpdater.addToStatisticalCodeIds(action.getUpdated(), instance.getStatisticalCodeIds()));
+      instance.setStatisticalCodeIds(statisticalCodesUpdater.addToStatisticalCodeIds(action.getUpdated(), instance.getStatisticalCodeIds(), forPreview));
     }
   }
 

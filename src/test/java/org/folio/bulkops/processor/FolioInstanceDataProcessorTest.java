@@ -448,6 +448,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
     assertEquals("[" + statCode1 + ", " + statCode2 + "]", result.getUpdated().getEntity().getStatisticalCodeIds().toString());
+    assertEquals("[" + statCode1 + ", " + statCode2 + "]", result.getPreview().getEntity().getStatisticalCodeIds().toString());
   }
 
   @Test
@@ -471,6 +472,59 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
     assertEquals("[" + statCode1 + ", " + statCode1 + ", " + statCode2 + "]",
+      result.getPreview().getEntity().getStatisticalCodeIds().toString());
+    assertEquals("[" + statCode1 + ", " + statCode2 + "]",
+      result.getUpdated().getEntity().getStatisticalCodeIds().toString());
+  }
+
+  @Test
+  void shouldAddDuplicatesToExistingIfNotPresentStatisticalCodes() {
+    var statCode1 = UUID.randomUUID().toString();
+    var statCode2 = UUID.randomUUID().toString();
+    var instance = Instance.builder()
+      .id(UUID.randomUUID().toString())
+      .source("FOLIO")
+      .title("Sample title")
+      .build();
+
+    var rules = rules(new BulkOperationRule()
+      .ruleDetails(new BulkOperationRuleRuleDetails()
+        .option(UpdateOptionType.STATISTICAL_CODE)
+        .actions(Collections.singletonList(new Action()
+          .type(ADD_TO_EXISTING).updated(statCode1 + "," + statCode2 + "," + statCode1)))));
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+
+    var result = processor.process(IDENTIFIER, extendedInstance, rules);
+
+    assertEquals("[" + statCode1 + ", " + statCode2 + ", " + statCode1 + "]",
+      result.getPreview().getEntity().getStatisticalCodeIds().toString());
+    assertEquals("[" + statCode1 + ", " + statCode2 + "]",
+      result.getUpdated().getEntity().getStatisticalCodeIds().toString());
+  }
+
+  @Test
+  void shouldAddDuplicatesToExistingIfPresentStatisticalCodes() {
+    var statCode1 = UUID.randomUUID().toString();
+    var statCode2 = UUID.randomUUID().toString();
+    var instance = Instance.builder()
+      .id(UUID.randomUUID().toString())
+      .source("FOLIO")
+      .statisticalCodeIds(List.of(statCode2))
+      .title("Sample title")
+      .build();
+
+    var rules = rules(new BulkOperationRule()
+      .ruleDetails(new BulkOperationRuleRuleDetails()
+        .option(UpdateOptionType.STATISTICAL_CODE)
+        .actions(Collections.singletonList(new Action()
+          .type(ADD_TO_EXISTING).updated(statCode1 + "," + statCode2 + "," + statCode1)))));
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+
+    var result = processor.process(IDENTIFIER, extendedInstance, rules);
+
+    assertEquals("[" + statCode2 + ", " + statCode1 + ", " + statCode2 + ", " + statCode1 + "]",
+      result.getPreview().getEntity().getStatisticalCodeIds().toString());
+    assertEquals("[" + statCode2 + ", " + statCode1 + "]",
       result.getUpdated().getEntity().getStatisticalCodeIds().toString());
   }
 
@@ -496,6 +550,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
     assertThat(result.getUpdated().getEntity().getStatisticalCodeIds()).hasSize(1);
+    assertThat(result.getPreview().getEntity().getStatisticalCodeIds()).hasSize(1);
     assertEquals(statCode3, result.getUpdated().getEntity().getStatisticalCodeIds().get(0));
   }
 
@@ -519,6 +574,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
     assertThat(result.getUpdated().getEntity().getStatisticalCodeIds()).isEmpty();
+    assertThat(result.getPreview().getEntity().getStatisticalCodeIds()).isEmpty();
   }
 
   @Test
@@ -542,5 +598,6 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
     assertThat(result.getUpdated().getEntity().getStatisticalCodeIds()).isEmpty();
+    assertThat(result.getPreview().getEntity().getStatisticalCodeIds()).isEmpty();
   }
 }

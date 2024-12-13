@@ -63,7 +63,7 @@ public class FolioInstanceDataProcessor extends FolioAbstractDataProcessor<Exten
         return extendedInstance -> extendedInstance.getEntity().setDiscoverySuppress(false);
       }
     }
-    return instanceNotesUpdaterFactory.getUpdater(option, action).orElseGet(() -> instance -> {
+    return instanceNotesUpdaterFactory.getUpdater(option, action, forPreview).orElseGet(() -> instance -> {
       throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
     });
   }
