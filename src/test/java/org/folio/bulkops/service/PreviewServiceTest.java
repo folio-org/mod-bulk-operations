@@ -563,10 +563,10 @@ class PreviewServiceTest extends BaseTest {
 
     var res = previewService.getPreview(bulkOperation, EDIT, 0, 10);
 
-    assertThat(res.getHeader().get(22).getValue(), equalTo("General note"));
-    assertThat(res.getHeader().get(22).getForceVisible(), equalTo(Boolean.FALSE));
-    assertThat(res.getHeader().get(23).getValue(), equalTo("Summary"));
-    assertThat(res.getHeader().get(23).getForceVisible(), equalTo(Boolean.TRUE));
+    assertThat(res.getHeader().get(23).getValue(), equalTo("General note"));
+    assertThat(res.getHeader().get(23).getForceVisible(), equalTo(Boolean.FALSE));
+    assertThat(res.getHeader().get(24).getValue(), equalTo("Summary"));
+    assertThat(res.getHeader().get(24).getForceVisible(), equalTo(Boolean.TRUE));
 
     assertThat(res.getRows().get(1).getRow().get(0), equalTo("ed32b4a6-3895-42a0-b696-7b8ed667313f"));
     assertThat(res.getRows().get(1).getRow().get(4), equalTo("inst000000000001"));
@@ -574,15 +574,15 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(1).getRow().get(6), equalTo("2023-12-27"));
     assertThat(res.getRows().get(1).getRow().get(7), equalTo("Other"));
     assertThat(res.getRows().get(1).getRow().get(8), equalTo("serial"));
-    assertThat(res.getRows().get(1).getRow().get(9), equalTo(csvChanges));
+    assertThat(res.getRows().get(1).getRow().get(10), equalTo(csvChanges));
 
     assertThat(res.getRows().get(2).getRow().get(0), equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
     assertThat(res.getRows().get(2).getRow().get(2), equalTo("true"));
     assertThat(res.getRows().get(2).getRow().get(4), equalTo("in00000000002"));
     assertThat(res.getRows().get(2).getRow().get(5), equalTo("MARC"));
     assertThat(res.getRows().get(2).getRow().get(8), equalTo("single unit"));
-    assertThat(res.getRows().get(2).getRow().get(9), equalTo(csvChanges));
-    assertThat(res.getRows().get(2).getRow().get(12), equalTo("series800 | series810 | series811 | series830"));
+    assertThat(res.getRows().get(2).getRow().get(10), equalTo(csvChanges));
+    assertThat(res.getRows().get(2).getRow().get(13), equalTo("series800 | series810 | series811 | series830"));
   }
 
   @Test
@@ -706,17 +706,17 @@ class PreviewServiceTest extends BaseTest {
 
     var res = previewService.getPreview(bulkOperation, COMMIT, 0, 10);
 
-    assertThat(res.getHeader().get(22).getValue(), equalTo("General note"));
-    assertThat(res.getHeader().get(22).getForceVisible(), equalTo(Boolean.FALSE));
-    assertThat(res.getHeader().get(23).getValue(), equalTo("Summary"));
-    assertThat(res.getHeader().get(23).getForceVisible(), equalTo(Boolean.TRUE));
+    assertThat(res.getHeader().get(23).getValue(), equalTo("General note"));
+    assertThat(res.getHeader().get(23).getForceVisible(), equalTo(Boolean.FALSE));
+    assertThat(res.getHeader().get(24).getValue(), equalTo("Summary"));
+    assertThat(res.getHeader().get(24).getForceVisible(), equalTo(Boolean.TRUE));
 
     assertThat(res.getRows().get(2).getRow().get(0), equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
     assertThat(res.getRows().get(2).getRow().get(2), equalTo("true"));
     assertThat(res.getRows().get(2).getRow().get(4), equalTo("in00000000002"));
     assertThat(res.getRows().get(2).getRow().get(5), equalTo("MARC"));
-    assertThat(res.getRows().get(2).getRow().get(9), equalTo(csvChanges));
-    assertThat(res.getRows().get(2).getRow().get(12), equalTo("series800 | series810 | series811 | series830"));
+    assertThat(res.getRows().get(2).getRow().get(10), equalTo(csvChanges));
+    assertThat(res.getRows().get(2).getRow().get(13), equalTo("series800 | series810 | series811 | series830"));
   }
 
   @SneakyThrows
