@@ -17,8 +17,10 @@ import org.folio.bulkops.client.InstanceStatusesClient;
 import org.folio.bulkops.client.InstanceTypesClient;
 import org.folio.bulkops.client.ModesOfIssuanceClient;
 import org.folio.bulkops.client.NatureOfContentTermsClient;
+import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.domain.bean.InstanceFormats;
 import org.folio.bulkops.domain.bean.InstanceTypes;
+import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.domain.dto.ContributorTypeCollection;
 import org.folio.bulkops.domain.dto.InstanceNoteType;
@@ -34,6 +36,7 @@ import java.util.List;
 public class InstanceReferenceService {
   private final InstanceStatusesClient instanceStatusesClient;
   private final ModesOfIssuanceClient modesOfIssuanceClient;
+  private final StatisticalCodeClient statisticalCodeClient;
   private final InstanceTypesClient instanceTypesClient;
   private final NatureOfContentTermsClient natureOfContentTermsClient;
   private final InstanceFormatsClient instanceFormatsClient;
@@ -74,6 +77,24 @@ public class InstanceReferenceService {
       throw new NotFoundException(format("Mode of issuance was not found by name=%s", name));
     }
     return response.getModes().get(0).getId();
+  }
+
+  @Cacheable(cacheNames = "instanceStatisticalCodes")
+  public StatisticalCode getStatisticalCodeByName(String name, String tenantId) {
+    var response = statisticalCodeClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
+    if (response.getStatisticalCodes().isEmpty()) {
+      throw new NotFoundException(format("Statistical code was not found by name=%s", name));
+    }
+    return response.getStatisticalCodes().get(0);
+  }
+
+  @Cacheable(cacheNames = "instanceStatisticalCodeNames")
+  public StatisticalCode getStatisticalCodeById(String id, String tenantId) {
+    try {
+      return statisticalCodeClient.getById(id);
+    } catch (Exception e) {
+      throw new NotFoundException(format("Statistical code was not found by id=%s", id));
+    }
   }
 
   @Cacheable(cacheNames = "instanceTypeNames")

@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 import lombok.With;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.ContributorListConverter;
-import org.folio.bulkops.domain.converter.DateWithoutTimeConverter;
 import org.folio.bulkops.domain.converter.InstanceFormatListConverter;
 import org.folio.bulkops.domain.converter.InstanceNoteListConverter;
 import org.folio.bulkops.domain.converter.InstanceStatusConverter;
@@ -21,12 +20,11 @@ import org.folio.bulkops.domain.converter.InstanceTypeConverter;
 import org.folio.bulkops.domain.converter.ModeOfIssuanceConverter;
 import org.folio.bulkops.domain.converter.NatureOfContentTermListConverter;
 import org.folio.bulkops.domain.converter.SeriesListConverter;
+import org.folio.bulkops.domain.converter.InstanceStatisticalCodeListConverter;
 import org.folio.bulkops.domain.converter.StringConverter;
 import org.folio.bulkops.domain.converter.StringListPipedConverter;
-import org.folio.bulkops.domain.dto.DataType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 
-import java.util.Date;
 import java.util.List;
 
 @Data
@@ -41,6 +39,7 @@ public class Instance implements BulkOperationsEntity {
   public static final String INSTANCE_HRID = "Instance HRID";
   public static final String INSTANCE_SOURCE = "Source";
   public static final String INSTANCE_MODE_OF_ISSUANCE = "Mode of issuance";
+  public static final String INSTANCE_STATISTICAL_CODES = "Statistical code";
   public static final String INSTANCE_RESOURCE_TITLE = "Resource title";
   public static final String INSTANCE_INDEX_TITLE = "Index title";
   public static final String INSTANCE_SERIES_STATEMENTS = "Series statements";
@@ -117,88 +116,94 @@ public class Instance implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private String modeOfIssuanceId;
 
+  @JsonProperty("statisticalCodeIds")
+  @CsvCustomBindByName(column = INSTANCE_STATISTICAL_CODES, converter = InstanceStatisticalCodeListConverter.class)
+  @CsvCustomBindByPosition(position = 9, converter = InstanceStatisticalCodeListConverter.class)
+  @UnifiedTableCell(visible = false)
+  private List<String> statisticalCodeIds;
+
   @JsonProperty("administrativeNotes")
   @CsvCustomBindByName(column = INSTANCE_ADMINISTRATIVE_NOTE, converter = StringListPipedConverter.class)
-  @CsvCustomBindByPosition(position = 9, converter = StringListPipedConverter.class)
+  @CsvCustomBindByPosition(position = 10, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> administrativeNotes;
 
   @JsonProperty("title")
   @CsvCustomBindByName(column = INSTANCE_RESOURCE_TITLE, converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 10, converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 11, converter = StringConverter.class)
   @UnifiedTableCell
   private String title;
 
   @JsonProperty("indexTitle")
   @CsvCustomBindByName(column = INSTANCE_INDEX_TITLE, converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 11, converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 12, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String indexTitle;
 
   @JsonProperty("series")
   @CsvCustomBindByName(column = INSTANCE_SERIES_STATEMENTS, converter = SeriesListConverter.class)
-  @CsvCustomBindByPosition(position = 12, converter = SeriesListConverter.class)
+  @CsvCustomBindByPosition(position = 13, converter = SeriesListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<Series> series;
 
   @JsonProperty("contributors")
   @CsvCustomBindByName(column = INSTANCE_CONTRIBUTORS, converter = ContributorListConverter.class)
-  @CsvCustomBindByPosition(position = 13, converter = ContributorListConverter.class)
+  @CsvCustomBindByPosition(position = 14, converter = ContributorListConverter.class)
   @UnifiedTableCell
   private List<ContributorName> contributors;
 
   @JsonProperty("editions")
   @CsvCustomBindByName(column = INSTANCE_EDITION, converter = StringListPipedConverter.class)
-  @CsvCustomBindByPosition(position = 14, converter = StringListPipedConverter.class)
+  @CsvCustomBindByPosition(position = 15, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> editions;
 
   @JsonProperty("physicalDescriptions")
   @CsvCustomBindByName(column = INSTANCE_PHYSICAL_DESCRIPTION, converter = StringListPipedConverter.class)
-  @CsvCustomBindByPosition(position = 15, converter = StringListPipedConverter.class)
+  @CsvCustomBindByPosition(position = 16, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> physicalDescriptions;
 
   @JsonProperty("instanceTypeId")
   @CsvCustomBindByName(column = INSTANCE_RESOURCE_TYPE, converter = InstanceTypeConverter.class)
-  @CsvCustomBindByPosition(position = 16, converter = InstanceTypeConverter.class)
+  @CsvCustomBindByPosition(position = 17, converter = InstanceTypeConverter.class)
   @UnifiedTableCell
   private String instanceTypeId;
 
   @JsonProperty("natureOfContentTermIds")
   @CsvCustomBindByName(column = INSTANCE_NATURE_OF_CONTENT, converter = NatureOfContentTermListConverter.class)
-  @CsvCustomBindByPosition(position = 17, converter = NatureOfContentTermListConverter.class)
+  @CsvCustomBindByPosition(position = 18, converter = NatureOfContentTermListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> natureOfContentTermIds;
 
   @JsonProperty("instanceFormatIds")
   @CsvCustomBindByName(column = INSTANCE_FORMATS, converter = InstanceFormatListConverter.class)
-  @CsvCustomBindByPosition(position = 18, converter = InstanceFormatListConverter.class)
+  @CsvCustomBindByPosition(position = 19, converter = InstanceFormatListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> instanceFormatIds;
 
   @JsonProperty("languages")
   @CsvCustomBindByName(column = INSTANCE_LANGUAGES, converter = StringListPipedConverter.class)
-  @CsvCustomBindByPosition(position = 19, converter = StringListPipedConverter.class)
+  @CsvCustomBindByPosition(position = 20, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> languages;
 
   @JsonProperty("publicationFrequency")
   @Valid
   @CsvCustomBindByName(column = INSTANCE_PUBLICATION_FREQUENCY, converter = StringListPipedConverter.class)
-  @CsvCustomBindByPosition(position = 20, converter = StringListPipedConverter.class)
+  @CsvCustomBindByPosition(position = 21, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> publicationFrequency;
 
   @JsonProperty("publicationRange")
   @CsvCustomBindByName(column = INSTANCE_PUBLICATION_RANGE, converter = StringListPipedConverter.class)
-  @CsvCustomBindByPosition(position = 21, converter = StringListPipedConverter.class)
+  @CsvCustomBindByPosition(position = 22, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> publicationRange;
 
   @JsonProperty("notes")
   @CsvCustomBindByName(column = "Notes", converter = InstanceNoteListConverter.class)
-  @CsvCustomBindByPosition(position = 22, converter = InstanceNoteListConverter.class)
+  @CsvCustomBindByPosition(position = 23, converter = InstanceNoteListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<InstanceNote> instanceNotes;
 
@@ -216,8 +221,6 @@ public class Instance implements BulkOperationsEntity {
   private List<Publication> publications;
   @JsonProperty("electronicAccess")
   private List<ElectronicAccess> electronicAccesses;
-  @JsonProperty("statisticalCodeIds")
-  private List<String> statisticalCodeIds;
   @JsonProperty("sourceRecordFormat")
   private String sourceRecordFormat;
   @JsonProperty("statusUpdatedDate")
