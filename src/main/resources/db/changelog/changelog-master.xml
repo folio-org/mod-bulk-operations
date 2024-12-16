@@ -36,4 +36,6 @@
   <include file="changes/09-10-2024-modify-tenants-in-rules.xml" relativeToChangelogFile="true"/>
   <include file="changes/24_10_2024_add_updated_tenants_to_rules.xml" relativeToChangelogFile="true"/>
   <include file="changes/08-11-2024_add_bulk_operation_status_no_marc_records.xml" relativeToChangelogFile="true"/>
+  <include file="changes/10-12-2024_add_statistical_code_type.xml" relativeToChangelogFile="true"/>
+  <include file="changes/11-12-2024_add_remove_some_to_action_type.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
