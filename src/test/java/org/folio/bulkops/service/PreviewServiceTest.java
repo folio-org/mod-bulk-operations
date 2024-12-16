@@ -424,7 +424,7 @@ class PreviewServiceTest extends BaseTest {
 
   @Test
   @SneakyThrows
-  void shouldGetCompositePreviewOnEditStep() {
+  void shouldGetCompositePreviewOnEditStepForMarcInstance() {
     var summaryNoteTypeId = "10e2e11b-450f-45c8-b09b-0f819999966e";
     var bulkOperationId = UUID.randomUUID();
     var pathToMarcFile = bulkOperationId + "/" + "file.mrc";
@@ -433,9 +433,7 @@ class PreviewServiceTest extends BaseTest {
         .id(bulkOperationId)
         .entityType(INSTANCE_MARC)
         .linkToMatchedRecordsCsvFile(pathToMatchedCsvFile)
-        .linkToMatchedRecordsMarcFile(pathToMarcFile)
         .linkToModifiedRecordsMarcFile(pathToMarcFile)
-        .linkToCommittedRecordsMarcFile(pathToMarcFile)
       .build();
 
     var rules = new BulkOperationMarcRuleCollection()
@@ -517,9 +515,79 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(2).getRow().get(24), equalTo("Ethan Feld, the worst baseball player in the history of the game, finds himself recruited by a 100-year-old scout to help a band of fairies triumph over an ancient enemy. 2nd"));
   }
 
+
   @Test
   @SneakyThrows
-  void shouldEnrichMarcPreviewWithAdministrativeDataOnCommitStep() {
+  void shouldGetCompositePreviewOnEditStepForFolioAndMarcInstance() {
+    var summaryNoteTypeId = "10e2e11b-450f-45c8-b09b-0f819999966e";
+    var bulkOperationId = UUID.randomUUID();
+    var pathToMarcFile = bulkOperationId + "/" + "file.mrc";
+    var pathToUpdatedCsvFile = bulkOperationId + "/" + "modified_file.csv";
+    var csvChanges = "Sample note for folio and marc instance";
+    var bulkOperation = BulkOperation.builder()
+      .id(bulkOperationId)
+      .entityType(INSTANCE_MARC)
+      .linkToModifiedRecordsCsvFile(pathToUpdatedCsvFile)
+      .linkToModifiedRecordsMarcFile(pathToMarcFile)
+      .build();
+
+    var rules = new BulkOperationMarcRuleCollection()
+      .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule()
+        .bulkOperationId(bulkOperationId)
+        .tag("520")))
+      .totalRecords(1);
+
+    when(ruleService.getMarcRules(bulkOperationId)).thenReturn(rules);
+    when(instanceNoteTypesClient.getNoteTypeById(summaryNoteTypeId))
+      .thenReturn(new InstanceNoteType().name("Summary"));
+    when(instanceReferenceService.getAllInstanceNoteTypes())
+      .thenReturn(List.of(new InstanceNoteType().name("Summary"), new InstanceNoteType().name(GENERAL_NOTE)));
+    when(remoteFileSystemClient.get(pathToMarcFile)).thenReturn(new FileInputStream("src/test/resources/files/preview.mrc"));
+    when(remoteFileSystemClient.get(pathToUpdatedCsvFile))
+      .thenReturn(new FileInputStream("src/test/resources/files/modified_instances_preview.csv"));
+    when(instanceReferenceService.getContributorTypesByCode("art"))
+      .thenReturn(new ContributorTypeCollection().contributorTypes(
+        Collections.singletonList(new ContributorType().name("Artist"))));
+    when(instanceReferenceService.getContributorTypesByCode(null))
+      .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
+    when(instanceReferenceService.getContributorTypesByName("contributor"))
+      .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
+    when(instanceReferenceService.getInstanceTypesByName("Text"))
+      .thenReturn(InstanceTypes.builder()
+        .types(Collections.singletonList(InstanceType.builder().name("Text").code("txt").source("rdacontent").build())).build());
+    when(instanceReferenceService.getInstanceFormatsByCode("cz"))
+      .thenReturn(InstanceFormats.builder()
+        .formats(Collections.singletonList(InstanceFormat.builder().name("computer -- other").code("cz").source("rdacarrier").build())).build());
+    when(mappingRulesClient.getMarcBibMappingRules())
+      .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+
+    var res = previewService.getPreview(bulkOperation, EDIT, 0, 10);
+
+    assertThat(res.getHeader().get(23).getValue(), equalTo("General note"));
+    assertThat(res.getHeader().get(23).getForceVisible(), equalTo(Boolean.FALSE));
+    assertThat(res.getHeader().get(24).getValue(), equalTo("Summary"));
+    assertThat(res.getHeader().get(24).getForceVisible(), equalTo(Boolean.TRUE));
+
+    assertThat(res.getRows().get(1).getRow().get(0), equalTo("ed32b4a6-3895-42a0-b696-7b8ed667313f"));
+    assertThat(res.getRows().get(1).getRow().get(4), equalTo("inst000000000001"));
+    assertThat(res.getRows().get(1).getRow().get(5), equalTo("FOLIO"));
+    assertThat(res.getRows().get(1).getRow().get(6), equalTo("2023-12-27"));
+    assertThat(res.getRows().get(1).getRow().get(7), equalTo("Other"));
+    assertThat(res.getRows().get(1).getRow().get(8), equalTo("serial"));
+    assertThat(res.getRows().get(1).getRow().get(10), equalTo(csvChanges));
+
+    assertThat(res.getRows().get(2).getRow().get(0), equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
+    assertThat(res.getRows().get(2).getRow().get(2), equalTo("true"));
+    assertThat(res.getRows().get(2).getRow().get(4), equalTo("in00000000002"));
+    assertThat(res.getRows().get(2).getRow().get(5), equalTo("MARC"));
+    assertThat(res.getRows().get(2).getRow().get(8), equalTo("single unit"));
+    assertThat(res.getRows().get(2).getRow().get(10), equalTo(csvChanges));
+    assertThat(res.getRows().get(2).getRow().get(13), equalTo("series800 | series810 | series811 | series830"));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldEnrichMarcPreviewWithAdministrativeDataOnCommitStepForMarcInstance() {
     var summaryNoteTypeId = "10e2e11b-450f-45c8-b09b-0f819999966e";
     var bulkOperationId = UUID.randomUUID();
     var pathToMarcFile = bulkOperationId + "/" + "file.mrc";
@@ -589,6 +657,66 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(0).getRow().get(22), equalTo("2002-2024"));
     assertThat(res.getRows().get(0).getRow().get(23), equalTo("language note (staff only)"));
     assertThat(res.getRows().get(0).getRow().get(24), equalTo("Ethan Feld, the worst baseball player in the history of the game, finds himself recruited by a 100-year-old scout to help a band of fairies triumph over an ancient enemy. 2nd"));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldEnrichMarcPreviewWithAdministrativeDataOnCommitStepForFolioAndMarcInstance() {
+    var csvChanges = "Sample note for folio and marc instance";
+    var summaryNoteTypeId = "10e2e11b-450f-45c8-b09b-0f819999966e";
+    var bulkOperationId = UUID.randomUUID();
+    var pathToMarcFile = bulkOperationId + "/" + "file.mrc";
+    var pathToCommittedCsvFile = bulkOperationId + "/" + "modified_file.csv";
+    var bulkOperation = BulkOperation.builder()
+      .id(bulkOperationId)
+      .entityType(INSTANCE_MARC)
+      .linkToCommittedRecordsCsvFile(pathToCommittedCsvFile)
+      .linkToCommittedRecordsMarcFile(pathToMarcFile)
+      .build();
+
+    var rules = new BulkOperationMarcRuleCollection()
+      .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule()
+        .bulkOperationId(bulkOperationId)
+        .tag("520")))
+      .totalRecords(1);
+
+    when(ruleService.getMarcRules(bulkOperationId)).thenReturn(rules);
+    when(instanceNoteTypesClient.getNoteTypeById(summaryNoteTypeId))
+      .thenReturn(new InstanceNoteType().name("Summary"));
+    when(instanceReferenceService.getAllInstanceNoteTypes())
+      .thenReturn(List.of(new InstanceNoteType().name("Summary"), new InstanceNoteType().name(GENERAL_NOTE)));
+    when(remoteFileSystemClient.get(pathToMarcFile)).thenReturn(new FileInputStream("src/test/resources/files/preview.mrc"));
+    when(remoteFileSystemClient.get(pathToCommittedCsvFile))
+      .thenReturn(new FileInputStream("src/test/resources/files/modified_instances_preview.csv"));
+    when(instanceReferenceService.getContributorTypesByCode("art"))
+      .thenReturn(new ContributorTypeCollection().contributorTypes(
+        Collections.singletonList(new ContributorType().name("Artist"))));
+    when(instanceReferenceService.getContributorTypesByCode(null))
+      .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
+    when(instanceReferenceService.getContributorTypesByName("contributor"))
+      .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
+    when(instanceReferenceService.getInstanceTypesByName("Text"))
+      .thenReturn(InstanceTypes.builder()
+        .types(Collections.singletonList(InstanceType.builder().name("Text").code("txt").source("rdacontent").build())).build());
+    when(instanceReferenceService.getInstanceFormatsByCode("cz"))
+      .thenReturn(InstanceFormats.builder()
+        .formats(Collections.singletonList(InstanceFormat.builder().name("computer -- other").code("cz").source("rdacarrier").build())).build());
+    when(mappingRulesClient.getMarcBibMappingRules())
+      .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+
+    var res = previewService.getPreview(bulkOperation, COMMIT, 0, 10);
+
+    assertThat(res.getHeader().get(23).getValue(), equalTo("General note"));
+    assertThat(res.getHeader().get(23).getForceVisible(), equalTo(Boolean.FALSE));
+    assertThat(res.getHeader().get(24).getValue(), equalTo("Summary"));
+    assertThat(res.getHeader().get(24).getForceVisible(), equalTo(Boolean.TRUE));
+
+    assertThat(res.getRows().get(2).getRow().get(0), equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
+    assertThat(res.getRows().get(2).getRow().get(2), equalTo("true"));
+    assertThat(res.getRows().get(2).getRow().get(4), equalTo("in00000000002"));
+    assertThat(res.getRows().get(2).getRow().get(5), equalTo("MARC"));
+    assertThat(res.getRows().get(2).getRow().get(10), equalTo(csvChanges));
+    assertThat(res.getRows().get(2).getRow().get(13), equalTo("series800 | series810 | series811 | series830"));
   }
 
   @SneakyThrows
