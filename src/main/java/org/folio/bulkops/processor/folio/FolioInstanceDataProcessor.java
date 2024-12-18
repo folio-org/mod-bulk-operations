@@ -63,7 +63,7 @@ public class FolioInstanceDataProcessor extends FolioAbstractDataProcessor<Exten
         return extendedInstance -> extendedInstance.getEntity().setDiscoverySuppress(false);
       }
     }
-    return instanceNotesUpdaterFactory.getUpdater(option, action).orElseGet(() -> instance -> {
+    return instanceNotesUpdaterFactory.getUpdater(option, action, forPreview).orElseGet(() -> instance -> {
       throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
     });
   }
@@ -80,6 +80,9 @@ public class FolioInstanceDataProcessor extends FolioAbstractDataProcessor<Exten
         instance.getInstanceNotes().stream()
         .map(instanceNote -> instanceNote.toBuilder().build())
         .toList()));
+    }
+    if (instance.getStatisticalCodeIds() != null) {
+      clone.setStatisticalCodeIds(new ArrayList<>(clone.getStatisticalCodeIds()));
     }
     return ExtendedInstance.builder().tenantId(extendedInstance.getTenantId()).entity(clone).build();
   }

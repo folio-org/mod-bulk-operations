@@ -2,6 +2,8 @@ package org.folio.bulkops.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.domain.bean.StatisticalCode;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class InstanceReferenceHelper implements InitializingBean {
   private final InstanceReferenceService instanceReferenceService;
+  private final FolioExecutionContext folioExecutionContext;
 
   public String getInstanceStatusNameById(String id) {
     return instanceReferenceService.getInstanceStatusNameById(id);
@@ -25,6 +28,14 @@ public class InstanceReferenceHelper implements InitializingBean {
 
   public String getModeOfIssuanceIdByName(String name) {
     return instanceReferenceService.getModeOfIssuanceIdByName(name);
+  }
+
+  public StatisticalCode getStatisticalCodeByName(String name) {
+    return instanceReferenceService.getStatisticalCodeByName(name, folioExecutionContext.getTenantId());
+  }
+
+  public StatisticalCode getStatisticalCodeById(String id) {
+    return instanceReferenceService.getStatisticalCodeById(id, folioExecutionContext.getTenantId());
   }
 
   public String getInstanceTypeNameById(String id) {
