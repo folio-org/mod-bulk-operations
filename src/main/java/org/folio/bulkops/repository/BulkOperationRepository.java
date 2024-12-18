@@ -10,4 +10,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface BulkOperationRepository extends JpaRepository<BulkOperation, UUID> {
   Optional<BulkOperation> findByDataExportJobId(UUID jobId);
+  Optional<BulkOperation> findByDataImportJobProfileId(UUID profileId);
 }
