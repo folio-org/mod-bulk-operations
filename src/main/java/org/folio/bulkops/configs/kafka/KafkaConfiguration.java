@@ -1,10 +1,17 @@
 package org.folio.bulkops.configs.kafka;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import java.util.HashMap;
 import java.util.Map;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.With;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -12,6 +19,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +32,7 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.support.serializer.JsonSerializer;
 import org.springframework.stereotype.Component;
+import org.folio.bulkops.domain.dto.DataImportJobExecution;
 
 @Component
 @Configuration
@@ -34,7 +43,17 @@ public class KafkaConfiguration {
   private final KafkaProperties kafkaProperties;
 
   @Bean
-  public <V> ConcurrentKafkaListenerContainerFactory<String, V> kafkaListenerContainerFactory(ConsumerFactory<String, V> cf) {
+  public <V> ConcurrentKafkaListenerContainerFactory<String, V> kafkaListenerContainerFactory(@Qualifier("consumerFactory") ConsumerFactory<String, V> cf) {
+    var factory = new ConcurrentKafkaListenerContainerFactory<String, V>();
+    factory.setConsumerFactory(cf);
+    if (kafkaProperties.getListener().getAckMode() != null) {
+      factory.getContainerProperties().setAckMode(kafkaProperties.getListener().getAckMode());
+    }
+    return factory;
+  }
+
+  @Bean
+  public <V> ConcurrentKafkaListenerContainerFactory<String, V> kafkaListenerContainerFactoryDI(@Qualifier("consumerFactoryDI") ConsumerFactory<String, V> cf) {
     var factory = new ConcurrentKafkaListenerContainerFactory<String, V>();
     factory.setConsumerFactory(cf);
     if (kafkaProperties.getListener().getAckMode() != null) {
@@ -47,6 +66,18 @@ public class KafkaConfiguration {
   public <V> ConsumerFactory<String, V> consumerFactory(ObjectMapper objectMapper, FolioModuleMetadata folioModuleMetadata) {
     Map<String, Object> props = new HashMap<>(kafkaProperties.buildConsumerProperties());
     try (var deserializer = new JsonDeserializer<V>(TypeFactory.defaultInstance().constructType(TypeFactory.rawClass(Job.class)), objectMapper, false).trustedPackages(STAR)) {
+      props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+      props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
+      props.put(JsonDeserializer.TRUSTED_PACKAGES, STAR);
+      props.put("folioModuleMetadata", folioModuleMetadata);
+      return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), deserializer);
+    }
+  }
+
+  @Bean
+  public <V> ConsumerFactory<String, V> consumerFactoryDI(ObjectMapper objectMapper, FolioModuleMetadata folioModuleMetadata) {
+    Map<String, Object> props = new HashMap<>(kafkaProperties.buildConsumerProperties());
+    try (var deserializer = new DataImportEventPayloadDeserializer<V>(TypeFactory.defaultInstance().constructType(TypeFactory.rawClass(DataImportJobExecution.class)), objectMapper, false).trustedPackages(STAR)) {
       props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
       props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
       props.put(JsonDeserializer.TRUSTED_PACKAGES, STAR);

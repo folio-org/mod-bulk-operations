@@ -79,6 +79,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpHeaders;
+import org.springframework.kafka.annotation.EnableKafka;
+import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.support.TestPropertySourceUtils;
@@ -88,13 +90,15 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ContextConfiguration(initializers = BaseTest.Initializer.class)
 @Testcontainers
 @AutoConfigureMockMvc
 @Log4j2
 @DirtiesContext(classMode= DirtiesContext.ClassMode.AFTER_CLASS)
+@EmbeddedKafka(topics = { "folio.Default.diku.DI_JOB_COMPLETED" })
+@EnableKafka
 public abstract class BaseTest {
   public static final String S3_ACCESS_KEY = "minio-access-key";
   public static final String S3_SECRET_KEY = "minio-secret-key";

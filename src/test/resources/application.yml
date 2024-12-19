@@ -36,6 +36,7 @@ application:
     awsSdk: ${LOCAL_FS_WITH_AWS_SDK:false}
   kafka:
     topic-pattern: ${ENV:folio}.(.*\.)?data-export.job.update
+    topic-pattern-di: ${ENV:folio}.(.*\.)?DI_JOB_COMPLETED
     group-id: ${ENV:folio}-mod-bulk-operations-events-group
   file-uploading:
     max-retry-count: ${MAX_UPLOADING_RETRIES:50}

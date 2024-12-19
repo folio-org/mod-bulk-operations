@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Awaitility;
@@ -82,6 +83,7 @@ import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
+import org.folio.bulkops.domain.dto.DataImportProgress;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.MarcAction;
@@ -163,6 +165,13 @@ class BulkOperationServiceTest extends BaseTest {
 
   @MockBean
   private PermissionsValidator permissionsValidator;
+
+  @MockBean
+  private MetadataProviderService metadataProviderService;
+
+  @MockBean
+  private SrsService srsService;
+
   @Test
   @SneakyThrows
   void shouldUploadIdentifiers() {
@@ -1476,6 +1485,29 @@ class BulkOperationServiceTest extends BaseTest {
       var itemEntity = (Item) modified.getUpdated().getRecordBulkOperationEntity();
 
       assertTrue(itemEntity.getDiscoverySuppress());
+    }
+  }
+  @Test
+  void shouldProcessDataImportResult() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      UUID dataImportJobProfileId = UUID.randomUUID();
+      BulkOperation operation = new BulkOperation();
+      operation.setId(UUID.randomUUID());
+      operation.setDataImportJobProfileId(dataImportJobProfileId);
+
+      when(bulkOperationRepository.findByDataImportJobProfileId(dataImportJobProfileId)).thenReturn(Optional.of(operation));
+      when(metadataProviderService.getJobExecutions(dataImportJobProfileId)).thenReturn(List.of(new org.folio.bulkops.domain.dto.DataImportJobExecution()));
+      when(metadataProviderService.calculateProgress(any())).thenReturn(new DataImportProgress().current(10));
+      when(metadataProviderService.isDataImportJobCompleted(any())).thenReturn(true);
+      when(metadataProviderService.getUpdatedInstanceIds(any())).thenReturn(List.of(UUID.randomUUID().toString()));
+
+      bulkOperationService.processDataImportResult(dataImportJobProfileId);
+
+      verify(bulkOperationRepository).findByDataImportJobProfileId(dataImportJobProfileId);
+      verify(metadataProviderService).getJobExecutions(dataImportJobProfileId);
+      verify(metadataProviderService).calculateProgress(any());
+      verify(metadataProviderService).isDataImportJobCompleted(any());
+      verify(srsService).retrieveMarcInstancesFromSrs(any(), any());
     }
   }
 }
