@@ -2,33 +2,28 @@ package org.folio.bulkops.service;
 
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import lombok.SneakyThrows;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.awaitility.Awaitility;
 import org.folio.bulkops.BaseTest;
-import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.FolioModuleMetadata;
-import org.folio.spring.integration.XOkapiHeaders;
+import org.folio.bulkops.configs.kafka.dto.Event;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
 import java.util.UUID;
 
+@ExtendWith(MockitoExtension.class)
 class DataImportJobCompletionReceiverServiceTest extends BaseTest {
 
   @Autowired
-  private KafkaTemplate<String, String> kafkaTemplate;
+  private KafkaTemplate<String, Event> kafkaTemplate;
 
   @Autowired
   private DataImportJobCompletionReceiverService receiverService;
@@ -36,28 +31,16 @@ class DataImportJobCompletionReceiverServiceTest extends BaseTest {
   @MockBean
   private BulkOperationService bulkOperationService;
 
-  @SpyBean
-  private FolioExecutionContext folioExecutionContext;
-
-  @Autowired
-  private FolioModuleMetadata folioModuleMetadata;
-
   @Test
   @SneakyThrows
   void testReceiveJobExecutionUpdate() {
-    HashMap<String, Collection<String>> headers = new HashMap<>();
-    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
-    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
-
     var topic = "folio.Default.diku.DI_JOB_COMPLETED";
-    var msg = Files.readString(Path.of("src/test/resources/files/kafka/topic_payload.json"));
+    var event = Files.readString(Path.of("src/test/resources/files/kafka/data_import_job_completed_message.json"));
 
-    kafkaTemplate.send(new ProducerRecord<>(topic, msg));
+    kafkaTemplate.send(topic, OBJECT_MAPPER.readValue(event, Event.class));
 
     var dataImportJobProfileIdCaptor = ArgumentCaptor.forClass(UUID.class);
     Awaitility.await().untilAsserted(() -> verify(bulkOperationService, times(1))
       .processDataImportResult(dataImportJobProfileIdCaptor.capture()));
-
   }
 }

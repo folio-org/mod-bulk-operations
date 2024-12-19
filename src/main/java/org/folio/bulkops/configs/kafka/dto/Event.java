@@ -1,25 +1,25 @@
-package org.folio.bulkops.domain.bean;
+package org.folio.bulkops.configs.kafka.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import org.folio.bulkops.domain.deserializer.EventPayloadDeserializer;
 
+/**
+ * Kafka event specific format used for Data Import module.
+ */
 @Data
 @With
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class KafkaEventDI {
-
+public class Event {
+  @JsonProperty("id")
+  private String id;
   @JsonProperty("eventType")
   private String eventType;
-
   @JsonProperty("eventPayload")
-  @JsonDeserialize(using = EventPayloadDeserializer.class)
-  private EventPayload eventPayload;
+  private String eventPayload;
 }
