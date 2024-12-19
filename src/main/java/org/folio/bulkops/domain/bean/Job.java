@@ -77,7 +77,6 @@ public class Job {
   @JsonProperty("batchStatus")
   private BatchStatus batchStatus;
 
-
   @JsonProperty("identifierType")
   private IdentifierType identifierType;
 
