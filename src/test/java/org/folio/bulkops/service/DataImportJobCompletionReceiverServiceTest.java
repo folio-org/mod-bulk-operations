@@ -8,9 +8,7 @@ import org.awaitility.Awaitility;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.configs.kafka.dto.Event;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -18,8 +16,8 @@ import org.springframework.kafka.core.KafkaTemplate;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
-@ExtendWith(MockitoExtension.class)
 class DataImportJobCompletionReceiverServiceTest extends BaseTest {
 
   @Autowired
@@ -40,7 +38,7 @@ class DataImportJobCompletionReceiverServiceTest extends BaseTest {
     kafkaTemplate.send(topic, OBJECT_MAPPER.readValue(event, Event.class));
 
     var dataImportJobProfileIdCaptor = ArgumentCaptor.forClass(UUID.class);
-    Awaitility.await().untilAsserted(() -> verify(bulkOperationService, times(1))
+    Awaitility.await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> verify(bulkOperationService, times(1))
       .processDataImportResult(dataImportJobProfileIdCaptor.capture()));
   }
 }
