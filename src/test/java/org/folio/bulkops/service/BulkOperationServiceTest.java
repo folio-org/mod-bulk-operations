@@ -110,19 +110,17 @@ import org.folio.s3.client.RemoteStorageWriter;
 import org.folio.s3.exception.S3ClientException;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-@ExtendWith(MockitoExtension.class)
+
 class BulkOperationServiceTest extends BaseTest {
   @Autowired
   private BulkOperationService bulkOperationService;
@@ -171,6 +169,9 @@ class BulkOperationServiceTest extends BaseTest {
 
   @MockBean
   private MetadataProviderService metadataProviderService;
+
+  @MockBean
+  private SrsService srsService;
 
   @Test
   @SneakyThrows
