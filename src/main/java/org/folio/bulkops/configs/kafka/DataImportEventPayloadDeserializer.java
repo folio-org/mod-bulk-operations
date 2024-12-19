@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 
 public class DataImportEventPayloadDeserializer<T> extends JsonDeserializer<T> {
 
-  public ObjectMapper objectMapper;
+  private final ObjectMapper objectMapper;
 
   public DataImportEventPayloadDeserializer(JavaType javaType, ObjectMapper objectMapper, boolean b) {
     super(javaType, objectMapper, b);
