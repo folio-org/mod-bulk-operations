@@ -3,6 +3,8 @@ package org.folio.bulkops.processor.folio;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.contains;
+import static org.apache.commons.lang3.StringUtils.replace;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
@@ -166,7 +168,7 @@ public class InstanceNotesUpdaterFactory {
     var typeIdOptional = getTypeIdOptional(parameters);
     if (typeIdOptional.isPresent() && notes != null) {
       notes = notes.stream().filter(note -> !(StringUtils.equals(note.getInstanceNoteTypeId(), typeIdOptional.get())
-              && StringUtils.equals(note.getNote(), noteToRemove))).collect(toCollection(ArrayList::new));
+              && contains(note.getNote(), noteToRemove))).collect(toCollection(ArrayList::new));
     }
     return notes;
   }
@@ -176,7 +178,9 @@ public class InstanceNotesUpdaterFactory {
     if (typeIdOptional.isPresent() && notes != null) {
       notes.forEach(note -> {
         if (StringUtils.equals(note.getInstanceNoteTypeId(), typeIdOptional.get())
-              && StringUtils.equals(note.getNote(), action.getInitial())) note.setNote(action.getUpdated());
+              && contains(note.getNote(), action.getInitial())) {
+          note.setNote(replace(note.getNote(), action.getInitial(), action.getUpdated()));
+        }
       });
     }
   }

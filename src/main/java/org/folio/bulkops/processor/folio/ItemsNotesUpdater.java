@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.util.stream.Collectors.toCollection;
+import static org.apache.commons.lang3.StringUtils.contains;
+import static org.apache.commons.lang3.StringUtils.replace;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.DUPLICATE;
@@ -200,58 +202,64 @@ public class ItemsNotesUpdater {
   }
 
   private Optional<Updater<ExtendedItem>> findAndRemoveThese(Action action, UpdateOptionType option) {
-    if (option == ADMINISTRATIVE_NOTE) {
-      return Optional.of(extendedItem -> extendedItem.getEntity().setAdministrativeNotes(administrativeNotesUpdater.findAndRemoveAdministrativeNote(action.getInitial(), extendedItem.getEntity().getAdministrativeNotes())));
-    } else if (option == CHECK_IN_NOTE || option == CHECK_OUT_NOTE) {
-      var circType = option == CHECK_IN_NOTE ? CirculationNote.NoteTypeEnum.IN : CirculationNote.NoteTypeEnum.OUT;
-      return Optional.of(extendedItem -> {
-        if (extendedItem.getEntity().getCirculationNotes() != null) {
-          var circulationNotes = extendedItem.getEntity().getCirculationNotes().stream()
-            .filter(circulationNote -> !(StringUtils.equals(circulationNote.getNote(), action.getInitial())
-              && circulationNote.getNoteType() == circType)).toList();
-          extendedItem.getEntity().setCirculationNotes(circulationNotes);
-        }});
-    } else if (option == ITEM_NOTE) {
-      return Optional.of(extendedItem -> action.getParameters()
-        .stream().filter(parameter -> StringUtils.equals(parameter.getKey(), ITEM_NOTE_TYPE_ID_KEY))
-        .findFirst().ifPresent(parameter -> {
-          if (extendedItem.getEntity().getNotes() != null) {
-            var itemNotes = extendedItem.getEntity().getNotes().stream()
-              .filter(note -> !(StringUtils.equals(note.getItemNoteTypeId(), parameter.getValue())
-                && StringUtils.equals(note.getNote(), action.getInitial()))).toList();
-            extendedItem.getEntity().setNotes(itemNotes);
-          }
-        }));
-    }
-    return Optional.empty();
+    return switch (option) {
+      case ADMINISTRATIVE_NOTE ->
+        Optional.of(extendedItem -> extendedItem.getEntity().setAdministrativeNotes(administrativeNotesUpdater.findAndRemoveAdministrativeNote(action.getInitial(), extendedItem.getEntity().getAdministrativeNotes())));
+      case CHECK_IN_NOTE, CHECK_OUT_NOTE -> {
+        var type = CHECK_IN_NOTE.equals(option) ? CirculationNote.NoteTypeEnum.IN : CirculationNote.NoteTypeEnum.OUT;
+        yield  Optional.of(extendedItem -> {
+          if (extendedItem.getEntity().getCirculationNotes() != null) {
+            var circulationNotes = extendedItem.getEntity().getCirculationNotes().stream()
+              .filter(circulationNote -> !(contains(circulationNote.getNote(), action.getInitial())
+                && circulationNote.getNoteType() == type)).toList();
+            extendedItem.getEntity().setCirculationNotes(circulationNotes);
+          }});
+      }
+      case ITEM_NOTE ->
+        Optional.of(extendedItem -> action.getParameters()
+          .stream().filter(parameter -> StringUtils.equals(parameter.getKey(), ITEM_NOTE_TYPE_ID_KEY))
+          .findFirst().ifPresent(parameter -> {
+            if (extendedItem.getEntity().getNotes() != null) {
+              var itemNotes = extendedItem.getEntity().getNotes().stream()
+                .filter(note -> !(StringUtils.equals(note.getItemNoteTypeId(), parameter.getValue())
+                  && contains(note.getNote(), action.getInitial()))).toList();
+              extendedItem.getEntity().setNotes(itemNotes);
+            }
+          }));
+      default -> Optional.empty();
+    };
   }
 
   private Optional<Updater<ExtendedItem>> findAndReplace(Action action, UpdateOptionType option) {
-    if (option == ADMINISTRATIVE_NOTE) {
-      return Optional.of(extendedItem -> extendedItem.getEntity().setAdministrativeNotes(administrativeNotesUpdater.findAndReplaceAdministrativeNote(action, extendedItem.getEntity().getAdministrativeNotes())));
-    } else if (option == CHECK_IN_NOTE || option == CHECK_OUT_NOTE) {
-      var type = option == CHECK_IN_NOTE ? CirculationNote.NoteTypeEnum.IN : CirculationNote.NoteTypeEnum.OUT;
-      return Optional.of(extendedItem -> {
-        if (extendedItem.getEntity().getCirculationNotes() != null) {
-          extendedItem.getEntity().getCirculationNotes().forEach(circulationNote -> {
-            if (StringUtils.equals(circulationNote.getNote(), action.getInitial()) && type == circulationNote.getNoteType())
-              circulationNote.setNote(action.getUpdated());
-          });
-        }
-      });
-    } else if (option == ITEM_NOTE) {
-      return Optional.of(extendedItem -> action.getParameters()
-        .stream().filter(parameter -> StringUtils.equals(parameter.getKey(), ITEM_NOTE_TYPE_ID_KEY))
-        .findFirst().ifPresent(parameter -> {
-          if (extendedItem.getEntity().getNotes() != null) {
-            extendedItem.getEntity().getNotes().forEach(itemNote -> {
-              if (StringUtils.equals(itemNote.getItemNoteTypeId(), parameter.getValue())
-                && StringUtils.equals(itemNote.getNote(), action.getInitial())) itemNote.setNote(action.getUpdated());
+    return switch (option) {
+      case ADMINISTRATIVE_NOTE ->
+        Optional.of(extendedItem -> extendedItem.getEntity().setAdministrativeNotes(administrativeNotesUpdater.findAndReplaceAdministrativeNote(action, extendedItem.getEntity().getAdministrativeNotes())));
+      case CHECK_IN_NOTE, CHECK_OUT_NOTE -> {
+        var type = CHECK_IN_NOTE.equals(option) ? CirculationNote.NoteTypeEnum.IN : CirculationNote.NoteTypeEnum.OUT;
+        yield  Optional.of(extendedItem -> {
+          if (extendedItem.getEntity().getCirculationNotes() != null) {
+            extendedItem.getEntity().getCirculationNotes().forEach(circulationNote -> {
+              if (contains(circulationNote.getNote(), action.getInitial()) && type == circulationNote.getNoteType())
+                circulationNote.setNote(replace(circulationNote.getNote(), action.getInitial(), action.getUpdated()));
             });
           }
-        }));
-    }
-    return Optional.empty();
+        });
+      }
+      case ITEM_NOTE ->
+        Optional.of(extendedItem -> action.getParameters()
+          .stream().filter(parameter -> StringUtils.equals(parameter.getKey(), ITEM_NOTE_TYPE_ID_KEY))
+          .findFirst().ifPresent(parameter -> {
+            if (extendedItem.getEntity().getNotes() != null) {
+              extendedItem.getEntity().getNotes().forEach(itemNote -> {
+                if (StringUtils.equals(itemNote.getItemNoteTypeId(), parameter.getValue())
+                  && contains(itemNote.getNote(), action.getInitial())) {
+                  itemNote.setNote(replace(itemNote.getNote(), action.getInitial(), action.getUpdated()));
+                }
+              });
+            }
+          }));
+      default -> Optional.empty();
+    };
   }
 
   private Optional<Updater<ExtendedItem>> duplicate(Action action, UpdateOptionType option) {

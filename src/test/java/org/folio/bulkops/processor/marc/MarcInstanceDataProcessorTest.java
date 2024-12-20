@@ -91,7 +91,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
           .name(FIND)
           .data(Collections.singletonList(new MarcActionDataInner()
             .key(MarcDataType.VALUE)
-            .value("text b"))),
+            .value("text"))),
         new MarcAction()
           .name(UpdateActionType.APPEND)
           .data(List.of(
@@ -160,7 +160,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
           .name(FIND)
           .data(Collections.singletonList(new MarcActionDataInner()
             .key(MarcDataType.VALUE)
-            .value("text a"))),
+            .value("text"))),
         new MarcAction()
           .name(UpdateActionType.REMOVE_FIELD)
           .data(Collections.emptyList())));
@@ -226,7 +226,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
           .name(FIND)
           .data(Collections.singletonList(new MarcActionDataInner()
             .key(MarcDataType.VALUE)
-            .value("text a"))),
+            .value("text"))),
         new MarcAction()
           .name(UpdateActionType.REMOVE_SUBFIELD)
           .data(Collections.emptyList())));
@@ -293,13 +293,13 @@ class MarcInstanceDataProcessorTest extends BaseTest {
           .name(FIND)
           .data(Collections.singletonList(new MarcActionDataInner()
             .key(MarcDataType.VALUE)
-            .value("old value"))),
+            .value("old"))),
         new MarcAction()
           .name(UpdateActionType.REPLACE_WITH)
           .data(List.of(
             new MarcActionDataInner()
               .key(MarcDataType.VALUE)
-              .value("new value")))));
+              .value("new")))));
     var rules = new BulkOperationMarcRuleCollection()
       .bulkOperationMarcRules(Collections.singletonList(findAndReplaceRule))
       .totalRecords(1);

@@ -1,6 +1,8 @@
 package org.folio.bulkops.processor.marc;
 
 import static java.lang.Character.isDigit;
+import static org.apache.commons.lang3.StringUtils.contains;
+import static org.apache.commons.lang3.StringUtils.replace;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.MarcDataType.SUBFIELD;
 import static org.folio.bulkops.domain.dto.MarcDataType.VALUE;
@@ -94,7 +96,7 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     var appendValue = fetchActionDataValue(VALUE, rule.getActions().get(1).getData());
     var appendSubfieldCode = fetchActionDataValue(SUBFIELD, rule.getActions().get(1).getData()).charAt(0);
     findFields(rule, marcRecord).stream()
-        .filter(df -> df.getSubfields(subfieldCode).stream().anyMatch(sf -> findValue.equals(sf.getData())))
+        .filter(df -> df.getSubfields(subfieldCode).stream().anyMatch(sf -> contains(sf.getData(), findValue)))
         .forEach(df -> {
           df.addSubfield(new SubfieldImpl(appendSubfieldCode, appendValue));
           df.getSubfields().sort(subfieldComparator);
@@ -107,8 +109,8 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     var newValue = fetchActionDataValue(VALUE, rule.getActions().get(1).getData());
     findFields(rule, marcRecord).forEach(dataField ->
       dataField.getSubfields(subfieldCode).forEach(subfield -> {
-        if (findValue.equals(subfield.getData())) {
-          subfield.setData(newValue);
+        if (contains(subfield.getData(), findValue)) {
+          subfield.setData(replace(subfield.getData(), findValue, newValue));
         }
       }));
   }
@@ -117,7 +119,7 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     char subfieldCode = rule.getSubfield().charAt(0);
     var findValue = fetchActionDataValue(VALUE, rule.getActions().get(0).getData());
     findFields(rule, marcRecord).stream()
-      .filter(df -> df.getSubfields(subfieldCode).stream().anyMatch(sf -> findValue.equals(sf.getData())))
+      .filter(df -> df.getSubfields(subfieldCode).stream().anyMatch(sf -> contains(sf.getData(), findValue)))
       .forEach(marcRecord::removeVariableField);
   }
 
@@ -125,7 +127,7 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     char subfieldCode = rule.getSubfield().charAt(0);
     var findValue = fetchActionDataValue(VALUE, rule.getActions().get(0).getData());
     findFields(rule, marcRecord).forEach(df -> df.getSubfields(subfieldCode).stream()
-      .filter(sf -> findValue.equals(sf.getData()))
+      .filter(sf -> contains(sf.getData(), findValue))
       .forEach(df::removeSubfield));
   }
 

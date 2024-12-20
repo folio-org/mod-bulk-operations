@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.util.stream.Collectors.toCollection;
+import static org.apache.commons.lang3.StringUtils.contains;
+import static org.apache.commons.lang3.StringUtils.replace;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
@@ -126,7 +128,7 @@ public class HoldingsNotesUpdater {
     var typeIdParameterOptional = getTypeIdParameterOptional(parameters);
     if (typeIdParameterOptional.isPresent() && notes != null) {
       notes = notes.stream().filter(note -> !(StringUtils.equals(note.getHoldingsNoteTypeId(), typeIdParameterOptional.get().getValue())
-              && StringUtils.equals(note.getNote(), noteToRemove))).collect(toCollection(ArrayList::new));
+              && contains(note.getNote(), noteToRemove))).collect(toCollection(ArrayList::new));
     }
     return notes;
   }
@@ -136,7 +138,9 @@ public class HoldingsNotesUpdater {
     if (typeIdParameterOptional.isPresent() && notes != null) {
       notes.forEach(note -> {
         if (StringUtils.equals(note.getHoldingsNoteTypeId(), typeIdParameterOptional.get().getValue())
-              && StringUtils.equals(note.getNote(), action.getInitial())) note.setNote(action.getUpdated());
+              && contains(note.getNote(), action.getInitial())) {
+          note.setNote(replace(note.getNote(), action.getInitial(), action.getUpdated()));
+        }
       });
     }
   }

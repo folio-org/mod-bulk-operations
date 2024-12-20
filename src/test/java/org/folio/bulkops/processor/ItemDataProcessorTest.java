@@ -576,18 +576,18 @@ class ItemDataProcessorTest extends BaseTest {
   @Test
   @SneakyThrows
   void testFindAndRemoveForAdministrativeNotes() {
-    var administrativeNote1 = "administrative note 1";
-    var administrativeNote2 = "administrative note 2";
+    var administrativeNote1 = "administrative note";
+    var administrativeNote2 = "Administrative note";
     var item = new Item().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
     var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("administrative note"), extendedItem, false).apply(extendedItem);
-    assertEquals(2, item.getAdministrativeNotes().size());
-
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial(administrativeNote2), extendedItem, false).apply(extendedItem);
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("administrative"), extendedItem, false).apply(extendedItem);
     assertEquals(1, item.getAdministrativeNotes().size());
-    assertEquals(administrativeNote1, item.getAdministrativeNotes().get(0));
+    assertEquals("Administrative note", item.getAdministrativeNotes().get(0));
+
+    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("Administrative"), extendedItem, false).apply(extendedItem);
+    assertTrue(item.getAdministrativeNotes().isEmpty());
   }
 
   @Test
@@ -602,7 +602,7 @@ class ItemDataProcessorTest extends BaseTest {
     var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
     processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note"), extendedItem, false).apply(extendedItem);
-    assertEquals(2, item.getCirculationNotes().size());
+    assertEquals(1, item.getCirculationNotes().size());
     processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("circ note"), extendedItem, false).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals("circ note", item.getCirculationNotes().get(0).getNote());
@@ -628,61 +628,58 @@ class ItemDataProcessorTest extends BaseTest {
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
     var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("itemNote")
-      .parameters(List.of(parameter)), extendedItem, false).apply(extendedItem);
-    assertEquals(3, item.getNotes().size());
-    processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("itemNote1")
+    processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("Note2")
       .parameters(List.of(parameter)), extendedItem, false).apply(extendedItem);
     assertEquals(2, item.getNotes().size());
-    processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("itemNote2")
-      .parameters(List.of(parameter)), extendedItem, false).apply(extendedItem);
-    assertEquals(1, item.getNotes().size());
+    assertEquals("itemNote1", item.getNotes().get(0).getNote());
+    assertEquals("typeId1", item.getNotes().get(0).getItemNoteTypeId());
+    assertEquals("itemNote1", item.getNotes().get(1).getNote());
+    assertEquals("typeId3", item.getNotes().get(1).getItemNoteTypeId());
   }
 
   @Test
   @SneakyThrows
   void testFindAndReplaceForAdministrativeNotes() {
-    var administrativeNote1 = "administrative note 1";
-    var administrativeNote2 = "administrative note 2";
-    var administrativeNote3 = "administrative note 3";
+    var administrativeNote1 = "administrative note";
+    var administrativeNote2 = "Administrative note";
     var item = new Item().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
     var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
     processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REPLACE)
-      .initial(administrativeNote1).updated(administrativeNote3), extendedItem, false).apply(extendedItem);
+      .initial("administrative").updated("new administrative"), extendedItem, false).apply(extendedItem);
     assertEquals(2, item.getAdministrativeNotes().size());
-    assertEquals(administrativeNote3, item.getAdministrativeNotes().get(0));
-    assertEquals(administrativeNote2, item.getAdministrativeNotes().get(1));
+    assertEquals("new administrative note", item.getAdministrativeNotes().get(0));
+    assertEquals("Administrative note", item.getAdministrativeNotes().get(1));
   }
 
   @Test
   @SneakyThrows
   void testFindAndReplaceForCirculationNotes() {
     var checkInNote = new CirculationNote()
-      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note");
+      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("check-in note");
     var checkOutNote = new CirculationNote()
-      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note");
+      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("check-out note");
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
     var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
     processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
-      .initial("note").updated("note 2"), extendedItem, false).apply(extendedItem);
+      .initial("check-in").updated("new check-in"), extendedItem, false).apply(extendedItem);
     assertEquals(2, item.getCirculationNotes().size());
-    assertEquals("note 2", item.getCirculationNotes().get(0).getNote());
+    assertEquals("new check-in note", item.getCirculationNotes().get(0).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
-    assertEquals("note", item.getCirculationNotes().get(1).getNote());
+    assertEquals("check-out note", item.getCirculationNotes().get(1).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(1).getNoteType());
 
-    checkInNote.setNote("note");
+    checkInNote.setNote("check-in note");
 
     processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REPLACE)
-      .initial("note").updated("note 2"), extendedItem, false).apply(extendedItem);
+      .initial("check-out").updated("new check-out"), extendedItem, false).apply(extendedItem);
     assertEquals(2, item.getCirculationNotes().size());
-    assertEquals("note", item.getCirculationNotes().get(0).getNote());
+    assertEquals("check-in note", item.getCirculationNotes().get(0).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
-    assertEquals("note 2", item.getCirculationNotes().get(1).getNote());
+    assertEquals("new check-out note", item.getCirculationNotes().get(1).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(1).getNoteType());
   }
 
