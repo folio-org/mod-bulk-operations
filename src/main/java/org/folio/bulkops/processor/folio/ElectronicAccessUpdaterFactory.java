@@ -4,7 +4,9 @@ import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
+import static org.apache.commons.lang3.StringUtils.replace;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 import lombok.AllArgsConstructor;
@@ -18,7 +20,6 @@ import org.folio.bulkops.util.RuleUtils;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;
 
-import java.util.Objects;
 
 @Component
 @Log4j2
@@ -70,12 +71,12 @@ public class ElectronicAccessUpdaterFactory {
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setUri(EMPTY)));
       case FIND_AND_REMOVE_THESE -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.stream()
-          .filter(electronicAccess -> Objects.equals(electronicAccess.getUri(), action.getInitial()))
+          .filter(electronicAccess -> contains(electronicAccess.getUri(), action.getInitial()))
           .forEach(electronicAccess -> electronicAccess.setUri(EMPTY)));
       case FIND_AND_REPLACE -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.stream()
-          .filter(electronicAccess -> Objects.equals(electronicAccess.getUri(), action.getInitial()))
-          .forEach(electronicAccess -> electronicAccess.setUri(isNull(action.getUpdated()) ? EMPTY : action.getUpdated())));
+          .filter(electronicAccess -> contains(electronicAccess.getUri(), action.getInitial()))
+          .forEach(electronicAccess -> electronicAccess.setUri(isNull(action.getUpdated()) ? EMPTY : electronicAccess.getUri().replace(action.getInitial(), action.getUpdated()))));
       case REPLACE_WITH -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setUri(isNull(action.getUpdated()) ? EMPTY : action.getUpdated())));
       default -> notSupported(option, action);
@@ -88,12 +89,12 @@ public class ElectronicAccessUpdaterFactory {
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setLinkText(null)));
       case FIND_AND_REMOVE_THESE -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.stream()
-          .filter(electronicAccess -> Objects.equals(electronicAccess.getLinkText(), action.getInitial()))
+          .filter(electronicAccess -> contains(electronicAccess.getLinkText(), action.getInitial()))
           .forEach(electronicAccess -> electronicAccess.setLinkText(null)));
       case FIND_AND_REPLACE -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.stream()
-          .filter(electronicAccess -> Objects.equals(electronicAccess.getLinkText(), action.getInitial()))
-          .forEach(electronicAccess -> electronicAccess.setLinkText(action.getUpdated())));
+          .filter(electronicAccess -> contains(electronicAccess.getLinkText(), action.getInitial()))
+          .forEach(electronicAccess -> electronicAccess.setLinkText(replace(electronicAccess.getLinkText(), action.getInitial(), action.getUpdated()))));
       case REPLACE_WITH -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setLinkText(action.getUpdated())));
       default -> notSupported(option, action);
@@ -106,12 +107,12 @@ public class ElectronicAccessUpdaterFactory {
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setMaterialsSpecification(null)));
       case FIND_AND_REMOVE_THESE -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.stream()
-          .filter(electronicAccess -> Objects.equals(electronicAccess.getMaterialsSpecification(), action.getInitial()))
+          .filter(electronicAccess -> contains(electronicAccess.getMaterialsSpecification(), action.getInitial()))
           .forEach(electronicAccess -> electronicAccess.setMaterialsSpecification(null)));
       case FIND_AND_REPLACE -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.stream()
-          .filter(electronicAccess -> Objects.equals(electronicAccess.getMaterialsSpecification(), action.getInitial()))
-          .forEach(electronicAccess -> electronicAccess.setMaterialsSpecification(action.getUpdated())));
+          .filter(electronicAccess -> contains(electronicAccess.getMaterialsSpecification(), action.getInitial()))
+          .forEach(electronicAccess -> electronicAccess.setMaterialsSpecification(replace(electronicAccess.getMaterialsSpecification(), action.getInitial(), action.getUpdated()))));
       case REPLACE_WITH -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setMaterialsSpecification(action.getUpdated())));
       default -> notSupported(option, action);
@@ -124,12 +125,12 @@ public class ElectronicAccessUpdaterFactory {
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setPublicNote(null)));
       case FIND_AND_REMOVE_THESE -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.stream()
-          .filter(electronicAccess -> Objects.equals(electronicAccess.getPublicNote(), action.getInitial()))
+          .filter(electronicAccess -> contains(electronicAccess.getPublicNote(), action.getInitial()))
           .forEach(electronicAccess -> electronicAccess.setPublicNote(null)));
       case FIND_AND_REPLACE -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.stream()
-          .filter(electronicAccess -> Objects.equals(electronicAccess.getPublicNote(), action.getInitial()))
-          .forEach(electronicAccess -> electronicAccess.setPublicNote(action.getUpdated())));
+          .filter(electronicAccess -> contains(electronicAccess.getPublicNote(), action.getInitial()))
+          .forEach(electronicAccess -> electronicAccess.setPublicNote(replace(electronicAccess.getPublicNote(), action.getInitial(), action.getUpdated()))));
       case REPLACE_WITH -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setPublicNote(action.getUpdated())));
       default -> notSupported(option, action);

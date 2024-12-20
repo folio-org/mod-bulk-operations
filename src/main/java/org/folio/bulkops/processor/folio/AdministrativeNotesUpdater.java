@@ -37,7 +37,7 @@ public class AdministrativeNotesUpdater {
   public List<String> findAndRemoveAdministrativeNote(String administrativeNoteToRemove, List<String> administrativeNotes) {
     if (administrativeNotes != null) {
       administrativeNotes = administrativeNotes.stream()
-        .filter(administrativeNote -> !StringUtils.equals(administrativeNote, administrativeNoteToRemove))
+        .filter(administrativeNote -> !StringUtils.contains(administrativeNote, administrativeNoteToRemove))
         .collect(toCollection(ArrayList::new));
     }
     return administrativeNotes;
@@ -46,8 +46,8 @@ public class AdministrativeNotesUpdater {
   public List<String> findAndReplaceAdministrativeNote(Action action, List<String> administrativeNotes) {
     if (administrativeNotes != null) {
       administrativeNotes = administrativeNotes.stream().map(administrativeNote -> {
-        if (StringUtils.equals(administrativeNote, action.getInitial())) {
-          return action.getUpdated();
+        if (StringUtils.contains(administrativeNote, action.getInitial())) {
+          return StringUtils.replace(administrativeNote, action.getInitial(), action.getUpdated());
         }
         return administrativeNote;
       }).collect(toCollection(ArrayList::new));

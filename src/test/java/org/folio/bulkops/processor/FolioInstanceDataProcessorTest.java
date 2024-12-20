@@ -292,8 +292,8 @@ class FolioInstanceDataProcessorTest extends BaseTest {
         .option(optionType)
         .actions(Collections.singletonList(new Action()
           .type(FIND_AND_REPLACE)
-          .initial("first note")
-          .updated("updated note")
+          .initial("first")
+          .updated("updated first")
           .parameters(Collections.singletonList(new Parameter()
             .key(INSTANCE_NOTE_TYPE_ID_KEY)
             .value(typeId)))))));
@@ -304,12 +304,12 @@ class FolioInstanceDataProcessorTest extends BaseTest {
 
     if (ADMINISTRATIVE_NOTE.equals(optionType)) {
       assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(2);
-      assertThat(result.getUpdated().getEntity().getAdministrativeNotes().get(0)).isEqualTo("updated note");
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes().get(0)).isEqualTo("updated first note");
       assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
     } else {
       assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(2);
       assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
-      assertThat(result.getUpdated().getEntity().getInstanceNotes().get(0).getNote()).isEqualTo("updated note");
+      assertThat(result.getUpdated().getEntity().getInstanceNotes().get(0).getNote()).isEqualTo("updated first note");
     }
   }
 
