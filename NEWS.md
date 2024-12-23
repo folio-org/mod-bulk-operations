@@ -1,3 +1,10 @@
+## v2.1.8 - Released 2024/12/23
+
+This release contains upgrading version dependencies of fqm-query-processor.
+
+### Bugs
+* [MODBULKOPS-449](https://folio-org.atlassian.net/browse/MODBULKOPS-449) Query search failed in Bulk Operations
+
 ## v2.1.7 - Released 2024/12/13
 
 This release contains optimization of memory utilization, upgrade dependencies.
