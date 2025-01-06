@@ -122,8 +122,20 @@
         "format": "int64",
         "default": 0
       },
+      "matchedNumOfWarnings": {
+        "description": "Number of matching warnings",
+        "type": "integer",
+        "format": "int64",
+        "default": 0
+      },
       "committedNumOfErrors": {
         "description": "Number of committing errors",
+        "type": "integer",
+        "format": "int64",
+        "default": 0
+      },
+      "committedNumOfWarnings": {
+        "description": "Number of committing warnings",
         "type": "integer",
         "format": "int64",
         "default": 0
