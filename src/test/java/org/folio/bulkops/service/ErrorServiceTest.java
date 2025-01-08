@@ -41,6 +41,7 @@ import org.folio.bulkops.domain.bean.JobLogEntryCollection;
 import org.folio.bulkops.domain.bean.RelatedInstanceInfo;
 import org.folio.bulkops.domain.bean.SrsRecord;
 import org.folio.bulkops.domain.dto.Error;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
@@ -407,8 +408,8 @@ class ErrorServiceTest extends BaseTest {
     if (DATA_MODIFICATION == statusType || COMPLETED_WITH_ERRORS == statusType) {
       when(bulkEditClient.getErrorsPreview(any(UUID.class), anyInt()))
         .thenReturn(new Errors()
-          .errors(List.of(new Error().type("BULK_EDIT_ERROR").message("123,No match found"),
-            new Error().type("BULK_EDIT_ERROR").message("456,Invalid format"))));
+          .errors(List.of(new Error().type(ErrorType.ERROR).message("123,No match found"),
+            new Error().type(ErrorType.ERROR).message("456,Invalid format"))));
     } else {
       executionContentRepository.save(BulkOperationExecutionContent.builder()
         .bulkOperationId(operationId)
