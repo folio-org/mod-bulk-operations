@@ -5,6 +5,8 @@ import static java.lang.String.join;
 
 import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.IntStream;
+
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.Personal;
@@ -21,11 +23,13 @@ public class ListUsersService {
 
   private static final String QUERY = "id==(%s)";
   private static final String OR_DELIMETER = " or ";
+  private static final int CHUNK_SIZE = 25;
 
   private final JpaCqlRepository<BulkOperation, UUID> bulkOperationCqlRepository;
   private final UserClient userClient;
 
   public Users getListUsers(String query, Integer offset, Integer limit) {
+
     var ids = bulkOperationCqlRepository.findByCql(query, OffsetRequest.of(Objects.isNull(offset) ? 0 : offset,
       Objects.isNull(limit) ? Integer.MAX_VALUE : limit))
       .stream()
@@ -33,10 +37,17 @@ public class ListUsersService {
       .distinct()
       .map(UUID::toString)
       .toList();
-    var users = userClient.getByQuery(format(QUERY, join(OR_DELIMETER, ids)), ids.size()).getUsers()
-      .stream()
-      .map(this::mapUserToUserDto)
+
+    var chunks = IntStream.range(0, (ids.size() + CHUNK_SIZE - 1) / CHUNK_SIZE)
+      .mapToObj(i -> ids.subList(i * CHUNK_SIZE, Math.min((i + 1) * CHUNK_SIZE, ids.size())))
       .toList();
+
+    var users = chunks
+      .parallelStream()
+      .flatMap(listOfIds -> userClient.getByQuery(format(QUERY, join(OR_DELIMETER, listOfIds)), listOfIds.size()).getUsers()
+      .stream()
+      .map(this::mapUserToUserDto)).toList();
+
     return new Users().users(users).totalRecords(users.size());
   }
 
