@@ -33,46 +33,45 @@ class ListUsersServiceTest extends BaseTest {
 
   @Test
   void shouldReturnListOfDistinctUsers() {
-    var operationIdUnique = UUID.randomUUID();
-    var operationIdRepeated1 = UUID.randomUUID();
-    var operationIdRepeated2 = UUID.randomUUID();
-    var userIdUnique = UUID.randomUUID();
-    var userIdRepeated = UUID.randomUUID();
+    var firstUserOperationId = UUID.randomUUID();
+    var secondUserFirstOperationId = UUID.randomUUID();
+    var secondUserSecondOperationId = UUID.randomUUID();
+    var firstUserId = UUID.randomUUID();
+    var secondUserId = UUID.randomUUID();
 
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
 
-      when(userClient.getByQuery("id==" + userIdUnique, 1))
-        .thenReturn(new UserCollection().withUsers(List.of(new User().withId(userIdUnique.toString()).withPersonal(new Personal().withFirstName("Test unique")
+      when(userClient.getByQuery("id==(" + firstUserId + " or " + secondUserId + ")", 2))
+        .thenReturn(new UserCollection().withUsers(List.of(new User().withId(firstUserId.toString()).withPersonal(new Personal().withFirstName("Test unique")
           .withLastName("Test last name unique").withPreferredFirstName("Test preferred first name unique")
-          .withMiddleName("Test middle name unique")))));
-      when(userClient.getByQuery("id==" + userIdRepeated, 1))
-        .thenReturn(new UserCollection().withUsers(List.of(new User().withId(userIdRepeated.toString()).withPersonal(new Personal().withFirstName("Test repeated")
-          .withLastName("Test last name repeated").withPreferredFirstName("Test preferred first name repeated")
-          .withMiddleName("Test middle name repeated")))));
+          .withMiddleName("Test middle name unique")),
+          new User().withId(secondUserId.toString()).withPersonal(new Personal().withFirstName("Test repeated")
+            .withLastName("Test last name repeated").withPreferredFirstName("Test preferred first name repeated")
+            .withMiddleName("Test middle name repeated")))));
 
       final Page<BulkOperation> page = new PageImpl<>(List.of(BulkOperation.builder()
-          .id(operationIdUnique)
+          .id(firstUserOperationId)
           .status(OperationStatusType.COMPLETED)
           .totalNumOfRecords(10)
           .processedNumOfRecords(10)
           .entityType(EntityType.USER)
-          .userId(userIdUnique)
+          .userId(firstUserId)
           .build(),
         BulkOperation.builder()
-          .id(operationIdRepeated1)
+          .id(secondUserFirstOperationId)
           .status(OperationStatusType.COMPLETED)
           .totalNumOfRecords(10)
           .processedNumOfRecords(10)
           .entityType(EntityType.USER)
-          .userId(userIdRepeated)
+          .userId(secondUserId)
           .build(),
         BulkOperation.builder()
-          .id(operationIdRepeated2)
+          .id(secondUserSecondOperationId)
           .status(OperationStatusType.COMPLETED)
           .totalNumOfRecords(10)
           .processedNumOfRecords(10)
           .entityType(EntityType.USER)
-          .userId(userIdRepeated)
+          .userId(secondUserId)
           .build()));
 
       when(bulkOperationCqlRepository.findByCql("(entityType==\"USER\")", OffsetRequest.of(0, 100)))
