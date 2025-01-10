@@ -45,7 +45,7 @@ import org.folio.bulkops.service.RuleService;
 import org.folio.bulkops.service.UserPermissionsService;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -54,6 +54,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -181,7 +182,11 @@ public class BulkOperationController implements BulkOperationsApi {
         headers.setContentLength(content.length);
         var decodedPath = URLDecoder.decode(path, StandardCharsets.UTF_8);
         headers.setContentDispositionFormData(FileUtils.filename(decodedPath), FileUtils.filename(decodedPath));
-        return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(content));
+        return ResponseEntity.ok()
+          .headers(headers)
+          .contentType(MediaType.APPLICATION_OCTET_STREAM)
+          .contentLength(content.length)
+          .body(new InputStreamResource(new ByteArrayInputStream(content)));
       } catch (IOException e) {
         log.error(e);
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
