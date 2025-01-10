@@ -25,8 +25,6 @@ public class BulkOperationDataProcessing {
   @Id
   private UUID bulkOperationId;
 
-  private UUID parentId;
-
   @Enumerated(EnumType.STRING)
   private StatusType status;
 
