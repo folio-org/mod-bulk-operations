@@ -10,12 +10,12 @@ import java.util.regex.Pattern;
 @Component
 public class MarcRulesValidator {
 
-  private static final Pattern VALID_TAG_PATTERN = Pattern.compile("[1-9][1-9]\\d");
+  private static final Pattern UNSUPPORTED_TAG_PATTERN = Pattern.compile("00\\d");
   private static final String NOT_SUPPORTED_BULK_EDIT_FIELD_MESSAGE = "Bulk edit of %s field is not supported";
 
   public void validate(BulkOperationMarcRule bulkOperationMarcRule) throws RuleValidationException {
     var tag = bulkOperationMarcRule.getTag();
-    if (StringUtils.isEmpty(tag) || !VALID_TAG_PATTERN.matcher(tag).matches()) {
+    if (StringUtils.isEmpty(tag) || UNSUPPORTED_TAG_PATTERN.matcher(tag).matches()) {
       throw new RuleValidationException(String.format(NOT_SUPPORTED_BULK_EDIT_FIELD_MESSAGE, tag));
     }
   }
