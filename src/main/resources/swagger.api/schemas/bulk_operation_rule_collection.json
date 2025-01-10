@@ -9,8 +9,7 @@
         "type": "array",
         "items": {
           "$ref": "bulk_operation_rule.json#/BulkOperationRule"
-        },
-        "minItems": 1
+        }
       },
       "totalRecords": {
         "type": "integer"

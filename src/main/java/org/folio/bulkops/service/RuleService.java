@@ -8,6 +8,7 @@ import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
+import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.mapper.MarcRulesMapper;
 import org.folio.bulkops.repository.BulkOperationMarcRuleRepository;
@@ -29,11 +30,9 @@ public class RuleService {
   private final MarcRulesMapper marcRulesMapper;
 
   @Transactional
-  public BulkOperationRuleCollection saveRules(BulkOperationRuleCollection ruleCollection) {
-    ruleCollection.getBulkOperationRules().stream()
-      .map(BulkOperationRule::getBulkOperationId)
-      .distinct()
-      .forEach(ruleRepository::deleteAllByBulkOperationId);
+  public BulkOperationRuleCollection saveRules(BulkOperation bulkOperation, BulkOperationRuleCollection ruleCollection) {
+    ruleRepository.deleteAllByBulkOperationId(bulkOperation.getId());
+    marcRuleRepository.deleteAllByBulkOperationId(bulkOperation.getId());
 
     ruleCollection.getBulkOperationRules().forEach(bulkOperationRule -> {
       var rule = ruleRepository.save(org.folio.bulkops.domain.entity.BulkOperationRule.builder()
@@ -83,11 +82,8 @@ public class RuleService {
   }
 
   @Transactional
-  public BulkOperationMarcRuleCollection saveMarcRules(BulkOperationMarcRuleCollection ruleCollection) {
-    ruleCollection.getBulkOperationMarcRules().stream()
-      .map(BulkOperationMarcRule::getBulkOperationId)
-      .distinct()
-      .forEach(marcRuleRepository::deleteAllByBulkOperationId);
+  public BulkOperationMarcRuleCollection saveMarcRules(BulkOperation bulkOperation, BulkOperationMarcRuleCollection ruleCollection) {
+    marcRuleRepository.deleteAllByBulkOperationId(bulkOperation.getId());
 
     ruleCollection.getBulkOperationMarcRules()
       .forEach(marcRule -> marcRuleRepository.save(marcRulesMapper.mapToEntity(marcRule)));

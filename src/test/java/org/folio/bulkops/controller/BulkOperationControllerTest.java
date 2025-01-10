@@ -119,7 +119,7 @@ class BulkOperationControllerTest extends BaseTest {
        }
       """;
     when(bulkOperationService.getBulkOperationOrThrow(bulkOperation.getId())).thenReturn(bulkOperation);
-    when(ruleService.saveRules(any(BulkOperationRuleCollection.class)))
+    when(ruleService.saveRules(bulkOperation, any(BulkOperationRuleCollection.class)))
       .thenReturn(new BulkOperationRuleCollection().bulkOperationRules(Collections.emptyList()).totalRecords(1));
 
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
@@ -327,7 +327,7 @@ class BulkOperationControllerTest extends BaseTest {
         .content(content))
       .andExpect(status().isOk());
 
-    verify(ruleService).saveMarcRules(any(BulkOperationMarcRuleCollection.class));
+    verify(ruleService).saveMarcRules(bulkOperation, any(BulkOperationMarcRuleCollection.class));
     verify(bulkOperationService).clearOperationProcessing(bulkOperation);
   }
 

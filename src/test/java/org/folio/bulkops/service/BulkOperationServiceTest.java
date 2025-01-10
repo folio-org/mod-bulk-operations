@@ -819,15 +819,14 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkOperationRepository.findById(any(UUID.class)))
       .thenReturn(Optional.of(operation));
 
-    when(ruleService.getRules(bulkOperationId))
-      .thenReturn(new BulkOperationRuleCollection()
+    var rules = new BulkOperationRuleCollection()
         .bulkOperationRules(List.of(new BulkOperationRule()
           .ruleDetails(new BulkOperationRuleRuleDetails()
             .option(UpdateOptionType.PATRON_GROUP)
             .actions(List.of(new Action()
               .type(UpdateActionType.REPLACE_WITH)
               .updated(newPatronGroupId))))))
-        .totalRecords(1));
+        .totalRecords(1);
 
     when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
       .thenReturn(BulkOperationDataProcessing.builder()
@@ -837,7 +836,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(pathToOrigin))
       .thenThrow(new RuntimeException("Failed to read file"));
 
-    bulkOperationService.confirm(operation);
+    bulkOperationService.confirm(operation.getId(), rules);
 
     var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
     Awaitility.await().untilAsserted(() -> verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));

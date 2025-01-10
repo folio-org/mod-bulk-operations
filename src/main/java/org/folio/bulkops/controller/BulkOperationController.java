@@ -103,7 +103,7 @@ public class BulkOperationController implements BulkOperationsApi {
   @Override
   public ResponseEntity<BulkOperationRuleCollection> postContentUpdates(UUID operationId, BulkOperationRuleCollection bulkOperationRuleCollection) {
     var operation = bulkOperationService.getBulkOperationOrThrow(operationId);
-    var rules = ruleService.saveRules(bulkOperationRuleCollection);
+    var rules = ruleService.saveRules(operation, bulkOperationRuleCollection);
 
     if (INSTANCE_MARC.equals(operation.getEntityType())) {
       operation.setEntityType(INSTANCE);
@@ -118,9 +118,10 @@ public class BulkOperationController implements BulkOperationsApi {
   @Override
   public ResponseEntity<BulkOperationMarcRuleCollection> postMarcContentUpdates(UUID operationId, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection) {
     var operation = bulkOperationService.getBulkOperationOrThrow(operationId);
+    var rules = ruleService.saveMarcRules(operation, bulkOperationMarcRuleCollection);
+
     operation.setEntityType(INSTANCE_MARC);
     bulkOperationRepository.save(operation);
-    var rules = ruleService.saveMarcRules(bulkOperationMarcRuleCollection);
 
     bulkOperationService.clearOperationProcessing(operation);
 
