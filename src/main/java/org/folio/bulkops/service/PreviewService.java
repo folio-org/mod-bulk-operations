@@ -183,11 +183,11 @@ public class PreviewService {
   }
 
   private UnifiedTable buildCompositePreview(BulkOperation bulkOperation, int offset, int limit, String linkToCsvFile, String linkToMarcFile) {
-    var csvTable = buildPreviewFromCsvFile(linkToCsvFile, Instance.class, offset, limit, bulkOperation);
+    var csvTable = getPreviewFromCsvWithChangedOptions(bulkOperation, linkToCsvFile, offset, limit);
     if (isNotEmpty(linkToMarcFile)) {
       referenceProvider.updateMappingRules();
-      var rules = ruleService.getMarcRules(bulkOperation.getId());
-      var changedOptionsSet = getChangedOptionsSet(rules);
+      var marcRules = ruleService.getMarcRules(bulkOperation.getId());
+      var changedOptionsSet = getChangedOptionsSet(marcRules);
       var compositeTable = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class);
       noteTableUpdater.extendTableWithInstanceNotesTypes(compositeTable, changedOptionsSet);
       var sourcePosition = getCellPositionByName(INSTANCE_SOURCE);
