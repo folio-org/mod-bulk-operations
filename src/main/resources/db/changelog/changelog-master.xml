@@ -38,4 +38,5 @@
   <include file="changes/08-11-2024_add_bulk_operation_status_no_marc_records.xml" relativeToChangelogFile="true"/>
   <include file="changes/10-12-2024_add_statistical_code_type.xml" relativeToChangelogFile="true"/>
   <include file="changes/11-12-2024_add_remove_some_to_action_type.xml" relativeToChangelogFile="true"/>
+  <include file="changes/11-01-2025_restore_id_column_bulk_operation_data_processing.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
