@@ -36,9 +36,9 @@ class DataImportJobCompletionReceiverServiceTest extends BaseTest {
     var event = Files.readString(Path.of("src/test/resources/files/kafka/data_import_job_completed_message.json"));
 
     kafkaTemplate.send(topic, OBJECT_MAPPER.readValue(event, Event.class));
-
+    kafkaTemplate.flush();
     var dataImportJobProfileIdCaptor = ArgumentCaptor.forClass(UUID.class);
-    Awaitility.await().atMost(30, TimeUnit.SECONDS).untilAsserted(() -> verify(bulkOperationService, times(1))
+    Awaitility.await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> verify(bulkOperationService, times(1))
       .processDataImportResult(dataImportJobProfileIdCaptor.capture()));
   }
 }
