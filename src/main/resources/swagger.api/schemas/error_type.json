@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "Type of error",
+  "ErrorType": {
+    "type": "string",
+    "enum": [
+      "ERROR",
+      "WARNING"
+    ],
+    "default": "ERROR"
+  }
+}
