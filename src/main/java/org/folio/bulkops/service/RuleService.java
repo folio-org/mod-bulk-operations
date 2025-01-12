@@ -27,9 +27,6 @@ public class RuleService {
 
   @Transactional
   public BulkOperationRuleCollection saveRules(BulkOperation bulkOperation, BulkOperationRuleCollection ruleCollection) {
-    ruleRepository.findAllByBulkOperationId(bulkOperation.getId()).stream()
-        .map(org.folio.bulkops.domain.entity.BulkOperationRule::getId)
-        .forEach(ruleDetailsRepository::deleteAllByRuleId);
     ruleRepository.deleteAllByBulkOperationId(bulkOperation.getId());
     marcRuleRepository.deleteAllByBulkOperationId(bulkOperation.getId());
 

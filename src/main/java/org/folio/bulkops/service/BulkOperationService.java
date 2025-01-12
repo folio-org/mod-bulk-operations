@@ -101,6 +101,7 @@ import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.marc4j.MarcStreamReader;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -215,21 +216,14 @@ public class BulkOperationService {
       .build());
   }
 
-  public void confirm(UUID operationId, BulkOperationRuleCollection ruleCollection)  {
+  public void confirm(BulkOperationDataProcessing dataProcessing, BulkOperationRuleCollection ruleCollection)  {
+    var operationId = dataProcessing.getBulkOperationId();
     var operation = getBulkOperationOrThrow(operationId);
     operation.setStatus(DATA_MODIFICATION_IN_PROGRESS);
     bulkOperationRepository.save(operation);
 
     var clazz = resolveEntityClass(operation.getEntityType());
     var extendedClazz = resolveExtendedEntityClass(operation.getEntityType());
-
-    var dataProcessing = dataProcessingRepository.save(BulkOperationDataProcessing.builder()
-      .bulkOperationId(operation.getId())
-      .status(StatusType.ACTIVE)
-      .startTime(LocalDateTime.now())
-      .totalNumOfRecords(operation.getTotalNumOfRecords())
-      .processedNumOfRecords(0)
-      .build());
 
     var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
     var modifiedJsonFileName = String.format(PREVIEW_JSON_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
@@ -298,20 +292,13 @@ public class BulkOperationService {
     }
   }
 
-  private void confirmForInstanceMarc(UUID operationId, BulkOperationMarcRuleCollection ruleCollection)  {
+  private void confirmForInstanceMarc(BulkOperationDataProcessing dataProcessing, BulkOperationMarcRuleCollection ruleCollection)  {
+    var operationId = dataProcessing.getBulkOperationId();
     var operation = getBulkOperationOrThrow(operationId);
     if (!DATA_MODIFICATION_IN_PROGRESS.equals(operation.getStatus())) {
       operation.setStatus(DATA_MODIFICATION_IN_PROGRESS);
       bulkOperationRepository.save(operation);
     }
-
-    var dataProcessing = dataProcessingRepository.save(BulkOperationDataProcessing.builder()
-      .bulkOperationId(operation.getId())
-      .status(StatusType.ACTIVE)
-      .startTime(LocalDateTime.now())
-      .totalNumOfRecords(operation.getTotalNumOfRecords())
-      .processedNumOfRecords(0)
-      .build());
 
     var processedNumOfRecords = 0;
     if (nonNull(operation.getLinkToMatchedRecordsMarcFile())) {
@@ -539,16 +526,7 @@ public class BulkOperationService {
           executor.execute(getRunnableWithCurrentFolioContext(() -> apply(operation)));
         } else {
           logFilesService.removeModifiedFiles(operation);
-          var folioRules = ruleService.getRules(operation.getId());
-          if (!folioRules.getBulkOperationRules().isEmpty()) {
-            executor.execute(getRunnableWithCurrentFolioContext(() -> confirm(operation.getId(), folioRules)));
-          }
-          if (INSTANCE_MARC.equals(operation.getEntityType())) {
-            var marcRules = ruleService.getMarcRules(operation.getId());
-            if (!marcRules.getBulkOperationMarcRules().isEmpty()) {
-              executor.execute(getRunnableWithCurrentFolioContext(() -> confirmForInstanceMarc(operation.getId(), marcRules)));
-            }
-          }
+          launchProcessing(operation);
         }
         return operation;
       } else {
@@ -660,6 +638,7 @@ public class BulkOperationService {
     }
   }
 
+  @Transactional
   public void clearOperationProcessing(BulkOperation operation) {
     dataProcessingRepository.deleteAllByBulkOperationId(operation.getId());
     operation.setStatus(DATA_MODIFICATION);
@@ -752,6 +731,37 @@ public class BulkOperationService {
     operation.setStatus(OperationStatusType.FAILED);
     operation.setEndTime(LocalDateTime.now());
     bulkOperationRepository.save(operation);
+  }
+
+  private void launchProcessing(BulkOperation operation) {
+    var folioRules = ruleService.getRules(operation.getId());
+    var folioProcessing = folioRules.getBulkOperationRules().isEmpty() ?
+      null :
+      dataProcessingRepository.save(BulkOperationDataProcessing.builder()
+        .bulkOperationId(operation.getId())
+        .status(StatusType.ACTIVE)
+        .startTime(LocalDateTime.now())
+        .totalNumOfRecords(operation.getTotalNumOfRecords())
+        .processedNumOfRecords(0)
+        .build());
+
+    var marcRules = ruleService.getMarcRules(operation.getId());
+    var marcProcessing = marcRules.getBulkOperationMarcRules().isEmpty() ?
+      null :
+      dataProcessingRepository.save(BulkOperationDataProcessing.builder()
+        .bulkOperationId(operation.getId())
+        .status(StatusType.ACTIVE)
+        .startTime(LocalDateTime.now())
+        .totalNumOfRecords(operation.getTotalNumOfRecords())
+        .processedNumOfRecords(0)
+        .build());
+
+    if (nonNull(folioProcessing)) {
+      executor.execute(getRunnableWithCurrentFolioContext(() -> confirm(folioProcessing, folioRules)));
+    }
+    if (nonNull(marcProcessing)) {
+      executor.execute(getRunnableWithCurrentFolioContext(() -> confirmForInstanceMarc(marcProcessing, marcRules)));
+    }
   }
 
   private void handleProcessingCompletion(UUID operationId) {
