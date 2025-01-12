@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BulkOperationRuleDetailsRepository extends JpaRepository<BulkOperationRuleDetails, UUID> {
+  void deleteAllByRuleId(UUID ruleId);
 }
