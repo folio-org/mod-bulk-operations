@@ -336,7 +336,12 @@ public class BulkOperationService {
             dataProcessingRepository.save(dataProcessing);
           }
         }
-        operation.setLinkToModifiedRecordsMarcFile(modifiedMarcFileName);
+
+        if (processedNumOfRecords > 0) {
+          operation = getBulkOperationOrThrow(operationId);
+          operation.setLinkToModifiedRecordsMarcFile(modifiedMarcFileName);
+          bulkOperationRepository.save(operation);
+        }
 
         dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
         dataProcessingRepository.save(dataProcessing);
