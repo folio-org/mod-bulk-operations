@@ -1,6 +1,7 @@
 package org.folio.bulkops.util;
 
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_IN_NOTE;
@@ -60,7 +61,7 @@ public class UpdateOptionTypeToFieldResolver {
       return "Status";
     } else if (SUPPRESS_FROM_DISCOVERY == type && entity != USER) {
       return "Suppress from discovery";
-    } else if (STAFF_SUPPRESS == type && INSTANCE == entity) {
+    } else if (STAFF_SUPPRESS == type && Set.of(INSTANCE, INSTANCE_MARC).contains(entity)) {
       return "Staff suppress";
     } else if (ITEM_NOTE == type) {
       return "Notes";
