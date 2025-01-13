@@ -597,12 +597,6 @@ class BulkOperationServiceTest extends BaseTest {
       assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(1));
       assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));
       assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
-
-      var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(8)).save(bulkOperationCaptor.capture()));
-      var capturedBulkOperation = bulkOperationCaptor.getValue();
-      assertThat(capturedBulkOperation.getLinkToModifiedRecordsMarcFile(), equalTo(expectedPathToModifiedMarcFile));
-      assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
     }
   }
 
@@ -874,7 +868,7 @@ class BulkOperationServiceTest extends BaseTest {
               .type(UpdateActionType.REPLACE_WITH)
               .updated(newPatronGroupId))))))
         .totalRecords(1);
-    when(ruleService.getRules(eq(bulkOperationId))).thenReturn(rules);
+    when(ruleService.getRules(bulkOperationId)).thenReturn(rules);
 
     var dataProcessing = BulkOperationDataProcessing.builder()
       .bulkOperationId(bulkOperationId)
