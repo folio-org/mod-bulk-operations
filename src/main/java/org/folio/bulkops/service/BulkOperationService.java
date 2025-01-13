@@ -774,6 +774,10 @@ public class BulkOperationService {
           operation.setProcessedNumOfRecords(processedNumOfRecords);
           bulkOperationRepository.save(operation);
         }
+      } else {
+        operation.setLinkToModifiedRecordsCsvFile(null);
+        operation.setLinkToModifiedRecordsMarcFile(null);
+        bulkOperationRepository.save(operation);
       }
     });
   }
