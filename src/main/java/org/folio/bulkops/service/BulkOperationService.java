@@ -216,12 +216,13 @@ public class BulkOperationService {
       .build());
   }
 
-  public void confirm(BulkOperationDataProcessing dataProcessing, BulkOperationRuleCollection ruleCollection)  {
+  public void confirm(BulkOperationDataProcessing dataProcessing)  {
     var operationId = dataProcessing.getBulkOperationId();
     var operation = getBulkOperationOrThrow(operationId);
     operation.setStatus(DATA_MODIFICATION_IN_PROGRESS);
     bulkOperationRepository.save(operation);
 
+    var ruleCollection = ruleService.getRules(dataProcessing.getBulkOperationId());
     var clazz = resolveEntityClass(operation.getEntityType());
     var extendedClazz = resolveExtendedEntityClass(operation.getEntityType());
 
@@ -292,7 +293,7 @@ public class BulkOperationService {
     }
   }
 
-  private void confirmForInstanceMarc(BulkOperationDataProcessing dataProcessing, BulkOperationMarcRuleCollection ruleCollection)  {
+  private void confirmForInstanceMarc(BulkOperationDataProcessing dataProcessing)  {
     var operationId = dataProcessing.getBulkOperationId();
     var operation = getBulkOperationOrThrow(operationId);
     if (!DATA_MODIFICATION_IN_PROGRESS.equals(operation.getStatus())) {
@@ -300,6 +301,7 @@ public class BulkOperationService {
       bulkOperationRepository.save(operation);
     }
 
+    var ruleCollection = ruleService.getMarcRules(dataProcessing.getBulkOperationId());
     var processedNumOfRecords = 0;
     if (nonNull(operation.getLinkToMatchedRecordsMarcFile())) {
       var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
@@ -310,7 +312,9 @@ public class BulkOperationService {
         var currentDate = new Date();
         while (matchedRecordsReader.hasNext()) {
           var marcRecord = matchedRecordsReader.next();
-          marcInstanceDataProcessor.update(operation, marcRecord, ruleCollection, currentDate);
+          if (!ruleCollection.getBulkOperationMarcRules().isEmpty()) {
+            marcInstanceDataProcessor.update(operation, marcRecord, ruleCollection, currentDate);
+          }
           writerForModifiedPreviewMarcFile.writeRecord(marcRecord);
 
           processedNumOfRecords++;
@@ -734,10 +738,7 @@ public class BulkOperationService {
   }
 
   private void launchProcessing(BulkOperation operation) {
-    var folioRules = ruleService.getRules(operation.getId());
-    var folioProcessing = folioRules.getBulkOperationRules().isEmpty() ?
-      null :
-      dataProcessingRepository.save(BulkOperationDataProcessing.builder()
+    var folioProcessing = dataProcessingRepository.save(BulkOperationDataProcessing.builder()
         .bulkOperationId(operation.getId())
         .status(StatusType.ACTIVE)
         .startTime(LocalDateTime.now())
@@ -745,23 +746,17 @@ public class BulkOperationService {
         .processedNumOfRecords(0)
         .build());
 
-    var marcRules = ruleService.getMarcRules(operation.getId());
-    var marcProcessing = marcRules.getBulkOperationMarcRules().isEmpty() ?
-      null :
-      dataProcessingRepository.save(BulkOperationDataProcessing.builder()
-        .bulkOperationId(operation.getId())
-        .status(StatusType.ACTIVE)
-        .startTime(LocalDateTime.now())
-        .totalNumOfRecords(operation.getTotalNumOfRecords())
-        .processedNumOfRecords(0)
-        .build());
-
-    if (nonNull(folioProcessing)) {
-      executor.execute(getRunnableWithCurrentFolioContext(() -> confirm(folioProcessing, folioRules)));
+    if (INSTANCE_MARC.equals(operation.getEntityType())) {
+      var marcProcessing = dataProcessingRepository.save(BulkOperationDataProcessing.builder()
+          .bulkOperationId(operation.getId())
+          .status(StatusType.ACTIVE)
+          .startTime(LocalDateTime.now())
+          .totalNumOfRecords(operation.getTotalNumOfRecords())
+          .processedNumOfRecords(0)
+          .build());
+      executor.execute(getRunnableWithCurrentFolioContext(() -> confirmForInstanceMarc(marcProcessing)));
     }
-    if (nonNull(marcProcessing)) {
-      executor.execute(getRunnableWithCurrentFolioContext(() -> confirmForInstanceMarc(marcProcessing, marcRules)));
-    }
+    executor.execute(getRunnableWithCurrentFolioContext(() -> confirm(folioProcessing)));
   }
 
   private void handleProcessingCompletion(UUID operationId) {
