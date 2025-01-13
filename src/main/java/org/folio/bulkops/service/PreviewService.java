@@ -187,7 +187,6 @@ public class PreviewService {
 
   private UnifiedTable buildCompositePreview(BulkOperation bulkOperation, int offset, int limit, String linkToCsvFile, String linkToMarcFile) {
     var csvTable = buildPreviewFromCsvFile(linkToCsvFile, resolveEntityClass(bulkOperation.getEntityType()), offset, limit, bulkOperation);
-//    var csvTable = getPreviewFromCsvWithChangedOptions(bulkOperation, linkToCsvFile, offset, limit);
     if (isNotEmpty(linkToMarcFile)) {
       referenceProvider.updateMappingRules();
       var marcRules = ruleService.getMarcRules(bulkOperation.getId());
