@@ -47,6 +47,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.bean.CsvCustomBindByName;
@@ -65,7 +66,9 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.Cell;
@@ -183,11 +186,11 @@ public class PreviewService {
   }
 
   private UnifiedTable buildCompositePreview(BulkOperation bulkOperation, int offset, int limit, String linkToCsvFile, String linkToMarcFile) {
-    var csvTable = buildPreviewFromCsvFile(linkToCsvFile, Instance.class, offset, limit, bulkOperation);
+    var csvTable = buildPreviewFromCsvFile(linkToCsvFile, resolveEntityClass(bulkOperation.getEntityType()), offset, limit, bulkOperation);
     if (isNotEmpty(linkToMarcFile)) {
       referenceProvider.updateMappingRules();
-      var rules = ruleService.getMarcRules(bulkOperation.getId());
-      var changedOptionsSet = getChangedOptionsSet(rules);
+      var marcRules = ruleService.getMarcRules(bulkOperation.getId());
+      var changedOptionsSet = getChangedOptionsSet(marcRules);
       var compositeTable = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class);
       noteTableUpdater.extendTableWithInstanceNotesTypes(compositeTable, changedOptionsSet);
       var sourcePosition = getCellPositionByName(INSTANCE_SOURCE);
@@ -211,9 +214,25 @@ public class PreviewService {
           }
         }
       });
+      forceVisibleAdministrativeDataHeaders(compositeTable, bulkOperation);
       return compositeTable;
     }
+    forceVisibleAdministrativeDataHeaders(csvTable, bulkOperation);
     return csvTable;
+  }
+
+  private void forceVisibleAdministrativeDataHeaders(UnifiedTable unifiedTable, BulkOperation bulkOperation) {
+    var rules = ruleService.getRules(bulkOperation.getId());
+    var forceVisibleFieldNames = rules.getBulkOperationRules().stream()
+      .map(BulkOperationRule::getRuleDetails)
+      .map(BulkOperationRuleRuleDetails::getOption)
+      .map(option -> UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option, INSTANCE))
+      .collect(Collectors.toSet());
+    unifiedTable.getHeader().forEach(header -> {
+        if (forceVisibleFieldNames.contains(header.getValue())) {
+          header.setForceVisible(true);
+        }
+      });
   }
 
   private void enrichMarcWithAdministrativeData(UnifiedTable unifiedTable, BulkOperation bulkOperation) {

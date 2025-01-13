@@ -443,6 +443,10 @@ class PreviewServiceTest extends BaseTest {
       .totalRecords(1);
 
     when(ruleService.getMarcRules(bulkOperationId)).thenReturn(rules);
+    when(ruleService.getRules(bulkOperationId))
+      .thenReturn(new BulkOperationRuleCollection()
+        .bulkOperationRules(Collections.emptyList())
+        .totalRecords(0));
     when(instanceNoteTypesClient.getNoteTypeById(summaryNoteTypeId))
       .thenReturn(new InstanceNoteType().name("Summary"));
     when(instanceReferenceService.getAllInstanceNoteTypes())
@@ -538,6 +542,10 @@ class PreviewServiceTest extends BaseTest {
       .totalRecords(1);
 
     when(ruleService.getMarcRules(bulkOperationId)).thenReturn(rules);
+    when(ruleService.getRules(bulkOperationId))
+      .thenReturn(new BulkOperationRuleCollection()
+        .bulkOperationRules(Collections.emptyList())
+        .totalRecords(0));
     when(instanceNoteTypesClient.getNoteTypeById(summaryNoteTypeId))
       .thenReturn(new InstanceNoteType().name("Summary"));
     when(instanceReferenceService.getAllInstanceNoteTypes())
@@ -681,6 +689,10 @@ class PreviewServiceTest extends BaseTest {
       .totalRecords(1);
 
     when(ruleService.getMarcRules(bulkOperationId)).thenReturn(rules);
+    when(ruleService.getRules(bulkOperationId))
+      .thenReturn(new BulkOperationRuleCollection()
+        .bulkOperationRules(Collections.emptyList())
+        .totalRecords(0));
     when(instanceNoteTypesClient.getNoteTypeById(summaryNoteTypeId))
       .thenReturn(new InstanceNoteType().name("Summary"));
     when(instanceReferenceService.getAllInstanceNoteTypes())

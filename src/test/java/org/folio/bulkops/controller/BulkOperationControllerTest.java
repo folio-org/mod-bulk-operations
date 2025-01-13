@@ -11,6 +11,7 @@ import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FIL
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_MARC_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 import static org.folio.bulkops.domain.dto.IdentifierType.BARCODE;
@@ -22,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -119,7 +121,7 @@ class BulkOperationControllerTest extends BaseTest {
        }
       """;
     when(bulkOperationService.getBulkOperationOrThrow(bulkOperation.getId())).thenReturn(bulkOperation);
-    when(ruleService.saveRules(any(BulkOperationRuleCollection.class)))
+    when(ruleService.saveRules(eq(bulkOperation), any(BulkOperationRuleCollection.class)))
       .thenReturn(new BulkOperationRuleCollection().bulkOperationRules(Collections.emptyList()).totalRecords(1));
 
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
@@ -158,7 +160,7 @@ class BulkOperationControllerTest extends BaseTest {
           .contentType(APPLICATION_JSON))
         .andExpect(status().isOk());
 
-      if (PROPOSED_CHANGES_FILE.equals(type) && INSTANCE_MARC.equals(entityType)) {
+      if (PROPOSED_CHANGES_MARC_FILE.equals(type) && INSTANCE_MARC.equals(entityType)) {
         verify(remoteFileSystemClient).get("G");
       }
     }
@@ -195,7 +197,7 @@ class BulkOperationControllerTest extends BaseTest {
       .andExpect(status().isOk()).andReturn();
     var actual = result.getResponse().getContentAsByteArray();
 
-    if (fileContentType == PROPOSED_CHANGES_FILE && entityType == INSTANCE_MARC) {
+    if (fileContentType == PROPOSED_CHANGES_MARC_FILE && entityType == INSTANCE_MARC) {
       assertNotEquals(content.getBytes().length + utf8bom.length, actual.length);
     } else {
       assertEquals(content.getBytes().length + utf8bom.length, actual.length);
@@ -327,7 +329,7 @@ class BulkOperationControllerTest extends BaseTest {
         .content(content))
       .andExpect(status().isOk());
 
-    verify(ruleService).saveMarcRules(any(BulkOperationMarcRuleCollection.class));
+    verify(ruleService).saveMarcRules(eq(bulkOperation), any(BulkOperationMarcRuleCollection.class));
     verify(bulkOperationService).clearOperationProcessing(bulkOperation);
   }
 
@@ -369,7 +371,7 @@ class BulkOperationControllerTest extends BaseTest {
       Arguments.of(PROPOSED_CHANGES_FILE, HOLDINGS_RECORD),
       Arguments.of(PROPOSED_CHANGES_FILE, USER),
       Arguments.of(PROPOSED_CHANGES_FILE, INSTANCE),
-      Arguments.of(PROPOSED_CHANGES_FILE, INSTANCE_MARC),
+      Arguments.of(PROPOSED_CHANGES_MARC_FILE, INSTANCE_MARC),
       Arguments.of(COMMITTED_RECORDS_FILE, ITEM),
       Arguments.of(COMMITTED_RECORDS_FILE, HOLDINGS_RECORD),
       Arguments.of(COMMITTED_RECORDS_FILE, USER),

@@ -9,8 +9,7 @@
         "type": "array",
         "items": {
           "$ref": "bulk_operation_marc_rule.json#/BulkOperationMarcRule"
-        },
-        "minItems": 1
+        }
       },
       "totalRecords": {
         "type": "integer"

@@ -18,6 +18,7 @@ import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
+import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationRuleDetails;
 import org.folio.bulkops.repository.BulkOperationMarcRuleRepository;
 import org.folio.bulkops.repository.BulkOperationRuleDetailsRepository;
@@ -42,10 +43,11 @@ class RuleServiceTest extends BaseTest {
   @Test
   void shouldSaveRules() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var operation = BulkOperation.builder().id(BULK_OPERATION_ID).build();
       when(ruleRepository.save(any(org.folio.bulkops.domain.entity.BulkOperationRule.class)))
         .thenReturn(org.folio.bulkops.domain.entity.BulkOperationRule.builder().id(UUID.randomUUID()).build());
 
-      ruleService.saveRules(rules());
+      ruleService.saveRules(operation, rules());
 
       verify(ruleRepository).deleteAllByBulkOperationId(BULK_OPERATION_ID);
       verify(ruleRepository).save(any(org.folio.bulkops.domain.entity.BulkOperationRule.class));
@@ -73,10 +75,11 @@ class RuleServiceTest extends BaseTest {
   @Test
   void shouldSaveMarcRules() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var operation = BulkOperation.builder().id(BULK_OPERATION_ID).build();
       when(marcRuleRepository.save(any(org.folio.bulkops.domain.entity.BulkOperationMarcRule.class)))
         .thenReturn(org.folio.bulkops.domain.entity.BulkOperationMarcRule.builder().id(UUID.randomUUID()).build());
 
-      ruleService.saveMarcRules(marcRules());
+      ruleService.saveMarcRules(operation, marcRules());
 
       verify(marcRuleRepository).deleteAllByBulkOperationId(BULK_OPERATION_ID);
       verify(marcRuleRepository).save(any(org.folio.bulkops.domain.entity.BulkOperationMarcRule.class));

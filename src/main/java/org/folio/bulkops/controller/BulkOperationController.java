@@ -6,6 +6,7 @@ import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FIL
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_MARC_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 import static org.folio.bulkops.util.Constants.CSV_EXTENSION;
@@ -104,7 +105,7 @@ public class BulkOperationController implements BulkOperationsApi {
   @Override
   public ResponseEntity<BulkOperationRuleCollection> postContentUpdates(UUID operationId, BulkOperationRuleCollection bulkOperationRuleCollection) {
     var operation = bulkOperationService.getBulkOperationOrThrow(operationId);
-    var rules = ruleService.saveRules(bulkOperationRuleCollection);
+    var rules = ruleService.saveRules(operation, bulkOperationRuleCollection);
 
     if (INSTANCE_MARC.equals(operation.getEntityType())) {
       operation.setEntityType(INSTANCE);
@@ -119,9 +120,10 @@ public class BulkOperationController implements BulkOperationsApi {
   @Override
   public ResponseEntity<BulkOperationMarcRuleCollection> postMarcContentUpdates(UUID operationId, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection) {
     var operation = bulkOperationService.getBulkOperationOrThrow(operationId);
+    var rules = ruleService.saveMarcRules(operation, bulkOperationMarcRuleCollection);
+
     operation.setEntityType(INSTANCE_MARC);
     bulkOperationRepository.save(operation);
-    var rules = ruleService.saveMarcRules(bulkOperationMarcRuleCollection);
 
     bulkOperationService.clearOperationProcessing(operation);
 
@@ -157,9 +159,9 @@ public class BulkOperationController implements BulkOperationsApi {
     } else if (fileContentType == RECORD_MATCHING_ERROR_FILE) {
       path = bulkOperation.getLinkToMatchedRecordsErrorsCsvFile();
     } else if (fileContentType == PROPOSED_CHANGES_FILE) {
-      path = INSTANCE_MARC.equals(bulkOperation.getEntityType()) ?
-        bulkOperation.getLinkToModifiedRecordsMarcFile() :
-        bulkOperation.getLinkToModifiedRecordsCsvFile();
+      path = bulkOperation.getLinkToModifiedRecordsCsvFile();
+    } else if (fileContentType == PROPOSED_CHANGES_MARC_FILE) {
+      path = bulkOperation.getLinkToModifiedRecordsMarcFile();
     } else if (fileContentType == COMMITTED_RECORDS_FILE) {
       path = INSTANCE_MARC.equals(bulkOperation.getEntityType()) ?
         bulkOperation.getLinkToCommittedRecordsMarcFile() :

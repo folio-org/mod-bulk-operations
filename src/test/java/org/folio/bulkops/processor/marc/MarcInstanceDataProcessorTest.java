@@ -671,7 +671,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
 
     var findAndAppendRule = new BulkOperationMarcRule()
       .bulkOperationId(bulkOperationId)
-      .tag("600")
+      .tag("001")
       .ind1("1")
       .ind2("\\")
       .subfield("b")
@@ -696,7 +696,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
 
     processor.update(operation, marcRecord, rules, date);
 
-    var expectedErrorMessage = "Bulk edit of 600 field is not supported";
+    var expectedErrorMessage = "Bulk edit of 001 field is not supported";
     verify(errorService).saveError(bulkOperationId, identifier, expectedErrorMessage);
   }
 }

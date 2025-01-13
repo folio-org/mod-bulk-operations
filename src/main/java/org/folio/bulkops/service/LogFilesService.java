@@ -111,5 +111,6 @@ public class LogFilesService {
       remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsMarcFile());
       bulkOperation.setLinkToModifiedRecordsMarcFile(null);
     }
+    bulkOperationRepository.save(bulkOperation);
   }
 }

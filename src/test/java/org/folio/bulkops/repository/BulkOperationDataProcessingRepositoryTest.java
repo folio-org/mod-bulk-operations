@@ -37,7 +37,7 @@ class BulkOperationDataProcessingRepositoryTest extends BaseTest {
   void shouldFindEntityById() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
-      var retrieved = repository.findById(created.getBulkOperationId());
+      var retrieved = repository.findById(created.getId());
       assertTrue(retrieved.isPresent() && created.getBulkOperationId().equals(retrieved.get().getBulkOperationId()));
     }
   }
