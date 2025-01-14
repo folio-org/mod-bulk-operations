@@ -266,10 +266,6 @@ public class BulkOperationService {
 
         processedNumOfRecords++;
 
-        dataProcessing = dataProcessing
-          .withStatus(iterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
-          .withEndTime(iterator.hasNext() ? null : LocalDateTime.now());
-
         if (processedNumOfRecords - dataProcessing.getProcessedNumOfRecords() > OPERATION_UPDATING_STEP) {
           dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
           dataProcessingRepository.save(dataProcessing);
@@ -283,8 +279,11 @@ public class BulkOperationService {
         bulkOperationRepository.save(operation);
       }
 
+      dataProcessing.setStatus(StatusType.COMPLETED);
       dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
+      dataProcessing.setEndTime(LocalDateTime.now());
       dataProcessingRepository.save(dataProcessing);
+
       handleProcessingCompletion(operationId);
     } catch (S3ClientException e) {
       handleException(operation.getId(), dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
