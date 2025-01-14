@@ -219,8 +219,6 @@ public class BulkOperationService {
   public void confirm(BulkOperationDataProcessing dataProcessing)  {
     var operationId = dataProcessing.getBulkOperationId();
     var operation = getBulkOperationOrThrow(operationId);
-    operation.setStatus(DATA_MODIFICATION_IN_PROGRESS);
-    bulkOperationRepository.save(operation);
 
     var ruleCollection = ruleService.getRules(dataProcessing.getBulkOperationId());
     var clazz = resolveEntityClass(operation.getEntityType());
@@ -273,10 +271,9 @@ public class BulkOperationService {
       }
 
       if (processedNumOfRecords > 0) {
-        operation = getBulkOperationOrThrow(operationId);
         operation.setLinkToModifiedRecordsCsvFile(modifiedPreviewCsvFileName);
         operation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
-        bulkOperationRepository.save(operation);
+        saveLinks(operation);
       }
 
       dataProcessing.setStatus(StatusType.COMPLETED);
@@ -295,10 +292,6 @@ public class BulkOperationService {
   private void confirmForInstanceMarc(BulkOperationDataProcessing dataProcessing)  {
     var operationId = dataProcessing.getBulkOperationId();
     var operation = getBulkOperationOrThrow(operationId);
-    if (!DATA_MODIFICATION_IN_PROGRESS.equals(operation.getStatus())) {
-      operation.setStatus(DATA_MODIFICATION_IN_PROGRESS);
-      bulkOperationRepository.save(operation);
-    }
 
     var ruleCollection = ruleService.getMarcRules(dataProcessing.getBulkOperationId());
     var processedNumOfRecords = 0;
@@ -317,9 +310,6 @@ public class BulkOperationService {
           writerForModifiedPreviewMarcFile.writeRecord(marcRecord);
 
           processedNumOfRecords++;
-          dataProcessing = dataProcessing
-            .withStatus(matchedRecordsReader.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
-            .withEndTime(matchedRecordsReader.hasNext() ? null : LocalDateTime.now());
 
           if (processedNumOfRecords - dataProcessing.getProcessedNumOfRecords() > OPERATION_UPDATING_STEP) {
             dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
@@ -328,13 +318,15 @@ public class BulkOperationService {
         }
 
         if (processedNumOfRecords > 0) {
-          operation = getBulkOperationOrThrow(operationId);
           operation.setLinkToModifiedRecordsMarcFile(modifiedMarcFileName);
-          bulkOperationRepository.save(operation);
+          saveLinks(operation);
         }
 
+        dataProcessing.setStatus(StatusType.COMPLETED);
+        dataProcessing.setEndTime(LocalDateTime.now());
         dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
         dataProcessingRepository.save(dataProcessing);
+
         handleProcessingCompletion(operationId);
       } catch (S3ClientException e) {
         handleException(operation.getId(), dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
@@ -737,6 +729,9 @@ public class BulkOperationService {
   }
 
   private void launchProcessing(BulkOperation operation) {
+    operation.setStatus(DATA_MODIFICATION_IN_PROGRESS);
+    bulkOperationRepository.save(operation);
+
     var folioProcessing = dataProcessingRepository.save(BulkOperationDataProcessing.builder()
         .bulkOperationId(operation.getId())
         .status(StatusType.ACTIVE)
@@ -758,9 +753,9 @@ public class BulkOperationService {
     executor.execute(getRunnableWithCurrentFolioContext(() -> confirm(folioProcessing)));
   }
 
-  private void handleProcessingCompletion(UUID operationId) {
+  private synchronized void handleProcessingCompletion(UUID operationId) {
     bulkOperationRepository.findById(operationId).ifPresent(operation -> {
-      if (!FAILED.equals(operation.getStatus())) {
+      if (DATA_MODIFICATION_IN_PROGRESS.equals(operation.getStatus())) {
         var processingList = dataProcessingRepository.findAllByBulkOperationId(operation.getId());
         if (isCompletedSuccessfully(processingList)) {
           var processedNumOfRecords = processingList.stream()
@@ -772,13 +767,27 @@ public class BulkOperationService {
           operation.setStatus(OperationStatusType.REVIEW_CHANGES);
           operation.setProcessedNumOfRecords(processedNumOfRecords);
           bulkOperationRepository.save(operation);
+          log.info("Bulk operation id={} completed successfully", operation.getId());
         }
-      } else {
-        operation.setLinkToModifiedRecordsCsvFile(null);
-        operation.setLinkToModifiedRecordsMarcFile(null);
-        bulkOperationRepository.save(operation);
+      } else if (FAILED.equals(operation.getStatus())) {
+        log.info("Bulk operation id={} failed, clearing modified files", operation.getId());
+        logFilesService.removeModifiedFiles(operation);
       }
     });
+  }
+
+  private synchronized void saveLinks(BulkOperation source) {
+    var dest = getBulkOperationOrThrow(source.getId());
+    if (nonNull(source.getLinkToModifiedRecordsCsvFile())) {
+      dest.setLinkToModifiedRecordsCsvFile(source.getLinkToModifiedRecordsCsvFile());
+    }
+    if (nonNull(source.getLinkToModifiedRecordsJsonFile())) {
+      dest.setLinkToModifiedRecordsJsonFile(source.getLinkToModifiedRecordsJsonFile());
+    }
+    if (nonNull(source.getLinkToModifiedRecordsMarcFile())) {
+      dest.setLinkToModifiedRecordsMarcFile(source.getLinkToModifiedRecordsMarcFile());
+    }
+    bulkOperationRepository.save(dest);
   }
 
   private boolean isCompletedSuccessfully(List<BulkOperationDataProcessing> list) {
