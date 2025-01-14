@@ -600,7 +600,7 @@ class BulkOperationServiceTest extends BaseTest {
       assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(8)).save(bulkOperationCaptor.capture()));
+      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(6)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getLinkToModifiedRecordsMarcFile(), equalTo(expectedPathToModifiedMarcFile));
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
@@ -733,7 +733,7 @@ class BulkOperationServiceTest extends BaseTest {
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(7)).save(bulkOperationCaptor.capture()));
+      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(6)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
     }
@@ -911,7 +911,7 @@ class BulkOperationServiceTest extends BaseTest {
     assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
 
     var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(2)).save(bulkOperationCaptor.capture());
+    verify(bulkOperationRepository, times(1)).save(bulkOperationCaptor.capture());
     var capturedBulkOperation = bulkOperationCaptor.getValue();
     assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
     assertThat(capturedBulkOperation.getEndTime(), notNullValue());
