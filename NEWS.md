@@ -1,3 +1,11 @@
+## v2.1.9 - Released 2025/01/15
+
+This release contains optimizations for a new platform.
+
+### Bugs
+* [MODBULKOPS-457](https://folio-org.atlassian.net/browse/MODBULKOPS-457) "Something went wrong" error appears and list of Users is empty in Bulk edit app on Eureka environment
+* [MODBULKOPS-456](https://folio-org.atlassian.net/browse/MODBULKOPS-456) Files downloading improvement
+
 ## v2.1.8 - Released 2024/12/23
 
 This release contains upgrading version dependencies of fqm-query-processor.
