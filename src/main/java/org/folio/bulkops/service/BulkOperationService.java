@@ -278,12 +278,12 @@ public class BulkOperationService {
       dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
       dataProcessing.setEndTime(LocalDateTime.now());
       dataProcessingRepository.save(dataProcessing);
-
-      handleProcessingCompletion(operationId);
     } catch (S3ClientException e) {
       handleException(operation.getId(), dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
     } catch (Exception e) {
       handleException(operation.getId(), dataProcessing, "Confirm failed", e);
+    } finally {
+      handleProcessingCompletion(operationId);
     }
   }
 
@@ -324,12 +324,12 @@ public class BulkOperationService {
         dataProcessing.setEndTime(LocalDateTime.now());
         dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
         dataProcessingRepository.save(dataProcessing);
-
-        handleProcessingCompletion(operationId);
       } catch (S3ClientException e) {
         handleException(operation.getId(), dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
       } catch (Exception e) {
         handleException(operation.getId(), dataProcessing, "Confirm failed", e);
+      } finally {
+        handleProcessingCompletion(operationId);
       }
     } else {
       log.error("No link to MARC file, failing operation");
