@@ -39,7 +39,6 @@ import java.io.Writer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -66,7 +65,6 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.converter.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
-import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.DataImportJobExecution;
@@ -657,7 +655,10 @@ public class BulkOperationService {
         yield operation;
       }
       case APPLY_CHANGES -> {
-        if (!INSTANCE_MARC.equals(operation.getEntityType())) {
+        if (INSTANCE_MARC.equals(operation.getEntityType())) {
+          var executions = metadataProviderService.getJobExecutions(operation.getDataImportJobProfileId());
+          updateBulkOperationBasedOnDataImportState(executions, operation);
+        } else {
           var execution = executionRepository.findByBulkOperationId(bulkOperationId);
           if (execution.isPresent() && StatusType.ACTIVE.equals(execution.get().getStatus())) {
             operation.setProcessedNumOfRecords(execution.get().getProcessedRecords());
@@ -675,8 +676,7 @@ public class BulkOperationService {
       if (operationOpt.isPresent()) {
         var operation = operationOpt.get();
         var executions = metadataProviderService.getJobExecutions(operation.getDataImportJobProfileId());
-        var processedNumOfRecords = metadataProviderService.calculateProgress(executions).getCurrent();
-        operation.setProcessedNumOfRecords(operation.getCommittedNumOfErrors() * 2 + processedNumOfRecords);
+        updateBulkOperationBasedOnDataImportState(executions, operation);
         if (metadataProviderService.isDataImportJobCompleted(executions)) {
           executions.stream()
             .map(DataImportJobExecution::getId)
@@ -686,6 +686,11 @@ public class BulkOperationService {
         }
       }
     }
+  }
+
+  private void updateBulkOperationBasedOnDataImportState(List<DataImportJobExecution> executions, BulkOperation operation) {
+    var processedNumOfRecords = metadataProviderService.calculateProgress(executions).getCurrent();
+    operation.setProcessedNumOfRecords(operation.getCommittedNumOfErrors() * 2 + processedNumOfRecords);
   }
 
   public BulkOperation getBulkOperationOrThrow(UUID operationId) {
