@@ -451,6 +451,10 @@
       "version": "5.0 6.0 7.0"
     },
     {
+      "id": "configuration",
+      "version": "2.0"
+    },
+    {
       "id": "holdings-storage",
       "version": "7.0 8.0"
     },
@@ -465,6 +469,10 @@
     {
       "id": "locations",
       "version": "3.1"
+    },
+    {
+      "id": "loan-types",
+      "version": "2.3"
     },
     {
       "id": "electronic-access-relationships",
@@ -592,6 +600,10 @@
     }
   ],
   "optional": [
+    {
+      "id": "custom-fields",
+      "version": "3.0"
+    },
     {
       "id": "users-keycloak",
       "version": "1.0"
