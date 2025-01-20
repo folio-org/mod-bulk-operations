@@ -519,10 +519,6 @@
       "version": "16.0"
     },
     {
-      "id": "custom-fields",
-      "version": "3.0"
-    },
-    {
       "id": "bulk-edit",
       "version": "4.1"
     },
@@ -604,6 +600,10 @@
     }
   ],
   "optional": [
+    {
+      "id": "custom-fields",
+      "version": "3.0"
+    },
     {
       "id": "users-keycloak",
       "version": "1.0"
