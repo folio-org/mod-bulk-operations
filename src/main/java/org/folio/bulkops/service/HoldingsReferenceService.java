@@ -18,7 +18,7 @@ import org.folio.bulkops.domain.bean.HoldingsType;
 import org.folio.bulkops.domain.bean.IllPolicy;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.StatisticalCode;
-import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -54,7 +54,7 @@ public class HoldingsReferenceService {
     try {
       return holdingsTypeClient.getById(id);
     } catch (Exception e) {
-      throw new NotFoundException(format("Holdings type not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Holdings type not found by id=%s", id));
     }
   }
 
@@ -62,7 +62,7 @@ public class HoldingsReferenceService {
   public HoldingsType getHoldingsTypeByName(String name, String tenantId) {
     var holdingsTypes = holdingsTypeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (holdingsTypes.getHoldingsTypes().isEmpty()) {
-      throw new NotFoundException(format("Holdings type not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Holdings type not found by name=%s", name));
     }
     return holdingsTypes.getHoldingsTypes().get(0);
   }
@@ -72,14 +72,14 @@ public class HoldingsReferenceService {
     try {
       return locationClient.getLocationById(id);
     } catch (Exception e) {
-      throw new NotFoundException(format("Location not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Location not found by id=%s", id));
     }
   }
 
   public ItemLocation getLocationIdByName(String name) {
     var locations = locationClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (locations.getLocations().isEmpty()) {
-      throw new NotFoundException(format("Location not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Location not found by name=%s", name));
     }
     return locations.getLocations().get(0);
   }
@@ -89,7 +89,7 @@ public class HoldingsReferenceService {
     try {
       return  callNumberTypeClient.getById(id).getName();
     } catch (Exception e) {
-      throw new NotFoundException(format("Call number type not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Call number type not found by id=%s", id));
     }
   }
 
@@ -97,7 +97,7 @@ public class HoldingsReferenceService {
   public String getCallNumberTypeIdByName(String name, String tenantId) {
     var callNumberTypes = callNumberTypeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (callNumberTypes.getCallNumberTypes().isEmpty()) {
-      throw new NotFoundException(format("Call number type not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Call number type not found by name=%s", name));
     }
     return callNumberTypes.getCallNumberTypes().get(0).getId();
   }
@@ -107,7 +107,7 @@ public class HoldingsReferenceService {
     try {
       return holdingsNoteTypeClient.getNoteTypeById(id).getName();
     } catch (Exception e) {
-      throw new NotFoundException(format("Note type not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Note type not found by id=%s", id));
     }
   }
 
@@ -115,7 +115,7 @@ public class HoldingsReferenceService {
   public String getNoteTypeIdByName(String name, String tenantId) {
     var noteTypes = holdingsNoteTypeClient.getNoteTypesByQuery(format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (noteTypes.getHoldingsNoteTypes().isEmpty()) {
-      throw new NotFoundException(format("Note type not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Note type not found by name=%s", name));
     }
     return noteTypes.getHoldingsNoteTypes().get(0).getId();
   }
@@ -125,7 +125,7 @@ public class HoldingsReferenceService {
     try {
       return illPolicyClient.getById(id);
     } catch (Exception e) {
-      throw new NotFoundException(format("Ill policy not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Ill policy not found by id=%s", id));
     }
   }
 
@@ -136,7 +136,7 @@ public class HoldingsReferenceService {
     }
     var illPolicies = illPolicyClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (illPolicies.getIllPolicies().isEmpty()) {
-      throw new NotFoundException(format("Ill policy not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Ill policy not found by name=%s", name));
     }
     return illPolicies.getIllPolicies().get(0);
   }
@@ -149,7 +149,7 @@ public class HoldingsReferenceService {
         holdingsSourceClient.getById(id);
     } catch (Exception e) {
       log.error(e);
-      throw new NotFoundException(format("Holdings record source not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Holdings record source not found by id=%s", id));
     }
   }
 
@@ -157,7 +157,7 @@ public class HoldingsReferenceService {
   public HoldingsRecordsSource getSourceByName(String name, String tenantId) {
     var sources = holdingsSourceClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (ObjectUtils.isEmpty(sources) || ObjectUtils.isEmpty(sources.getHoldingsRecordsSources())) {
-      throw new NotFoundException(format("Source not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Source not found by name=%s", name));
     }
     return sources.getHoldingsRecordsSources().get(0);
   }
@@ -167,7 +167,7 @@ public class HoldingsReferenceService {
     try {
       return statisticalCodeClient.getById(id);
     } catch (Exception e) {
-      throw new NotFoundException(format("Statistical code not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Statistical code not found by id=%s", id));
     }
   }
 
@@ -175,7 +175,7 @@ public class HoldingsReferenceService {
   public StatisticalCode getStatisticalCodeByName(String name, String tenantId) {
     var statisticalCodes = statisticalCodeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (statisticalCodes.getStatisticalCodes().isEmpty()) {
-      throw new NotFoundException(format("Statistical code not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Statistical code not found by name=%s", name));
     }
     return statisticalCodes.getStatisticalCodes().get(0);
   }

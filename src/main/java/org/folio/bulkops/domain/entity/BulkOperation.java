@@ -81,6 +81,7 @@ public class BulkOperation {
   private int committedNumOfRecords;
   private int matchedNumOfErrors;
   private int committedNumOfErrors;
+  private int committedNumOfWarnings;
   private LocalDateTime startTime;
   private LocalDateTime endTime;
   private String errorMessage;

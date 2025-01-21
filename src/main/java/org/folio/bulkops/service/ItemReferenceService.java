@@ -31,7 +31,7 @@ import org.folio.bulkops.domain.bean.MaterialType;
 import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.bean.ServicePoint;
 import org.folio.bulkops.exception.ConfigurationException;
-import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -68,7 +68,7 @@ public class ItemReferenceService {
     try {
       return isEmpty(callNumberTypeId) ? EMPTY : callNumberTypeClient.getById(callNumberTypeId).getName();
     } catch (Exception e) {
-      throw new NotFoundException(format("Call number type was not found by id=%s", callNumberTypeId));
+      throw new ReferenceDataNotFoundException(format("Call number type was not found by id=%s", callNumberTypeId));
     }
   }
 
@@ -77,7 +77,7 @@ public class ItemReferenceService {
     try {
       return damagedStatusClient.getById(damagedStatusId);
     } catch (Exception e) {
-      throw new NotFoundException(format("Damaged status was not found by id=%s", damagedStatusId));
+      throw new ReferenceDataNotFoundException(format("Damaged status was not found by id=%s", damagedStatusId));
     }
   }
 
@@ -85,7 +85,7 @@ public class ItemReferenceService {
   public DamagedStatus getDamagedStatusByName(String name) {
     var response = damagedStatusClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     if (response.getItemDamageStatuses().isEmpty()) {
-      throw new NotFoundException(format("Damaged status was not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Damaged status was not found by name=%s", name));
     }
     return response.getItemDamageStatuses().get(0);
   }
@@ -95,7 +95,7 @@ public class ItemReferenceService {
     try {
       return isEmpty(noteTypeId) ? EMPTY : itemNoteTypeClient.getNoteTypeById(noteTypeId).getName();
     } catch (Exception e) {
-      throw new NotFoundException(format("Note type was not found by id=%s", noteTypeId));
+      throw new ReferenceDataNotFoundException(format("Note type was not found by id=%s", noteTypeId));
     }
   }
 
@@ -103,7 +103,7 @@ public class ItemReferenceService {
   public String getNoteTypeIdByName(String name) {
     var response = itemNoteTypeClient.getNoteTypesByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (response.getItemNoteTypes().isEmpty()) {
-      throw new NotFoundException(format("Note type was not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Note type was not found by name=%s", name));
     }
     return response.getItemNoteTypes().get(0).getId();
   }
@@ -113,7 +113,7 @@ public class ItemReferenceService {
     try {
       return servicePointClient.getById(servicePointId);
     } catch (Exception e) {
-      throw new NotFoundException(format("Service point was not found by id=%s", servicePointId));
+      throw new ReferenceDataNotFoundException(format("Service point was not found by id=%s", servicePointId));
     }
   }
 
@@ -121,7 +121,7 @@ public class ItemReferenceService {
   public ServicePoint getServicePointByName(String name) {
     var response = servicePointClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1L);
     if (response.getServicepoints().isEmpty()) {
-      throw new NotFoundException(format("Service point was not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Service point was not found by name=%s", name));
     }
     return response.getServicepoints().get(0);
   }
@@ -131,7 +131,7 @@ public class ItemReferenceService {
     try {
       return statisticalCodeClient.getById(statisticalCodeId).getCode();
     } catch (Exception e) {
-      throw new NotFoundException(format("Statistical code was not found by id=%s", statisticalCodeId));
+      throw new ReferenceDataNotFoundException(format("Statistical code was not found by id=%s", statisticalCodeId));
     }
   }
 
@@ -139,7 +139,7 @@ public class ItemReferenceService {
   public String getStatisticalCodeIdByCode(String code) {
     var response = statisticalCodeClient.getByQuery(String.format(QUERY_PATTERN_CODE, encode(code)));
     if (response.getStatisticalCodes().isEmpty()) {
-      throw new NotFoundException(format("Statistical code was not found by code=%s", code));
+      throw new ReferenceDataNotFoundException(format("Statistical code was not found by code=%s", code));
     }
     return response.getStatisticalCodes().get(0).getId();
   }
@@ -149,7 +149,7 @@ public class ItemReferenceService {
     try {
       return userClient.getUserById(userId).getUsername();
     } catch (Exception e) {
-      throw new NotFoundException(format("User name was not found by id=%s", userId));
+      throw new ReferenceDataNotFoundException(format("User name was not found by id=%s", userId));
     }
   }
 
@@ -157,7 +157,7 @@ public class ItemReferenceService {
   public String getUserIdByUserName(String name) {
     var response = userClient.getByQuery(String.format(QUERY_PATTERN_USERNAME, encode(name)), 1L);
     if (response.getUsers().isEmpty()) {
-      throw new NotFoundException(format("User was not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("User was not found by name=%s", name));
     }
     return response.getUsers().get(0).getId();
   }
@@ -167,14 +167,14 @@ public class ItemReferenceService {
     try {
       return locationClient.getLocationById(id);
     } catch (Exception e) {
-      throw new NotFoundException(format("Location was not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Location was not found by id=%s", id));
     }
   }
 
   public ItemLocation getLocationByName(String name) {
     var locations = locationClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     if (ObjectUtils.isEmpty(locations) || ObjectUtils.isEmpty(locations.getLocations())) {
-      throw new NotFoundException(format("Location not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Location not found by name=%s", name));
     }
     return locations.getLocations().get(0);
   }
@@ -182,7 +182,7 @@ public class ItemReferenceService {
   public MaterialType getMaterialTypeByName(String name) {
     var types = materialTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     if (types.getMtypes().isEmpty()) {
-      throw new NotFoundException(format("Material type not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Material type not found by name=%s", name));
     }
     return types.getMtypes().get(0);
   }
@@ -192,14 +192,14 @@ public class ItemReferenceService {
     try {
       return loanTypeClient.getLoanTypeById(id);
     } catch (Exception e) {
-      throw new NotFoundException(format("Loan type not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Loan type not found by id=%s", id));
     }
   }
 
   public LoanType getLoanTypeByName(String name) {
     var loanTypes = loanTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     if (loanTypes.getLoantypes().isEmpty()) {
-      throw new NotFoundException(format("Loan type not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Loan type not found by name=%s", name));
     }
     return loanTypes.getLoantypes().get(0);
   }
@@ -210,7 +210,7 @@ public class ItemReferenceService {
       .getByQuery(format(BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE, MODULE_NAME, STATUSES_CONFIG_NAME));
     if (configurations.getConfigs()
       .isEmpty()) {
-      throw new NotFoundException("Statuses configuration was not found");
+      throw new ReferenceDataNotFoundException("Statuses configuration was not found");
     }
     try {
       var statuses = objectMapper.readValue(configurations.getConfigs()

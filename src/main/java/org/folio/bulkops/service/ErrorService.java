@@ -26,9 +26,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.MetadataProviderClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.JobLogEntry;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.dto.Error;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.Parameter;
@@ -59,8 +61,8 @@ public class ErrorService {
   private final BulkEditClient bulkEditClient;
   private final MetadataProviderClient metadataProviderClient;
 
-  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
-    if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
+  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link, ErrorType errorType) {
+    if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage).isPresent()) {
       return;
     }
     executionContentRepository.save(BulkOperationExecutionContent.builder()
@@ -69,6 +71,7 @@ public class ErrorService {
       .state(StateType.FAILED)
       .errorMessage(errorMessage)
       .uiErrorMessage(uiErrorMessage)
+      .errorType(errorType)
       .linkToFailedEntity(link)
       .build());
   }
@@ -77,8 +80,16 @@ public class ErrorService {
     executionContentRepository.save(bulkOperationExecutionContent);
   }
 
-  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage) {
-    saveError(bulkOperationId, identifier, errorMessage, null, null);
+  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, ErrorType errorType) {
+    saveError(bulkOperationId, identifier, errorMessage, null, null, errorType);
+  }
+
+  public void saveError(BulkOperation operation, BulkOperationsEntity entity, StateType stateType) {
+    executionContentRepository.save(BulkOperationExecutionContent.builder()
+      .bulkOperationId(operation.getId())
+      .identifier(entity.getIdentifier(operation.getIdentifierType()))
+      .state(stateType)
+      .build());
   }
 
   @Transactional
@@ -90,7 +101,7 @@ public class ErrorService {
   public Errors getErrorsPreviewByBulkOperationId(UUID bulkOperationId, int limit) {
     var bulkOperation = operationRepository.findById(bulkOperationId)
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
-    if (Set.of(DATA_MODIFICATION, REVIEW_CHANGES, REVIEWED_NO_MARC_RECORDS).contains(bulkOperation.getStatus()) || COMPLETED_WITH_ERRORS == bulkOperation.getStatus() && noCommittedErrors(bulkOperation)) {
+    if (Set.of(DATA_MODIFICATION, REVIEW_CHANGES, REVIEWED_NO_MARC_RECORDS).contains(bulkOperation.getStatus()) || COMPLETED_WITH_ERRORS == bulkOperation.getStatus() && noCommittedErrors(bulkOperation) && noCommittedWarnings(bulkOperation)) {
       var errors = bulkEditClient.getErrorsPreview(bulkOperation.getDataExportJobId(), limit);
       return new Errors().errors(errors.getErrors().stream()
           .map(this::prepareInternalErrorRepresentation)
@@ -126,7 +137,7 @@ public class ErrorService {
           errorEntry.setError(DATA_IMPORT_ERROR_DISCARDED);
         }
         if (!errorEntry.getError().isEmpty()) {
-          saveError(bulkOperationId, identifier, errorEntry.getError());
+          saveError(bulkOperationId, identifier, errorEntry.getError(), ErrorType.ERROR);
         }
       });
     } catch (Exception e) {
@@ -137,6 +148,10 @@ public class ErrorService {
 
   private boolean noCommittedErrors(BulkOperation bulkOperation) {
     return isNull(bulkOperation.getCommittedNumOfErrors()) || bulkOperation.getCommittedNumOfErrors() == 0;
+  }
+
+  private boolean noCommittedWarnings(BulkOperation bulkOperation) {
+    return isNull(bulkOperation.getCommittedNumOfWarnings()) || bulkOperation.getCommittedNumOfWarnings() == 0;
   }
 
   private Error prepareInternalErrorRepresentation(Error e) {
@@ -176,7 +191,8 @@ public class ErrorService {
 
     return new Error()
       .message(StringUtils.isNotBlank(content.getUiErrorMessage()) ? content.getUiErrorMessage() : content.getErrorMessage())
-      .parameters(parameters);
+      .parameters(parameters)
+      .type(content.getErrorType());
   }
 
   public String uploadErrorsToStorage(UUID bulkOperationId) {
@@ -196,7 +212,11 @@ public class ErrorService {
   }
 
   public int getCommittedNumOfErrors(UUID bulkOperationId) {
-    return executionContentRepository.countAllByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId);
+    return executionContentRepository.countAllByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIs(bulkOperationId, ErrorType.ERROR);
+  }
+
+  public int getCommittedNumOfWarnings(UUID bulkOperationId) {
+    return executionContentRepository.countAllByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIs(bulkOperationId, ErrorType.WARNING);
   }
 
 }

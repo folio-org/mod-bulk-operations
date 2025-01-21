@@ -119,7 +119,7 @@ class ErrorServiceTest extends BaseTest {
   @Test
   void shouldSaveError() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      errorService.saveError(bulkOperationId, "123", "Error message");
+      errorService.saveError(bulkOperationId, "123", "Error message", ErrorType.ERROR);
 
       var result = executionContentCqlRepository.findByCql("bulkOperationId==" + bulkOperationId, OffsetRequest.of(0, 10));
 
@@ -134,8 +134,8 @@ class ErrorServiceTest extends BaseTest {
   @SneakyThrows
   void shouldUploadErrorsAndReturnLinkToFile() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      errorService.saveError(bulkOperationId, "123", "Error message 123");
-      errorService.saveError(bulkOperationId, "456", "Error message 456");
+      errorService.saveError(bulkOperationId, "123", "Error message 123", ErrorType.ERROR);
+      errorService.saveError(bulkOperationId, "456", "Error message 456", ErrorType.ERROR);
 
       var expectedFileName = bulkOperationId + "/" + LocalDate.now() + "-Committing-changes-Errors-records.csv";
       when(remoteFileSystemClient.put(any(), eq(expectedFileName))).thenReturn(expectedFileName);

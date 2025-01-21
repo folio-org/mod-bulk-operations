@@ -18,6 +18,7 @@ import org.folio.bulkops.exception.ConverterException;
 
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
+import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 
 public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
 
@@ -58,6 +59,9 @@ public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
     }
     try {
       return convertToString((T) object);
+    } catch (ReferenceDataNotFoundException e) {
+      failed = true;
+      throw new ConverterException(this.getField(), object, e.getMessage(), e.getErrorType());
     } catch (Exception e) {
       failed = true;
       throw new ConverterException(this.getField(), object, e.getMessage());
