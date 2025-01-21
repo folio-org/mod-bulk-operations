@@ -18,6 +18,7 @@ import org.folio.bulkops.domain.bean.HoldingsType;
 import org.folio.bulkops.domain.bean.IllPolicy;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.StatisticalCode;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -149,7 +150,7 @@ public class HoldingsReferenceService {
         holdingsSourceClient.getById(id);
     } catch (Exception e) {
       log.error(e);
-      throw new ReferenceDataNotFoundException(format("Holdings record source not found by id=%s", id));
+      throw new NotFoundException(format("Holdings record source not found by id=%s", id));
     }
   }
 
@@ -157,7 +158,7 @@ public class HoldingsReferenceService {
   public HoldingsRecordsSource getSourceByName(String name, String tenantId) {
     var sources = holdingsSourceClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (ObjectUtils.isEmpty(sources) || ObjectUtils.isEmpty(sources.getHoldingsRecordsSources())) {
-      throw new ReferenceDataNotFoundException(format("Source not found by name=%s", name));
+      throw new NotFoundException(format("Source not found by name=%s", name));
     }
     return sources.getHoldingsRecordsSources().get(0);
   }

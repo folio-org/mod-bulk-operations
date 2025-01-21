@@ -101,7 +101,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var extendedInstance = ExtendedInstance.builder().entity(new Instance().withDiscoverySuppress(true)).build();
     var actual = processor.process(IDENTIFIER, extendedInstance, rules(rule(STAFF_SUPPRESS, CLEAR_FIELD, null)));
     assertTrue(actual.getUpdated().getEntity().getDiscoverySuppress());
-    verify(errorService).saveError(any(UUID.class), eq(IDENTIFIER), anyString(), ErrorType.ERROR);
+    verify(errorService).saveError(any(UUID.class), eq(IDENTIFIER), anyString(), eq(ErrorType.ERROR));
   }
 
   @Test
