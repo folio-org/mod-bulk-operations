@@ -27,6 +27,7 @@ import org.folio.bulkops.domain.bean.StatisticalCodeCollection;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserCollection;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -45,7 +46,7 @@ class ItemReferenceHelperTest extends BaseTest {
     assertEquals("name_1", actual);
 
     when(callNumberTypeClient.getById("id_2")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getCallNumberTypeNameById("id_2"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getCallNumberTypeNameById("id_2"));
 
     assertEquals(EMPTY, itemReferenceHelper.getCallNumberTypeNameById(null));
   }
@@ -61,7 +62,7 @@ class ItemReferenceHelperTest extends BaseTest {
     assertEquals("id_2", actual.getId());
 
     when(damagedStatusClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getDamagedStatusById("id_3"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getDamagedStatusById("id_3"));
 
     when(damagedStatusClient.getByQuery("name==" + encode("name_4"))).thenReturn(new DamagedStatusCollection().withItemDamageStatuses(Collections.singletonList(new DamagedStatus().withName("name_4"))));
     actual = itemReferenceHelper.getDamagedStatusByName("name_4");
@@ -79,10 +80,10 @@ class ItemReferenceHelperTest extends BaseTest {
     assertEquals("id_2", actual);
 
     when(itemNoteTypeClient.getNoteTypeById("id_3")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getNoteTypeNameById("id_3", "tenant"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getNoteTypeNameById("id_3", "tenant"));
 
     when(itemNoteTypeClient.getNoteTypesByQuery("name==\"name_4\"", 1)).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.emptyList()));
-    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getNoteTypeIdByName("name_4"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getNoteTypeIdByName("name_4"));
 
   }
 
@@ -97,10 +98,10 @@ class ItemReferenceHelperTest extends BaseTest {
     assertEquals("id_2", actual.getId());
 
     when(servicePointClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getServicePointById("id_3"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getServicePointById("id_3"));
 
     when(servicePointClient.getByQuery("name==\"name_4\"", 1L)).thenReturn(new ServicePoints().withServicepoints(Collections.emptyList()));
-    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getServicePointByName("name_4"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getServicePointByName("name_4"));
   }
 
   @Test
@@ -114,10 +115,10 @@ class ItemReferenceHelperTest extends BaseTest {
     assertEquals("id_2", actual);
 
     when(statisticalCodeClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getStatisticalCodeById("id_3"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getStatisticalCodeById("id_3"));
 
     when(statisticalCodeClient.getByQuery("code==\"code_4\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.emptyList()));
-    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getStatisticalCodeIdByCode("code_4"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getStatisticalCodeIdByCode("code_4"));
   }
 
   @Test
@@ -131,10 +132,10 @@ class ItemReferenceHelperTest extends BaseTest {
     assertEquals("id_2", actual);
 
     when(userClient.getUserById("id_3")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getUserNameById("id_3"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getUserNameById("id_3"));
 
     when(userClient.getByQuery("username==\"name_4\"", 1L)).thenReturn(new UserCollection().withUsers(Collections.emptyList()));
-    assertThrows(NotFoundException.class, () -> itemReferenceHelper.getUserIdByUserName("name_4"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getUserIdByUserName("name_4"));
   }
 
   @Test
