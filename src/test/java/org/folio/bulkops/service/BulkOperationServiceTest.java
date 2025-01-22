@@ -837,7 +837,7 @@ class BulkOperationServiceTest extends BaseTest {
       assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));
       assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
 
-      verify(errorService).saveError(eq(bulkOperationId), eq("10101"), any(String.class), ErrorType.ERROR);
+      verify(errorService).saveError(eq(bulkOperationId), eq("10101"), any(String.class), eq(ErrorType.ERROR));
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
       Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(5)).save(bulkOperationCaptor.capture()));
@@ -1456,7 +1456,7 @@ class BulkOperationServiceTest extends BaseTest {
       verify(itemClient, times(testData.expectedNumOfItemUpdates)).updateItem(any(), anyString());
     }
     if (nonNull(testData.expectedErrorMessage)) {
-      verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage), eq(ErrorType.ERROR));
+      verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage), eq(ErrorType.WARNING));
     }
   }
 
