@@ -5,8 +5,7 @@ import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -92,7 +91,7 @@ class RecordUpdateServiceTest extends BaseTest {
 
     assertEquals(extendedModifiedItem, result);
     verify(itemUpdateProcessor).updateRecord(any(ExtendedItem.class));
-    verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString(), ErrorType.WARNING);
+    verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString(), eq(ErrorType.WARNING));
   }
 
   @Test
