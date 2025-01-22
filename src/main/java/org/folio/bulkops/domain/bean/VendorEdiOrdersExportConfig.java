@@ -39,5 +39,14 @@ public class VendorEdiOrdersExportConfig {
 
   @JsonProperty("isDefaultConfig")
   private Boolean isDefaultConfig = false;
+
+  @JsonProperty("integrationType")
+  private String integrationType;
+
+  @JsonProperty("transmissionMethod")
+  private String transmissionMethod;
+
+  @JsonProperty("fileFormat")
+  private String fileFormat;
 }
 
