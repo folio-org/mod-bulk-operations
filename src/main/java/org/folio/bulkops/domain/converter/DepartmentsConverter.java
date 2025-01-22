@@ -12,8 +12,10 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.exception.ConverterException;
+import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.folio.bulkops.service.UserReferenceHelper;
 
 public class DepartmentsConverter extends BaseConverter<Set<UUID>> {
@@ -43,8 +45,10 @@ public class DepartmentsConverter extends BaseConverter<Set<UUID>> {
           .map(v -> SpecialCharacterEscaper.escape(v.getName()))
           .collect(Collectors.joining(ARRAY_DELIMITER));
       }
+    } catch (ReferenceDataNotFoundException e) {
+      throw new ConverterException(this.getField(), value, e.getMessage(), e.getErrorType());
     } catch (Exception e) {
-      throw new ConverterException(this.getField(), value, e.getMessage());
+      throw new ConverterException(this.getField(), value, e.getMessage(), ErrorType.ERROR);
     }
     return EMPTY;
   }

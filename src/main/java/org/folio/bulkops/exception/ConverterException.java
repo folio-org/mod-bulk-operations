@@ -13,29 +13,10 @@ import java.lang.reflect.Field;
 
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
-@NoArgsConstructor
 @Data
 public class ConverterException extends CsvRuntimeException {
-  private transient Field field;
-  private transient Object value;
-  private String message;
-  private BulkOperationsEntity bean;
-  private BulkOperation bulkOperation;
-  private ErrorType errorType;
-  public ConverterException(Field field, Object value, String message) {
-    this.field = field;
-    this.value = value;
-    this.message = message;
-  }
-
-  public ConverterException(Field field, Object value, String message, ErrorType errorType) {
-    this(message, errorType);
-    this.field = field;
-    this.value = value;
-  }
-
-  public ConverterException(String message, ErrorType errorType) {
-    this.message = message;
-    this.errorType = errorType;
-  }
+  private final transient Field field;
+  private final transient Object value;
+  private final String message;
+  private final ErrorType errorType;
 }
