@@ -29,6 +29,7 @@ import org.folio.bulkops.domain.bean.DepartmentCollection;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.bean.UserGroupCollection;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -59,7 +60,7 @@ class UserReferenceServiceTest {
     assertEquals("type", actual.getDesc());
 
     when(addressTypeClient.getAddressTypeById("id")).thenThrow(NotFoundException.class);
-    assertThrows(NotFoundException.class, () -> userReferenceService.getAddressTypeById("id"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> userReferenceService.getAddressTypeById("id"));
   }
 
   @Test
@@ -74,7 +75,7 @@ class UserReferenceServiceTest {
   @Test
   void getAddressTypeIdByAddressTypeValueNotFoundTest() {
     when(addressTypeClient.getByQuery("addressType==" + encode("at_1"))).thenReturn(new AddressTypeCollection().withAddressTypes(Collections.emptyList()));
-    assertThrows(NotFoundException.class, () -> userReferenceService.getAddressTypeByAddressTypeValue("at_1"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> userReferenceService.getAddressTypeByAddressTypeValue("at_1"));
   }
 
   @Test
@@ -91,7 +92,7 @@ class UserReferenceServiceTest {
     assertEquals("departmentName", actual.getName());
 
     when(departmentClient.getDepartmentById("id")).thenThrow(NotFoundException.class);
-    assertThrows(NotFoundException.class, () -> userReferenceService.getDepartmentById("id"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> userReferenceService.getDepartmentById("id"));
   }
 
   @Test
@@ -118,7 +119,7 @@ class UserReferenceServiceTest {
     assertEquals("userGroup", actual.getGroup());
 
     when(groupClient.getGroupById("id")).thenThrow(NotFoundException.class);
-    assertThrows(NotFoundException.class, () -> userReferenceService.getPatronGroupById("id"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> userReferenceService.getPatronGroupById("id"));
   }
 
   @Test
@@ -154,6 +155,6 @@ class UserReferenceServiceTest {
     when(customFieldsClient.getByQuery(isA(String.class), eq("name==" + encode("name"))))
       .thenReturn(new CustomFieldCollection().withCustomFields(new ArrayList<>()));
     doReturn("module").when(userReferenceService).getModuleId(isA(String.class));
-    assertThrows(NotFoundException.class, () -> userReferenceService.getCustomFieldByName("name"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> userReferenceService.getCustomFieldByName("name"));
   }
 }

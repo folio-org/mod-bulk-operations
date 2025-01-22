@@ -100,7 +100,7 @@ class MarcUpdateServiceTest extends BaseTest {
     verify(mockMarcWriter).writeRecord(recordArgumentCaptor.capture());
     assertThat(recordArgumentCaptor.getValue().getControlNumberField().getData()).isEqualTo("hrid1");
 
-    verify(errorService).saveError(eq(bulkOperation.getId()), identifierArgumentCaptor.capture(), errorMessageArgumentCaptor.capture(), ErrorType.WARNING);
+    verify(errorService).saveError(eq(bulkOperation.getId()), identifierArgumentCaptor.capture(), errorMessageArgumentCaptor.capture(), eq(ErrorType.WARNING));
     assertThat(identifierArgumentCaptor.getValue()).isEqualTo("hrid2");
     assertThat(errorMessageArgumentCaptor.getValue()).isEqualTo(MSG_NO_CHANGE_REQUIRED);
   }
@@ -186,7 +186,7 @@ class MarcUpdateServiceTest extends BaseTest {
     marcUpdateService.saveErrorsForFolioInstances(bulkOperation);
 
     verify(errorService).saveError(any(UUID.class), identifierArgumentCaptor.capture(),
-      errorMessageArgumentCaptor.capture(), ErrorType.ERROR);
+      errorMessageArgumentCaptor.capture(), eq(ErrorType.ERROR));
     assertThat(errorMessageArgumentCaptor.getValue()).isEqualTo(MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY);
     assertThat(identifierArgumentCaptor.getValue()).isEqualTo(HRID.equals(identifierType) ? "hrid2" : "139ed15a-edba-4cde-8f92-810a4cec7770");
   }

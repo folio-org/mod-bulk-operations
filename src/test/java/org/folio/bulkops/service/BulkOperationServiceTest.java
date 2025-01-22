@@ -1137,7 +1137,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     verify(userClient, times(0)).updateUser(any(User.class), anyString());
 
-    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), eq(MSG_NO_CHANGE_REQUIRED), ErrorType.WARNING));
+    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), eq(MSG_NO_CHANGE_REQUIRED), eq(ErrorType.WARNING)));
 
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).writer(pathCaptor.capture()));
@@ -1194,7 +1194,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     bulkOperationService.commit(operation);
 
-    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), anyString(), ErrorType.ERROR));
+    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), anyString(), eq(ErrorType.ERROR)));
 
   }
 
@@ -1422,7 +1422,7 @@ class BulkOperationServiceTest extends BaseTest {
       .thenReturn(new ByteArrayInputStream(modifiedHoldingsString.getBytes()));
     when(remoteFileSystemClient.writer(anyString()))
       .thenReturn(new StringWriter());
-    doNothing().when(errorService).saveError(any(), any(), any(), ErrorType.ERROR);
+    doNothing().when(errorService).saveError(any(), any(), any(), eq(ErrorType.ERROR));
     when(ruleService.getRules(operationId))
       .thenReturn(new BulkOperationRuleCollection()
         .bulkOperationRules(List.of(new BulkOperationRule()
@@ -1456,7 +1456,7 @@ class BulkOperationServiceTest extends BaseTest {
       verify(itemClient, times(testData.expectedNumOfItemUpdates)).updateItem(any(), anyString());
     }
     if (nonNull(testData.expectedErrorMessage)) {
-      verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage), ErrorType.ERROR);
+      verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage), eq(ErrorType.ERROR));
     }
   }
 
