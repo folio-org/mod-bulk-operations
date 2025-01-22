@@ -62,7 +62,7 @@ public class ErrorService {
   private final MetadataProviderClient metadataProviderClient;
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link, ErrorType errorType) {
-    if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifierAndErrorMessage(bulkOperationId, identifier, errorMessage).isPresent()) {
+    if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
       return;
     }
     executionContentRepository.save(BulkOperationExecutionContent.builder()

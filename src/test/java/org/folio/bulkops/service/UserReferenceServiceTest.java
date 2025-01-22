@@ -13,19 +13,24 @@ import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-import com.fasterxml.jackson.databind.node.BaseJsonNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.CustomFieldsClient;
 import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.client.GroupClient;
 import org.folio.bulkops.client.OkapiClient;
-import org.folio.bulkops.domain.bean.*;
+import org.folio.bulkops.domain.bean.AddressType;
+import org.folio.bulkops.domain.bean.AddressTypeCollection;
+import org.folio.bulkops.domain.bean.CustomField;
+import org.folio.bulkops.domain.bean.CustomFieldCollection;
+import org.folio.bulkops.domain.bean.Department;
+import org.folio.bulkops.domain.bean.DepartmentCollection;
+import org.folio.bulkops.domain.bean.UserGroup;
+import org.folio.bulkops.domain.bean.UserGroupCollection;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.folio.spring.FolioExecutionContext;
@@ -35,8 +40,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.JsonNode;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.JsonSerializable;
 
 @ExtendWith(MockitoExtension.class)
 class UserReferenceServiceTest {
