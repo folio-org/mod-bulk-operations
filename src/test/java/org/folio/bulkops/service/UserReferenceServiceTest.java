@@ -5,37 +5,38 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.node.BaseJsonNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.CustomFieldsClient;
 import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.client.GroupClient;
-import org.folio.bulkops.domain.bean.AddressType;
-import org.folio.bulkops.domain.bean.AddressTypeCollection;
-import org.folio.bulkops.domain.bean.CustomField;
-import org.folio.bulkops.domain.bean.CustomFieldCollection;
-import org.folio.bulkops.domain.bean.Department;
-import org.folio.bulkops.domain.bean.DepartmentCollection;
-import org.folio.bulkops.domain.bean.UserGroup;
-import org.folio.bulkops.domain.bean.UserGroupCollection;
+import org.folio.bulkops.client.OkapiClient;
+import org.folio.bulkops.domain.bean.*;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
+import org.folio.spring.FolioExecutionContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.JsonNode;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.JsonSerializable;
 
 @ExtendWith(MockitoExtension.class)
 class UserReferenceServiceTest {
@@ -48,6 +49,10 @@ class UserReferenceServiceTest {
   private GroupClient groupClient;
   @Mock
   private CustomFieldsClient customFieldsClient;
+  @Mock
+  private FolioExecutionContext folioExecutionContext;
+  @Mock
+  private OkapiClient okapiClient;
   @InjectMocks
   @Spy
   private UserReferenceService userReferenceService;
@@ -156,5 +161,24 @@ class UserReferenceServiceTest {
       .thenReturn(new CustomFieldCollection().withCustomFields(new ArrayList<>()));
     doReturn("module").when(userReferenceService).getModuleId(isA(String.class));
     assertThrows(ReferenceDataNotFoundException.class, () -> userReferenceService.getCustomFieldByName("name"));
+  }
+
+  @Test
+  void getPatronGroupByNameNotFoundTest() {
+    when(groupClient.getByQuery("group==" + encode("name"))).thenReturn(new UserGroupCollection());
+    assertThrows(ReferenceDataNotFoundException.class, () -> userReferenceService.getPatronGroupByName("name"));
+  }
+
+  @Test
+  void getModuleIdNotFoundTest() {
+    when(okapiClient.getModuleIds(any(URI.class), any(String.class), any(String.class)))
+      .thenReturn(new TextNode(""));
+    when(folioExecutionContext.getTenantId()).thenReturn("tenant");
+    assertThrows(ReferenceDataNotFoundException.class, () -> userReferenceService.getModuleId("name"));
+  }
+
+  @Test
+  void getPreferredContactTypeByIdNotFoundTest() {
+    assertThrows(ReferenceDataNotFoundException.class, () -> userReferenceService.getPreferredContactTypeById("not found id"));
   }
 }
