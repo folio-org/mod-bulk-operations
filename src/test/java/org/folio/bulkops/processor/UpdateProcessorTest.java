@@ -475,4 +475,36 @@ class UpdateProcessorTest extends BaseTest {
     verify(holdingsClient).updateHoldingsRecord(any(HoldingsRecord.class), eq(holdingRecord.getId()));
     verify(itemClient).updateItem(any(Item.class), eq(item.getId()));
   }
+
+  @Test
+  void testSaveWarning_WhenInstanceNotChanged() {
+    var instanceId = UUID.randomUUID().toString();
+    var instance = Instance.builder()
+      .id(instanceId)
+      .source("FOLIO")
+      .discoverySuppress(true)
+      .build();
+    var extendedInstance = ExtendedInstance.builder().entity(instance).build();
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+
+    var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
+      .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
+      .actions(Collections.singletonList(new Action()
+        .type(SET_TO_TRUE)
+        .parameters(Collections.singletonList(new Parameter()
+          .key(APPLY_TO_HOLDINGS)
+          .value(Boolean.toString(false)))))));
+
+    when(consortiaService.isTenantCentral(isA(String.class))).thenReturn(false);
+    when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()
+        .bulkOperationRules(Collections.singletonList(rule)));
+
+    folioInstanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, true);
+
+    verify(errorService).saveError(eq(operationId), eq(instanceId), anyString(), eq(ErrorType.WARNING));
+  }
 }

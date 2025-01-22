@@ -4,10 +4,7 @@ import com.opencsv.exceptions.CsvRuntimeException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.dto.ErrorType;
-import org.folio.bulkops.domain.entity.BulkOperation;
 
 import java.lang.reflect.Field;
 

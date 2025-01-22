@@ -46,7 +46,7 @@ public class DepartmentsConverter extends BaseConverter<Set<UUID>> {
           .collect(Collectors.joining(ARRAY_DELIMITER));
       }
     } catch (ReferenceDataNotFoundException e) {
-      throw new ConverterException(this.getField(), value, e.getMessage(), e.getErrorType());
+      throw new ConverterException(this.getField(), value, e.getMessage(), ErrorType.WARNING);
     } catch (Exception e) {
       throw new ConverterException(this.getField(), value, e.getMessage(), ErrorType.ERROR);
     }
