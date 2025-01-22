@@ -516,7 +516,7 @@ class BulkOperationServiceTest extends BaseTest {
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(4)).save(bulkOperationCaptor.capture()));
+      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(5)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
 
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
@@ -601,7 +601,7 @@ class BulkOperationServiceTest extends BaseTest {
       assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(8)).save(bulkOperationCaptor.capture()));
+      Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(6)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getLinkToModifiedRecordsMarcFile(), equalTo(expectedPathToModifiedMarcFile));
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
