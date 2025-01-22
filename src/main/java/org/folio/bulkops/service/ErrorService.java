@@ -84,14 +84,6 @@ public class ErrorService {
     saveError(bulkOperationId, identifier, errorMessage, null, null, errorType);
   }
 
-  public void saveError(BulkOperation operation, BulkOperationsEntity entity, StateType stateType) {
-    executionContentRepository.save(BulkOperationExecutionContent.builder()
-      .bulkOperationId(operation.getId())
-      .identifier(entity.getIdentifier(operation.getIdentifierType()))
-      .state(stateType)
-      .build());
-  }
-
   @Transactional
   public void deleteErrorsByBulkOperationId(UUID bulkOperationId) {
     executionContentRepository.deleteByBulkOperationId(bulkOperationId);

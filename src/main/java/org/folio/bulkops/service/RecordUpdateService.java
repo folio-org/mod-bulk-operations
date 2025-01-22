@@ -24,7 +24,6 @@ public class RecordUpdateService {
   private final FolioUpdateProcessorFactory updateProcessorFactory;
   private final BulkOperationExecutionContentRepository executionContentRepository;
   private final EntityPathResolver entityPathResolver;
-  private final ErrorService errorService;
 
   public BulkOperationsEntity updateEntity(BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation) {
     var entity = modified.getRecordBulkOperationEntity();
@@ -44,7 +43,11 @@ public class RecordUpdateService {
         }
         throw e;
       }
-      errorService.saveError(operation, modified, StateType.PROCESSED);
+      executionContentRepository.save(BulkOperationExecutionContent.builder()
+        .bulkOperationId(operation.getId())
+        .identifier(modified.getIdentifier(operation.getIdentifierType()))
+        .state(StateType.PROCESSED)
+        .build());
       operation.setCommittedNumOfRecords(operation.getCommittedNumOfRecords() + 1);
     }
     updater.updateAssociatedRecords(modified, operation, isEqual);
