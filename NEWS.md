@@ -1,3 +1,10 @@
+## v2.1.10 - Released 2025/01/23
+
+This release contains optimizations for a new platform and adding missing interfaces.
+
+### Bugs
+* [MODBULKOPS-457](https://folio-org.atlassian.net/browse/MODBULKOPS-457) "Something went wrong" error appears and list of Users is empty in Bulk edit app on Eureka environment (reverting couple of changes)
+
 ## v2.1.9 - Released 2025/01/15
 
 This release contains optimizations for a new platform.
