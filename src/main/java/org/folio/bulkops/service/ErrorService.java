@@ -191,7 +191,7 @@ public class ErrorService {
     var contents = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId, OffsetRequest.of(0, Integer.MAX_VALUE));
     if (!contents.isEmpty()) {
       var errorsString = contents.stream()
-        .map(content -> String.join(Constants.COMMA_DELIMETER, content.getIdentifier(), content.getErrorMessage()))
+        .map(content -> String.join(Constants.COMMA_DELIMETER, content.getIdentifier(), content.getErrorMessage(), content.getErrorType().getValue()))
         .collect(Collectors.joining(LF));
       var errorsFileName = LocalDate.now() + operationRepository.findById(bulkOperationId)
         .map(BulkOperation::getLinkToTriggeringCsvFile)
