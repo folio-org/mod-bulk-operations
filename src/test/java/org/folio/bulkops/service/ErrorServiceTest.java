@@ -135,7 +135,7 @@ class ErrorServiceTest extends BaseTest {
   void shouldUploadErrorsAndReturnLinkToFile() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       errorService.saveError(bulkOperationId, "123", "Error message 123", ErrorType.ERROR);
-      errorService.saveError(bulkOperationId, "456", "Error message 456", ErrorType.ERROR);
+      errorService.saveError(bulkOperationId, "456", "Error message 456", ErrorType.WARNING);
 
       var expectedFileName = bulkOperationId + "/" + LocalDate.now() + "-Committing-changes-Errors-records.csv";
       when(remoteFileSystemClient.put(any(), eq(expectedFileName))).thenReturn(expectedFileName);
@@ -148,7 +148,7 @@ class ErrorServiceTest extends BaseTest {
       var actual = new String(streamCaptor.getValue().readAllBytes());
       var actualArr = actual.split("\n");
       Arrays.sort(actualArr);
-      var expectedArr = new String[] {"123,Error message 123", "456,Error message 456"};
+      var expectedArr = new String[] {"123,Error message 123,ERROR", "456,Error message 456,WARNING"};
       assertArrayEquals(expectedArr, actualArr);
     }
   }
