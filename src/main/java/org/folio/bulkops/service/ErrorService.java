@@ -42,6 +42,7 @@ import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.Constants;
 import org.folio.spring.data.OffsetRequest;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -90,7 +91,7 @@ public class ErrorService {
     log.info("Errors deleted for bulk operation {}", bulkOperationId);
   }
 
-  public Errors getErrorsPreviewByBulkOperationId(UUID bulkOperationId, int limit) {
+  public Errors getErrorsPreviewByBulkOperationId(UUID bulkOperationId, int limit, int offset, ErrorType errorType) {
     var bulkOperation = operationRepository.findById(bulkOperationId)
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
     if (Set.of(DATA_MODIFICATION, REVIEW_CHANGES, REVIEWED_NO_MARC_RECORDS).contains(bulkOperation.getStatus()) || COMPLETED_WITH_ERRORS == bulkOperation.getStatus() && noCommittedErrors(bulkOperation) && noCommittedWarnings(bulkOperation)) {
@@ -100,7 +101,7 @@ public class ErrorService {
           .toList())
         .totalRecords(errors.getTotalRecords());
     } else if (COMPLETED == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
-      return getExecutionErrors(bulkOperationId, limit);
+      return getExecutionErrors(bulkOperationId, limit, offset, errorType);
     } else {
       throw new NotFoundException("Errors preview is not available");
     }
@@ -151,14 +152,19 @@ public class ErrorService {
     return new Error().message(error[1]).parameters(List.of(new Parameter().key(IDENTIFIER).value(error[0])));
   }
 
-  public String getErrorsCsvByBulkOperationId(UUID bulkOperationId) {
-    return getErrorsPreviewByBulkOperationId(bulkOperationId, Integer.MAX_VALUE).getErrors().stream()
+  public String getErrorsCsvByBulkOperationId(UUID bulkOperationId, int offset, ErrorType errorType) {
+    return getErrorsPreviewByBulkOperationId(bulkOperationId, Integer.MAX_VALUE, offset, errorType).getErrors().stream()
       .map(error -> String.join(Constants.COMMA_DELIMETER, ObjectUtils.isEmpty(error.getParameters()) ? EMPTY : error.getParameters().get(0).getValue(), error.getMessage()))
       .collect(Collectors.joining(Constants.NEW_LINE_SEPARATOR));
   }
 
-  private Errors getExecutionErrors(UUID bulkOperationId, int limit) {
-    var errorPage = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId, OffsetRequest.of(0, limit));
+  private Errors getExecutionErrors(UUID bulkOperationId, int limit, int offset, ErrorType errorType) {
+    Page<BulkOperationExecutionContent> errorPage;
+    if (isNull(errorType)) {
+      errorPage = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNullOrderByErrorType(bulkOperationId, OffsetRequest.of(offset, limit));
+    } else {
+      errorPage = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIsOrderByErrorType(bulkOperationId, OffsetRequest.of(offset, limit), errorType);
+    }
     var errors = errorPage.toList().stream()
       .map(this::executionContentToFolioError)
       .toList();
@@ -188,7 +194,7 @@ public class ErrorService {
   }
 
   public String uploadErrorsToStorage(UUID bulkOperationId) {
-    var contents = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId, OffsetRequest.of(0, Integer.MAX_VALUE));
+    var contents = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNullOrderByErrorType(bulkOperationId, OffsetRequest.of(0, Integer.MAX_VALUE));
     if (!contents.isEmpty()) {
       var errorsString = contents.stream()
         .map(content -> String.join(Constants.COMMA_DELIMETER, content.getIdentifier(), content.getErrorMessage(), content.getErrorType().getValue()))
