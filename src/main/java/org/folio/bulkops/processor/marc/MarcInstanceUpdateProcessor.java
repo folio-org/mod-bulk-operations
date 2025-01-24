@@ -72,6 +72,7 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
         bulkOperation.setLinkToCommittedRecordsMarcFile(null);
         bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(bulkOperation.getId()));
         bulkOperation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(bulkOperation.getId()));
+        bulkOperation.setCommittedNumOfWarnings(errorService.getCommittedNumOfWarnings(bulkOperation.getId()));
         bulkOperation.setEndTime(LocalDateTime.now());
         bulkOperation.setStatus(bulkOperation.getCommittedNumOfErrors() == 0 ? COMPLETED : COMPLETED_WITH_ERRORS);
       }

@@ -92,6 +92,7 @@ public class SrsService {
     operation.setCommittedNumOfRecords(committedNumOfRecords);
     operation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(operation.getId()));
     operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operation.getId()));
+    operation.setCommittedNumOfWarnings(errorService.getCommittedNumOfWarnings(operation.getId()));
     operation.setEndTime(LocalDateTime.now());
     operation.setStatus(operation.getCommittedNumOfErrors() == 0 ? COMPLETED : COMPLETED_WITH_ERRORS);
     bulkOperationRepository.save(operation);

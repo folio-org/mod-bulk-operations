@@ -14,10 +14,12 @@ import java.util.Set;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.Tags;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.exception.ConverterException;
 
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
+import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 
 public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
 
@@ -58,9 +60,12 @@ public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
     }
     try {
       return convertToString((T) object);
+    } catch (ReferenceDataNotFoundException e) {
+      failed = true;
+      throw new ConverterException(this.getField(), object, e.getMessage(), ErrorType.WARNING);
     } catch (Exception e) {
       failed = true;
-      throw new ConverterException(this.getField(), object, e.getMessage());
+      throw new ConverterException(this.getField(), object, e.getMessage(), ErrorType.ERROR);
     }
   }
 

@@ -13,6 +13,7 @@ import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.MarcAction;
 import org.folio.bulkops.domain.dto.MarcActionDataInner;
@@ -468,7 +469,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     processor.update(operation, marcRecord, rules, new Date());
 
     var identifier = isInstanceId ? instanceId : hrid;
-    verify(errorService).saveError(bulkOperationId, identifier, errorMessage);
+    verify(errorService).saveError(bulkOperationId, identifier, errorMessage, ErrorType.ERROR);
   }
 
   @ParameterizedTest
@@ -512,7 +513,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
       "Action FIND + %s is not supported yet." :
       "Action %s is not supported yet.";
     var errorMessage = String.format(errorMessageTemplate, errorMessageArg);
-    verify(errorService).saveError(bulkOperationId, hrid, errorMessage);
+    verify(errorService).saveError(bulkOperationId, hrid, errorMessage, ErrorType.ERROR);
   }
 
   @Test
@@ -697,6 +698,6 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     processor.update(operation, marcRecord, rules, date);
 
     var expectedErrorMessage = "Bulk edit of 001 field is not supported";
-    verify(errorService).saveError(bulkOperationId, identifier, expectedErrorMessage);
+    verify(errorService).saveError(bulkOperationId, identifier, expectedErrorMessage, ErrorType.ERROR);
   }
 }

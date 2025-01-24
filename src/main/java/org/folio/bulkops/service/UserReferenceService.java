@@ -20,7 +20,7 @@ import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.bean.Department;
 import org.folio.bulkops.domain.bean.PreferredContactType;
 import org.folio.bulkops.domain.bean.UserGroup;
-import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -46,7 +46,7 @@ public class UserReferenceService {
   public AddressType getAddressTypeByAddressTypeValue(String addressTypeValue) {
     var response = addressTypeClient.getByQuery(String.format(QUERY_PATTERN_ADDRESS_TYPE, encode(addressTypeValue)));
     if (response.getAddressTypes().isEmpty()) {
-      throw new NotFoundException(format("Address type=%s not found", addressTypeValue));
+      throw new ReferenceDataNotFoundException(format("Address type=%s not found", addressTypeValue));
     }
     return response.getAddressTypes().get(0);
   }
@@ -56,7 +56,7 @@ public class UserReferenceService {
     try {
       return addressTypeClient.getAddressTypeById(id);
     } catch (Exception e) {
-      throw new NotFoundException(format("Address type was not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Address type was not found by id=%s", id));
     }
   }
 
@@ -65,7 +65,7 @@ public class UserReferenceService {
     try {
       return departmentClient.getDepartmentById(id);
     } catch (Exception e) {
-      throw new NotFoundException(format("Department was not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Department was not found by id=%s", id));
     }
   }
 
@@ -73,7 +73,7 @@ public class UserReferenceService {
   public Department getDepartmentByName(String name) {
     var response = departmentClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     if (response.getDepartments().isEmpty()) {
-      throw new NotFoundException(format("Department=%s not found", name));
+      throw new ReferenceDataNotFoundException(format("Department=%s not found", name));
     }
     return response.getDepartments().get(0);
   }
@@ -83,7 +83,7 @@ public class UserReferenceService {
     try {
       return groupClient.getGroupById(id);
     } catch (Exception e) {
-      throw new NotFoundException(format("Patron group was not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Patron group was not found by id=%s", id));
     }
   }
 
@@ -91,7 +91,7 @@ public class UserReferenceService {
   public UserGroup getPatronGroupByName(String name) {
     var response = groupClient.getByQuery(String.format(QUERY_PATTERN_GROUP, encode(name)));
     if (ObjectUtils.isEmpty(response) || ObjectUtils.isEmpty(response.getUsergroups())) {
-      throw new NotFoundException(format("Invalid patron group value: %s", name));
+      throw new ReferenceDataNotFoundException(format("Invalid patron group value: %s", name));
     }
     return response.getUsergroups().get(0);
   }
@@ -102,14 +102,14 @@ public class UserReferenceService {
     return customFieldsClient.getByQuery(getModuleId(MOD_USERS), format(QUERY_PATTERN_NAME, encode(name)))
       .getCustomFields().stream().filter(customField -> customField.getName().equals(name))
       .findFirst()
-      .orElseThrow(() -> new NotFoundException(format("Custom field with name=%s not found", name)));
+      .orElseThrow(() -> new ReferenceDataNotFoundException(format("Custom field with name=%s not found", name)));
   }
 
   @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByRefId(String refId) {
     return customFieldsClient.getByQuery(getModuleId(MOD_USERS), format(QUERY_PATTERN_REF_ID, encode(refId)))
       .getCustomFields().stream().filter(customField -> customField.getRefId().equals(refId)).findFirst()
-      .orElseThrow(() -> new NotFoundException(format("Custom field with refId=%s not found", refId)));
+      .orElseThrow(() -> new ReferenceDataNotFoundException(format("Custom field with refId=%s not found", refId)));
   }
 
   @Cacheable(cacheNames = "moduleIds")
@@ -119,7 +119,7 @@ public class UserReferenceService {
     if (!moduleNamesJson.isEmpty()) {
       return moduleNamesJson.get(0).get("id").asText();
     }
-    throw new NotFoundException(format("Module id not found for name: %s", moduleName));
+    throw new ReferenceDataNotFoundException(format("Module id not found for name: %s", moduleName));
   }
 
   public PreferredContactType getPreferredContactTypeById(String id) {
@@ -127,6 +127,6 @@ public class UserReferenceService {
     if (contactType.isPresent()) {
       return contactType.get();
     }
-    throw new NotFoundException(format("Invalid Preferred contact value: %s", id));
+    throw new ReferenceDataNotFoundException(format("Invalid Preferred contact value: %s", id));
   }
 }

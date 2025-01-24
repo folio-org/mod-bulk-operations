@@ -21,9 +21,9 @@ import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.domain.bean.InstanceFormats;
 import org.folio.bulkops.domain.bean.InstanceTypes;
 import org.folio.bulkops.domain.bean.StatisticalCode;
-import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.domain.dto.ContributorTypeCollection;
 import org.folio.bulkops.domain.dto.InstanceNoteType;
+import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -48,7 +48,7 @@ public class InstanceReferenceService {
     try {
       return isEmpty(id) ? EMPTY : instanceStatusesClient.getById(id).getName();
     } catch (Exception e) {
-      throw new NotFoundException(format("Instance status was not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Instance status was not found by id=%s", id));
     }
   }
 
@@ -56,7 +56,7 @@ public class InstanceReferenceService {
   public String getInstanceStatusIdByName(String name) {
     var response = instanceStatusesClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (response.getStatuses().isEmpty()) {
-      throw new NotFoundException(format("Instance status was not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Instance status was not found by name=%s", name));
     }
     return response.getStatuses().get(0).getId();
   }
@@ -66,7 +66,7 @@ public class InstanceReferenceService {
     try {
       return isEmpty(id) ? EMPTY : modesOfIssuanceClient.getById(id).getName();
     } catch (Exception e) {
-      throw new NotFoundException(format("Mode of issuance was not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Mode of issuance was not found by id=%s", id));
     }
   }
 
@@ -74,7 +74,7 @@ public class InstanceReferenceService {
   public String getModeOfIssuanceIdByName(String name) {
     var response = modesOfIssuanceClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (response.getModes().isEmpty()) {
-      throw new NotFoundException(format("Mode of issuance was not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Mode of issuance was not found by name=%s", name));
     }
     return response.getModes().get(0).getId();
   }
@@ -83,7 +83,7 @@ public class InstanceReferenceService {
   public StatisticalCode getStatisticalCodeByName(String name, String tenantId) {
     var response = statisticalCodeClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     if (response.getStatisticalCodes().isEmpty()) {
-      throw new NotFoundException(format("Statistical code was not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Statistical code was not found by name=%s", name));
     }
     return response.getStatisticalCodes().get(0);
   }
@@ -93,7 +93,7 @@ public class InstanceReferenceService {
     try {
       return statisticalCodeClient.getById(id);
     } catch (Exception e) {
-      throw new NotFoundException(format("Statistical code was not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Statistical code was not found by id=%s", id));
     }
   }
 
@@ -102,7 +102,7 @@ public class InstanceReferenceService {
     try {
       return isEmpty(id) ? EMPTY : instanceTypesClient.getById(id).getName();
     } catch (Exception e) {
-      throw new NotFoundException(format("Instance type was not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Instance type was not found by id=%s", id));
     }
   }
 
@@ -110,7 +110,7 @@ public class InstanceReferenceService {
   public String getInstanceTypeIdByName(String name) {
     var response = instanceTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (response.getTypes().isEmpty()) {
-      throw new NotFoundException(format("Instance type was not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Instance type was not found by name=%s", name));
     }
     return response.getTypes().get(0).getId();
   }
@@ -120,7 +120,7 @@ public class InstanceReferenceService {
     try {
       return isEmpty(id) ? EMPTY : natureOfContentTermsClient.getById(id).getName();
     } catch (Exception e) {
-      throw new NotFoundException(format("Nature of content term was not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Nature of content term was not found by id=%s", id));
     }
   }
 
@@ -128,7 +128,7 @@ public class InstanceReferenceService {
   public String getNatureOfContentTermIdByName(String name) {
     var response = natureOfContentTermsClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (response.getTerms().isEmpty()) {
-      throw new NotFoundException(format("Nature of content term was not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Nature of content term was not found by name=%s", name));
     }
     return response.getTerms().get(0).getId();
   }
@@ -138,7 +138,7 @@ public class InstanceReferenceService {
     try {
       return isEmpty(id) ? EMPTY : instanceFormatsClient.getById(id).getName();
     } catch (Exception e) {
-      throw new NotFoundException(format("Instance format was not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Instance format was not found by id=%s", id));
     }
   }
 
@@ -146,7 +146,7 @@ public class InstanceReferenceService {
   public String getInstanceFormatIdByName(String name) {
     var response = instanceFormatsClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (response.getFormats().isEmpty()) {
-      throw new NotFoundException(format("Instance format was not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Instance format was not found by name=%s", name));
     }
     return response.getFormats().get(0).getId();
   }
@@ -163,7 +163,7 @@ public class InstanceReferenceService {
     try {
       return instanceNoteTypesClient.getNoteTypeById(id).getName();
     } catch (Exception e) {
-      throw new NotFoundException(format("Note type not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Note type not found by id=%s", id));
     }
   }
 
@@ -171,7 +171,7 @@ public class InstanceReferenceService {
   public String getNoteTypeIdByName(String name) {
     var noteTypes = instanceNoteTypesClient.getNoteTypesByQuery(format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (noteTypes.getInstanceNoteTypes().isEmpty()) {
-      throw new NotFoundException(format("Note type not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Note type not found by name=%s", name));
     }
     return noteTypes.getInstanceNoteTypes().get(0).getId().toString();
   }
