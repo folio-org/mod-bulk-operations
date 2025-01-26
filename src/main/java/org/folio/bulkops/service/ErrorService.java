@@ -94,21 +94,19 @@ public class ErrorService {
   public Errors getErrorsPreviewByBulkOperationId(UUID bulkOperationId, int limit, int offset, ErrorType errorType) {
     var bulkOperation = operationRepository.findById(bulkOperationId)
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
-    if (Set.of(DATA_MODIFICATION, REVIEW_CHANGES, REVIEWED_NO_MARC_RECORDS).contains(bulkOperation.getStatus()) || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()
-      && noCommittedErrors(bulkOperation)
-      && noCommittedWarnings(bulkOperation)) {
-    var errors = new BufferedReader(new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile())))
-      .lines()
-      .skip(offset)
-      .limit(limit)
-      .map(message -> {
-        var error = message.split(Constants.COMMA_DELIMETER);
-        return new Error().message(error[1]).parameters(List.of(new Parameter().key(IDENTIFIER).value(error[0])));
-      })
-      .collect(toList());
-    return new Errors().errors(errors)
-      .totalRecords(remoteFileSystemClient.getNumOfLines(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile()));
-  } else if (COMPLETED == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
+    if (Set.of(DATA_MODIFICATION, REVIEW_CHANGES, REVIEWED_NO_MARC_RECORDS).contains(bulkOperation.getStatus()) || COMPLETED_WITH_ERRORS == bulkOperation.getStatus() && noCommittedErrors(bulkOperation) && noCommittedWarnings(bulkOperation)) {
+      var errors = new BufferedReader(new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile())))
+        .lines()
+        .skip(offset)
+        .limit(limit)
+        .map(message -> {
+          var error = message.split(Constants.COMMA_DELIMETER);
+          return new Error().message(error[1]).parameters(List.of(new Parameter().key(IDENTIFIER).value(error[0])));
+        })
+        .collect(toList());
+      return new Errors().errors(errors)
+        .totalRecords(remoteFileSystemClient.getNumOfLines(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile()));
+    } else if (COMPLETED == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
       return getExecutionErrors(bulkOperationId, limit, offset, errorType);
     } else {
       throw new NotFoundException("Errors preview is not available");
