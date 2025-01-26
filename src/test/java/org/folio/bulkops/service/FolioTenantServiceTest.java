@@ -8,7 +8,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -21,16 +23,25 @@ class FolioTenantServiceTest {
   PrepareSystemUserService prepareSystemUserService;
 
   @Test
-  void shouldDoProcessAfterTenantUpdating() {
+  void shouldProcessAfterTenantUpdating() {
     TenantAttributes tenantAttributes = createTenantAttributes();
 
     doNothing().when(prepareSystemUserService)
       .setupSystemUser();
 
-
     folioTenantService.afterTenantUpdate(tenantAttributes);
 
     verify(prepareSystemUserService).setupSystemUser();
+  }
+
+  @Test
+  void shouldFailAfterTenantUpdating() {
+    TenantAttributes tenantAttributes = createTenantAttributes();
+
+    doThrow(NullPointerException.class).when(prepareSystemUserService)
+      .setupSystemUser();
+
+    assertThrows(NullPointerException.class, () -> folioTenantService.afterTenantUpdate(tenantAttributes));
   }
 
   private TenantAttributes createTenantAttributes() {
