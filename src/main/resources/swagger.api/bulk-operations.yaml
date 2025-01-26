@@ -312,6 +312,12 @@ paths:
           schema:
             type: integer
           description: The numbers of errors to return
+        - in: query
+          name: offset
+          required: true
+          schema:
+            type: integer
+          description: The query offset
       responses:
         '200':
           description: Collection of errors for preview

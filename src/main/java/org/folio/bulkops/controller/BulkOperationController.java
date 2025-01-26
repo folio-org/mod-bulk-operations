@@ -92,8 +92,8 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   @Override
-  public ResponseEntity<Errors> getErrorsPreviewByOperationId(UUID operationId, Integer limit) {
-    return new ResponseEntity<>(errorService.getErrorsPreviewByBulkOperationId(operationId, limit), HttpStatus.OK);
+  public ResponseEntity<Errors> getErrorsPreviewByOperationId(UUID operationId, Integer limit, Integer offset) {
+    return new ResponseEntity<>(errorService.getErrorsPreviewByBulkOperationId(operationId, limit, offset), HttpStatus.OK);
   }
 
   @Override
