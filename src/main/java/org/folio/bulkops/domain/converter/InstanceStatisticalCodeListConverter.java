@@ -8,12 +8,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 
 public class InstanceStatisticalCodeListConverter extends BaseConverter<List<String>> {
   @Override
   public List<String> convertToObject(String value) {
-    return Arrays.stream(value.split(ARRAY_DELIMITER))
+    return Arrays.stream(value.split("\\|"))
+      .map(v -> v.split("-")[1].trim())
       .map(SpecialCharacterEscaper::restore)
       .map(name -> InstanceReferenceHelper.service().getStatisticalCodeByName(name).getId())
       .filter(Objects::nonNull)
@@ -24,8 +25,11 @@ public class InstanceStatisticalCodeListConverter extends BaseConverter<List<Str
   public String convertToString(List<String> object) {
     return object.stream()
       .filter(Objects::nonNull)
-      .map(id -> InstanceReferenceHelper.service().getStatisticalCodeById(id).getName())
-      .map(SpecialCharacterEscaper::escape)
-      .collect(Collectors.joining(ARRAY_DELIMITER));
+      .map(id -> {
+        var sc = InstanceReferenceHelper.service().getStatisticalCodeById(id);
+        var sct = InstanceReferenceHelper.service().getStatisticalCodeTypeById(sc.getStatisticalCodeTypeId());
+        return String.format("%s: %s - %s", escape(sct.getName()), escape(sc.getCode()), escape(sc.getName()));
+      })
+      .collect(Collectors.joining("|"));
   }
 }
