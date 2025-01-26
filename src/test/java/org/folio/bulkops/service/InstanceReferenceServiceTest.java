@@ -21,6 +21,7 @@ import org.folio.bulkops.domain.bean.ModesOfIssuance;
 import org.folio.bulkops.domain.bean.NatureOfContentTerms;
 import org.folio.bulkops.domain.dto.ContributorTypeCollection;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -53,70 +54,70 @@ class InstanceReferenceServiceTest {
   void shouldThrowNotFoundExceptionIfInstanceStatusNotFound() {
     var id = UUID.randomUUID().toString();
     doThrow(new NotFoundException("not found")).when(instanceStatusesClient).getById(id);
-    assertThrows(NotFoundException.class, () -> instanceReferenceService.getInstanceStatusNameById(id));
+    assertThrows(ReferenceDataNotFoundException.class, () -> instanceReferenceService.getInstanceStatusNameById(id));
 
     var name = "name";
     when(instanceStatusesClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1)).thenReturn(InstanceStatuses.builder()
       .statuses(Collections.emptyList())
       .totalRecords(0)
       .build());
-    assertThrows(NotFoundException.class, () -> instanceReferenceService.getInstanceStatusIdByName(name));
+    assertThrows(ReferenceDataNotFoundException.class, () -> instanceReferenceService.getInstanceStatusIdByName(name));
   }
 
   @Test
   void shouldThrowNotFoundExceptionIfModeOfIssuanceNotFound() {
     var id = UUID.randomUUID().toString();
     doThrow(new NotFoundException("not found")).when(modesOfIssuanceClient).getById(id);
-    assertThrows(NotFoundException.class, () -> instanceReferenceService.getModeOfIssuanceNameById(id));
+    assertThrows(ReferenceDataNotFoundException.class, () -> instanceReferenceService.getModeOfIssuanceNameById(id));
 
     var name = "name";
     when(modesOfIssuanceClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1)).thenReturn(ModesOfIssuance.builder()
       .modes(Collections.emptyList())
       .totalRecords(0)
       .build());
-    assertThrows(NotFoundException.class, () -> instanceReferenceService.getModeOfIssuanceIdByName(name));
+    assertThrows(ReferenceDataNotFoundException.class, () -> instanceReferenceService.getModeOfIssuanceIdByName(name));
   }
 
   @Test
   void shouldThrowNotFoundExceptionIfInstanceTypeNotFound() {
     var id = UUID.randomUUID().toString();
     doThrow(new NotFoundException("not found")).when(instanceTypesClient).getById(id);
-    assertThrows(NotFoundException.class, () -> instanceReferenceService.getInstanceTypeNameById(id));
+    assertThrows(ReferenceDataNotFoundException.class, () -> instanceReferenceService.getInstanceTypeNameById(id));
 
     var name = "name";
     when(instanceTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1)).thenReturn(InstanceTypes.builder()
       .types(Collections.emptyList())
       .totalRecords(0)
       .build());
-    assertThrows(NotFoundException.class, () -> instanceReferenceService.getInstanceTypeIdByName(name));
+    assertThrows(ReferenceDataNotFoundException.class, () -> instanceReferenceService.getInstanceTypeIdByName(name));
   }
 
   @Test
   void shouldThrowNotFoundExceptionIfNatureOfContentTermNotFound() {
     var id = UUID.randomUUID().toString();
     doThrow(new NotFoundException("not found")).when(natureOfContentTermsClient).getById(id);
-    assertThrows(NotFoundException.class, () -> instanceReferenceService.getNatureOfContentTermNameById(id));
+    assertThrows(ReferenceDataNotFoundException.class, () -> instanceReferenceService.getNatureOfContentTermNameById(id));
 
     var name = "name";
     when(natureOfContentTermsClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1)).thenReturn(NatureOfContentTerms.builder()
       .terms(Collections.emptyList())
       .totalRecords(0)
       .build());
-    assertThrows(NotFoundException.class, () -> instanceReferenceService.getNatureOfContentTermIdByName(name));
+    assertThrows(ReferenceDataNotFoundException.class, () -> instanceReferenceService.getNatureOfContentTermIdByName(name));
   }
 
   @Test
   void shouldThrowNotFoundExceptionIfInstanceFormatNotFound() {
     var id = UUID.randomUUID().toString();
     doThrow(new NotFoundException("not found")).when(instanceFormatsClient).getById(id);
-    assertThrows(NotFoundException.class, () -> instanceReferenceService.getInstanceFormatNameById(id));
+    assertThrows(ReferenceDataNotFoundException.class, () -> instanceReferenceService.getInstanceFormatNameById(id));
 
     var name = "name";
     when(instanceFormatsClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1)).thenReturn(InstanceFormats.builder()
       .formats(Collections.emptyList())
       .totalRecords(0)
       .build());
-    assertThrows(NotFoundException.class, () -> instanceReferenceService.getInstanceFormatIdByName(name));
+    assertThrows(ReferenceDataNotFoundException.class, () -> instanceReferenceService.getInstanceFormatIdByName(name));
   }
 
   @Test
@@ -132,7 +133,7 @@ class InstanceReferenceServiceTest {
     var id = UUID.randomUUID().toString();
     doThrow(new NotFoundException("not found")).when(statisticalCodeClient).getById(id);
     doThrow(new NotFoundException("not found")).when(statisticalCodeClient).getByQuery("name==\"some name\"");
-    assertThrows(NotFoundException.class, () -> instanceReferenceService.getStatisticalCodeById(id, "tenant"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> instanceReferenceService.getStatisticalCodeById(id, "tenant"));
     assertThrows(NotFoundException.class, () -> instanceReferenceService.getStatisticalCodeByName("some name", "tenant"));
   }
 }

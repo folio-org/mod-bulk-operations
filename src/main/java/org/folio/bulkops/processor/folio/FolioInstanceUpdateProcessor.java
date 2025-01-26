@@ -28,6 +28,7 @@ import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.processor.FolioAbstractUpdateProcessor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
@@ -83,7 +84,7 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
       .isPresent();
     if (notChanged) {
       var errorMessage = buildErrorMessage(recordsUpdated, instance.getDiscoverySuppress());
-      errorService.saveError(operation.getId(), instance.getIdentifier(operation.getIdentifierType()), errorMessage);
+      errorService.saveError(operation.getId(), instance.getIdentifier(operation.getIdentifierType()), errorMessage, ErrorType.WARNING);
     }
   }
 
@@ -114,7 +115,7 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
             for (var holdingId : consortiaHoldingsEntry.getValue()) {
               var errorMessage = String.format(ERROR_NO_AFFILIATION_TO_EDIT_HOLDINGS, user.getUsername(), holdingId, memberTenantForHoldings);
               log.error(errorMessage);
-              errorService.saveError(operation.getId(), instance.getIdentifier(operation.getIdentifierType()), errorMessage);
+              errorService.saveError(operation.getId(), instance.getIdentifier(operation.getIdentifierType()), errorMessage, ErrorType.ERROR);
             }
             continue;
           }

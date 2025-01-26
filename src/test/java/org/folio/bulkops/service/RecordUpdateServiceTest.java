@@ -5,8 +5,7 @@ import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -23,6 +22,7 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.OptimisticLockingException;
@@ -91,7 +91,7 @@ class RecordUpdateServiceTest extends BaseTest {
 
     assertEquals(extendedModifiedItem, result);
     verify(itemUpdateProcessor).updateRecord(any(ExtendedItem.class));
-    verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString());
+    verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString(), eq(ErrorType.WARNING));
   }
 
   @Test
@@ -113,7 +113,7 @@ class RecordUpdateServiceTest extends BaseTest {
 
     assertEquals(extendedOriginalItem, result);
     verify(itemUpdateProcessor, times(0)).updateRecord(any(ExtendedItem.class));
-    verify(errorService).saveError(operation.getId(), original.getIdentifier(IdentifierType.ID), MSG_NO_CHANGE_REQUIRED);
+    verify(errorService).saveError(operation.getId(), original.getIdentifier(IdentifierType.ID), MSG_NO_CHANGE_REQUIRED, ErrorType.WARNING);
   }
 
   @ParameterizedTest

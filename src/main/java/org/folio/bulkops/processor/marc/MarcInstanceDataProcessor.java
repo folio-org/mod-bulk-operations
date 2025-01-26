@@ -18,6 +18,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.MarcActionDataInner;
 import org.folio.bulkops.domain.dto.MarcDataType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -53,10 +54,10 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
         applyRuleToRecord(bulkOperationMarcRule, marcRecord);
       } catch (RuleValidationException e) {
         log.warn(String.format("Rule validation exception: %s", e.getMessage()));
-        errorService.saveError(operation.getId(), getIdentifier(operation, marcRecord), e.getMessage());
+        errorService.saveError(operation.getId(), getIdentifier(operation, marcRecord), e.getMessage(), ErrorType.ERROR);
       } catch (Exception e) {
         log.error(String.format("MARC record HRID=%s error: %s", marcRecord.getControlNumber(), e.getMessage()));
-        errorService.saveError(operation.getId(), getIdentifier(operation, marcRecord), e.getMessage());
+        errorService.saveError(operation.getId(), getIdentifier(operation, marcRecord), e.getMessage(), ErrorType.ERROR);
       }
     });
     var updatedRecord = marcRecord.toString();

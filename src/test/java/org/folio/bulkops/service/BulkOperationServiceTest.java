@@ -86,6 +86,7 @@ import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.DataImportProgress;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.MarcAction;
 import org.folio.bulkops.domain.dto.OperationStatusType;
@@ -836,7 +837,7 @@ class BulkOperationServiceTest extends BaseTest {
       assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));
       assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
 
-      verify(errorService).saveError(eq(bulkOperationId), eq("10101"), any(String.class));
+      verify(errorService).saveError(eq(bulkOperationId), eq("10101"), any(String.class), eq(ErrorType.ERROR));
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
       Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(5)).save(bulkOperationCaptor.capture()));
@@ -1136,7 +1137,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     verify(userClient, times(0)).updateUser(any(User.class), anyString());
 
-    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), eq(MSG_NO_CHANGE_REQUIRED)));
+    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), eq(MSG_NO_CHANGE_REQUIRED), eq(ErrorType.WARNING)));
 
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     Awaitility.await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).writer(pathCaptor.capture()));
@@ -1193,7 +1194,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     bulkOperationService.commit(operation);
 
-    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), anyString()));
+    Awaitility.await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), anyString(), eq(ErrorType.ERROR)));
 
   }
 
@@ -1421,7 +1422,7 @@ class BulkOperationServiceTest extends BaseTest {
       .thenReturn(new ByteArrayInputStream(modifiedHoldingsString.getBytes()));
     when(remoteFileSystemClient.writer(anyString()))
       .thenReturn(new StringWriter());
-    doNothing().when(errorService).saveError(any(), any(), any());
+    doNothing().when(errorService).saveError(any(), any(), any(), eq(ErrorType.ERROR));
     when(ruleService.getRules(operationId))
       .thenReturn(new BulkOperationRuleCollection()
         .bulkOperationRules(List.of(new BulkOperationRule()
@@ -1455,7 +1456,7 @@ class BulkOperationServiceTest extends BaseTest {
       verify(itemClient, times(testData.expectedNumOfItemUpdates)).updateItem(any(), anyString());
     }
     if (nonNull(testData.expectedErrorMessage)) {
-      verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage));
+      verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage), eq(ErrorType.WARNING));
     }
   }
 

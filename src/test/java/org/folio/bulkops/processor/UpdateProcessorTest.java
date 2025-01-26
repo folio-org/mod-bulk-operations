@@ -43,6 +43,7 @@ import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateActionType;
@@ -175,9 +176,9 @@ class UpdateProcessorTest extends BaseTest {
     verify(itemClient, times(0)).updateItem(any(Item.class), anyString());
 
     if (notChanged) {
-      verify(errorService).saveError(any(UUID.class), anyString(), eq(MSG_NO_CHANGE_REQUIRED));
+      verify(errorService).saveError(any(UUID.class), anyString(), eq(MSG_NO_CHANGE_REQUIRED), eq(ErrorType.WARNING));
     } else {
-      verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString());
+      verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString(), eq(ErrorType.ERROR));
     }
   }
 
@@ -225,9 +226,9 @@ class UpdateProcessorTest extends BaseTest {
     if (notChanged) {
       var errorMessage = String.format("No change in value for holdings record required, associated %s item(s) have been updated.",
         SET_TO_TRUE_INCLUDING_ITEMS.equals(actionType) ? "unsuppressed" : "suppressed");
-      verify(errorService).saveError(any(UUID.class), anyString(), eq(errorMessage));
+      verify(errorService).saveError(any(UUID.class), anyString(), eq(errorMessage), eq(ErrorType.WARNING));
     } else {
-      verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString());
+      verify(errorService, times(0)).saveError(any(UUID.class), anyString(), anyString(), eq(ErrorType.ERROR));
     }
   }
 
@@ -470,8 +471,40 @@ class UpdateProcessorTest extends BaseTest {
       .thenReturn(itemCollection);
 
     folioInstanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
-    verify(errorService).saveError(eq(operationId), eq(instanceId), anyString());
+    verify(errorService).saveError(eq(operationId), eq(instanceId), anyString(), eq(ErrorType.ERROR));
     verify(holdingsClient).updateHoldingsRecord(any(HoldingsRecord.class), eq(holdingRecord.getId()));
     verify(itemClient).updateItem(any(Item.class), eq(item.getId()));
+  }
+
+  @Test
+  void testSaveWarning_WhenInstanceNotChanged() {
+    var instanceId = UUID.randomUUID().toString();
+    var instance = Instance.builder()
+      .id(instanceId)
+      .source("FOLIO")
+      .discoverySuppress(true)
+      .build();
+    var extendedInstance = ExtendedInstance.builder().entity(instance).build();
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .identifierType(IdentifierType.ID)
+      .build();
+
+    var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
+      .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
+      .actions(Collections.singletonList(new Action()
+        .type(SET_TO_TRUE)
+        .parameters(Collections.singletonList(new Parameter()
+          .key(APPLY_TO_HOLDINGS)
+          .value(Boolean.toString(false)))))));
+
+    when(consortiaService.isTenantCentral(isA(String.class))).thenReturn(false);
+    when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()
+        .bulkOperationRules(Collections.singletonList(rule)));
+
+    folioInstanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, true);
+
+    verify(errorService).saveError(eq(operationId), eq(instanceId), anyString(), eq(ErrorType.WARNING));
   }
 }

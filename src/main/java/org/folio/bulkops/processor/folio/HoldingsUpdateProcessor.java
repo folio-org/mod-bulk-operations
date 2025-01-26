@@ -18,6 +18,7 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.processor.FolioAbstractUpdateProcessor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
@@ -91,7 +92,7 @@ public class HoldingsUpdateProcessor extends FolioAbstractUpdateProcessor<Extend
     }
     if (notChanged) {
       var errorMessage = buildErrorMessage(itemsUpdated, holdingsRecord.getDiscoverySuppress());
-      errorService.saveError(operation.getId(), holdingsRecord.getIdentifier(operation.getIdentifierType()), errorMessage);
+      errorService.saveError(operation.getId(), holdingsRecord.getIdentifier(operation.getIdentifierType()), errorMessage, ErrorType.WARNING);
     }
   }
 

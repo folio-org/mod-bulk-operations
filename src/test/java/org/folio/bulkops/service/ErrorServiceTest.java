@@ -13,7 +13,6 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,7 +20,6 @@ import static wiremock.org.hamcrest.MatcherAssert.assertThat;
 import static wiremock.org.hamcrest.Matchers.anyOf;
 import static wiremock.org.hamcrest.Matchers.contains;
 import static wiremock.org.hamcrest.Matchers.equalTo;
-import static wiremock.org.hamcrest.Matchers.hasItems;
 import static wiremock.org.hamcrest.Matchers.hasSize;
 
 import java.io.IOException;
@@ -48,10 +46,8 @@ import org.folio.bulkops.domain.bean.RelatedInstanceInfo;
 import org.folio.bulkops.domain.bean.SrsRecord;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.ErrorType;
-import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
-import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.domain.entity.BulkOperationProcessingContent;
@@ -125,7 +121,7 @@ class ErrorServiceTest extends BaseTest {
   @Test
   void shouldSaveError() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      errorService.saveError(bulkOperationId, "123", "Error message");
+      errorService.saveError(bulkOperationId, "123", "Error message", ErrorType.ERROR);
 
       var result = executionContentCqlRepository.findByCql("bulkOperationId==" + bulkOperationId, OffsetRequest.of(0, 10));
 
@@ -140,8 +136,8 @@ class ErrorServiceTest extends BaseTest {
   @SneakyThrows
   void shouldUploadErrorsAndReturnLinkToFile() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      errorService.saveError(bulkOperationId, "123", "Error message 123");
-      errorService.saveError(bulkOperationId, "456", "Error message 456");
+      errorService.saveError(bulkOperationId, "123", "Error message 123", ErrorType.ERROR);
+      errorService.saveError(bulkOperationId, "456", "Error message 456", ErrorType.WARNING);
 
       var expectedFileName = bulkOperationId + "/" + LocalDate.now() + "-Committing-changes-Errors-records.csv";
       when(remoteFileSystemClient.put(any(), eq(expectedFileName))).thenReturn(expectedFileName);
@@ -154,7 +150,7 @@ class ErrorServiceTest extends BaseTest {
       var actual = new String(streamCaptor.getValue().readAllBytes());
       var actualArr = actual.split("\n");
       Arrays.sort(actualArr);
-      var expectedArr = new String[] {"123,Error message 123", "456,Error message 456"};
+      var expectedArr = new String[] {"123,Error message 123,ERROR", "456,Error message 456,WARNING"};
       assertArrayEquals(expectedArr, actualArr);
     }
   }
@@ -167,7 +163,7 @@ class ErrorServiceTest extends BaseTest {
 
       mockErrorsData(statusType, operationId);
 
-      var actualWithOffset = errorService.getErrorsPreviewByBulkOperationId(operationId, 2, 1);
+      var actualWithOffset = errorService.getErrorsPreviewByBulkOperationId(operationId, 2, 1, null);
       assertThat(actualWithOffset.getErrors(), hasSize(1));
       assertThat(actualWithOffset.getTotalRecords(), equalTo(2));
 
@@ -181,7 +177,40 @@ class ErrorServiceTest extends BaseTest {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).status(statusType).build()).getId();
 
-      assertThrows(NotFoundException.class, () -> errorService.getErrorsPreviewByBulkOperationId(operationId, 10, 1));
+      assertThrows(NotFoundException.class, () -> errorService.getErrorsPreviewByBulkOperationId(operationId, 10, 0, ErrorType.ERROR));
+
+      bulkOperationRepository.deleteById(operationId);
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "COMPLETED" }, mode = EnumSource.Mode.INCLUDE)
+  void shouldGetErrorsCsvByBulkOperationId(OperationStatusType statusType) throws IOException {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
+
+      var expected = "123,No match found\n456,Invalid format".split(LF);
+
+      mockErrorsData(statusType, operationId);
+
+      var actual = errorService.getErrorsCsvByBulkOperationId(operationId, 0, null).split(LF);
+      Arrays.sort(expected);
+      Arrays.sort(actual);
+
+      assertArrayEquals(expected, actual);
+      assertThat(actual.length, equalTo(2));
+
+      bulkOperationRepository.deleteById(operationId);
+    }
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED", "COMPLETED_WITH_ERRORS", "REVIEWED_NO_MARC_RECORDS" }, mode = EnumSource.Mode.EXCLUDE)
+  void shouldRejectErrorsCsvOnWrongOperationStatus(OperationStatusType statusType) {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).status(statusType).build()).getId();
+
+      assertThrows(NotFoundException.class, () -> errorService.getErrorsCsvByBulkOperationId(operationId, 0, ErrorType.ERROR));
 
       bulkOperationRepository.deleteById(operationId);
     }
@@ -216,7 +245,7 @@ class ErrorServiceTest extends BaseTest {
           .build());
       }
 
-      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 10, 0);
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 10, 0, null);
 
       assertThat(errors.getErrors(), hasSize(2));
       assertThat(errors.getTotalRecords(), equalTo(2));
@@ -244,9 +273,10 @@ class ErrorServiceTest extends BaseTest {
         .errorMessage(format("%s %s", message, link))
         .uiErrorMessage(message)
         .linkToFailedEntity(link)
+        .errorType(ErrorType.ERROR)
         .build());
 
-      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1, 0);
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1, 0, ErrorType.ERROR);
 
       assertThat(errors.getErrors(), hasSize(1));
       assertThat(errors.getErrors().get(0).getParameters(), hasSize(2));
@@ -293,7 +323,7 @@ class ErrorServiceTest extends BaseTest {
           .build())
         .getId();
       errorService.saveErrorsFromDataImport(operationId, dataImportJobId);
-      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 2, 1);
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 2, 1, ErrorType.ERROR);
 
       assertThat(errors.getErrors(), hasSize(1));
       assertThat(errors.getTotalRecords(), equalTo(2));
@@ -320,7 +350,7 @@ class ErrorServiceTest extends BaseTest {
           .build())
         .getId();
       errorService.saveErrorsFromDataImport(operationId, dataImportJobId);
-      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1, 1);
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1, 1, ErrorType.ERROR);
 
       assertThat(errors.getErrors(), hasSize(0));
     }
@@ -349,7 +379,7 @@ class ErrorServiceTest extends BaseTest {
           .build())
         .getId();
       errorService.saveErrorsFromDataImport(operationId, dataImportJobId);
-      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1, 0);
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1, 0, ErrorType.ERROR);
 
       assertThat(errors.getErrors(), hasSize(1));
       assertEquals(DATA_IMPORT_ERROR_DISCARDED, errors.getErrors().get(0).getMessage());

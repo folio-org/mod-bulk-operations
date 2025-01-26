@@ -14,6 +14,7 @@ import org.folio.bulkops.domain.bean.DepartmentCollection;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.bean.UserGroupCollection;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,7 +34,7 @@ class UserReferenceHelperTest extends BaseTest {
     assertEquals("addressType", actual.getAddressType());
 
     when(addressTypeClient.getAddressTypeById("id_2")).thenThrow(new NotFoundException("not found"));
-    assertThrows(NotFoundException.class, () -> userReferenceHelper.getAddressTypeById("id_2"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> userReferenceHelper.getAddressTypeById("id_2"));
 
     when(addressTypeClient.getByQuery("addressType==\"at_1\"")).thenReturn(AddressTypeCollection.builder().addressTypes(singletonList(AddressType.builder().id("id_3").build())).build());
     actual = userReferenceHelper.getAddressTypeByAddressTypeValue("at_1");
@@ -48,14 +49,14 @@ class UserReferenceHelperTest extends BaseTest {
     assertEquals("name_1", actual.getName());
 
     when(departmentClient.getDepartmentById("id_2")).thenThrow(new NotFoundException("not found"));
-    assertThrows(NotFoundException.class, () -> userReferenceHelper.getDepartmentById("id_2"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> userReferenceHelper.getDepartmentById("id_2"));
 
     when(departmentClient.getByQuery("name==\"name_2\"")).thenReturn(DepartmentCollection.builder().departments(singletonList(Department.builder().id("id_3").build())).build());
     actual = userReferenceHelper.getDepartmentByName("name_2");
     assertEquals("id_3", actual.getId());
 
     when(departmentClient.getByQuery("name==\"name_3\"")).thenReturn(DepartmentCollection.builder().departments(emptyList()).build());
-    assertThrows(NotFoundException.class, () -> userReferenceHelper.getDepartmentByName("name_3"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> userReferenceHelper.getDepartmentByName("name_3"));
   }
 
   @Test
@@ -65,7 +66,7 @@ class UserReferenceHelperTest extends BaseTest {
     assertEquals("name_1", actual.getGroup());
 
     when(groupClient.getGroupById("id_2")).thenThrow(new NotFoundException("not found"));
-    assertThrows(NotFoundException.class, () -> userReferenceHelper.getPatronGroupById("id_2"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> userReferenceHelper.getPatronGroupById("id_2"));
 
     when(groupClient.getByQuery("group==\"name_2\"")).thenReturn(UserGroupCollection.builder().usergroups(singletonList(UserGroup.builder().id("id_3").build())).build());
     actual = userReferenceHelper.getPatronGroupByName("name_2");

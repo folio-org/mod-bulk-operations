@@ -52,6 +52,7 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.NotFoundException;
@@ -847,7 +848,7 @@ class HoldingsDataProcessorTest extends BaseTest {
       assertEquals(initPermLocation, result.getUpdated().getEntity().getPermanentLocationId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-        holdId, "memberA", "permanent location").trim());
+        holdId, "memberA", "permanent location").trim(), ErrorType.ERROR);
     }
   }
 
@@ -875,7 +876,7 @@ class HoldingsDataProcessorTest extends BaseTest {
       assertEquals(initElectronicAccess, result.getUpdated().getEntity().getElectronicAccess().get(0).getRelationshipId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-        holdId, "memberA", "URL relationship").trim());
+        holdId, "memberA", "URL relationship").trim(), ErrorType.ERROR);
     }
   }
 
@@ -901,7 +902,7 @@ class HoldingsDataProcessorTest extends BaseTest {
       assertNull(result.getUpdated().getEntity().getElectronicAccess());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-        holdId, "memberA", "URL relationship").trim());
+        holdId, "memberA", "URL relationship").trim(), ErrorType.ERROR);
     }
   }
 
@@ -1020,7 +1021,7 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     assertNotNull(result);
     verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-      holdId, "memberA", "URL relationship").trim());
+      holdId, "memberA", "URL relationship").trim(), ErrorType.ERROR);
     assertEquals(initElectronicAccForRecord, result.getUpdated().getEntity().getElectronicAccess().get(0).getRelationshipId());
   }
 
@@ -1078,7 +1079,7 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     assertNotNull(result);
     verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("URL relationship %s doesn't exist in tenant %s",
-      updatedElectronicAccess, "diku").trim());
+      updatedElectronicAccess, "diku").trim(), ErrorType.ERROR);
     assertEquals(initElectronicAccForRecord, result.getUpdated().getEntity().getElectronicAccess().get(0).getRelationshipId());
   }
 
@@ -1108,7 +1109,7 @@ class HoldingsDataProcessorTest extends BaseTest {
       assertEquals(initPermLocation, result.getUpdated().getEntity().getPermanentLocationId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-        holdId, "memberA", "permanent location").trim());
+        holdId, "memberA", "permanent location").trim(), ErrorType.ERROR);
     }
   }
 
@@ -1135,7 +1136,7 @@ class HoldingsDataProcessorTest extends BaseTest {
       assertEquals(initPermLocation, result.getUpdated().getEntity().getPermanentLocationId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-        holdId, "memberA", "permanent location").trim());
+        holdId, "memberA", "permanent location").trim(), ErrorType.ERROR);
     }
   }
 
