@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.kafka.core.KafkaTemplate;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -23,9 +22,6 @@ import java.util.Map;
 import java.util.UUID;
 
 class DataImportJobCompletionReceiverServiceTest extends BaseTest {
-
-  @Autowired
-  private KafkaTemplate<String, Event> kafkaTemplate;
 
   @Autowired
   private DataImportJobCompletionReceiverService receiverService;
