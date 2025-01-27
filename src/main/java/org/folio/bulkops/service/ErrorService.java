@@ -64,7 +64,7 @@ public class ErrorService {
   private final BulkEditClient bulkEditClient;
   private final MetadataProviderClient metadataProviderClient;
 
-  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link) {
+  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link, ErrorType errorType) {
     if (Set.of(MSG_NO_CHANGE_REQUIRED, MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED, MSG_NO_MARC_CHANGE_REQUIRED).contains(errorMessage)
       && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
       return;

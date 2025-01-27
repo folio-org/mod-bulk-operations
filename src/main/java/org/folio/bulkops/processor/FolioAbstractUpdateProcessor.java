@@ -26,7 +26,7 @@ public abstract class FolioAbstractUpdateProcessor<T extends BulkOperationsEntit
       var errorMessage = INSTANCE_MARC.equals(operation.getEntityType()) ?
         MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED :
         MSG_NO_CHANGE_REQUIRED;
-      errorService.saveError(operation.getId(), t.getIdentifier(operation.getIdentifierType()), errorMessage);
+      errorService.saveError(operation.getId(), t.getIdentifier(operation.getIdentifierType()), errorMessage, ErrorType.WARNING);
     }
   }
 }

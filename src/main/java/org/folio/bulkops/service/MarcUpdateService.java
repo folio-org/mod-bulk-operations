@@ -105,7 +105,7 @@ public class MarcUpdateService {
           var identifier = HRID.equals(bulkOperation.getIdentifierType()) ?
             originalRecord.getControlNumber() :
             fetchInstanceUuidOrElseHrid(originalRecord);
-          errorService.saveError(bulkOperation.getId(), identifier, MSG_NO_MARC_CHANGE_REQUIRED);
+          errorService.saveError(bulkOperation.getId(), identifier, MSG_NO_MARC_CHANGE_REQUIRED, ErrorType.WARNING);
         } else {
           MarcDateHelper.updateDateTimeControlField(modifiedRecord, currentDate);
           writerForResultMarcFile.writeRecord(modifiedRecord);
