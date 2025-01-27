@@ -12,7 +12,9 @@ import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.GetParsedRecordsBatchConditions;
 import org.folio.bulkops.domain.bean.GetParsedRecordsBatchRequestBody;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.marc4j.MarcJsonReader;
 import org.marc4j.marc.Record;
@@ -35,6 +37,7 @@ public class SrsService {
   private final BulkOperationRepository bulkOperationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final ErrorService errorService;
+  private final BulkOperationExecutionRepository executionRepository;
 
   public void retrieveMarcInstancesFromSrs(List<String> instanceIds, BulkOperation bulkOperation) {
     var fetchedNumOfRecords = 0;
@@ -89,11 +92,19 @@ public class SrsService {
     operation.setLinkToCommittedRecordsMarcFile(committedRecordsMarcFile);
     operation.setTotalNumOfRecords(operation.getMatchedNumOfRecords());
     operation.setProcessedNumOfRecords(operation.getMatchedNumOfRecords());
-    operation.setCommittedNumOfRecords(committedNumOfRecords);
+    operation.setCommittedNumOfRecords(Math.max(committedNumOfRecords, getNumOfProcessedRecords(bulkOperation)));
     operation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(operation.getId()));
     operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operation.getId()));
     operation.setEndTime(LocalDateTime.now());
     operation.setStatus(operation.getCommittedNumOfErrors() == 0 ? COMPLETED : COMPLETED_WITH_ERRORS);
     bulkOperationRepository.save(operation);
+  }
+
+  private int getNumOfProcessedRecords(BulkOperation bulkOperation) {
+    return executionRepository.findAllByBulkOperationId(bulkOperation.getId()).stream()
+      .map(BulkOperationExecution::getProcessedRecords)
+      .mapToInt(v -> v)
+      .max()
+      .orElse(0);
   }
 }

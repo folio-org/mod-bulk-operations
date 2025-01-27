@@ -135,18 +135,11 @@ public class PreviewService {
         if (MANUAL == operation.getApproach()) {
           yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit, operation);
         } else {
-          var bulkOperationId = operation.getId();
           if (INSTANCE_MARC == operation.getEntityType() || INSTANCE == operation.getEntityType()) {
             if (isFolioInstanceCommitPreview(operation)) {
               yield getPreviewFromCsvWithChangedOptions(operation, operation.getLinkToCommittedRecordsCsvFile(), offset, limit);
             } else if (isMarcInstanceCommitPreview(operation)) {
-              //ToDo Use buildCompositePreview after completion MODBULKOPS-429
-              referenceProvider.updateMappingRules();
-              var rules = ruleService.getMarcRules(bulkOperationId);
-              var options = getChangedOptionsSet(rules);
-              var marcTable = buildPreviewFromMarcFile(operation.getLinkToCommittedRecordsMarcFile(), clazz, offset, limit, options);
-              enrichMarcWithAdministrativeData(marcTable, operation);
-              yield marcTable;
+              yield buildCompositePreview(operation, offset, limit, operation.getLinkToMatchedRecordsCsvFile(), operation.getLinkToCommittedRecordsMarcFile());
             } else {
               yield buildCompositePreview(operation, offset, limit, operation.getLinkToCommittedRecordsCsvFile(), operation.getLinkToCommittedRecordsMarcFile());
             }
