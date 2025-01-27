@@ -1,6 +1,8 @@
 package org.folio.bulkops.service;
 
 import static java.lang.String.format;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
+import static org.folio.bulkops.util.Constants.MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,6 +23,7 @@ import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
@@ -37,6 +40,8 @@ import org.folio.spring.integration.XOkapiHeaders;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -44,6 +49,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import java.nio.charset.Charset;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +68,8 @@ class RecordUpdateServiceTest extends BaseTest {
   private BulkOperationRepository bulkOperationRepository;
   @MockBean
   private PermissionsValidator permissionsValidator;
+  @MockBean
+  private RuleService ruleService;
   @SpyBean
   private ItemUpdateProcessor itemUpdateProcessor;
   @SpyBean
@@ -114,6 +122,33 @@ class RecordUpdateServiceTest extends BaseTest {
     assertEquals(extendedOriginalItem, result);
     verify(itemUpdateProcessor, times(0)).updateRecord(any(ExtendedItem.class));
     verify(errorService).saveError(operation.getId(), original.getIdentifier(IdentifierType.ID), MSG_NO_CHANGE_REQUIRED, ErrorType.WARNING);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = EntityType.class, names = {"INSTANCE", "INSTANCE_MARC"}, mode = EnumSource.Mode.INCLUDE)
+  void shouldChangeErrorMessageForNonModifiedMarcInstances(EntityType entityType) {
+    var original = Instance.builder()
+      .id(UUID.randomUUID().toString())
+      .hrid("hrid")
+      .discoverySuppress(false)
+      .build();
+    var extendedOriginalInstance = ExtendedInstance.builder().entity(original).build();
+    var extendedModifiedInstance = ExtendedInstance.builder().entity(original).build();
+    var operation = BulkOperation.builder()
+      .id(UUID.randomUUID())
+      .identifierType(IdentifierType.HRID)
+      .entityType(entityType)
+      .build();
+
+    when(ruleService.getRules(operation.getId())).thenReturn(new BulkOperationRuleCollection()
+      .bulkOperationRules(Collections.emptyList())
+      .totalRecords(0));
+
+    var result = recordUpdateService.updateEntity(extendedOriginalInstance, extendedModifiedInstance, operation);
+
+    assertEquals(extendedOriginalInstance, result);
+    var expectedErrorMessage = INSTANCE.equals(entityType) ? MSG_NO_CHANGE_REQUIRED : MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED;
+    verify(errorService).saveError(operation.getId(), original.getIdentifier(IdentifierType.HRID), expectedErrorMessage, ErrorType.WARNING);
   }
 
   @ParameterizedTest
@@ -186,7 +221,7 @@ class RecordUpdateServiceTest extends BaseTest {
     var operation = BulkOperation.builder()
       .id(UUID.randomUUID())
       .identifierType(IdentifierType.ID)
-      .entityType(EntityType.INSTANCE)
+      .entityType(INSTANCE)
       .build();
 
     assertThrows(FeignException.class, () -> recordUpdateService.updateEntity(extendedOriginal, extendedModified, operation));

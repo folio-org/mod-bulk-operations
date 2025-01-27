@@ -1,7 +1,5 @@
 package org.folio.bulkops.processor;
 
-import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
-import static org.folio.bulkops.util.Constants.MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 
 import lombok.extern.log4j.Log4j2;
@@ -23,10 +21,7 @@ public abstract class FolioAbstractUpdateProcessor<T extends BulkOperationsEntit
   @Override
   public void updateAssociatedRecords(T t, BulkOperation operation, boolean notChanged) {
     if (notChanged) {
-      var errorMessage = INSTANCE_MARC.equals(operation.getEntityType()) ?
-        MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED :
-        MSG_NO_CHANGE_REQUIRED;
-      errorService.saveError(operation.getId(), t.getIdentifier(operation.getIdentifierType()), errorMessage, ErrorType.WARNING);
+      errorService.saveError(operation.getId(), t.getIdentifier(operation.getIdentifierType()), MSG_NO_CHANGE_REQUIRED, ErrorType.WARNING);
     }
   }
 }
