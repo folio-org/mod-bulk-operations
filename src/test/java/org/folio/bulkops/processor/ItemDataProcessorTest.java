@@ -58,6 +58,7 @@ import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
@@ -935,7 +936,7 @@ class ItemDataProcessorTest extends BaseTest {
       assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType().getId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-        itemId, "memberA", "permanent loan type").trim());
+        itemId, "memberA", "permanent loan type").trim(), ErrorType.ERROR);
     }
   }
 
@@ -962,7 +963,7 @@ class ItemDataProcessorTest extends BaseTest {
       assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType().getId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-        itemId, "memberA", "permanent loan type").trim());
+        itemId, "memberA", "permanent loan type").trim(), ErrorType.ERROR);
     }
   }
 
@@ -1032,7 +1033,7 @@ class ItemDataProcessorTest extends BaseTest {
       assertEquals(initPermLocation, result.getUpdated().getEntity().getPermanentLocation().getId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
-        itemId, "memberA", "permanent loan type").trim());
+        itemId, "memberA", "permanent loan type").trim(), ErrorType.ERROR);
     }
   }
 }

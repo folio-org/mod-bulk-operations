@@ -27,6 +27,7 @@ import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.dto.IdentifierType;
@@ -93,8 +94,8 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   @Override
-  public ResponseEntity<Errors> getErrorsPreviewByOperationId(UUID operationId, Integer limit) {
-    return new ResponseEntity<>(errorService.getErrorsPreviewByBulkOperationId(operationId, limit), HttpStatus.OK);
+  public ResponseEntity<Errors> getErrorsPreviewByOperationId(UUID operationId, Integer limit, Integer offset, ErrorType errorType) {
+    return new ResponseEntity<>(errorService.getErrorsPreviewByBulkOperationId(operationId, limit, offset, errorType), HttpStatus.OK);
   }
 
   @Override

@@ -4,10 +4,12 @@ import java.io.Closeable;
 import java.util.function.Consumer;
 
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.bean.Error;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.exception.RuleValidationTenantsException;
@@ -60,7 +62,7 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
       validator().validate(rules);
     } catch (RuleValidationException e) {
       log.warn(String.format("Rule validation exception: %s", e.getMessage()));
-      errorService.saveError(rules.getBulkOperationRules().get(0).getBulkOperationId(), identifier, e.getMessage());
+      errorService.saveError(rules.getBulkOperationRules().get(0).getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
     } catch (Exception e) {
       log.error(e.getMessage());
     }
@@ -79,14 +81,14 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
             }
         } catch (RuleValidationException e) {
           log.warn(String.format("Rule validation exception: %s", e.getMessage()));
-          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
+          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
         } catch (RuleValidationTenantsException e) {
           log.info("current tenant: {}", folioExecutionContext.getTenantId());
-          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
+          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
           log.error(e.getMessage());
         } catch (Exception e) {
           log.error(String.format("%s id=%s, error: %s", updated.getRecordBulkOperationEntity().getClass().getSimpleName(), "id", e.getMessage()));
-          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage());
+          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
         }
       }
     }

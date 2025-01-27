@@ -6,6 +6,7 @@ import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.service.ErrorService;
 import org.springframework.beans.factory.annotation.Autowired;

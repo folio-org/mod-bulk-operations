@@ -70,6 +70,7 @@ import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.DataImportJobExecution;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.QueryRequest;
@@ -355,6 +356,7 @@ public class BulkOperationService {
           .identifier(bean.getIdentifier(operation.getIdentifierType()))
           .bulkOperationId(operation.getId())
           .state(StateType.FAILED)
+          .errorType(e.getErrorType())
           .errorMessage(format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()))
           .build());
       }
@@ -446,13 +448,13 @@ public class BulkOperationService {
               bulkOperationExecutionContents.forEach(errorService::saveError);
             }
           } catch (OptimisticLockingException e) {
-            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLinkToFailedEntity());
+            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLinkToFailedEntity(), ErrorType.ERROR);
           } catch (WritePermissionDoesNotExist e) {
             var userName = userClient.getUserById(folioExecutionContext.getUserId().toString()).getUsername();
             var errorMessage = String.format(e.getMessage(), userName, IdentifiersResolver.resolve(operation.getIdentifierType()), original.getIdentifier(operation.getIdentifierType()))  ;
-            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), errorMessage);
+            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), errorMessage, ErrorType.ERROR);
           } catch (Exception e) {
-            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage());
+            errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage(), ErrorType.ERROR);
           }
           execution = execution
             .withStatus(originalFileIterator.hasNext() ? StatusType.ACTIVE : StatusType.COMPLETED)
@@ -612,7 +614,7 @@ public class BulkOperationService {
           bulkOperationRepository.save(operation);
         }
       }
-      csvToBean.getCapturedExceptions().forEach(e -> errorService.saveError(operation.getId(), Utils.getIdentifierForManualApproach(e.getLine(), operation.getIdentifierType()), e.getMessage()));
+      csvToBean.getCapturedExceptions().forEach(e -> errorService.saveError(operation.getId(), Utils.getIdentifierForManualApproach(e.getLine(), operation.getIdentifierType()), e.getMessage(), ErrorType.ERROR));
       csvToBean.getCapturedExceptions().clear();
       operation.setProcessedNumOfRecords(processedNumOfRecords);
       operation.setStatus(REVIEW_CHANGES);

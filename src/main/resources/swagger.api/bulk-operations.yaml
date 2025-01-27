@@ -312,6 +312,18 @@ paths:
           schema:
             type: integer
           description: The numbers of errors to return
+        - in: query
+          name: offset
+          required: false
+          schema:
+            type: integer
+          description: Query offset
+        - in: query
+          name: errorType
+          required: false
+          schema:
+            $ref: "#/components/schemas/errorType"
+          description: The error type
       responses:
         '200':
           description: Collection of errors for preview
@@ -628,3 +640,5 @@ components:
         record:
           type: object
           description: Example response
+    errorType:
+      $ref: 'schemas/error_type.json#/ErrorType'

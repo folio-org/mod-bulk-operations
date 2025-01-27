@@ -17,6 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.StatusType;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.processor.marc.MarcInstanceUpdateProcessor;
@@ -125,7 +126,7 @@ public class MarcUpdateService {
           var identifier = HRID.equals(bulkOperation.getIdentifierType()) ?
             instance.getHrid() :
             instance.getId();
-          errorService.saveError(bulkOperation.getId(), identifier, MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY);
+          errorService.saveError(bulkOperation.getId(), identifier, MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY, ErrorType.ERROR);
           if (++numOfFolioInstances % 100 == 0) {
             saveProgress(bulkOperation, numOfFolioInstances);
           }
