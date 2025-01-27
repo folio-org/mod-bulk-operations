@@ -992,7 +992,7 @@ class BulkOperationServiceTest extends BaseTest {
 
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       var pathCaptor = ArgumentCaptor.forClass(String.class);
-      Awaitility.await().untilAsserted(() -> verify(remoteFolioS3Client, times(2)).write(pathCaptor.capture(), streamCaptor.capture()));
+      Awaitility.await().untilAsserted(() -> verify(remoteFolioS3Client, times(1)).write(pathCaptor.capture(), streamCaptor.capture()));
       assertEquals(new String(streamCaptor.getAllValues().get(0).readAllBytes()),
         Files.readString(Path.of(pathToModifiedUserJson)).trim());
       assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().get(0));
@@ -1120,7 +1120,7 @@ class BulkOperationServiceTest extends BaseTest {
       .thenReturn(new FileInputStream(pathToUserJson));
 
     var expectedPathToResultFile = bulkOperationId + "/json/" + LocalDate.now() + "-Changed-Records-identifiers.json";
-    var expectedPathToResultCsvFile = bulkOperationId + "/" + LocalDate.now() + "-Changed-Records-identifiers.csv";
+    var expectedPathToResultCsvFile = bulkOperationId + "/" + LocalDate.now() + "-Changed-Records-CSV-identifiers.csv";
 
     var jsonWriter = new StringWriter();
     when(remoteFileSystemClient.writer(expectedPathToResultFile))

@@ -3,6 +3,7 @@ package org.folio.bulkops.controller;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_MARC_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
@@ -163,9 +164,9 @@ public class BulkOperationController implements BulkOperationsApi {
     } else if (fileContentType == PROPOSED_CHANGES_MARC_FILE) {
       path = bulkOperation.getLinkToModifiedRecordsMarcFile();
     } else if (fileContentType == COMMITTED_RECORDS_FILE) {
-      path = INSTANCE_MARC.equals(bulkOperation.getEntityType()) ?
-        bulkOperation.getLinkToCommittedRecordsMarcFile() :
-        bulkOperation.getLinkToCommittedRecordsCsvFile();
+      path = bulkOperation.getLinkToCommittedRecordsCsvFile();
+    } else if (fileContentType == COMMITTED_RECORDS_MARC_FILE) {
+      path = bulkOperation.getLinkToCommittedRecordsMarcFile();
     } else if (fileContentType == COMMITTING_CHANGES_ERROR_FILE) {
       path = bulkOperation.getLinkToCommittedRecordsErrorsCsvFile();
     } else {

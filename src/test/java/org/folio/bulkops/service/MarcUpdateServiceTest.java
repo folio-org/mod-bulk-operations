@@ -6,6 +6,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.service.MarcUpdateService.CHANGED_MARC_PATH_TEMPLATE;
 import static org.folio.bulkops.service.MarcUpdateService.MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
+import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -101,7 +102,7 @@ class MarcUpdateServiceTest extends BaseTest {
 
     verify(errorService).saveError(eq(bulkOperation.getId()), identifierArgumentCaptor.capture(), errorMessageArgumentCaptor.capture());
     assertThat(identifierArgumentCaptor.getValue()).isEqualTo("hrid2");
-    assertThat(errorMessageArgumentCaptor.getValue()).isEqualTo(MSG_NO_CHANGE_REQUIRED);
+    assertThat(errorMessageArgumentCaptor.getValue()).isEqualTo(MSG_NO_MARC_CHANGE_REQUIRED);
   }
 
   @Test
@@ -166,7 +167,7 @@ class MarcUpdateServiceTest extends BaseTest {
     verify(executionRepository, times(2)).save(executionArgumentCaptor.capture());
     assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus()).isEqualTo(StatusType.FAILED);
 
-    verify(bulkOperationRepository).save(bulkOperationArgumentCaptor.capture());
+    verify(bulkOperationRepository, times(2)).save(bulkOperationArgumentCaptor.capture());
     assertThat(bulkOperationArgumentCaptor.getValue().getStatus()).isEqualTo(FAILED);
   }
 

@@ -2,9 +2,10 @@ package org.folio.bulkops.service;
 
 import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
+import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.util.Constants.MARC;
-import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
+import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.MarcHelper.fetchInstanceUuidOrElseHrid;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -35,7 +36,7 @@ import java.util.Date;
 @Log4j2
 @RequiredArgsConstructor
 public class MarcUpdateService {
-  public static final String CHANGED_MARC_PATH_TEMPLATE = "%s/%s-Changed-Records-%s.mrc";
+  public static final String CHANGED_MARC_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-%s.mrc";
   public static final String MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY = "Bulk edit of MARC fields is supported only for instance with MARC source.";
 
   private final BulkOperationExecutionRepository executionRepository;
@@ -48,8 +49,8 @@ public class MarcUpdateService {
   @Transactional
   public void commitForInstanceMarc(BulkOperation bulkOperation) {
     if (StringUtils.isNotEmpty(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
-      bulkOperation.setTotalNumOfRecords(bulkOperation.getTotalNumOfRecords() * 2);
-      bulkOperation.setProcessedNumOfRecords(bulkOperation.getProcessedNumOfRecords() * 2);
+      bulkOperation.setStatus(APPLY_MARC_CHANGES);
+      bulkOperationRepository.save(bulkOperation);
 
       var execution = executionRepository.save(BulkOperationExecution.builder()
         .bulkOperationId(bulkOperation.getId())
@@ -103,7 +104,7 @@ public class MarcUpdateService {
           var identifier = HRID.equals(bulkOperation.getIdentifierType()) ?
             originalRecord.getControlNumber() :
             fetchInstanceUuidOrElseHrid(originalRecord);
-          errorService.saveError(bulkOperation.getId(), identifier, MSG_NO_CHANGE_REQUIRED);
+          errorService.saveError(bulkOperation.getId(), identifier, MSG_NO_MARC_CHANGE_REQUIRED);
         } else {
           MarcDateHelper.updateDateTimeControlField(modifiedRecord, currentDate);
           writerForResultMarcFile.writeRecord(modifiedRecord);
