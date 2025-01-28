@@ -262,27 +262,6 @@ public class PreviewService {
     return positions;
   }
 
-  private Map<String, Row> findInstanceRowsByHrids(BulkOperation bulkOperation, List<String> hrids) {
-    var hridPosition = getCellPositionByName(INSTANCE_HRID);
-    var list = new ArrayList<>(hrids);
-    var map = new HashMap<String, Row>();
-
-    try (var csvReader = new CSVReaderBuilder(new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsCsvFile())))
-      .withCSVParser(CSVHelper.getCsvParser()).build()) {
-      String[] line;
-      while (nonNull(line = csvReader.readNext()) && !list.isEmpty()) {
-        var hrid = line[hridPosition];
-        if (list.contains(hrid)) {
-          map.put(hrid, new Row().row(Arrays.asList(line)));
-          list.remove(hrid);
-        }
-      }
-    } catch (IOException | CsvValidationException e) {
-      log.error("Failed to read csv file", e);
-    }
-    return map;
-  }
-
   private Map<String, Record> findMarcRecordsByHrids(String linkToMarcFile, List<String> hrids) {
     var map = new HashMap<String, Record>();
     var list = new ArrayList<>(hrids);
@@ -471,22 +450,6 @@ public class PreviewService {
       log.error(e.getMessage());
     }
     tenantTableUpdater.updateTenantInHeadersAndRows(table, clazz);
-    return table;
-  }
-
-  private UnifiedTable populatePreviewFromMarc(String pathToFile, int offset, int limit, UnifiedTable table) {
-    var headers = table.getHeader().stream()
-      .map(Cell::getValue)
-      .toList();
-    var reader = new MarcStreamReader(remoteFileSystemClient.get(pathToFile));
-    var counter = 0;
-    while (reader.hasNext() && counter < offset + limit) {
-      counter++;
-      var marcRecord = reader.next();
-      if (counter >= offset) {
-        table.addRowsItem(new Row().row(marcToUnifiedTableRowMapper.processRecord(marcRecord, headers)));
-      }
-    }
     return table;
   }
 
