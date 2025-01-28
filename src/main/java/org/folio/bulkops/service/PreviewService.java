@@ -18,6 +18,7 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PREVIOUSLY_HELD;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TYPE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SOURCE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_STAFF_SUPPRESS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_STATISTICAL_CODES;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_STATUS_TERM;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
@@ -256,6 +257,7 @@ public class PreviewService {
     marcRow.getRow().set(positions.get(INSTANCE_RESOURCE_TYPE), csvRow.getRow().get(positions.get(INSTANCE_RESOURCE_TYPE)));
     marcRow.getRow().set(positions.get(INSTANCE_LANGUAGES), csvRow.getRow().get(positions.get(INSTANCE_LANGUAGES)));
     marcRow.getRow().set(positions.get(INSTANCE_CATALOGED_DATE), csvRow.getRow().get(positions.get(INSTANCE_CATALOGED_DATE)));
+    marcRow.getRow().set(positions.get(INSTANCE_STATISTICAL_CODES), csvRow.getRow().get(positions.get(INSTANCE_STATISTICAL_CODES)));
   }
 
   private Map<String, Integer> getAdministrativeDataFieldPositions() {
@@ -270,7 +272,8 @@ public class PreviewService {
         INSTANCE_FORMATS,
         INSTANCE_CONTRIBUTORS,
         INSTANCE_RESOURCE_TYPE,
-        INSTANCE_LANGUAGES)
+        INSTANCE_LANGUAGES,
+        INSTANCE_STATISTICAL_CODES)
       .forEach(name -> positions.put(name, getCellPositionByName(name)));
     return positions;
   }

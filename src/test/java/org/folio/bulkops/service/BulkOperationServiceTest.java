@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
+import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
@@ -23,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
@@ -53,6 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import lombok.SneakyThrows;
@@ -1296,12 +1299,18 @@ class BulkOperationServiceTest extends BaseTest {
         .processedRecords(5)
         .build()));
 
+    when(metadataProviderService.getJobExecutions(operationId))
+      .thenReturn(Collections.emptyList());
+
+    when(metadataProviderService.calculateProgress(anyList()))
+      .thenReturn(new DataImportProgress().total(10).current(5));
+
     when(queryService.checkQueryExecutionStatus(any(BulkOperation.class)))
-      .thenReturn(new BulkOperation());
+      .thenReturn(experctedBulkOperation);
 
     var operation = bulkOperationService.getOperationById(operationId);
 
-    if (DATA_MODIFICATION.equals(operation.getStatus()) || APPLY_CHANGES.equals(operation.getStatus())) {
+    if (Set.of(DATA_MODIFICATION, EXECUTING_QUERY, APPLY_CHANGES, APPLY_MARC_CHANGES).contains(operation.getStatus())) {
       assertThat(operation.getProcessedNumOfRecords(), equalTo(5));
     } else {
       assertThat(operation.getProcessedNumOfRecords(), equalTo(0));
