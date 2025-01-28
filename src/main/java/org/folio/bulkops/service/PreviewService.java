@@ -39,7 +39,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -227,21 +226,6 @@ public class PreviewService {
           header.setForceVisible(true);
         }
       });
-  }
-
-  private void enrichMarcWithAdministrativeData(UnifiedTable unifiedTable, BulkOperation bulkOperation) {
-    var hridPosition = getCellPositionByName(INSTANCE_HRID);
-    var hrids = unifiedTable.getRows().stream()
-      .map(row -> row.getRow().get(hridPosition))
-      .toList();
-    var csvRows = findInstanceRowsByHrids(bulkOperation, hrids);
-    unifiedTable.getRows().forEach(marcRow -> {
-      var hrid = marcRow.getRow().get(hridPosition);
-      if (csvRows.containsKey(hrid)) {
-        var csvRow = csvRows.get(hrid);
-        enrichRowWithAdministrativeData(marcRow, csvRow);
-      }
-    });
   }
 
   private void enrichRowWithAdministrativeData(Row marcRow, Row csvRow) {
@@ -458,15 +442,6 @@ public class PreviewService {
                                                int limit, BulkOperation bulkOperation) {
     var table =  UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
     return populatePreview(pathToFile, clazz, offset, limit, table, emptySet(), bulkOperation);
-  }
-
-  private UnifiedTable buildPreviewFromMarcFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset,
-                                                int limit, Set<String> forceVisible) {
-    var table =  UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
-    noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible);
-    return isNotEmpty(pathToFile) ?
-      populatePreviewFromMarc(pathToFile, offset, limit, table) :
-      table.rows(Collections.emptyList());
   }
 
   private UnifiedTable populatePreview(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit,
