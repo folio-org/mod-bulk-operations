@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
@@ -152,7 +153,7 @@ public class BulkOperationService {
   private static final String PREVIEW_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-CSV-%s.csv";
   private static final String PREVIEW_MARC_PATH_TEMPLATE = "%s/%s-Updates-Preview-MARC-%s.mrc";
   private static final String CHANGED_JSON_PATH_TEMPLATE = "%s/json/%s-Changed-Records-%s.json";
-  private static final String CHANGED_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-%s.csv";
+  private static final String CHANGED_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-CSV-%s.csv";
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -379,15 +380,16 @@ public class BulkOperationService {
     var operationId = operation.getId();
     operation.setCommittedNumOfRecords(0);
     operation.setStatus(OperationStatusType.APPLY_CHANGES);
-    operation.setTotalNumOfRecords(operation.getMatchedNumOfRecords());
 
-    operation = bulkOperationRepository.save(operation);
+    var totalNumOfRecords = operation.getMatchedNumOfRecords();
 
-    if (operation.getEntityType() == INSTANCE_MARC) {
+    if (INSTANCE_MARC.equals(operation.getEntityType())) {
       marcUpdateService.saveErrorsForFolioInstances(operation);
-      marcUpdateService.commitForInstanceMarc(operation);
-      return;
+      totalNumOfRecords *= getProgressMultiplier(operation);
     }
+
+    operation.setTotalNumOfRecords(totalNumOfRecords);
+    operation = bulkOperationRepository.save(operation);
 
     if (StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsJsonFile())) {
       var entityClass = resolveEntityClass(operation.getEntityType());
@@ -462,8 +464,6 @@ public class BulkOperationService {
         }
 
         execution.setProcessedRecords(processedNumOfRecords);
-        operation.setProcessedNumOfRecords(operation.getCommittedNumOfRecords());
-        operation.setEndTime(LocalDateTime.now());
         if (operation.getCommittedNumOfRecords() > 0) {
           operation.setLinkToCommittedRecordsCsvFile(resultCsvFileName);
           operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
@@ -479,15 +479,21 @@ public class BulkOperationService {
       executionRepository.save(execution);
     }
 
-    var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operationId);
-    operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
-    operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operationId));
-    operation.setCommittedNumOfWarnings(errorService.getCommittedNumOfWarnings(operationId));
+    marcUpdateService.commitForInstanceMarc(operation);
 
-    if (!FAILED.equals(operation.getStatus())) {
-      operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
+    if (!INSTANCE_MARC.equals(operation.getEntityType()) || isNull(operation.getLinkToModifiedRecordsMarcFile())) {
+      operation.setProcessedNumOfRecords(operation.getCommittedNumOfRecords());
+      operation.setEndTime(LocalDateTime.now());
+
+      var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operationId);
+      operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
+      operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operationId));
+
+      if (!FAILED.equals(operation.getStatus())) {
+        operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
+      }
+      bulkOperationRepository.save(operation);
     }
-    bulkOperationRepository.save(operation);
   }
 
   private boolean isCurrentTenantNotCentral(String tenantId) {
@@ -658,15 +664,20 @@ public class BulkOperationService {
         yield operation;
       }
       case APPLY_CHANGES -> {
-        if (INSTANCE_MARC.equals(operation.getEntityType())) {
-          var executions = metadataProviderService.getJobExecutions(operation.getDataImportJobProfileId());
-          updateBulkOperationBasedOnDataImportState(executions, operation);
-        } else {
-          var execution = executionRepository.findByBulkOperationId(bulkOperationId);
-          if (execution.isPresent() && StatusType.ACTIVE.equals(execution.get().getStatus())) {
-            operation.setProcessedNumOfRecords(execution.get().getProcessedRecords());
+        var execution = executionRepository.findByBulkOperationId(bulkOperationId);
+        if (execution.isPresent() && StatusType.ACTIVE.equals(execution.get().getStatus())) {
+          var processedNumOfRecords = execution.get().getProcessedRecords();
+          if (INSTANCE_MARC.equals(operation.getEntityType())) {
+            var numOfErrors = operation.getCommittedNumOfErrors() * getProgressMultiplier(operation);
+            operation.setProcessedNumOfRecords(numOfErrors + processedNumOfRecords);
           }
+          operation.setProcessedNumOfRecords(processedNumOfRecords);
         }
+        yield bulkOperationRepository.save(operation);
+      }
+      case APPLY_MARC_CHANGES -> {
+        var executions = metadataProviderService.getJobExecutions(operation.getDataImportJobProfileId());
+        updateBulkOperationBasedOnDataImportState(executions, operation);
         yield bulkOperationRepository.save(operation);
       }
       default -> operation;
@@ -692,8 +703,15 @@ public class BulkOperationService {
   }
 
   private void updateBulkOperationBasedOnDataImportState(List<DataImportJobExecution> executions, BulkOperation operation) {
+    var numOfCommittedAdministrativeUpdates = executionRepository.findAllByBulkOperationId(operation.getId())
+      .stream()
+      .filter(execution -> StatusType.COMPLETED.equals(execution.getStatus()))
+      .map(BulkOperationExecution::getProcessedRecords)
+      .max(Integer::compareTo)
+      .orElse(0);
     var processedNumOfRecords = metadataProviderService.calculateProgress(executions).getCurrent();
-    operation.setProcessedNumOfRecords(operation.getCommittedNumOfErrors() * 2 + processedNumOfRecords);
+    operation.setProcessedNumOfRecords(operation.getCommittedNumOfErrors() * getProgressMultiplier(operation) +
+      numOfCommittedAdministrativeUpdates + processedNumOfRecords);
   }
 
   public BulkOperation getBulkOperationOrThrow(UUID operationId) {
@@ -800,5 +818,12 @@ public class BulkOperationService {
 
   private boolean isCompletedSuccessfully(List<BulkOperationDataProcessing> list) {
     return list.stream().allMatch(p -> StatusType.COMPLETED.equals(p.getStatus()));
+  }
+
+  private int getProgressMultiplier(BulkOperation operation) {
+    if (nonNull(operation.getLinkToModifiedRecordsMarcFile())) {
+      return nonNull(operation.getLinkToModifiedRecordsJsonFile()) ? 3 : 2;
+    }
+    return 1;
   }
 }
