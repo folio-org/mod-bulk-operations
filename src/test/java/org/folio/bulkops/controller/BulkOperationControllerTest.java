@@ -8,6 +8,7 @@ import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_MARC_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.MATCHED_RECORDS_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
@@ -39,6 +40,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -162,6 +164,8 @@ class BulkOperationControllerTest extends BaseTest {
 
       if (PROPOSED_CHANGES_MARC_FILE.equals(type) && INSTANCE_MARC.equals(entityType)) {
         verify(remoteFileSystemClient).get("G");
+      } else if (COMMITTED_RECORDS_MARC_FILE.equals(type) && INSTANCE_MARC.equals(entityType)) {
+        verify(remoteFileSystemClient).get("J");
       }
     }
   }
@@ -186,6 +190,7 @@ class BulkOperationControllerTest extends BaseTest {
       .linkToCommittedRecordsCsvFile(csvfileName)
       .linkToCommittedRecordsErrorsCsvFile(csvfileName)
       .linkToModifiedRecordsMarcFile(mrcfileName)
+      .linkToCommittedRecordsMarcFile(mrcfileName)
       .entityType(entityType)
       .build());
     when(itemNoteProcessor.processCsvContent(any(), any())).thenReturn(content.getBytes());
@@ -197,7 +202,8 @@ class BulkOperationControllerTest extends BaseTest {
       .andExpect(status().isOk()).andReturn();
     var actual = result.getResponse().getContentAsByteArray();
 
-    if (fileContentType == PROPOSED_CHANGES_MARC_FILE && entityType == INSTANCE_MARC) {
+    if (Set.of(PROPOSED_CHANGES_MARC_FILE, COMMITTED_RECORDS_MARC_FILE).contains(fileContentType)
+      && entityType == INSTANCE_MARC) {
       assertNotEquals(content.getBytes().length + utf8bom.length, actual.length);
     } else {
       assertEquals(content.getBytes().length + utf8bom.length, actual.length);
@@ -376,6 +382,7 @@ class BulkOperationControllerTest extends BaseTest {
       Arguments.of(COMMITTED_RECORDS_FILE, HOLDINGS_RECORD),
       Arguments.of(COMMITTED_RECORDS_FILE, USER),
       Arguments.of(COMMITTED_RECORDS_FILE, INSTANCE),
+      Arguments.of(COMMITTED_RECORDS_MARC_FILE, INSTANCE_MARC),
       Arguments.of(COMMITTING_CHANGES_ERROR_FILE, ITEM),
       Arguments.of(COMMITTING_CHANGES_ERROR_FILE, HOLDINGS_RECORD),
       Arguments.of(COMMITTING_CHANGES_ERROR_FILE, USER),
@@ -397,7 +404,8 @@ class BulkOperationControllerTest extends BaseTest {
       .linkToModifiedRecordsMarcFile("G")
       .linkToCommittedRecordsJsonFile("H")
       .linkToCommittedRecordsCsvFile("I")
-      .linkToCommittedRecordsErrorsCsvFile("J")
+      .linkToCommittedRecordsMarcFile("J")
+      .linkToCommittedRecordsErrorsCsvFile("K")
       .entityType(entityType)
       .build());
 
