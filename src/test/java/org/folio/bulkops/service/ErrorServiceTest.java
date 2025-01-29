@@ -252,6 +252,42 @@ class ErrorServiceTest extends BaseTest {
     }
   }
 
+  @ParameterizedTest
+  @ValueSource(ints = {0, 1})
+  void shouldReturnOnlyErrorsTotalNumberPreviewOnCompletedWithErrors(int committedErrors) throws IOException {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var jobId = UUID.randomUUID();
+
+      var operationId = bulkOperationRepository.save(BulkOperation.builder()
+          .id(UUID.randomUUID())
+          .status(COMPLETED_WITH_ERRORS)
+          .committedNumOfErrors(committedErrors)
+          .dataExportJobId(jobId)
+          .build())
+        .getId();
+
+      mockErrorsData(COMPLETED_WITH_ERRORS, operationId);
+
+      if (committedErrors == 1) {
+        executionContentRepository.save(BulkOperationExecutionContent.builder()
+          .bulkOperationId(operationId)
+          .identifier("123")
+          .errorMessage("No match found")
+          .build());
+        executionContentRepository.save(BulkOperationExecutionContent.builder()
+          .bulkOperationId(operationId)
+          .identifier("456")
+          .errorMessage("Invalid format")
+          .build());
+      }
+
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 0, 0, null);
+
+      assertThat(errors.getErrors(), hasSize(0));
+      assertThat(errors.getTotalRecords(), equalTo(2));
+    }
+  }
+
   @Test
   void testOptimisticLockErrorProcessing() {
 
