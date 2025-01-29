@@ -725,6 +725,7 @@ public class BulkOperationService {
           .map(DataImportJobExecution::getId)
           .forEach(uuid -> errorService.saveErrorsFromDataImport(operation.getId(), uuid));
         var updatedIds = metadataProviderService.getUpdatedInstanceIds(executions);
+        operation.setDataImportJobProfileId(null);
         executor.execute(getRunnableWithCurrentFolioContext(() -> srsService.retrieveMarcInstancesFromSrs(updatedIds, operation)));
       }
     }
