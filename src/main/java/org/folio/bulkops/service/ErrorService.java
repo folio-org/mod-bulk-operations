@@ -106,7 +106,7 @@ public class ErrorService {
           var error = message.split(Constants.COMMA_DELIMETER);
           return new Error().message(error[1]).parameters(List.of(new Parameter().key(IDENTIFIER).value(error[0])));
         })
-        .collect(toList());
+        .toList();
       return new Errors().errors(errors)
         .totalRecords(remoteFileSystemClient.getNumOfLines(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile()));
     } else if (COMPLETED == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
