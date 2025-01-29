@@ -160,6 +160,12 @@ public class ErrorService {
   }
 
   private Errors getExecutionErrors(UUID bulkOperationId, int limit, int offset, ErrorType errorType) {
+    var totalRecords = (int) executionContentRepository.countByBulkOperationId(bulkOperationId);
+    if (limit == 0) {
+      return new Errors()
+        .errors(List.of())
+        .totalRecords(totalRecords);
+    }
     Page<BulkOperationExecutionContent> errorPage;
     if (isNull(errorType)) {
       errorPage = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNullOrderByErrorType(bulkOperationId, OffsetRequest.of(offset, limit));
@@ -171,7 +177,7 @@ public class ErrorService {
       .toList();
     return new Errors()
       .errors(errors)
-      .totalRecords((int) errorPage.getTotalElements());
+      .totalRecords(totalRecords);
   }
 
   /**

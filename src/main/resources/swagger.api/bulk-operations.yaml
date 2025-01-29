@@ -311,12 +311,16 @@ paths:
           required: true
           schema:
             type: integer
+            default: 10
+            minimum: 0
           description: The numbers of errors to return
         - in: query
           name: offset
           required: false
           schema:
             type: integer
+            default: 0
+            minimum: 0
           description: Query offset
         - in: query
           name: errorType
