@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
@@ -10,9 +11,13 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEWED_NO_MARC_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.util.Constants.DATA_IMPORT_ERROR_DISCARDED;
+import static org.folio.bulkops.util.Constants.MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED;
+import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,10 +28,8 @@ import java.util.stream.Collectors;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.MetadataProviderClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.JobLogEntry;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.dto.Error;
@@ -59,11 +62,11 @@ public class ErrorService {
   private final BulkOperationRepository operationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final BulkOperationExecutionContentRepository executionContentRepository;
-  private final BulkEditClient bulkEditClient;
   private final MetadataProviderClient metadataProviderClient;
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link, ErrorType errorType) {
-    if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage) && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
+    if (Set.of(MSG_NO_CHANGE_REQUIRED, MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED, MSG_NO_MARC_CHANGE_REQUIRED).contains(errorMessage)
+      && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
       return;
     }
     executionContentRepository.save(BulkOperationExecutionContent.builder()
@@ -95,11 +98,17 @@ public class ErrorService {
     var bulkOperation = operationRepository.findById(bulkOperationId)
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
     if (Set.of(DATA_MODIFICATION, REVIEW_CHANGES, REVIEWED_NO_MARC_RECORDS).contains(bulkOperation.getStatus()) || COMPLETED_WITH_ERRORS == bulkOperation.getStatus() && noCommittedErrors(bulkOperation) && noCommittedWarnings(bulkOperation)) {
-      var errors = bulkEditClient.getErrorsPreview(bulkOperation.getDataExportJobId(), limit);
-      return new Errors().errors(errors.getErrors().stream()
-          .map(this::prepareInternalErrorRepresentation)
-          .toList())
-        .totalRecords(errors.getTotalRecords());
+      var errors = new BufferedReader(new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile())))
+        .lines()
+        .skip(offset)
+        .limit(limit)
+        .map(message -> {
+          var error = message.split(Constants.COMMA_DELIMETER);
+          return new Error().message(error[1]).parameters(List.of(new Parameter().key(IDENTIFIER).value(error[0])));
+        })
+        .toList();
+      return new Errors().errors(errors)
+        .totalRecords(remoteFileSystemClient.getNumOfLines(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile()));
     } else if (COMPLETED == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
       return getExecutionErrors(bulkOperationId, limit, offset, errorType);
     } else {
@@ -147,11 +156,6 @@ public class ErrorService {
     return isNull(bulkOperation.getCommittedNumOfWarnings()) || bulkOperation.getCommittedNumOfWarnings() == 0;
   }
 
-  private Error prepareInternalErrorRepresentation(Error e) {
-    var error= e.getMessage().split(Constants.COMMA_DELIMETER);
-    return new Error().message(error[1]).parameters(List.of(new Parameter().key(IDENTIFIER).value(error[0])));
-  }
-
   public String getErrorsCsvByBulkOperationId(UUID bulkOperationId, int offset, ErrorType errorType) {
     return getErrorsPreviewByBulkOperationId(bulkOperationId, Integer.MAX_VALUE, offset, errorType).getErrors().stream()
       .map(error -> String.join(Constants.COMMA_DELIMETER, ObjectUtils.isEmpty(error.getParameters()) ? EMPTY : error.getParameters().get(0).getValue(), error.getMessage()))
@@ -159,6 +163,12 @@ public class ErrorService {
   }
 
   private Errors getExecutionErrors(UUID bulkOperationId, int limit, int offset, ErrorType errorType) {
+    var totalRecords = (int) executionContentRepository.countByBulkOperationId(bulkOperationId);
+    if (limit == 0) {
+      return new Errors()
+        .errors(List.of())
+        .totalRecords(totalRecords);
+    }
     Page<BulkOperationExecutionContent> errorPage;
     if (isNull(errorType)) {
       errorPage = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNullOrderByErrorType(bulkOperationId, OffsetRequest.of(offset, limit));
@@ -170,7 +180,7 @@ public class ErrorService {
       .toList();
     return new Errors()
       .errors(errors)
-      .totalRecords((int) errorPage.getTotalElements());
+      .totalRecords(totalRecords);
   }
 
   /**

@@ -18,6 +18,7 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PREVIOUSLY_HELD;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TYPE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SOURCE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_STAFF_SUPPRESS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_STATISTICAL_CODES;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_STATUS_TERM;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
@@ -38,7 +39,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -135,18 +135,11 @@ public class PreviewService {
         if (MANUAL == operation.getApproach()) {
           yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit, operation);
         } else {
-          var bulkOperationId = operation.getId();
           if (INSTANCE_MARC == operation.getEntityType() || INSTANCE == operation.getEntityType()) {
             if (isFolioInstanceCommitPreview(operation)) {
               yield getPreviewFromCsvWithChangedOptions(operation, operation.getLinkToCommittedRecordsCsvFile(), offset, limit);
             } else if (isMarcInstanceCommitPreview(operation)) {
-              //ToDo Use buildCompositePreview after completion MODBULKOPS-429
-              referenceProvider.updateMappingRules();
-              var rules = ruleService.getMarcRules(bulkOperationId);
-              var options = getChangedOptionsSet(rules);
-              var marcTable = buildPreviewFromMarcFile(operation.getLinkToCommittedRecordsMarcFile(), clazz, offset, limit, options);
-              enrichMarcWithAdministrativeData(marcTable, operation);
-              yield marcTable;
+              yield buildCompositePreview(operation, offset, limit, operation.getLinkToMatchedRecordsCsvFile(), operation.getLinkToCommittedRecordsMarcFile());
             } else {
               yield buildCompositePreview(operation, offset, limit, operation.getLinkToCommittedRecordsCsvFile(), operation.getLinkToCommittedRecordsMarcFile());
             }
@@ -235,21 +228,6 @@ public class PreviewService {
       });
   }
 
-  private void enrichMarcWithAdministrativeData(UnifiedTable unifiedTable, BulkOperation bulkOperation) {
-    var hridPosition = getCellPositionByName(INSTANCE_HRID);
-    var hrids = unifiedTable.getRows().stream()
-      .map(row -> row.getRow().get(hridPosition))
-      .toList();
-    var csvRows = findInstanceRowsByHrids(bulkOperation, hrids);
-    unifiedTable.getRows().forEach(marcRow -> {
-      var hrid = marcRow.getRow().get(hridPosition);
-      if (csvRows.containsKey(hrid)) {
-        var csvRow = csvRows.get(hrid);
-        enrichRowWithAdministrativeData(marcRow, csvRow);
-      }
-    });
-  }
-
   private void enrichRowWithAdministrativeData(Row marcRow, Row csvRow) {
     var positions = getAdministrativeDataFieldPositions();
     marcRow.getRow().set(positions.get(INSTANCE_STAFF_SUPPRESS), csvRow.getRow().get(positions.get(INSTANCE_STAFF_SUPPRESS)));
@@ -263,6 +241,7 @@ public class PreviewService {
     marcRow.getRow().set(positions.get(INSTANCE_RESOURCE_TYPE), csvRow.getRow().get(positions.get(INSTANCE_RESOURCE_TYPE)));
     marcRow.getRow().set(positions.get(INSTANCE_LANGUAGES), csvRow.getRow().get(positions.get(INSTANCE_LANGUAGES)));
     marcRow.getRow().set(positions.get(INSTANCE_CATALOGED_DATE), csvRow.getRow().get(positions.get(INSTANCE_CATALOGED_DATE)));
+    marcRow.getRow().set(positions.get(INSTANCE_STATISTICAL_CODES), csvRow.getRow().get(positions.get(INSTANCE_STATISTICAL_CODES)));
   }
 
   private Map<String, Integer> getAdministrativeDataFieldPositions() {
@@ -277,30 +256,10 @@ public class PreviewService {
         INSTANCE_FORMATS,
         INSTANCE_CONTRIBUTORS,
         INSTANCE_RESOURCE_TYPE,
-        INSTANCE_LANGUAGES)
+        INSTANCE_LANGUAGES,
+        INSTANCE_STATISTICAL_CODES)
       .forEach(name -> positions.put(name, getCellPositionByName(name)));
     return positions;
-  }
-
-  private Map<String, Row> findInstanceRowsByHrids(BulkOperation bulkOperation, List<String> hrids) {
-    var hridPosition = getCellPositionByName(INSTANCE_HRID);
-    var list = new ArrayList<>(hrids);
-    var map = new HashMap<String, Row>();
-
-    try (var csvReader = new CSVReaderBuilder(new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsCsvFile())))
-      .withCSVParser(CSVHelper.getCsvParser()).build()) {
-      String[] line;
-      while (nonNull(line = csvReader.readNext()) && !list.isEmpty()) {
-        var hrid = line[hridPosition];
-        if (list.contains(hrid)) {
-          map.put(hrid, new Row().row(Arrays.asList(line)));
-          list.remove(hrid);
-        }
-      }
-    } catch (IOException | CsvValidationException e) {
-      log.error("Failed to read csv file", e);
-    }
-    return map;
   }
 
   private Map<String, Record> findMarcRecordsByHrids(String linkToMarcFile, List<String> hrids) {
@@ -464,15 +423,6 @@ public class PreviewService {
     return populatePreview(pathToFile, clazz, offset, limit, table, emptySet(), bulkOperation);
   }
 
-  private UnifiedTable buildPreviewFromMarcFile(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset,
-                                                int limit, Set<String> forceVisible) {
-    var table =  UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
-    noteTableUpdater.extendTableWithInstanceNotesTypes(table, forceVisible);
-    return isNotEmpty(pathToFile) ?
-      populatePreviewFromMarc(pathToFile, offset, limit, table) :
-      table.rows(Collections.emptyList());
-  }
-
   private UnifiedTable populatePreview(String pathToFile, Class<? extends BulkOperationsEntity> clazz, int offset, int limit,
                                        UnifiedTable table, Set<String> forceVisible, BulkOperation bulkOperation) {
     try (Reader reader = new InputStreamReader(remoteFileSystemClient.get(pathToFile))) {
@@ -500,22 +450,6 @@ public class PreviewService {
       log.error(e.getMessage());
     }
     tenantTableUpdater.updateTenantInHeadersAndRows(table, clazz);
-    return table;
-  }
-
-  private UnifiedTable populatePreviewFromMarc(String pathToFile, int offset, int limit, UnifiedTable table) {
-    var headers = table.getHeader().stream()
-      .map(Cell::getValue)
-      .toList();
-    var reader = new MarcStreamReader(remoteFileSystemClient.get(pathToFile));
-    var counter = 0;
-    while (reader.hasNext() && counter < offset + limit) {
-      counter++;
-      var marcRecord = reader.next();
-      if (counter >= offset) {
-        table.addRowsItem(new Row().row(marcToUnifiedTableRowMapper.processRecord(marcRecord, headers)));
-      }
-    }
     return table;
   }
 

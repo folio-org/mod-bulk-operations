@@ -15,6 +15,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.GetParsedRecordsBatchRequestBody;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -41,6 +42,8 @@ class SrsServiceTest extends BaseTest {
   private RemoteFileSystemClient remoteFileSystemClient;
   @MockBean
   private ErrorService errorService;
+  @MockBean
+  private BulkOperationExecutionRepository executionRepository;
   @Captor
   private ArgumentCaptor<BulkOperation> bulkOperationCaptor;
 
@@ -69,6 +72,7 @@ class SrsServiceTest extends BaseTest {
       .thenReturn("errors.csv");
     when(errorService.getCommittedNumOfErrors(operationId))
       .thenReturn(numOfErrors);
+    when(executionRepository.findByBulkOperationId(any(UUID.class))).thenReturn(Optional.empty());
 
     srsService.retrieveMarcInstancesFromSrs(List.of(UUID.randomUUID().toString()), operation);
 
@@ -91,6 +95,7 @@ class SrsServiceTest extends BaseTest {
       .build();
     when(bulkOperationRepository.findById(operationId))
       .thenReturn(Optional.of(operation));
+    when(executionRepository.findByBulkOperationId(any(UUID.class))).thenReturn(Optional.empty());
 
     srsService.retrieveMarcInstancesFromSrs(List.of(), operation);
 
