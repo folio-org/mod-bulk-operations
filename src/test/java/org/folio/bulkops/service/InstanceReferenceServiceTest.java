@@ -14,6 +14,7 @@ import org.folio.bulkops.client.InstanceTypesClient;
 import org.folio.bulkops.client.ModesOfIssuanceClient;
 import org.folio.bulkops.client.NatureOfContentTermsClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
+import org.folio.bulkops.client.StatisticalCodeTypeClient;
 import org.folio.bulkops.domain.bean.InstanceFormats;
 import org.folio.bulkops.domain.bean.InstanceStatuses;
 import org.folio.bulkops.domain.bean.InstanceTypes;
@@ -47,6 +48,8 @@ class InstanceReferenceServiceTest {
   private ContributorTypesClient contributorTypesClient;
   @Mock
   private StatisticalCodeClient statisticalCodeClient;
+  @Mock
+  private StatisticalCodeTypeClient statisticalCodeTypeClient;
   @InjectMocks
   private InstanceReferenceService instanceReferenceService;
 
@@ -135,5 +138,12 @@ class InstanceReferenceServiceTest {
     doThrow(new NotFoundException("not found")).when(statisticalCodeClient).getByQuery("name==\"some name\"");
     assertThrows(ReferenceDataNotFoundException.class, () -> instanceReferenceService.getStatisticalCodeById(id, "tenant"));
     assertThrows(NotFoundException.class, () -> instanceReferenceService.getStatisticalCodeByName("some name", "tenant"));
+  }
+
+  @Test
+  void shouldThrowNotFoundExceptionIfStatisticalCodeTypeNotFound() {
+    var id = UUID.randomUUID().toString();
+    doThrow(new NotFoundException("not found")).when(statisticalCodeTypeClient).getById(id);
+    assertThrows(ReferenceDataNotFoundException.class, () -> instanceReferenceService.getStatisticalCodeTypeById(id, "tenant"));
   }
 }

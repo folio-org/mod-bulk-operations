@@ -768,7 +768,7 @@ class PreviewServiceTest extends BaseTest {
     assertThat(table.getRows().get(0).getRow().get(23), equalTo("Accumulation and Frequency of Use note text"));
     assertThat(table.getRows().get(0).getRow().get(24), equalTo("Bibliography note text"));
     assertThat(table.getRows().get(0).getRow().get(25), equalTo("General note text"));
-    assertThat(table.getRows().get(0).getRow().get(9), equalTo("some code"));
+    assertThat(table.getRows().get(0).getRow().get(9), equalTo("some type: some code - some name"));
   }
 
   private String getPathToContentUpdateRequest(org.folio.bulkops.domain.dto.EntityType entityType) {
