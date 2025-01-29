@@ -1,3 +1,7 @@
+## v2.1.11 - Released 2025/01/29
+
+This release contains fix for redundant data import result processing calls.
+
 ## v2.1.10 - Released 2025/01/23
 
 This release contains optimizations for a new platform and adding missing interfaces.
