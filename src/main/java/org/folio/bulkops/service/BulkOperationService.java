@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -48,6 +49,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.opencsv.CSVWriterBuilder;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
@@ -93,6 +95,7 @@ import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.IdentifiersResolver;
+import org.folio.bulkops.util.MarcCsvHelper;
 import org.folio.bulkops.util.Utils;
 import org.folio.s3.exception.S3ClientException;
 import org.folio.spring.FolioExecutionContext;
@@ -147,11 +150,13 @@ public class BulkOperationService {
   private final MarcUpdateService marcUpdateService;
   private final MetadataProviderService metadataProviderService;
   private final SrsService srsService;
+  private final MarcCsvHelper marcCsvHelper;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
   private static final String PREVIEW_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-CSV-%s.csv";
   private static final String PREVIEW_MARC_PATH_TEMPLATE = "%s/%s-Updates-Preview-MARC-%s.mrc";
+  private static final String PREVIEW_MARC_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-MARC-CSV-%s.csv";
   private static final String CHANGED_JSON_PATH_TEMPLATE = "%s/json/%s-Changed-Records-%s.json";
   private static final String CHANGED_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-CSV-%s.csv";
 
@@ -298,7 +303,10 @@ public class BulkOperationService {
     if (nonNull(operation.getLinkToMatchedRecordsMarcFile())) {
       var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
       var modifiedMarcFileName = String.format(PREVIEW_MARC_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
+      var previewMarcCsvFileName = String.format(PREVIEW_MARC_CSV_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
       try (var writerForModifiedPreviewMarcFile = remoteFileSystemClient.marcWriter(modifiedMarcFileName);
+           var csvWriter = new CSVWriterBuilder(remoteFileSystemClient.writer(previewMarcCsvFileName))
+             .withSeparator(DEFAULT_SEPARATOR).build();
            var linkToMatchedRecordsMarcFileStream = remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile())) {
         var matchedRecordsReader = new MarcStreamReader(linkToMatchedRecordsMarcFileStream);
         var currentDate = new Date();
@@ -308,6 +316,7 @@ public class BulkOperationService {
             marcInstanceDataProcessor.update(operation, marcRecord, ruleCollection, currentDate);
           }
           writerForModifiedPreviewMarcFile.writeRecord(marcRecord);
+          csvWriter.writeNext(marcCsvHelper.getCsvData(marcRecord));
 
           processedNumOfRecords++;
 
@@ -319,6 +328,7 @@ public class BulkOperationService {
 
         if (processedNumOfRecords > 0) {
           operation.setLinkToModifiedRecordsMarcFile(modifiedMarcFileName);
+          operation.setLinkToCommittedRecordsMarcCsvFile(previewMarcCsvFileName);
           saveLinks(operation);
         }
 

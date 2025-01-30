@@ -110,6 +110,7 @@ import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.ErrorCode;
+import org.folio.bulkops.util.MarcCsvHelper;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.RemoteStorageWriter;
 import org.folio.s3.exception.S3ClientException;
@@ -118,6 +119,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.marc4j.marc.Record;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -177,6 +179,9 @@ class BulkOperationServiceTest extends BaseTest {
 
   @MockBean
   private SrsService srsService;
+
+  @MockBean
+  private MarcCsvHelper marcCsvHelper;
 
   @Test
   @SneakyThrows
@@ -588,6 +593,8 @@ class BulkOperationServiceTest extends BaseTest {
       when(remoteFileSystemClient.writer(anyString()))
         .thenReturn(new StringWriter());
       when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenReturn(new MarcRemoteStorageWriter(new RemoteStorageWriter(expectedPathToModifiedMarcFile, 8192, remoteFolioS3Client)));
+      when(marcCsvHelper.getCsvData(any(Record.class)))
+        .thenReturn(new String[]{"a", "b", "c"});
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
 

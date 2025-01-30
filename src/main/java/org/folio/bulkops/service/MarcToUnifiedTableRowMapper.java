@@ -94,7 +94,7 @@ public class MarcToUnifiedTableRowMapper {
         case "800", "810", "811", "830" -> processSeries(rowData, dataField, headers);
         case "999" -> processInstanceId(rowData, dataField, headers);
         default -> {
-          if (referenceProvider.getMappedNoteTags().contains(tag)) {
+          if (referenceProvider.isMappedNoteTag(tag)) {
             processInstanceNotes(rowData, dataField, headers);
           }
         }
