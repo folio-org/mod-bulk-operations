@@ -11,6 +11,7 @@ import static org.folio.bulkops.util.Constants.CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC
 import static org.folio.bulkops.util.Constants.DATA_IMPORT_ERROR_DISCARDED;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -441,6 +442,50 @@ class ErrorServiceTest extends BaseTest {
         .getId();
 
       assertThrows(DataImportException.class, () -> errorService.saveErrorsFromDataImport(operationId, dataImportJobId));
+    }
+  }
+
+  @Test
+  void getCommittedNumOfErrorsAndWarningsTest() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var uuid = UUID.randomUUID();
+      bulkOperationRepository.save(BulkOperation.builder()
+        .id(uuid)
+        .status(COMPLETED_WITH_ERRORS)
+        .committedNumOfErrors(2)
+        .committedNumOfWarnings(1)
+        .linkToCommittedRecordsErrorsCsvFile("link")
+        .dataExportJobId(UUID.randomUUID())
+        .build());
+      executionContentRepository.save(BulkOperationExecutionContent.builder()
+        .bulkOperationId(uuid)
+        .identifier("123")
+        .errorMessage(format("%s %s", "message", "link"))
+        .errorType(ErrorType.ERROR)
+        .build());
+      executionContentRepository.save(BulkOperationExecutionContent.builder()
+        .bulkOperationId(uuid)
+        .identifier("456")
+        .errorMessage(format("%s %s", "message", "link"))
+        .errorType(ErrorType.ERROR)
+        .build());
+      executionContentRepository.save(BulkOperationExecutionContent.builder()
+        .bulkOperationId(uuid)
+        .identifier("789")
+        .errorMessage(format("%s %s", "message", "link"))
+        .errorType(ErrorType.WARNING)
+        .build());
+
+      assertEquals(2, errorService.getCommittedNumOfErrors(uuid));
+      assertEquals(1, errorService.getCommittedNumOfWarnings(uuid));
+    }
+  }
+
+  @Test
+  void uploadErrorsToStorageShouldReturnNullWhenContentsIsEmpty() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var uuid = UUID.randomUUID();
+      assertNull(errorService.uploadErrorsToStorage(uuid));
     }
   }
 
