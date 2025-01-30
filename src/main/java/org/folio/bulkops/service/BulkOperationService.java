@@ -721,12 +721,8 @@ public class BulkOperationService {
       var processedNumOfRecords = metadataProviderService.calculateProgress(executions).getCurrent();
       operation.setProcessedNumOfRecords(operation.getCommittedNumOfErrors() * 2 + processedNumOfRecords);
       if (metadataProviderService.isDataImportJobCompleted(executions)) {
-        executions.stream()
-          .map(DataImportJobExecution::getId)
-          .forEach(uuid -> errorService.saveErrorsFromDataImport(operation.getId(), uuid));
-        var updatedIds = metadataProviderService.getUpdatedInstanceIds(executions);
         operation.setDataImportJobProfileId(null);
-        executor.execute(getRunnableWithCurrentFolioContext(() -> srsService.retrieveMarcInstancesFromSrs(updatedIds, operation)));
+        executor.execute(getRunnableWithCurrentFolioContext(() -> processDataImportJobExecutions(executions, operation)));
       }
     }
   }
@@ -750,5 +746,13 @@ public class BulkOperationService {
       throw new IllegalOperationStateException(String.format("Operation with status %s cannot be cancelled", operation.getStatus()));
     }
     bulkOperationRepository.save(operation);
+  }
+
+  private void processDataImportJobExecutions(List<DataImportJobExecution> executions, BulkOperation operation) {
+    executions.stream()
+      .map(DataImportJobExecution::getId)
+      .forEach(uuid -> errorService.saveErrorsFromDataImport(operation.getId(), uuid));
+    var updatedIds = metadataProviderService.getUpdatedInstanceIds(executions);
+    srsService.retrieveMarcInstancesFromSrs(updatedIds, operation);
   }
 }
