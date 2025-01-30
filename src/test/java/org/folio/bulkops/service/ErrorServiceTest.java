@@ -189,7 +189,7 @@ class ErrorServiceTest extends BaseTest {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
 
-      var expected = "123,No match found\n456,Invalid format".split(LF);
+      var expected = "123,No match found,ERROR\n456,Invalid format,ERROR".split(LF);
 
       mockErrorsData(statusType, operationId);
 
@@ -455,11 +455,13 @@ class ErrorServiceTest extends BaseTest {
         .bulkOperationId(operationId)
         .identifier("123")
         .errorMessage("No match found")
+        .errorType(ErrorType.ERROR)
         .build());
       executionContentRepository.save(BulkOperationExecutionContent.builder()
         .bulkOperationId(operationId)
         .identifier("456")
         .errorMessage("Invalid format")
+        .errorType(ErrorType.ERROR)
         .build());
       processingContentRepository.save(BulkOperationProcessingContent.builder()
         .bulkOperationId(operationId)

@@ -163,7 +163,7 @@ public class ErrorService {
 
   public String getErrorsCsvByBulkOperationId(UUID bulkOperationId, int offset, ErrorType errorType) {
     return getErrorsPreviewByBulkOperationId(bulkOperationId, Integer.MAX_VALUE, offset, errorType).getErrors().stream()
-      .map(error -> String.join(Constants.COMMA_DELIMETER, ObjectUtils.isEmpty(error.getParameters()) ? EMPTY : error.getParameters().get(0).getValue(), error.getMessage()))
+      .map(error -> String.join(Constants.COMMA_DELIMETER, ObjectUtils.isEmpty(error.getParameters()) ? EMPTY : error.getParameters().get(0).getValue(), error.getMessage(), error.getType().getValue()))
       .collect(Collectors.joining(Constants.NEW_LINE_SEPARATOR));
   }
 
