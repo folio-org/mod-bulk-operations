@@ -59,6 +59,10 @@ import lombok.RequiredArgsConstructor;
 public class ErrorService {
   public static final String IDENTIFIER = "IDENTIFIER";
   public static final String LINK = "LINK";
+
+  private static final int IDX_ERROR_IDENTIFIER = 0;
+  private static final int IDX_ERROR_MSG = 1;
+  private static final int IDX_ERROR_TYPE = 2;
   private final BulkOperationRepository operationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final BulkOperationExecutionContentRepository executionContentRepository;
@@ -104,8 +108,9 @@ public class ErrorService {
         .limit(limit)
         .map(message -> {
           var error = message.split(Constants.COMMA_DELIMETER);
-          return new Error().message(error[1]).parameters(List.of(new Parameter().key(IDENTIFIER).value(error[0])));
+          return new Error().message(error[IDX_ERROR_MSG]).parameters(List.of(new Parameter().key(IDENTIFIER).value(error[IDX_ERROR_IDENTIFIER]))).type(ErrorType.fromValue(error[IDX_ERROR_TYPE]));
         })
+        .filter(err -> isNull(errorType) || err.getType() == errorType)
         .toList();
       return new Errors().errors(errors)
         .totalRecords(remoteFileSystemClient.getNumOfLines(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile()));

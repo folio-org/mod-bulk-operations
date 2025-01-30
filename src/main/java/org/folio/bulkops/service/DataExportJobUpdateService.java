@@ -121,6 +121,7 @@ public class DataExportJobUpdateService {
       if (nonNull(progress)) {
         operation.setMatchedNumOfRecords(isNull(progress.getSuccess()) ? 0 : progress.getSuccess());
         operation.setMatchedNumOfErrors(isNull(progress.getErrors()) ? 0 : progress.getErrors());
+        operation.setMatchedNumOfWarnings(isNull(progress.getWarnings()) ? 0 : progress.getWarnings());
         operation.setTotalNumOfRecords(isNull(progress.getTotal()) ? 0 : progress.getTotal());
         operation.setProcessedNumOfRecords(isNull(progress.getProcessed()) ? 0 : progress.getProcessed());
       }
@@ -178,6 +179,7 @@ public class DataExportJobUpdateService {
     operation.setEndTime(LocalDateTime.now());
     if (ObjectUtils.isNotEmpty(jobUpdate.getProgress())) {
       operation.setMatchedNumOfErrors(isNull(jobUpdate.getProgress().getErrors()) ? 0 : jobUpdate.getProgress().getErrors());
+      operation.setMatchedNumOfWarnings(isNull(jobUpdate.getProgress().getWarnings()) ? 0 : jobUpdate.getProgress().getWarnings());
     }
   }
 }
