@@ -616,13 +616,16 @@ class PreviewServiceTest extends BaseTest {
       .totalRecords(1);
 
     when(ruleService.getMarcRules(bulkOperationId)).thenReturn(rules);
+    when(ruleService.getRules(any(UUID.class))).thenReturn(new BulkOperationRuleCollection()
+      .bulkOperationRules(Collections.emptyList())
+      .totalRecords(0));
     when(instanceNoteTypesClient.getNoteTypeById(summaryNoteTypeId))
       .thenReturn(new InstanceNoteType().name("Summary"));
     when(instanceReferenceService.getAllInstanceNoteTypes())
       .thenReturn(List.of(new InstanceNoteType().name("Summary"), new InstanceNoteType().name(GENERAL_NOTE)));
     when(remoteFileSystemClient.get(pathToMarcFile)).thenReturn(new FileInputStream("src/test/resources/files/preview.mrc"));
     when(remoteFileSystemClient.get(pathToMatchedCsvFile))
-      .thenReturn(new FileInputStream("src/test/resources/files/instances_preview.csv"));
+      .thenReturn(new FileInputStream("src/test/resources/files/preview.csv"));
     when(instanceReferenceService.getContributorTypesByCode("art"))
       .thenReturn(new ContributorTypeCollection().contributorTypes(
         Collections.singletonList(new ContributorType().name("Artist"))));
@@ -765,7 +768,7 @@ class PreviewServiceTest extends BaseTest {
     assertThat(table.getRows().get(0).getRow().get(23), equalTo("Accumulation and Frequency of Use note text"));
     assertThat(table.getRows().get(0).getRow().get(24), equalTo("Bibliography note text"));
     assertThat(table.getRows().get(0).getRow().get(25), equalTo("General note text"));
-    assertThat(table.getRows().get(0).getRow().get(9), equalTo("some code"));
+    assertThat(table.getRows().get(0).getRow().get(9), equalTo("some type: some code - some name"));
   }
 
   private String getPathToContentUpdateRequest(org.folio.bulkops.domain.dto.EntityType entityType) {

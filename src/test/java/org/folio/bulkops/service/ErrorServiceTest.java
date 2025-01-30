@@ -13,15 +13,19 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static wiremock.org.hamcrest.MatcherAssert.assertThat;
+import static wiremock.org.hamcrest.Matchers.anyOf;
+import static wiremock.org.hamcrest.Matchers.contains;
 import static wiremock.org.hamcrest.Matchers.equalTo;
 import static wiremock.org.hamcrest.Matchers.hasSize;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -42,10 +46,8 @@ import org.folio.bulkops.domain.bean.RelatedInstanceInfo;
 import org.folio.bulkops.domain.bean.SrsRecord;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.ErrorType;
-import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
-import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.domain.entity.BulkOperationProcessingContent;
@@ -155,19 +157,15 @@ class ErrorServiceTest extends BaseTest {
 
   @ParameterizedTest
   @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "COMPLETED" }, mode = EnumSource.Mode.INCLUDE)
-  void shouldGetErrorsPreviewByBulkOperationId(OperationStatusType statusType) {
+  void shouldGetErrorsPreviewByBulkOperationId(OperationStatusType statusType) throws IOException {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
 
-      var expected = List.of(
-        new Error().message("No match found").parameters(List.of(new Parameter().key("IDENTIFIER").value("123"))),
-        new Error().message("Invalid format").parameters(List.of(new Parameter().key("IDENTIFIER").value("456")))
-      );
-
       mockErrorsData(statusType, operationId);
 
-      var actual = errorService.getErrorsPreviewByBulkOperationId(operationId, 2, 0, null);
-      assertThat(actual.getErrors(), hasSize(2));
+      var actualWithOffset = errorService.getErrorsPreviewByBulkOperationId(operationId, 2, 1, null);
+      assertThat(actualWithOffset.getErrors(), hasSize(1));
+      assertThat(actualWithOffset.getTotalRecords(), equalTo(2));
 
       bulkOperationRepository.deleteById(operationId);
     }
@@ -187,7 +185,7 @@ class ErrorServiceTest extends BaseTest {
 
   @ParameterizedTest
   @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "COMPLETED" }, mode = EnumSource.Mode.INCLUDE)
-  void shouldGetErrorsCsvByBulkOperationId(OperationStatusType statusType) {
+  void shouldGetErrorsCsvByBulkOperationId(OperationStatusType statusType) throws IOException {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
 
@@ -220,7 +218,7 @@ class ErrorServiceTest extends BaseTest {
 
   @ParameterizedTest
   @ValueSource(ints = {0, 1})
-  void shouldReturnErrorsPreviewOnCompletedWithErrors(int committedErrors) {
+  void shouldReturnErrorsPreviewOnCompletedWithErrors(int committedErrors) throws IOException {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var jobId = UUID.randomUUID();
 
@@ -250,6 +248,43 @@ class ErrorServiceTest extends BaseTest {
       var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 10, 0, null);
 
       assertThat(errors.getErrors(), hasSize(2));
+      assertThat(errors.getTotalRecords(), equalTo(2));
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {0, 1})
+  void shouldReturnOnlyErrorsTotalNumberPreviewOnCompletedWithErrors(int committedErrors) throws IOException {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var jobId = UUID.randomUUID();
+
+      var operationId = bulkOperationRepository.save(BulkOperation.builder()
+          .id(UUID.randomUUID())
+          .status(COMPLETED_WITH_ERRORS)
+          .committedNumOfErrors(committedErrors)
+          .dataExportJobId(jobId)
+          .build())
+        .getId();
+
+      mockErrorsData(COMPLETED_WITH_ERRORS, operationId);
+
+      if (committedErrors == 1) {
+        executionContentRepository.save(BulkOperationExecutionContent.builder()
+          .bulkOperationId(operationId)
+          .identifier("123")
+          .errorMessage("No match found")
+          .build());
+        executionContentRepository.save(BulkOperationExecutionContent.builder()
+          .bulkOperationId(operationId)
+          .identifier("456")
+          .errorMessage("Invalid format")
+          .build());
+      }
+
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 0, 0, null);
+
+      assertThat(errors.getErrors(), hasSize(0));
+      assertThat(errors.getTotalRecords(), equalTo(2));
     }
   }
 
@@ -305,7 +340,10 @@ class ErrorServiceTest extends BaseTest {
     final var instanceInfo = new RelatedInstanceInfo().withIdList(List.of(instanceId)).withHridList(List.of("instance HRID"));
     when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE))
       .thenReturn(new JobLogEntryCollection().withEntries(List.of(new JobLogEntry()
-        .withError("some MARC error").withSourceRecordId(sourceRecordId).withRelatedInstanceInfo(
+        .withError("some MARC error #1").withSourceRecordId(sourceRecordId).withRelatedInstanceInfo(
+          relatedInstanceInfo ? instanceInfo : new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
+        ), new JobLogEntry()
+        .withError("some MARC error #2").withSourceRecordId(sourceRecordId).withRelatedInstanceInfo(
           relatedInstanceInfo ? instanceInfo : new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
         ))));
     when(srsClient.getSrsRecordById(sourceRecordId)).thenReturn(new SrsRecord().withExternalIdsHolder(
@@ -316,15 +354,16 @@ class ErrorServiceTest extends BaseTest {
           .id(UUID.randomUUID())
           .status(COMPLETED_WITH_ERRORS)
           .identifierType(identifierType)
-          .committedNumOfErrors(1)
+          .committedNumOfErrors(2)
           .dataExportJobId(dataExportJobId)
           .build())
         .getId();
       errorService.saveErrorsFromDataImport(operationId, dataImportJobId);
-      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1, 0, ErrorType.ERROR);
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 2, 1, ErrorType.ERROR);
 
       assertThat(errors.getErrors(), hasSize(1));
-      assertEquals("some MARC error", errors.getErrors().get(0).getMessage());
+      assertThat(errors.getTotalRecords(), equalTo(2));
+      assertThat(errors.getErrors().stream().map(Error::getMessage).toList(), anyOf(contains("some MARC error #1"), contains("some MARC error #2")));
     }
   }
 
@@ -347,7 +386,7 @@ class ErrorServiceTest extends BaseTest {
           .build())
         .getId();
       errorService.saveErrorsFromDataImport(operationId, dataImportJobId);
-      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1, 0, ErrorType.ERROR);
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1, 1, ErrorType.ERROR);
 
       assertThat(errors.getErrors(), hasSize(0));
     }
@@ -405,12 +444,12 @@ class ErrorServiceTest extends BaseTest {
     }
   }
 
-  private void mockErrorsData(OperationStatusType statusType, UUID operationId) {
+  private void mockErrorsData(OperationStatusType statusType, UUID operationId) throws IOException {
     if (DATA_MODIFICATION == statusType || COMPLETED_WITH_ERRORS == statusType) {
-      when(bulkEditClient.getErrorsPreview(any(UUID.class), anyInt()))
-        .thenReturn(new Errors()
-          .errors(List.of(new Error().type(ErrorType.ERROR).message("123,No match found"),
-            new Error().type(ErrorType.ERROR).message("456,Invalid format"))));
+      when(remoteFileSystemClient.get(any()))
+        .thenReturn(Files.newInputStream(Paths.get("src/test/resources/files/errors.csv")));
+      when(remoteFileSystemClient.getNumOfLines(any()))
+        .thenReturn(2);
     } else {
       executionContentRepository.save(BulkOperationExecutionContent.builder()
         .bulkOperationId(operationId)

@@ -18,9 +18,11 @@ import org.folio.bulkops.client.InstanceTypesClient;
 import org.folio.bulkops.client.ModesOfIssuanceClient;
 import org.folio.bulkops.client.NatureOfContentTermsClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
+import org.folio.bulkops.client.StatisticalCodeTypeClient;
 import org.folio.bulkops.domain.bean.InstanceFormats;
 import org.folio.bulkops.domain.bean.InstanceTypes;
 import org.folio.bulkops.domain.bean.StatisticalCode;
+import org.folio.bulkops.domain.bean.StatisticalCodeType;
 import org.folio.bulkops.domain.dto.ContributorTypeCollection;
 import org.folio.bulkops.domain.dto.InstanceNoteType;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
@@ -37,6 +39,7 @@ public class InstanceReferenceService {
   private final InstanceStatusesClient instanceStatusesClient;
   private final ModesOfIssuanceClient modesOfIssuanceClient;
   private final StatisticalCodeClient statisticalCodeClient;
+  private final StatisticalCodeTypeClient statisticalCodeTypeClient;
   private final InstanceTypesClient instanceTypesClient;
   private final NatureOfContentTermsClient natureOfContentTermsClient;
   private final InstanceFormatsClient instanceFormatsClient;
@@ -94,6 +97,15 @@ public class InstanceReferenceService {
       return statisticalCodeClient.getById(id);
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Statistical code was not found by id=%s", id));
+    }
+  }
+
+  @Cacheable(cacheNames = "instanceStatisticalCodeTypes")
+  public StatisticalCodeType getStatisticalCodeTypeById(String id, String tenantId) {
+    try {
+      return statisticalCodeTypeClient.getById(id);
+    } catch (Exception e) {
+      throw new ReferenceDataNotFoundException(format("Statistical code type was not found by id=%s", id));
     }
   }
 

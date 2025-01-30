@@ -56,6 +56,7 @@ import org.folio.bulkops.client.OkapiClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.ServicePointClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
+import org.folio.bulkops.client.StatisticalCodeTypeClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
@@ -185,6 +186,8 @@ public abstract class BaseTest {
   public IllPolicyClient illPolicyClient;
   @MockBean
   public StatisticalCodeClient statisticalCodeClient;
+  @MockBean
+  public StatisticalCodeTypeClient statisticalCodeTypeClient;
   @MockBean
   public DamagedStatusClient damagedStatusClient;
   @MockBean

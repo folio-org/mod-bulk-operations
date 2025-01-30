@@ -3,12 +3,14 @@ package org.folio.bulkops.processor.folio;
 import static java.lang.Boolean.TRUE;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.String.format;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.util.Constants.APPLY_TO_HOLDINGS;
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.GET_HOLDINGS_BY_INSTANCE_ID_QUERY;
 import static org.folio.bulkops.util.Constants.GET_ITEMS_BY_HOLDING_ID_QUERY;
 import static org.folio.bulkops.util.Constants.MARC;
+import static org.folio.bulkops.util.Constants.MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.RuleUtils.fetchParameters;
@@ -83,7 +85,7 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
       .filter(rule -> applyRuleToAssociatedRecords(extendedInstance, rule, operation))
       .isPresent();
     if (notChanged) {
-      var errorMessage = buildErrorMessage(recordsUpdated, instance.getDiscoverySuppress());
+      var errorMessage = buildErrorMessage(recordsUpdated, instance.getDiscoverySuppress(), operation.getEntityType());
       errorService.saveError(operation.getId(), instance.getIdentifier(operation.getIdentifierType()), errorMessage, ErrorType.WARNING);
     }
   }
@@ -168,11 +170,14 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
     return true;
   }
 
-  private String buildErrorMessage(boolean recordsUpdated, boolean newValue) {
+  private String buildErrorMessage(boolean recordsUpdated, boolean newValue, EntityType entityType) {
     var affectedState = TRUE.equals(newValue) ? "unsuppressed" : "suppressed";
+    var message = INSTANCE_MARC.equals(entityType) ?
+      MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED :
+      MSG_NO_CHANGE_REQUIRED;
     return recordsUpdated ?
       format(ERROR_MESSAGE_TEMPLATE, affectedState) :
-      MSG_NO_CHANGE_REQUIRED;
+      message;
   }
 
   private List<HoldingsRecord> getHoldingsSourceFolioByInstanceId(String instanceId) {
