@@ -102,7 +102,13 @@ public class ErrorService {
     var bulkOperation = operationRepository.findById(bulkOperationId)
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
     if (Set.of(DATA_MODIFICATION, REVIEW_CHANGES, REVIEWED_NO_MARC_RECORDS).contains(bulkOperation.getStatus()) || COMPLETED_WITH_ERRORS == bulkOperation.getStatus() && noCommittedErrors(bulkOperation) && noCommittedWarnings(bulkOperation)) {
-      var errors = new BufferedReader(new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile())))
+      var pathToMatchedRecordsErrorsCsvFile = bulkOperation.getLinkToMatchedRecordsErrorsCsvFile();
+      if (StringUtils.isEmpty(pathToMatchedRecordsErrorsCsvFile)) {
+        return new Errors()
+          .errors(List.of())
+          .totalRecords(0);
+      }
+      var errors = new BufferedReader(new InputStreamReader(remoteFileSystemClient.get(pathToMatchedRecordsErrorsCsvFile)))
         .lines()
         .skip(offset)
         .limit(limit)

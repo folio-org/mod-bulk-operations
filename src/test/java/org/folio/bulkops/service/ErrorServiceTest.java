@@ -160,7 +160,11 @@ class ErrorServiceTest extends BaseTest {
   @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "COMPLETED" }, mode = EnumSource.Mode.INCLUDE)
   void shouldGetErrorsPreviewByBulkOperationId(OperationStatusType statusType) throws IOException {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
+      var operationId = bulkOperationRepository.save(BulkOperation.builder()
+        .id(UUID.randomUUID())
+        .dataExportJobId(UUID.randomUUID())
+          .linkToMatchedRecordsErrorsCsvFile("link-to-errors-csv")
+        .status(statusType).build()).getId();
 
       mockErrorsData(statusType, operationId);
 
@@ -188,7 +192,10 @@ class ErrorServiceTest extends BaseTest {
   @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "COMPLETED" }, mode = EnumSource.Mode.INCLUDE)
   void shouldGetErrorsCsvByBulkOperationId(OperationStatusType statusType) throws IOException {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
+      var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID())
+        .linkToMatchedRecordsErrorsCsvFile("link-to-errors-csv")
+        .dataExportJobId(UUID.randomUUID())
+        .status(statusType).build()).getId();
 
       var expected = "123,No match found,ERROR\n456,Invalid format,ERROR".split(LF);
 
@@ -227,6 +234,7 @@ class ErrorServiceTest extends BaseTest {
           .id(UUID.randomUUID())
           .status(COMPLETED_WITH_ERRORS)
           .committedNumOfErrors(committedErrors)
+          .linkToMatchedRecordsErrorsCsvFile("link-to-errors-csv")
           .dataExportJobId(jobId)
           .build())
         .getId();
@@ -263,6 +271,7 @@ class ErrorServiceTest extends BaseTest {
           .id(UUID.randomUUID())
           .status(COMPLETED_WITH_ERRORS)
           .committedNumOfErrors(committedErrors)
+          .linkToMatchedRecordsErrorsCsvFile("link-to-errors-csv")
           .dataExportJobId(jobId)
           .build())
         .getId();
