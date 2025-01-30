@@ -2,6 +2,8 @@ package org.folio.bulkops;
 
 import static java.lang.String.format;
 import static org.folio.bulkops.processor.folio.UserDataProcessor.DATE_TIME_FORMAT;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -20,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
@@ -67,7 +70,9 @@ import org.folio.s3.client.S3ClientProperties;
 import org.folio.spring.DefaultFolioExecutionContext;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.client.UsersClient;
 import org.folio.spring.integration.XOkapiHeaders;
+import org.folio.spring.service.PrepareSystemUserService;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -107,6 +112,7 @@ public abstract class BaseTest {
   public static final String BUCKET = "test-bucket";
   public static final String REGION = "us-west-2";
   private static final String MINIO_ENDPOINT;
+  private static final String OKAPI_URL = "http://okapi:9130";
 
   public static final PostgreSQLContainer<?> postgresDBContainer;
   private static final GenericContainer<?> s3;
@@ -206,6 +212,8 @@ public abstract class BaseTest {
   public InstanceClient instanceClient;
   @MockBean
   public InstanceNoteTypesClient instanceNoteTypesClient;
+  @MockBean
+  public PrepareSystemUserService prepareSystemUserService;
 
   @Autowired
   protected MockMvc mockMvc;
@@ -241,6 +249,8 @@ public abstract class BaseTest {
 
   @BeforeEach
   void setUp() {
+    when(prepareSystemUserService.getFolioUser(any()))
+      .thenReturn(Optional.of(new UsersClient.User("1f111648-0196-4fe2-b890-1df2f1afa790", "mod-bulk-operations-system-user", "System", true, null)));
     okapiHeaders.clear();
     okapiHeaders.put(XOkapiHeaders.TENANT, TENANT);
     okapiHeaders.put(XOkapiHeaders.TOKEN, TOKEN);
@@ -273,6 +283,7 @@ public abstract class BaseTest {
     httpHeaders.setContentType(APPLICATION_JSON);
     httpHeaders.put(XOkapiHeaders.TENANT, List.of(TENANT));
     httpHeaders.add(XOkapiHeaders.TOKEN, TOKEN);
+    httpHeaders.add(XOkapiHeaders.URL, OKAPI_URL);
     httpHeaders.add(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     return httpHeaders;

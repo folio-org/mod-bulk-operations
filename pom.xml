@@ -71,6 +71,13 @@
       <artifactId>folio-spring-base</artifactId>
       <version>${folio-spring-base.version}</version>
     </dependency>
+
+    <dependency>
+      <groupId>org.folio</groupId>
+      <artifactId>folio-spring-system-user</artifactId>
+      <version>${folio-spring-base.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-service-tools-spring-dev</artifactId>
