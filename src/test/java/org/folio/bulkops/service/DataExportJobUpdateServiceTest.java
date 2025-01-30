@@ -1,13 +1,11 @@
 package org.folio.bulkops.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_DOWNLOAD_ORIGIN_FILE_FROM_S3;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -30,6 +28,7 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.s3.exception.S3ClientException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -199,6 +198,26 @@ class DataExportJobUpdateServiceTest extends BaseTest {
   }
 
   @Test
+  void shouldThrowS3ExceptionIfS3ClientIssue() {
+    var jobId = UUID.randomUUID();
+    var bulkOperation = BulkOperation.builder().id(UUID.randomUUID()).build();
+    when(bulkOperationRepository.findByDataExportJobId(jobId))
+      .thenReturn(Optional.of(bulkOperation));
+    doThrow(new S3ClientException("s3 issue")).when(remoteFileSystemClient).put(any(InputStream.class), anyString());
+
+    var jobUpdate = Job.builder()
+      .id(jobId)
+      .files(List.of("file:src/test/resources/files/users.csv", "file:src/test/resources/files/errors.csv", "file:src/test/resources/files/user.json"))
+      .batchStatus(BatchStatus.COMPLETED)
+      .progress(Progress.builder().build())
+      .build();
+
+    dataExportJobUpdateService.handleReceivedJobExecutionUpdate(jobUpdate);
+
+    assertEquals(ERROR_NOT_DOWNLOAD_ORIGIN_FILE_FROM_S3 + " : s3 issue", bulkOperation.getErrorMessage());
+  }
+
+  @Test
   @SneakyThrows
   void shouldDownloadAndSaveJsonFileForItemEntityType() {
     var bulkOperation = BulkOperation.builder()
@@ -249,5 +268,11 @@ class DataExportJobUpdateServiceTest extends BaseTest {
 
     assertThrows(ServerErrorException.class, () -> dataExportJobUpdateService.downloadAndSaveJsonFile(bulkOperation, jobUpdate));
     verify(bulkOperationRepository, times(1)).save(any(BulkOperation.class));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldReturnNullWhenMarcUrlIsEmpty() {
+    assertNull(dataExportJobUpdateService.downloadAndSaveMarcFile(new BulkOperation(), new Job().withFiles(List.of("", "", "", ""))));
   }
 }
