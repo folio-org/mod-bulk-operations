@@ -1,3 +1,7 @@
+## v2.1.12 - Released 2025/01/30
+
+This release contains improvements of data import result processing.
+
 ## v2.1.11 - Released 2025/01/29
 
 This release contains fix for redundant data import result processing calls.
