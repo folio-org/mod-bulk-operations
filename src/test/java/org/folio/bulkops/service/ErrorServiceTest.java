@@ -119,6 +119,7 @@ class ErrorServiceTest extends BaseTest {
   void clearTestData() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       bulkOperationRepository.deleteById(bulkOperationId);
+      executionContentRepository.deleteByBulkOperationId(bulkOperationId);
     }
   }
 
@@ -460,9 +461,8 @@ class ErrorServiceTest extends BaseTest {
   @Test
   void getCommittedNumOfErrorsAndWarningsTest() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var uuid = UUID.randomUUID();
       bulkOperationRepository.save(BulkOperation.builder()
-        .id(uuid)
+        .id(bulkOperationId)
         .status(COMPLETED_WITH_ERRORS)
         .committedNumOfErrors(2)
         .committedNumOfWarnings(1)
@@ -470,34 +470,33 @@ class ErrorServiceTest extends BaseTest {
         .dataExportJobId(UUID.randomUUID())
         .build());
       executionContentRepository.save(BulkOperationExecutionContent.builder()
-        .bulkOperationId(uuid)
+        .bulkOperationId(bulkOperationId)
         .identifier("123")
         .errorMessage(format("%s %s", "message", "link"))
         .errorType(ErrorType.ERROR)
         .build());
       executionContentRepository.save(BulkOperationExecutionContent.builder()
-        .bulkOperationId(uuid)
+        .bulkOperationId(bulkOperationId)
         .identifier("456")
         .errorMessage(format("%s %s", "message", "link"))
         .errorType(ErrorType.ERROR)
         .build());
       executionContentRepository.save(BulkOperationExecutionContent.builder()
-        .bulkOperationId(uuid)
+        .bulkOperationId(bulkOperationId)
         .identifier("789")
         .errorMessage(format("%s %s", "message", "link"))
         .errorType(ErrorType.WARNING)
         .build());
 
-      assertEquals(2, errorService.getCommittedNumOfErrors(uuid));
-      assertEquals(1, errorService.getCommittedNumOfWarnings(uuid));
+      assertEquals(2, errorService.getCommittedNumOfErrors(bulkOperationId));
+      assertEquals(1, errorService.getCommittedNumOfWarnings(bulkOperationId));
     }
   }
 
   @Test
   void uploadErrorsToStorageShouldReturnNullWhenContentsIsEmpty() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var uuid = UUID.randomUUID();
-      assertNull(errorService.uploadErrorsToStorage(uuid));
+      assertNull(errorService.uploadErrorsToStorage(bulkOperationId));
     }
   }
 
@@ -505,81 +504,76 @@ class ErrorServiceTest extends BaseTest {
   @ValueSource(strings = {MSG_NO_CHANGE_REQUIRED, MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED, MSG_NO_MARC_CHANGE_REQUIRED})
   void saveErrorShouldSaveNothingWhenSpecificErrorMsg(String errorMsg) {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var uuid = UUID.randomUUID();
       bulkOperationRepository.save(BulkOperation.builder()
-        .id(uuid)
+        .id(bulkOperationId)
         .status(COMPLETED_WITH_ERRORS)
         .linkToCommittedRecordsErrorsCsvFile("link")
         .dataExportJobId(UUID.randomUUID())
         .build());
       executionContentRepository.save(BulkOperationExecutionContent.builder()
-        .bulkOperationId(uuid)
+        .bulkOperationId(bulkOperationId)
         .identifier("123")
         .errorMessage(format("%s %s", "message", "link"))
         .errorType(ErrorType.ERROR)
         .build());
-      errorService.saveError(uuid, "123", errorMsg, "ui msg", "link", ErrorType.ERROR);
-      assertEquals(1, executionContentRepository.count());
-      executionContentRepository.deleteAll();
+      errorService.saveError(bulkOperationId, "123", errorMsg, "ui msg", "link", ErrorType.ERROR);
+      assertEquals(1, executionContentRepository.countByBulkOperationId(bulkOperationId));
     }
   }
 
   @Test
   void saveErrorShouldSaveBulkOperationExecutionContent() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var uuid = UUID.randomUUID();
       var bulkOperationExecContent = BulkOperationExecutionContent.builder()
-        .bulkOperationId(uuid)
+        .bulkOperationId(bulkOperationId)
         .identifier("123")
         .errorMessage(format("%s %s", "message", "link"))
         .errorType(ErrorType.ERROR)
         .build();
       bulkOperationRepository.save(BulkOperation.builder()
-        .id(uuid)
+        .id(bulkOperationId)
         .status(COMPLETED_WITH_ERRORS)
         .linkToCommittedRecordsErrorsCsvFile("link")
         .dataExportJobId(UUID.randomUUID())
         .build());
       errorService.saveError(bulkOperationExecContent);
-      assertEquals(1, executionContentRepository.count());
+      assertEquals(1, executionContentRepository.countByBulkOperationId(bulkOperationId));
     }
   }
 
   @Test
   void shouldDeleteErrorByOperationId() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var uuid = UUID.randomUUID();
       var bulkOperationExecContent = BulkOperationExecutionContent.builder()
-        .bulkOperationId(uuid)
+        .bulkOperationId(bulkOperationId)
         .identifier("123")
         .errorMessage(format("%s %s", "message", "link"))
         .errorType(ErrorType.ERROR)
         .build();
       bulkOperationRepository.save(BulkOperation.builder()
-        .id(uuid)
+        .id(bulkOperationId)
         .status(COMPLETED_WITH_ERRORS)
         .linkToCommittedRecordsErrorsCsvFile("link")
         .dataExportJobId(UUID.randomUUID())
         .build());
       executionContentRepository.save(bulkOperationExecContent);
-      assertEquals(1, executionContentRepository.count());
-      errorService.deleteErrorsByBulkOperationId(uuid);
-      assertEquals(0, executionContentRepository.count());
+      assertEquals(1, executionContentRepository.countByBulkOperationId(bulkOperationId));
+      errorService.deleteErrorsByBulkOperationId(bulkOperationId);
+      assertEquals(0, executionContentRepository.countByBulkOperationId(bulkOperationId));
     }
   }
 
   @Test
   void shouldReturnNothingForErrorsPreviewIfLinkToMatchedErrorsCsvIsNull() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var uuid = UUID.randomUUID();
       bulkOperationRepository.save(BulkOperation.builder()
-        .id(uuid)
+        .id(bulkOperationId)
         .status(COMPLETED_WITH_ERRORS)
         .linkToCommittedRecordsErrorsCsvFile("link")
         .dataExportJobId(UUID.randomUUID())
         .build());
 
-      var actualNumErrors = errorService.getErrorsPreviewByBulkOperationId(uuid, 10, 0, ErrorType.ERROR).getTotalRecords();
+      var actualNumErrors = errorService.getErrorsPreviewByBulkOperationId(bulkOperationId, 10, 0, ErrorType.ERROR).getTotalRecords();
       assertEquals(0, actualNumErrors);
     }
   }
