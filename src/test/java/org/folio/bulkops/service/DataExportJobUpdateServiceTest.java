@@ -99,7 +99,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
       .endTime(new Date())
       .progress(Progress.builder()
         .total(totalRecords)
-        .processed(processedRecords).build())
+        .processed(processedRecords).success(10).warnings(0).errors(0).build())
       .files(List.of("file:src/test/resources/files/users.csv", "file:src/test/resources/files/errors.csv", "file:src/test/resources/files/user.json", "file:src/test/resources/files/preview.mrc")).build();
 
     dataExportJobUpdateReceiverService.receiveJobExecutionUpdate(jobUpdate, okapiHeaders);
