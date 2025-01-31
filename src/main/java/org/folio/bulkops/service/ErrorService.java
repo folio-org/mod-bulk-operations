@@ -2,7 +2,7 @@ package org.folio.bulkops.service;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import static java.util.stream.Collectors.toList;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
@@ -174,7 +174,9 @@ public class ErrorService {
   }
 
   private Errors getExecutionErrors(UUID bulkOperationId, int limit, int offset, ErrorType errorType) {
-    var totalRecords = (int) executionContentRepository.countByBulkOperationId(bulkOperationId);
+    int totalRecords = ofNullable(errorType)
+      .map(errType -> (int) executionContentRepository.countByBulkOperationIdAndErrorType(bulkOperationId, errType))
+      .orElseGet(() -> (int) executionContentRepository.countByBulkOperationId(bulkOperationId));
     if (limit == 0) {
       return new Errors()
         .errors(List.of())

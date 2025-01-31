@@ -517,7 +517,7 @@ class ErrorServiceTest extends BaseTest {
         .errorType(ErrorType.ERROR)
         .build());
       errorService.saveError(bulkOperationId, "123", errorMsg, "ui msg", "link", ErrorType.ERROR);
-      assertEquals(1, executionContentRepository.countByBulkOperationId(bulkOperationId));
+      assertEquals(1, executionContentRepository.countByBulkOperationIdAndErrorType(bulkOperationId, ErrorType.ERROR));
     }
   }
 
@@ -537,7 +537,7 @@ class ErrorServiceTest extends BaseTest {
         .dataExportJobId(UUID.randomUUID())
         .build());
       errorService.saveError(bulkOperationExecContent);
-      assertEquals(1, executionContentRepository.countByBulkOperationId(bulkOperationId));
+      assertEquals(1, executionContentRepository.countByBulkOperationIdAndErrorType(bulkOperationId, ErrorType.ERROR));
     }
   }
 
@@ -557,9 +557,9 @@ class ErrorServiceTest extends BaseTest {
         .dataExportJobId(UUID.randomUUID())
         .build());
       executionContentRepository.save(bulkOperationExecContent);
-      assertEquals(1, executionContentRepository.countByBulkOperationId(bulkOperationId));
+      assertEquals(1, executionContentRepository.countByBulkOperationIdAndErrorType(bulkOperationId, ErrorType.ERROR));
       errorService.deleteErrorsByBulkOperationId(bulkOperationId);
-      assertEquals(0, executionContentRepository.countByBulkOperationId(bulkOperationId));
+      assertEquals(0, executionContentRepository.countByBulkOperationIdAndErrorType(bulkOperationId, ErrorType.ERROR));
     }
   }
 
@@ -572,6 +572,29 @@ class ErrorServiceTest extends BaseTest {
         .linkToCommittedRecordsErrorsCsvFile("link")
         .dataExportJobId(UUID.randomUUID())
         .build());
+
+      var actualNumErrors = errorService.getErrorsPreviewByBulkOperationId(bulkOperationId, 10, 0, ErrorType.ERROR).getTotalRecords();
+      assertEquals(0, actualNumErrors);
+    }
+  }
+
+  @Test
+  void shouldReturnNothingForErrorsPreviewForTypeErrorIfOnlyWarningsArePresent() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var bulkOperationExecContent = BulkOperationExecutionContent.builder()
+        .bulkOperationId(bulkOperationId)
+        .identifier("123")
+        .errorMessage(format("%s %s", "message", "link"))
+        .errorType(ErrorType.WARNING)
+        .build();
+      bulkOperationRepository.save(BulkOperation.builder()
+        .id(bulkOperationId)
+        .status(COMPLETED_WITH_ERRORS)
+        .linkToCommittedRecordsErrorsCsvFile("link")
+        .committedNumOfWarnings(1)
+        .dataExportJobId(UUID.randomUUID())
+        .build());
+      executionContentRepository.save(bulkOperationExecContent);
 
       var actualNumErrors = errorService.getErrorsPreviewByBulkOperationId(bulkOperationId, 10, 0, ErrorType.ERROR).getTotalRecords();
       assertEquals(0, actualNumErrors);
