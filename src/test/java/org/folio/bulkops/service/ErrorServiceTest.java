@@ -355,8 +355,6 @@ class ErrorServiceTest extends BaseTest {
         .withError("some MARC error #2").withSourceRecordId(sourceRecordId).withRelatedInstanceInfo(
           relatedInstanceInfo ? instanceInfo : new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
         ))));
-    when(srsClient.getSrsRecordById(sourceRecordId)).thenReturn(new SrsRecord().withExternalIdsHolder(
-      new ExternalIdsHolder().withInstanceHrid("instance HRID").withInstanceId(instanceId)));
 
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = bulkOperationRepository.save(BulkOperation.builder()
@@ -411,8 +409,6 @@ class ErrorServiceTest extends BaseTest {
       .thenReturn(new JobLogEntryCollection().withEntries(List.of(new JobLogEntry()
         .withSourceRecordActionStatus(JobLogEntry.ActionStatus.DISCARDED).withError("")
         .withRelatedInstanceInfo(new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())))));
-    when(srsClient.getSrsRecordById(sourceRecordId)).thenReturn(new SrsRecord().withExternalIdsHolder(
-      new ExternalIdsHolder().withInstanceHrid("instance HRID").withInstanceId(instanceId)));
 
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = bulkOperationRepository.save(BulkOperation.builder()
