@@ -155,7 +155,7 @@ class ErrorServiceTest extends BaseTest {
       var actual = new String(streamCaptor.getValue().readAllBytes());
       var actualArr = actual.split("\n");
       Arrays.sort(actualArr);
-      var expectedArr = new String[] {"123,Error message 123,ERROR", "456,Error message 456,WARNING"};
+      var expectedArr = new String[] {"ERROR,123,Error message 123", "WARNING,456,Error message 456"};
       assertArrayEquals(expectedArr, actualArr);
     }
   }
@@ -201,7 +201,7 @@ class ErrorServiceTest extends BaseTest {
         .dataExportJobId(UUID.randomUUID())
         .status(statusType).build()).getId();
 
-      var expected = "123,No match found,ERROR\n456,Invalid format,ERROR".split(LF);
+      var expected = "ERROR,123,No match found\nERROR,456,Invalid format".split(LF);
 
       mockErrorsData(statusType, operationId);
 

@@ -60,9 +60,9 @@ public class ErrorService {
   public static final String IDENTIFIER = "IDENTIFIER";
   public static final String LINK = "LINK";
 
-  private static final int IDX_ERROR_IDENTIFIER = 0;
-  private static final int IDX_ERROR_MSG = 1;
-  private static final int IDX_ERROR_TYPE = 2;
+  private static final int IDX_ERROR_IDENTIFIER = 1;
+  private static final int IDX_ERROR_MSG = 2;
+  private static final int IDX_ERROR_TYPE = 0;
   private final BulkOperationRepository operationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final BulkOperationExecutionContentRepository executionContentRepository;
@@ -169,7 +169,7 @@ public class ErrorService {
 
   public String getErrorsCsvByBulkOperationId(UUID bulkOperationId, int offset, ErrorType errorType) {
     return getErrorsPreviewByBulkOperationId(bulkOperationId, Integer.MAX_VALUE, offset, errorType).getErrors().stream()
-      .map(error -> String.join(Constants.COMMA_DELIMETER, ObjectUtils.isEmpty(error.getParameters()) ? EMPTY : error.getParameters().get(0).getValue(), error.getMessage(), error.getType().getValue()))
+      .map(error -> String.join(Constants.COMMA_DELIMETER, ObjectUtils.isEmpty(error.getParameters()) ? EMPTY : error.getType().getValue(), error.getParameters().get(0).getValue(), error.getMessage()))
       .collect(Collectors.joining(Constants.NEW_LINE_SEPARATOR));
   }
 
@@ -220,7 +220,7 @@ public class ErrorService {
     var contents = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNullOrderByErrorType(bulkOperationId, OffsetRequest.of(0, Integer.MAX_VALUE));
     if (!contents.isEmpty()) {
       var errorsString = contents.stream()
-        .map(content -> String.join(Constants.COMMA_DELIMETER, content.getIdentifier(), content.getErrorMessage(), content.getErrorType().getValue()))
+        .map(content -> String.join(Constants.COMMA_DELIMETER, content.getErrorType().getValue(), content.getIdentifier(), content.getErrorMessage()))
         .collect(Collectors.joining(LF));
       var errorsFileName = LocalDate.now() + operationRepository.findById(bulkOperationId)
         .map(BulkOperation::getLinkToTriggeringCsvFile)

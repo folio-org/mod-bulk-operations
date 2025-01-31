@@ -15,6 +15,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
+
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.RemoteFileSystemClient;
@@ -33,6 +35,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -169,8 +172,9 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     verify(bulkOperationRepository, times(0)).save(any(BulkOperation.class));
   }
 
-  @Test
-  void shouldSetDefaultValuesIfProgressIsEmpty() {
+  @ParameterizedTest
+  @MethodSource("provideProgressValues")
+  void shouldSetDefaultValuesIfProgressIsEmptyOrNull(Progress progress) {
     var jobId = UUID.randomUUID();
     when(bulkOperationRepository.findByDataExportJobId(jobId))
       .thenReturn(Optional.of(BulkOperation.builder()
@@ -183,7 +187,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
       .id(jobId)
       .files(List.of("file:src/test/resources/files/users.csv", "file:src/test/resources/files/errors.csv", "file:src/test/resources/files/user.json"))
       .batchStatus(BatchStatus.COMPLETED)
-      .progress(Progress.builder().build())
+      .progress(progress)
       .build();
 
     dataExportJobUpdateService.handleReceivedJobExecutionUpdate(jobUpdate);
@@ -274,5 +278,9 @@ class DataExportJobUpdateServiceTest extends BaseTest {
   @SneakyThrows
   void shouldReturnNullWhenMarcUrlIsEmpty() {
     assertNull(dataExportJobUpdateService.downloadAndSaveMarcFile(new BulkOperation(), new Job().withFiles(List.of("", "", "", ""))));
+  }
+
+  private static Stream<Progress> provideProgressValues() {
+    return Stream.of(new Progress[] {Progress.builder().build(), null});
   }
 }
