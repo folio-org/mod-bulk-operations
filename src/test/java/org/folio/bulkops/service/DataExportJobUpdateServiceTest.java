@@ -223,12 +223,43 @@ class DataExportJobUpdateServiceTest extends BaseTest {
       .batchStatus(batchStatus)
       .progress(Progress.builder().build())
       .endTime(new Date())
+      .errorDetails("error details")
       .build();
 
     dataExportJobUpdateService.handleReceivedJobExecutionUpdate(jobUpdate);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(1)).save(operationCaptor.capture());
+    var operation = operationCaptor.getAllValues().get(0);
+    assertEquals(0, operation.getTotalNumOfRecords());
+    assertEquals(0, operation.getProcessedNumOfRecords());
+    assertEquals(0, operation.getMatchedNumOfRecords());
+    assertEquals(0, operation.getMatchedNumOfErrors());
+  }
+
+  @Test
+  void shouldSetDefaultValuesIfJobStatusIsCompletedAndErrorUrlLinkIsEmpty() {
+    var jobId = UUID.randomUUID();
+    when(bulkOperationRepository.findByDataExportJobId(jobId))
+      .thenReturn(Optional.of(BulkOperation.builder()
+        .id(UUID.randomUUID())
+        .build()));
+    when(remoteFileSystemClient.put(any(InputStream.class), anyString()))
+      .thenReturn("file.csv");
+
+    var jobUpdate = Job.builder()
+      .id(jobId)
+      .files(List.of("file:src/test/resources/files/users.csv", "", "file:src/test/resources/files/user.json"))
+      .batchStatus(BatchStatus.COMPLETED)
+      .progress(Progress.builder().build())
+      .endTime(new Date())
+      .errorDetails("error details")
+      .build();
+
+    dataExportJobUpdateService.handleReceivedJobExecutionUpdate(jobUpdate);
+
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
     var operation = operationCaptor.getAllValues().get(0);
     assertEquals(0, operation.getTotalNumOfRecords());
     assertEquals(0, operation.getProcessedNumOfRecords());
