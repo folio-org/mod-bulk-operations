@@ -39,11 +39,9 @@ import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.MetadataProviderClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.SrsClient;
-import org.folio.bulkops.domain.bean.ExternalIdsHolder;
 import org.folio.bulkops.domain.bean.JobLogEntry;
 import org.folio.bulkops.domain.bean.JobLogEntryCollection;
 import org.folio.bulkops.domain.bean.RelatedInstanceInfo;
-import org.folio.bulkops.domain.bean.SrsRecord;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
@@ -402,9 +400,7 @@ class ErrorServiceTest extends BaseTest {
   @Test
   void testSaveErrorsFromDataImport_whenDiscardedAndNoMessage() {
     final var dataImportJobId = UUID.randomUUID();
-    final var sourceRecordId = UUID.randomUUID().toString();
     final var dataExportJobId = UUID.randomUUID();
-    final var instanceId = UUID.randomUUID().toString();
     when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE))
       .thenReturn(new JobLogEntryCollection().withEntries(List.of(new JobLogEntry()
         .withSourceRecordActionStatus(JobLogEntry.ActionStatus.DISCARDED).withError("")
