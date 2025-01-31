@@ -99,7 +99,7 @@ class DataExportJobUpdateServiceTest extends BaseTest {
       .endTime(new Date())
       .progress(Progress.builder()
         .total(totalRecords)
-        .processed(processedRecords).success(10).warnings(0).errors(0).build())
+        .processed(processedRecords).build())
       .files(List.of("file:src/test/resources/files/users.csv", "file:src/test/resources/files/errors.csv", "file:src/test/resources/files/user.json", "file:src/test/resources/files/preview.mrc")).build();
 
     dataExportJobUpdateReceiverService.receiveJobExecutionUpdate(jobUpdate, okapiHeaders);
@@ -264,6 +264,36 @@ class DataExportJobUpdateServiceTest extends BaseTest {
     assertEquals(0, operation.getTotalNumOfRecords());
     assertEquals(0, operation.getProcessedNumOfRecords());
     assertEquals(0, operation.getMatchedNumOfRecords());
+    assertEquals(0, operation.getMatchedNumOfErrors());
+  }
+
+  @Test
+  void shouldSetSpecificValuesForProgressIfJobStatusIsCompleted() {
+    var jobId = UUID.randomUUID();
+    when(bulkOperationRepository.findByDataExportJobId(jobId))
+      .thenReturn(Optional.of(BulkOperation.builder()
+        .id(UUID.randomUUID())
+        .build()));
+    when(remoteFileSystemClient.put(any(InputStream.class), anyString()))
+      .thenReturn("file.csv");
+
+    var jobUpdate = Job.builder()
+      .id(jobId)
+      .files(List.of("file:src/test/resources/files/users.csv", "", "file:src/test/resources/files/user.json", ""))
+      .batchStatus(BatchStatus.COMPLETED)
+      .progress(Progress.builder().success(1).errors(0).warnings(0).processed(1).total(1).build())
+      .endTime(new Date())
+      .errorDetails("error details")
+      .build();
+
+    dataExportJobUpdateService.handleReceivedJobExecutionUpdate(jobUpdate);
+
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
+    var operation = operationCaptor.getAllValues().get(0);
+    assertEquals(1, operation.getTotalNumOfRecords());
+    assertEquals(1, operation.getProcessedNumOfRecords());
+    assertEquals(1, operation.getMatchedNumOfRecords());
     assertEquals(0, operation.getMatchedNumOfErrors());
   }
 
