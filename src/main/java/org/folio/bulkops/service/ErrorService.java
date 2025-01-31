@@ -160,11 +160,11 @@ public class ErrorService {
   }
 
   private boolean noCommittedErrors(BulkOperation bulkOperation) {
-    return isNull(bulkOperation.getCommittedNumOfErrors()) || bulkOperation.getCommittedNumOfErrors() == 0;
+    return bulkOperation.getCommittedNumOfErrors() == 0;
   }
 
   private boolean noCommittedWarnings(BulkOperation bulkOperation) {
-    return isNull(bulkOperation.getCommittedNumOfWarnings()) || bulkOperation.getCommittedNumOfWarnings() == 0;
+    return bulkOperation.getCommittedNumOfWarnings() == 0;
   }
 
   public String getErrorsCsvByBulkOperationId(UUID bulkOperationId, int offset, ErrorType errorType) {
