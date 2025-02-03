@@ -199,7 +199,7 @@ public class PreviewService {
         } else {
           var hrid = csvRow.getRow().get(hridPosition);
           if (marcRecords.containsKey(hrid)) {
-            var marcRow = new Row().row(marcToUnifiedTableRowMapper.processRecord(marcRecords.get(hrid), headers));
+            var marcRow = new Row().row(marcToUnifiedTableRowMapper.processRecord(marcRecords.get(hrid), headers, false));
             enrichRowWithAdministrativeData(marcRow, csvRow);
             compositeTable.addRowsItem(marcRow);
           }

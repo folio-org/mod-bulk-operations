@@ -37,6 +37,7 @@ import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.
 import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -307,6 +308,9 @@ public class BulkOperationService {
       try (var writerForModifiedPreviewMarcFile = remoteFileSystemClient.marcWriter(modifiedMarcFileName);
            var csvWriter = new CSVWriterBuilder(remoteFileSystemClient.writer(previewMarcCsvFileName))
              .withSeparator(DEFAULT_SEPARATOR).build();
+           var stringWriter = new StringWriter();
+           var csvStringWriter = new CSVWriterBuilder(stringWriter)
+             .withSeparator(DEFAULT_SEPARATOR).build();
            var linkToMatchedRecordsMarcFileStream = remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile())) {
         var matchedRecordsReader = new MarcStreamReader(linkToMatchedRecordsMarcFileStream);
         var currentDate = new Date();
@@ -316,7 +320,9 @@ public class BulkOperationService {
             marcInstanceDataProcessor.update(operation, marcRecord, ruleCollection, currentDate);
           }
           writerForModifiedPreviewMarcFile.writeRecord(marcRecord);
-          csvWriter.writeNext(marcCsvHelper.getCsvData(marcRecord));
+          var data = marcCsvHelper.getModifiedDataForCsv(marcRecord);
+          csvWriter.writeNext(data);
+          csvStringWriter.writeNext(data);
 
           processedNumOfRecords++;
 

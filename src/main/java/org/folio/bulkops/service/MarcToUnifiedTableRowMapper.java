@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CONTRIBUTORS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_EDITION;
@@ -39,12 +40,12 @@ public class MarcToUnifiedTableRowMapper {
   private final MarcToUnifiedTableRowMapperHelper helper;
   private final Marc21ReferenceProvider referenceProvider;
 
-  public List<String> processRecord(Record rec, List<String> headers) {
+  public List<String> processRecord(Record rec, List<String> headers, boolean forCsv) {
     var rowData = new ArrayList<>(Arrays.asList(new String[headers.size()]));
     setSourceMarc(rowData, headers);
     processLeader(rowData, rec.getLeader(), headers);
     processControlFields(rowData, rec.getControlFields(), headers);
-    processDataFields(rowData, rec.getDataFields(), headers);
+    processDataFields(rowData, rec.getDataFields(), headers, forCsv);
     return rowData;
   }
 
@@ -78,7 +79,7 @@ public class MarcToUnifiedTableRowMapper {
     });
   }
 
-  private void processDataFields(List<String> rowData, List<DataField> dataFields, List<String> headers) {
+  private void processDataFields(List<String> rowData, List<DataField> dataFields, List<String> headers, boolean forCsv) {
     dataFields.forEach(dataField -> {
       var tag = dataField.getTag();
       switch (tag) {
@@ -95,7 +96,7 @@ public class MarcToUnifiedTableRowMapper {
         case "999" -> processInstanceId(rowData, dataField, headers);
         default -> {
           if (referenceProvider.isMappedNoteTag(tag)) {
-            processInstanceNotes(rowData, dataField, headers);
+            processInstanceNotes(rowData, dataField, headers, forCsv);
           }
         }
       }
@@ -215,11 +216,12 @@ public class MarcToUnifiedTableRowMapper {
     }
   }
 
-  private void processInstanceNotes(List<String> rowData, DataField dataField, List<String> headers) {
+  private void processInstanceNotes(List<String> rowData, DataField dataField, List<String> headers, boolean forCsv) {
     var tag = dataField.getTag();
     var index = !headers.contains(referenceProvider.getNoteTypeByTag(tag)) ? headers.indexOf(GENERAL_NOTE) : headers.indexOf(referenceProvider.getNoteTypeByTag(tag));
     if (index != -1) {
-      var notes = helper.fetchNotes(dataField);
+      var prefix = forCsv ? headers.get(index) + ARRAY_DELIMITER : EMPTY;
+      var notes = prefix + helper.fetchNotes(dataField, forCsv);
       rowData.set(index, isNotEmpty(rowData.get(index)) ?
         String.join(ITEM_DELIMITER_SPACED, rowData.get(index), notes) :
         notes);

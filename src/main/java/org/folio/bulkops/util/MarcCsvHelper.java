@@ -2,10 +2,13 @@ package org.folio.bulkops.util;
 
 import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_HRID;
+import static org.folio.bulkops.util.Constants.INSTANCE_NOTE_POSITION;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 
 import com.opencsv.CSVReaderBuilder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.dto.Cell;
@@ -23,6 +26,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -34,11 +38,15 @@ public class MarcCsvHelper {
   private final RuleService ruleService;
   private final Marc21ReferenceProvider marc21ReferenceProvider;
 
-  public String[] getCsvData(Record record) {
+  public String[] getModifiedDataForCsv(Record record) {
     var instanceHeaderNames = getInstanceHeaderNames();
-    return marcToUnifiedTableRowMapper
-      .processRecord(record, instanceHeaderNames)
-      .toArray(String[]::new);
+    var csvData = marcToUnifiedTableRowMapper.processRecord(record, instanceHeaderNames, true);
+    var concatenatedNotes = csvData.subList(INSTANCE_NOTE_POSITION, csvData.size()).stream()
+      .filter(StringUtils::isNotBlank)
+      .collect(Collectors.joining(ITEM_DELIMITER_SPACED));
+    csvData = csvData.subList(0, INSTANCE_NOTE_POSITION + 1);
+    csvData.set(INSTANCE_NOTE_POSITION, concatenatedNotes);
+    return csvData.toArray(String[]::new);
   }
 
   public byte[] enrichCsvWithMarcChanges(byte[] content, BulkOperation bulkOperation) {

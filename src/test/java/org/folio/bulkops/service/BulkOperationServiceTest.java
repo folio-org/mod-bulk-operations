@@ -593,7 +593,7 @@ class BulkOperationServiceTest extends BaseTest {
       when(remoteFileSystemClient.writer(anyString()))
         .thenReturn(new StringWriter());
       when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenReturn(new MarcRemoteStorageWriter(new RemoteStorageWriter(expectedPathToModifiedMarcFile, 8192, remoteFolioS3Client)));
-      when(marcCsvHelper.getCsvData(any(Record.class)))
+      when(marcCsvHelper.getModifiedDataForCsv(any(Record.class)))
         .thenReturn(new String[]{"a", "b", "c"});
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
