@@ -102,8 +102,10 @@ public class DataExportJobUpdateService {
       var errorsUrl = jobUpdate.getFiles().get(1);
       if (StringUtils.isNotEmpty(errorsUrl)) {
         try (var is = new URL(errorsUrl).openStream()) {
-          var linkToMatchingErrorsFile = remoteFileSystemClient.put(is, operation.getId() + "/" + FilenameUtils.getName(errorsUrl.split("\\?")[0]));
-          operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
+          try (var isSorted = Utils.sortLinesFromInputStream(is)) {
+            var linkToMatchingErrorsFile = remoteFileSystemClient.put(isSorted, operation.getId() + "/" + FilenameUtils.getName(errorsUrl.split("\\?")[0]));
+            operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
+          }
         }
       }
 
