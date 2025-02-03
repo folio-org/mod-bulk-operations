@@ -83,6 +83,9 @@ public class MarcUpdateService {
         bulkOperationRepository.save(bulkOperation);
       }
       executionRepository.save(execution);
+    } else {
+      bulkOperation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(bulkOperation.getId()));
+      bulkOperation.setCommittedNumOfWarnings(errorService.getCommittedNumOfWarnings(bulkOperation.getId()));
     }
   }
 

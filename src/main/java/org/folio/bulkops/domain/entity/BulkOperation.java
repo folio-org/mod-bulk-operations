@@ -80,6 +80,7 @@ public class BulkOperation {
   private int matchedNumOfRecords;
   private int committedNumOfRecords;
   private int matchedNumOfErrors;
+  private int matchedNumOfWarnings;
   private int committedNumOfErrors;
   private int committedNumOfWarnings;
   private LocalDateTime startTime;
