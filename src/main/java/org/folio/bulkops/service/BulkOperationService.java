@@ -246,9 +246,8 @@ public class BulkOperationService {
 
       while (iterator.hasNext()) {
         var original = iterator.next();
-        if (ruleCollection.getBulkOperationRules().isEmpty() ||
-          (INSTANCE_MARC.equals(operation.getEntityType()) && original instanceof ExtendedInstance extendedInstance
-          && !MARC.equals(extendedInstance.getEntity().getSource()))) {
+        if (INSTANCE_MARC.equals(operation.getEntityType()) && original instanceof ExtendedInstance extendedInstance
+          && !MARC.equals(extendedInstance.getEntity().getSource())) {
           continue;
         }
         var modified = processUpdate(original, operation, ruleCollection, extendedClazz);
