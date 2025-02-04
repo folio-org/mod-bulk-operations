@@ -110,22 +110,22 @@ public class ErrorService {
           .totalRecords(0);
       }
       ArrayList<Error> errors = new ArrayList<>();
-      AtomicInteger total = new AtomicInteger();
+      AtomicInteger current = new AtomicInteger();
       AtomicInteger counter = new AtomicInteger();
       var size = limit - offset;
       new BufferedReader(new InputStreamReader(remoteFileSystemClient.get(pathToMatchedRecordsErrorsCsvFile)))
         .lines().forEach(line -> {
+          current.incrementAndGet();
           var message = line.split(Constants.COMMA_DELIMETER);
           var error = new Error().message(message[IDX_ERROR_MSG])
             .parameters(List.of(new Parameter().key(IDENTIFIER).value(message[IDX_ERROR_IDENTIFIER])))
             .type(ErrorType.fromValue(message[IDX_ERROR_TYPE]));
-          if (errorType == null || errorType == error.getType()) {
+          if (isNull(errorType) || errorType == error.getType()) {
             counter.incrementAndGet();
-            if (total.get() > offset && errors.size() < size + 1) {
+            if (offset < current.get() && errors.size() < size) {
               errors.add(error);
             }
           }
-          total.incrementAndGet();
         });
       return new Errors().errors(errors).totalRecords(counter.get());
     } else if (COMPLETED == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
