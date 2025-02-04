@@ -169,7 +169,7 @@ public class ErrorService {
   }
 
   private Errors getExecutionErrors(UUID bulkOperationId, int limit, int offset, ErrorType errorType) {
-    var totalRecords = (int) executionContentRepository.countByBulkOperationId(bulkOperationId);
+    var totalRecords = (int) executionContentRepository.countAllByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId);
     if (limit == 0) {
       return new Errors()
         .errors(List.of())

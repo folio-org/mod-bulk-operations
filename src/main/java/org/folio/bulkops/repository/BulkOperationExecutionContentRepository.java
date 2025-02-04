@@ -8,7 +8,6 @@ import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -17,7 +16,6 @@ public interface BulkOperationExecutionContentRepository extends JpaRepository<B
   Page<BulkOperationExecutionContent> findByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIsOrderByErrorType(UUID bulkOperationId, OffsetRequest offsetRequest, ErrorType errorType);
   Optional<BulkOperationExecutionContent> findFirstByBulkOperationIdAndIdentifier(UUID bulkOperationId, String identifier);
   int countAllByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIs(UUID bulkOperationId, ErrorType errorType);
-  @Query("SELECT COUNT(i) FROM BulkOperationExecutionContent i WHERE i.bulkOperationId = :bulkOperationId")
-  long countByBulkOperationId(UUID bulkOperationId);
+  long countAllByBulkOperationIdAndErrorMessageIsNotNull(UUID bulkOperationId);
   void deleteByBulkOperationId(UUID bulkOperationId);
 }
