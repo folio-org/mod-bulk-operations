@@ -17,12 +17,15 @@ import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import lombok.extern.log4j.Log4j2;
@@ -39,6 +42,7 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.DataImportException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
@@ -108,18 +112,25 @@ public class ErrorService {
           .errors(List.of())
           .totalRecords(0);
       }
-      var errors = new BufferedReader(new InputStreamReader(remoteFileSystemClient.get(pathToMatchedRecordsErrorsCsvFile)))
-        .lines()
-        .skip(offset)
-        .limit(limit)
-        .map(message -> {
-          var error = message.split(Constants.COMMA_DELIMETER);
-          return new Error().message(error[IDX_ERROR_MSG]).parameters(List.of(new Parameter().key(IDENTIFIER).value(error[IDX_ERROR_IDENTIFIER]))).type(ErrorType.fromValue(error[IDX_ERROR_TYPE]));
-        })
-        .filter(err -> isNull(errorType) || err.getType() == errorType)
-        .toList();
-      return new Errors().errors(errors)
-        .totalRecords(errors.size());
+      ArrayList<Error> errors = new ArrayList<>();
+      AtomicInteger counter = new AtomicInteger();
+      try (var reader = new BufferedReader(new InputStreamReader(remoteFileSystemClient.get(pathToMatchedRecordsErrorsCsvFile)))) {
+        reader.lines().forEach(line -> {
+          var message = line.split(Constants.COMMA_DELIMETER);
+          if (isNull(errorType) || Objects.equals(errorType.getValue(), message[IDX_ERROR_TYPE])) {
+            counter.incrementAndGet();
+            if (offset < counter.get() && errors.size() < limit) {
+              errors.add(new Error().message(message[IDX_ERROR_MSG])
+                .parameters(List.of(new Parameter().key(IDENTIFIER).value(message[IDX_ERROR_IDENTIFIER])))
+                .type(ErrorType.fromValue(message[IDX_ERROR_TYPE])));
+            }
+          }
+        });
+      } catch (IOException e) {
+        log.error("Error reading errors from file", e);
+        throw new NotFoundException("Cannot process matching errors");
+      }
+      return new Errors().errors(errors).totalRecords(counter.get());
     } else if (COMPLETED == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
       return getExecutionErrors(bulkOperationId, limit, offset, errorType);
     } else {
