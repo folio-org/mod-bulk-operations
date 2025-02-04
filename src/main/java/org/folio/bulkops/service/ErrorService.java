@@ -122,7 +122,7 @@ public class ErrorService {
             .type(ErrorType.fromValue(message[IDX_ERROR_TYPE]));
           if (errorType == null || errorType == error.getType()) {
             counter.incrementAndGet();
-            if (total.get() > offset && errors.size() < size) {
+            if (total.get() > offset && errors.size() < size + 1) {
               errors.add(error);
             }
           }
