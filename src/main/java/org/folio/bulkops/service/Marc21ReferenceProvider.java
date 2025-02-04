@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CONTRIBUTORS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_EDITION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_FORMATS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_NOTES;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PHYSICAL_DESCRIPTION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION_FREQUENCY;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION_RANGE;
@@ -650,11 +651,23 @@ public class Marc21ReferenceProvider {
     return noteTags.contains(tag) ? instanceNoteTypes.getOrDefault(tag, GENERAL_NOTE) : mappedFields.get(tag);
   }
 
+  public String getFieldNameByTagForCsv(String tag) {
+    return noteTags.contains(tag) ? INSTANCE_NOTES : mappedFields.get(tag);
+  }
+
   public Set<String> getChangedOptionsSet(BulkOperationMarcRuleCollection rules) {
     return rules.getBulkOperationMarcRules().stream()
       .map(BulkOperationMarcRule::getTag)
       .filter(this::isMappedTag)
       .map(this::getFieldNameByTag)
+      .collect(Collectors.toSet());
+  }
+
+  public Set<String> getChangedOptionsSetForCsv(BulkOperationMarcRuleCollection rules) {
+    return rules.getBulkOperationMarcRules().stream()
+      .map(BulkOperationMarcRule::getTag)
+      .filter(this::isMappedTag)
+      .map(this::getFieldNameByTagForCsv)
       .collect(Collectors.toSet());
   }
 }

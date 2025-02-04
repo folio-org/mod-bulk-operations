@@ -81,7 +81,8 @@ public class MarcCsvHelper {
     if (nonNull(fileName)) {
       try (var reader = new CSVReaderBuilder(new InputStreamReader(remoteFileSystemClient.get(fileName)))
         .withCSVParser(CSVHelper.getCsvParser()).build()) {
-        var changedOptionsSet = marc21ReferenceProvider.getChangedOptionsSet(ruleService.getMarcRules(bulkOperation.getId()));
+        marc21ReferenceProvider.updateMappingRules();
+        var changedOptionsSet = marc21ReferenceProvider.getChangedOptionsSetForCsv(ruleService.getMarcRules(bulkOperation.getId()));
         String[] line;
         while ((line = reader.readNext()) != null) {
           if (line.length == instanceHeaderNames.size()) {
