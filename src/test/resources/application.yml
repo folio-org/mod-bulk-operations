@@ -17,6 +17,14 @@ spring:
   jpa:
     show-sql: true
 folio:
+  system-user:
+    enabled: true
+    username: mod-bulk-operations-system-user
+    password: system-user-password
+    lastname: System
+    permissionsFilePath: permissions/system-user-permissions.csv
+  okapi-url: http://okapi:9130
+  environment: folio
   tenant:
     validation:
       enabled: false

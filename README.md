@@ -28,18 +28,24 @@ More information you can find here: [bulk-operations-design](https://wiki.folio.
 This module uses S3 storage for files. AWS S3 and Minio Server are supported for files storage.
 It is also necessary to specify variable S3_IS_AWS to determine if AWS S3 is used as files storage. By default,
 this variable is `false` and means that MinIO server is used as storage.
-This value should be `true` if AWS S3 is used.
+This value should be `true` if AWS S3 is used. To ensure the correct operation of the module, a system user must be
+configured. This requires setting the values of environment variables: OKAPI_URL, SYSTEM_USER_NAME, SYSTEM_USER_PASSWORD,
+SYSTEM_USER_ENABLED (by default is `true`).
 
-| Name                                             | Default value                | Description                                |
-|:-------------------------------------------------|:-----------------------------|:-------------------------------------------|
-| KAFKA_HOST                                       | localhost                    | Kafka broker hostname                      |
-| KAFKA_PORT                                       | 9092                         | Kafka broker port                          |
-| ENV                                              | folio                        | Environment name                           |
-| S3_URL                                           | http://127.0.0.1:9000/       | S3 url                                     |
-| S3_REGION                                        | -                            | S3 region                                  |
-| S3_BUCKET                                        | -                            | S3 bucket                                  |
-| S3_ACCESS_KEY_ID                                 | -                            | S3 access key                              |
-| S3_SECRET_ACCESS_KEY                             | -                            | S3 secret key                              |
-| S3_IS_AWS                                        | false                        | Specify if AWS S3 is used as files storage |
-| MAX_UPLOADED_FILE_SIZE                           | 40MB                         | Specifies multipart upload file size       |
-| PLATFORM                                         | okapi                        | Specifies if okapi or eureka platform      |
+| Name                            | Default value                   | Description                                                                                                 |
+|:--------------------------------|:--------------------------------|:------------------------------------------------------------------------------------------------------------|
+| KAFKA_HOST                      | localhost                       | Kafka broker hostname                                                                                       |
+| KAFKA_PORT                      | 9092                            | Kafka broker port                                                                                           |
+| ENV                             | folio                           | Environment name                                                                                            |
+| S3_URL                          | http://127.0.0.1:9000/          | S3 url                                                                                                      |
+| S3_REGION                       | -                               | S3 region                                                                                                   |
+| S3_BUCKET                       | -                               | S3 bucket                                                                                                   |
+| S3_ACCESS_KEY_ID                | -                               | S3 access key                                                                                               |
+| S3_SECRET_ACCESS_KEY            | -                               | S3 secret key                                                                                               |
+| S3_IS_AWS                       | false                           | Specify if AWS S3 is used as files storage                                                                  |
+| MAX_UPLOADED_FILE_SIZE          | 40MB                            | Specifies multipart upload file size                                                                        |
+| PLATFORM                        | okapi                           | Specifies if okapi or eureka platform                                                                       |
+| OKAPI_URL                       | http://okapi:9130               | Okapi url                                                                                                   |
+| SYSTEM\_USER\_NAME              | mod-bulk-operations-system-user | Username of the system user                                                                                 |
+| SYSTEM\_USER\_PASSWORD          | -                               | Password of the system user                                                                                 |
+| SYSTEM\_USER\_ENABLED           | true                            | Defines if system user must be created at service tenant initialization or used for egress service requests |
