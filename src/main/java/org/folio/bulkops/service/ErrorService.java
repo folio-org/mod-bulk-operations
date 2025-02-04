@@ -176,7 +176,7 @@ public class ErrorService {
   private Errors getExecutionErrors(UUID bulkOperationId, int limit, int offset, ErrorType errorType) {
     int totalRecords = ofNullable(errorType)
       .map(errType -> (int) executionContentRepository.countByBulkOperationIdAndErrorType(bulkOperationId, errType))
-      .orElseGet(() -> (int) executionContentRepository.countByBulkOperationId(bulkOperationId));
+      .orElseGet(() -> (int) executionContentRepository.countAllByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId));
     if (limit == 0) {
       return new Errors()
         .errors(List.of())
