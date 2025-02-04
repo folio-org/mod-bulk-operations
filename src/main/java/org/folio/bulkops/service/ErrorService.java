@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import lombok.extern.log4j.Log4j2;
@@ -108,18 +109,26 @@ public class ErrorService {
           .errors(List.of())
           .totalRecords(0);
       }
-      var errors = new BufferedReader(new InputStreamReader(remoteFileSystemClient.get(pathToMatchedRecordsErrorsCsvFile)))
-        .lines()
-        .skip(offset)
-        .limit(limit)
-        .map(message -> {
-          var error = message.split(Constants.COMMA_DELIMETER);
-          return new Error().message(error[IDX_ERROR_MSG]).parameters(List.of(new Parameter().key(IDENTIFIER).value(error[IDX_ERROR_IDENTIFIER]))).type(ErrorType.fromValue(error[IDX_ERROR_TYPE]));
-        })
-        .filter(err -> isNull(errorType) || err.getType() == errorType)
-        .toList();
-      return new Errors().errors(errors)
-        .totalRecords(errors.size());
+
+      ArrayList<Error> errors = new ArrayList<>();
+      AtomicInteger total = new AtomicInteger();
+      AtomicInteger counter = new AtomicInteger();
+      var size = limit - offset;
+      new BufferedReader(new InputStreamReader(remoteFileSystemClient.get(pathToMatchedRecordsErrorsCsvFile)))
+        .lines().forEach(line -> {
+          var message = line.split(Constants.COMMA_DELIMETER);
+          var error = new Error().message(message[IDX_ERROR_MSG])
+            .parameters(List.of(new Parameter().key(IDENTIFIER).value(message[IDX_ERROR_IDENTIFIER])))
+            .type(ErrorType.fromValue(message[IDX_ERROR_TYPE]));
+          if (errorType == null || errorType == error.getType()) {
+            counter.incrementAndGet();
+            if (total.get() > offset && errors.size() < size) {
+              errors.add(error);
+            }
+          }
+          total.incrementAndGet();
+        });
+      return new Errors().errors(errors).totalRecords(counter.get());
     } else if (COMPLETED == bulkOperation.getStatus() || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
       return getExecutionErrors(bulkOperationId, limit, offset, errorType);
     } else {
