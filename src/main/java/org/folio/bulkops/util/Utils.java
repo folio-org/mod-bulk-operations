@@ -15,6 +15,14 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -24,6 +32,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.Constants.MSG_ERROR_OPTIMISTIC_LOCKING_DEFAULT;
 import static org.folio.bulkops.util.Constants.MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING;
+import static org.folio.bulkops.util.Constants.NEW_LINE_SEPARATOR;
 
 @UtilityClass
 @Log4j2
@@ -101,4 +110,17 @@ public class Utils {
       return MSG_ERROR_OPTIMISTIC_LOCKING_DEFAULT;
     }
   }
+
+  public static InputStream sortLinesFromInputStream(InputStream is) throws IOException {
+    var reader = new BufferedReader(new InputStreamReader(is));
+    List<String> lines = new ArrayList<>();
+    String line;
+    while ((line = reader.readLine()) != null) {
+      lines.add(line);
+    }
+    Collections.sort(lines);
+    var content = String.join(NEW_LINE_SEPARATOR, lines) + NEW_LINE_SEPARATOR;
+    return new ByteArrayInputStream(content.getBytes());
+  }
+
 }
