@@ -109,7 +109,6 @@ public class ErrorService {
           .errors(List.of())
           .totalRecords(0);
       }
-
       ArrayList<Error> errors = new ArrayList<>();
       AtomicInteger total = new AtomicInteger();
       AtomicInteger counter = new AtomicInteger();
