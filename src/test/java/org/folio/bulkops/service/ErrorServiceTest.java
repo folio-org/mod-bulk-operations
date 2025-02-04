@@ -172,7 +172,7 @@ class ErrorServiceTest extends BaseTest {
 
       var actualWithOffset = errorService.getErrorsPreviewByBulkOperationId(operationId, 2, 1, null);
       assertThat(actualWithOffset.getErrors(), hasSize(1));
-      assertThat(actualWithOffset.getTotalRecords(), equalTo(2));
+      assertThat(actualWithOffset.getTotalRecords(), equalTo(statusType == COMPLETED ? 2 : 1));
 
       bulkOperationRepository.deleteById(operationId);
     }
@@ -284,11 +284,13 @@ class ErrorServiceTest extends BaseTest {
         executionContentRepository.save(BulkOperationExecutionContent.builder()
           .bulkOperationId(operationId)
           .identifier("123")
+            .errorType(ErrorType.ERROR)
           .errorMessage("No match found")
           .build());
         executionContentRepository.save(BulkOperationExecutionContent.builder()
           .bulkOperationId(operationId)
           .identifier("456")
+            .errorType(ErrorType.ERROR)
           .errorMessage("Invalid format")
           .build());
       }
@@ -296,7 +298,7 @@ class ErrorServiceTest extends BaseTest {
       var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 0, 0, null);
 
       assertThat(errors.getErrors(), hasSize(0));
-      assertThat(errors.getTotalRecords(), equalTo(2));
+      assertThat(errors.getTotalRecords(), equalTo(2 * committedErrors));
     }
   }
 
