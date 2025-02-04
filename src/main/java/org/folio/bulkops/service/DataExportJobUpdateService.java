@@ -102,8 +102,10 @@ public class DataExportJobUpdateService {
       var errorsUrl = jobUpdate.getFiles().get(1);
       if (StringUtils.isNotEmpty(errorsUrl)) {
         try (var is = new URL(errorsUrl).openStream()) {
-          var linkToMatchingErrorsFile = remoteFileSystemClient.put(is, operation.getId() + "/" + FilenameUtils.getName(errorsUrl.split("\\?")[0]));
-          operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
+          try (var isSorted = Utils.sortLinesFromInputStream(is)) {
+            var linkToMatchingErrorsFile = remoteFileSystemClient.put(isSorted, operation.getId() + "/" + FilenameUtils.getName(errorsUrl.split("\\?")[0]));
+            operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
+          }
         }
       }
 
@@ -121,6 +123,7 @@ public class DataExportJobUpdateService {
       if (nonNull(progress)) {
         operation.setMatchedNumOfRecords(isNull(progress.getSuccess()) ? 0 : progress.getSuccess());
         operation.setMatchedNumOfErrors(isNull(progress.getErrors()) ? 0 : progress.getErrors());
+        operation.setMatchedNumOfWarnings(isNull(progress.getWarnings()) ? 0 : progress.getWarnings());
         operation.setTotalNumOfRecords(isNull(progress.getTotal()) ? 0 : progress.getTotal());
         operation.setProcessedNumOfRecords(isNull(progress.getProcessed()) ? 0 : progress.getProcessed());
       }
@@ -178,6 +181,7 @@ public class DataExportJobUpdateService {
     operation.setEndTime(LocalDateTime.now());
     if (ObjectUtils.isNotEmpty(jobUpdate.getProgress())) {
       operation.setMatchedNumOfErrors(isNull(jobUpdate.getProgress().getErrors()) ? 0 : jobUpdate.getProgress().getErrors());
+      operation.setMatchedNumOfWarnings(isNull(jobUpdate.getProgress().getWarnings()) ? 0 : jobUpdate.getProgress().getWarnings());
     }
   }
 }

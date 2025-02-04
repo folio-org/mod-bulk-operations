@@ -16,6 +16,8 @@ public interface BulkOperationExecutionContentRepository extends JpaRepository<B
   Page<BulkOperationExecutionContent> findByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIsOrderByErrorType(UUID bulkOperationId, OffsetRequest offsetRequest, ErrorType errorType);
   Optional<BulkOperationExecutionContent> findFirstByBulkOperationIdAndIdentifier(UUID bulkOperationId, String identifier);
   int countAllByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIs(UUID bulkOperationId, ErrorType errorType);
+  @Query("SELECT COUNT(i) FROM BulkOperationExecutionContent i WHERE i.bulkOperationId = :bulkOperationId AND i.errorType = :errorType")
+  long countByBulkOperationIdAndErrorType(UUID bulkOperationId, ErrorType errorType);
   long countAllByBulkOperationIdAndErrorMessageIsNotNull(UUID bulkOperationId);
   void deleteByBulkOperationId(UUID bulkOperationId);
 }

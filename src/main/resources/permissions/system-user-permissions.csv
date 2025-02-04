@@ -1,1 +1,5 @@
 data-import.splitconfig.get
+metadata-provider.jobExecutions.collection.get
+metadata-provider.jobLogEntries.collection.get
+source-storage.parsed-records.fetch.collection.post
+users.collection.get

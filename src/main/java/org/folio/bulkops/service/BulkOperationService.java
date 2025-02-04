@@ -488,6 +488,7 @@ public class BulkOperationService {
       var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operationId);
       operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
       operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operationId));
+      operation.setCommittedNumOfWarnings(errorService.getCommittedNumOfWarnings(operationId));
 
       if (!FAILED.equals(operation.getStatus())) {
         operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
@@ -522,6 +523,7 @@ public class BulkOperationService {
     } else if (BulkOperationStep.EDIT == step) {
       errorService.deleteErrorsByBulkOperationId(bulkOperationId);
       operation.setCommittedNumOfErrors(0);
+      operation.setCommittedNumOfWarnings(0);
       bulkOperationRepository.save(operation);
       if (DATA_MODIFICATION.equals(operation.getStatus()) || REVIEW_CHANGES.equals(operation.getStatus())) {
         if (MANUAL == approach) {
@@ -617,7 +619,10 @@ public class BulkOperationService {
       operation.setProcessedNumOfRecords(processedNumOfRecords);
       operation.setStatus(REVIEW_CHANGES);
       operation.setLinkToModifiedRecordsJsonFile(linkToModifiedRecordsJsonFile);
-      bulkOperationRepository.findById(operation.getId()).ifPresent(op -> operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors()));
+      bulkOperationRepository.findById(operation.getId()).ifPresent(op -> {
+        operation.setCommittedNumOfErrors(op.getCommittedNumOfErrors());
+        operation.setCommittedNumOfWarnings(op.getCommittedNumOfWarnings());
+      });
     } catch (Exception e) {
       operation.setErrorMessage("Error applying changes: " + e.getCause());
 
