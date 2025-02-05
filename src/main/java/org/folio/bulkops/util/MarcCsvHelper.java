@@ -50,7 +50,9 @@ public class MarcCsvHelper {
   }
 
   public byte[] enrichCsvWithMarcChanges(byte[] content, BulkOperation bulkOperation) {
-    var instanceHeaderNames = getInstanceHeaderNames();
+    var instanceHeaderNames = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class).getHeader().stream()
+      .map(Cell::getValue)
+      .toList();
     var changedMarcData = getChangedMarcData(bulkOperation);
     if (!changedMarcData.isEmpty()) {
       try (var reader = new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(content)))
@@ -64,6 +66,7 @@ public class MarcCsvHelper {
               line[instanceHeaderNames.indexOf(entry.getKey())] = entry.getValue();
             }
           }
+          writer.write(String.join(",", line) + "\n");
         }
         writer.flush();
         return writer.toString().getBytes();
@@ -75,7 +78,9 @@ public class MarcCsvHelper {
   }
 
   private Map<String, Map<String, String>> getChangedMarcData(BulkOperation bulkOperation) {
-    var instanceHeaderNames = getInstanceHeaderNames();
+    var instanceHeaderNames = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class).getHeader().stream()
+      .map(Cell::getValue)
+      .toList();
     Map<String, Map<String, String>> result = new HashMap<>();
     var fileName = getCsvFileName(bulkOperation);
     if (nonNull(fileName)) {
@@ -88,10 +93,10 @@ public class MarcCsvHelper {
           if (line.length == instanceHeaderNames.size()) {
             var hrid = line[instanceHeaderNames.indexOf(INSTANCE_HRID)];
             Map<String, String> changedValues = new HashMap<>();
-            for (var entry : changedOptionsSet) {
-              var index = instanceHeaderNames.indexOf(entry);
+            for (var option : changedOptionsSet) {
+              var index = instanceHeaderNames.indexOf(option);
               if (index != -1) {
-                changedValues.put(entry, line[index]);
+                changedValues.put(option, line[index]);
               }
             }
             result.put(hrid, changedValues);

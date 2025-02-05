@@ -37,7 +37,6 @@ import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.
 import java.io.BufferedInputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.StringWriter;
 import java.io.Writer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -308,9 +307,6 @@ public class BulkOperationService {
       try (var writerForModifiedPreviewMarcFile = remoteFileSystemClient.marcWriter(modifiedMarcFileName);
            var csvWriter = new CSVWriterBuilder(remoteFileSystemClient.writer(previewMarcCsvFileName))
              .withSeparator(DEFAULT_SEPARATOR).build();
-           var stringWriter = new StringWriter();
-           var csvStringWriter = new CSVWriterBuilder(stringWriter)
-             .withSeparator(DEFAULT_SEPARATOR).build();
            var linkToMatchedRecordsMarcFileStream = remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile())) {
         var matchedRecordsReader = new MarcStreamReader(linkToMatchedRecordsMarcFileStream);
         var currentDate = new Date();
@@ -322,7 +318,6 @@ public class BulkOperationService {
           writerForModifiedPreviewMarcFile.writeRecord(marcRecord);
           var data = marcCsvHelper.getModifiedDataForCsv(marcRecord);
           csvWriter.writeNext(data);
-          csvStringWriter.writeNext(data);
 
           processedNumOfRecords++;
 
@@ -334,7 +329,7 @@ public class BulkOperationService {
 
         if (processedNumOfRecords > 0) {
           operation.setLinkToModifiedRecordsMarcFile(modifiedMarcFileName);
-          operation.setLinkToCommittedRecordsMarcCsvFile(previewMarcCsvFileName);
+          operation.setLinkToModifiedRecordsMarcCsvFile(previewMarcCsvFileName);
           saveLinks(operation);
         }
 
@@ -407,6 +402,9 @@ public class BulkOperationService {
     operation.setTotalNumOfRecords(totalNumOfRecords);
     operation = bulkOperationRepository.save(operation);
 
+    var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
+    var resultCsvFileName = String.format(CHANGED_CSV_PATH_TEMPLATE, operation.getId(), LocalDate.now(), triggeringFileName);
+
     if (StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsJsonFile())) {
       var entityClass = resolveEntityClass(operation.getEntityType());
       var extendedClass = resolveExtendedEntityClass(operation.getEntityType());
@@ -418,9 +416,7 @@ public class BulkOperationService {
         .status(StatusType.ACTIVE)
         .build());
 
-      var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
       var resultJsonFileName = String.format(CHANGED_JSON_PATH_TEMPLATE, operation.getId(), LocalDate.now(), triggeringFileName);
-      var resultCsvFileName = String.format(CHANGED_CSV_PATH_TEMPLATE, operation.getId(), LocalDate.now(), triggeringFileName);
 
       try (var originalFileReader = new InputStreamReader(new BufferedInputStream(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile())));
            var modifiedFileReader = new InputStreamReader(new BufferedInputStream(remoteFileSystemClient.get(operation.getLinkToModifiedRecordsJsonFile())));
@@ -446,7 +442,7 @@ public class BulkOperationService {
 
           try {
             var result = recordUpdateService.updateEntity(original, modified, operation);
-            if (result != original) {
+            if (result != original || INSTANCE_MARC.equals(operation.getEntityType())) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
               if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId()) || entityClass == User.class ) {
@@ -480,7 +476,9 @@ public class BulkOperationService {
         }
 
         execution.setProcessedRecords(processedNumOfRecords);
-        if (operation.getCommittedNumOfRecords() > 0) {
+        if (INSTANCE_MARC.equals(operation.getEntityType())) {
+          operation.setLinkToCommittedRecordsCsvFile(resultCsvFileName);
+        } else if (operation.getCommittedNumOfRecords() > 0) {
           operation.setLinkToCommittedRecordsCsvFile(resultCsvFileName);
           operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
         }
@@ -833,6 +831,9 @@ public class BulkOperationService {
     }
     if (nonNull(source.getLinkToModifiedRecordsMarcFile())) {
       dest.setLinkToModifiedRecordsMarcFile(source.getLinkToModifiedRecordsMarcFile());
+    }
+    if (nonNull(source.getLinkToModifiedRecordsMarcCsvFile())) {
+      dest.setLinkToModifiedRecordsMarcCsvFile(source.getLinkToModifiedRecordsMarcCsvFile());
     }
     bulkOperationRepository.save(dest);
   }

@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
@@ -20,6 +21,7 @@ import org.folio.bulkops.repository.BulkOperationRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.marc4j.marc.DataField;
 import org.marc4j.marc.Record;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -27,8 +29,10 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,6 +48,10 @@ class SrsServiceTest extends BaseTest {
   private ErrorService errorService;
   @MockBean
   private BulkOperationExecutionRepository executionRepository;
+  @MockBean
+  private InstanceReferenceService instanceReferenceService;
+  @MockBean
+  private MarcToUnifiedTableRowMapperHelper marcToUnifiedTableRowMapperHelper;
   @Captor
   private ArgumentCaptor<BulkOperation> bulkOperationCaptor;
 
@@ -73,6 +81,11 @@ class SrsServiceTest extends BaseTest {
     when(errorService.getCommittedNumOfErrors(operationId))
       .thenReturn(numOfErrors);
     when(executionRepository.findByBulkOperationId(any(UUID.class))).thenReturn(Optional.empty());
+    when(instanceReferenceService.getAllInstanceNoteTypes()).thenReturn(Collections.emptyList());
+    when(marcToUnifiedTableRowMapperHelper.fetchContributorType(any(DataField.class)))
+      .thenReturn(EMPTY);
+    when(remoteFileSystemClient.writer(anyString()))
+      .thenReturn(new StringWriter());
 
     srsService.retrieveMarcInstancesFromSrs(List.of(UUID.randomUUID().toString()), operation);
 
