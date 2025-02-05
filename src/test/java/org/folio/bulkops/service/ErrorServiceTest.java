@@ -284,11 +284,13 @@ class ErrorServiceTest extends BaseTest {
         executionContentRepository.save(BulkOperationExecutionContent.builder()
           .bulkOperationId(operationId)
           .identifier("123")
+            .errorType(ErrorType.ERROR)
           .errorMessage("No match found")
           .build());
         executionContentRepository.save(BulkOperationExecutionContent.builder()
           .bulkOperationId(operationId)
           .identifier("456")
+            .errorType(ErrorType.ERROR)
           .errorMessage("Invalid format")
           .build());
       }
