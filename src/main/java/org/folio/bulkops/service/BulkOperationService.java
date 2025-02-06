@@ -340,6 +340,7 @@ public class BulkOperationService {
         .withEndTime(LocalDateTime.now()));
       operation = getBulkOperationOrThrow(operationId);
       operation.setStatus(OperationStatusType.REVIEWED_NO_MARC_RECORDS);
+      operation.setProcessedNumOfRecords(0);
       operation.setEndTime(LocalDateTime.now());
       bulkOperationRepository.save(operation);
     }
