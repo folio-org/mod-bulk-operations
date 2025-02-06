@@ -66,11 +66,12 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
     } catch (Exception e) {
       log.error(e.getMessage());
     }
-    for (BulkOperationRule rule : rules.getBulkOperationRules()) {
-      var details = rule.getRuleDetails();
-      var option = details.getOption();
-      for (Action action : details.getActions()) {
-        try {
+    if (!rules.getBulkOperationRules().isEmpty()) {
+      for (BulkOperationRule rule : rules.getBulkOperationRules()) {
+        var details = rule.getRuleDetails();
+        var option = details.getOption();
+        for (Action action : details.getActions()) {
+          try {
             var tenantIdOfEntity = entity.getTenant();
             try (var ignored = isTenantApplicableForProcessingAsMember(entity) ?
               new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))
@@ -79,16 +80,17 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
               validator(entity).validate(option, action, rule);
               updater(option, action, entity, false).apply(updated);
             }
-        } catch (RuleValidationException e) {
-          log.warn(String.format("Rule validation exception: %s", e.getMessage()));
-          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
-        } catch (RuleValidationTenantsException e) {
-          log.info("current tenant: {}", folioExecutionContext.getTenantId());
-          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
-          log.error(e.getMessage());
-        } catch (Exception e) {
-          log.error(String.format("%s id=%s, error: %s", updated.getRecordBulkOperationEntity().getClass().getSimpleName(), "id", e.getMessage()));
-          errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
+          } catch (RuleValidationException e) {
+            log.warn(String.format("Rule validation exception: %s", e.getMessage()));
+            errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
+          } catch (RuleValidationTenantsException e) {
+            log.info("current tenant: {}", folioExecutionContext.getTenantId());
+            errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
+            log.error(e.getMessage());
+          } catch (Exception e) {
+            log.error(String.format("%s id=%s, error: %s", updated.getRecordBulkOperationEntity().getClass().getSimpleName(), "id", e.getMessage()));
+            errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
+          }
         }
       }
     }

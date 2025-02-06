@@ -45,6 +45,7 @@ class LogFilesServiceTest extends BaseTest {
         .linkToMatchedRecordsMarcFile("some/path/records.mrc")
         .linkToModifiedRecordsCsvFile("some/path/records.csv")
         .linkToModifiedRecordsMarcFile("some/path/records.mrc")
+        .linkToModifiedRecordsMarcCsvFile("some/path/records.csv")
         .linkToModifiedRecordsJsonFile("some/path/records.csv")
         .linkToPreviewRecordsJsonFile("some/path/records.csv")
         .linkToCommittedRecordsJsonFile("some/path/records.csv")
@@ -53,6 +54,7 @@ class LogFilesServiceTest extends BaseTest {
         .linkToCommittedRecordsErrorsCsvFile("some/path/records.csv")
         .linkToCommittedRecordsCsvFile("some/path/records.csv")
         .linkToCommittedRecordsMarcFile("some/path/records.mrc")
+        .linkToCommittedRecordsMarcCsvFile("some/path/records.csv")
         .endTime(back31days)
         .build()).getId();
       nonOldBulkOperationId = bulkOperationRepository.save(BulkOperation.builder()
@@ -62,6 +64,7 @@ class LogFilesServiceTest extends BaseTest {
         .linkToMatchedRecordsMarcFile("some/path/records.mrc")
         .linkToModifiedRecordsCsvFile("some/path/records.csv")
         .linkToModifiedRecordsMarcFile("some/path/records.mrc")
+        .linkToModifiedRecordsMarcCsvFile("some/path/records.csv")
         .linkToModifiedRecordsJsonFile("some/path/records.csv")
         .linkToPreviewRecordsJsonFile("some/path/records.csv")
         .linkToCommittedRecordsJsonFile("some/path/records.csv")
@@ -70,6 +73,7 @@ class LogFilesServiceTest extends BaseTest {
         .linkToCommittedRecordsErrorsCsvFile("some/path/records.csv")
         .linkToCommittedRecordsCsvFile("some/path/records.csv")
         .linkToCommittedRecordsMarcFile("some/path/records.mrc")
+        .linkToCommittedRecordsMarcCsvFile("some/path/records.csv")
         .endTime(back29days)
         .build()).getId();
     }
@@ -120,6 +124,8 @@ class LogFilesServiceTest extends BaseTest {
   private void verifyAllFilesRemoved(BulkOperation operation) {
     assertNull(operation.getLinkToCommittedRecordsCsvFile());
     assertNull(operation.getLinkToCommittedRecordsJsonFile());
+    assertNull(operation.getLinkToCommittedRecordsMarcFile());
+    assertNull(operation.getLinkToCommittedRecordsMarcCsvFile());
     assertNull(operation.getLinkToMatchedRecordsJsonFile());
     assertNull(operation.getLinkToMatchedRecordsCsvFile());
     assertNull(operation.getLinkToTriggeringCsvFile());
@@ -127,16 +133,21 @@ class LogFilesServiceTest extends BaseTest {
     assertNull(operation.getLinkToCommittedRecordsErrorsCsvFile());
     assertNull(operation.getLinkToPreviewRecordsJsonFile());
     assertNull(operation.getLinkToModifiedRecordsJsonFile());
+    assertNull(operation.getLinkToModifiedRecordsMarcFile());
+    assertNull(operation.getLinkToModifiedRecordsMarcCsvFile());
     assertNull(operation.getLinkToMatchedRecordsErrorsCsvFile());
   }
 
   private void verifyAllFilesPresent(BulkOperation operation) {
     assertNotNull(operation.getLinkToCommittedRecordsCsvFile());
     assertNotNull(operation.getLinkToCommittedRecordsJsonFile());
+    assertNotNull(operation.getLinkToCommittedRecordsMarcFile());
+    assertNotNull(operation.getLinkToCommittedRecordsMarcCsvFile());
     assertNotNull(operation.getLinkToMatchedRecordsJsonFile());
     assertNotNull(operation.getLinkToMatchedRecordsCsvFile());
     assertNotNull(operation.getLinkToMatchedRecordsMarcFile());
     assertNotNull(operation.getLinkToModifiedRecordsMarcFile());
+    assertNotNull(operation.getLinkToModifiedRecordsMarcCsvFile());
     assertNotNull(operation.getLinkToTriggeringCsvFile());
     assertNotNull(operation.getLinkToModifiedRecordsCsvFile());
     assertNotNull(operation.getLinkToCommittedRecordsErrorsCsvFile());

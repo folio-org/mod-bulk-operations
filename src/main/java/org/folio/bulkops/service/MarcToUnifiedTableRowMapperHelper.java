@@ -154,8 +154,11 @@ public class MarcToUnifiedTableRowMapperHelper {
     return subfieldsToStringRemoveEndingPunctuation(dataField.getSubfields(subfields));
   }
 
-  public String fetchNotes(DataField dataField) {
-    return trimPeriod(subfieldsToString(dataField.getSubfields(referenceProvider.getSubfieldsByTag(dataField.getTag())))) + (referenceProvider.isStaffOnlyNote(dataField) ? SPACE + STAFF_ONLY : EMPTY);
+  public String fetchNotes(DataField dataField, boolean forCsv) {
+    var staffOnlyTruePostfix = forCsv ? ARRAY_DELIMITER + Boolean.TRUE : SPACE + STAFF_ONLY;
+    var staffOnlyFalsePostfix = forCsv ? ARRAY_DELIMITER + Boolean.FALSE : EMPTY;
+    return trimPeriod(subfieldsToString(dataField.getSubfields(referenceProvider.getSubfieldsByTag(dataField.getTag())))) +
+      (referenceProvider.isStaffOnlyNote(dataField) ? staffOnlyTruePostfix : staffOnlyFalsePostfix);
   }
 
   public List<Subfield> getSubfieldsByOrderedCodes(DataField dataField, String subfields) {

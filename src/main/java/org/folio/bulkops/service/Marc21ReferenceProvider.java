@@ -1,12 +1,24 @@
 package org.folio.bulkops.service;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CONTRIBUTORS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_EDITION;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_FORMATS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_NOTES;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PHYSICAL_DESCRIPTION;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION_FREQUENCY;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION_RANGE;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TITLE;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TYPE;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SERIES_STATEMENTS;
 
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.MappingRulesClient;
+import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
+import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.marc4j.marc.DataField;
 import org.springframework.stereotype.Component;
 
@@ -15,7 +27,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -25,9 +36,9 @@ import java.util.stream.IntStream;
 public class Marc21ReferenceProvider {
   public static final String GENERAL_NOTE = "General note";
   private static final String LOCAL_NOTES = "Local notes";
-  private static final Pattern UNDESIRED_LOCAL_NOTE_TAGS = Pattern.compile("59[1-9]");
 
   private static final Map<String, String> languages = new HashMap<>();
+  private static Map<String, String> mappedFields = new HashMap<>();
 
   private final MappingRulesClient mappingRulesClient;
 
@@ -557,6 +568,18 @@ public class Marc21ReferenceProvider {
     languages.put("zun", "Zuni");
     languages.put("zxx", "No linguistic content");
     languages.put("zza", "Zaza");
+
+    List.of("100", "110", "111", "700", "710", "711", "720")
+      .forEach(tag -> mappedFields.put(tag, INSTANCE_CONTRIBUTORS));
+    mappedFields.put("245", INSTANCE_RESOURCE_TITLE);
+    mappedFields.put("250", INSTANCE_EDITION);
+    mappedFields.put("300", INSTANCE_PHYSICAL_DESCRIPTION);
+    List.of("310", "321").forEach(tag -> mappedFields.put(tag, INSTANCE_PUBLICATION_FREQUENCY));
+    mappedFields.put("336", INSTANCE_RESOURCE_TYPE);
+    mappedFields.put("338", INSTANCE_FORMATS);
+    mappedFields.put("362", INSTANCE_PUBLICATION_RANGE);
+    List.of("800", "810", "811", "830")
+      .forEach(tag -> mappedFields.put(tag, INSTANCE_SERIES_STATEMENTS));
   }
 
   public void updateMappingRules() {
@@ -616,9 +639,35 @@ public class Marc21ReferenceProvider {
     return staffOnlyNotes.contains(dataField.getTag()) && '0' == dataField.getIndicator1();
   }
 
-  public Set<String> getMappedNoteTags() {
-    return instanceNoteTypes.keySet().stream()
-      .filter(s -> !UNDESIRED_LOCAL_NOTE_TAGS.matcher(s).matches())
+  public boolean isMappedTag(String tag) {
+    return mappedFields.containsKey(tag) || noteTags.contains(tag);
+  }
+
+  public boolean isMappedNoteTag(String tag) {
+    return noteTags.contains(tag);
+  }
+
+  public String getFieldNameByTag(String tag) {
+    return noteTags.contains(tag) ? instanceNoteTypes.getOrDefault(tag, GENERAL_NOTE) : mappedFields.get(tag);
+  }
+
+  public String getFieldNameByTagForCsv(String tag) {
+    return noteTags.contains(tag) ? INSTANCE_NOTES : mappedFields.get(tag);
+  }
+
+  public Set<String> getChangedOptionsSet(BulkOperationMarcRuleCollection rules) {
+    return rules.getBulkOperationMarcRules().stream()
+      .map(BulkOperationMarcRule::getTag)
+      .filter(this::isMappedTag)
+      .map(this::getFieldNameByTag)
+      .collect(Collectors.toSet());
+  }
+
+  public Set<String> getChangedOptionsSetForCsv(BulkOperationMarcRuleCollection rules) {
+    return rules.getBulkOperationMarcRules().stream()
+      .map(BulkOperationMarcRule::getTag)
+      .filter(this::isMappedTag)
+      .map(this::getFieldNameByTagForCsv)
       .collect(Collectors.toSet());
   }
 }

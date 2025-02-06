@@ -58,6 +58,7 @@ public class Instance implements BulkOperationsEntity {
   public static final String INSTANCE_CATALOGED_DATE = "Cataloged date";
   public static final String INSTANCE_STATUS_TERM = "Instance status term";
   public static final String INSTANCE_NATURE_OF_CONTENT = "Nature of content";
+  public static final String INSTANCE_NOTES = "Notes";
 
   @JsonProperty("id")
   @CsvCustomBindByName(column = INSTANCE_UUID, converter = StringConverter.class)
@@ -202,7 +203,7 @@ public class Instance implements BulkOperationsEntity {
   private List<String> publicationRange;
 
   @JsonProperty("notes")
-  @CsvCustomBindByName(column = "Notes", converter = InstanceNoteListConverter.class)
+  @CsvCustomBindByName(column = INSTANCE_NOTES, converter = InstanceNoteListConverter.class)
   @CsvCustomBindByPosition(position = 23, converter = InstanceNoteListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<InstanceNote> instanceNotes;

@@ -314,7 +314,7 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
       .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
     marc21ReferenceProvider.updateMappingRules();
 
-    var res = mapperHelper.fetchNotes(dataField);
+    var res = mapperHelper.fetchNotes(dataField, false);
 
     assertThat(res).isEqualTo("subfield a. subfield b");
   }
@@ -325,7 +325,7 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
     var dataField = new DataFieldImpl(tag, ind1, ' ');
     dataField.addSubfield(new SubfieldImpl('a', "subfield a."));
 
-    var res = mapperHelper.fetchNotes(dataField);
+    var res = mapperHelper.fetchNotes(dataField, false);
 
     assertThat(res).isEqualTo('0' == ind1 ? "subfield a (staff only)" : "subfield a");
   }
