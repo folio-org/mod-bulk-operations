@@ -613,6 +613,77 @@ class BulkOperationServiceTest extends BaseTest {
 
   @Test
   @SneakyThrows
+  void shouldNotBeProcessedRecordsIfUploadedNotMarcAndSelectedMarcEdit() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var bulkOperationId = UUID.randomUUID();
+      var marcAction = new MarcAction();
+      marcAction.setName(UpdateActionType.CLEAR_FIELD);
+      var bulkOperationMarcRule = new BulkOperationMarcRule();
+      bulkOperationMarcRule.setBulkOperationId(bulkOperationId);
+      bulkOperationMarcRule.setActions(List.of(marcAction));
+      bulkOperationMarcRule.setTag("500");
+      bulkOperationMarcRule.setInd1("ind1");
+      bulkOperationMarcRule.setInd2("ind2");
+
+      var bulkOperationMarcRuleCollection = new BulkOperationMarcRuleCollection();
+      bulkOperationMarcRuleCollection.setBulkOperationMarcRules(List.of(bulkOperationMarcRule));
+
+      var pathToTriggering = "/some/path/instance_marc.csv";
+      String pathToMatchedRecordsMarcFile = null;
+      var pathToMatchedJson = bulkOperationId + "/instance_marc.json";
+      var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
+      var pathToInstanceMarc = "src/test/resources/files/instance_marc.mrc";
+      var pathToInstanceJson = "src/test/resources/files/instance_marc.json";
+      var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-MARC-instance_marc.mrc";
+
+      when(bulkOperationRepository.findById(any(UUID.class)))
+        .thenReturn(Optional.of(BulkOperation.builder()
+          .id(bulkOperationId)
+          .status(DATA_MODIFICATION)
+          .entityType(EntityType.INSTANCE_MARC)
+          .identifierType(IdentifierType.ID)
+          .linkToTriggeringCsvFile(pathToTriggering)
+          .linkToMatchedRecordsJsonFile(pathToMatchedJson)
+          .linkToMatchedRecordsMarcFile(pathToMatchedRecordsMarcFile)
+          .linkToModifiedRecordsMarcFile(pathToModifiedRecordsMarcFileName)
+          .processedNumOfRecords(0)
+          .build()));
+      when(ruleService.getMarcRules(bulkOperationId))
+        .thenReturn(bulkOperationMarcRuleCollection);
+      when(ruleService.getRules(bulkOperationId))
+        .thenReturn(new BulkOperationRuleCollection()
+          .bulkOperationRules(Collections.emptyList())
+          .totalRecords(0));
+      when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
+        .thenReturn(BulkOperationDataProcessing.builder()
+          .bulkOperationId(bulkOperationId)
+          .processedNumOfRecords(0)
+          .build());
+      when(dataProcessingRepository.findAllByBulkOperationId(bulkOperationId))
+        .thenReturn(Collections.singletonList(BulkOperationDataProcessing.builder()
+          .bulkOperationId(bulkOperationId)
+          .status(StatusType.COMPLETED)
+          .processedNumOfRecords(1)
+          .build()));
+      when(remoteFileSystemClient.get(pathToMatchedRecordsMarcFile))
+        .thenReturn(new FileInputStream(pathToInstanceMarc));
+      when(remoteFileSystemClient.get(pathToMatchedJson))
+        .thenReturn(new FileInputStream(pathToInstanceJson));
+      when(remoteFileSystemClient.writer(anyString()))
+        .thenReturn(new StringWriter());
+      when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenReturn(new MarcRemoteStorageWriter(new RemoteStorageWriter(expectedPathToModifiedMarcFile, 8192, remoteFolioS3Client)));
+
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
+
+      var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
+      Awaitility.await().untilAsserted(() -> verify(dataProcessingRepository, times(4)).save(dataProcessingCaptor.capture()));
+      var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(2);
+      assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(0));
+    }
+  }
+
+  @Test
+  @SneakyThrows
   void  shouldPopulateErrorToBulkOperationIfS3IssuesForConfirmChangesForInstanceMarc() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
