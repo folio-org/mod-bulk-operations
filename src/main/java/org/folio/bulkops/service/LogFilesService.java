@@ -63,6 +63,14 @@ public class LogFilesService {
       remoteFileSystemClient.remove(bulkOperation.getLinkToPreviewRecordsJsonFile());
       bulkOperation.setLinkToPreviewRecordsJsonFile(null);
     }
+    if (isNotEmpty(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
+      remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsMarcFile());
+      bulkOperation.setLinkToCommittedRecordsMarcFile(null);
+    }
+    if (isNotEmpty(bulkOperation.getLinkToCommittedRecordsMarcCsvFile())) {
+      remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsMarcCsvFile());
+      bulkOperation.setLinkToCommittedRecordsMarcCsvFile(null);
+    }
   }
 
   public void deleteFileByOperationIdAndName(UUID operationId, String fileName) {
@@ -110,6 +118,10 @@ public class LogFilesService {
     if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
       remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsMarcFile());
       bulkOperation.setLinkToModifiedRecordsMarcFile(null);
+    }
+    if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsMarcCsvFile())) {
+      remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsMarcCsvFile());
+      bulkOperation.setLinkToModifiedRecordsMarcCsvFile(null);
     }
     bulkOperationRepository.save(bulkOperation);
   }

@@ -68,10 +68,12 @@ public class BulkOperation {
   private String linkToModifiedRecordsJsonFile;
   private String linkToModifiedRecordsCsvFile;
   private String linkToModifiedRecordsMarcFile;
+  private String linkToModifiedRecordsMarcCsvFile;
   private String linkToPreviewRecordsJsonFile;
   private String linkToCommittedRecordsJsonFile;
   private String linkToCommittedRecordsCsvFile;
   private String linkToCommittedRecordsMarcFile;
+  private String linkToCommittedRecordsMarcCsvFile;
   private String linkToCommittedRecordsErrorsCsvFile;
 
   private int totalNumOfRecords;
