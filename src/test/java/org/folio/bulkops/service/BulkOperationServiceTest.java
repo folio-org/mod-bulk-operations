@@ -3,6 +3,7 @@ package org.folio.bulkops.service;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
@@ -1585,5 +1586,46 @@ class BulkOperationServiceTest extends BaseTest {
       verify(metadataProviderService).isDataImportJobCompleted(any());
       verify(metadataProviderService).getUpdatedInstanceIds(any());
     }
+  }
+
+  @Test
+  void shouldSaveUnchangedRecordsIfNoRulesArePresent() {
+    var operationId = UUID.randomUUID();
+    var matchedCsvFileName = "matched.csv";
+    var matchedMrcFileName = "matched.mrc";
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(INSTANCE_MARC)
+      .linkToTriggeringCsvFile("instances.csv")
+      .linkToMatchedRecordsCsvFile(matchedCsvFileName)
+      .linkToMatchedRecordsMarcFile(matchedMrcFileName)
+      .build();
+
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(operation);
+
+    when(ruleService.hasAdministrativeUpdates(operation))
+      .thenReturn(false);
+    when(ruleService.hasMarcUpdates(operation))
+      .thenReturn(false);
+
+    var csvContent = new ByteArrayInputStream("csv".getBytes());
+    var marcContent = new ByteArrayInputStream("marc".getBytes());
+    when(remoteFileSystemClient.get(matchedCsvFileName))
+      .thenReturn(csvContent);
+    when(remoteFileSystemClient.get(matchedMrcFileName))
+      .thenReturn(marcContent);
+    when(remoteFileSystemClient.put(eq(csvContent), anyString()))
+      .thenReturn("copy.csv");
+    when(remoteFileSystemClient.put(eq(marcContent), anyString()))
+      .thenReturn("copy.mrc");
+
+    bulkOperationService.commit(operation);
+
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository, times(6)).save(operationCaptor.capture());
+    var op = operationCaptor.getAllValues().get(5);
+    assertEquals("copy.csv", op.getLinkToCommittedRecordsCsvFile());
+    assertEquals("copy.mrc", op.getLinkToCommittedRecordsMarcFile());
   }
 }
