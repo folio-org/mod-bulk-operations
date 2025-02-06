@@ -38,6 +38,7 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class MarcUpdateService {
   public static final String CHANGED_MARC_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-%s.mrc";
+  public static final String CHANGED_MARC_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-CSV%s.csv";
   public static final String MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY = "Bulk edit of MARC fields is supported only for instance with MARC source.";
 
   private final BulkOperationExecutionRepository executionRepository;

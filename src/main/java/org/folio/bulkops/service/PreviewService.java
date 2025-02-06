@@ -2,7 +2,6 @@ package org.folio.bulkops.service;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
-import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -52,7 +51,6 @@ import java.util.stream.Collectors;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.CsvCustomBindByPosition;
-import com.opencsv.exceptions.CsvValidationException;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -69,7 +67,6 @@ import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
-import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.Row;
@@ -113,6 +110,7 @@ public class PreviewService {
 
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+  private final Marc21ReferenceProvider marc21ReferenceProvider;
 
   public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset, int limit) {
     var clazz = resolveEntityClass(operation.getEntityType());
@@ -183,7 +181,7 @@ public class PreviewService {
     if (isNotEmpty(linkToMarcFile)) {
       referenceProvider.updateMappingRules();
       var marcRules = ruleService.getMarcRules(bulkOperation.getId());
-      var changedOptionsSet = getChangedOptionsSet(marcRules);
+      var changedOptionsSet = marc21ReferenceProvider.getChangedOptionsSet(marcRules);
       var compositeTable = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class);
       noteTableUpdater.extendTableWithInstanceNotesTypes(compositeTable, changedOptionsSet);
       var sourcePosition = getCellPositionByName(INSTANCE_SOURCE);
@@ -201,7 +199,7 @@ public class PreviewService {
         } else {
           var hrid = csvRow.getRow().get(hridPosition);
           if (marcRecords.containsKey(hrid)) {
-            var marcRow = new Row().row(marcToUnifiedTableRowMapper.processRecord(marcRecords.get(hrid), headers));
+            var marcRow = new Row().row(marcToUnifiedTableRowMapper.processRecord(marcRecords.get(hrid), headers, false));
             enrichRowWithAdministrativeData(marcRow, csvRow);
             compositeTable.addRowsItem(marcRow);
           }
@@ -388,14 +386,6 @@ public class PreviewService {
       });
     });
     log.info(format("Bulk Operation ID: %s, forced to visible fields: %s", bulkOperationId.toString(), String.join(",", forceVisibleOptions)));
-    return forceVisibleOptions;
-  }
-
-  private Set<String> getChangedOptionsSet(BulkOperationMarcRuleCollection rules) {
-    Set<String> forceVisibleOptions = new HashSet<>();
-    rules.getBulkOperationMarcRules()
-      .stream().filter(rule -> referenceProvider.getMappedNoteTags().contains(rule.getTag()))
-      .forEach(rule -> forceVisibleOptions.add(referenceProvider.getNoteTypeByTag(rule.getTag())));
     return forceVisibleOptions;
   }
 
