@@ -46,6 +46,7 @@ import org.folio.bulkops.service.LogFilesService;
 import org.folio.bulkops.service.PreviewService;
 import org.folio.bulkops.service.RuleService;
 import org.folio.bulkops.service.UserPermissionsService;
+import org.folio.bulkops.util.MarcCsvHelper;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.core.io.InputStreamResource;
@@ -86,6 +87,7 @@ public class BulkOperationController implements BulkOperationsApi {
   private final NoteProcessorFactory noteProcessorFactory;
   private final BulkOperationRepository bulkOperationRepository;
   private final UserPermissionsService userPermissionsService;
+  private final MarcCsvHelper marcCsvHelper;
 
   @Override
   public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(String query, Integer offset, Integer limit) {
@@ -184,6 +186,10 @@ public class BulkOperationController implements BulkOperationsApi {
         var entityType = bulkOperation.getEntityType().getValue();
         if (isDownloadPreview(fileContentType) && SPLIT_NOTE_ENTITIES.contains(entityType)) {
           content = noteProcessorFactory.getNoteProcessor(entityType).processCsvContent(content, bulkOperation);
+        }
+        if (INSTANCE_MARC.equals(bulkOperation.getEntityType())
+          && Set.of(PROPOSED_CHANGES_FILE, COMMITTED_RECORDS_FILE).contains(fileContentType)) {
+          content = marcCsvHelper.enrichCsvWithMarcChanges(content, bulkOperation);
         }
         if (CSV_EXTENSION.equalsIgnoreCase(FilenameUtils.getExtension(path))) {
           content = getCsvContentWithUtf8Bom(content);

@@ -43,4 +43,6 @@
   <include file="changes/21-01-2025_add_committed_warnings.xml" relativeToChangelogFile="true"/>
   <include file="changes/17-01-2025_add_bulk_operation_apply_marc_changes_status.xml" relativeToChangelogFile="true"/>
   <include file="changes/29-01-2025_update_bulk_operation_add_num_warnings.xml" relativeToChangelogFile="true"/>
+  <include file="changes/30-01-2025_add_marc_csv_links_to_bulk_operation_table.xml" relativeToChangelogFile="true"/>
+  <include file="changes/05-02-2025_add_migration_script_for_warnings.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
