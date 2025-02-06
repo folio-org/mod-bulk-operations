@@ -46,21 +46,21 @@ class MarcCsvHelperTest extends BaseTest {
 
   @Test
   void shouldGetModifiedDataForCsv() {
-    var record = new RecordImpl();
-    record.setLeader(new LeaderImpl("00714cam a2200205 a 4500"));
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("00714cam a2200205 a 4500"));
     var field = new DataFieldImpl("245", ' ', ' ');
     var subfield = new SubfieldImpl('a', "Sample title");
     field.addSubfield(subfield);
-    record.addVariableField(field);
+    marcRecord.addVariableField(field);
     field = new DataFieldImpl("500", ' ', ' ');
     subfield = new SubfieldImpl('a', "General note");
     field.addSubfield(subfield);
-    record.addVariableField(field);
+    marcRecord.addVariableField(field);
 
     when(instanceReferenceService.getAllInstanceNoteTypes())
       .thenReturn(Collections.singletonList(new InstanceNoteType().name("General note")));
 
-    var res = marcCsvHelper.getModifiedDataForCsv(record);
+    var res = marcCsvHelper.getModifiedDataForCsv(marcRecord);
 
     assertThat(res[11]).isEqualTo("Sample title");
     assertThat(res[23]).isEqualTo("General note;General note;false");

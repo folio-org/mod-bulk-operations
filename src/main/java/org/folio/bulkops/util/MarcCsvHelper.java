@@ -38,9 +38,9 @@ public class MarcCsvHelper {
   private final RuleService ruleService;
   private final Marc21ReferenceProvider marc21ReferenceProvider;
 
-  public String[] getModifiedDataForCsv(Record record) {
+  public String[] getModifiedDataForCsv(Record marcRecord) {
     var instanceHeaderNames = getInstanceHeaderNames();
-    var csvData = marcToUnifiedTableRowMapper.processRecord(record, instanceHeaderNames, true);
+    var csvData = marcToUnifiedTableRowMapper.processRecord(marcRecord, instanceHeaderNames, true);
     var concatenatedNotes = csvData.subList(INSTANCE_NOTE_POSITION, csvData.size()).stream()
       .filter(StringUtils::isNotBlank)
       .collect(Collectors.joining(ITEM_DELIMITER_SPACED));

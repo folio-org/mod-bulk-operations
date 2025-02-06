@@ -64,9 +64,9 @@ public class SrsService {
             .get("records");
           for (var jsonNodeIterator = marcJsons.elements(); jsonNodeIterator.hasNext();) {
             var recordJson = jsonNodeIterator.next().get("parsedRecord").get("content").toString();
-            var record = jsonToMarcRecord(recordJson);
-            writer.writeRecord(record);
-            csvWriter.writeNext(marcCsvHelper.getModifiedDataForCsv(record));
+            var marcRecord = jsonToMarcRecord(recordJson);
+            writer.writeRecord(marcRecord);
+            csvWriter.writeNext(marcCsvHelper.getModifiedDataForCsv(marcRecord));
           }
           fetchedNumOfRecords += ids.size();
           updateBulkOperationProgress(bulkOperation, ids.size());
