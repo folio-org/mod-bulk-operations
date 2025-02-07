@@ -183,6 +183,7 @@ public class PreviewService {
       var marcRules = ruleService.getMarcRules(bulkOperation.getId());
       var changedOptionsSet = marc21ReferenceProvider.getChangedOptionsSet(marcRules);
       var compositeTable = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class);
+      forceVisibleMarcFields(compositeTable, changedOptionsSet);
       noteTableUpdater.extendTableWithInstanceNotesTypes(compositeTable, changedOptionsSet);
       var sourcePosition = getCellPositionByName(INSTANCE_SOURCE);
       var hridPosition = getCellPositionByName(INSTANCE_HRID);
@@ -224,6 +225,14 @@ public class PreviewService {
           header.setForceVisible(true);
         }
       });
+  }
+
+  private void forceVisibleMarcFields(UnifiedTable unifiedTable, Set<String> changedOptionsSet) {
+    unifiedTable.getHeader().forEach(cell -> {
+      if (changedOptionsSet.contains(cell.getValue())) {
+        cell.setForceVisible(true);
+      }
+    });
   }
 
   private void enrichRowWithAdministrativeData(Row marcRow, Row csvRow) {
