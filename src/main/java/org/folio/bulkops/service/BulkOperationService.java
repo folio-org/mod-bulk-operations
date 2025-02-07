@@ -269,11 +269,6 @@ public class BulkOperationService {
         }
 
         processedNumOfRecords++;
-
-        if (processedNumOfRecords - dataProcessing.getProcessedNumOfRecords() > OPERATION_UPDATING_STEP) {
-          dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
-          dataProcessingRepository.save(dataProcessing);
-        }
       }
 
       if (processedNumOfRecords > 0) {
@@ -295,7 +290,7 @@ public class BulkOperationService {
     }
   }
 
-  private void confirmForInstanceMarc(BulkOperationDataProcessing dataProcessing)  {
+  public void confirmForInstanceMarc(BulkOperationDataProcessing dataProcessing)  {
     var operationId = dataProcessing.getBulkOperationId();
     var operation = getBulkOperationOrThrow(operationId);
 
@@ -321,11 +316,6 @@ public class BulkOperationService {
           csvWriter.writeNext(data);
 
           processedNumOfRecords++;
-
-          if (processedNumOfRecords - dataProcessing.getProcessedNumOfRecords() > OPERATION_UPDATING_STEP) {
-            dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
-            dataProcessingRepository.save(dataProcessing);
-          }
         }
 
         if (processedNumOfRecords > 0) {

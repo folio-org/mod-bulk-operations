@@ -31,6 +31,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -52,6 +53,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,6 +107,7 @@ import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.processor.marc.MarcInstanceDataProcessor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
@@ -183,6 +186,9 @@ class BulkOperationServiceTest extends BaseTest {
 
   @MockBean
   private MarcCsvHelper marcCsvHelper;
+
+  @MockBean
+  private MarcInstanceDataProcessor marcInstanceDataProcessor;
 
   @Test
   @SneakyThrows
@@ -1662,5 +1668,55 @@ class BulkOperationServiceTest extends BaseTest {
     bulkOperationService.confirm(processing);
 
     verify(bulkOperationRepository, times(0)).save(any(BulkOperation.class));
+  }
+
+  @Test
+  void shouldSkipConfirmForInstanceMarcIfNoMatchedRecordsMarcFile() {
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(INSTANCE_MARC)
+      .build();
+    var processing = BulkOperationDataProcessing.builder()
+      .bulkOperationId(operationId)
+      .build();
+
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(operation));
+
+    bulkOperationService.confirmForInstanceMarc(processing);
+
+    var processingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
+    verify(dataProcessingRepository).save(processingCaptor.capture());
+    assertEquals(StatusType.FAILED, processingCaptor.getValue().getStatus());
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldSkipConfirmForInstanceMarkIfNoRules() {
+    var operationId = UUID.randomUUID();
+    var matchedMrcFileName = "matched.mrc";
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .linkToTriggeringCsvFile("instances.csv")
+      .linkToMatchedRecordsMarcFile(matchedMrcFileName)
+      .entityType(INSTANCE_MARC)
+
+      .build();
+    var processing = BulkOperationDataProcessing.builder()
+      .bulkOperationId(operationId)
+      .build();
+
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(operation));
+    when(ruleService.getMarcRules(operationId))
+      .thenReturn(new BulkOperationMarcRuleCollection());
+    when(remoteFileSystemClient.get(matchedMrcFileName))
+      .thenReturn(new FileInputStream("src/test/resources/files/matched.mrc"));
+
+    bulkOperationService.confirmForInstanceMarc(processing);
+
+    verify(marcInstanceDataProcessor, never()).update(any(BulkOperation.class), any(Record.class),
+      any(org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection.class), any(Date.class));
   }
 }
