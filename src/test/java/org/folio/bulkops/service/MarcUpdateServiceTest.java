@@ -187,7 +187,7 @@ class MarcUpdateServiceTest extends BaseTest {
 
     verify(errorService).saveError(any(UUID.class), identifierArgumentCaptor.capture(),
       errorMessageArgumentCaptor.capture(), eq(ErrorType.ERROR));
-    assertThat(errorMessageArgumentCaptor.getValue()).isEqualTo(MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY);
+    assertThat(errorMessageArgumentCaptor.getValue()).isEqualTo(MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY.formatted("FOLIO"));
     assertThat(identifierArgumentCaptor.getValue()).isEqualTo(HRID.equals(identifierType) ? "hrid2" : "139ed15a-edba-4cde-8f92-810a4cec7770");
   }
 }
