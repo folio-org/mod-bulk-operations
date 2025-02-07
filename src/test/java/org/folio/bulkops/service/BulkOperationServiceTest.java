@@ -1635,4 +1635,32 @@ class BulkOperationServiceTest extends BaseTest {
     assertEquals("copy.csv", op.getLinkToCommittedRecordsCsvFile());
     assertEquals("copy.mrc", op.getLinkToCommittedRecordsMarcFile());
   }
+
+  @Test
+  @SneakyThrows
+  void shouldSkipUnsupportedInstancesOnConfirm() {
+    var operationId = UUID.randomUUID();
+    var matchedCsvFileName = "matched.csv";
+    var matchedJsonFileName = "matched.json";
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(INSTANCE_MARC)
+      .linkToTriggeringCsvFile("instances.csv")
+      .linkToMatchedRecordsCsvFile(matchedCsvFileName)
+      .build();
+    var processing = BulkOperationDataProcessing.builder()
+      .bulkOperationId(operationId)
+      .build();
+
+    when(remoteFileSystemClient.get(matchedCsvFileName))
+      .thenReturn(new FileInputStream("src/test/resources/files/instance.csv"));
+    when(remoteFileSystemClient.get(matchedJsonFileName))
+      .thenReturn(new FileInputStream("src/test/resources/files/extended_instance.json"));
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(operation));
+
+    bulkOperationService.confirm(processing);
+
+    verify(bulkOperationRepository, times(0)).save(any(BulkOperation.class));
+  }
 }
