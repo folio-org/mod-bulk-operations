@@ -507,7 +507,7 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(2).getRow().get(11), equalTo("summerland / Michael Chabon."));
     assertThat(res.getRows().get(2).getRow().get(12), equalTo("Mmerland /"));
     assertThat(res.getRows().get(2).getRow().get(13), equalTo("series800 | series810 | series811 | series830"));
-    assertThat(res.getRows().get(2).getRow().get(14), equalTo("Sample contributor"));
+    assertThat(res.getRows().get(2).getRow().get(14), equalTo("Chabon, Michael;Personal name;Artist | Another Contributor;Meeting name;contributor"));
     assertThat(res.getRows().get(2).getRow().get(15), equalTo("1st ed."));
     assertThat(res.getRows().get(2).getRow().get(16), equalTo("500 p. ; 22 cm."));
     assertThat(res.getRows().get(2).getRow().get(17), equalTo("text"));
@@ -658,7 +658,7 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(0).getRow().get(11), equalTo("summerland / Michael Chabon."));
     assertThat(res.getRows().get(0).getRow().get(12), equalTo("Mmerland /"));
     assertThat(res.getRows().get(0).getRow().get(13), equalTo("series800 | series810 | series811 | series830"));
-    assertThat(res.getRows().get(0).getRow().get(14), equalTo("Sample contributor"));
+    assertThat(res.getRows().get(0).getRow().get(14), equalTo("Chabon, Michael;Personal name;Artist | Another Contributor;Meeting name;contributor"));
     assertThat(res.getRows().get(0).getRow().get(15), equalTo("1st ed."));
     assertThat(res.getRows().get(0).getRow().get(16), equalTo("500 p. ; 22 cm."));
     assertThat(res.getRows().get(0).getRow().get(17), equalTo("text"));
