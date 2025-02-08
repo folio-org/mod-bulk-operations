@@ -66,6 +66,7 @@ public class MarcCsvHelper {
               line[instanceHeaderNames.indexOf(entry.getKey())] = entry.getValue();
             }
           }
+          handleSpecialCharacters(line);
           writer.write(String.join(",", line) + "\n");
         }
         writer.flush();
@@ -123,5 +124,18 @@ public class MarcCsvHelper {
     return table.getHeader().stream()
       .map(Cell::getValue)
       .toList();
+  }
+
+  private void handleSpecialCharacters(String[] strings) {
+    for (int i = 0; i < strings.length; i++) {
+      var s = strings[i];
+      if (s.contains("\"")) {
+        s = s.replace("\"", "\"\"");
+      }
+      if (s.contains("\n") || s.contains(",")) {
+        s = "\"" + s + "\"";
+      }
+      strings[i] = s;
+    }
   }
 }
