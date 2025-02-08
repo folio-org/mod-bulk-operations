@@ -1790,4 +1790,48 @@ class BulkOperationServiceTest extends BaseTest {
     verify(marcInstanceDataProcessor, never()).update(any(BulkOperation.class), any(Record.class),
       any(org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection.class), any(Date.class));
   }
+
+  @Test
+  void shouldSkipCommitAndCopyMatchedIfNoRules() {
+    var operationId = UUID.randomUUID();
+    var matchedCsv = "matched.csv";
+    var matchedMarc = "matched.mrc";
+    var copyCsv = "copy.csv";
+    var copyMarc = "copy.mrc";
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(INSTANCE_MARC)
+      .linkToTriggeringCsvFile("instances.csv")
+      .linkToMatchedRecordsCsvFile(matchedCsv)
+      .linkToMatchedRecordsMarcFile(matchedMarc)
+      .build();
+
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(operation);
+    when(ruleService.hasAdministrativeUpdates(operation))
+      .thenReturn(false);
+    when(ruleService.hasMarcUpdates(operation))
+      .thenReturn(false);
+    var csvContent = new ByteArrayInputStream("csv".getBytes());
+    when(remoteFileSystemClient.get(matchedCsv))
+      .thenReturn(csvContent);
+    when(remoteFileSystemClient.put(eq(csvContent), anyString()))
+      .thenReturn(copyCsv);
+    var marcContent = new ByteArrayInputStream("mrc".getBytes());
+    when(remoteFileSystemClient.get(matchedMarc))
+      .thenReturn(marcContent);
+    when(remoteFileSystemClient.put(eq(marcContent), anyString()))
+      .thenReturn(copyMarc);
+
+    bulkOperationService.commit(operation);
+
+    verify(remoteFileSystemClient).put(eq(marcContent), anyString());
+    verify(remoteFileSystemClient).put(eq(csvContent), anyString());
+
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository, times(6)).save(operationCaptor.capture());
+    var lastCapture = operationCaptor.getAllValues().get(5);
+    assertEquals(copyMarc, lastCapture.getLinkToCommittedRecordsMarcFile());
+    assertEquals(copyCsv, lastCapture.getLinkToCommittedRecordsCsvFile());
+  }
 }
