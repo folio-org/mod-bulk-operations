@@ -3,7 +3,6 @@ package org.folio.bulkops.util;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import lombok.SneakyThrows;
@@ -28,8 +27,6 @@ import org.marc4j.marc.impl.SubfieldImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
