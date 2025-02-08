@@ -1710,8 +1710,8 @@ class BulkOperationServiceTest extends BaseTest {
     bulkOperationService.commit(operation);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(6)).save(operationCaptor.capture());
-    var op = operationCaptor.getAllValues().get(5);
+    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
+    var op = operationCaptor.getAllValues().get(3);
     assertEquals("copy.csv", op.getLinkToCommittedRecordsCsvFile());
     assertEquals("copy.mrc", op.getLinkToCommittedRecordsMarcFile());
   }
@@ -1832,8 +1832,8 @@ class BulkOperationServiceTest extends BaseTest {
     verify(remoteFileSystemClient).put(eq(csvContent), anyString());
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(6)).save(operationCaptor.capture());
-    var lastCapture = operationCaptor.getAllValues().get(5);
+    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
+    var lastCapture = operationCaptor.getAllValues().get(3);
     assertEquals(copyMarc, lastCapture.getLinkToCommittedRecordsMarcFile());
     assertEquals(copyCsv, lastCapture.getLinkToCommittedRecordsCsvFile());
   }
