@@ -507,7 +507,7 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(2).getRow().get(11), equalTo("summerland / Michael Chabon."));
     assertThat(res.getRows().get(2).getRow().get(12), equalTo("Mmerland /"));
     assertThat(res.getRows().get(2).getRow().get(13), equalTo("series800 | series810 | series811 | series830"));
-    assertThat(res.getRows().get(2).getRow().get(14), equalTo("Sample contributor"));
+    assertThat(res.getRows().get(2).getRow().get(14), equalTo("Chabon, Michael;Personal name;Artist | Another Contributor;Meeting name;contributor"));
     assertThat(res.getRows().get(2).getRow().get(15), equalTo("1st ed."));
     assertThat(res.getRows().get(2).getRow().get(16), equalTo("500 p. ; 22 cm."));
     assertThat(res.getRows().get(2).getRow().get(17), equalTo("text"));
@@ -536,10 +536,13 @@ class PreviewServiceTest extends BaseTest {
       .build();
 
     var rules = new BulkOperationMarcRuleCollection()
-      .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule()
+      .bulkOperationMarcRules(List.of(new BulkOperationMarcRule()
         .bulkOperationId(bulkOperationId)
-        .tag("520")))
-      .totalRecords(1);
+        .tag("520"),
+        new BulkOperationMarcRule()
+          .bulkOperationId(bulkOperationId)
+          .tag("710")))
+      .totalRecords(2);
 
     when(ruleService.getMarcRules(bulkOperationId)).thenReturn(rules);
     when(ruleService.getRules(bulkOperationId))
@@ -571,6 +574,8 @@ class PreviewServiceTest extends BaseTest {
 
     var res = previewService.getPreview(bulkOperation, EDIT, 0, 10);
 
+    assertThat(res.getHeader().get(14).getValue(), equalTo("Contributors"));
+    assertThat(res.getHeader().get(14).getForceVisible(), equalTo(Boolean.TRUE));
     assertThat(res.getHeader().get(23).getValue(), equalTo("General note"));
     assertThat(res.getHeader().get(23).getForceVisible(), equalTo(Boolean.FALSE));
     assertThat(res.getHeader().get(24).getValue(), equalTo("Summary"));
@@ -658,7 +663,7 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(0).getRow().get(11), equalTo("summerland / Michael Chabon."));
     assertThat(res.getRows().get(0).getRow().get(12), equalTo("Mmerland /"));
     assertThat(res.getRows().get(0).getRow().get(13), equalTo("series800 | series810 | series811 | series830"));
-    assertThat(res.getRows().get(0).getRow().get(14), equalTo("Sample contributor"));
+    assertThat(res.getRows().get(0).getRow().get(14), equalTo("Chabon, Michael;Personal name;Artist | Another Contributor;Meeting name;contributor"));
     assertThat(res.getRows().get(0).getRow().get(15), equalTo("1st ed."));
     assertThat(res.getRows().get(0).getRow().get(16), equalTo("500 p. ; 22 cm."));
     assertThat(res.getRows().get(0).getRow().get(17), equalTo("text"));

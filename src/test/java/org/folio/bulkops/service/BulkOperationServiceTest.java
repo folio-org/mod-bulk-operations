@@ -3,6 +3,7 @@ package org.folio.bulkops.service;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
@@ -30,6 +31,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -51,6 +53,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,6 +107,7 @@ import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.processor.marc.MarcInstanceDataProcessor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
@@ -182,6 +186,12 @@ class BulkOperationServiceTest extends BaseTest {
 
   @MockBean
   private MarcCsvHelper marcCsvHelper;
+
+  @MockBean
+  private MarcInstanceDataProcessor marcInstanceDataProcessor;
+
+  @MockBean
+  private MarcUpdateService marcUpdateService;
 
   @Test
   @SneakyThrows
@@ -1662,6 +1672,202 @@ class BulkOperationServiceTest extends BaseTest {
       verify(metadataProviderService).calculateProgress(any());
       verify(metadataProviderService).isDataImportJobCompleted(any());
       verify(metadataProviderService).getUpdatedInstanceIds(any());
+    }
+  }
+
+  @Test
+  void shouldSaveUnchangedRecordsIfNoRulesArePresent() {
+    var operationId = UUID.randomUUID();
+    var matchedCsvFileName = "matched.csv";
+    var matchedMrcFileName = "matched.mrc";
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(INSTANCE_MARC)
+      .linkToTriggeringCsvFile("instances.csv")
+      .linkToMatchedRecordsCsvFile(matchedCsvFileName)
+      .linkToMatchedRecordsMarcFile(matchedMrcFileName)
+      .build();
+
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(operation);
+
+    when(ruleService.hasAdministrativeUpdates(operation))
+      .thenReturn(false);
+    when(ruleService.hasMarcUpdates(operation))
+      .thenReturn(false);
+
+    var csvContent = new ByteArrayInputStream("csv".getBytes());
+    var marcContent = new ByteArrayInputStream("marc".getBytes());
+    when(remoteFileSystemClient.get(matchedCsvFileName))
+      .thenReturn(csvContent);
+    when(remoteFileSystemClient.get(matchedMrcFileName))
+      .thenReturn(marcContent);
+    when(remoteFileSystemClient.put(eq(csvContent), anyString()))
+      .thenReturn("copy.csv");
+    when(remoteFileSystemClient.put(eq(marcContent), anyString()))
+      .thenReturn("copy.mrc");
+
+    bulkOperationService.commit(operation);
+
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
+    var op = operationCaptor.getAllValues().get(3);
+    assertEquals("copy.csv", op.getLinkToCommittedRecordsCsvFile());
+    assertEquals("copy.mrc", op.getLinkToCommittedRecordsMarcFile());
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldSkipUnsupportedInstancesOnConfirm() {
+    var operationId = UUID.randomUUID();
+    var matchedCsvFileName = "matched.csv";
+    var matchedJsonFileName = "matched.json";
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(INSTANCE_MARC)
+      .linkToTriggeringCsvFile("instances.csv")
+      .linkToMatchedRecordsCsvFile(matchedCsvFileName)
+      .build();
+    var processing = BulkOperationDataProcessing.builder()
+      .bulkOperationId(operationId)
+      .build();
+
+    when(remoteFileSystemClient.get(matchedCsvFileName))
+      .thenReturn(new FileInputStream("src/test/resources/files/instance.csv"));
+    when(remoteFileSystemClient.get(matchedJsonFileName))
+      .thenReturn(new FileInputStream("src/test/resources/files/extended_instance.json"));
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(operation));
+
+    bulkOperationService.confirm(processing);
+
+    verify(bulkOperationRepository, times(0)).save(any(BulkOperation.class));
+  }
+
+  @Test
+  void shouldSkipConfirmForInstanceMarcIfNoMatchedRecordsMarcFile() {
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(INSTANCE_MARC)
+      .build();
+    var processing = BulkOperationDataProcessing.builder()
+      .bulkOperationId(operationId)
+      .build();
+
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(operation));
+
+    bulkOperationService.confirmForInstanceMarc(processing);
+
+    var processingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
+    verify(dataProcessingRepository).save(processingCaptor.capture());
+    assertEquals(StatusType.FAILED, processingCaptor.getValue().getStatus());
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldSkipConfirmForInstanceMarkIfNoRules() {
+    var operationId = UUID.randomUUID();
+    var matchedMrcFileName = "matched.mrc";
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .linkToTriggeringCsvFile("instances.csv")
+      .linkToMatchedRecordsMarcFile(matchedMrcFileName)
+      .entityType(INSTANCE_MARC)
+
+      .build();
+    var processing = BulkOperationDataProcessing.builder()
+      .bulkOperationId(operationId)
+      .build();
+
+    when(bulkOperationRepository.findById(operationId))
+      .thenReturn(Optional.of(operation));
+    when(ruleService.getMarcRules(operationId))
+      .thenReturn(new BulkOperationMarcRuleCollection());
+    when(remoteFileSystemClient.get(matchedMrcFileName))
+      .thenReturn(new FileInputStream("src/test/resources/files/matched.mrc"));
+
+    bulkOperationService.confirmForInstanceMarc(processing);
+
+    verify(marcInstanceDataProcessor, never()).update(any(BulkOperation.class), any(Record.class),
+      any(org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection.class), any(Date.class));
+  }
+
+  @Test
+  void shouldSkipCommitAndCopyMatchedIfNoRules() {
+    var operationId = UUID.randomUUID();
+    var matchedCsv = "matched.csv";
+    var matchedMarc = "matched.mrc";
+    var copyCsv = "copy.csv";
+    var copyMarc = "copy.mrc";
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(INSTANCE_MARC)
+      .linkToTriggeringCsvFile("instances.csv")
+      .linkToMatchedRecordsCsvFile(matchedCsv)
+      .linkToMatchedRecordsMarcFile(matchedMarc)
+      .build();
+
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(operation);
+    when(ruleService.hasAdministrativeUpdates(operation))
+      .thenReturn(false);
+    when(ruleService.hasMarcUpdates(operation))
+      .thenReturn(false);
+    var csvContent = new ByteArrayInputStream("csv".getBytes());
+    when(remoteFileSystemClient.get(matchedCsv))
+      .thenReturn(csvContent);
+    when(remoteFileSystemClient.put(eq(csvContent), anyString()))
+      .thenReturn(copyCsv);
+    var marcContent = new ByteArrayInputStream("mrc".getBytes());
+    when(remoteFileSystemClient.get(matchedMarc))
+      .thenReturn(marcContent);
+    when(remoteFileSystemClient.put(eq(marcContent), anyString()))
+      .thenReturn(copyMarc);
+
+    bulkOperationService.commit(operation);
+
+    verify(remoteFileSystemClient).put(eq(marcContent), anyString());
+    verify(remoteFileSystemClient).put(eq(csvContent), anyString());
+
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
+    var lastCapture = operationCaptor.getAllValues().get(3);
+    assertEquals(copyMarc, lastCapture.getLinkToCommittedRecordsMarcFile());
+    assertEquals(copyCsv, lastCapture.getLinkToCommittedRecordsCsvFile());
+  }
+
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+    true  | false
+    false | true
+    """, delimiter = '|')
+  void shouldStartCommitInstanceMarcIfRulesArePresent(boolean hasAdministrativeRules, boolean hasMarcRules) {
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(INSTANCE_MARC)
+      .linkToTriggeringCsvFile("instances.csv")
+      .linkToModifiedRecordsJsonFile("modified.json")
+      .build();
+
+    when(executionRepository.save(any(BulkOperationExecution.class)))
+      .thenReturn(new BulkOperationExecution());
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(operation);
+    when(ruleService.hasAdministrativeUpdates(operation))
+      .thenReturn(hasAdministrativeRules);
+    when(ruleService.hasMarcUpdates(operation))
+      .thenReturn(hasMarcRules);
+
+    bulkOperationService.commit(operation);
+
+    if (hasAdministrativeRules) {
+      verify(executionRepository, times(2)).save(any(BulkOperationExecution.class));
+    }
+    if (hasMarcRules) {
+      verify(marcUpdateService).commitForInstanceMarc(any(BulkOperation.class));
     }
   }
 }

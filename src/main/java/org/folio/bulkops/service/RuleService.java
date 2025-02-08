@@ -90,4 +90,12 @@ public class RuleService {
       .toList();
     return new BulkOperationMarcRuleCollection().bulkOperationMarcRules(rules).totalRecords(rules.size());
   }
+
+  public boolean hasAdministrativeUpdates(BulkOperation bulkOperation) {
+    return ruleRepository.findFirstByBulkOperationId(bulkOperation.getId()).isPresent();
+  }
+
+  public boolean hasMarcUpdates(BulkOperation bulkOperation) {
+    return marcRuleRepository.findFirstByBulkOperationId(bulkOperation.getId()).isPresent();
+  }
 }

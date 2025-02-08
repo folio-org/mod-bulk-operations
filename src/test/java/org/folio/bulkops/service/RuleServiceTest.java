@@ -2,12 +2,15 @@ package org.folio.bulkops.service;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.dto.Action;
@@ -25,6 +28,8 @@ import org.folio.bulkops.repository.BulkOperationRuleDetailsRepository;
 import org.folio.bulkops.repository.BulkOperationRuleRepository;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -104,6 +109,34 @@ class RuleServiceTest extends BaseTest {
     var fetchedRules = ruleService.getMarcRules(BULK_OPERATION_ID);
 
     assertEquals(marcRules(), fetchedRules);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void shouldCheckIfAdministrativeDataRulesArePresent(boolean isPresent) {
+    var operation = BulkOperation.builder().id(UUID.randomUUID()).build();
+    when(ruleRepository.findFirstByBulkOperationId(operation.getId()))
+      .thenReturn(isPresent? Optional.of(new org.folio.bulkops.domain.entity.BulkOperationRule()) : Optional.empty());
+
+    if (isPresent) {
+      assertTrue(ruleService.hasAdministrativeUpdates(operation));
+    } else {
+      assertFalse(ruleService.hasAdministrativeUpdates(operation));
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void shouldCheckIfMarcRulesArePresent(boolean isPresent) {
+    var operation = BulkOperation.builder().id(UUID.randomUUID()).build();
+    when(marcRuleRepository.findFirstByBulkOperationId(operation.getId()))
+      .thenReturn(isPresent? Optional.of(new org.folio.bulkops.domain.entity.BulkOperationMarcRule()) : Optional.empty());
+
+    if (isPresent) {
+      assertTrue(ruleService.hasMarcUpdates(operation));
+    } else {
+      assertFalse(ruleService.hasMarcUpdates(operation));
+    }
   }
 
   private BulkOperationRuleCollection rules() {
