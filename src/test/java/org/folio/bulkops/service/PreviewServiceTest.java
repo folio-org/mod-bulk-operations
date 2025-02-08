@@ -536,10 +536,13 @@ class PreviewServiceTest extends BaseTest {
       .build();
 
     var rules = new BulkOperationMarcRuleCollection()
-      .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule()
+      .bulkOperationMarcRules(List.of(new BulkOperationMarcRule()
         .bulkOperationId(bulkOperationId)
-        .tag("520")))
-      .totalRecords(1);
+        .tag("520"),
+        new BulkOperationMarcRule()
+          .bulkOperationId(bulkOperationId)
+          .tag("710")))
+      .totalRecords(2);
 
     when(ruleService.getMarcRules(bulkOperationId)).thenReturn(rules);
     when(ruleService.getRules(bulkOperationId))
@@ -571,6 +574,8 @@ class PreviewServiceTest extends BaseTest {
 
     var res = previewService.getPreview(bulkOperation, EDIT, 0, 10);
 
+    assertThat(res.getHeader().get(14).getValue(), equalTo("Contributors"));
+    assertThat(res.getHeader().get(14).getForceVisible(), equalTo(Boolean.TRUE));
     assertThat(res.getHeader().get(23).getValue(), equalTo("General note"));
     assertThat(res.getHeader().get(23).getForceVisible(), equalTo(Boolean.FALSE));
     assertThat(res.getHeader().get(24).getValue(), equalTo("Summary"));
