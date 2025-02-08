@@ -190,6 +190,9 @@ class BulkOperationServiceTest extends BaseTest {
   @MockBean
   private MarcInstanceDataProcessor marcInstanceDataProcessor;
 
+  @MockBean
+  private MarcUpdateService marcUpdateService;
+
   @Test
   @SneakyThrows
   void shouldUploadIdentifiers() {
@@ -1833,5 +1836,38 @@ class BulkOperationServiceTest extends BaseTest {
     var lastCapture = operationCaptor.getAllValues().get(5);
     assertEquals(copyMarc, lastCapture.getLinkToCommittedRecordsMarcFile());
     assertEquals(copyCsv, lastCapture.getLinkToCommittedRecordsCsvFile());
+  }
+
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+    true  | false
+    false | true
+    """, delimiter = '|')
+  void shouldStartCommitInstanceMarcIfRulesArePresent(boolean hasAdministrativeRules, boolean hasMarcRules) {
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(INSTANCE_MARC)
+      .linkToTriggeringCsvFile("instances.csv")
+      .linkToModifiedRecordsJsonFile("modified.json")
+      .build();
+
+    when(executionRepository.save(any(BulkOperationExecution.class)))
+      .thenReturn(new BulkOperationExecution());
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(operation);
+    when(ruleService.hasAdministrativeUpdates(operation))
+      .thenReturn(hasAdministrativeRules);
+    when(ruleService.hasMarcUpdates(operation))
+      .thenReturn(hasMarcRules);
+
+    bulkOperationService.commit(operation);
+
+    if (hasAdministrativeRules) {
+      verify(executionRepository, times(2)).save(any(BulkOperationExecution.class));
+    }
+    if (hasMarcRules) {
+      verify(marcUpdateService).commitForInstanceMarc(any(BulkOperation.class));
+    }
   }
 }
