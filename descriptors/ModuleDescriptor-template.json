@@ -101,7 +101,8 @@
             "inventory-storage.statistical-codes.item.get",
             "inventory-storage.instance-note-types.item.get",
             "consortium-search.holdings.batch.collection.get",
-            "consortium-search.items.batch.collection.get"
+            "consortium-search.items.batch.collection.get",
+            "mapping-rules.get"
           ]
         },
         {
