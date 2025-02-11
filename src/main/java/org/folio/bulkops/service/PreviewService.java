@@ -243,7 +243,6 @@ public class PreviewService {
     marcRow.getRow().set(positions.get(INSTANCE_PREVIOUSLY_HELD), csvRow.getRow().get(positions.get(INSTANCE_PREVIOUSLY_HELD)));
     marcRow.getRow().set(positions.get(INSTANCE_STATUS_TERM), csvRow.getRow().get(positions.get(INSTANCE_STATUS_TERM)));
     marcRow.getRow().set(positions.get(INSTANCE_NATURE_OF_CONTENT), csvRow.getRow().get(positions.get(INSTANCE_NATURE_OF_CONTENT)));
-    marcRow.getRow().set(positions.get(INSTANCE_LANGUAGES), csvRow.getRow().get(positions.get(INSTANCE_LANGUAGES)));
     marcRow.getRow().set(positions.get(INSTANCE_CATALOGED_DATE), csvRow.getRow().get(positions.get(INSTANCE_CATALOGED_DATE)));
     marcRow.getRow().set(positions.get(INSTANCE_STATISTICAL_CODES), csvRow.getRow().get(positions.get(INSTANCE_STATISTICAL_CODES)));
   }
