@@ -39,7 +39,7 @@ import java.util.Date;
 public class MarcUpdateService {
   public static final String CHANGED_MARC_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-%s.mrc";
   public static final String MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY = "Instance with source %s is not supported by MARC records bulk edit and cannot be updated.";
-  public static final String CHANGED_MARC_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-CSV%s.csv";
+  public static final String CHANGED_MARC_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-CSV-%s.csv";
 
   private final BulkOperationExecutionRepository executionRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;

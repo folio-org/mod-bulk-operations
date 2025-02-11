@@ -45,6 +45,7 @@ public class SrsService {
   private final MarcCsvHelper marcCsvHelper;
 
   public void retrieveMarcInstancesFromSrs(List<String> instanceIds, BulkOperation bulkOperation) {
+    log.info("Retrieving {} marc instances from SRS", instanceIds.size());
     var fetchedNumOfRecords = 0;
     var noLinkToCommitted = false;
     var triggeringFileName = FilenameUtils.getBaseName(bulkOperation.getLinkToTriggeringCsvFile());

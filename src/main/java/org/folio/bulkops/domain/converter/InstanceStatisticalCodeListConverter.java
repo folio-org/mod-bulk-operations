@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
-
 public class InstanceStatisticalCodeListConverter extends BaseConverter<List<String>> {
   @Override
   public List<String> convertToObject(String value) {
@@ -28,7 +26,7 @@ public class InstanceStatisticalCodeListConverter extends BaseConverter<List<Str
       .map(id -> {
         var sc = InstanceReferenceHelper.service().getStatisticalCodeById(id);
         var sct = InstanceReferenceHelper.service().getStatisticalCodeTypeById(sc.getStatisticalCodeTypeId());
-        return String.format("%s: %s - %s", escape(sct.getName()), escape(sc.getCode()), escape(sc.getName()));
+        return String.format("%s: %s - %s", (sct.getName()), sc.getCode(), sc.getName());
       })
       .collect(Collectors.joining("|"));
   }

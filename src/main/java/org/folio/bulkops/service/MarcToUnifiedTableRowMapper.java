@@ -20,6 +20,7 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SOURCE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_UUID;
 import static org.folio.bulkops.service.Marc21ReferenceProvider.GENERAL_NOTE;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Constants.MARC;
 
@@ -107,18 +108,26 @@ public class MarcToUnifiedTableRowMapper {
     var index = headers.indexOf(INSTANCE_LANGUAGES);
     if (index != -1) {
       var languages = helper.fetchLanguages(dataField);
-      rowData.set(index, isNotEmpty(rowData.get(index)) && isNotEmpty(languages) ?
-        String.join(ITEM_DELIMITER_SPACED, rowData.get(index), languages) :
-        languages);
+      var oldValue = rowData.get(index);
+      if (nonNull(oldValue) && !languages.isEmpty()) {
+        languages = languages.stream()
+          .filter(lang -> !oldValue.contains(lang))
+          .toList();
+        if (!languages.isEmpty()) {
+          rowData.set(index, oldValue + ARRAY_DELIMITER_SPACED + String.join(ARRAY_DELIMITER_SPACED, languages));
+        }
+      } else if (!languages.isEmpty()) {
+        rowData.set(index, String.join(ARRAY_DELIMITER_SPACED, languages));
+      }
     }
   }
 
   private void processContributors(List<String> rowData, DataField dataField, List<String> headers) {
     var index = headers.indexOf(INSTANCE_CONTRIBUTORS);
     if (index != -1) {
-      var contributor = String.join(ARRAY_DELIMITER, helper.fetchContributorName(dataField), helper.fetchNameType(dataField), helper.fetchContributorType(dataField));
+      var contributor = helper.fetchContributorName(dataField);
       rowData.set(index, isNotEmpty(rowData.get(index)) && isNotEmpty(contributor) ?
-        String.join(ITEM_DELIMITER_SPACED, rowData.get(index), contributor) :
+        String.join(ARRAY_DELIMITER_SPACED, rowData.get(index), contributor) :
         contributor);
     }
   }
@@ -163,7 +172,7 @@ public class MarcToUnifiedTableRowMapper {
   private void processResourceType(List<String> rowData, DataField dataField, List<String> headers) {
     var index = headers.indexOf(INSTANCE_RESOURCE_TYPE);
     if (index != -1) {
-      var resourceType = helper.fetchResourceType(dataField);
+      var resourceType = nonNull(dataField.getSubfield('a')) ? dataField.getSubfield('a').getData() : null;
       rowData.set(index, isNotEmpty(rowData.get(index)) && isNotEmpty(resourceType) ?
         String.join(ITEM_DELIMITER_SPACED, rowData.get(index), resourceType) :
         resourceType);

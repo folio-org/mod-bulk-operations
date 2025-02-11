@@ -65,7 +65,7 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
 
     var res = mapperHelper.fetchLanguages(dataField);
 
-    assertThat(res).isEqualTo("English | French");
+    assertThat(res).contains("English", "French");
   }
 
   @ParameterizedTest
@@ -224,7 +224,7 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
 
     var res = mapperHelper.fetchResourceType(dataField);
 
-    assertThat(res).isEqualTo(String.join(ARRAY_DELIMITER, expectedName, expectedCode, "rdacontent"));
+    assertThat(res).isEqualTo(expectedName);
   }
 
   @ParameterizedTest

@@ -117,7 +117,7 @@ public class PreviewService {
     return switch (step) {
       case UPLOAD -> buildPreviewFromCsvFile(operation.getLinkToMatchedRecordsCsvFile(), clazz, offset, limit, operation);
       case EDIT -> {
-        if (INSTANCE_MARC == operation.getEntityType() || INSTANCE == operation.getEntityType()) {
+        if (INSTANCE_MARC == operation.getEntityType()) {
           if (isFolioInstanceEditPreview(operation)) {
             yield getPreviewFromCsvWithChangedOptions(operation, operation.getLinkToModifiedRecordsCsvFile(), offset, limit);
           } else if (isMarcInstanceEditPreview(operation)) {
@@ -133,7 +133,7 @@ public class PreviewService {
         if (MANUAL == operation.getApproach()) {
           yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(), clazz, offset, limit, operation);
         } else {
-          if (INSTANCE_MARC == operation.getEntityType() || INSTANCE == operation.getEntityType()) {
+          if (INSTANCE_MARC == operation.getEntityType()) {
             if (isFolioInstanceCommitPreview(operation)) {
               yield getPreviewFromCsvWithChangedOptions(operation, operation.getLinkToCommittedRecordsCsvFile(), offset, limit);
             } else if (isMarcInstanceCommitPreview(operation)) {
@@ -243,8 +243,6 @@ public class PreviewService {
     marcRow.getRow().set(positions.get(INSTANCE_PREVIOUSLY_HELD), csvRow.getRow().get(positions.get(INSTANCE_PREVIOUSLY_HELD)));
     marcRow.getRow().set(positions.get(INSTANCE_STATUS_TERM), csvRow.getRow().get(positions.get(INSTANCE_STATUS_TERM)));
     marcRow.getRow().set(positions.get(INSTANCE_NATURE_OF_CONTENT), csvRow.getRow().get(positions.get(INSTANCE_NATURE_OF_CONTENT)));
-    marcRow.getRow().set(positions.get(INSTANCE_FORMATS), csvRow.getRow().get(positions.get(INSTANCE_FORMATS)));
-    marcRow.getRow().set(positions.get(INSTANCE_RESOURCE_TYPE), csvRow.getRow().get(positions.get(INSTANCE_RESOURCE_TYPE)));
     marcRow.getRow().set(positions.get(INSTANCE_LANGUAGES), csvRow.getRow().get(positions.get(INSTANCE_LANGUAGES)));
     marcRow.getRow().set(positions.get(INSTANCE_CATALOGED_DATE), csvRow.getRow().get(positions.get(INSTANCE_CATALOGED_DATE)));
     marcRow.getRow().set(positions.get(INSTANCE_STATISTICAL_CODES), csvRow.getRow().get(positions.get(INSTANCE_STATISTICAL_CODES)));
