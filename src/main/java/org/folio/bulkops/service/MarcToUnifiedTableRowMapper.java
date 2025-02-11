@@ -182,7 +182,10 @@ public class MarcToUnifiedTableRowMapper {
   private void processInstanceFormats(List<String> rowData, DataField dataField, List<String> headers) {
     var index = headers.indexOf(INSTANCE_FORMATS);
     if (index != -1) {
-      rowData.set(index, helper.fetchInstanceFormats(dataField));
+      var format = helper.fetchInstanceFormats(dataField);
+      rowData.set(index, isNotEmpty(rowData.get(index)) && isNotEmpty(format) ?
+        String.join(ITEM_DELIMITER_SPACED, rowData.get(index), format) :
+        format);
     }
   }
 
