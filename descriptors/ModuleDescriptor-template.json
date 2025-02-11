@@ -150,6 +150,7 @@
             "inventory-storage.service-points.collection.get",
             "inventory-storage.statistical-codes.item.get",
             "inventory-storage.statistical-codes.collection.get",
+            "inventory-storage.statistical-code-types.item.get",
             "users.item.put",
             "users.item.get",
             "users.collection.get",
