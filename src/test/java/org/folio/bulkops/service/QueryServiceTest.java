@@ -78,6 +78,7 @@ class QueryServiceTest extends BaseTest {
 
     when(queryClient.getQuery(fqlQueryId)).thenReturn(new QueryDetails()
       .status(status)
+      .failureReason("some reason")
       .totalRecords(0));
 
     queryService.checkQueryExecutionStatus(operation);

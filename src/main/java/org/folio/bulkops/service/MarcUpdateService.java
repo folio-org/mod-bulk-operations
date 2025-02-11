@@ -4,6 +4,7 @@ import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
+import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.MarcHelper.fetchInstanceUuidOrElseHrid;
@@ -81,6 +82,8 @@ public class MarcUpdateService {
         bulkOperation.setStatus(FAILED);
         bulkOperation.setEndTime(LocalDateTime.now());
         bulkOperation.setErrorMessage(e.getMessage());
+        var linkToMatchingErrorsFile = errorService.uploadErrorToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, bulkOperation.getErrorMessage());
+        bulkOperation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
         bulkOperationRepository.save(bulkOperation);
       }
       executionRepository.save(execution);

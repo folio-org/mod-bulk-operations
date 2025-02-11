@@ -3,8 +3,10 @@ package org.folio.bulkops.service;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.UTC_ZONE;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_DOWNLOAD_ORIGIN_FILE_FROM_S3;
@@ -12,6 +14,7 @@ import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_DOWNLOAD_ORIGIN_FILE_FR
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Spliterators;
@@ -59,6 +62,7 @@ public class DataExportJobUpdateService {
   private final BulkOperationRepository bulkOperationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final ObjectMapper objectMapper;
+  private final ErrorService errorService;
 
   @Transactional
   public void handleReceivedJobExecutionUpdate(Job jobExecutionUpdate) {
@@ -87,8 +91,10 @@ public class DataExportJobUpdateService {
         downloadOriginFileAndUpdateBulkOperation(operation, jobExecutionUpdate);
       } else if (JobStatus.FAILED.equals(status)) {
         operation.setStatus(OperationStatusType.FAILED);
-        operation.setEndTime(LocalDateTime.ofInstant(jobExecutionUpdate.getEndTime().toInstant(), UTC_ZONE));
+        operation.setEndTime(LocalDateTime.ofInstant(ofNullable(jobExecutionUpdate.getEndTime()).orElse(new Date()).toInstant(), UTC_ZONE));
         operation.setErrorMessage(isNull(jobExecutionUpdate.getErrorDetails()) ? EMPTY : jobExecutionUpdate.getErrorDetails());
+        var linkToMatchingErrorsFile = errorService.uploadErrorToStorage(operation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, operation.getErrorMessage());
+        operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
       }
     }
     bulkOperationRepository.save(operation);
@@ -151,9 +157,12 @@ public class DataExportJobUpdateService {
             .toList()
         );
       } catch (Exception e) {
-        log.error("Error getting tenants list", e);
+        var error = "Error getting tenants list";
+        log.error(error, e);
         bulkOperation.setStatus(OperationStatusType.FAILED);
-        bulkOperation.setErrorMessage("Error getting tenants list");
+        bulkOperation.setErrorMessage(error);
+        var linkToMatchingErrorsFile = errorService.uploadErrorToStorage(bulkOperation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, error + ":" + e.getMessage());
+        bulkOperation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
         throw new ServerErrorException("Error getting tenants list: " + e.getMessage());
       } finally {
         bulkOperationRepository.save(bulkOperation);

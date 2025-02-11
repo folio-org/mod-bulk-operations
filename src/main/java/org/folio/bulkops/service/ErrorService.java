@@ -11,6 +11,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEWED_NO_MARC_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.util.Constants.DATA_IMPORT_ERROR_DISCARDED;
+import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
@@ -42,7 +43,6 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
-import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.DataImportException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
@@ -236,11 +236,20 @@ public class ErrorService {
       var errorsFileName = LocalDate.now() + operationRepository.findById(bulkOperationId)
         .map(BulkOperation::getLinkToTriggeringCsvFile)
         .map(FilenameUtils::getName)
-        .map(fileName -> "-Committing-changes-Errors-" + fileName)
+        .map(fileName -> ERROR_COMMITTING_FILE_NAME_PREFIX + fileName)
         .orElse("-Errors.csv");
       return remoteFileSystemClient.put(new ByteArrayInputStream(errorsString.getBytes()), bulkOperationId + "/" + errorsFileName);
     }
     return null;
+  }
+
+  public String uploadErrorToStorage(UUID bulkOperationId, String fileNamePrefix, String errorString) {
+    var errorsFileName = LocalDate.now() + operationRepository.findById(bulkOperationId)
+      .map(BulkOperation::getLinkToTriggeringCsvFile)
+      .map(FilenameUtils::getName)
+      .map(fileName -> fileNamePrefix + fileName)
+      .orElse("-Errors.csv");
+    return remoteFileSystemClient.put(new ByteArrayInputStream(errorString.getBytes()), bulkOperationId + "/" + errorsFileName);
   }
 
   public int getCommittedNumOfErrors(UUID bulkOperationId) {
