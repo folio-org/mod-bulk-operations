@@ -75,6 +75,7 @@ public class ErrorService {
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link, ErrorType errorType) {
     if (Set.of(MSG_NO_CHANGE_REQUIRED, MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED, MSG_NO_MARC_CHANGE_REQUIRED).contains(errorMessage)
       && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
+      log.info("Skip error: {}", errorMessage);
       return;
     }
     executionContentRepository.save(BulkOperationExecutionContent.builder()
@@ -157,6 +158,7 @@ public class ErrorService {
           identifierList = relatedInstanceInfo.getHridList();
         }
         var identifier = CollectionUtils.isEmpty(identifierList) ? null : identifierList.get(0);
+        log.info("DI Error {}: {} for identifier: {}", errorEntry.getSourceRecordActionStatus(), errorEntry.getError(), identifier);
         if (errorEntry.getSourceRecordActionStatus() == JobLogEntry.ActionStatus.DISCARDED && errorEntry.getError().isEmpty()) {
           errorEntry.setError(DATA_IMPORT_ERROR_DISCARDED);
         }
@@ -165,7 +167,7 @@ public class ErrorService {
         }
       });
     } catch (Exception e) {
-      log.error("Problem with retrieving logs from MetadataProvider", e);
+      log.info("Problem with retrieving logs from MetadataProvider", e);
       throw new DataImportException(e);
     }
   }
