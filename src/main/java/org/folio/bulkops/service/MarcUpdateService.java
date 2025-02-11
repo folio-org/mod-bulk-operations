@@ -82,8 +82,8 @@ public class MarcUpdateService {
         bulkOperation.setStatus(FAILED);
         bulkOperation.setEndTime(LocalDateTime.now());
         bulkOperation.setErrorMessage(e.getMessage());
-        var linkToMatchingErrorsFile = errorService.uploadErrorToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, bulkOperation.getErrorMessage());
-        bulkOperation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
+        var linkToCommittingErrorsFile = errorService.uploadErrorToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, bulkOperation.getErrorMessage());
+        bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
         bulkOperationRepository.save(bulkOperation);
       }
       executionRepository.save(execution);
