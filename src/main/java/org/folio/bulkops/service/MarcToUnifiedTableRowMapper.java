@@ -172,7 +172,7 @@ public class MarcToUnifiedTableRowMapper {
   private void processResourceType(List<String> rowData, DataField dataField, List<String> headers) {
     var index = headers.indexOf(INSTANCE_RESOURCE_TYPE);
     if (index != -1) {
-      var resourceType = nonNull(dataField.getSubfield('a')) ? dataField.getSubfield('a').getData() : null;
+      var resourceType = helper.fetchResourceType(dataField);
       rowData.set(index, isNotEmpty(rowData.get(index)) && isNotEmpty(resourceType) ?
         String.join(ITEM_DELIMITER_SPACED, rowData.get(index), resourceType) :
         resourceType);
