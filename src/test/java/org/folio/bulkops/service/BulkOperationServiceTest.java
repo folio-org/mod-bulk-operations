@@ -1703,47 +1703,6 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   @Test
-  void shouldSaveUnchangedRecordsIfNoRulesArePresent() {
-    var operationId = UUID.randomUUID();
-    var matchedCsvFileName = "matched.csv";
-    var matchedMrcFileName = "matched.mrc";
-    var operation = BulkOperation.builder()
-      .id(operationId)
-      .entityType(INSTANCE_MARC)
-      .linkToTriggeringCsvFile("instances.csv")
-      .linkToMatchedRecordsCsvFile(matchedCsvFileName)
-      .linkToMatchedRecordsMarcFile(matchedMrcFileName)
-      .build();
-
-    when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(operation);
-
-    when(ruleService.hasAdministrativeUpdates(operation))
-      .thenReturn(false);
-    when(ruleService.hasMarcUpdates(operation))
-      .thenReturn(false);
-
-    var csvContent = new ByteArrayInputStream("csv".getBytes());
-    var marcContent = new ByteArrayInputStream("marc".getBytes());
-    when(remoteFileSystemClient.get(matchedCsvFileName))
-      .thenReturn(csvContent);
-    when(remoteFileSystemClient.get(matchedMrcFileName))
-      .thenReturn(marcContent);
-    when(remoteFileSystemClient.put(eq(csvContent), anyString()))
-      .thenReturn("copy.csv");
-    when(remoteFileSystemClient.put(eq(marcContent), anyString()))
-      .thenReturn("copy.mrc");
-
-    bulkOperationService.commit(operation);
-
-    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
-    var op = operationCaptor.getAllValues().get(3);
-    assertEquals("copy.csv", op.getLinkToCommittedRecordsCsvFile());
-    assertEquals("copy.mrc", op.getLinkToCommittedRecordsMarcFile());
-  }
-
-  @Test
   @SneakyThrows
   void shouldSkipUnsupportedInstancesOnConfirm() {
     var operationId = UUID.randomUUID();
@@ -1822,18 +1781,18 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   @Test
-  void shouldSkipCommitAndCopyMatchedIfNoRules() {
+  void shouldSkipCommitAndCopyModifiedIfNoRules() {
     var operationId = UUID.randomUUID();
-    var matchedCsv = "matched.csv";
-    var matchedMarc = "matched.mrc";
+    var modifiedCsv = "modified.csv";
+    var modifiedMarc = "modified.mrc";
     var copyCsv = "copy.csv";
     var copyMarc = "copy.mrc";
     var operation = BulkOperation.builder()
       .id(operationId)
       .entityType(INSTANCE_MARC)
       .linkToTriggeringCsvFile("instances.csv")
-      .linkToMatchedRecordsCsvFile(matchedCsv)
-      .linkToMatchedRecordsMarcFile(matchedMarc)
+      .linkToModifiedRecordsCsvFile(modifiedCsv)
+      .linkToModifiedRecordsMarcFile(modifiedMarc)
       .build();
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
@@ -1843,12 +1802,12 @@ class BulkOperationServiceTest extends BaseTest {
     when(ruleService.hasMarcUpdates(operation))
       .thenReturn(false);
     var csvContent = new ByteArrayInputStream("csv".getBytes());
-    when(remoteFileSystemClient.get(matchedCsv))
+    when(remoteFileSystemClient.get(modifiedCsv))
       .thenReturn(csvContent);
     when(remoteFileSystemClient.put(eq(csvContent), anyString()))
       .thenReturn(copyCsv);
     var marcContent = new ByteArrayInputStream("mrc".getBytes());
-    when(remoteFileSystemClient.get(matchedMarc))
+    when(remoteFileSystemClient.get(modifiedMarc))
       .thenReturn(marcContent);
     when(remoteFileSystemClient.put(eq(marcContent), anyString()))
       .thenReturn(copyMarc);

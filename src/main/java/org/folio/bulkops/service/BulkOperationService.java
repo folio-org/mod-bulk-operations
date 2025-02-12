@@ -408,7 +408,7 @@ public class BulkOperationService {
 
     if (INSTANCE_MARC.equals(operation.getEntityType()) && !hasAdministrativeRules) {
       log.info("No administrative data updates, saving unchanged CSV");
-      var committedCsvFileName = copyFile(operation.getLinkToMatchedRecordsCsvFile(), resultCsvFileName);
+      var committedCsvFileName = copyFile(operation.getLinkToModifiedRecordsCsvFile(), resultCsvFileName);
       if (nonNull(committedCsvFileName)) {
         operation.setLinkToCommittedRecordsCsvFile(committedCsvFileName);
         bulkOperationRepository.save(operation);
@@ -506,7 +506,7 @@ public class BulkOperationService {
     if (INSTANCE_MARC.equals(operation.getEntityType()) && !hasMarcRules) {
       log.info("No MARC updates, saving unchanged MARC");
       var resultMarcFileName = String.format(CHANGED_MARC_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
-      var committedMarcFileName = copyFile(operation.getLinkToMatchedRecordsMarcFile(), resultMarcFileName);
+      var committedMarcFileName = copyFile(operation.getLinkToModifiedRecordsMarcFile(), resultMarcFileName);
       if (nonNull(committedMarcFileName)) {
         operation.setLinkToCommittedRecordsMarcFile(committedMarcFileName);
         bulkOperationRepository.save(operation);
@@ -875,10 +875,12 @@ public class BulkOperationService {
   }
 
   private String copyFile(String linkToSourceFile, String linkToDestFile) {
-    try (var inputStream = remoteFileSystemClient.get(linkToSourceFile)) {
-      return remoteFileSystemClient.put(inputStream, linkToDestFile);
-    } catch (IOException e) {
-      log.error("Failed to copy file {} to {}",linkToSourceFile, linkToDestFile, e);
+    if (nonNull(linkToSourceFile) && nonNull(linkToDestFile)) {
+      try (var inputStream = remoteFileSystemClient.get(linkToSourceFile)) {
+        return remoteFileSystemClient.put(inputStream, linkToDestFile);
+      } catch (IOException e) {
+        log.error("Failed to copy file {} to {}",linkToSourceFile, linkToDestFile, e);
+      }
     }
     return null;
   }
