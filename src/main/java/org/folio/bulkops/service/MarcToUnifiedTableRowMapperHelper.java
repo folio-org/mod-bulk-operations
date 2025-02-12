@@ -9,8 +9,6 @@ import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER_SPACED;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Constants.STAFF_ONLY;
 
 import lombok.RequiredArgsConstructor;
@@ -50,10 +48,9 @@ public class MarcToUnifiedTableRowMapperHelper {
     };
   }
 
-  public List<String> fetchLanguages(DataField dataField) {
+  public List<String> fetchLanguageCodes(DataField dataField) {
     return dataField.getSubfields('a').stream()
       .map(Subfield::getData)
-      .map(referenceProvider::getLanguageByCode)
       .toList();
   }
 

@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -74,7 +75,7 @@ public class MarcToUnifiedTableRowMapper {
       } else if ("008".equals(controlField.getTag())) {
         var index = headers.indexOf(INSTANCE_LANGUAGES);
         if (index != -1) {
-          rowData.set(index, referenceProvider.getLanguageByCode(controlField.getData().substring(35, 38)));
+          rowData.set(index, controlField.getData().substring(35, 38));
         }
       }
     });
@@ -107,17 +108,14 @@ public class MarcToUnifiedTableRowMapper {
   private void processLanguages(List<String> rowData, DataField dataField, List<String> headers) {
     var index = headers.indexOf(INSTANCE_LANGUAGES);
     if (index != -1) {
-      var languages = helper.fetchLanguages(dataField);
-      var oldValue = rowData.get(index);
-      if (nonNull(oldValue) && !languages.isEmpty()) {
-        languages = languages.stream()
-          .filter(lang -> !oldValue.contains(lang))
-          .toList();
-        if (!languages.isEmpty()) {
-          rowData.set(index, oldValue + ARRAY_DELIMITER_SPACED + String.join(ARRAY_DELIMITER_SPACED, languages));
-        }
-      } else if (!languages.isEmpty()) {
-        rowData.set(index, String.join(ARRAY_DELIMITER_SPACED, languages));
+      var newLanguages = new ArrayList<>(helper.fetchLanguageCodes(dataField));
+      if (!newLanguages.isEmpty()) {
+      List<String> languages = isNull(rowData.get(index)) ?
+        new ArrayList<>() :
+        new ArrayList<>(Arrays.asList(rowData.get(index).split(ITEM_DELIMITER_SPACED)));
+      newLanguages.removeAll(languages);
+      languages.addAll(newLanguages);
+      rowData.set(index, String.join(ITEM_DELIMITER_SPACED, languages));
       }
     }
   }

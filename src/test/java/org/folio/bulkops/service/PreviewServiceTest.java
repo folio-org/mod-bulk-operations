@@ -512,7 +512,7 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(2).getRow().get(16), equalTo("500 p. ; 22 cm."));
     assertThat(res.getRows().get(2).getRow().get(17), equalTo("Text"));
     assertThat(res.getRows().get(2).getRow().get(19), equalTo("computer -- other"));
-    assertThat(res.getRows().get(2).getRow().get(20), equalTo("English; French"));
+    assertThat(res.getRows().get(2).getRow().get(20), equalTo("eng | fre"));
     assertThat(res.getRows().get(2).getRow().get(21), equalTo("monthly. Jun 10, 2024 | yearly. 2024"));
     assertThat(res.getRows().get(2).getRow().get(22), equalTo("2002-2024"));
     assertThat(res.getRows().get(2).getRow().get(23), equalTo("language note (staff only)"));
@@ -668,7 +668,7 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(0).getRow().get(16), equalTo("500 p. ; 22 cm."));
     assertThat(res.getRows().get(0).getRow().get(17), equalTo("Text"));
     assertThat(res.getRows().get(0).getRow().get(19), equalTo("computer -- other"));
-    assertThat(res.getRows().get(0).getRow().get(20), equalTo("English; French"));
+    assertThat(res.getRows().get(0).getRow().get(20), equalTo("eng | fre"));
     assertThat(res.getRows().get(0).getRow().get(21), equalTo("monthly. Jun 10, 2024 | yearly. 2024"));
     assertThat(res.getRows().get(0).getRow().get(22), equalTo("2002-2024"));
     assertThat(res.getRows().get(0).getRow().get(23), equalTo("language note (staff only)"));
