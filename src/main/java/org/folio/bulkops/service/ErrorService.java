@@ -145,10 +145,16 @@ public class ErrorService {
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
     var identifierType = bulkOperation.getIdentifierType();
     try {
-      var jobLogEntries = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE)
-        .getEntries().stream()
+      var logEntries = = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE)
+        .getEntries();
+      log.info("DI log entries: {}", logEntries)
+
+      var jobLogEntries = logEntries
+        .stream()
         .filter(entry -> nonNull(entry.getError()))
         .toList();
+      log.info("DI filtered log entries: {}", jobLogEntries)
+
       jobLogEntries.forEach(errorEntry -> {
         List<String> identifierList = null;
         var relatedInstanceInfo = errorEntry.getRelatedInstanceInfo();
