@@ -1,10 +1,12 @@
 package org.folio.bulkops.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_CODE;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Utils.encode;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.folio.bulkops.client.ContributorTypesClient;
@@ -145,5 +147,15 @@ class InstanceReferenceServiceTest {
     var id = UUID.randomUUID().toString();
     doThrow(new NotFoundException("not found")).when(statisticalCodeTypeClient).getById(id);
     assertThrows(ReferenceDataNotFoundException.class, () -> instanceReferenceService.getStatisticalCodeTypeById(id, "tenant"));
+  }
+
+  @Test
+  void shouldGetInstanceFormatByCode() {
+    var code = "code";
+    assertThat(instanceReferenceService.getInstanceFormatsByCode(null).getFormats()).isEmpty();
+
+    instanceReferenceService.getInstanceFormatsByCode(code);
+
+    verify(instanceFormatsClient).getByQuery(QUERY_PATTERN_CODE.formatted(encode(code)), 1L);
   }
 }
