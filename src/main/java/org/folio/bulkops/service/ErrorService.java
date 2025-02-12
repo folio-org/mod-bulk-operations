@@ -145,7 +145,7 @@ public class ErrorService {
       .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
     var identifierType = bulkOperation.getIdentifierType();
     try {
-      var logEntries = = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE)
+      var logEntries = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE)
         .getEntries();
       log.info("DI log entries: {}", logEntries);
 
