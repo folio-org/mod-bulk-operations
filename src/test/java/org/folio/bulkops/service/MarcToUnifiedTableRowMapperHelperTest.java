@@ -3,7 +3,6 @@ package org.folio.bulkops.service;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.mockito.Mockito.when;
 
 import lombok.SneakyThrows;
@@ -58,14 +57,14 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
   }
 
   @Test
-  void shouldFetchLanguages() {
+  void shouldFetchLanguageCodes() {
     var dataField = new DataFieldImpl("041", ' ', ' ');
     dataField.addSubfield(new SubfieldImpl('a', "eng"));
     dataField.addSubfield(new SubfieldImpl('a', "fre"));
 
-    var res = mapperHelper.fetchLanguages(dataField);
+    var res = mapperHelper.fetchLanguageCodes(dataField);
 
-    assertThat(res).isEqualTo("English | French");
+    assertThat(res).contains("eng", "fre");
   }
 
   @ParameterizedTest
@@ -224,7 +223,7 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
 
     var res = mapperHelper.fetchResourceType(dataField);
 
-    assertThat(res).isEqualTo(String.join(ARRAY_DELIMITER, expectedName, expectedCode, "rdacontent"));
+    assertThat(res).isEqualTo(expectedName);
   }
 
   @ParameterizedTest
