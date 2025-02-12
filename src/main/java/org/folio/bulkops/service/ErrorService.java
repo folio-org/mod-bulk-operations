@@ -147,13 +147,13 @@ public class ErrorService {
     try {
       var logEntries = = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE)
         .getEntries();
-      log.info("DI log entries: {}", logEntries)
+      log.info("DI log entries: {}", logEntries);
 
       var jobLogEntries = logEntries
         .stream()
         .filter(entry -> nonNull(entry.getError()))
         .toList();
-      log.info("DI filtered log entries: {}", jobLogEntries)
+      log.info("DI filtered log entries: {}", jobLogEntries);
 
       jobLogEntries.forEach(errorEntry -> {
         List<String> identifierList = null;
