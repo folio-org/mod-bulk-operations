@@ -8,8 +8,6 @@ import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
-import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
-import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
@@ -17,7 +15,14 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
+import static org.folio.bulkops.service.BulkOperationService.FILE_UPLOADING_FAILED;
+import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
+import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
+import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
+import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
+import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
+import static org.folio.bulkops.util.ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -113,7 +118,6 @@ import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.folio.bulkops.util.ErrorCode;
 import org.folio.bulkops.util.MarcCsvHelper;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.RemoteStorageWriter;
@@ -238,15 +242,18 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldPopulateErrorToBulkOperationIfS3IssuesForUploadIdentifiersInApp() {
     var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
     var jobId = UUID.randomUUID();
+    var bulkOperationId = UUID.randomUUID();
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(BulkOperation.builder().id(UUID.randomUUID()).build());
+      .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
 
     when(remoteFileSystemClient.put(any(), any()))
       .thenThrow(new S3ClientException("error"));
 
-    var bulkOperation = bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
-    var bulkOperationId = bulkOperation.getId();
+    when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX,ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE + " : error"))
+      .thenReturn("/linkToMatchingErrorsFile.csv");
+
+    bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
 
     when(bulkOperationRepository.findById(bulkOperationId))
       .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringCsvFile("barcodes.csv").build()));
@@ -255,7 +262,8 @@ class BulkOperationServiceTest extends BaseTest {
     verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
     var capturedBulkOperation = operationCaptor.getValue();
     assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, "error")));
+    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, "error")));
+    assertThat(capturedBulkOperation.getLinkToMatchedRecordsErrorsCsvFile(), equalTo("/linkToMatchingErrorsFile.csv"));
   }
 
   @Test
@@ -309,7 +317,7 @@ class BulkOperationServiceTest extends BaseTest {
     verify(bulkOperationRepository, times(1)).save(operationCaptor.capture());
     var capturedBulkOperation = operationCaptor.getValue();
     assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, "error")));
+    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, "error")));
   }
 
   @Test
@@ -341,12 +349,20 @@ class BulkOperationServiceTest extends BaseTest {
     when(dataExportSpringClient.getJob(jobId))
       .thenReturn(Job.builder().id(jobId).status(JobStatus.FAILED).build());
 
+    if (jobStatus == JobStatus.FAILED) {
+      when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX, "File uploading failed - invalid job status: FAILED (expected: SCHEDULED)"))
+        .thenReturn("/linkToMatchingErrorsFile.csv");
+    }
+
     bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
     bulkOperationService.startBulkOperation(bulkOperationId, any(UUID.class), new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD));
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
     assertEquals(OperationStatusType.FAILED, operationCaptor.getAllValues().get(3).getStatus());
+    if (jobStatus == JobStatus.FAILED) {
+      assertThat(operationCaptor.getValue().getLinkToMatchedRecordsErrorsCsvFile(), equalTo("/linkToMatchingErrorsFile.csv"));
+    }
   }
 
   @Test
@@ -372,12 +388,16 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
       .thenThrow(new NotFoundException("Job was not found"));
 
+    when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX,FILE_UPLOADING_FAILED + " : Failed to upload file with identifiers: data export job was not found"))
+      .thenReturn("/linkToMatchingErrorsFile.csv");
+
     bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
     bulkOperationService.startBulkOperation(bulkOperationId, any(UUID.class), new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD));
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(4)).save(operationCaptor.capture()));
     assertEquals(OperationStatusType.FAILED, operationCaptor.getAllValues().get(3).getStatus());
+    assertThat(operationCaptor.getValue().getLinkToMatchedRecordsErrorsCsvFile(), equalTo("/linkToMatchingErrorsFile.csv"));
   }
 
   @ParameterizedTest
@@ -531,6 +551,9 @@ class BulkOperationServiceTest extends BaseTest {
       when(remoteFileSystemClient.get(pathToModified))
         .thenReturn(new FileInputStream(pathToUserJson));
 
+      when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_COMMITTING_FILE_NAME_PREFIX,ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE + " : error"))
+        .thenReturn("/linkToCommittingErrorsFile.csv");
+
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
@@ -538,7 +561,8 @@ class BulkOperationServiceTest extends BaseTest {
       var capturedBulkOperation = bulkOperationCaptor.getValue();
 
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, "error")));
+      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, "error")));
+      assertThat(capturedBulkOperation.getLinkToCommittedRecordsErrorsCsvFile(), equalTo("/linkToCommittingErrorsFile.csv"));
     }
   }
 
@@ -762,7 +786,7 @@ class BulkOperationServiceTest extends BaseTest {
       Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, atLeast(6)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, "error")));
+      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, "error")));
     }
   }
 
@@ -821,6 +845,8 @@ class BulkOperationServiceTest extends BaseTest {
         .thenReturn(new FileInputStream(pathToInstanceMarc));
       when(remoteFileSystemClient.marcWriter(anyString())).thenThrow(new RuntimeException("error"));
       when(remoteFileSystemClient.writer(anyString())).thenReturn(new StringWriter());
+      when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_COMMITTING_FILE_NAME_PREFIX, "Confirm failed : error"))
+        .thenReturn("/linkToCommittingErrorsFile.csv");
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
 
@@ -828,6 +854,7 @@ class BulkOperationServiceTest extends BaseTest {
       Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(7)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
+      assertThat(capturedBulkOperation.getLinkToCommittedRecordsErrorsCsvFile(), equalTo("/linkToCommittingErrorsFile.csv"));
     }
   }
 
@@ -1076,7 +1103,7 @@ class BulkOperationServiceTest extends BaseTest {
       when(remoteFileSystemClient.writer(pathToModifiedResult)).thenReturn(new RemoteStorageWriter(pathToModifiedResult, 8192, remoteFolioS3Client));
       when(remoteFileSystemClient.writer(pathToModifiedCsvResult)).thenReturn(new RemoteStorageWriter(pathToModifiedCsvResult, 8192, remoteFolioS3Client));
 
-      when(errorService.uploadErrorsToStorage(any(UUID.class))).thenReturn(linkToErrors);
+      when(errorService.uploadErrorsToStorage(any(UUID.class), any(String.class), any())).thenReturn(linkToErrors);
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(COMMIT));
 
