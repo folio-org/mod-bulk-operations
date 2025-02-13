@@ -497,7 +497,7 @@ public class BulkOperationService {
         operation.setStatus(OperationStatusType.FAILED);
         operation.setEndTime(LocalDateTime.now());
         operation.setErrorMessage(e.getMessage());
-        var linkToCommittingErrorsFile = errorService.uploadErrorToStorage(operation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, operation.getErrorMessage());
+        var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, operation.getErrorMessage());
         operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
       }
       executionRepository.save(execution);
@@ -517,7 +517,7 @@ public class BulkOperationService {
       operation.setProcessedNumOfRecords(operation.getCommittedNumOfRecords());
       operation.setEndTime(LocalDateTime.now());
 
-      var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operationId);
+      var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operationId, ERROR_COMMITTING_FILE_NAME_PREFIX, null);
       operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
       operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operationId));
       operation.setCommittedNumOfWarnings(errorService.getCommittedNumOfWarnings(operationId));
@@ -551,7 +551,7 @@ public class BulkOperationService {
         operation.setStatus(FAILED);
         operation.setErrorMessage(errorMessage);
         operation.setEndTime(LocalDateTime.now());
-        var linkToMatchingErrorsFile = errorService.uploadErrorToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX, errorMessage);
+        var linkToMatchingErrorsFile = errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX, errorMessage);
         operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
       }
       bulkOperationRepository.save(operation);
@@ -780,7 +780,7 @@ public class BulkOperationService {
     operation.setErrorMessage(format(ERROR_MESSAGE_PATTERN, message, exception.getMessage()));
     operation.setStatus(FAILED);
     operation.setEndTime(LocalDateTime.now());
-    var linkToMatchingErrorsFile = errorService.uploadErrorToStorage(operation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, operation.getErrorMessage());
+    var linkToMatchingErrorsFile = errorService.uploadErrorsToStorage(operation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, operation.getErrorMessage());
     operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
   }
 
@@ -793,7 +793,7 @@ public class BulkOperationService {
     operation.setErrorMessage(format(ERROR_MESSAGE_PATTERN, message, exception.getMessage()));
     operation.setStatus(OperationStatusType.FAILED);
     operation.setEndTime(LocalDateTime.now());
-    var linkToCommittingErrorsFile = errorService.uploadErrorToStorage(operation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, operation.getErrorMessage());
+    var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, operation.getErrorMessage());
     operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
     bulkOperationRepository.save(operation);
   }

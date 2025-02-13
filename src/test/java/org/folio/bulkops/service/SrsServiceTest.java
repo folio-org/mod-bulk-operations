@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
+import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
@@ -76,7 +77,7 @@ class SrsServiceTest extends BaseTest {
       .thenReturn(objectMapper.readTree(Files.readString(Path.of("src/test/resources/files/srs_batch_response.json"))));
     when(bulkOperationRepository.findById(operationId))
       .thenReturn(Optional.of(operation));
-    when(errorService.uploadErrorsToStorage(operationId))
+    when(errorService.uploadErrorsToStorage(operationId, ERROR_COMMITTING_FILE_NAME_PREFIX, null))
       .thenReturn("errors.csv");
     when(errorService.getCommittedNumOfErrors(operationId))
       .thenReturn(numOfErrors);

@@ -80,7 +80,7 @@ public class QueryService {
     bulkOperation.setStatus(FAILED);
     bulkOperation.setErrorMessage(errorMessage);
     bulkOperation.setEndTime(LocalDateTime.now());
-    var linkToCommittingErrorsFile = errorService.uploadErrorToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, bulkOperation.getErrorMessage());
+    var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, bulkOperation.getErrorMessage());
     bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
     return bulkOperationRepository.save(bulkOperation);
   }

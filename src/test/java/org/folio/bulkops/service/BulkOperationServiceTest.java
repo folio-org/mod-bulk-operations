@@ -250,7 +250,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.put(any(), any()))
       .thenThrow(new S3ClientException("error"));
 
-    when(errorService.uploadErrorToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX,ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE + " : error"))
+    when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX,ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE + " : error"))
       .thenReturn("/linkToMatchingErrorsFile.csv");
 
     bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
@@ -350,7 +350,7 @@ class BulkOperationServiceTest extends BaseTest {
       .thenReturn(Job.builder().id(jobId).status(JobStatus.FAILED).build());
 
     if (jobStatus == JobStatus.FAILED) {
-      when(errorService.uploadErrorToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX, "File uploading failed - invalid job status: FAILED (expected: SCHEDULED)"))
+      when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX, "File uploading failed - invalid job status: FAILED (expected: SCHEDULED)"))
         .thenReturn("/linkToMatchingErrorsFile.csv");
     }
 
@@ -388,7 +388,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
       .thenThrow(new NotFoundException("Job was not found"));
 
-    when(errorService.uploadErrorToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX,FILE_UPLOADING_FAILED + " : Failed to upload file with identifiers: data export job was not found"))
+    when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX,FILE_UPLOADING_FAILED + " : Failed to upload file with identifiers: data export job was not found"))
       .thenReturn("/linkToMatchingErrorsFile.csv");
 
     bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
@@ -551,7 +551,7 @@ class BulkOperationServiceTest extends BaseTest {
       when(remoteFileSystemClient.get(pathToModified))
         .thenReturn(new FileInputStream(pathToUserJson));
 
-      when(errorService.uploadErrorToStorage(bulkOperationId, ERROR_COMMITTING_FILE_NAME_PREFIX,ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE + " : error"))
+      when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_COMMITTING_FILE_NAME_PREFIX,ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE + " : error"))
         .thenReturn("/linkToCommittingErrorsFile.csv");
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
@@ -845,7 +845,7 @@ class BulkOperationServiceTest extends BaseTest {
         .thenReturn(new FileInputStream(pathToInstanceMarc));
       when(remoteFileSystemClient.marcWriter(anyString())).thenThrow(new RuntimeException("error"));
       when(remoteFileSystemClient.writer(anyString())).thenReturn(new StringWriter());
-      when(errorService.uploadErrorToStorage(bulkOperationId, ERROR_COMMITTING_FILE_NAME_PREFIX, "Confirm failed : error"))
+      when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_COMMITTING_FILE_NAME_PREFIX, "Confirm failed : error"))
         .thenReturn("/linkToCommittingErrorsFile.csv");
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
@@ -1103,7 +1103,7 @@ class BulkOperationServiceTest extends BaseTest {
       when(remoteFileSystemClient.writer(pathToModifiedResult)).thenReturn(new RemoteStorageWriter(pathToModifiedResult, 8192, remoteFolioS3Client));
       when(remoteFileSystemClient.writer(pathToModifiedCsvResult)).thenReturn(new RemoteStorageWriter(pathToModifiedCsvResult, 8192, remoteFolioS3Client));
 
-      when(errorService.uploadErrorsToStorage(any(UUID.class))).thenReturn(linkToErrors);
+      when(errorService.uploadErrorsToStorage(any(UUID.class), any(String.class), any())).thenReturn(linkToErrors);
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(COMMIT));
 

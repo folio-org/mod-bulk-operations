@@ -93,7 +93,7 @@ public class DataExportJobUpdateService {
         operation.setStatus(OperationStatusType.FAILED);
         operation.setEndTime(LocalDateTime.ofInstant(ofNullable(jobExecutionUpdate.getEndTime()).orElse(new Date()).toInstant(), UTC_ZONE));
         operation.setErrorMessage(isNull(jobExecutionUpdate.getErrorDetails()) ? EMPTY : jobExecutionUpdate.getErrorDetails());
-        var linkToMatchingErrorsFile = errorService.uploadErrorToStorage(operation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, operation.getErrorMessage());
+        var linkToMatchingErrorsFile = errorService.uploadErrorsToStorage(operation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, operation.getErrorMessage());
         operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
       }
     }
@@ -161,7 +161,7 @@ public class DataExportJobUpdateService {
         log.error(error, e);
         bulkOperation.setStatus(OperationStatusType.FAILED);
         bulkOperation.setErrorMessage(error);
-        var linkToMatchingErrorsFile = errorService.uploadErrorToStorage(bulkOperation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, error + ":" + e.getMessage());
+        var linkToMatchingErrorsFile = errorService.uploadErrorsToStorage(bulkOperation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, error + ":" + e.getMessage());
         bulkOperation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
         throw new ServerErrorException("Error getting tenants list: " + e.getMessage());
       } finally {
