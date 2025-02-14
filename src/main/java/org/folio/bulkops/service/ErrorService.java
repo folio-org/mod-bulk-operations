@@ -43,7 +43,6 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
-import org.folio.bulkops.exception.DataImportException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -142,10 +141,10 @@ public class ErrorService {
     log.info("Saving errors from DataImport, total entries = {}", logEntries.size());
     logEntries.stream()
       .filter(entry -> nonNull(entry.getError()))
-      .forEach(entry -> processDataImportLogEntry(entry, bulkOperation));
+      .forEach(entry -> processDataImportErrorLogEntry(entry, bulkOperation));
   }
 
-  private void processDataImportLogEntry(JobLogEntry errorEntry, BulkOperation bulkOperation) {
+  private void processDataImportErrorLogEntry(JobLogEntry errorEntry, BulkOperation bulkOperation) {
     List<String> identifierList = null;
     var relatedInstanceInfo = errorEntry.getRelatedInstanceInfo();
     if (IdentifierType.ID.equals(bulkOperation.getIdentifierType())) {

@@ -570,7 +570,6 @@ public class Marc21ReferenceProvider {
     languages.put("zxx", "No linguistic content");
     languages.put("zza", "Zaza");
 
-    mappedFields.put("041", INSTANCE_LANGUAGES);
     List.of("100", "110", "111", "700", "710", "711", "720")
       .forEach(tag -> mappedFields.put(tag, INSTANCE_CONTRIBUTORS));
     mappedFields.put("245", INSTANCE_RESOURCE_TITLE);

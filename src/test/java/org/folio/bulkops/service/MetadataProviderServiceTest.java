@@ -249,7 +249,7 @@ class MetadataProviderServiceTest extends BaseTest {
           var offset = (Long) invocation.getArguments()[1];
           return switch (offset.intValue()) {
             case 0, 6 -> threeEntriesCollection;
-            case 3 -> throw new NotFoundException("Log entry was not found");
+            case 3 -> throw new NotFoundException("Log entries were not found");
             case 9 -> singleEntryCollection;
             default -> throw new IllegalStateException("Unexpected offset value: " + offset);
           };
