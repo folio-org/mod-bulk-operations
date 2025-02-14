@@ -4,6 +4,7 @@ import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
+import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.MarcHelper.fetchInstanceUuidOrElseHrid;
@@ -39,7 +40,7 @@ import java.util.Date;
 public class MarcUpdateService {
   public static final String CHANGED_MARC_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-%s.mrc";
   public static final String MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY = "Instance with source %s is not supported by MARC records bulk edit and cannot be updated.";
-  public static final String CHANGED_MARC_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-CSV%s.csv";
+  public static final String CHANGED_MARC_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-CSV-%s.csv";
 
   private final BulkOperationExecutionRepository executionRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
@@ -81,6 +82,8 @@ public class MarcUpdateService {
         bulkOperation.setStatus(FAILED);
         bulkOperation.setEndTime(LocalDateTime.now());
         bulkOperation.setErrorMessage(e.getMessage());
+        var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, bulkOperation.getErrorMessage());
+        bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
         bulkOperationRepository.save(bulkOperation);
       }
       executionRepository.save(execution);

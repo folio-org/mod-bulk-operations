@@ -4,6 +4,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.CANCELLED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
+import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.NEW_LINE_SEPARATOR;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
 
@@ -18,7 +19,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,6 +33,7 @@ public class QueryService {
   private final QueryClient queryClient;
   private final BulkOperationRepository bulkOperationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
+  private final ErrorService errorService;
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -79,6 +80,8 @@ public class QueryService {
     bulkOperation.setStatus(FAILED);
     bulkOperation.setErrorMessage(errorMessage);
     bulkOperation.setEndTime(LocalDateTime.now());
+    var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, bulkOperation.getErrorMessage());
+    bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
     return bulkOperationRepository.save(bulkOperation);
   }
 

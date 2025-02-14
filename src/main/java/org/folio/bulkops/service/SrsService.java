@@ -5,6 +5,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.service.MarcUpdateService.CHANGED_MARC_CSV_PATH_TEMPLATE;
 import static org.folio.bulkops.service.MarcUpdateService.CHANGED_MARC_PATH_TEMPLATE;
+import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 
 import com.opencsv.CSVWriterBuilder;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,7 @@ public class SrsService {
   private final MarcCsvHelper marcCsvHelper;
 
   public void retrieveMarcInstancesFromSrs(List<String> instanceIds, BulkOperation bulkOperation) {
+    log.info("Retrieving {} marc instances from SRS", instanceIds.size());
     var fetchedNumOfRecords = 0;
     var noLinkToCommitted = false;
     var triggeringFileName = FilenameUtils.getBaseName(bulkOperation.getLinkToTriggeringCsvFile());
@@ -103,7 +105,7 @@ public class SrsService {
     operation.setTotalNumOfRecords(operation.getMatchedNumOfRecords());
     operation.setProcessedNumOfRecords(operation.getMatchedNumOfRecords());
     operation.setCommittedNumOfRecords(Math.max(committedNumOfRecords, getNumOfProcessedRecords(bulkOperation)));
-    operation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(operation.getId()));
+    operation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(operation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, null));
     operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operation.getId()));
     operation.setCommittedNumOfWarnings(errorService.getCommittedNumOfWarnings(operation.getId()));
     operation.setEndTime(LocalDateTime.now());

@@ -9,6 +9,7 @@ import static org.folio.bulkops.service.ErrorService.IDENTIFIER;
 import static org.folio.bulkops.service.ErrorService.LINK;
 import static org.folio.bulkops.util.Constants.CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING;
 import static org.folio.bulkops.util.Constants.DATA_IMPORT_ERROR_DISCARDED;
+import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
@@ -130,7 +131,7 @@ class ErrorServiceTest extends BaseTest {
       var expectedFileName = bulkOperationId + "/" + LocalDate.now() + "-Committing-changes-Errors-records.csv";
       when(remoteFileSystemClient.put(any(), eq(expectedFileName))).thenReturn(expectedFileName);
 
-      var result = errorService.uploadErrorsToStorage(bulkOperationId);
+      var result = errorService.uploadErrorsToStorage(bulkOperationId, ERROR_COMMITTING_FILE_NAME_PREFIX, null);
       assertThat(result, equalTo(expectedFileName));
 
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
@@ -449,7 +450,7 @@ class ErrorServiceTest extends BaseTest {
   @Test
   void uploadErrorsToStorageShouldReturnNullWhenContentsIsEmpty() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      assertNull(errorService.uploadErrorsToStorage(bulkOperationId));
+      assertNull(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_COMMITTING_FILE_NAME_PREFIX, null));
     }
   }
 

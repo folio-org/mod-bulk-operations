@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
+import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.MARC;
 
 import lombok.RequiredArgsConstructor;
@@ -70,7 +71,7 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
         bulkOperation.setDataImportJobProfileId(UUID.fromString(jobProfile.getId()));
       } else {
         bulkOperation.setLinkToCommittedRecordsMarcFile(null);
-        bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(bulkOperation.getId()));
+        bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, null));
         bulkOperation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(bulkOperation.getId()));
         bulkOperation.setCommittedNumOfWarnings(errorService.getCommittedNumOfWarnings(bulkOperation.getId()));
         bulkOperation.setEndTime(LocalDateTime.now());

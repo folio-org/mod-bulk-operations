@@ -11,9 +11,10 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEWED_NO_MARC_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.util.Constants.DATA_IMPORT_ERROR_DISCARDED;
+import static org.folio.bulkops.util.Constants.ERROR_FILE_NAME_ENDING;
 import static org.folio.bulkops.util.Constants.MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED;
-import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
+import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -42,6 +43,7 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.exception.DataImportException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -217,21 +219,31 @@ public class ErrorService {
       .type(content.getErrorType());
   }
 
-  public String uploadErrorsToStorage(UUID bulkOperationId) {
-    var contents = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNullOrderByErrorType(bulkOperationId, OffsetRequest.of(0, Integer.MAX_VALUE));
-    if (!contents.isEmpty()) {
-      var errorsString = contents.stream()
-        .map(content -> String.join(Constants.COMMA_DELIMETER, content.getErrorType().getValue(), content.getIdentifier(), content.getErrorMessage()))
+  public String uploadErrorsToStorage(UUID bulkOperationId, String fileNamePrefix, String errorString) {
+    String errors;
+    if (errorString != null) {
+      errors = errorString;
+    } else {
+      var contents = executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNullOrderByErrorType(
+        bulkOperationId, OffsetRequest.of(0, Integer.MAX_VALUE));
+      if (contents.isEmpty()) {
+        return null;
+      }
+      errors = contents.stream()
+        .map(content -> String.join(Constants.COMMA_DELIMETER,
+          content.getErrorType().getValue(),
+          content.getIdentifier(),
+          content.getErrorMessage()))
         .collect(Collectors.joining(LF));
-      var errorsFileName = LocalDate.now() + operationRepository.findById(bulkOperationId)
-        .map(BulkOperation::getLinkToTriggeringCsvFile)
-        .map(FilenameUtils::getName)
-        .map(fileName -> "-Committing-changes-Errors-" + fileName)
-        .orElse("-Errors.csv");
-      return remoteFileSystemClient.put(new ByteArrayInputStream(errorsString.getBytes()), bulkOperationId + "/" + errorsFileName);
     }
-    return null;
+    var errorsFileName = LocalDate.now() + operationRepository.findById(bulkOperationId)
+      .map(BulkOperation::getLinkToTriggeringCsvFile)
+      .map(FilenameUtils::getName)
+      .map(fileName -> fileNamePrefix + fileName)
+      .orElse(ERROR_FILE_NAME_ENDING);
+    return remoteFileSystemClient.put(new ByteArrayInputStream(errors.getBytes()), bulkOperationId + "/" + errorsFileName);
   }
+
 
   public int getCommittedNumOfErrors(UUID bulkOperationId) {
     return executionContentRepository.countAllByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIs(bulkOperationId, ErrorType.ERROR);

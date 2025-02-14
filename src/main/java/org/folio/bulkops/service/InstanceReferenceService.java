@@ -167,7 +167,7 @@ public class InstanceReferenceService {
   public InstanceFormats getInstanceFormatsByCode(String code) {
     return isNull(code) ?
       InstanceFormats.builder().formats(Collections.emptyList()).totalRecords(0).build() :
-      instanceFormatsClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(code)), 1);
+      instanceFormatsClient.getByQuery(String.format(QUERY_PATTERN_CODE, encode(code)), 1);
   }
 
   @Cacheable(cacheNames = "instanceNoteTypesNames")

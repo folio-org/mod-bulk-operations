@@ -1,5 +1,7 @@
 package org.folio.bulkops.domain.converter;
 
+import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
+
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.service.InstanceReferenceHelper;
 
@@ -7,8 +9,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 
 public class InstanceStatisticalCodeListConverter extends BaseConverter<List<String>> {
   @Override
