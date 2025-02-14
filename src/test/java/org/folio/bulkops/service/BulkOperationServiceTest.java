@@ -1663,7 +1663,7 @@ class BulkOperationServiceTest extends BaseTest {
       when(metadataProviderService.getJobExecutions(dataImportJobProfileId)).thenReturn(List.of(new org.folio.bulkops.domain.dto.DataImportJobExecution()));
       when(metadataProviderService.calculateProgress(any())).thenReturn(new DataImportProgress().current(10));
       when(metadataProviderService.isDataImportJobCompleted(any())).thenReturn(true);
-      when(metadataProviderService.getUpdatedInstanceIds(any())).thenReturn(List.of(UUID.randomUUID().toString()));
+      when(metadataProviderService.fetchUpdatedInstanceIds(any())).thenReturn(List.of(UUID.randomUUID().toString()));
 
       bulkOperationService.processDataImportResult(dataImportJobProfileId);
 
@@ -1671,7 +1671,7 @@ class BulkOperationServiceTest extends BaseTest {
       verify(metadataProviderService).getJobExecutions(dataImportJobProfileId);
       verify(metadataProviderService).calculateProgress(any());
       verify(metadataProviderService).isDataImportJobCompleted(any());
-      verify(metadataProviderService).getUpdatedInstanceIds(any());
+      verify(metadataProviderService).fetchUpdatedInstanceIds(any());
     }
   }
 

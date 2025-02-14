@@ -42,8 +42,6 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
-import org.folio.bulkops.exception.BulkOperationException;
-import org.folio.bulkops.exception.DataImportException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -138,35 +136,27 @@ public class ErrorService {
     }
   }
 
-  public void saveErrorsFromDataImport(UUID bulkOperationId, UUID dataImportJobId) {
-    log.info("Saving errors from DataImport, bulkOperationId = {}, dataImportJobId = {}", bulkOperationId, dataImportJobId);
-    var bulkOperation = operationRepository.findById(bulkOperationId)
-      .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
-    var identifierType = bulkOperation.getIdentifierType();
-    try {
-      var jobLogEntries = metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE)
-        .getEntries().stream()
-        .filter(entry -> nonNull(entry.getError()))
-        .toList();
-      jobLogEntries.forEach(errorEntry -> {
-        List<String> identifierList = null;
-        var relatedInstanceInfo = errorEntry.getRelatedInstanceInfo();
-        if (identifierType == IdentifierType.ID) {
-          identifierList = relatedInstanceInfo.getIdList();
-        } else if (identifierType == IdentifierType.INSTANCE_HRID) {
-          identifierList = relatedInstanceInfo.getHridList();
-        }
-        var identifier = CollectionUtils.isEmpty(identifierList) ? null : identifierList.get(0);
-        if (errorEntry.getSourceRecordActionStatus() == JobLogEntry.ActionStatus.DISCARDED && errorEntry.getError().isEmpty()) {
-          errorEntry.setError(DATA_IMPORT_ERROR_DISCARDED);
-        }
-        if (!errorEntry.getError().isEmpty()) {
-          saveError(bulkOperationId, identifier, errorEntry.getError(), ErrorType.ERROR);
-        }
-      });
-    } catch (Exception e) {
-      log.error("Problem with retrieving logs from MetadataProvider", e);
-      throw new DataImportException(e);
+  public void saveErrorsFromDataImport(List<JobLogEntry> logEntries, BulkOperation bulkOperation) {
+    log.info("Saving errors from DataImport, total entries = {}", logEntries.size());
+    logEntries.stream()
+      .filter(entry -> nonNull(entry.getError()))
+      .forEach(entry -> processDataImportLogEntry(entry, bulkOperation));
+  }
+
+  private void processDataImportLogEntry(JobLogEntry errorEntry, BulkOperation bulkOperation) {
+    List<String> identifierList = null;
+    var relatedInstanceInfo = errorEntry.getRelatedInstanceInfo();
+    if (IdentifierType.ID.equals(bulkOperation.getIdentifierType())) {
+      identifierList = relatedInstanceInfo.getIdList();
+    } else if (IdentifierType.INSTANCE_HRID.equals(bulkOperation.getIdentifierType())) {
+      identifierList = relatedInstanceInfo.getHridList();
+    }
+    var identifier = CollectionUtils.isEmpty(identifierList) ? null : identifierList.get(0);
+    if (errorEntry.getSourceRecordActionStatus() == JobLogEntry.ActionStatus.DISCARDED && errorEntry.getError().isEmpty()) {
+      errorEntry.setError(DATA_IMPORT_ERROR_DISCARDED);
+    }
+    if (!errorEntry.getError().isEmpty()) {
+      saveError(bulkOperation.getId(), identifier, errorEntry.getError(), ErrorType.ERROR);
     }
   }
 

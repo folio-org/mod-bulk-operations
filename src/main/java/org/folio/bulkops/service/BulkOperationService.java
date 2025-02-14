@@ -720,19 +720,18 @@ public class BulkOperationService {
 
   public void processDataImportResult(UUID dataImportJobProfileId) {
     if (nonNull(dataImportJobProfileId)) {
-      var operationOpt = bulkOperationRepository.findByDataImportJobProfileId(dataImportJobProfileId);
-      if (operationOpt.isPresent()) {
-        var operation = operationOpt.get();
-        var executions = metadataProviderService.getJobExecutions(operation.getDataImportJobProfileId());
-        updateBulkOperationBasedOnDataImportState(executions, operation);
-        if (metadataProviderService.isDataImportJobCompleted(executions)) {
-          executions.stream()
-            .map(DataImportJobExecution::getId)
-            .forEach(uuid -> errorService.saveErrorsFromDataImport(operation.getId(), uuid));
-          var updatedIds = metadataProviderService.getUpdatedInstanceIds(executions);
-          executor.execute(getRunnableWithCurrentFolioContext(() -> srsService.retrieveMarcInstancesFromSrs(updatedIds, operation)));
-        }
-      }
+      bulkOperationRepository.findByDataImportJobProfileId(dataImportJobProfileId)
+        .ifPresent(bulkOperation -> {
+          var executions = metadataProviderService.getJobExecutions(bulkOperation.getDataImportJobProfileId());
+          updateBulkOperationBasedOnDataImportState(executions, bulkOperation);
+          if (metadataProviderService.isDataImportJobCompleted(executions)) {
+            var logEntries = metadataProviderService.getJobLogEntries(bulkOperation, executions);
+            errorService.saveErrorsFromDataImport(logEntries, bulkOperation);
+            var updatedIds = metadataProviderService.fetchUpdatedInstanceIds(logEntries);
+            executor.execute(getRunnableWithCurrentFolioContext(() ->
+              srsService.retrieveMarcInstancesFromSrs(updatedIds, bulkOperation)));
+          }
+      });
     }
   }
 

@@ -32,19 +32,13 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import feign.FeignException;
-import feign.Request;
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.client.BulkEditClient;
-import org.folio.bulkops.client.MetadataProviderClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.JobLogEntry;
-import org.folio.bulkops.domain.bean.JobLogEntryCollection;
 import org.folio.bulkops.domain.bean.RelatedInstanceInfo;
 import org.folio.bulkops.domain.dto.Error;
 import org.folio.bulkops.domain.dto.ErrorType;
@@ -53,7 +47,6 @@ import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.domain.entity.BulkOperationProcessingContent;
-import org.folio.bulkops.exception.DataImportException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationProcessingContentRepository;
@@ -91,15 +84,6 @@ class ErrorServiceTest extends BaseTest {
   @MockBean
   private RemoteFileSystemClient remoteFileSystemClient;
 
-  @MockBean
-  private BulkEditClient bulkEditClient;
-
-  @MockBean
-  private MetadataProviderClient metadataProviderClient;
-
-  @MockBean
-  private SrsClient srsClient;
-
   private UUID bulkOperationId;
 
   @BeforeEach()
@@ -108,6 +92,7 @@ class ErrorServiceTest extends BaseTest {
 
       bulkOperationId = bulkOperationRepository.save(BulkOperation.builder()
         .id(UUID.randomUUID())
+        .identifierType(IdentifierType.HRID)
         .linkToTriggeringCsvFile("some/path/records.csv")
         .build()).getId();
     }
@@ -347,32 +332,32 @@ class ErrorServiceTest extends BaseTest {
       INSTANCE_HRID | false
     """, delimiter = '|')
   void testSaveErrorsFromDataImport(IdentifierType identifierType, boolean relatedInstanceInfo) {
-    final var dataImportJobId = UUID.randomUUID();
     final var sourceRecordId = UUID.randomUUID().toString();
     final var dataExportJobId = UUID.randomUUID();
     final var instanceId = UUID.randomUUID().toString();
-    final var instanceInfo = new RelatedInstanceInfo().withIdList(List.of(instanceId)).withHridList(List.of("instance HRID"));
-    when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE))
-      .thenReturn(new JobLogEntryCollection().withEntries(List.of(new JobLogEntry()
-        .withError("some MARC error #1").withSourceRecordId(sourceRecordId).withRelatedInstanceInfo(
-          relatedInstanceInfo ? instanceInfo : new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
-        ), new JobLogEntry()
-        .withError("some MARC error #2").withSourceRecordId(sourceRecordId).withRelatedInstanceInfo(
-          relatedInstanceInfo ? instanceInfo : new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
-        ))));
+    final var instanceInfo = new RelatedInstanceInfo()
+      .withIdList(List.of(instanceId))
+      .withHridList(List.of("instance HRID"));
+    var logEntries = List.of(new JobLogEntry()
+      .withError("some MARC error #1").withSourceRecordId(sourceRecordId).withRelatedInstanceInfo(
+        relatedInstanceInfo ? instanceInfo : new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
+      ), new JobLogEntry()
+      .withError("some MARC error #2").withSourceRecordId(sourceRecordId).withRelatedInstanceInfo(
+        relatedInstanceInfo ? instanceInfo : new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
+      ));
 
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var operationId = bulkOperationRepository.save(BulkOperation.builder()
-          .id(UUID.randomUUID())
-          .status(COMPLETED_WITH_ERRORS)
-          .identifierType(identifierType)
-          .committedNumOfErrors(2)
-          .dataExportJobId(dataExportJobId)
-          .build())
-        .getId();
-      errorService.saveErrorsFromDataImport(operationId, dataImportJobId);
-      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 2, 1, ErrorType.ERROR);
+      var operation = bulkOperationRepository.save(BulkOperation.builder()
+        .id(UUID.randomUUID())
+        .status(COMPLETED_WITH_ERRORS)
+        .identifierType(identifierType)
+        .committedNumOfErrors(2)
+        .dataExportJobId(dataExportJobId)
+        .build());
 
+      errorService.saveErrorsFromDataImport(logEntries, operation);
+
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operation.getId(), 2, 1, ErrorType.ERROR);
       assertThat(errors.getErrors(), hasSize(1));
       assertThat(errors.getTotalRecords(), equalTo(2));
       assertThat(errors.getErrors().stream().map(Error::getMessage).toList(), anyOf(contains("some MARC error #1"), contains("some MARC error #2")));
@@ -381,74 +366,48 @@ class ErrorServiceTest extends BaseTest {
 
   @Test
   void shouldNotSaveError_IfErrorFromDataImportIsEmpty() {
-    final var dataImportJobId = UUID.randomUUID();
     final var dataExportJobId = UUID.randomUUID();
-    when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE))
-      .thenReturn(new JobLogEntryCollection().withEntries(List.of(new JobLogEntry()
-        .withError("").withRelatedInstanceInfo(
-          new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
-        ))));
+    var logEntries = List.of(new JobLogEntry()
+      .withError("").withRelatedInstanceInfo(
+        new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
+      ));
 
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var operationId = bulkOperationRepository.save(BulkOperation.builder()
-          .id(UUID.randomUUID())
-          .status(COMPLETED)
-          .identifierType(IdentifierType.ID)
-          .dataExportJobId(dataExportJobId)
-          .build())
-        .getId();
-      errorService.saveErrorsFromDataImport(operationId, dataImportJobId);
-      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1, 1, ErrorType.ERROR);
+      var operation = bulkOperationRepository.save(BulkOperation.builder()
+        .id(UUID.randomUUID())
+        .status(COMPLETED)
+        .identifierType(IdentifierType.ID)
+        .dataExportJobId(dataExportJobId)
+        .build());
 
+      errorService.saveErrorsFromDataImport(logEntries, operation);
+
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operation.getId(), 1, 1, ErrorType.ERROR);
       assertThat(errors.getErrors(), hasSize(0));
     }
   }
 
   @Test
   void testSaveErrorsFromDataImport_whenDiscardedAndNoMessage() {
-    final var dataImportJobId = UUID.randomUUID();
     final var dataExportJobId = UUID.randomUUID();
-    when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE))
-      .thenReturn(new JobLogEntryCollection().withEntries(List.of(new JobLogEntry()
-        .withSourceRecordActionStatus(JobLogEntry.ActionStatus.DISCARDED).withError("")
-        .withRelatedInstanceInfo(new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())))));
+    var logEntries = Collections.singletonList(new JobLogEntry()
+      .withSourceRecordActionStatus(JobLogEntry.ActionStatus.DISCARDED).withError("")
+      .withRelatedInstanceInfo(new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())));
 
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var operationId = bulkOperationRepository.save(BulkOperation.builder()
-          .id(UUID.randomUUID())
-          .status(COMPLETED_WITH_ERRORS)
-          .identifierType(IdentifierType.ID)
-          .committedNumOfErrors(1)
-          .dataExportJobId(dataExportJobId)
-          .build())
-        .getId();
-      errorService.saveErrorsFromDataImport(operationId, dataImportJobId);
-      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1, 0, ErrorType.ERROR);
+      var operation = bulkOperationRepository.save(BulkOperation.builder()
+        .id(UUID.randomUUID())
+        .status(COMPLETED_WITH_ERRORS)
+        .identifierType(IdentifierType.ID)
+        .committedNumOfErrors(1)
+        .dataExportJobId(dataExportJobId)
+        .build());
 
+      errorService.saveErrorsFromDataImport(logEntries, operation);
+
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operation.getId(), 1, 0, ErrorType.ERROR);
       assertThat(errors.getErrors(), hasSize(1));
       assertEquals(DATA_IMPORT_ERROR_DISCARDED, errors.getErrors().get(0).getMessage());
-    }
-  }
-
-  @Test
-  void testDataImportException() {
-    final var dataImportJobId = UUID.randomUUID();
-    final var dataExportJobId = UUID.randomUUID();
-    when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), Integer.MAX_VALUE))
-      .thenThrow(new FeignException.FeignClientException(403, "some error msg",
-        Request.create(Request.HttpMethod.GET, "url", Map.of(), null, null, null), null, null));
-
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var operationId = bulkOperationRepository.save(BulkOperation.builder()
-          .id(UUID.randomUUID())
-          .status(COMPLETED_WITH_ERRORS)
-          .identifierType(IdentifierType.ID)
-          .committedNumOfErrors(1)
-          .dataExportJobId(dataExportJobId)
-          .build())
-        .getId();
-
-      assertThrows(DataImportException.class, () -> errorService.saveErrorsFromDataImport(operationId, dataImportJobId));
     }
   }
 
