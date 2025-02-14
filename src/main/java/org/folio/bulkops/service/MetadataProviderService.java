@@ -102,6 +102,7 @@ public class MetadataProviderService {
         .toList()).get();
     } catch (ExecutionException | InterruptedException e) {
       log.error("Failed to retrieve job log entries", e);
+      Thread.currentThread().interrupt();
       return Collections.emptyList();
     } finally {
       fjPool.shutdown();
