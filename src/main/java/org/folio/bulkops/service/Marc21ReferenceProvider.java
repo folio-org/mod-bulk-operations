@@ -4,6 +4,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CONTRIBUTORS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_EDITION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_FORMATS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_LANGUAGES;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_NOTES;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PHYSICAL_DESCRIPTION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION_FREQUENCY;
@@ -569,6 +570,7 @@ public class Marc21ReferenceProvider {
     languages.put("zxx", "No linguistic content");
     languages.put("zza", "Zaza");
 
+    mappedFields.put("041", INSTANCE_LANGUAGES);
     List.of("100", "110", "111", "700", "710", "711", "720")
       .forEach(tag -> mappedFields.put(tag, INSTANCE_CONTRIBUTORS));
     mappedFields.put("245", INSTANCE_RESOURCE_TITLE);
