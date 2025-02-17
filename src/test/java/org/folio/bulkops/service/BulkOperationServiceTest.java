@@ -1680,23 +1680,23 @@ class BulkOperationServiceTest extends BaseTest {
       assertTrue(itemEntity.getDiscoverySuppress());
     }
   }
+
   @Test
   void shouldProcessDataImportResult() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       UUID dataImportJobProfileId = UUID.randomUUID();
-      BulkOperation operation = new BulkOperation();
-      operation.setId(UUID.randomUUID());
-      operation.setDataImportJobProfileId(dataImportJobProfileId);
+      BulkOperation operation = BulkOperation.builder()
+        .id(UUID.randomUUID())
+        .dataImportJobProfileId(dataImportJobProfileId)
+        .build();
 
-      when(bulkOperationRepository.findByDataImportJobProfileId(dataImportJobProfileId)).thenReturn(Optional.of(operation));
       when(metadataProviderService.getJobExecutions(dataImportJobProfileId)).thenReturn(List.of(new DataImportJobExecution().status(DataImportStatus.COMMITTED)));
       when(metadataProviderService.calculateProgress(any())).thenReturn(new DataImportProgress().current(10));
       when(metadataProviderService.isDataImportJobCompleted(any())).thenReturn(true);
       when(metadataProviderService.fetchUpdatedInstanceIds(any())).thenReturn(List.of(UUID.randomUUID().toString()));
 
-      bulkOperationService.processDataImportResult(dataImportJobProfileId);
+      bulkOperationService.processDataImportResult(operation);
 
-      verify(bulkOperationRepository).findByDataImportJobProfileId(dataImportJobProfileId);
       verify(metadataProviderService).getJobExecutions(dataImportJobProfileId);
       verify(metadataProviderService).calculateProgress(any());
       verify(metadataProviderService).isDataImportJobCompleted(any());
