@@ -38,6 +38,8 @@ public class DataImportJobCompletionReceiverService {
           return null;
         });
       }
+    } catch (Exception e) {
+      log.error("Failed to process data import event: {}.", e.getMessage());
     }
   }
 }
