@@ -2,12 +2,14 @@ package org.folio.bulkops.service;
 
 import static java.lang.Boolean.TRUE;
 import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.domain.bean.JobLogEntry.ActionStatus.UPDATED;
 import static org.folio.bulkops.domain.dto.DataImportStatus.CANCELLED;
 import static org.folio.bulkops.domain.dto.DataImportStatus.COMMITTED;
 import static org.folio.bulkops.domain.dto.DataImportStatus.ERROR;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.DataImportClient;
 import org.folio.bulkops.client.MetadataProviderClient;
 import org.folio.bulkops.domain.bean.JobLogEntry;
@@ -15,20 +17,33 @@ import org.folio.bulkops.domain.bean.RelatedInstanceInfo;
 import org.folio.bulkops.domain.dto.DataImportJobExecution;
 import org.folio.bulkops.domain.dto.DataImportProgress;
 import org.folio.bulkops.domain.dto.DataImportStatus;
+import org.folio.bulkops.domain.dto.ErrorType;
+import org.folio.bulkops.domain.entity.BulkOperation;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class MetadataProviderService {
-  private static final int CHUNK_SIZE = 1000;
+  public static final String MSG_FAILED_TO_GET_LOG_ENTRIES_CHUNK = "Failed to get %d log entries, reason: %s";
   private final Set<DataImportStatus> completedStatuses = Set.of(COMMITTED, CANCELLED, ERROR);
   private final MetadataProviderClient metadataProviderClient;
   private final DataImportClient dataImportClient;
+  private final ErrorService errorService;
+
+  @Value("${application.data-import-integration.num_of_concurrent_requests}")
+  private int numOfConcurrentRequests;
+  @Value("${application.data-import-integration.chunk_size}")
+  private int chunkSize;
 
   public List<DataImportJobExecution> getJobExecutions(UUID jobProfileId) {
     var splitStatus = dataImportClient.getSplitStatus();
@@ -58,12 +73,8 @@ public class MetadataProviderService {
     return progress;
   }
 
-  public List<String> getUpdatedInstanceIds(List<DataImportJobExecution> jobExecutions) {
-    return jobExecutions.stream()
-      .map(DataImportJobExecution::getId)
-      .map(UUID::toString)
-      .map(this::getJobLogEntries)
-      .flatMap(List::stream)
+  public List<String> fetchUpdatedInstanceIds(List<JobLogEntry> logEntries) {
+    return logEntries.stream()
       .filter(entry -> UPDATED.equals(entry.getSourceRecordActionStatus()))
       .map(JobLogEntry::getRelatedInstanceInfo)
       .map(RelatedInstanceInfo::getIdList)
@@ -71,17 +82,48 @@ public class MetadataProviderService {
       .toList();
   }
 
-  private List<JobLogEntry> getJobLogEntries(String jobExecutionId) {
-    var response = metadataProviderClient.getJobLogEntries(jobExecutionId, CHUNK_SIZE);
-    if (response.getTotalRecords() <= CHUNK_SIZE) {
-      return response.getEntries();
+  public List<JobLogEntry> getJobLogEntries(BulkOperation bulkOperation, List<DataImportJobExecution> jobExecutions) {
+    return jobExecutions.stream()
+      .map(DataImportJobExecution::getId)
+      .map(UUID::toString)
+      .map(executionId -> getExecutionLogEntries(bulkOperation, executionId))
+      .flatMap(List::stream)
+      .toList();
+  }
+
+  private List<JobLogEntry> getExecutionLogEntries(BulkOperation bulkOperation, String jobExecutionId) {
+    var fjPool = new ForkJoinPool(numOfConcurrentRequests);
+    try {
+      var totalJobLogEntries = metadataProviderClient.getJobLogEntries(jobExecutionId, 1).getTotalRecords();
+      var offsets = splitOffsets(totalJobLogEntries);
+      return fjPool.submit(() -> offsets.stream().parallel()
+        .map(offset -> getEntries(bulkOperation, jobExecutionId, offset, chunkSize))
+        .flatMap(List::stream)
+        .toList()).get();
+    } catch (ExecutionException | InterruptedException e) {
+      log.error("Failed to retrieve job log entries", e);
+      Thread.currentThread().interrupt();
+      return Collections.emptyList();
+    } finally {
+      fjPool.shutdown();
     }
-    var result = new ArrayList<>(response.getEntries());
-    var offset = CHUNK_SIZE;
-    while (offset < response.getTotalRecords()) {
-      result.addAll(metadataProviderClient.getJobLogEntries(jobExecutionId, offset, CHUNK_SIZE).getEntries());
-      offset += CHUNK_SIZE;
+  }
+
+  private List<Integer> splitOffsets(int totalRecords) {
+    List<Integer> offsets = new ArrayList<>();
+    for (int i = 0; i < totalRecords; i += chunkSize) {
+      offsets.add(i);
     }
-    return result;
+    return offsets;
+  }
+
+  private List<JobLogEntry> getEntries(BulkOperation bulkOperation, String jobExecutionId, int offset, int limit) {
+    try {
+      return metadataProviderClient.getJobLogEntries(jobExecutionId, offset, limit).getEntries();
+    } catch (Exception e) {
+      log.error("Failed to get chunk offset={}, limit={}, reason: {}", offset, limit, e.getMessage());
+      errorService.saveError(bulkOperation.getId(), EMPTY, MSG_FAILED_TO_GET_LOG_ENTRIES_CHUNK.formatted(limit, e.getMessage()), ErrorType.ERROR);
+      return Collections.emptyList();
+    }
   }
 }

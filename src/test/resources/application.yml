@@ -49,3 +49,6 @@ application:
   file-uploading:
     max-retry-count: ${MAX_UPLOADING_RETRIES:50}
   platform: ${PLATFORM:okapi}
+  data-import-integration:
+    num_of_concurrent_requests: ${DI_NUMBER_OF_CONCURRENT_REQUESTS:2}
+    chunk_size: ${DI_CHUNK_SIZE:3}

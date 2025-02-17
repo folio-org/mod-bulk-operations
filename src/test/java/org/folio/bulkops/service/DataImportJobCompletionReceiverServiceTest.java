@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -42,6 +43,19 @@ class DataImportJobCompletionReceiverServiceTest extends BaseTest {
       receiverService.receiveJobExecutionUpdate(payload, Map.of());
       var dataImportJobProfileIdCaptor = ArgumentCaptor.forClass(UUID.class);
       verify(bulkOperationService, times(1)).processDataImportResult(dataImportJobProfileIdCaptor.capture());
+    }
+  }
+
+  @Test
+  void shouldIgnoreNonBulkOperationJobExecutionUpdate() throws IOException {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      when(systemUserService.getAuthedSystemUser(any())).thenReturn(new SystemUser("mod-bulk-operation", "http://okapi:9130", "diku", null, ""));
+      var message = Files.readString(Path.of("src/test/resources/files/kafka/data_import_job_completed_non_bulk_edit_message.json"));
+      var event = OBJECT_MAPPER.readValue(message, Event.class);
+      var payload = OBJECT_MAPPER.readValue(event.getEventPayload(), org.folio.bulkops.domain.dto.DataImportJobExecution.class);
+      receiverService.receiveJobExecutionUpdate(payload, Map.of());
+      var dataImportJobProfileIdCaptor = ArgumentCaptor.forClass(UUID.class);
+      verify(bulkOperationService, never()).processDataImportResult(dataImportJobProfileIdCaptor.capture());
     }
   }
 }

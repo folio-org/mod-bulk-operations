@@ -1,10 +1,15 @@
 package org.folio.bulkops.service;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.bean.JobLogEntry.ActionStatus.DISCARDED;
 import static org.folio.bulkops.domain.bean.JobLogEntry.ActionStatus.UPDATED;
+import static org.folio.bulkops.service.MetadataProviderService.MSG_FAILED_TO_GET_LOG_ENTRIES_CHUNK;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.folio.bulkops.BaseTest;
@@ -18,7 +23,11 @@ import org.folio.bulkops.domain.dto.DataImportJobExecution;
 import org.folio.bulkops.domain.dto.DataImportJobExecutionCollection;
 import org.folio.bulkops.domain.dto.DataImportProgress;
 import org.folio.bulkops.domain.dto.DataImportStatus;
+import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.ProfileInfo;
+import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.exception.NotFoundException;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -26,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,6 +44,8 @@ class MetadataProviderServiceTest extends BaseTest {
   DataImportClient dataImportClient;
   @MockBean
   private MetadataProviderClient metadataProviderClient;
+  @MockBean
+  private ErrorService errorService;
 
   @Autowired
   private MetadataProviderService metadataProviderService;
@@ -117,52 +129,36 @@ class MetadataProviderServiceTest extends BaseTest {
   }
 
   @Test
-  void shouldGetUpdatedInstanceIds() {
-    var id1 = UUID.randomUUID();
-    var id2 = UUID.randomUUID();
+  void shouldFetchUpdatedInstanceIds() {
     var updatedId1 = UUID.randomUUID().toString();
     var updatedId2 = UUID.randomUUID().toString();
-    var jobExecutions = List.of(
-      new DataImportJobExecution().id(id1),
-      new DataImportJobExecution().id(id2)
-    );
-
-    when(metadataProviderClient.getJobLogEntries(id1.toString(), 1000))
-      .thenReturn(JobLogEntryCollection.builder()
-        .entries(List.of(
-          JobLogEntry.builder()
-            .sourceRecordActionStatus(UPDATED)
-            .relatedInstanceInfo(RelatedInstanceInfo.builder()
-              .idList(List.of(updatedId1))
-              .build())
-            .build(),
-          JobLogEntry.builder()
-            .sourceRecordActionStatus(DISCARDED)
-            .relatedInstanceInfo(RelatedInstanceInfo.builder()
-              .idList(List.of(UUID.randomUUID().toString()))
-              .build())
-            .build()))
-        .totalRecords(1)
-        .build());
-    when(metadataProviderClient.getJobLogEntries(id2.toString(), 1000))
-      .thenReturn(JobLogEntryCollection.builder()
-        .entries(List.of(
-          JobLogEntry.builder()
-            .sourceRecordActionStatus(UPDATED)
-            .relatedInstanceInfo(RelatedInstanceInfo.builder()
-              .idList(List.of(updatedId2))
-              .build())
-            .build(),
-          JobLogEntry.builder()
-            .sourceRecordActionStatus(DISCARDED)
-            .relatedInstanceInfo(RelatedInstanceInfo.builder()
-              .idList(List.of(UUID.randomUUID().toString()))
-              .build())
-            .build()))
-        .totalRecords(1)
+    var logEntries = List.of(
+      JobLogEntry.builder()
+        .sourceRecordActionStatus(UPDATED)
+        .relatedInstanceInfo(RelatedInstanceInfo.builder()
+          .idList(List.of(updatedId1))
+          .build())
+        .build(),
+      JobLogEntry.builder()
+        .sourceRecordActionStatus(DISCARDED)
+        .relatedInstanceInfo(RelatedInstanceInfo.builder()
+          .idList(List.of(UUID.randomUUID().toString()))
+          .build())
+        .build(),
+      JobLogEntry.builder()
+        .sourceRecordActionStatus(UPDATED)
+        .relatedInstanceInfo(RelatedInstanceInfo.builder()
+          .idList(List.of(updatedId2))
+          .build())
+        .build(),
+      JobLogEntry.builder()
+        .sourceRecordActionStatus(DISCARDED)
+        .relatedInstanceInfo(RelatedInstanceInfo.builder()
+          .idList(List.of(UUID.randomUUID().toString()))
+          .build())
         .build());
 
-    var ids = metadataProviderService.getUpdatedInstanceIds(jobExecutions);
+    var ids = metadataProviderService.fetchUpdatedInstanceIds(logEntries);
 
     assertThat(ids).hasSize(2);
     assertThat(ids.get(0)).isEqualTo(updatedId1);
@@ -170,51 +166,109 @@ class MetadataProviderServiceTest extends BaseTest {
   }
 
   @Test
-  void shouldSliceLargeMetadataProviderResponses() {
-    var id1 = UUID.randomUUID();
-    var updatedId1 = UUID.randomUUID().toString();
-    var updatedId2 = UUID.randomUUID().toString();
-    var jobExecutions = List.of(new DataImportJobExecution().id(id1));
+  void shouldRetrieveDataImportJobLogEntriesInChunks() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var dataImportJobId = UUID.randomUUID();
 
-    when(metadataProviderClient.getJobLogEntries(id1.toString(), 1000))
-      .thenReturn(JobLogEntryCollection.builder()
+      when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), 1))
+        .thenReturn(JobLogEntryCollection.builder()
+          .entries(Collections.emptyList())
+          .totalRecords(10)
+          .build());
+      var threeEntriesCollection = JobLogEntryCollection.builder()
         .entries(List.of(
+          JobLogEntry.builder().build(),
           JobLogEntry.builder()
-            .sourceRecordActionStatus(UPDATED)
+            .error("error")
             .relatedInstanceInfo(RelatedInstanceInfo.builder()
-              .idList(List.of(updatedId1))
+              .hridList(List.of("123"))
               .build())
             .build(),
-          JobLogEntry.builder()
-            .sourceRecordActionStatus(DISCARDED)
-            .relatedInstanceInfo(RelatedInstanceInfo.builder()
-              .idList(List.of(UUID.randomUUID().toString()))
-              .build())
-            .build()))
-        .totalRecords(1010)
-        .build());
-    when(metadataProviderClient.getJobLogEntries(id1.toString(), 1000, 1000))
-      .thenReturn(JobLogEntryCollection.builder()
+          JobLogEntry.builder().build()
+        ))
+        .totalRecords(10)
+        .build();
+      var singleEntryCollection = JobLogEntryCollection.builder()
+        .entries(Collections.singletonList(JobLogEntry.builder().build()))
+        .totalRecords(10)
+        .build();
+      when(metadataProviderClient.getJobLogEntries(eq(dataImportJobId.toString()), anyLong(), anyLong()))
+        .thenAnswer(invocation -> {
+          var offset = (Long) invocation.getArguments()[1];
+          return switch (offset.intValue()) {
+            case 0, 3, 6 -> threeEntriesCollection;
+            case 9 -> singleEntryCollection;
+            default -> throw new IllegalStateException("Unexpected value: " + offset);
+          };
+        });
+      var executions = Collections.singletonList(new DataImportJobExecution().id(dataImportJobId));
+      var operation = new BulkOperation();
+
+      var entries = metadataProviderService.getJobLogEntries(operation, executions);
+
+      assertThat(entries).hasSize(10);
+
+      verify(metadataProviderClient).getJobLogEntries(dataImportJobId.toString(), 0, 3);
+      verify(metadataProviderClient).getJobLogEntries(dataImportJobId.toString(), 3, 3);
+      verify(metadataProviderClient).getJobLogEntries(dataImportJobId.toString(), 6, 3);
+      verify(metadataProviderClient).getJobLogEntries(dataImportJobId.toString(), 9, 3);
+    }
+  }
+
+  @Test
+  void shouldSaveErrorAndCompleteRetrievingJobLogEntriesWhenChunkFails() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var dataImportJobId = UUID.randomUUID();
+      var operationId = UUID.randomUUID();
+
+      when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), 1))
+        .thenReturn(JobLogEntryCollection.builder()
+          .entries(Collections.emptyList())
+          .totalRecords(10)
+          .build());
+
+      var threeEntriesCollection = JobLogEntryCollection.builder()
         .entries(List.of(
+          JobLogEntry.builder().build(),
           JobLogEntry.builder()
-            .sourceRecordActionStatus(UPDATED)
+            .error("error")
             .relatedInstanceInfo(RelatedInstanceInfo.builder()
-              .idList(List.of(updatedId2))
+              .hridList(List.of("123"))
               .build())
             .build(),
-          JobLogEntry.builder()
-            .sourceRecordActionStatus(DISCARDED)
-            .relatedInstanceInfo(RelatedInstanceInfo.builder()
-              .idList(List.of(UUID.randomUUID().toString()))
-              .build())
-            .build()))
-        .totalRecords(1010)
-        .build());
+          JobLogEntry.builder().build()
+        ))
+        .totalRecords(10)
+        .build();
+      var singleEntryCollection = JobLogEntryCollection.builder()
+        .entries(Collections.singletonList(JobLogEntry.builder().build()))
+        .totalRecords(10)
+        .build();
+      when(metadataProviderClient.getJobLogEntries(eq(dataImportJobId.toString()), anyLong(), anyLong()))
+        .thenAnswer(invocation -> {
+          var offset = (Long) invocation.getArguments()[1];
+          return switch (offset.intValue()) {
+            case 0, 6 -> threeEntriesCollection;
+            case 3 -> throw new NotFoundException("Log entries were not found");
+            case 9 -> singleEntryCollection;
+            default -> throw new IllegalStateException("Unexpected offset value: " + offset);
+          };
+        });
 
-    var ids = metadataProviderService.getUpdatedInstanceIds(jobExecutions);
+      var executions = Collections.singletonList(new DataImportJobExecution().id(dataImportJobId));
+      var operation = BulkOperation.builder().id(operationId).build();
 
-    assertThat(ids).hasSize(2);
-    assertThat(ids.get(0)).isEqualTo(updatedId1);
-    assertThat(ids.get(1)).isEqualTo(updatedId2);
+      var entries = metadataProviderService.getJobLogEntries(operation, executions);
+
+      assertThat(entries).hasSize(7);
+
+      verify(metadataProviderClient).getJobLogEntries(dataImportJobId.toString(), 0, 3);
+      verify(metadataProviderClient).getJobLogEntries(dataImportJobId.toString(), 3, 3);
+      verify(metadataProviderClient).getJobLogEntries(dataImportJobId.toString(), 6, 3);
+      verify(metadataProviderClient).getJobLogEntries(dataImportJobId.toString(), 9, 3);
+
+      var expectedMessage = MSG_FAILED_TO_GET_LOG_ENTRIES_CHUNK.formatted(3, "Log entries were not found");
+      verify(errorService).saveError(operationId, EMPTY, expectedMessage, ErrorType.ERROR);
+    }
   }
 }

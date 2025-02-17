@@ -17,6 +17,7 @@ import java.util.Map;
 @Log4j2
 @RequiredArgsConstructor
 public class DataImportJobCompletionReceiverService {
+  private static final String BULK_OPERATION_DI_JOB_NAME_PREFIX = "Bulk operations data import job profile";
   private final BulkOperationService bulkOperationService;
   private final FolioModuleMetadata folioModuleMetadata;
   private final SystemUserScopedExecutionService executionService;
@@ -29,12 +30,14 @@ public class DataImportJobCompletionReceiverService {
     var defaultFolioExecutionContext = DefaultFolioExecutionContext.fromMessageHeaders(folioModuleMetadata, messageHeaders);
     try (var context = new FolioExecutionContextSetter(defaultFolioExecutionContext)) {
       log.info("Received event from DI: {}.", dataImportJobExecution);
-      var importProfileId = dataImportJobExecution.getJobProfileInfo().getId();
-      var tenantId = defaultFolioExecutionContext.getTenantId();
-      executionService.executeSystemUserScoped(tenantId, () -> {
-        bulkOperationService.processDataImportResult(importProfileId);
-        return null;
-      });
+      if (dataImportJobExecution.getJobProfileInfo().getName().contains(BULK_OPERATION_DI_JOB_NAME_PREFIX)) {
+        var importProfileId = dataImportJobExecution.getJobProfileInfo().getId();
+        var tenantId = defaultFolioExecutionContext.getTenantId();
+        executionService.executeSystemUserScoped(tenantId, () -> {
+          bulkOperationService.processDataImportResult(importProfileId);
+          return null;
+        });
+      }
     }
   }
 }
