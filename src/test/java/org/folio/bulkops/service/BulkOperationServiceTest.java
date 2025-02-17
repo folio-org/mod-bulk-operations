@@ -95,7 +95,9 @@ import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
+import org.folio.bulkops.domain.dto.DataImportJobExecution;
 import org.folio.bulkops.domain.dto.DataImportProgress;
+import org.folio.bulkops.domain.dto.DataImportStatus;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
@@ -1687,7 +1689,7 @@ class BulkOperationServiceTest extends BaseTest {
       operation.setDataImportJobProfileId(dataImportJobProfileId);
 
       when(bulkOperationRepository.findByDataImportJobProfileId(dataImportJobProfileId)).thenReturn(Optional.of(operation));
-      when(metadataProviderService.getJobExecutions(dataImportJobProfileId)).thenReturn(List.of(new org.folio.bulkops.domain.dto.DataImportJobExecution()));
+      when(metadataProviderService.getJobExecutions(dataImportJobProfileId)).thenReturn(List.of(new DataImportJobExecution().status(DataImportStatus.COMMITTED)));
       when(metadataProviderService.calculateProgress(any())).thenReturn(new DataImportProgress().current(10));
       when(metadataProviderService.isDataImportJobCompleted(any())).thenReturn(true);
       when(metadataProviderService.fetchUpdatedInstanceIds(any())).thenReturn(List.of(UUID.randomUUID().toString()));
