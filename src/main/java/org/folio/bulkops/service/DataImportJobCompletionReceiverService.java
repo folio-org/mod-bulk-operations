@@ -40,7 +40,7 @@ public class DataImportJobCompletionReceiverService {
         });
       });
     } catch (Exception e) {
-      log.error("Failed to process DI event: {}.", e.getMessage());
+      log.error("Failed to process DI event: {}, reason: {}", dataImportJobExecution, e.getMessage());
     }
   }
 }
