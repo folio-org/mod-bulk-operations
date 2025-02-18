@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.spring.DefaultFolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
@@ -17,8 +18,8 @@ import java.util.Map;
 @Log4j2
 @RequiredArgsConstructor
 public class DataImportJobCompletionReceiverService {
-  private static final String BULK_OPERATION_DI_JOB_NAME_PREFIX = "Bulk operations data import job profile";
   private final BulkOperationService bulkOperationService;
+  private final BulkOperationRepository bulkOperationRepository;
   private final FolioModuleMetadata folioModuleMetadata;
   private final SystemUserScopedExecutionService executionService;
 
@@ -29,15 +30,17 @@ public class DataImportJobCompletionReceiverService {
   public void receiveJobExecutionUpdate(DataImportJobExecution dataImportJobExecution, @Headers Map<String, Object> messageHeaders) {
     var defaultFolioExecutionContext = DefaultFolioExecutionContext.fromMessageHeaders(folioModuleMetadata, messageHeaders);
     try (var context = new FolioExecutionContextSetter(defaultFolioExecutionContext)) {
-      log.info("Received event from DI: {}.", dataImportJobExecution);
-      if (dataImportJobExecution.getJobProfileInfo().getName().contains(BULK_OPERATION_DI_JOB_NAME_PREFIX)) {
-        var importProfileId = dataImportJobExecution.getJobProfileInfo().getId();
+      var importProfileId = dataImportJobExecution.getJobProfileInfo().getId();
+      bulkOperationRepository.findByDataImportJobProfileId(importProfileId).ifPresent(bulkOperation ->
+      {
         var tenantId = defaultFolioExecutionContext.getTenantId();
         executionService.executeSystemUserScoped(tenantId, () -> {
-          bulkOperationService.processDataImportResult(importProfileId);
+          bulkOperationService.processDataImportResult(bulkOperation);
           return null;
         });
-      }
+      });
+    } catch (Exception e) {
+      log.error("Failed to process DI event: {}, reason: {}", dataImportJobExecution, e.getMessage());
     }
   }
 }
