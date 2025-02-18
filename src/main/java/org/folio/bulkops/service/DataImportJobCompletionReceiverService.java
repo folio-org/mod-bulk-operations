@@ -29,24 +29,19 @@ public class DataImportJobCompletionReceiverService {
     topicPattern = "${application.kafka.topic-pattern-di}",
     groupId = "${application.kafka.group-id}")
   public void receiveJobExecutionUpdate(DataImportJobExecution dataImportJobExecution, @Headers Map<String, Object> messageHeaders) {
-    log.info("Received event from DI: {}.", dataImportJobExecution);
-    try {
-      var importProfileId = dataImportJobExecution.getJobProfileInfo().getId();
-      bulkOperationRepository.findByDataImportJobProfileId(importProfileId).ifPresent(bulkOperation ->
-        processJobExecutionUpdate(bulkOperation, messageHeaders));
-    } catch (Exception e) {
-      log.error("Failed to process DI event: {}.", e.getMessage());
-    }
-  }
-
-  private void processJobExecutionUpdate(BulkOperation bulkOperation, Map<String, Object> messageHeaders) {
     var defaultFolioExecutionContext = DefaultFolioExecutionContext.fromMessageHeaders(folioModuleMetadata, messageHeaders);
     try (var context = new FolioExecutionContextSetter(defaultFolioExecutionContext)) {
-      var tenantId = defaultFolioExecutionContext.getTenantId();
-      executionService.executeSystemUserScoped(tenantId, () -> {
-        bulkOperationService.processDataImportResult(bulkOperation);
-        return null;
+      var importProfileId = dataImportJobExecution.getJobProfileInfo().getId();
+      bulkOperationRepository.findByDataImportJobProfileId(importProfileId).ifPresent(bulkOperation ->
+      {
+        var tenantId = defaultFolioExecutionContext.getTenantId();
+        executionService.executeSystemUserScoped(tenantId, () -> {
+          bulkOperationService.processDataImportResult(bulkOperation);
+          return null;
+        });
       });
+    } catch (Exception e) {
+      log.error("Failed to process DI event: {}.", e.getMessage());
     }
   }
 }
