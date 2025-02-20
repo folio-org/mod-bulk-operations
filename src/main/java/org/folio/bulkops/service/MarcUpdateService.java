@@ -109,6 +109,7 @@ public class MarcUpdateService {
         var modifiedRecord = modifiedRecordsReader.next();
 
         if (originalRecord.toString().equals(modifiedRecord.toString())) {
+          log.info("Marc records are equal");
           var identifier = HRID.equals(bulkOperation.getIdentifierType()) ?
             originalRecord.getControlNumber() :
             fetchInstanceUuidOrElseHrid(originalRecord);

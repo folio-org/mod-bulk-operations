@@ -1783,18 +1783,14 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   @Test
-  void shouldSkipCommitAndCopyModifiedIfNoRules() {
+  void shouldSkipCommitIfNoRules() {
     var operationId = UUID.randomUUID();
-    var modifiedCsv = "modified.csv";
-    var modifiedMarc = "modified.mrc";
-    var copyCsv = "copy.csv";
-    var copyMarc = "copy.mrc";
     var operation = BulkOperation.builder()
       .id(operationId)
       .entityType(INSTANCE_MARC)
       .linkToTriggeringCsvFile("instances.csv")
-      .linkToModifiedRecordsCsvFile(modifiedCsv)
-      .linkToModifiedRecordsMarcFile(modifiedMarc)
+      .linkToModifiedRecordsCsvFile("modified.csv")
+      .linkToModifiedRecordsMarcFile("modified.mrc")
       .build();
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
@@ -1803,27 +1799,14 @@ class BulkOperationServiceTest extends BaseTest {
       .thenReturn(false);
     when(ruleService.hasMarcUpdates(operation))
       .thenReturn(false);
-    var csvContent = new ByteArrayInputStream("csv".getBytes());
-    when(remoteFileSystemClient.get(modifiedCsv))
-      .thenReturn(csvContent);
-    when(remoteFileSystemClient.put(eq(csvContent), anyString()))
-      .thenReturn(copyCsv);
-    var marcContent = new ByteArrayInputStream("mrc".getBytes());
-    when(remoteFileSystemClient.get(modifiedMarc))
-      .thenReturn(marcContent);
-    when(remoteFileSystemClient.put(eq(marcContent), anyString()))
-      .thenReturn(copyMarc);
 
     bulkOperationService.commit(operation);
 
-    verify(remoteFileSystemClient).put(eq(marcContent), anyString());
-    verify(remoteFileSystemClient).put(eq(csvContent), anyString());
-
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
-    var lastCapture = operationCaptor.getAllValues().get(3);
-    assertEquals(copyMarc, lastCapture.getLinkToCommittedRecordsMarcFile());
-    assertEquals(copyCsv, lastCapture.getLinkToCommittedRecordsCsvFile());
+    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
+    var lastCapture = operationCaptor.getAllValues().get(1);
+    assertNull(lastCapture.getLinkToCommittedRecordsMarcFile());
+    assertNull(lastCapture.getLinkToCommittedRecordsCsvFile());
   }
 
   @ParameterizedTest

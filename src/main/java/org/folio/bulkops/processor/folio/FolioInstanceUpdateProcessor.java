@@ -86,6 +86,7 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
       .isPresent();
     if (notChanged) {
       var errorMessage = buildErrorMessage(recordsUpdated, instance.getDiscoverySuppress(), operation.getEntityType());
+      log.info("Error message: {}", errorMessage);
       errorService.saveError(operation.getId(), instance.getIdentifier(operation.getIdentifierType()), errorMessage, ErrorType.WARNING);
     }
   }

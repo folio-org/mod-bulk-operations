@@ -407,12 +407,7 @@ public class BulkOperationService {
     var resultCsvFileName = String.format(CHANGED_CSV_PATH_TEMPLATE, operation.getId(), LocalDate.now(), triggeringFileName);
 
     if (INSTANCE_MARC.equals(operation.getEntityType()) && !hasAdministrativeRules) {
-      log.info("No administrative data updates, saving unchanged CSV");
-      var committedCsvFileName = copyFile(operation.getLinkToModifiedRecordsCsvFile(), resultCsvFileName);
-      if (nonNull(committedCsvFileName)) {
-        operation.setLinkToCommittedRecordsCsvFile(committedCsvFileName);
-        bulkOperationRepository.save(operation);
-      }
+      log.info("No administrative data updates, skipping commit");
     } else if (StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsJsonFile())) {
       var entityClass = resolveEntityClass(operation.getEntityType());
       var extendedClass = resolveExtendedEntityClass(operation.getEntityType());
@@ -501,16 +496,6 @@ public class BulkOperationService {
         operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
       }
       executionRepository.save(execution);
-    }
-
-    if (INSTANCE_MARC.equals(operation.getEntityType()) && !hasMarcRules) {
-      log.info("No MARC updates, saving unchanged MARC");
-      var resultMarcFileName = String.format(CHANGED_MARC_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
-      var committedMarcFileName = copyFile(operation.getLinkToModifiedRecordsMarcFile(), resultMarcFileName);
-      if (nonNull(committedMarcFileName)) {
-        operation.setLinkToCommittedRecordsMarcFile(committedMarcFileName);
-        bulkOperationRepository.save(operation);
-      }
     }
 
     if (!INSTANCE_MARC.equals(operation.getEntityType()) || !hasMarcRules) {
