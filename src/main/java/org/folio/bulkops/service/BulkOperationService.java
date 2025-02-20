@@ -479,9 +479,7 @@ public class BulkOperationService {
         }
 
         execution.setProcessedRecords(processedNumOfRecords);
-        if (INSTANCE_MARC.equals(operation.getEntityType())) {
-          operation.setLinkToCommittedRecordsCsvFile(resultCsvFileName);
-        } else if (operation.getCommittedNumOfRecords() > 0) {
+        if (operation.getCommittedNumOfRecords() > 0) {
           operation.setLinkToCommittedRecordsCsvFile(resultCsvFileName);
           operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
         }
