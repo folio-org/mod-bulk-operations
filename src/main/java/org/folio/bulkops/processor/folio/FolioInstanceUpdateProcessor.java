@@ -81,12 +81,12 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
   @Override
   public void updateAssociatedRecords(ExtendedInstance extendedInstance, BulkOperation operation, boolean notChanged) {
     var instance = extendedInstance.getEntity();
+    log.info("Hrid: {}, equal: {}", instance.getHrid(), notChanged);
     var recordsUpdated = findRuleByOption(ruleService.getRules(operation.getId()), SUPPRESS_FROM_DISCOVERY)
       .filter(rule -> applyRuleToAssociatedRecords(extendedInstance, rule, operation))
       .isPresent();
     if (notChanged) {
       var errorMessage = buildErrorMessage(recordsUpdated, instance.getDiscoverySuppress(), operation.getEntityType());
-      log.info("Error message: {}", errorMessage);
       errorService.saveError(operation.getId(), instance.getIdentifier(operation.getIdentifierType()), errorMessage, ErrorType.WARNING);
     }
   }
