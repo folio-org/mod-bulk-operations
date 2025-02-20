@@ -592,6 +592,7 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToInstanceMarc = "src/test/resources/files/instance_marc.mrc";
       var pathToInstanceJson = "src/test/resources/files/instance_marc.json";
       var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-MARC-instance_marc.mrc";
+      var expectedPathToFilteredMatchedJsonFile = bulkOperationId + "/json/" + LocalDate.now() + "-Filtered-Matched-Records-instance_marc.json";
 
       when(bulkOperationRepository.findById(any(UUID.class)))
         .thenReturn(Optional.of(BulkOperation.builder()
@@ -650,6 +651,7 @@ class BulkOperationServiceTest extends BaseTest {
       Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(6)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getLinkToModifiedRecordsMarcFile(), equalTo(expectedPathToModifiedMarcFile));
+      assertThat(capturedBulkOperation.getLinkToMatchedRecordsJsonFile(), equalTo(expectedPathToFilteredMatchedJsonFile));
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
     }
   }

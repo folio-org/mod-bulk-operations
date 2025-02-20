@@ -12,9 +12,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEWED_NO_MARC_
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.util.Constants.DATA_IMPORT_ERROR_DISCARDED;
 import static org.folio.bulkops.util.Constants.ERROR_FILE_NAME_ENDING;
-import static org.folio.bulkops.util.Constants.MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
-import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -72,7 +70,7 @@ public class ErrorService {
   private final MetadataProviderClient metadataProviderClient;
 
   public void saveError(UUID bulkOperationId, String identifier,  String errorMessage, String uiErrorMessage, String link, ErrorType errorType) {
-    if (Set.of(MSG_NO_CHANGE_REQUIRED, MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED, MSG_NO_MARC_CHANGE_REQUIRED).contains(errorMessage)
+    if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage)
       && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier).isPresent()) {
       return;
     }

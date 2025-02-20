@@ -157,6 +157,7 @@ public class BulkOperationService {
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
+  private static final String FILTERED_MATCH_JSON_PATH_TEMPLATE = "%s/json/%s-Filtered-Matched-Records-%s.json";
   private static final String PREVIEW_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-CSV-%s.csv";
   private static final String PREVIEW_MARC_PATH_TEMPLATE = "%s/%s-Updates-Preview-MARC-%s.mrc";
   private static final String PREVIEW_MARC_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-MARC-CSV-%s.csv";
@@ -234,11 +235,13 @@ public class BulkOperationService {
 
     var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
     var modifiedJsonFileName = String.format(PREVIEW_JSON_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
+    var filteredMatchedJsonFileName = String.format(FILTERED_MATCH_JSON_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
     var modifiedPreviewCsvFileName = String.format(PREVIEW_CSV_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
 
     try (var readerForMatchedJsonFile = remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile());
          var writerForModifiedPreviewCsvFile = remoteFileSystemClient.writer(modifiedPreviewCsvFileName);
-         var writerForModifiedJsonFile = remoteFileSystemClient.writer(modifiedJsonFileName)) {
+         var writerForModifiedJsonFile = remoteFileSystemClient.writer(modifiedJsonFileName);
+         var writerForFilteredMatchedJsonFile = remoteFileSystemClient.writer(filteredMatchedJsonFileName)) {
 
       var csvWriter = new BulkOperationsEntityCsvWriter(writerForModifiedPreviewCsvFile, clazz);
 
@@ -248,9 +251,13 @@ public class BulkOperationService {
 
       while (iterator.hasNext()) {
         var original = iterator.next();
-        if (INSTANCE_MARC.equals(operation.getEntityType()) && original instanceof ExtendedInstance extendedInstance
-          && !MARC.equals(extendedInstance.getEntity().getSource())) {
-          continue;
+        if (INSTANCE_MARC.equals(operation.getEntityType()) && original instanceof ExtendedInstance extendedInstance) {
+          if (!MARC.equals(extendedInstance.getEntity().getSource())) {
+            continue;
+          } else {
+            var originalRecord = objectMapper.writeValueAsString(original) + LF;
+            writerForFilteredMatchedJsonFile.write(originalRecord);
+          }
         }
         var modified = processUpdate(original, operation, ruleCollection, extendedClazz);
         List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
@@ -274,6 +281,11 @@ public class BulkOperationService {
       }
 
       if (processedNumOfRecords > 0) {
+        if (INSTANCE_MARC.equals(operation.getEntityType())) {
+          remoteFileSystemClient.remove(operation.getLinkToMatchedRecordsJsonFile());
+          log.info("Removed matched records json file: {}, new filename: {}", operation.getLinkToMatchedRecordsJsonFile(), filteredMatchedJsonFileName);
+          operation.setLinkToMatchedRecordsJsonFile(filteredMatchedJsonFileName);
+        }
         operation.setLinkToModifiedRecordsCsvFile(modifiedPreviewCsvFileName);
         operation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
         saveLinks(operation);
@@ -826,6 +838,9 @@ public class BulkOperationService {
 
   private synchronized void saveLinks(BulkOperation source) {
     var dest = getBulkOperationOrThrow(source.getId());
+    if (nonNull(source.getLinkToMatchedRecordsJsonFile())) {
+      dest.setLinkToMatchedRecordsJsonFile(source.getLinkToMatchedRecordsJsonFile());
+    }
     if (nonNull(source.getLinkToModifiedRecordsCsvFile())) {
       dest.setLinkToModifiedRecordsCsvFile(source.getLinkToModifiedRecordsCsvFile());
     }
@@ -850,16 +865,5 @@ public class BulkOperationService {
       return (hasAdministrativeRules && nonNull(operation.getLinkToModifiedRecordsJsonFile())) ? 3 : 2;
     }
     return 1;
-  }
-
-  private String copyFile(String linkToSourceFile, String linkToDestFile) {
-    if (nonNull(linkToSourceFile) && nonNull(linkToDestFile)) {
-      try (var inputStream = remoteFileSystemClient.get(linkToSourceFile)) {
-        return remoteFileSystemClient.put(inputStream, linkToDestFile);
-      } catch (IOException e) {
-        log.error("Failed to copy file {} to {}",linkToSourceFile, linkToDestFile, e);
-      }
-    }
-    return null;
   }
 }
