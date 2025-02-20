@@ -81,7 +81,6 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
   @Override
   public void updateAssociatedRecords(ExtendedInstance extendedInstance, BulkOperation operation, boolean notChanged) {
     var instance = extendedInstance.getEntity();
-    log.info("Hrid: {}, equal: {}", instance.getHrid(), notChanged);
     var recordsUpdated = findRuleByOption(ruleService.getRules(operation.getId()), SUPPRESS_FROM_DISCOVERY)
       .filter(rule -> applyRuleToAssociatedRecords(extendedInstance, rule, operation))
       .isPresent();

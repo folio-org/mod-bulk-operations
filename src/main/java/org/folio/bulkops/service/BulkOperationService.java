@@ -445,7 +445,7 @@ public class BulkOperationService {
 
           try {
             var result = recordUpdateService.updateEntity(original, modified, operation);
-            if (result != original || INSTANCE_MARC.equals(operation.getEntityType())) {
+            if (result != original) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
               if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId()) || entityClass == User.class ) {
