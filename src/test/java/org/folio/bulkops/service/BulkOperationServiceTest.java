@@ -16,6 +16,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.service.BulkOperationService.FILE_UPLOADING_FAILED;
+import static org.folio.bulkops.service.BulkOperationService.MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY;
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
@@ -68,6 +69,7 @@ import java.util.UUID;
 
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.BulkEditClient;
@@ -653,6 +655,13 @@ class BulkOperationServiceTest extends BaseTest {
       assertThat(capturedBulkOperation.getLinkToModifiedRecordsMarcFile(), equalTo(expectedPathToModifiedMarcFile));
       assertThat(capturedBulkOperation.getLinkToMatchedRecordsJsonFile(), equalTo(expectedPathToFilteredMatchedJsonFile));
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
+
+      var identifierArgumentCaptor = ArgumentCaptor.forClass(String.class);
+      var errorMessageArgumentCaptor = ArgumentCaptor.forClass(String.class);
+      Awaitility.await().untilAsserted(() -> verify(errorService).saveError(any(UUID.class), identifierArgumentCaptor.capture(),
+        errorMessageArgumentCaptor.capture(), eq(ErrorType.ERROR)));
+      Assertions.assertThat(errorMessageArgumentCaptor.getValue()).isEqualTo(MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY.formatted("FOLIO"));
+      Assertions.assertThat(identifierArgumentCaptor.getValue()).isEqualTo("69640328-788e-43fc-9c3c-af39e243f3b7");
     }
   }
 

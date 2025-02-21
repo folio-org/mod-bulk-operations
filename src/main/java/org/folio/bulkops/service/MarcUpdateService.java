@@ -5,18 +5,15 @@ import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
-import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.MarcHelper.fetchInstanceUuidOrElseHrid;
 
-import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -39,7 +36,6 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class MarcUpdateService {
   public static final String CHANGED_MARC_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-%s.mrc";
-  public static final String MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY = "Instance with source %s is not supported by MARC records bulk edit and cannot be updated.";
   public static final String CHANGED_MARC_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-CSV-%s.csv";
 
   private final BulkOperationExecutionRepository executionRepository;
@@ -122,32 +118,10 @@ public class MarcUpdateService {
     }
   }
 
-  public void saveErrorsForFolioInstances(BulkOperation bulkOperation) {
-    var numOfFolioInstances = 0;
-    saveProgress(bulkOperation, numOfFolioInstances);
-    try (var readerForMatchedJsonFile = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
-      var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), ExtendedInstance.class);
-      while (iterator.hasNext()) {
-        var instance = iterator.next().getEntity();
-        if (!MARC.equals(instance.getSource())) {
-          var identifier = HRID.equals(bulkOperation.getIdentifierType()) ?
-            instance.getHrid() :
-            instance.getId();
-          errorService.saveError(bulkOperation.getId(), identifier, MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY.formatted(instance.getSource()), ErrorType.ERROR);
-          if (++numOfFolioInstances % 100 == 0) {
-            saveProgress(bulkOperation, numOfFolioInstances);
-          }
-        }
-      }
-      saveProgress(bulkOperation, numOfFolioInstances);
-    } catch (Exception e) {
-      log.error("Failed to save errors for folio instances", e);
-    }
-  }
-
-  private void saveProgress(BulkOperation bulkOperation, int numOfFolioInstances) {
-    bulkOperation.setProcessedNumOfRecords(numOfFolioInstances);
-    bulkOperation.setCommittedNumOfErrors(numOfFolioInstances);
+  public void prepareProgress(BulkOperation bulkOperation) {
+    var processedNumOfRecords = errorService.getCommittedNumOfErrors(bulkOperation.getId());
+    bulkOperation.setProcessedNumOfRecords(processedNumOfRecords);
+    bulkOperation.setCommittedNumOfErrors(processedNumOfRecords);
     bulkOperationRepository.save(bulkOperation);
   }
 }

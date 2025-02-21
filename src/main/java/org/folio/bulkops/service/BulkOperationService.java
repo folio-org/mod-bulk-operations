@@ -11,6 +11,7 @@ import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
+import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
@@ -23,7 +24,6 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORD
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
-import static org.folio.bulkops.service.MarcUpdateService.CHANGED_MARC_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
@@ -37,7 +37,6 @@ import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
 
 import java.io.BufferedInputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
@@ -128,6 +127,7 @@ public class BulkOperationService {
   public static final String FILE_UPLOADING_FAILED = "File uploading failed";
   public static final String STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS = "Step %s is not applicable for bulk operation status %s";
   public static final String ERROR_STARTING_BULK_OPERATION = "Error starting Bulk Operation: ";
+  public static final String MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY = "Instance with source %s is not supported by MARC records bulk edit and cannot be updated.";
   @Value("${application.file-uploading.max-retry-count}")
   private int maxRetryCount;
 
@@ -253,6 +253,11 @@ public class BulkOperationService {
         var original = iterator.next();
         if (INSTANCE_MARC.equals(operation.getEntityType()) && original instanceof ExtendedInstance extendedInstance) {
           if (!MARC.equals(extendedInstance.getEntity().getSource())) {
+            var instance = extendedInstance.getEntity();
+            var identifier = HRID.equals(operation.getIdentifierType()) ?
+              instance.getHrid() :
+              instance.getId();
+            errorService.saveError(operation.getId(), identifier, MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY.formatted(instance.getSource()), ErrorType.ERROR);
             continue;
           } else {
             var originalRecord = objectMapper.writeValueAsString(original) + LF;
@@ -404,7 +409,7 @@ public class BulkOperationService {
     boolean hasMarcRules = false;
 
     if (INSTANCE_MARC.equals(operation.getEntityType())) {
-      marcUpdateService.saveErrorsForFolioInstances(operation);
+      marcUpdateService.prepareProgress(operation);
       hasAdministrativeRules = ruleService.hasAdministrativeUpdates(operation);
       hasMarcRules = ruleService.hasMarcUpdates(operation);
       var multiplier = getProgressMultiplier(operation, hasAdministrativeRules, hasMarcRules);
