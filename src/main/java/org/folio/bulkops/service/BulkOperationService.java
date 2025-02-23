@@ -254,9 +254,7 @@ public class BulkOperationService {
         if (INSTANCE_MARC.equals(operation.getEntityType()) && original instanceof ExtendedInstance extendedInstance) {
           if (!MARC.equals(extendedInstance.getEntity().getSource())) {
             var instance = extendedInstance.getEntity();
-            var identifier = HRID.equals(operation.getIdentifierType()) ?
-              instance.getHrid() :
-              instance.getId();
+            var identifier = HRID.equals(operation.getIdentifierType()) ? instance.getHrid() : instance.getId();
             errorService.saveError(operation.getId(), identifier, MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY.formatted(instance.getSource()), ErrorType.ERROR);
             continue;
           } else {
@@ -299,12 +297,12 @@ public class BulkOperationService {
       dataProcessing.setStatus(StatusType.COMPLETED);
       dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
       dataProcessing.setEndTime(LocalDateTime.now());
-      dataProcessingRepository.save(dataProcessing);
     } catch (S3ClientException e) {
       handleException(operation.getId(), dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
     } catch (Exception e) {
       handleException(operation.getId(), dataProcessing, "Confirm failed", e);
     } finally {
+      dataProcessingRepository.save(dataProcessing);
       handleProcessingCompletion(operationId);
     }
   }
@@ -346,12 +344,12 @@ public class BulkOperationService {
         dataProcessing.setStatus(StatusType.COMPLETED);
         dataProcessing.setEndTime(LocalDateTime.now());
         dataProcessing.setProcessedNumOfRecords(processedNumOfRecords);
-        dataProcessingRepository.save(dataProcessing);
       } catch (S3ClientException e) {
         handleException(operation.getId(), dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
       } catch (Exception e) {
         handleException(operation.getId(), dataProcessing, "Confirm failed", e);
       } finally {
+        dataProcessingRepository.save(dataProcessing);
         handleProcessingCompletion(operationId);
       }
     } else {

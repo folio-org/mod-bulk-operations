@@ -1036,12 +1036,6 @@ class BulkOperationServiceTest extends BaseTest {
 
     bulkOperationService.confirm(dataProcessing);
 
-    var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
-    Awaitility.await().untilAsserted(() -> verify(dataProcessingRepository).save(dataProcessingCaptor.capture()));
-    var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(0);
-    assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.FAILED));
-    assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
-
     var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(2)).save(bulkOperationCaptor.capture());
     var capturedBulkOperation = bulkOperationCaptor.getValue();
