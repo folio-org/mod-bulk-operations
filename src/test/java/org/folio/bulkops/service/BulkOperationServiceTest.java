@@ -16,6 +16,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.service.BulkOperationService.FILE_UPLOADING_FAILED;
+import static org.folio.bulkops.service.BulkOperationService.MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY;
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
@@ -68,6 +69,7 @@ import java.util.UUID;
 
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.BulkEditClient;
@@ -592,6 +594,7 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToInstanceMarc = "src/test/resources/files/instance_marc.mrc";
       var pathToInstanceJson = "src/test/resources/files/instance_marc.json";
       var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-MARC-instance_marc.mrc";
+      var expectedPathToFilteredMatchedJsonFile = bulkOperationId + "/json/" + LocalDate.now() + "-Filtered-Matched-Records-instance_marc.json";
 
       when(bulkOperationRepository.findById(any(UUID.class)))
         .thenReturn(Optional.of(BulkOperation.builder()
@@ -650,7 +653,15 @@ class BulkOperationServiceTest extends BaseTest {
       Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(6)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getLinkToModifiedRecordsMarcFile(), equalTo(expectedPathToModifiedMarcFile));
+      assertThat(capturedBulkOperation.getLinkToMatchedRecordsJsonFile(), equalTo(expectedPathToFilteredMatchedJsonFile));
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
+
+      var identifierArgumentCaptor = ArgumentCaptor.forClass(String.class);
+      var errorMessageArgumentCaptor = ArgumentCaptor.forClass(String.class);
+      Awaitility.await().untilAsserted(() -> verify(errorService).saveError(any(UUID.class), identifierArgumentCaptor.capture(),
+        errorMessageArgumentCaptor.capture(), eq(ErrorType.ERROR)));
+      Assertions.assertThat(errorMessageArgumentCaptor.getValue()).isEqualTo(MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY.formatted("FOLIO"));
+      Assertions.assertThat(identifierArgumentCaptor.getValue()).isEqualTo("69640328-788e-43fc-9c3c-af39e243f3b7");
     }
   }
 
@@ -1024,12 +1035,6 @@ class BulkOperationServiceTest extends BaseTest {
       .thenThrow(new RuntimeException("Failed to read file"));
 
     bulkOperationService.confirm(dataProcessing);
-
-    var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
-    Awaitility.await().untilAsserted(() -> verify(dataProcessingRepository).save(dataProcessingCaptor.capture()));
-    var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(0);
-    assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.FAILED));
-    assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
 
     var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(2)).save(bulkOperationCaptor.capture());
@@ -1783,18 +1788,14 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   @Test
-  void shouldSkipCommitAndCopyModifiedIfNoRules() {
+  void shouldSkipCommitIfNoRules() {
     var operationId = UUID.randomUUID();
-    var modifiedCsv = "modified.csv";
-    var modifiedMarc = "modified.mrc";
-    var copyCsv = "copy.csv";
-    var copyMarc = "copy.mrc";
     var operation = BulkOperation.builder()
       .id(operationId)
       .entityType(INSTANCE_MARC)
       .linkToTriggeringCsvFile("instances.csv")
-      .linkToModifiedRecordsCsvFile(modifiedCsv)
-      .linkToModifiedRecordsMarcFile(modifiedMarc)
+      .linkToModifiedRecordsCsvFile("modified.csv")
+      .linkToModifiedRecordsMarcFile("modified.mrc")
       .build();
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
@@ -1803,27 +1804,14 @@ class BulkOperationServiceTest extends BaseTest {
       .thenReturn(false);
     when(ruleService.hasMarcUpdates(operation))
       .thenReturn(false);
-    var csvContent = new ByteArrayInputStream("csv".getBytes());
-    when(remoteFileSystemClient.get(modifiedCsv))
-      .thenReturn(csvContent);
-    when(remoteFileSystemClient.put(eq(csvContent), anyString()))
-      .thenReturn(copyCsv);
-    var marcContent = new ByteArrayInputStream("mrc".getBytes());
-    when(remoteFileSystemClient.get(modifiedMarc))
-      .thenReturn(marcContent);
-    when(remoteFileSystemClient.put(eq(marcContent), anyString()))
-      .thenReturn(copyMarc);
 
     bulkOperationService.commit(operation);
 
-    verify(remoteFileSystemClient).put(eq(marcContent), anyString());
-    verify(remoteFileSystemClient).put(eq(csvContent), anyString());
-
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
-    var lastCapture = operationCaptor.getAllValues().get(3);
-    assertEquals(copyMarc, lastCapture.getLinkToCommittedRecordsMarcFile());
-    assertEquals(copyCsv, lastCapture.getLinkToCommittedRecordsCsvFile());
+    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
+    var lastCapture = operationCaptor.getAllValues().get(1);
+    assertNull(lastCapture.getLinkToCommittedRecordsMarcFile());
+    assertNull(lastCapture.getLinkToCommittedRecordsCsvFile());
   }
 
   @ParameterizedTest

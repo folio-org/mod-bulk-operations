@@ -10,9 +10,7 @@ import static org.folio.bulkops.service.ErrorService.LINK;
 import static org.folio.bulkops.util.Constants.CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING;
 import static org.folio.bulkops.util.Constants.DATA_IMPORT_ERROR_DISCARDED;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
-import static org.folio.bulkops.util.Constants.MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
-import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -454,9 +452,8 @@ class ErrorServiceTest extends BaseTest {
     }
   }
 
-  @ParameterizedTest
-  @ValueSource(strings = {MSG_NO_CHANGE_REQUIRED, MSG_NO_ADMINISTRATIVE_CHANGE_REQUIRED, MSG_NO_MARC_CHANGE_REQUIRED})
-  void saveErrorShouldSaveNothingWhenSpecificErrorMsg(String errorMsg) {
+  @Test
+  void saveErrorShouldSaveNothingWhenSpecificErrorMsg() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       bulkOperationRepository.save(BulkOperation.builder()
         .id(bulkOperationId)
@@ -470,7 +467,7 @@ class ErrorServiceTest extends BaseTest {
         .errorMessage(format("%s %s", "message", "link"))
         .errorType(ErrorType.ERROR)
         .build());
-      errorService.saveError(bulkOperationId, "123", errorMsg, "ui msg", "link", ErrorType.ERROR);
+      errorService.saveError(bulkOperationId, "123", MSG_NO_CHANGE_REQUIRED, "ui msg", "link", ErrorType.ERROR);
       assertEquals(1, executionContentRepository.countByBulkOperationIdAndErrorType(bulkOperationId, ErrorType.ERROR));
     }
   }
