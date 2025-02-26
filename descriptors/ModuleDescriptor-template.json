@@ -629,6 +629,19 @@
       "version": "1.1"
     }
   ],
+  "metadata": {
+    "user": {
+      "type": "system",
+      "permissions": [
+        "users.collection.get",
+        "data-import.splitconfig.get",
+        "metadata-provider.jobExecutions.collection.get",
+        "metadata-provider.jobLogEntries.collection.get",
+        "source-storage.parsed-records.fetch.collection.post",
+        "inventory-storage.contributor-types.collection.get"
+      ]
+    }
+  },
   "launchDescriptor": {
     "dockerImage": "@artifactId@:@version@",
     "dockerPull": false,
