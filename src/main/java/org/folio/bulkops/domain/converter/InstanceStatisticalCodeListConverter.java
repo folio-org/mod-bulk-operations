@@ -2,7 +2,6 @@ package org.folio.bulkops.domain.converter;
 
 import static org.folio.bulkops.domain.format.SpecialCharacterEscaper.escape;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.service.InstanceReferenceHelper;
 

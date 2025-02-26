@@ -249,14 +249,6 @@ public abstract class BaseTest {
 
   @BeforeEach
   void setUp() {
-//    when(prepareSystemUserService.getFolioUser(any()))
-//      .thenReturn(
-//        Optional.of(UsersClient.User.builder()
-//          .id(UUID.randomUUID().toString())
-//          .username("mod-bulk-operations-system-user")
-//          .type("System")
-//          .active(true)
-//          .build()));
     okapiHeaders.clear();
     okapiHeaders.put(XOkapiHeaders.TENANT, TENANT);
     okapiHeaders.put(XOkapiHeaders.TOKEN, TOKEN);
