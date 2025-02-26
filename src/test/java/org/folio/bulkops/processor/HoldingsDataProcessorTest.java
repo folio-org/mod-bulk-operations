@@ -77,10 +77,10 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
 import feign.FeignException;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 class HoldingsDataProcessorTest extends BaseTest {
 
@@ -89,20 +89,20 @@ class HoldingsDataProcessorTest extends BaseTest {
   public static final String IDENTIFIER = "678";
   @Autowired
   DataProcessorFactory factory;
-  @MockBean
+   @MockitoBean
   ErrorService errorService;
-  @MockBean
+   @MockitoBean
   ElectronicAccessService electronicAccessService;
-  @MockBean
+   @MockitoBean
   private ConsortiaService consortiaService;
-  @MockBean
+   @MockitoBean
   private ElectronicAccessReferenceService electronicAccessReferenceService;
-  @SpyBean
+  @MockitoSpyBean
   private FolioExecutionContext folioExecutionContext;
 
   private FolioDataProcessor<ExtendedHoldingsRecord> processor;
 
-  @MockBean
+   @MockitoBean
   private BulkOperationExecutionContentRepository bulkOperationExecutionContentRepository;
 
   @Autowired

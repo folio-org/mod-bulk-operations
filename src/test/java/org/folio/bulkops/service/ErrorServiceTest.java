@@ -62,7 +62,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class ErrorServiceTest extends BaseTest {
   @Autowired
@@ -80,7 +80,7 @@ class ErrorServiceTest extends BaseTest {
   @Autowired
   private JpaCqlRepository<BulkOperationExecutionContent, UUID> executionContentCqlRepository;
 
-  @MockBean
+   @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
 
   private UUID bulkOperationId;

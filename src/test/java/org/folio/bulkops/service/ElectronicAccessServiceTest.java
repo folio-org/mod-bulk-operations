@@ -18,13 +18,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.github.jknack.handlebars.internal.lang3.StringUtils;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 class ElectronicAccessServiceTest extends BaseTest {
-  @MockBean
+   @MockitoBean
   private ElectronicAccessReferenceService electronicAccessReferenceService;
-  @SpyBean
+  @MockitoSpyBean
   private FolioExecutionContext folioExecutionContext;
 
   @Autowired
