@@ -24,7 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.ByteArrayInputStream;
 import java.util.Collections;
@@ -32,11 +32,11 @@ import java.util.List;
 import java.util.UUID;
 
 class QueryServiceTest extends BaseTest {
-  @MockBean
+   @MockitoBean
   private QueryClient queryClient;
-  @MockBean
+   @MockitoBean
   private BulkOperationRepository bulkOperationRepository;
-  @MockBean
+   @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
   @Autowired
   private QueryService queryService;

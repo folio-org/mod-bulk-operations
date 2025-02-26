@@ -31,18 +31,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class RuleServiceTest extends BaseTest {
   private final static UUID BULK_OPERATION_ID = UUID.randomUUID();
   private final static String LOCATION_ID = UUID.randomUUID().toString();
   @Autowired
   private RuleService ruleService;
-  @MockBean
+   @MockitoBean
   private BulkOperationRuleRepository ruleRepository;
-  @MockBean
+   @MockitoBean
   private BulkOperationMarcRuleRepository marcRuleRepository;
-  @MockBean
+   @MockitoBean
   private BulkOperationRuleDetailsRepository ruleDetailsRepository;
 
   @Test

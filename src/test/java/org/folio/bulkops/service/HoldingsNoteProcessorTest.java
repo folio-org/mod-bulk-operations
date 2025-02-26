@@ -12,14 +12,14 @@ import org.folio.bulkops.processor.note.CsvDownloadPreProcessor;
 import org.folio.bulkops.processor.note.NoteProcessorFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 
 class HoldingsNoteProcessorTest extends BaseTest {
-  @MockBean
+   @MockitoBean
   private HoldingsReferenceService holdingsReferenceService;
-  @MockBean
+   @MockitoBean
   private ConsortiaService consortiaService;
   @Autowired
   private CsvDownloadPreProcessor holdingsNotesProcessor;

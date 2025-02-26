@@ -81,7 +81,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpHeaders;
@@ -89,6 +88,7 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.support.TestPropertySourceUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.GenericContainer;
@@ -152,67 +152,67 @@ public abstract class BaseTest {
   protected static final String TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkaWt1X2FkbWluIiwidXNlcl9pZCI6IjFkM2I1OGNiLTA3YjUtNWZjZC04YTJhLTNjZTA2YTBlYjkwZiIsImlhdCI6MTYxNjQyMDM5MywidGVuYW50IjoiZGlrdSJ9.2nvEYQBbJP1PewEgxixBWLHSX_eELiBEBpjufWiJZRs";
   protected static final String TENANT = "diku";
 
-  @MockBean
+  @MockitoBean
   public HoldingsClient holdingsClient;
-  @MockBean
+  @MockitoBean
   public ItemClient itemClient;
-  @MockBean
+  @MockitoBean
   public UserClient userClient;
-  @MockBean
+  @MockitoBean
   public LoanTypeClient loanTypeClient;
-  @MockBean
+  @MockitoBean
   public ConfigurationClient configurationClient;
-  @MockBean
+  @MockitoBean
   public GroupClient groupClient;
-  @MockBean
+  @MockitoBean
   public DepartmentClient departmentClient;
-  @MockBean
+  @MockitoBean
   public AddressTypeClient addressTypeClient;
-  @MockBean
+  @MockitoBean
   public CustomFieldsClient customFieldsClient;
-  @MockBean
+  @MockitoBean
   public OkapiClient okapiClient;
-  @MockBean
+  @MockitoBean
   public LocationClient locationClient;
-  @MockBean
+  @MockitoBean
   public HoldingsSourceClient holdingsSourceClient;
-  @MockBean
+  @MockitoBean
   public CallNumberTypeClient callNumberTypeClient;
-  @MockBean
+  @MockitoBean
   public HoldingsTypeClient holdingsTypeClient;
-  @MockBean
+  @MockitoBean
   public HoldingsNoteTypeClient holdingsNoteTypeClient;
-  @MockBean
+  @MockitoBean
   public IllPolicyClient illPolicyClient;
-  @MockBean
+  @MockitoBean
   public StatisticalCodeClient statisticalCodeClient;
-  @MockBean
+  @MockitoBean
   public StatisticalCodeTypeClient statisticalCodeTypeClient;
-  @MockBean
+  @MockitoBean
   public DamagedStatusClient damagedStatusClient;
-  @MockBean
+  @MockitoBean
   public ItemNoteTypeClient itemNoteTypeClient;
-  @MockBean
+  @MockitoBean
   public ServicePointClient servicePointClient;
-  @MockBean
+  @MockitoBean
   public MaterialTypeClient materialTypeClient;
-  @MockBean
+  @MockitoBean
   public ElectronicAccessRelationshipClient relationshipClient;
-  @MockBean
+  @MockitoBean
   public InstanceStatusesClient instanceStatusesClient;
-  @MockBean
+  @MockitoBean
   public ModesOfIssuanceClient modesOfIssuanceClient;
-  @MockBean
+  @MockitoBean
   public InstanceTypesClient instanceTypesClient;
-  @MockBean
+  @MockitoBean
   public NatureOfContentTermsClient natureOfContentTermsClient;
-  @MockBean
+  @MockitoBean
   public InstanceFormatsClient instanceFormatsClient;
-  @MockBean
+  @MockitoBean
   public InstanceClient instanceClient;
-  @MockBean
+  @MockitoBean
   public InstanceNoteTypesClient instanceNoteTypesClient;
-  @MockBean
+  @MockitoBean
   public PrepareSystemUserService prepareSystemUserService;
 
   @Autowired
@@ -249,8 +249,14 @@ public abstract class BaseTest {
 
   @BeforeEach
   void setUp() {
-    when(prepareSystemUserService.getFolioUser(any()))
-      .thenReturn(Optional.of(new UsersClient.User("1f111648-0196-4fe2-b890-1df2f1afa790", "mod-bulk-operations-system-user", "System", true, null)));
+//    when(prepareSystemUserService.getFolioUser(any()))
+//      .thenReturn(
+//        Optional.of(UsersClient.User.builder()
+//          .id(UUID.randomUUID().toString())
+//          .username("mod-bulk-operations-system-user")
+//          .type("System")
+//          .active(true)
+//          .build()));
     okapiHeaders.clear();
     okapiHeaders.put(XOkapiHeaders.TENANT, TENANT);
     okapiHeaders.put(XOkapiHeaders.TOKEN, TOKEN);
