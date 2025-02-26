@@ -14,7 +14,12 @@ import java.util.stream.Collectors;
 public class InstanceStatisticalCodeListConverter extends BaseConverter<List<String>> {
   @Override
   public List<String> convertToObject(String value) {
-    throw new NotImplementedException("Shouldn't be used");
+    return Arrays.stream(value.split("\\|"))
+      .map(v -> v.split("-")[1].trim())
+      .map(SpecialCharacterEscaper::restore)
+      .map(name -> InstanceReferenceHelper.service().getStatisticalCodeByName(name).getId())
+      .filter(Objects::nonNull)
+      .toList();
   }
 
   @Override
