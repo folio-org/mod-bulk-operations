@@ -206,7 +206,7 @@ public class MarcCsvHelper {
       try (var marcInputStream = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile());
            var marcOutputStream = new ByteArrayOutputStream()) {
         var marcReader = new MarcStreamReader(marcInputStream);
-        var streamWriter = new MarcStreamWriter(marcOutputStream);
+        var streamWriter = new MarcStreamWriter(marcOutputStream, "UTF-8");
         while (marcReader.hasNext()) {
           var marcRecord = marcReader.next();
           if (hrids.contains(marcRecord.getControlNumber())) {
@@ -216,7 +216,7 @@ public class MarcCsvHelper {
          if (nonNull(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
            remoteFileSystemClient.append(bulkOperation.getLinkToCommittedRecordsMarcFile(), new ByteArrayInputStream(marcOutputStream.toString(UTF_8).getBytes()));
          } else {
-           remoteFileSystemClient.put(new ByteArrayInputStream(marcOutputStream.toString().getBytes()), committedMarcFileName);
+           remoteFileSystemClient.put(new ByteArrayInputStream(marcOutputStream.toString(UTF_8).getBytes()), committedMarcFileName);
          }
       } catch (Exception e) {
         log.error("Failed to enrich marc file", e);
