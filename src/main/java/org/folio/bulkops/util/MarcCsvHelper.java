@@ -216,7 +216,7 @@ public class MarcCsvHelper {
          if (nonNull(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
            remoteFileSystemClient.append(bulkOperation.getLinkToCommittedRecordsMarcFile(), new ByteArrayInputStream(marcOutputStream.toString(UTF_8).getBytes()));
          } else {
-           remoteFileSystemClient.put(new ByteArrayInputStream(marcOutputStream.toString(UTF_8).getBytes()), committedMarcFileName);
+           remoteFileSystemClient.put(new ByteArrayInputStream(marcOutputStream.toString().getBytes()), committedMarcFileName);
          }
       } catch (Exception e) {
         log.error("Failed to enrich marc file", e);
