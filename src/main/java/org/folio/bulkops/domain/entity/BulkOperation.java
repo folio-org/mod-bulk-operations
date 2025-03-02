@@ -25,7 +25,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.folio.bulkops.domain.dto.TenantNotePair;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
 
 @Data
 @Builder
@@ -47,6 +49,7 @@ public class BulkOperation {
   private OperationType operationType;
 
   @Enumerated(EnumType.STRING)
+  @JdbcTypeCode(SqlTypes.NAMED_ENUM)
   private EntityType entityType;
 
   @Enumerated(EnumType.STRING)
