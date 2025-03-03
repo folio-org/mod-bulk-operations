@@ -1,10 +1,11 @@
 package org.folio.bulkops.util;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
+import static org.folio.bulkops.util.MarcCsvHelper.ENRICHED_PREFIX;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -32,10 +33,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.UUID;
 
 class MarcCsvHelperTest extends BaseTest {
@@ -65,7 +66,7 @@ class MarcCsvHelperTest extends BaseTest {
     marcRecord.addVariableField(field);
 
     when(instanceReferenceService.getAllInstanceNoteTypes())
-      .thenReturn(Collections.singletonList(new InstanceNoteType().name("General note")));
+      .thenReturn(singletonList(new InstanceNoteType().name("General note")));
 
     var res = marcCsvHelper.getModifiedDataForCsv(marcRecord);
 
@@ -95,7 +96,7 @@ class MarcCsvHelperTest extends BaseTest {
       .thenReturn(new FileInputStream("src/test/resources/files/sample_marc_csv.csv"));
     when(ruleService.getMarcRules(operationId))
       .thenReturn(new BulkOperationMarcRuleCollection()
-        .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule().tag("500"))));
+        .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag("500"))));
 
     var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
 
@@ -132,7 +133,7 @@ class MarcCsvHelperTest extends BaseTest {
     when(remoteFileSystemClient.get(fileName)).thenThrow(new RuntimeException());
     when(ruleService.getMarcRules(operationId))
       .thenReturn(new BulkOperationMarcRuleCollection()
-        .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule().tag("500"))));
+        .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag("500"))));
 
     var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
 
@@ -162,7 +163,7 @@ class MarcCsvHelperTest extends BaseTest {
       .thenReturn(new FileInputStream("src/test/resources/files/invalid_sample_marc_csv.csv"));
     when(ruleService.getMarcRules(operationId))
       .thenReturn(new BulkOperationMarcRuleCollection()
-        .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule().tag("500"))));
+        .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag("500"))));
 
     var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
 
@@ -174,9 +175,11 @@ class MarcCsvHelperTest extends BaseTest {
   @Test
   @SneakyThrows
   void shouldEnrichCommittedCsvWithUpdatedMarcRecords() {
+    var pathToCommittedCsv = "somedir/committed.csv";
     var bulkOperation = BulkOperation.builder()
       .id(UUID.randomUUID())
-      .linkToCommittedRecordsCsvFile("committed.csv")
+      .linkToTriggeringCsvFile("instances.csv")
+      .linkToCommittedRecordsCsvFile(pathToCommittedCsv)
       .linkToCommittedRecordsMarcFile("committed.mrc")
       .linkToMatchedRecordsJsonFile("matched.json")
       .build();
@@ -192,10 +195,14 @@ class MarcCsvHelperTest extends BaseTest {
     var marcHrids = marcCsvHelper.getUpdatedMarcInstanceHrids(bulkOperation);
     marcCsvHelper.enrichCommittedCsvWithUpdatedMarcRecords(bulkOperation, csvHrids, marcHrids);
 
-    var expectedAppendContent = "043c77e9-3653-43d6-a064-5d99b9e5adb4,,,,hrid3,MARC,,,,,,,,,,,,,,,,,,\n";
     var contentCaptor = ArgumentCaptor.forClass(InputStream.class);
-    verify(remoteFileSystemClient).append(eq(bulkOperation.getLinkToCommittedRecordsCsvFile()), contentCaptor.capture());
-    assertThat(new String(contentCaptor.getValue().readAllBytes())).isEqualTo(expectedAppendContent);
+    var pathCaptor = ArgumentCaptor.forClass(String.class);
+
+    verify(remoteFileSystemClient).remove(pathToCommittedCsv);
+    verify(remoteFileSystemClient).put(contentCaptor.capture(), pathCaptor.capture());
+    assertThat(contentCaptor.getValue()).isInstanceOf(SequenceInputStream.class);
+    assertThat(pathCaptor.getValue()).startsWith(ENRICHED_PREFIX);
+    assertThat(bulkOperation.getLinkToCommittedRecordsCsvFile()).startsWith(ENRICHED_PREFIX);
   }
 
   @Test
@@ -203,6 +210,7 @@ class MarcCsvHelperTest extends BaseTest {
   void shouldCreateCommittedCsvWithUpdatedMarcRecordsIfNoLink() {
     var bulkOperation = BulkOperation.builder()
       .id(UUID.randomUUID())
+      .linkToTriggeringCsvFile("instances.csv")
       .linkToCommittedRecordsMarcFile("committed.mrc")
       .linkToMatchedRecordsJsonFile("matched.json")
       .build();
@@ -216,9 +224,7 @@ class MarcCsvHelperTest extends BaseTest {
     when(remoteFileSystemClient.writer(anyString()))
       .thenReturn(writer);
 
-    var csvHrids = marcCsvHelper.getUpdatedInventoryInstanceHrids(bulkOperation);
-    var marcHrids = marcCsvHelper.getUpdatedMarcInstanceHrids(bulkOperation);
-    marcCsvHelper.enrichCommittedCsvWithUpdatedMarcRecords(bulkOperation, csvHrids, marcHrids);
+    marcCsvHelper.enrichCommittedCsvWithUpdatedMarcRecords(bulkOperation, singletonList("hrid1"), singletonList("hrid3"));
 
     assertThat(bulkOperation.getLinkToCommittedRecordsCsvFile()).isNotNull();
     var expectedCsvContent = """
@@ -231,10 +237,12 @@ class MarcCsvHelperTest extends BaseTest {
   @Test
   @SneakyThrows
   void shouldEnrichCommittedMarcWithUpdatedInventoryRecords() {
+    var pathToCommittedMarc = "somedir/committed.mrc";
     var bulkOperation = BulkOperation.builder()
       .id(UUID.randomUUID())
+      .linkToTriggeringCsvFile("instances.csv")
       .linkToCommittedRecordsCsvFile("committed.csv")
-      .linkToCommittedRecordsMarcFile("committed.mrc")
+      .linkToCommittedRecordsMarcFile(pathToCommittedMarc)
       .linkToMatchedRecordsMarcFile("matched.json")
       .build();
 
@@ -245,14 +253,16 @@ class MarcCsvHelperTest extends BaseTest {
     when(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile()))
       .thenReturn(new FileInputStream("src/test/resources/files/matched_marc_records.mrc"));
 
-    var csvHrids = marcCsvHelper.getUpdatedInventoryInstanceHrids(bulkOperation);
-    var marcHrids = marcCsvHelper.getUpdatedMarcInstanceHrids(bulkOperation);
-    marcCsvHelper.enrichCommittedMarcWithUpdatedInventoryRecords(bulkOperation, csvHrids, marcHrids);
+    marcCsvHelper.enrichCommittedMarcWithUpdatedInventoryRecords(bulkOperation, singletonList("hrid1"), singletonList("hrid3"));
 
-    var expectedAppendContent = "00044nam a2200037Ia 4500001000600000\u001Ehrid1\u001E\u001D";
     var contentCaptor = ArgumentCaptor.forClass(InputStream.class);
-    verify(remoteFileSystemClient).append(eq(bulkOperation.getLinkToCommittedRecordsMarcFile()), contentCaptor.capture());
-    assertThat(new String(contentCaptor.getValue().readAllBytes())).isEqualTo(expectedAppendContent);
+    var pathCaptor = ArgumentCaptor.forClass(String.class);
+
+    verify(remoteFileSystemClient).remove(pathToCommittedMarc);
+    verify(remoteFileSystemClient).put(contentCaptor.capture(), pathCaptor.capture());
+    assertThat(contentCaptor.getValue()).isInstanceOf(SequenceInputStream.class);
+    assertThat(pathCaptor.getValue()).startsWith(ENRICHED_PREFIX);
+    assertThat(bulkOperation.getLinkToCommittedRecordsMarcFile()).startsWith(ENRICHED_PREFIX);
   }
 
   @Test
@@ -260,6 +270,7 @@ class MarcCsvHelperTest extends BaseTest {
   void shouldCreateCommittedMarcWithUpdatedInventoryRecordsIfNoLink() {
     var bulkOperation = BulkOperation.builder()
       .id(UUID.randomUUID())
+      .linkToTriggeringCsvFile("instances.csv")
       .linkToCommittedRecordsCsvFile("committed.csv")
       .linkToMatchedRecordsMarcFile("matched.json")
       .build();
