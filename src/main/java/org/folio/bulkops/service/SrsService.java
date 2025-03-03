@@ -110,6 +110,7 @@ public class SrsService {
     operation.setCommittedNumOfWarnings(errorService.getCommittedNumOfWarnings(operation.getId()));
     operation.setEndTime(LocalDateTime.now());
     operation.setStatus(operation.getCommittedNumOfErrors() == 0 ? COMPLETED : COMPLETED_WITH_ERRORS);
+    marcCsvHelper.enrichMarcAndCsvCommittedFiles(operation);
     bulkOperationRepository.save(operation);
   }
 

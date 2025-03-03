@@ -1,0 +1,24 @@
+{
+  "tenantId": "tenant1",
+  "entity": {
+    "id": "713fea83-6cb2-4ab7-9201-346f2a585f23",
+    "hrid": "hrid1",
+    "source": "MARC"
+  }
+}
+{
+  "tenantId": "tenant1",
+  "entity": {
+    "id": "139ed15a-edba-4cde-8f92-810a4cec7770",
+    "hrid": "hrid2",
+    "source": "MARC"
+  }
+}
+{
+  "tenantId": "tenant1",
+  "entity": {
+    "id": "043c77e9-3653-43d6-a064-5d99b9e5adb4",
+    "hrid": "hrid3",
+    "source": "MARC"
+  }
+}
