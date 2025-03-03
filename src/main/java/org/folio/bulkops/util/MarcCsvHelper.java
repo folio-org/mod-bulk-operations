@@ -38,6 +38,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.SequenceInputStream;
 import java.io.StringWriter;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -51,6 +52,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Log4j2
 public class MarcCsvHelper {
+  private static final String ENRICHED_DIR = "/enriched/";
+
   private final NoteTableUpdater noteTableUpdater;
   private final MarcToUnifiedTableRowMapper marcToUnifiedTableRowMapper;
   private final RemoteFileSystemClient remoteFileSystemClient;
@@ -171,7 +174,7 @@ public class MarcCsvHelper {
     if (!hrids.isEmpty() && nonNull(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
       var committedCsvFileName = isNull(bulkOperation.getLinkToCommittedRecordsCsvFile()) ?
         CHANGED_CSV_PATH_TEMPLATE.formatted(bulkOperation.getId(), LocalDate.now(), getBaseName(bulkOperation.getLinkToTriggeringCsvFile())) :
-        bulkOperation.getLinkToCommittedRecordsCsvFile();
+        bulkOperation.getLinkToCommittedRecordsCsvFile().replaceFirst("/", ENRICHED_DIR);
       try (var matchedFileReader = new InputStreamReader(new BufferedInputStream(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())));
            var writer = isNull(bulkOperation.getLinkToCommittedRecordsCsvFile()) ?
              remoteFileSystemClient.writer(committedCsvFileName) : new StringWriter()) {
@@ -185,13 +188,19 @@ public class MarcCsvHelper {
           }
         }
         if (nonNull(bulkOperation.getLinkToCommittedRecordsCsvFile())) {
-          var res = writer.toString();
-          res = res.substring(res.indexOf(LINE_BREAK) + 1);
-          remoteFileSystemClient.append(bulkOperation.getLinkToCommittedRecordsCsvFile(), new ByteArrayInputStream(res.getBytes()));
+          var appendedCsvRecords = writer.toString();
+          appendedCsvRecords = appendedCsvRecords.substring(appendedCsvRecords.indexOf(LINE_BREAK) + 1);
+          var appendedCsvStream = new SequenceInputStream(
+            remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsCsvFile()),
+            new ByteArrayInputStream(appendedCsvRecords.getBytes()));
+          remoteFileSystemClient.put(appendedCsvStream, committedCsvFileName);
         }
       } catch (Exception e) {
         log.error("Failed to enrich csv file", e);
       } finally {
+        if (nonNull(bulkOperation.getLinkToCommittedRecordsCsvFile())) {
+          remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsCsvFile());
+        }
         bulkOperation.setLinkToCommittedRecordsCsvFile(committedCsvFileName);
       }
     }
@@ -202,10 +211,11 @@ public class MarcCsvHelper {
     if (!hrids.isEmpty() && nonNull(bulkOperation.getLinkToMatchedRecordsMarcFile())) {
       var committedMarcFileName = isNull(bulkOperation.getLinkToCommittedRecordsMarcFile()) ?
         CHANGED_MARC_PATH_TEMPLATE.formatted(bulkOperation.getId(), LocalDate.now(), getBaseName(bulkOperation.getLinkToTriggeringCsvFile())) :
-        bulkOperation.getLinkToCommittedRecordsMarcFile();
-      try (var marcInputStream = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile());
+        bulkOperation.getLinkToCommittedRecordsMarcFile().replaceFirst("/", ENRICHED_DIR);
+      try (var matchedMarcInputStream = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile());
+           var committedMarcInputStream = remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsMarcFile());
            var marcOutputStream = new ByteArrayOutputStream()) {
-        var marcReader = new MarcStreamReader(marcInputStream);
+        var marcReader = new MarcStreamReader(matchedMarcInputStream);
         var streamWriter = new MarcStreamWriter(marcOutputStream, "UTF-8");
         while (marcReader.hasNext()) {
           var marcRecord = marcReader.next();
@@ -213,14 +223,18 @@ public class MarcCsvHelper {
             streamWriter.write(marcRecord);
           }
         }
-         if (nonNull(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
-           remoteFileSystemClient.append(bulkOperation.getLinkToCommittedRecordsMarcFile(), new ByteArrayInputStream(marcOutputStream.toString(UTF_8).getBytes()));
-         } else {
-           remoteFileSystemClient.put(new ByteArrayInputStream(marcOutputStream.toString(UTF_8).getBytes()), committedMarcFileName);
-         }
+        var appendedMarcStream = new ByteArrayInputStream(marcOutputStream.toString(UTF_8).getBytes());
+        var linkToCommittedMarcFile = bulkOperation.getLinkToCommittedRecordsMarcFile();
+        var committedMarcStream = isNull(linkToCommittedMarcFile) ?
+          appendedMarcStream :
+          new SequenceInputStream(committedMarcInputStream, appendedMarcStream);
+        remoteFileSystemClient.put(committedMarcStream, committedMarcFileName);
       } catch (Exception e) {
         log.error("Failed to enrich marc file", e);
       } finally {
+        if (nonNull(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
+          remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsMarcFile());
+        }
         bulkOperation.setLinkToCommittedRecordsMarcFile(committedMarcFileName);
       }
     }

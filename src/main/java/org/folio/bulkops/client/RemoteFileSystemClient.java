@@ -47,8 +47,4 @@ public class RemoteFileSystemClient {
   public MarcRemoteStorageWriter marcWriter(String path) {
     return new MarcRemoteStorageWriter(writer(path));
   }
-
-  public void append(String path, InputStream is) {
-    remoteFolioS3Client.append(path, is);
-  }
 }
