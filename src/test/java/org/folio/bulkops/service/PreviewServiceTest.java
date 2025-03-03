@@ -77,29 +77,29 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 
 import lombok.SneakyThrows;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class PreviewServiceTest extends BaseTest {
 
   @Autowired
   private PreviewService previewService;
-  @MockBean
+   @MockitoBean
   private BulkOperationRepository bulkOperationRepository;
-  @MockBean
+   @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
-  @MockBean
+   @MockitoBean
   private RuleService ruleService;
-  @MockBean
+   @MockitoBean
   private InstanceReferenceService instanceReferenceService;
-  @MockBean
+   @MockitoBean
   private ConsortiaService consortiaService;
-  @MockBean
+   @MockitoBean
   private MappingRulesClient mappingRulesClient;
-  @MockBean
+   @MockitoBean
   private BulkOperationService bulkOperationService;
   @Autowired
   private NoteTableUpdater noteTableUpdater;

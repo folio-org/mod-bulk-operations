@@ -77,7 +77,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -119,7 +119,7 @@ class OpenCSVConverterTest extends BaseTest {
     }
   }
 
-  @SpyBean
+  @MockitoSpyBean
   private FolioExecutionContext folioExecutionContext;
 
   @ParameterizedTest

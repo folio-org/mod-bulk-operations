@@ -134,9 +134,9 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.marc4j.marc.Record;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.multipart.MultipartFile;
 
 
@@ -144,61 +144,61 @@ class BulkOperationServiceTest extends BaseTest {
   @Autowired
   private BulkOperationService bulkOperationService;
 
-  @MockBean
+   @MockitoBean
   private BulkOperationRepository bulkOperationRepository;
 
-  @MockBean
+   @MockitoBean
   private DataExportSpringClient dataExportSpringClient;
 
-  @MockBean
+   @MockitoBean
   private BulkEditClient bulkEditClient;
 
-  @MockBean
+   @MockitoBean
   private RuleService ruleService;
 
-  @MockBean
+   @MockitoBean
   private BulkOperationDataProcessingRepository dataProcessingRepository;
 
-  @MockBean
+   @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
 
-  @MockBean
+   @MockitoBean
   private FolioS3Client remoteFolioS3Client;
 
-  @MockBean
+   @MockitoBean
   private BulkOperationExecutionRepository executionRepository;
 
-  @MockBean
+   @MockitoBean
   private BulkOperationExecutionContentRepository executionContentRepository;
 
-  @MockBean
+   @MockitoBean
   private ErrorService errorService;
 
-  @MockBean
+   @MockitoBean
   private ItemReferenceService itemReferenceService;
 
-  @MockBean
+   @MockitoBean
   private QueryService queryService;
 
-  @MockBean
+   @MockitoBean
   private ConsortiaService consortiaService;
 
-  @MockBean
+   @MockitoBean
   private PermissionsValidator permissionsValidator;
 
-  @MockBean
+   @MockitoBean
   private MetadataProviderService metadataProviderService;
 
-  @MockBean
+   @MockitoBean
   private SrsService srsService;
 
-  @MockBean
+   @MockitoBean
   private MarcCsvHelper marcCsvHelper;
 
-  @MockBean
+   @MockitoBean
   private MarcInstanceDataProcessor marcInstanceDataProcessor;
 
-  @MockBean
+   @MockitoBean
   private MarcUpdateService marcUpdateService;
 
   @Test

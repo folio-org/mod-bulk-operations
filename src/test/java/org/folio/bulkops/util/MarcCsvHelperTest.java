@@ -25,7 +25,8 @@ import org.marc4j.marc.impl.LeaderImpl;
 import org.marc4j.marc.impl.RecordImpl;
 import org.marc4j.marc.impl.SubfieldImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
 import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,13 +37,13 @@ class MarcCsvHelperTest extends BaseTest {
   @Autowired
   private MarcCsvHelper marcCsvHelper;
 
-  @MockBean
+   @MockitoBean
   private InstanceReferenceService instanceReferenceService;
-  @MockBean
+   @MockitoBean
   private MappingRulesClient mappingRulesClient;
-  @MockBean
+   @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
-  @MockBean
+   @MockitoBean
   private RuleService ruleService;
 
   @Test
