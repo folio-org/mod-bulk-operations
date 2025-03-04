@@ -80,6 +80,7 @@ public class MarcUpdateService {
         bulkOperation.setErrorMessage(e.getMessage());
         var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, bulkOperation.getErrorMessage());
         bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
+        bulkOperation.setLinkToCommittedRecordsMarcFile(null);
         bulkOperationRepository.save(bulkOperation);
       }
       executionRepository.save(execution);
