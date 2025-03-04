@@ -173,7 +173,9 @@ public class DataExportJobUpdateService {
 
   public String downloadAndSaveCsvFile(BulkOperation bulkOperation, Job jobUpdate) throws IOException {
     var csvUrl = jobUpdate.getFiles().get(0);
-    return remoteFileSystemClient.put(new URL(csvUrl).openStream(), bulkOperation.getId() + "/" + FilenameUtils.getName(csvUrl.split("\\?")[0]));
+    return isEmpty(csvUrl) ?
+      null :
+      remoteFileSystemClient.put(new URL(csvUrl).openStream(), bulkOperation.getId() + "/" + FilenameUtils.getName(csvUrl.split("\\?")[0]));
   }
 
   public String downloadAndSaveMarcFile(BulkOperation bulkOperation, Job jobUpdate) throws IOException {
