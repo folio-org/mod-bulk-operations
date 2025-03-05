@@ -39,10 +39,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -50,19 +50,19 @@ import java.util.Collections;
 import java.util.UUID;
 
 class MarcInstanceUpdateProcessorTest extends BaseTest {
-  @MockBean
+   @MockitoBean
   private DataImportClient dataImportClient;
-  @MockBean
+   @MockitoBean
   private DataImportUploadClient dataImportUploadClient;
-  @MockBean
+   @MockitoBean
   private DataImportProfilesClient dataImportProfilesClient;
-  @MockBean
+   @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
-  @MockBean
+   @MockitoBean
   private BulkOperationRepository bulkOperationRepository;
-  @MockBean
+   @MockitoBean
   private DataImportRestS3UploadClient dataImportRestS3UploadClient;
-  @MockBean
+   @MockitoBean
   private ErrorService errorService;
 
   @Captor

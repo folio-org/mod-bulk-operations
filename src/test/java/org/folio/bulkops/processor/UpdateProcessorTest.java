@@ -67,20 +67,20 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 class UpdateProcessorTest extends BaseTest {
 
-  @MockBean
+   @MockitoBean
   private RuleService ruleService;
-  @SpyBean
+  @MockitoSpyBean
   private ItemClient itemClient;
-  @SpyBean
+  @MockitoSpyBean
   private ErrorService errorService;
-  @MockBean
+   @MockitoBean
   private BulkOperationExecutionContentRepository executionContentRepository;
-  @MockBean
+   @MockitoBean
   private BulkOperationRepository bulkOperationRepository;
   @Autowired
   private HoldingsUpdateProcessor holdingsUpdateProcessor;
@@ -92,15 +92,15 @@ class UpdateProcessorTest extends BaseTest {
   private FolioInstanceUpdateProcessor folioInstanceUpdateProcessor;
   @Autowired
   private FolioModuleMetadata folioModuleMetadata;
-  @SpyBean
+  @MockitoSpyBean
   private FolioExecutionContext folioExecutionContext;
-  @MockBean
+   @MockitoBean
   private HoldingsReferenceService holdingsReferenceService;
-  @MockBean
+   @MockitoBean
   private ConsortiaService consortiaService;
-  @MockBean
+   @MockitoBean
   private SearchConsortium searchConsortium;
-  @MockBean
+   @MockitoBean
   private PermissionsValidator permissionsValidator;
 
   @Test

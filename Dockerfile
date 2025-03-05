@@ -1,4 +1,4 @@
-FROM folioci/alpine-jre-openjdk17:latest
+FROM folioci/alpine-jre-openjdk21:latest
 
 # Copy your fat jar to the container
 ENV APP_FILE mod-bulk-operations-fat.jar
@@ -14,7 +14,7 @@ USER folio
 # - copy
 COPY ${JAR_FILE} ${JAVA_APP_DIR}/${APP_FILE}
 
-# Add JMX exporter and config 
+# Add JMX exporter and config
 RUN mkdir -p jmx_exporter &&\
     wget -P jmx_exporter https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.17.2/jmx_prometheus_javaagent-0.17.2.jar
 COPY ./prometheus-jmx-config.yaml jmx_exporter/

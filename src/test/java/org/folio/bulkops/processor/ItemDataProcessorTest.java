@@ -82,29 +82,29 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 
 import lombok.SneakyThrows;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 class ItemDataProcessorTest extends BaseTest {
 
   @Autowired
   DataProcessorFactory factory;
-  @MockBean
+   @MockitoBean
   ErrorService errorService;
-  @MockBean
+   @MockitoBean
   private HoldingsReferenceService holdingsReferenceService;
-  @MockBean
+   @MockitoBean
   private ItemReferenceService itemReferenceService;
-  @SpyBean
+  @MockitoSpyBean
   private FolioExecutionContext folioExecutionContext;
-  @MockBean
+   @MockitoBean
   private ConsortiaService consortiaService;
 
   private FolioDataProcessor<ExtendedItem> processor;
 
-  @MockBean
+   @MockitoBean
   private BulkOperationExecutionContentRepository bulkOperationExecutionContentRepository;
 
   public static final String IDENTIFIER = "123";

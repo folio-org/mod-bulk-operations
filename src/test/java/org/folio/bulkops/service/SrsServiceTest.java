@@ -28,7 +28,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
@@ -40,19 +40,19 @@ import java.util.Optional;
 import java.util.UUID;
 
 class SrsServiceTest extends BaseTest {
-  @MockBean
+   @MockitoBean
   private SrsClient srsClient;
-  @MockBean
+   @MockitoBean
   private BulkOperationRepository bulkOperationRepository;
-  @MockBean
+   @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
-  @MockBean
+   @MockitoBean
   private ErrorService errorService;
-  @MockBean
+   @MockitoBean
   private BulkOperationExecutionRepository executionRepository;
-  @MockBean
+   @MockitoBean
   private InstanceReferenceService instanceReferenceService;
-  @MockBean
+   @MockitoBean
   private MarcToUnifiedTableRowMapperHelper marcToUnifiedTableRowMapperHelper;
   @Captor
   private ArgumentCaptor<BulkOperation> bulkOperationCaptor;
