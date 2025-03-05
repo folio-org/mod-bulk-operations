@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -173,6 +174,10 @@ class MetadataProviderServiceTest extends BaseTest {
       when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), 1))
         .thenReturn(JobLogEntryCollection.builder()
           .entries(Collections.emptyList())
+          .totalRecords(9)
+          .build())
+        .thenReturn(JobLogEntryCollection.builder()
+          .entries(Collections.emptyList())
           .totalRecords(10)
           .build());
       var threeEntriesCollection = JobLogEntryCollection.builder()
@@ -209,6 +214,8 @@ class MetadataProviderServiceTest extends BaseTest {
       var entries = metadataProviderService.getJobLogEntries(operation, executions);
 
       assertThat(entries).hasSize(10);
+
+      verify(metadataProviderClient, times(2)).getJobLogEntries(dataImportJobId.toString(), 1);
 
       verify(metadataProviderClient).getJobLogEntries(dataImportJobId.toString(), 0, 3);
       verify(metadataProviderClient).getJobLogEntries(dataImportJobId.toString(), 3, 3);
