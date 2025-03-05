@@ -113,7 +113,7 @@ public class ErrorService {
       AtomicInteger counter = new AtomicInteger();
       try (var reader = new BufferedReader(new InputStreamReader(remoteFileSystemClient.get(pathToMatchedRecordsErrorsCsvFile)))) {
         reader.lines().forEach(line -> {
-          var message = line.split(Constants.COMMA_DELIMETER);
+          var message = line.split(Constants.COMMA_DELIMETER, 3);
           if (isNull(errorType) || Objects.equals(errorType.getValue(), message[IDX_ERROR_TYPE])) {
             counter.incrementAndGet();
             if (offset < counter.get() && errors.size() < limit) {
