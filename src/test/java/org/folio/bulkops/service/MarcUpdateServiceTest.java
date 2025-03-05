@@ -28,22 +28,22 @@ import org.marc4j.marc.Record;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.FileInputStream;
 import java.time.LocalDate;
 import java.util.UUID;
 
 class MarcUpdateServiceTest extends BaseTest {
-  @MockBean
+   @MockitoBean
   private BulkOperationExecutionRepository executionRepository;
-  @MockBean
+   @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
-  @MockBean
+   @MockitoBean
   private MarcInstanceUpdateProcessor updateProcessor;
-  @MockBean
+   @MockitoBean
   private ErrorService errorService;
-  @MockBean
+   @MockitoBean
   private BulkOperationRepository bulkOperationRepository;
 
   @Captor

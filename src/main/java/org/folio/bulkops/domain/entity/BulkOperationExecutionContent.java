@@ -45,7 +45,6 @@ public class BulkOperationExecutionContent {
 
   private String linkToFailedEntity;
 
-  @Enumerated
-  @JdbcType(PostgreSQLEnumJdbcType.class)
+  @Enumerated(EnumType.STRING)
   private ErrorType errorType;
 }

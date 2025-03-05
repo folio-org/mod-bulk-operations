@@ -43,8 +43,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.nio.charset.Charset;
 import java.util.Collection;
@@ -59,21 +59,21 @@ class RecordUpdateServiceTest extends BaseTest {
   private RecordUpdateService recordUpdateService;
   @Autowired
   private EntityPathResolver entityPathResolver;
-  @MockBean
+   @MockitoBean
   private BulkOperationExecutionContentRepository executionContentRepository;
-  @MockBean
+   @MockitoBean
   private ConsortiaService consortiaService;
-  @MockBean
+   @MockitoBean
   private BulkOperationRepository bulkOperationRepository;
-  @MockBean
+   @MockitoBean
   private PermissionsValidator permissionsValidator;
-  @MockBean
+   @MockitoBean
   private RuleService ruleService;
-  @SpyBean
+  @MockitoSpyBean
   private ItemUpdateProcessor itemUpdateProcessor;
-  @SpyBean
+  @MockitoSpyBean
   private ErrorService errorService;
-  @SpyBean
+  @MockitoSpyBean
   private FolioExecutionContext folioExecutionContext;
 
   @Test

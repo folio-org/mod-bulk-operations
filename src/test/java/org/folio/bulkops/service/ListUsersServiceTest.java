@@ -12,9 +12,9 @@ import org.folio.spring.data.OffsetRequest;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 
 class ListUsersServiceTest extends BaseTest {
 
-  @MockBean
+   @MockitoBean
   private JpaCqlRepository<BulkOperation, UUID> bulkOperationCqlRepository;
 
   @Autowired
