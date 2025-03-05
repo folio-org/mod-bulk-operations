@@ -35,6 +35,9 @@ import java.util.concurrent.ForkJoinPool;
 @Log4j2
 public class MetadataProviderService {
   public static final String MSG_FAILED_TO_GET_LOG_ENTRIES_CHUNK = "Failed to get %d log entries, reason: %s";
+  private static final int GET_JOB_LOG_ENTRIES_MAX_RETRIES = 5;
+  private static final int GET_JOB_LOG_ENTRIES_RETRY_TIMEOUT = 1000;
+
   private final Set<DataImportStatus> completedStatuses = Set.of(COMMITTED, CANCELLED, ERROR);
   private final MetadataProviderClient metadataProviderClient;
   private final DataImportClient dataImportClient;
@@ -84,17 +87,28 @@ public class MetadataProviderService {
 
   public List<JobLogEntry> getJobLogEntries(BulkOperation bulkOperation, List<DataImportJobExecution> jobExecutions) {
     return jobExecutions.stream()
-      .map(DataImportJobExecution::getId)
-      .map(UUID::toString)
-      .map(executionId -> getExecutionLogEntries(bulkOperation, executionId))
+      .map(execution -> getExecutionLogEntries(bulkOperation, execution))
       .flatMap(List::stream)
       .toList();
   }
 
-  private List<JobLogEntry> getExecutionLogEntries(BulkOperation bulkOperation, String jobExecutionId) {
+  private List<JobLogEntry> getExecutionLogEntries(BulkOperation bulkOperation, DataImportJobExecution jobExecution) {
     var fjPool = new ForkJoinPool(numOfConcurrentRequests);
     try {
-      var totalJobLogEntries = metadataProviderClient.getJobLogEntries(jobExecutionId, 1).getTotalRecords();
+      var jobExecutionId = jobExecution.getId().toString();
+      var retryCounter = 0;
+      var totalJobLogEntries = 0;
+      while (retryCounter < GET_JOB_LOG_ENTRIES_MAX_RETRIES) {
+        var expectedJobLogEntriesNumber = jobExecution.getProgress().getTotal();
+        totalJobLogEntries = metadataProviderClient.getJobLogEntries(jobExecutionId, 1).getTotalRecords();
+        log.info("Get log entries attempt #{}, total job log entries: {}, expected value: {}", retryCounter, totalJobLogEntries, expectedJobLogEntriesNumber);
+        if (totalJobLogEntries == expectedJobLogEntriesNumber) {
+          break;
+        } else {
+          Thread.sleep(GET_JOB_LOG_ENTRIES_RETRY_TIMEOUT);
+          retryCounter++;
+        }
+      }
       var offsets = splitOffsets(totalJobLogEntries);
       return fjPool.submit(() -> offsets.stream().parallel()
         .map(offset -> getEntries(bulkOperation, jobExecutionId, offset, chunkSize))
