@@ -201,7 +201,9 @@ class MetadataProviderServiceTest extends BaseTest {
             default -> throw new IllegalStateException("Unexpected value: " + offset);
           };
         });
-      var executions = Collections.singletonList(new DataImportJobExecution().id(dataImportJobId));
+      var executions = Collections.singletonList(new DataImportJobExecution()
+        .id(dataImportJobId)
+        .progress(new DataImportProgress().current(10).total(10)));
       var operation = new BulkOperation();
 
       var entries = metadataProviderService.getJobLogEntries(operation, executions);
@@ -255,7 +257,9 @@ class MetadataProviderServiceTest extends BaseTest {
           };
         });
 
-      var executions = Collections.singletonList(new DataImportJobExecution().id(dataImportJobId));
+      var executions = Collections.singletonList(new DataImportJobExecution()
+        .id(dataImportJobId)
+        .progress(new DataImportProgress().current(10).total(10)));
       var operation = BulkOperation.builder().id(operationId).build();
 
       var entries = metadataProviderService.getJobLogEntries(operation, executions);
