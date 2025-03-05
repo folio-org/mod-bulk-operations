@@ -516,7 +516,7 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(2).getRow().get(21), equalTo("monthly. Jun 10, 2024 | yearly. 2024"));
     assertThat(res.getRows().get(2).getRow().get(22), equalTo("2002-2024"));
     assertThat(res.getRows().get(2).getRow().get(23), equalTo("language note (staff only)"));
-    assertThat(res.getRows().get(2).getRow().get(24), equalTo("Ethan Feld, the worst baseball player in the history of the game, finds himself recruited by a 100-year-old scout to help a band of fairies triumph over an ancient enemy. 2nd"));
+    assertThat(res.getRows().get(2).getRow().get(24), equalTo("Ethan Feld, the worst baseball player in the history of the game, finds himself recruited by a 100-year-old scout to help a band of fairies triumph over an ancient enemy. 2nd."));
   }
 
 
@@ -672,7 +672,7 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(0).getRow().get(21), equalTo("monthly. Jun 10, 2024 | yearly. 2024"));
     assertThat(res.getRows().get(0).getRow().get(22), equalTo("2002-2024"));
     assertThat(res.getRows().get(0).getRow().get(23), equalTo("language note (staff only)"));
-    assertThat(res.getRows().get(0).getRow().get(24), equalTo("Ethan Feld, the worst baseball player in the history of the game, finds himself recruited by a 100-year-old scout to help a band of fairies triumph over an ancient enemy. 2nd"));
+    assertThat(res.getRows().get(0).getRow().get(24), equalTo("Ethan Feld, the worst baseball player in the history of the game, finds himself recruited by a 100-year-old scout to help a band of fairies triumph over an ancient enemy. 2nd."));
   }
 
   @Test

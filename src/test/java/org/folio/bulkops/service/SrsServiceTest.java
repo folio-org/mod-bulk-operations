@@ -30,6 +30,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -87,6 +88,8 @@ class SrsServiceTest extends BaseTest {
       .thenReturn(EMPTY);
     when(remoteFileSystemClient.writer(anyString()))
       .thenReturn(new StringWriter());
+    when(remoteFileSystemClient.get(anyString()))
+      .thenReturn(new ByteArrayInputStream(EMPTY.getBytes()));
 
     srsService.retrieveMarcInstancesFromSrs(List.of(UUID.randomUUID().toString()), operation);
 

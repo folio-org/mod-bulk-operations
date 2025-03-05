@@ -162,7 +162,7 @@ public class BulkOperationService {
   private static final String PREVIEW_MARC_PATH_TEMPLATE = "%s/%s-Updates-Preview-MARC-%s.mrc";
   private static final String PREVIEW_MARC_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-MARC-CSV-%s.csv";
   private static final String CHANGED_JSON_PATH_TEMPLATE = "%s/json/%s-Changed-Records-%s.json";
-  private static final String CHANGED_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-CSV-%s.csv";
+  public static final String CHANGED_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-CSV-%s.csv";
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -522,7 +522,10 @@ public class BulkOperationService {
 
       if (!FAILED.equals(operation.getStatus())) {
         operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
+      } else {
+        operation.setLinkToCommittedRecordsCsvFile(null);
       }
+      marcCsvHelper.enrichMarcAndCsvCommittedFiles(operation);
       bulkOperationRepository.save(operation);
     } else {
       marcUpdateService.commitForInstanceMarc(operation);
@@ -716,7 +719,11 @@ public class BulkOperationService {
       case APPLY_MARC_CHANGES -> {
         var executions = metadataProviderService.getJobExecutions(operation.getDataImportJobProfileId());
         updateBulkOperationBasedOnDataImportState(executions, operation);
-        yield bulkOperationRepository.save(operation);
+        var updatedOperation = bulkOperationRepository.save(operation);
+        // while commit is in progress, no download links should be available
+        updatedOperation.setLinkToCommittedRecordsCsvFile(null);
+        updatedOperation.setLinkToCommittedRecordsErrorsCsvFile(null);
+        yield updatedOperation;
       }
       default -> operation;
     };

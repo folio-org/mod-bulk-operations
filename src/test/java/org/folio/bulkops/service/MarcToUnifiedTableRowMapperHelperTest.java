@@ -315,7 +315,7 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
 
     var res = mapperHelper.fetchNotes(dataField, false);
 
-    assertThat(res).isEqualTo("subfield a. subfield b");
+    assertThat(res).isEqualTo("subfield a. subfield b.");
   }
 
   @ParameterizedTest
@@ -326,6 +326,6 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
 
     var res = mapperHelper.fetchNotes(dataField, false);
 
-    assertThat(res).isEqualTo('0' == ind1 ? "subfield a (staff only)" : "subfield a");
+    assertThat(res).isEqualTo('0' == ind1 ? "subfield a. (staff only)" : "subfield a.");
   }
 }
