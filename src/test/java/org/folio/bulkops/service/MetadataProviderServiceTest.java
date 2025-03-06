@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,11 +41,11 @@ import java.util.List;
 import java.util.UUID;
 
 class MetadataProviderServiceTest extends BaseTest {
-  @MockBean
+   @MockitoBean
   DataImportClient dataImportClient;
-  @MockBean
+   @MockitoBean
   private MetadataProviderClient metadataProviderClient;
-  @MockBean
+   @MockitoBean
   private ErrorService errorService;
 
   @Autowired

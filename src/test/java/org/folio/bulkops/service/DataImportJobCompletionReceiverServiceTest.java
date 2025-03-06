@@ -17,7 +17,7 @@ import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.folio.spring.service.SystemUserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,13 +31,13 @@ class DataImportJobCompletionReceiverServiceTest extends BaseTest {
   @Autowired
   private DataImportJobCompletionReceiverService receiverService;
 
-  @MockBean
+   @MockitoBean
   private BulkOperationService bulkOperationService;
 
-  @MockBean
+   @MockitoBean
   private SystemUserService systemUserService;
 
-  @MockBean
+   @MockitoBean
   private BulkOperationRepository bulkOperationRepository;
 
   @Test

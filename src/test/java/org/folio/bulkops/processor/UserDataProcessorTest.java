@@ -10,7 +10,7 @@ import org.folio.bulkops.service.ErrorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -34,12 +34,12 @@ class UserDataProcessorTest extends BaseTest {
 
   @Autowired
   DataProcessorFactory factory;
-  @MockBean
+   @MockitoBean
   ErrorService errorService;
 
   private FolioDataProcessor<User> processor;
 
-  @MockBean
+   @MockitoBean
   private BulkOperationExecutionContentRepository bulkOperationExecutionContentRepository;
 
   public static final String IDENTIFIER = "345";

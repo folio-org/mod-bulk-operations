@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -39,7 +39,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
 
   @Autowired
   private HoldingsReferenceHelper holdingsReferenceHelper;
-  @SpyBean
+  @MockitoSpyBean
   private FolioExecutionContext folioExecutionContext;
 
   @Test
