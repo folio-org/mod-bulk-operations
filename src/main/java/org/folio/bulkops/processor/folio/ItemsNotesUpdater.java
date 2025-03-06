@@ -3,6 +3,7 @@ package org.folio.bulkops.processor.folio;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import org.folio.bulkops.domain.bean.CirculationNote;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.Item;
@@ -209,10 +210,9 @@ public class ItemsNotesUpdater {
         var type = CHECK_IN_NOTE.equals(option) ? CirculationNote.NoteTypeEnum.IN : CirculationNote.NoteTypeEnum.OUT;
         yield  Optional.of(extendedItem -> {
           if (extendedItem.getEntity().getCirculationNotes() != null) {
-            var circulationNotes = extendedItem.getEntity().getCirculationNotes().stream()
-              .filter(circulationNote -> !(contains(circulationNote.getNote(), action.getInitial())
-                && circulationNote.getNoteType() == type)).toList();
-            extendedItem.getEntity().setCirculationNotes(circulationNotes);
+            extendedItem.getEntity().getCirculationNotes().stream()
+              .filter(circulationNote -> circulationNote.getNoteType() == type)
+              .forEach(note -> note.setNote(note.getNote().replace(action.getInitial(), EMPTY)));
           }});
       }
       case ITEM_NOTE ->
@@ -220,10 +220,9 @@ public class ItemsNotesUpdater {
           .stream().filter(parameter -> StringUtils.equals(parameter.getKey(), ITEM_NOTE_TYPE_ID_KEY))
           .findFirst().ifPresent(parameter -> {
             if (extendedItem.getEntity().getNotes() != null) {
-              var itemNotes = extendedItem.getEntity().getNotes().stream()
-                .filter(note -> !(StringUtils.equals(note.getItemNoteTypeId(), parameter.getValue())
-                  && contains(note.getNote(), action.getInitial()))).toList();
-              extendedItem.getEntity().setNotes(itemNotes);
+              extendedItem.getEntity().getNotes().stream()
+                .filter(note -> StringUtils.equals(note.getItemNoteTypeId(), parameter.getValue()))
+                .forEach(note -> note.setNote(note.getNote().replace(action.getInitial(), EMPTY)));
             }
           }));
       default -> Optional.empty();

@@ -124,11 +124,12 @@ public class HoldingsNotesUpdater {
     return notes;
   }
 
-  private List<HoldingsNote> findAndRemoveNoteByValueAndTypeId(String noteToRemove, List<HoldingsNote> notes, List<Parameter> parameters) {
+  private List<HoldingsNote> findAndRemoveNoteByValueAndTypeId(String valueToRemove, List<HoldingsNote> notes, List<Parameter> parameters) {
     var typeIdParameterOptional = getTypeIdParameterOptional(parameters);
     if (typeIdParameterOptional.isPresent() && notes != null) {
-      notes = notes.stream().filter(note -> !(StringUtils.equals(note.getHoldingsNoteTypeId(), typeIdParameterOptional.get().getValue())
-              && contains(note.getNote(), noteToRemove))).collect(toCollection(ArrayList::new));
+      notes.stream()
+        .filter(note -> StringUtils.equals(note.getHoldingsNoteTypeId(), typeIdParameterOptional.get().getValue()))
+        .forEach(note -> note.setNote(note.getNote().replace(valueToRemove, StringUtils.EMPTY)));
     }
     return notes;
   }

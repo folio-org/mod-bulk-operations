@@ -456,11 +456,9 @@ class HoldingsDataProcessorTest extends BaseTest {
     var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null);
 
     dataProcessor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("administrative"), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
-    assertEquals(1, holding.getAdministrativeNotes().size());
-    assertEquals("Administrative note", holding.getAdministrativeNotes().get(0));
-
-    dataProcessor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("Administrative"), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
-    assertTrue(holding.getAdministrativeNotes().isEmpty());
+    assertEquals(2, holding.getAdministrativeNotes().size());
+    assertEquals(" note", holding.getAdministrativeNotes().get(0));
+    assertEquals("Administrative note", holding.getAdministrativeNotes().get(1));
   }
 
   @Test
@@ -477,8 +475,10 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     dataProcessor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("example")
       .parameters(List.of(parameter)), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
-    assertEquals(1, holding.getNotes().size());
-    assertEquals("typeId2", holding.getNotes().get(0).getHoldingsNoteTypeId());
+    assertEquals(2, holding.getNotes().size());
+    assertEquals("typeId1", holding.getNotes().get(0).getHoldingsNoteTypeId());
+    assertEquals(" note", holding.getNotes().get(0).getNote());
+    assertEquals("typeId2", holding.getNotes().get(1).getHoldingsNoteTypeId());
   }
 
   @Test
