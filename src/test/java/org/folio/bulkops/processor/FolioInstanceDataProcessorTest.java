@@ -253,7 +253,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
         .option(optionType)
         .actions(Collections.singletonList(new Action()
           .type(FIND_AND_REMOVE_THESE)
-          .initial("first note")
+          .initial("first")
           .parameters(Collections.singletonList(new Parameter()
             .key(INSTANCE_NOTE_TYPE_ID_KEY)
             .value(typeId)))))));
@@ -263,13 +263,15 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
     if (ADMINISTRATIVE_NOTE.equals(optionType)) {
-      assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(1);
-      assertThat(result.getUpdated().getEntity().getAdministrativeNotes().get(0)).isEqualTo("First note");
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(2);
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes().get(0)).isEqualTo(" note");
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes().get(1)).isEqualTo("First note");
       assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
     } else {
       assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(2);
-      assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(1);
-      assertThat(result.getUpdated().getEntity().getInstanceNotes().get(0).getNote()).isEqualTo("First note");
+      assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
+      assertThat(result.getUpdated().getEntity().getInstanceNotes().get(0).getNote()).isEqualTo(" note");
+      assertThat(result.getUpdated().getEntity().getInstanceNotes().get(1).getNote()).isEqualTo("First note");
     }
   }
 

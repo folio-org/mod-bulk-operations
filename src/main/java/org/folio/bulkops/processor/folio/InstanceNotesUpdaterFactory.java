@@ -1,8 +1,8 @@
 package org.folio.bulkops.processor.folio;
 
 import static java.util.Objects.isNull;
-import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.replace;
 import static org.folio.bulkops.domain.dto.UpdateActionType.MARK_AS_STAFF_ONLY;
@@ -164,11 +164,12 @@ public class InstanceNotesUpdaterFactory {
       .orElse(false);
   }
 
-  private List<InstanceNote> findAndRemoveNoteByValueAndTypeId(String noteToRemove, List<InstanceNote> notes, List<Parameter> parameters) {
+  private List<InstanceNote> findAndRemoveNoteByValueAndTypeId(String valueToRemove, List<InstanceNote> notes, List<Parameter> parameters) {
     var typeIdOptional = getTypeIdOptional(parameters);
     if (typeIdOptional.isPresent() && notes != null) {
-      notes = notes.stream().filter(note -> !(StringUtils.equals(note.getInstanceNoteTypeId(), typeIdOptional.get())
-              && contains(note.getNote(), noteToRemove))).collect(toCollection(ArrayList::new));
+      notes.stream()
+        .filter(note -> StringUtils.equals(note.getInstanceNoteTypeId(), typeIdOptional.get()))
+        .forEach(note -> note.setNote(note.getNote().replace(valueToRemove, EMPTY)));
     }
     return notes;
   }

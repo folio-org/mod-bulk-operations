@@ -1,6 +1,7 @@
 package org.folio.bulkops.processor.folio;
 
 import org.apache.commons.lang3.StringUtils;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import org.folio.bulkops.domain.bean.CirculationNote;
 import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
@@ -34,10 +35,10 @@ public class AdministrativeNotesUpdater {
     return notes;
   }
 
-  public List<String> findAndRemoveAdministrativeNote(String administrativeNoteToRemove, List<String> administrativeNotes) {
+  public List<String> findAndRemoveAdministrativeNote(String valueToRemove, List<String> administrativeNotes) {
     if (administrativeNotes != null) {
       administrativeNotes = administrativeNotes.stream()
-        .filter(administrativeNote -> !StringUtils.contains(administrativeNote, administrativeNoteToRemove))
+        .map(note -> note.replace(valueToRemove, EMPTY))
         .collect(toCollection(ArrayList::new));
     }
     return administrativeNotes;
