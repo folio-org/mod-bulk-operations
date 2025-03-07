@@ -24,6 +24,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORD
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
+import static org.folio.bulkops.util.Constants.COMMA_DELIMETER;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
@@ -128,6 +129,8 @@ public class BulkOperationService {
   public static final String STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS = "Step %s is not applicable for bulk operation status %s";
   public static final String ERROR_STARTING_BULK_OPERATION = "Error starting Bulk Operation: ";
   public static final String MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY = "Instance with source %s is not supported by MARC records bulk edit and cannot be updated.";
+  public static final String MSG_CONFIRM_FAILED = "Confirm failed";
+
   @Value("${application.file-uploading.max-retry-count}")
   private int maxRetryCount;
 
@@ -284,7 +287,7 @@ public class BulkOperationService {
     } catch (S3ClientException e) {
       handleException(operation.getId(), dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
     } catch (Exception e) {
-      handleException(operation.getId(), dataProcessing, "Confirm failed", e);
+      handleException(operation.getId(), dataProcessing, MSG_CONFIRM_FAILED, e);
     } finally {
       dataProcessingRepository.save(dataProcessing);
       handleProcessingCompletion(operationId);
@@ -316,7 +319,7 @@ public class BulkOperationService {
       } catch (S3ClientException e) {
         handleException(bulkOperation.getId(), dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
       } catch (Exception e) {
-        handleException(bulkOperation.getId(), dataProcessing, "Confirm failed", e);
+        handleException(bulkOperation.getId(), dataProcessing, MSG_CONFIRM_FAILED, e);
       } finally {
         remoteFileSystemClient.remove(tmpMatchedJsonFileName);
       }
@@ -363,7 +366,7 @@ public class BulkOperationService {
       } catch (S3ClientException e) {
         handleException(operation.getId(), dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
       } catch (Exception e) {
-        handleException(operation.getId(), dataProcessing, "Confirm failed", e);
+        handleException(operation.getId(), dataProcessing, MSG_CONFIRM_FAILED, e);
       } finally {
         dataProcessingRepository.save(dataProcessing);
         handleProcessingCompletion(operationId);
