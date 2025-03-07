@@ -655,15 +655,15 @@ class HoldingsDataProcessorTest extends BaseTest {
         assertEquals(initialElectronicAccess.getUri(), unmodified.getUri());
       }
       case ELECTRONIC_ACCESS_LINK_TEXT -> {
-        assertNull(modified.getLinkText());
+        assertEquals(modified.getLinkText(), EMPTY);
         assertEquals(initialElectronicAccess.getLinkText(), unmodified.getLinkText());
       }
       case ELECTRONIC_ACCESS_MATERIALS_SPECIFIED -> {
-        assertNull(modified.getMaterialsSpecification());
+        assertEquals(modified.getMaterialsSpecification(), EMPTY);
         assertEquals(initialElectronicAccess.getMaterialsSpecification(), unmodified.getMaterialsSpecification());
       }
       case ELECTRONIC_ACCESS_URL_PUBLIC_NOTE -> {
-        assertNull(modified.getPublicNote());
+        assertEquals(modified.getPublicNote(), EMPTY);
         assertEquals(initialElectronicAccess.getPublicNote(), unmodified.getPublicNote());
       }
     }
@@ -692,19 +692,19 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     switch (option) {
       case ELECTRONIC_ACCESS_URI -> {
-        assertEquals(EMPTY, modified.getUri());
+        assertEquals(modified.getUri(), "http://");
         assertEquals(initialElectronicAccess.getUri(), unmodified.getUri());
       }
       case ELECTRONIC_ACCESS_LINK_TEXT -> {
-        assertNull(modified.getLinkText());
+        assertEquals(modified.getLinkText(), " text");
         assertEquals(initialElectronicAccess.getLinkText(), unmodified.getLinkText());
       }
       case ELECTRONIC_ACCESS_MATERIALS_SPECIFIED -> {
-        assertNull(modified.getMaterialsSpecification());
+        assertEquals(modified.getMaterialsSpecification(), "s");
         assertEquals(initialElectronicAccess.getMaterialsSpecification(), unmodified.getMaterialsSpecification());
       }
       case ELECTRONIC_ACCESS_URL_PUBLIC_NOTE -> {
-        assertNull(modified.getPublicNote());
+        assertEquals(modified.getPublicNote(), " note");
         assertEquals(initialElectronicAccess.getPublicNote(), unmodified.getPublicNote());
       }
     }
