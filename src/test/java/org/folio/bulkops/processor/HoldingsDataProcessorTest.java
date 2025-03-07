@@ -655,15 +655,15 @@ class HoldingsDataProcessorTest extends BaseTest {
         assertEquals(initialElectronicAccess.getUri(), unmodified.getUri());
       }
       case ELECTRONIC_ACCESS_LINK_TEXT -> {
-        assertEquals(modified.getLinkText(), EMPTY);
+        assertEquals(EMPTY, modified.getLinkText());
         assertEquals(initialElectronicAccess.getLinkText(), unmodified.getLinkText());
       }
       case ELECTRONIC_ACCESS_MATERIALS_SPECIFIED -> {
-        assertEquals(modified.getMaterialsSpecification(), EMPTY);
+        assertEquals(EMPTY, modified.getMaterialsSpecification());
         assertEquals(initialElectronicAccess.getMaterialsSpecification(), unmodified.getMaterialsSpecification());
       }
       case ELECTRONIC_ACCESS_URL_PUBLIC_NOTE -> {
-        assertEquals(modified.getPublicNote(), EMPTY);
+        assertEquals(EMPTY, modified.getPublicNote());
         assertEquals(initialElectronicAccess.getPublicNote(), unmodified.getPublicNote());
       }
     }
@@ -692,19 +692,19 @@ class HoldingsDataProcessorTest extends BaseTest {
 
     switch (option) {
       case ELECTRONIC_ACCESS_URI -> {
-        assertEquals(modified.getUri(), "http://");
+        assertEquals("http://", modified.getUri());
         assertEquals(initialElectronicAccess.getUri(), unmodified.getUri());
       }
       case ELECTRONIC_ACCESS_LINK_TEXT -> {
-        assertEquals(modified.getLinkText(), " text");
+        assertEquals(" text", modified.getLinkText());
         assertEquals(initialElectronicAccess.getLinkText(), unmodified.getLinkText());
       }
       case ELECTRONIC_ACCESS_MATERIALS_SPECIFIED -> {
-        assertEquals(modified.getMaterialsSpecification(), "s");
+        assertEquals("s", modified.getMaterialsSpecification());
         assertEquals(initialElectronicAccess.getMaterialsSpecification(), unmodified.getMaterialsSpecification());
       }
       case ELECTRONIC_ACCESS_URL_PUBLIC_NOTE -> {
-        assertEquals(modified.getPublicNote(), " note");
+        assertEquals(" note", modified.getPublicNote());
         assertEquals(initialElectronicAccess.getPublicNote(), unmodified.getPublicNote());
       }
     }
