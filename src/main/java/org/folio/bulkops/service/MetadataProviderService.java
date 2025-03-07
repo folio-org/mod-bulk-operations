@@ -35,8 +35,8 @@ import java.util.concurrent.ForkJoinPool;
 @Log4j2
 public class MetadataProviderService {
   public static final String MSG_FAILED_TO_GET_LOG_ENTRIES_CHUNK = "Failed to get %d log entries, reason: %s";
-  private static final int GET_JOB_LOG_ENTRIES_MAX_RETRIES = 5;
-  private static final int GET_JOB_LOG_ENTRIES_RETRY_TIMEOUT = 1000;
+  private static final int GET_JOB_LOG_ENTRIES_MAX_RETRIES = 10;
+  private static final int GET_JOB_LOG_ENTRIES_RETRY_TIMEOUT = 5000;
 
   private final Set<DataImportStatus> completedStatuses = Set.of(COMMITTED, CANCELLED, ERROR);
   private final MetadataProviderClient metadataProviderClient;
@@ -93,23 +93,25 @@ public class MetadataProviderService {
   }
 
   private List<JobLogEntry> getExecutionLogEntries(BulkOperation bulkOperation, DataImportJobExecution jobExecution) {
-    var fjPool = new ForkJoinPool(numOfConcurrentRequests);
-    try {
+    try (var fjPool = new ForkJoinPool(numOfConcurrentRequests)) {
       var jobExecutionId = jobExecution.getId().toString();
       var retryCounter = 0;
       var totalJobLogEntries = 0;
+      var expectedJobLogEntriesNumber = jobExecution.getProgress().getTotal();
       while (retryCounter < GET_JOB_LOG_ENTRIES_MAX_RETRIES) {
-        var expectedJobLogEntriesNumber = jobExecution.getProgress().getTotal();
         totalJobLogEntries = metadataProviderClient.getJobLogEntries(jobExecutionId, 1).getTotalRecords();
         log.info("Get log entries attempt #{}, total job log entries: {}, expected value: {}", retryCounter, totalJobLogEntries, expectedJobLogEntriesNumber);
         if (totalJobLogEntries == expectedJobLogEntriesNumber) {
           break;
         } else {
-          Thread.sleep(GET_JOB_LOG_ENTRIES_RETRY_TIMEOUT);
-          retryCounter++;
+          if (++retryCounter == GET_JOB_LOG_ENTRIES_MAX_RETRIES) {
+            log.error("Expected number of job log entries ({}) was not reached after {} retries", expectedJobLogEntriesNumber, retryCounter);
+          } else {
+            Thread.sleep(GET_JOB_LOG_ENTRIES_RETRY_TIMEOUT);
+          }
         }
       }
-      var offsets = splitOffsets(totalJobLogEntries);
+      var offsets = splitOffsets(expectedJobLogEntriesNumber);
       return fjPool.submit(() -> offsets.stream().parallel()
         .map(offset -> getEntries(bulkOperation, jobExecutionId, offset, chunkSize))
         .flatMap(List::stream)
@@ -118,8 +120,6 @@ public class MetadataProviderService {
       log.error("Failed to retrieve job log entries", e);
       Thread.currentThread().interrupt();
       return Collections.emptyList();
-    } finally {
-      fjPool.shutdown();
     }
   }
 

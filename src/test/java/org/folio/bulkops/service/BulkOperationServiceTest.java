@@ -17,6 +17,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.service.BulkOperationService.FILE_UPLOADING_FAILED;
 import static org.folio.bulkops.service.BulkOperationService.MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY;
+import static org.folio.bulkops.service.BulkOperationService.TMP_MATCHED_JSON_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
@@ -593,8 +594,9 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
       var pathToInstanceMarc = "src/test/resources/files/instance_marc.mrc";
       var pathToInstanceJson = "src/test/resources/files/instance_marc.json";
+      var pathToFilteredInstanceJson = "src/test/resources/files/instance_marc_filtered.json";
       var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-MARC-instance_marc.mrc";
-      var expectedPathToFilteredMatchedJsonFile = bulkOperationId + "/json/" + LocalDate.now() + "-Filtered-Matched-Records-instance_marc.json";
+      var expectedPathToTmpModifiedJson = TMP_MATCHED_JSON_PATH_TEMPLATE.formatted(bulkOperationId);
 
       when(bulkOperationRepository.findById(any(UUID.class)))
         .thenReturn(Optional.of(BulkOperation.builder()
@@ -628,6 +630,9 @@ class BulkOperationServiceTest extends BaseTest {
       when(remoteFileSystemClient.get(pathToMatchedRecordsMarcFile))
         .thenReturn(new FileInputStream(pathToInstanceMarc));
       when(remoteFileSystemClient.get(pathToMatchedJson))
+        .thenReturn(new FileInputStream(pathToInstanceJson))
+        .thenReturn(new FileInputStream(pathToFilteredInstanceJson));
+      when(remoteFileSystemClient.get(expectedPathToTmpModifiedJson))
         .thenReturn(new FileInputStream(pathToInstanceJson));
       when(remoteFileSystemClient.writer(anyString()))
         .thenReturn(new StringWriter());
@@ -653,12 +658,11 @@ class BulkOperationServiceTest extends BaseTest {
       Awaitility.await().untilAsserted(() -> verify(bulkOperationRepository, times(6)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getLinkToModifiedRecordsMarcFile(), equalTo(expectedPathToModifiedMarcFile));
-      assertThat(capturedBulkOperation.getLinkToMatchedRecordsJsonFile(), equalTo(expectedPathToFilteredMatchedJsonFile));
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
 
       var identifierArgumentCaptor = ArgumentCaptor.forClass(String.class);
       var errorMessageArgumentCaptor = ArgumentCaptor.forClass(String.class);
-      Awaitility.await().untilAsserted(() -> verify(errorService).saveError(any(UUID.class), identifierArgumentCaptor.capture(),
+      Awaitility.await().untilAsserted(() -> verify(errorService).saveError(eq(bulkOperationId), identifierArgumentCaptor.capture(),
         errorMessageArgumentCaptor.capture(), eq(ErrorType.ERROR)));
       Assertions.assertThat(errorMessageArgumentCaptor.getValue()).isEqualTo(MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY.formatted("FOLIO"));
       Assertions.assertThat(identifierArgumentCaptor.getValue()).isEqualTo("69640328-788e-43fc-9c3c-af39e243f3b7");
