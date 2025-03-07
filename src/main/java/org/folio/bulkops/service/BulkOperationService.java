@@ -522,13 +522,19 @@ public class BulkOperationService {
 
       if (!FAILED.equals(operation.getStatus())) {
         operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
+        processCommittedFiles(operation);
       } else {
         operation.setLinkToCommittedRecordsCsvFile(null);
       }
-      marcCsvHelper.enrichMarcAndCsvCommittedFiles(operation);
       bulkOperationRepository.save(operation);
     } else {
       marcUpdateService.commitForInstanceMarc(operation);
+    }
+  }
+
+  private void processCommittedFiles(BulkOperation bulkOperation) {
+    if (INSTANCE_MARC.equals(bulkOperation.getEntityType())) {
+      marcCsvHelper.enrichMarcAndCsvCommittedFiles(bulkOperation);
     }
   }
 
