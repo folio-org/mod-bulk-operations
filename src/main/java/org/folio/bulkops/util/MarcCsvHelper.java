@@ -208,10 +208,11 @@ public class MarcCsvHelper {
   public void enrichCommittedMarcWithUpdatedInventoryRecords(BulkOperation bulkOperation, List<String> csvHrids, List<String> marcHrids) {
     var hrids = CollectionUtils.subtract(csvHrids, marcHrids);
     if (!hrids.isEmpty() && nonNull(bulkOperation.getLinkToMatchedRecordsMarcFile())) {
-      var dirName = isNull(bulkOperation.getLinkToCommittedRecordsMarcFile()) ? bulkOperation.getId() : ENRICHED_PREFIX + bulkOperation.getId();
+      var linkToCommitted = bulkOperation.getLinkToCommittedRecordsMarcFile();
+      var dirName = isNull(linkToCommitted) ? bulkOperation.getId() : ENRICHED_PREFIX + bulkOperation.getId();
       var committedMarcFileName = CHANGED_MARC_PATH_TEMPLATE.formatted(dirName, LocalDate.now(), getBaseName(bulkOperation.getLinkToTriggeringCsvFile()));
       try (var matchedMarcInputStream = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile());
-           var committedMarcInputStream = remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsMarcFile());
+           var committedMarcInputStream = isNull(linkToCommitted) ? null : remoteFileSystemClient.get(linkToCommitted);
            var marcOutputStream = new ByteArrayOutputStream()) {
         var marcReader = new MarcStreamReader(matchedMarcInputStream);
         var streamWriter = new MarcStreamWriter(marcOutputStream, "UTF-8");
@@ -222,8 +223,7 @@ public class MarcCsvHelper {
           }
         }
         var appendedMarcStream = new ByteArrayInputStream(marcOutputStream.toString(UTF_8).getBytes());
-        var linkToCommittedMarcFile = bulkOperation.getLinkToCommittedRecordsMarcFile();
-        var committedMarcStream = isNull(linkToCommittedMarcFile) ?
+        var committedMarcStream = isNull(linkToCommitted) ?
           appendedMarcStream :
           new SequenceInputStream(committedMarcInputStream, appendedMarcStream);
         remoteFileSystemClient.put(committedMarcStream, committedMarcFileName);

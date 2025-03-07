@@ -24,6 +24,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORD
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
+import static org.folio.bulkops.util.Constants.COMMA_DELIMETER;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
@@ -128,6 +129,8 @@ public class BulkOperationService {
   public static final String STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS = "Step %s is not applicable for bulk operation status %s";
   public static final String ERROR_STARTING_BULK_OPERATION = "Error starting Bulk Operation: ";
   public static final String MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY = "Instance with source %s is not supported by MARC records bulk edit and cannot be updated.";
+  public static final String MSG_CONFIRM_FAILED = "Confirm failed";
+
   @Value("${application.file-uploading.max-retry-count}")
   private int maxRetryCount;
 
@@ -157,12 +160,12 @@ public class BulkOperationService {
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
-  private static final String FILTERED_MATCH_JSON_PATH_TEMPLATE = "%s/json/%s-Filtered-Matched-Records-%s.json";
   private static final String PREVIEW_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-CSV-%s.csv";
   private static final String PREVIEW_MARC_PATH_TEMPLATE = "%s/%s-Updates-Preview-MARC-%s.mrc";
   private static final String PREVIEW_MARC_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-MARC-CSV-%s.csv";
   private static final String CHANGED_JSON_PATH_TEMPLATE = "%s/json/%s-Changed-Records-%s.json";
   public static final String CHANGED_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-CSV-%s.csv";
+  public static final String TMP_MATCHED_JSON_PATH_TEMPLATE = "%s/json/tmp-matched.json";
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -235,13 +238,13 @@ public class BulkOperationService {
 
     var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
     var modifiedJsonFileName = String.format(PREVIEW_JSON_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
-    var filteredMatchedJsonFileName = String.format(FILTERED_MATCH_JSON_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
     var modifiedPreviewCsvFileName = String.format(PREVIEW_CSV_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
+
+    prepareMatchedJsonForInstanceMarc(operation, dataProcessing);
 
     try (var readerForMatchedJsonFile = remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile());
          var writerForModifiedPreviewCsvFile = remoteFileSystemClient.writer(modifiedPreviewCsvFileName);
-         var writerForModifiedJsonFile = remoteFileSystemClient.writer(modifiedJsonFileName);
-         var writerForFilteredMatchedJsonFile = remoteFileSystemClient.writer(filteredMatchedJsonFileName)) {
+         var writerForModifiedJsonFile = remoteFileSystemClient.writer(modifiedJsonFileName)) {
 
       var csvWriter = new BulkOperationsEntityCsvWriter(writerForModifiedPreviewCsvFile, clazz);
 
@@ -251,17 +254,6 @@ public class BulkOperationService {
 
       while (iterator.hasNext()) {
         var original = iterator.next();
-        if (INSTANCE_MARC.equals(operation.getEntityType()) && original instanceof ExtendedInstance extendedInstance) {
-          if (!MARC.equals(extendedInstance.getEntity().getSource())) {
-            var instance = extendedInstance.getEntity();
-            var identifier = HRID.equals(operation.getIdentifierType()) ? instance.getHrid() : instance.getId();
-            errorService.saveError(operation.getId(), identifier, MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY.formatted(instance.getSource()), ErrorType.ERROR);
-            continue;
-          } else {
-            var originalRecord = objectMapper.writeValueAsString(original) + LF;
-            writerForFilteredMatchedJsonFile.write(originalRecord);
-          }
-        }
         var modified = processUpdate(original, operation, ruleCollection, extendedClazz);
         List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
         if (Objects.nonNull(modified)) {
@@ -284,11 +276,6 @@ public class BulkOperationService {
       }
 
       if (processedNumOfRecords > 0) {
-        if (INSTANCE_MARC.equals(operation.getEntityType())) {
-          remoteFileSystemClient.remove(operation.getLinkToMatchedRecordsJsonFile());
-          log.info("Removed matched records json file: {}, new filename: {}", operation.getLinkToMatchedRecordsJsonFile(), filteredMatchedJsonFileName);
-          operation.setLinkToMatchedRecordsJsonFile(filteredMatchedJsonFileName);
-        }
         operation.setLinkToModifiedRecordsCsvFile(modifiedPreviewCsvFileName);
         operation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
         saveLinks(operation);
@@ -300,10 +287,42 @@ public class BulkOperationService {
     } catch (S3ClientException e) {
       handleException(operation.getId(), dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
     } catch (Exception e) {
-      handleException(operation.getId(), dataProcessing, "Confirm failed", e);
+      handleException(operation.getId(), dataProcessing, MSG_CONFIRM_FAILED, e);
     } finally {
       dataProcessingRepository.save(dataProcessing);
       handleProcessingCompletion(operationId);
+    }
+  }
+
+  private void prepareMatchedJsonForInstanceMarc(BulkOperation bulkOperation, BulkOperationDataProcessing dataProcessing) {
+    if (INSTANCE_MARC.equals(bulkOperation.getEntityType())) {
+      var matchedJsonFileName = bulkOperation.getLinkToMatchedRecordsJsonFile();
+      var tmpMatchedJsonFileName = TMP_MATCHED_JSON_PATH_TEMPLATE.formatted(bulkOperation.getId());
+      remoteFileSystemClient.put(remoteFileSystemClient.get(matchedJsonFileName), tmpMatchedJsonFileName);
+      remoteFileSystemClient.remove(matchedJsonFileName);
+      try (var readerForMatchedJsonFile = remoteFileSystemClient.get(tmpMatchedJsonFileName);
+           var writerForMatchedJsonFile = remoteFileSystemClient.writer(matchedJsonFileName)) {
+        var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), ExtendedInstance.class);
+        while (iterator.hasNext()) {
+          var original = iterator.next();
+          if (original instanceof ExtendedInstance extendedInstance) {
+            if (!MARC.equals(extendedInstance.getEntity().getSource())) {
+              var instance = extendedInstance.getEntity();
+              var identifier = HRID.equals(bulkOperation.getIdentifierType()) ? instance.getHrid() : instance.getId();
+              errorService.saveError(bulkOperation.getId(), identifier, MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY.formatted(instance.getSource()), ErrorType.ERROR);
+            } else {
+              var originalRecord = objectMapper.writeValueAsString(original) + LF;
+              writerForMatchedJsonFile.write(originalRecord);
+            }
+          }
+        }
+      } catch (S3ClientException e) {
+        handleException(bulkOperation.getId(), dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
+      } catch (Exception e) {
+        handleException(bulkOperation.getId(), dataProcessing, MSG_CONFIRM_FAILED, e);
+      } finally {
+        remoteFileSystemClient.remove(tmpMatchedJsonFileName);
+      }
     }
   }
 
@@ -347,7 +366,7 @@ public class BulkOperationService {
       } catch (S3ClientException e) {
         handleException(operation.getId(), dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
       } catch (Exception e) {
-        handleException(operation.getId(), dataProcessing, "Confirm failed", e);
+        handleException(operation.getId(), dataProcessing, MSG_CONFIRM_FAILED, e);
       } finally {
         dataProcessingRepository.save(dataProcessing);
         handleProcessingCompletion(operationId);
@@ -522,13 +541,19 @@ public class BulkOperationService {
 
       if (!FAILED.equals(operation.getStatus())) {
         operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
+        processCommittedFiles(operation);
       } else {
         operation.setLinkToCommittedRecordsCsvFile(null);
       }
-      marcCsvHelper.enrichMarcAndCsvCommittedFiles(operation);
       bulkOperationRepository.save(operation);
     } else {
       marcUpdateService.commitForInstanceMarc(operation);
+    }
+  }
+
+  private void processCommittedFiles(BulkOperation bulkOperation) {
+    if (INSTANCE_MARC.equals(bulkOperation.getEntityType())) {
+      marcCsvHelper.enrichMarcAndCsvCommittedFiles(bulkOperation);
     }
   }
 
