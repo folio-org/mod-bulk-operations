@@ -8,6 +8,7 @@ import static org.folio.bulkops.domain.dto.DataImportStatus.CANCELLED;
 import static org.folio.bulkops.domain.dto.DataImportStatus.COMMITTED;
 import static org.folio.bulkops.domain.dto.DataImportStatus.ERROR;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.DataImportClient;
@@ -77,6 +78,7 @@ public class MetadataProviderService {
   }
 
   public List<String> fetchUpdatedInstanceIds(List<JobLogEntry> logEntries) {
+    log.info("Log entries ({}): {}", logEntries.size(), logEntries);
     return logEntries.stream()
       .filter(entry -> UPDATED.equals(entry.getSourceRecordActionStatus()))
       .map(JobLogEntry::getRelatedInstanceInfo)
