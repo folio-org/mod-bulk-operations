@@ -77,6 +77,7 @@ public class MetadataProviderService {
   }
 
   public List<String> fetchUpdatedInstanceIds(List<JobLogEntry> logEntries) {
+    log.info("LogEntries: {}", logEntries);
     return logEntries.stream()
       .filter(entry -> UPDATED.equals(entry.getSourceRecordActionStatus()))
       .map(JobLogEntry::getRelatedInstanceInfo)

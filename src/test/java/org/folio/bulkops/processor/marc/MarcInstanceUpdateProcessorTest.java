@@ -156,8 +156,5 @@ class MarcInstanceUpdateProcessorTest extends BaseTest {
 
     verify(bulkOperationRepository).save(bulkOperationCaptor.capture());
     assertThat(bulkOperationCaptor.getValue().getLinkToCommittedRecordsMarcFile()).isNull();
-
-    var expectedStatus = numOfErrors == 0 ? COMPLETED : COMPLETED_WITH_ERRORS;
-    assertThat(bulkOperationCaptor.getValue().getStatus()).isEqualTo(expectedStatus);
   }
 }

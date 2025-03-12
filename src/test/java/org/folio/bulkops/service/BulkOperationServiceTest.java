@@ -1812,8 +1812,8 @@ class BulkOperationServiceTest extends BaseTest {
     bulkOperationService.commit(operation);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
-    var lastCapture = operationCaptor.getAllValues().get(1);
+    verify(bulkOperationRepository, times(1)).save(operationCaptor.capture());
+    var lastCapture = operationCaptor.getValue();
     assertNull(lastCapture.getLinkToCommittedRecordsMarcFile());
     assertNull(lastCapture.getLinkToCommittedRecordsCsvFile());
   }
@@ -1823,13 +1823,14 @@ class BulkOperationServiceTest extends BaseTest {
     true  | false
     false | true
     """, delimiter = '|')
-  void shouldStartCommitInstanceMarcIfRulesArePresent(boolean hasAdministrativeRules, boolean hasMarcRules) {
+  void shouldStartCommitInstanceMarcIfModifiedMarcFileIsPresent(boolean hasAdministrativeRules, boolean hasMarcRules) {
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
       .id(operationId)
       .entityType(INSTANCE_MARC)
       .linkToTriggeringCsvFile("instances.csv")
       .linkToModifiedRecordsJsonFile("modified.json")
+      .linkToModifiedRecordsMarcFile(hasMarcRules ? "modified.mrc" : null)
       .build();
 
     when(executionRepository.save(any(BulkOperationExecution.class)))

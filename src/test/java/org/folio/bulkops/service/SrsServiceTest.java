@@ -96,9 +96,8 @@ class SrsServiceTest extends BaseTest {
     verify(marcWriter).writeRecord(any(Record.class));
     verify(bulkOperationRepository, times(2))
       .save(bulkOperationCaptor.capture());
-    var expectedStatus = numOfErrors == 0 ? COMPLETED : COMPLETED_WITH_ERRORS;
     assertThat(bulkOperationCaptor.getAllValues().get(1).getStatus())
-      .isEqualTo(expectedStatus);
+      .isEqualTo(COMPLETED_WITH_ERRORS);
   }
 
   @SneakyThrows

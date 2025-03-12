@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.service.MarcUpdateService.CHANGED_MARC_CSV_PATH_TEMPLATE;
@@ -109,7 +110,7 @@ public class SrsService {
     operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operation.getId()));
     operation.setCommittedNumOfWarnings(errorService.getCommittedNumOfWarnings(operation.getId()));
     operation.setEndTime(LocalDateTime.now());
-    operation.setStatus(operation.getCommittedNumOfErrors() == 0 ? COMPLETED : COMPLETED_WITH_ERRORS);
+    operation.setStatus(isEmpty(operation.getLinkToCommittedRecordsErrorsCsvFile()) ? COMPLETED : COMPLETED_WITH_ERRORS);
     marcCsvHelper.enrichMarcAndCsvCommittedFiles(operation);
     bulkOperationRepository.save(operation);
   }
