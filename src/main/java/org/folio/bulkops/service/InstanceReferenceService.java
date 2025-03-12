@@ -211,13 +211,13 @@ public class InstanceReferenceService {
   public InstanceTypes getInstanceTypesByName(String name) {
     return isNull(name) ?
       InstanceTypes.builder().types(Collections.emptyList()).totalRecords(0).build() :
-      instanceTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, name), 1);
+      instanceTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
   }
 
   @Cacheable(cacheNames = "instanceTypesByCodes")
   public InstanceTypes getInstanceTypesByCode(String code) {
     return isNull(code) ?
       InstanceTypes.builder().types(Collections.emptyList()).totalRecords(0).build() :
-      instanceTypesClient.getByQuery(String.format(QUERY_PATTERN_CODE, code), 1);
+      instanceTypesClient.getByQuery(String.format(QUERY_PATTERN_CODE, encode(code)), 1);
   }
 }
