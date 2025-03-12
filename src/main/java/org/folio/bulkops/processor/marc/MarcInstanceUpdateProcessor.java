@@ -33,6 +33,7 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.processor.MarcUpdateProcessor;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.ErrorService;
+import org.folio.bulkops.util.MarcCsvHelper;
 import org.folio.bulkops.util.MarcDateHelper;
 import org.springframework.stereotype.Component;
 
@@ -56,6 +57,7 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
   private final BulkOperationRepository bulkOperationRepository;
   private final DataImportRestS3UploadClient dataImportRestS3UploadClient;
   private final ErrorService errorService;
+  private final MarcCsvHelper marcCsvHelper;
 
   public void updateMarcRecords(BulkOperation bulkOperation) throws IOException {
     try (var is = remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
@@ -71,6 +73,7 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
         bulkOperation.setDataImportJobProfileId(UUID.fromString(jobProfile.getId()));
       } else {
         bulkOperation.setLinkToCommittedRecordsMarcFile(null);
+        marcCsvHelper.enrichMarcAndCsvCommittedFiles(bulkOperation);
         bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, null));
         bulkOperation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(bulkOperation.getId()));
         bulkOperation.setCommittedNumOfWarnings(errorService.getCommittedNumOfWarnings(bulkOperation.getId()));
