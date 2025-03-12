@@ -14,17 +14,21 @@ import static org.folio.bulkops.util.Constants.LINE_BREAK;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import com.opencsv.exceptions.CsvValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.converter.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.service.Marc21ReferenceProvider;
 import org.folio.bulkops.service.MarcToUnifiedTableRowMapper;
 import org.folio.bulkops.service.NoteTableUpdater;
@@ -183,7 +187,7 @@ public class MarcCsvHelper {
         while (matchedFileIterator.hasNext()) {
           var instance = matchedFileIterator.next().getEntity();
           if (hrids.contains(instance.getHrid())) {
-            csvWriter.write(instance);
+            writeBeanToCsv(csvWriter, instance);
           }
         }
         if (nonNull(bulkOperation.getLinkToCommittedRecordsCsvFile())) {
@@ -202,6 +206,15 @@ public class MarcCsvHelper {
         }
         bulkOperation.setLinkToCommittedRecordsCsvFile(committedCsvFileName);
       }
+    }
+  }
+
+  private void writeBeanToCsv(BulkOperationsEntityCsvWriter writer, BulkOperationsEntity bean)
+    throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
+    try {
+      writer.write(bean);
+    } catch (ConverterException e) {
+      writeBeanToCsv(writer, bean);
     }
   }
 
