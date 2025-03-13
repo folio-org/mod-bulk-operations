@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
+import static org.folio.bulkops.util.Constants.CHANGED_MARC_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.MarcHelper.fetchInstanceUuidOrElseHrid;
@@ -32,9 +33,6 @@ import java.util.Date;
 @Log4j2
 @RequiredArgsConstructor
 public class MarcUpdateService {
-  public static final String CHANGED_MARC_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-%s.mrc";
-  public static final String CHANGED_MARC_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-CSV-%s.csv";
-
   private final BulkOperationExecutionRepository executionRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final MarcInstanceUpdateProcessor updateProcessor;

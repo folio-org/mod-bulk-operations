@@ -2,8 +2,8 @@ package org.folio.bulkops.service;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
 import static java.util.Objects.nonNull;
-import static org.folio.bulkops.service.MarcUpdateService.CHANGED_MARC_CSV_PATH_TEMPLATE;
-import static org.folio.bulkops.service.MarcUpdateService.CHANGED_MARC_PATH_TEMPLATE;
+import static org.folio.bulkops.util.Constants.CHANGED_MARC_CSV_PATH_TEMPLATE;
+import static org.folio.bulkops.util.Constants.CHANGED_MARC_PATH_TEMPLATE;
 
 import com.opencsv.CSVWriterBuilder;
 import lombok.RequiredArgsConstructor;

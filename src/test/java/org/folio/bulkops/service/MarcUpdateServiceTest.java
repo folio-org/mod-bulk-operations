@@ -2,7 +2,7 @@ package org.folio.bulkops.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
-import static org.folio.bulkops.service.MarcUpdateService.CHANGED_MARC_PATH_TEMPLATE;
+import static org.folio.bulkops.util.Constants.CHANGED_MARC_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;

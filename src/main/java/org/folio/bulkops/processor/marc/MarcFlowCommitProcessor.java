@@ -5,8 +5,8 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.io.FilenameUtils.getBaseName;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_HRID;
-import static org.folio.bulkops.service.MarcUpdateService.CHANGED_MARC_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.CHANGED_CSV_PATH_TEMPLATE;
+import static org.folio.bulkops.util.Constants.CHANGED_MARC_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.ENRICHED_PREFIX;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
 
