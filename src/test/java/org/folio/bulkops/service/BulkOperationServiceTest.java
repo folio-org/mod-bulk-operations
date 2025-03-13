@@ -1812,7 +1812,7 @@ class BulkOperationServiceTest extends BaseTest {
     bulkOperationService.commit(operation);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(1)).save(operationCaptor.capture());
+    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
     var lastCapture = operationCaptor.getValue();
     assertNull(lastCapture.getLinkToCommittedRecordsMarcFile());
     assertNull(lastCapture.getLinkToCommittedRecordsCsvFile());

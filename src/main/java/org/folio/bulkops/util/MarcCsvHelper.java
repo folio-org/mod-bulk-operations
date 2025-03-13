@@ -175,7 +175,6 @@ public class MarcCsvHelper {
 
   public void enrichCommittedCsvWithUpdatedMarcRecords(BulkOperation bulkOperation, List<String> csvHrids, List<String> marcHrids) {
     var hrids = CollectionUtils.subtract(marcHrids, csvHrids);
-    log.info("Hrids to be added to committed CSV: {}", hrids);
     if (!hrids.isEmpty() && nonNull(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
       var dirName = isNull(bulkOperation.getLinkToCommittedRecordsCsvFile()) ? bulkOperation.getId() : ENRICHED_PREFIX + bulkOperation.getId();
       var committedCsvFileName = CHANGED_CSV_PATH_TEMPLATE.formatted(dirName, LocalDate.now(), getBaseName(bulkOperation.getLinkToTriggeringCsvFile()));
@@ -220,8 +219,9 @@ public class MarcCsvHelper {
   }
 
   public void enrichCommittedMarcWithUpdatedInventoryRecords(BulkOperation bulkOperation, List<String> csvHrids, List<String> marcHrids) {
+    log.info("CSV hrids: {}, MARC hrids: {}", csvHrids, marcHrids);
     var hrids = CollectionUtils.subtract(csvHrids, marcHrids);
-    log.info("Hrids to be added to  committed MARC: {}", hrids);
+    log.info("Hrids to be added to MARC: {}", hrids);
     if (!hrids.isEmpty() && nonNull(bulkOperation.getLinkToMatchedRecordsMarcFile())) {
       var linkToCommitted = bulkOperation.getLinkToCommittedRecordsMarcFile();
       var dirName = isNull(linkToCommitted) ? bulkOperation.getId() : ENRICHED_PREFIX + bulkOperation.getId();
@@ -233,6 +233,7 @@ public class MarcCsvHelper {
         var streamWriter = new MarcStreamWriter(marcOutputStream, "UTF-8");
         while (marcReader.hasNext()) {
           var marcRecord = marcReader.next();
+          log.info("Marc record: {}", marcRecord.getControlNumber());
           if (hrids.contains(marcRecord.getControlNumber())) {
             streamWriter.write(marcRecord);
           }
