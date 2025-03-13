@@ -172,7 +172,9 @@ public class MarcCsvHelper {
     var csvHrids = getUpdatedInventoryInstanceHrids(bulkOperation);
     var marcHrids = getUpdatedMarcInstanceHrids(bulkOperation);
 
-    bulkOperation.setCommittedNumOfRecords(Set.of(csvHrids, marcHrids).size());
+    var updatedHrids = new HashSet<>(csvHrids);
+    updatedHrids.addAll(marcHrids);
+    bulkOperation.setCommittedNumOfRecords(updatedHrids.size());
 
     enrichCommittedCsvWithUpdatedMarcRecords(bulkOperation, csvHrids, marcHrids);
     enrichCommittedMarcWithUpdatedInventoryRecords(bulkOperation, csvHrids, marcHrids);
