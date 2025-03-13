@@ -530,7 +530,7 @@ public class BulkOperationService {
       executionRepository.save(execution);
     }
 
-    if (!INSTANCE_MARC.equals(operation.getEntityType()) || isEmpty(operation.getLinkToModifiedRecordsMarcFile())) {
+    if (!INSTANCE_MARC.equals(operation.getEntityType()) || !hasMarcRules) {
       operation.setProcessedNumOfRecords(operation.getCommittedNumOfRecords());
       operation.setEndTime(LocalDateTime.now());
 
