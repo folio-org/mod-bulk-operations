@@ -530,8 +530,9 @@ public class BulkOperationService {
       executionRepository.save(execution);
     }
 
+    operation.setProcessedNumOfRecords(operation.getCommittedNumOfRecords());
+
     if (!INSTANCE_MARC.equals(operation.getEntityType()) || !hasMarcRules) {
-      operation.setProcessedNumOfRecords(operation.getCommittedNumOfRecords());
       operation.setEndTime(LocalDateTime.now());
 
       var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operationId, ERROR_COMMITTING_FILE_NAME_PREFIX, null);

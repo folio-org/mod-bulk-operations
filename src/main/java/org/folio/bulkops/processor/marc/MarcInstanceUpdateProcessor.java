@@ -73,12 +73,13 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
         bulkOperation.setDataImportJobProfileId(UUID.fromString(jobProfile.getId()));
       } else {
         bulkOperation.setLinkToCommittedRecordsMarcFile(null);
-        marcCsvHelper.enrichMarcAndCsvCommittedFiles(bulkOperation);
+        bulkOperation.setTotalNumOfRecords(bulkOperation.getMatchedNumOfRecords());
         bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, null));
         bulkOperation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(bulkOperation.getId()));
         bulkOperation.setCommittedNumOfWarnings(errorService.getCommittedNumOfWarnings(bulkOperation.getId()));
         bulkOperation.setEndTime(LocalDateTime.now());
         bulkOperation.setStatus(isEmpty(bulkOperation.getLinkToCommittedRecordsErrorsCsvFile()) ? COMPLETED : COMPLETED_WITH_ERRORS);
+        marcCsvHelper.enrichMarcAndCsvCommittedFiles(bulkOperation);
       }
       bulkOperationRepository.save(bulkOperation);
     }
