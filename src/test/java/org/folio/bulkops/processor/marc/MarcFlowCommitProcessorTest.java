@@ -1,8 +1,8 @@
-package org.folio.bulkops.util;
+package org.folio.bulkops.processor.marc;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.bulkops.util.MarcFlowCommitHelper.ENRICHED_PREFIX;
+import static org.folio.bulkops.util.Constants.ENRICHED_PREFIX;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,11 +21,11 @@ import java.io.SequenceInputStream;
 import java.io.StringWriter;
 import java.util.UUID;
 
-class MarcFlowCommitHelperTest extends BaseTest {
+class MarcFlowCommitProcessorTest extends BaseTest {
   @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
   @Autowired
-  private MarcFlowCommitHelper marcFlowCommitHelper;
+  private MarcFlowCommitProcessor marcFlowCommitProcessor;
 
   @Test
   @SneakyThrows
@@ -46,9 +46,9 @@ class MarcFlowCommitHelperTest extends BaseTest {
     when(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile()))
       .thenReturn(new FileInputStream("src/test/resources/files/matched_marc_instances.json"));
 
-    var csvHrids = marcFlowCommitHelper.getUpdatedInventoryInstanceHrids(bulkOperation);
-    var marcHrids = marcFlowCommitHelper.getUpdatedMarcInstanceHrids(bulkOperation);
-    marcFlowCommitHelper.enrichCommittedCsvWithUpdatedMarcRecords(bulkOperation, csvHrids, marcHrids);
+    var csvHrids = marcFlowCommitProcessor.getUpdatedInventoryInstanceHrids(bulkOperation);
+    var marcHrids = marcFlowCommitProcessor.getUpdatedMarcInstanceHrids(bulkOperation);
+    marcFlowCommitProcessor.enrichCommittedCsvWithUpdatedMarcRecords(bulkOperation, csvHrids, marcHrids);
 
     var contentCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
@@ -79,7 +79,7 @@ class MarcFlowCommitHelperTest extends BaseTest {
     when(remoteFileSystemClient.writer(anyString()))
       .thenReturn(writer);
 
-    marcFlowCommitHelper.enrichCommittedCsvWithUpdatedMarcRecords(bulkOperation, singletonList("hrid1"), singletonList("hrid3"));
+    marcFlowCommitProcessor.enrichCommittedCsvWithUpdatedMarcRecords(bulkOperation, singletonList("hrid1"), singletonList("hrid3"));
 
     assertThat(bulkOperation.getLinkToCommittedRecordsCsvFile()).isNotNull();
     var expectedCsvContent = """
@@ -108,7 +108,7 @@ class MarcFlowCommitHelperTest extends BaseTest {
     when(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile()))
       .thenReturn(new FileInputStream("src/test/resources/files/matched_marc_records.mrc"));
 
-    marcFlowCommitHelper.enrichCommittedMarcWithUpdatedInventoryRecords(bulkOperation, singletonList("hrid1"), singletonList("hrid3"));
+    marcFlowCommitProcessor.enrichCommittedMarcWithUpdatedInventoryRecords(bulkOperation, singletonList("hrid1"), singletonList("hrid3"));
 
     var contentCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
@@ -135,9 +135,9 @@ class MarcFlowCommitHelperTest extends BaseTest {
     when(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile()))
       .thenReturn(new FileInputStream("src/test/resources/files/matched_marc_records.mrc"));
 
-    var csvHrids = marcFlowCommitHelper.getUpdatedInventoryInstanceHrids(bulkOperation);
-    var marcHrids = marcFlowCommitHelper.getUpdatedMarcInstanceHrids(bulkOperation);
-    marcFlowCommitHelper.enrichCommittedMarcWithUpdatedInventoryRecords(bulkOperation, csvHrids, marcHrids);
+    var csvHrids = marcFlowCommitProcessor.getUpdatedInventoryInstanceHrids(bulkOperation);
+    var marcHrids = marcFlowCommitProcessor.getUpdatedMarcInstanceHrids(bulkOperation);
+    marcFlowCommitProcessor.enrichCommittedMarcWithUpdatedInventoryRecords(bulkOperation, csvHrids, marcHrids);
 
     assertThat(bulkOperation.getLinkToCommittedRecordsMarcFile()).isNotNull();
 

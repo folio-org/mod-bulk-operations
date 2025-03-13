@@ -21,6 +21,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORD
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
+import static org.folio.bulkops.util.Constants.CHANGED_CSV_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
@@ -161,7 +162,7 @@ public class BulkOperationService {
   private static final String PREVIEW_MARC_PATH_TEMPLATE = "%s/%s-Updates-Preview-MARC-%s.mrc";
   private static final String PREVIEW_MARC_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-MARC-CSV-%s.csv";
   private static final String CHANGED_JSON_PATH_TEMPLATE = "%s/json/%s-Changed-Records-%s.json";
-  public static final String CHANGED_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-CSV-%s.csv";
+
   public static final String TMP_MATCHED_JSON_PATH_TEMPLATE = "%s/json/tmp-matched.json";
 
   private final ExecutorService executor = Executors.newCachedThreadPool();

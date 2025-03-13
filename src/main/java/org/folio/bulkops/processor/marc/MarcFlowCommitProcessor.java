@@ -1,12 +1,13 @@
-package org.folio.bulkops.util;
+package org.folio.bulkops.processor.marc;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.io.FilenameUtils.getBaseName;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_HRID;
-import static org.folio.bulkops.service.BulkOperationService.CHANGED_CSV_PATH_TEMPLATE;
 import static org.folio.bulkops.service.MarcUpdateService.CHANGED_MARC_PATH_TEMPLATE;
+import static org.folio.bulkops.util.Constants.CHANGED_CSV_PATH_TEMPLATE;
+import static org.folio.bulkops.util.Constants.ENRICHED_PREFIX;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
 
 import com.fasterxml.jackson.core.JsonFactory;
@@ -25,6 +26,8 @@ import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.converter.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.ConverterException;
+import org.folio.bulkops.util.CSVHelper;
+import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
 import org.marc4j.MarcStreamReader;
 import org.marc4j.MarcStreamWriter;
 import org.springframework.stereotype.Service;
@@ -43,9 +46,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Log4j2
-public class MarcFlowCommitHelper {
-  public static final String ENRICHED_PREFIX = "enriched-";
-
+public class MarcFlowCommitProcessor {
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final ObjectMapper objectMapper;
 

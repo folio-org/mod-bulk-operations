@@ -11,7 +11,7 @@ import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.folio.bulkops.util.MarcFlowCommitHelper;
+import org.folio.bulkops.processor.marc.MarcFlowCommitProcessor;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 
@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
 public class BulkOperationServiceHelper {
   private final BulkOperationRepository bulkOperationRepository;
   private final ErrorService errorService;
-  private final MarcFlowCommitHelper marcFlowCommitHelper;
+  private final MarcFlowCommitProcessor marcFlowCommitProcessor;
   private final LogFilesService logFilesService;
 
   public void completeBulkOperation(BulkOperation bulkOperation) {
@@ -32,7 +32,7 @@ public class BulkOperationServiceHelper {
     }
     bulkOperation.setStatus(isEmpty(bulkOperation.getLinkToCommittedRecordsErrorsCsvFile()) ? COMPLETED : COMPLETED_WITH_ERRORS);
     if (INSTANCE_MARC.equals(bulkOperation.getEntityType())) {
-      marcFlowCommitHelper.processMarcFlowCommitResult(bulkOperation);
+      marcFlowCommitProcessor.processMarcFlowCommitResult(bulkOperation);
     }
     bulkOperation.setProcessedNumOfRecords(bulkOperation.getCommittedNumOfRecords());
     bulkOperation.setEndTime(LocalDateTime.now());
