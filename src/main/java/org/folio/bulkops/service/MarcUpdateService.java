@@ -1,14 +1,11 @@
 package org.folio.bulkops.service;
 
-import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
-import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.MarcHelper.fetchInstanceUuidOrElseHrid;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
@@ -43,7 +40,7 @@ public class MarcUpdateService {
   private final MarcInstanceUpdateProcessor updateProcessor;
   private final ErrorService errorService;
   private final BulkOperationRepository bulkOperationRepository;
-  private final ObjectMapper objectMapper;
+  private final BulkOperationServiceHelper bulkOperationServiceHelper;
 
   @Transactional
   public void commitForInstanceMarc(BulkOperation bulkOperation) {
@@ -69,13 +66,9 @@ public class MarcUpdateService {
         execution = execution
           .withStatus(StatusType.FAILED)
           .withEndTime(LocalDateTime.now());
-        bulkOperation.setStatus(FAILED);
-        bulkOperation.setEndTime(LocalDateTime.now());
-        bulkOperation.setErrorMessage(e.getMessage());
         var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, bulkOperation.getErrorMessage());
         bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
-        bulkOperation.setLinkToCommittedRecordsMarcFile(null);
-        bulkOperationRepository.save(bulkOperation);
+        bulkOperationServiceHelper.failCommit(bulkOperation, e);
       }
       executionRepository.save(execution);
     } else {

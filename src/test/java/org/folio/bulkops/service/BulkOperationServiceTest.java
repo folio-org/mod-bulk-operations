@@ -329,7 +329,8 @@ class BulkOperationServiceTest extends BaseTest {
   @SneakyThrows
   void shouldThrowExceptionIfOperationIdIsNull() {
     var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/modified-user.csv").readAllBytes());
-    assertThrows(NotFoundException.class, () -> bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, true, null, UUID.randomUUID(), file));
+    var bulkOperationId = UUID.randomUUID();
+    assertThrows(NotFoundException.class, () -> bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, true, null, bulkOperationId, file));
   }
 
   @ParameterizedTest
@@ -1365,7 +1366,7 @@ class BulkOperationServiceTest extends BaseTest {
     assertThat(updatedExecution.getStatus(), equalTo(StatusType.FAILED));
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
+    verify(bulkOperationRepository, times(3)).save(operationCaptor.capture());
     var secondCapture = operationCaptor.getAllValues().get(1);
     assertThat(secondCapture.getStatus(), equalTo(OperationStatusType.FAILED));
     assertThat(secondCapture.getEndTime(), notNullValue());

@@ -48,8 +48,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
@@ -166,9 +168,12 @@ public class MarcCsvHelper {
     }
   }
 
-  public void enrichMarcAndCsvCommittedFiles(BulkOperation bulkOperation) {
+  public void processMarcFlowCommitResult(BulkOperation bulkOperation) {
     var csvHrids = getUpdatedInventoryInstanceHrids(bulkOperation);
     var marcHrids = getUpdatedMarcInstanceHrids(bulkOperation);
+
+    bulkOperation.setCommittedNumOfRecords(Set.of(csvHrids, marcHrids).size());
+
     enrichCommittedCsvWithUpdatedMarcRecords(bulkOperation, csvHrids, marcHrids);
     enrichCommittedMarcWithUpdatedInventoryRecords(bulkOperation, csvHrids, marcHrids);
   }

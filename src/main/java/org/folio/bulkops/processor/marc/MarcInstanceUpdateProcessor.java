@@ -3,9 +3,6 @@ package org.folio.bulkops.processor.marc;
 import static java.lang.Boolean.TRUE;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
-import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
-import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.MARC;
 
 import lombok.RequiredArgsConstructor;
@@ -32,13 +29,11 @@ import org.folio.bulkops.domain.bean.UploadFileDefinitionProcessFiles;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.processor.MarcUpdateProcessor;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.folio.bulkops.service.ErrorService;
-import org.folio.bulkops.util.MarcCsvHelper;
+import org.folio.bulkops.service.BulkOperationServiceHelper;
 import org.folio.bulkops.util.MarcDateHelper;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -56,8 +51,7 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final BulkOperationRepository bulkOperationRepository;
   private final DataImportRestS3UploadClient dataImportRestS3UploadClient;
-  private final ErrorService errorService;
-  private final MarcCsvHelper marcCsvHelper;
+  private final BulkOperationServiceHelper bulkOperationServiceHelper;
 
   public void updateMarcRecords(BulkOperation bulkOperation) throws IOException {
     try (var is = remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
@@ -71,17 +65,11 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
             .build(),
           uploadDefinition.getId());
         bulkOperation.setDataImportJobProfileId(UUID.fromString(jobProfile.getId()));
+        bulkOperationRepository.save(bulkOperation);
       } else {
         bulkOperation.setLinkToCommittedRecordsMarcFile(null);
-        bulkOperation.setTotalNumOfRecords(bulkOperation.getMatchedNumOfRecords());
-        bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(errorService.uploadErrorsToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, null));
-        bulkOperation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(bulkOperation.getId()));
-        bulkOperation.setCommittedNumOfWarnings(errorService.getCommittedNumOfWarnings(bulkOperation.getId()));
-        bulkOperation.setEndTime(LocalDateTime.now());
-        bulkOperation.setStatus(isEmpty(bulkOperation.getLinkToCommittedRecordsErrorsCsvFile()) ? COMPLETED : COMPLETED_WITH_ERRORS);
-        marcCsvHelper.enrichMarcAndCsvCommittedFiles(bulkOperation);
+        bulkOperationServiceHelper.completeBulkOperation(bulkOperation);
       }
-      bulkOperationRepository.save(bulkOperation);
     }
   }
 

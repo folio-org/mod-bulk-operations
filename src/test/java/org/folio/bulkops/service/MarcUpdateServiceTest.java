@@ -159,7 +159,7 @@ class MarcUpdateServiceTest extends BaseTest {
     verify(executionRepository, times(2)).save(executionArgumentCaptor.capture());
     assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus()).isEqualTo(StatusType.FAILED);
 
-    verify(bulkOperationRepository, times(2)).save(bulkOperationArgumentCaptor.capture());
+    verify(bulkOperationRepository, times(3)).save(bulkOperationArgumentCaptor.capture());
     assertThat(bulkOperationArgumentCaptor.getValue().getStatus()).isEqualTo(FAILED);
   }
 }
