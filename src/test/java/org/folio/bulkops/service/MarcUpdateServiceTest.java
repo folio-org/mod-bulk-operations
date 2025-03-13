@@ -86,9 +86,6 @@ class MarcUpdateServiceTest extends BaseTest {
 
     marcUpdateService.commitForInstanceMarc(bulkOperation);
 
-    verify(updateProcessor).updateMarcRecords(bulkOperationArgumentCaptor.capture());
-    assertThat(bulkOperationArgumentCaptor.getValue().getLinkToCommittedRecordsMarcFile()).isNull();
-
     verify(executionRepository, times(2)).save(executionArgumentCaptor.capture());
     assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus()).isEqualTo(StatusType.COMPLETED);
 

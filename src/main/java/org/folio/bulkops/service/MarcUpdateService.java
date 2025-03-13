@@ -61,12 +61,6 @@ public class MarcUpdateService {
       try {
         bulkOperation.setLinkToCommittedRecordsMarcFile(prepareCommittedFile(bulkOperation));
         updateProcessor.updateMarcRecords(bulkOperation);
-        var path = bulkOperation.getLinkToCommittedRecordsMarcFile();
-        if (nonNull(path)) {
-          remoteFileSystemClient.remove(path);
-          bulkOperation.setLinkToCommittedRecordsMarcFile(null);
-        }
-        bulkOperationRepository.save(bulkOperation);
         execution = execution
           .withStatus(StatusType.COMPLETED)
           .withEndTime(LocalDateTime.now());

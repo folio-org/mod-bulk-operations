@@ -176,7 +176,7 @@ public class MarcCsvHelper {
   public void enrichCommittedCsvWithUpdatedMarcRecords(BulkOperation bulkOperation, List<String> csvHrids, List<String> marcHrids) {
     var hrids = CollectionUtils.subtract(marcHrids, csvHrids);
     if (!hrids.isEmpty() && nonNull(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
-      var dirName = isNull(bulkOperation.getLinkToCommittedRecordsCsvFile()) ? bulkOperation.getId() : ENRICHED_PREFIX + bulkOperation.getId();
+      var dirName = isNull(bulkOperation.getLinkToCommittedRecordsCsvFile()) ? bulkOperation.getId().toString() : ENRICHED_PREFIX + bulkOperation.getId();
       var committedCsvFileName = CHANGED_CSV_PATH_TEMPLATE.formatted(dirName, LocalDate.now(), getBaseName(bulkOperation.getLinkToTriggeringCsvFile()));
       try (var matchedFileReader = new InputStreamReader(new BufferedInputStream(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())));
            var writer = isNull(bulkOperation.getLinkToCommittedRecordsCsvFile()) ?

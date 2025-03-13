@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
@@ -54,6 +55,11 @@ public class SrsService {
     var committedRecordsMarcFile = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(), LocalDate.now(), triggeringFileName);
     var committedRecordsMarcCsvFile = String.format(CHANGED_MARC_CSV_PATH_TEMPLATE, bulkOperation.getId(), LocalDate.now(), triggeringFileName);
     if (!instanceIds.isEmpty()) {
+      var path = bulkOperation.getLinkToCommittedRecordsMarcFile();
+      if (nonNull(path)) {
+        remoteFileSystemClient.remove(path);
+        bulkOperation.setLinkToCommittedRecordsMarcFile(null);
+      }
       try (var writer = remoteFileSystemClient.marcWriter(committedRecordsMarcFile);
            var csvWriter = new CSVWriterBuilder(remoteFileSystemClient.writer(committedRecordsMarcCsvFile))
              .withSeparator(DEFAULT_SEPARATOR).build();) {
