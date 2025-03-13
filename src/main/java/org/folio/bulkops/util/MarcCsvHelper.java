@@ -219,12 +219,10 @@ public class MarcCsvHelper {
   }
 
   public void enrichCommittedMarcWithUpdatedInventoryRecords(BulkOperation bulkOperation, List<String> csvHrids, List<String> marcHrids) {
-    log.info("CSV hrids: {}, MARC hrids: {}", csvHrids, marcHrids);
     var hrids = CollectionUtils.subtract(csvHrids, marcHrids);
-    log.info("Hrids to be added to MARC: {}", hrids);
     if (!hrids.isEmpty() && nonNull(bulkOperation.getLinkToMatchedRecordsMarcFile())) {
       var linkToCommitted = bulkOperation.getLinkToCommittedRecordsMarcFile();
-      var dirName = isNull(linkToCommitted) ? bulkOperation.getId() : ENRICHED_PREFIX + bulkOperation.getId();
+      var dirName = isNull(linkToCommitted) ? bulkOperation.getId().toString() : ENRICHED_PREFIX + bulkOperation.getId();
       var committedMarcFileName = CHANGED_MARC_PATH_TEMPLATE.formatted(dirName, LocalDate.now(), getBaseName(bulkOperation.getLinkToTriggeringCsvFile()));
       try (var matchedMarcInputStream = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile());
            var committedMarcInputStream = isNull(linkToCommitted) ? null : remoteFileSystemClient.get(linkToCommitted);
@@ -233,7 +231,6 @@ public class MarcCsvHelper {
         var streamWriter = new MarcStreamWriter(marcOutputStream, "UTF-8");
         while (marcReader.hasNext()) {
           var marcRecord = marcReader.next();
-          log.info("Marc record: {}", marcRecord.getControlNumber());
           if (hrids.contains(marcRecord.getControlNumber())) {
             streamWriter.write(marcRecord);
           }
