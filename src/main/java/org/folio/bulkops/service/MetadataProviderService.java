@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static java.lang.Boolean.TRUE;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.domain.bean.JobLogEntry.ActionStatus.UPDATED;
@@ -8,7 +9,6 @@ import static org.folio.bulkops.domain.dto.DataImportStatus.CANCELLED;
 import static org.folio.bulkops.domain.dto.DataImportStatus.COMMITTED;
 import static org.folio.bulkops.domain.dto.DataImportStatus.ERROR;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.DataImportClient;
@@ -78,7 +78,6 @@ public class MetadataProviderService {
   }
 
   public List<String> fetchUpdatedInstanceIds(List<JobLogEntry> logEntries) {
-    log.info("Log entries ({}): {}", logEntries.size(), logEntries);
     return logEntries.stream()
       .filter(entry -> UPDATED.equals(entry.getSourceRecordActionStatus()))
       .map(JobLogEntry::getRelatedInstanceInfo)
@@ -102,7 +101,7 @@ public class MetadataProviderService {
       var expectedJobLogEntriesNumber = jobExecution.getProgress().getTotal();
       while (retryCounter < GET_JOB_LOG_ENTRIES_MAX_RETRIES) {
         totalJobLogEntries = metadataProviderClient.getJobLogEntries(jobExecutionId, 1).getTotalRecords();
-        log.info("Get log entries attempt #{}, total job log entries: {}, expected value: {}", retryCounter, totalJobLogEntries, expectedJobLogEntriesNumber);
+        log.info("Get log entries number attempt #{}, total job log entries: {}, expected value: {}", retryCounter, totalJobLogEntries, expectedJobLogEntriesNumber);
         if (totalJobLogEntries == expectedJobLogEntriesNumber) {
           break;
         } else {
@@ -134,12 +133,29 @@ public class MetadataProviderService {
   }
 
   private List<JobLogEntry> getEntries(BulkOperation bulkOperation, String jobExecutionId, int offset, int limit) {
+    List<JobLogEntry> entries = new ArrayList<>();
     try {
-      return metadataProviderClient.getJobLogEntries(jobExecutionId, offset, limit).getEntries();
+      var retryCounter = 0;
+      while (retryCounter < GET_JOB_LOG_ENTRIES_MAX_RETRIES) {
+        entries = metadataProviderClient.getJobLogEntries(jobExecutionId, offset, limit).getEntries();
+        var hasNullStatuses = entries.stream().anyMatch(entry -> isNull(entry.getSourceRecordActionStatus()));
+        log.info("Get log entries attempt #{}, has null statuses: {}", retryCounter, hasNullStatuses);
+        if (hasNullStatuses) {
+          if (++retryCounter == GET_JOB_LOG_ENTRIES_MAX_RETRIES) {
+            log.info("Null statuses are present after {} retries", retryCounter);
+          } else {
+            Thread.sleep(GET_JOB_LOG_ENTRIES_RETRY_TIMEOUT);
+          }
+        } else {
+          break;
+        }
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
     } catch (Exception e) {
       log.error("Failed to get chunk offset={}, limit={}, reason: {}", offset, limit, e.getMessage());
       errorService.saveError(bulkOperation.getId(), EMPTY, MSG_FAILED_TO_GET_LOG_ENTRIES_CHUNK.formatted(limit, e.getMessage()), ErrorType.ERROR);
-      return Collections.emptyList();
     }
+    return entries;
   }
 }
