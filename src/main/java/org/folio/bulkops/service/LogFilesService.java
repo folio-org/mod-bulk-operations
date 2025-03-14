@@ -37,14 +37,14 @@ public class LogFilesService {
     log.info("Found {} old bulk operations to clear files.", oldOperations.size());
     oldOperations.forEach(bulkOperation -> {
       bulkOperation.setExpired(true);
-      removeFiles(bulkOperation);
+      removeCommittedFiles(bulkOperation);
       bulkOperationRepository.save(bulkOperation);
       log.info("Bulk operation with id {} is older than {} days. All files were removed.",
         bulkOperation.getId(), MIN_DAYS_TO_CLEAR_LOG_FILES);
     });
   }
 
-  private void removeFiles(BulkOperation bulkOperation) {
+  public void removeCommittedFiles(BulkOperation bulkOperation) {
     removeTriggeringAndMatchedRecordsFiles(bulkOperation);
     removeModifiedFiles(bulkOperation);
     if (isNotEmpty(bulkOperation.getLinkToCommittedRecordsJsonFile())) {

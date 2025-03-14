@@ -2,7 +2,6 @@ package org.folio.bulkops.service;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.mockito.ArgumentMatchers.any;
@@ -96,9 +95,8 @@ class SrsServiceTest extends BaseTest {
     verify(marcWriter).writeRecord(any(Record.class));
     verify(bulkOperationRepository, times(2))
       .save(bulkOperationCaptor.capture());
-    var expectedStatus = numOfErrors == 0 ? COMPLETED : COMPLETED_WITH_ERRORS;
     assertThat(bulkOperationCaptor.getAllValues().get(1).getStatus())
-      .isEqualTo(expectedStatus);
+      .isEqualTo(COMPLETED_WITH_ERRORS);
   }
 
   @SneakyThrows

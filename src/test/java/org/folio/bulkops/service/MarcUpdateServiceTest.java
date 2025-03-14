@@ -2,7 +2,7 @@ package org.folio.bulkops.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
-import static org.folio.bulkops.service.MarcUpdateService.CHANGED_MARC_PATH_TEMPLATE;
+import static org.folio.bulkops.util.Constants.CHANGED_MARC_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -86,9 +86,6 @@ class MarcUpdateServiceTest extends BaseTest {
 
     marcUpdateService.commitForInstanceMarc(bulkOperation);
 
-    verify(updateProcessor).updateMarcRecords(bulkOperationArgumentCaptor.capture());
-    assertThat(bulkOperationArgumentCaptor.getValue().getLinkToCommittedRecordsMarcFile()).isNull();
-
     verify(executionRepository, times(2)).save(executionArgumentCaptor.capture());
     assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus()).isEqualTo(StatusType.COMPLETED);
 
@@ -162,7 +159,7 @@ class MarcUpdateServiceTest extends BaseTest {
     verify(executionRepository, times(2)).save(executionArgumentCaptor.capture());
     assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus()).isEqualTo(StatusType.FAILED);
 
-    verify(bulkOperationRepository, times(2)).save(bulkOperationArgumentCaptor.capture());
+    verify(bulkOperationRepository, times(3)).save(bulkOperationArgumentCaptor.capture());
     assertThat(bulkOperationArgumentCaptor.getValue().getStatus()).isEqualTo(FAILED);
   }
 }

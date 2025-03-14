@@ -80,4 +80,8 @@ public class Constants {
   public static final String ERROR_COMMITTING_FILE_NAME_PREFIX = "-Committing-changes-Errors-";
   public static final String ERROR_MATCHING_FILE_NAME_PREFIX = "-Matching-Records-Errors-";
   public static final String ERROR_FILE_NAME_ENDING = "-Errors.csv";
+  public static final String ENRICHED_PREFIX = "enriched-";
+  public static final String CHANGED_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-CSV-%s.csv";
+  public static final String CHANGED_MARC_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-%s.mrc";
+  public static final String CHANGED_MARC_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-CSV-%s.csv";
 }
