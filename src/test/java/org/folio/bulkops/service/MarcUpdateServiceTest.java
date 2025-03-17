@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -130,7 +131,7 @@ class MarcUpdateServiceTest extends BaseTest {
 
   @Test
   @SneakyThrows
-  void shouldFailOperationInCaseOfException() {
+  void shouldFailOperationInCaseOfIOException() {
     var bulkOperation = BulkOperation.builder()
       .id(UUID.randomUUID())
       .linkToTriggeringCsvFile("triggering.csv")
@@ -143,7 +144,7 @@ class MarcUpdateServiceTest extends BaseTest {
     var pathToCommittedMarcFile = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(), LocalDate.now(), "triggering");
 
     var mockMarcWriter = mock(MarcRemoteStorageWriter.class);
-    doThrow(new IllegalArgumentException())
+    doThrow(new IOException())
       .when(mockMarcWriter).writeRecord(any(Record.class));
     when(executionRepository.save(any(BulkOperationExecution.class)))
       .thenReturn(execution);

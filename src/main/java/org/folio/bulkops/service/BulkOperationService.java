@@ -519,8 +519,6 @@ public class BulkOperationService {
         execution = execution
           .withStatus(StatusType.FAILED)
           .withEndTime(LocalDateTime.now());
-        var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, operation.getErrorMessage());
-        operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
         bulkOperationServiceHelper.failCommit(operation, e);
       }
       executionRepository.save(execution);

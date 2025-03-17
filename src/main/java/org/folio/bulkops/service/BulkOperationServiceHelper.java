@@ -32,7 +32,7 @@ public class BulkOperationServiceHelper {
     }
     bulkOperation.setStatus(isEmpty(bulkOperation.getLinkToCommittedRecordsErrorsCsvFile()) ? COMPLETED : COMPLETED_WITH_ERRORS);
     if (INSTANCE_MARC.equals(bulkOperation.getEntityType())) {
-      marcFlowCommitProcessor.processMarcFlowCommitResult(bulkOperation);
+      marcFlowCommitProcessor.processCommit(bulkOperation);
     }
     bulkOperation.setProcessedNumOfRecords(bulkOperation.getCommittedNumOfRecords());
     bulkOperation.setEndTime(LocalDateTime.now());
@@ -42,6 +42,8 @@ public class BulkOperationServiceHelper {
   public void failCommit(BulkOperation bulkOperation, Exception e) {
     logFilesService.removeCommittedFiles(bulkOperation);
     bulkOperation.setErrorMessage(e.getMessage());
+    var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, bulkOperation.getErrorMessage());
+    bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
     bulkOperation.setStatus(FAILED);
     bulkOperation.setEndTime(LocalDateTime.now());
     bulkOperationRepository.save(bulkOperation);

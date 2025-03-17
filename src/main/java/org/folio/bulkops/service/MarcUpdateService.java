@@ -59,13 +59,11 @@ public class MarcUpdateService {
         execution = execution
           .withStatus(StatusType.COMPLETED)
           .withEndTime(LocalDateTime.now());
-      } catch (Exception e) {
+      } catch (IOException e) {
         log.error("Error while updating marc file", e);
         execution = execution
           .withStatus(StatusType.FAILED)
           .withEndTime(LocalDateTime.now());
-        var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, bulkOperation.getErrorMessage());
-        bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
         bulkOperationServiceHelper.failCommit(bulkOperation, e);
       }
       executionRepository.save(execution);

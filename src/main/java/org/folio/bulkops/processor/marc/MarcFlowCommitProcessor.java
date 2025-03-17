@@ -26,6 +26,7 @@ import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.converter.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.ConverterException;
+import org.folio.bulkops.processor.CommitProcessor;
 import org.folio.bulkops.util.CSVHelper;
 import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
 import org.marc4j.MarcStreamReader;
@@ -46,11 +47,12 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Log4j2
-public class MarcFlowCommitProcessor {
+public class MarcFlowCommitProcessor implements CommitProcessor {
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final ObjectMapper objectMapper;
 
-  public void processMarcFlowCommitResult(BulkOperation bulkOperation) {
+  @Override
+  public void processCommit(BulkOperation bulkOperation) {
     var csvHrids = getUpdatedInventoryInstanceHrids(bulkOperation);
     var marcHrids = getUpdatedMarcInstanceHrids(bulkOperation);
 
@@ -86,14 +88,15 @@ public class MarcFlowCommitProcessor {
             remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsCsvFile()),
             new ByteArrayInputStream(appendedCsvRecords.getBytes()));
           remoteFileSystemClient.put(appendedCsvStream, committedCsvFileName);
+          remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsCsvFile());
+          bulkOperation.setLinkToCommittedRecordsCsvFile(committedCsvFileName);
         }
-      } catch (Exception e) {
-        log.error("Failed to enrich csv file", e);
-      } finally {
         if (nonNull(bulkOperation.getLinkToCommittedRecordsCsvFile())) {
           remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsCsvFile());
         }
         bulkOperation.setLinkToCommittedRecordsCsvFile(committedCsvFileName);
+      } catch (IOException | CsvRequiredFieldEmptyException | CsvDataTypeMismatchException e) {
+        log.error("Failed to enrich csv file", e);
       }
     }
   }
@@ -129,13 +132,12 @@ public class MarcFlowCommitProcessor {
           appendedMarcStream :
           new SequenceInputStream(committedMarcInputStream, appendedMarcStream);
         remoteFileSystemClient.put(committedMarcStream, committedMarcFileName);
-      } catch (Exception e) {
-        log.error("Failed to enrich marc file", e);
-      } finally {
         if (nonNull(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
           remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsMarcFile());
         }
         bulkOperation.setLinkToCommittedRecordsMarcFile(committedMarcFileName);
+      } catch (IOException e) {
+        log.error("Failed to enrich marc file", e);
       }
     }
   }
