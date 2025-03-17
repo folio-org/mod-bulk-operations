@@ -2,7 +2,7 @@ package org.folio.bulkops.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
-import static org.folio.bulkops.service.MarcUpdateService.CHANGED_MARC_PATH_TEMPLATE;
+import static org.folio.bulkops.util.Constants.CHANGED_MARC_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -86,9 +87,6 @@ class MarcUpdateServiceTest extends BaseTest {
 
     marcUpdateService.commitForInstanceMarc(bulkOperation);
 
-    verify(updateProcessor).updateMarcRecords(bulkOperationArgumentCaptor.capture());
-    assertThat(bulkOperationArgumentCaptor.getValue().getLinkToCommittedRecordsMarcFile()).isNull();
-
     verify(executionRepository, times(2)).save(executionArgumentCaptor.capture());
     assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus()).isEqualTo(StatusType.COMPLETED);
 
@@ -133,7 +131,7 @@ class MarcUpdateServiceTest extends BaseTest {
 
   @Test
   @SneakyThrows
-  void shouldFailOperationInCaseOfException() {
+  void shouldFailOperationInCaseOfIOException() {
     var bulkOperation = BulkOperation.builder()
       .id(UUID.randomUUID())
       .linkToTriggeringCsvFile("triggering.csv")
@@ -146,7 +144,7 @@ class MarcUpdateServiceTest extends BaseTest {
     var pathToCommittedMarcFile = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(), LocalDate.now(), "triggering");
 
     var mockMarcWriter = mock(MarcRemoteStorageWriter.class);
-    doThrow(new IllegalArgumentException())
+    doThrow(new IOException())
       .when(mockMarcWriter).writeRecord(any(Record.class));
     when(executionRepository.save(any(BulkOperationExecution.class)))
       .thenReturn(execution);
@@ -162,7 +160,7 @@ class MarcUpdateServiceTest extends BaseTest {
     verify(executionRepository, times(2)).save(executionArgumentCaptor.capture());
     assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus()).isEqualTo(StatusType.FAILED);
 
-    verify(bulkOperationRepository, times(2)).save(bulkOperationArgumentCaptor.capture());
+    verify(bulkOperationRepository, times(3)).save(bulkOperationArgumentCaptor.capture());
     assertThat(bulkOperationArgumentCaptor.getValue().getStatus()).isEqualTo(FAILED);
   }
 }

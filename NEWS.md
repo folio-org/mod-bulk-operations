@@ -1,3 +1,49 @@
+* ## v2.2.0 - Released 2025/03/13
+
+This release contains new functionality for errors handling and MARC operations, bugfixes, dependencies upgrading and migration to Java 21.
+
+### Technical tasks
+* [MODBULKOPS-482](https://folio-org.atlassian.net/browse/MODBULKOPS-482) Update to mod-bulk-operations Java 21
+* [MODBULKOPS-468](https://folio-org.atlassian.net/browse/MODBULKOPS-468) Improvement of data import errors saving
+* [MODBULKOPS-459](https://folio-org.atlassian.net/browse/MODBULKOPS-459) TD: fix unstable testReceiveJobExecutionUpdate unit test
+* [MODBULKOPS-456](https://folio-org.atlassian.net/browse/MODBULKOPS-456) Files downloading improvement
+* [MODBULKOPS-451](https://folio-org.atlassian.net/browse/MODBULKOPS-451) Rework errors preview
+* [MODBULKOPS-433](https://folio-org.atlassian.net/browse/MODBULKOPS-433) Optimisation of memory utilization
+* [MODBULKOPS-424](https://folio-org.atlassian.net/browse/MODBULKOPS-424) Check Data import profile creation and  update mod bulk operation data import job profile
+* [MODBULKOPS-412](https://folio-org.atlassian.net/browse/MODBULKOPS-412) Add UTF-8 BOM to Exported csv Files
+* [MODBULKOPS-406](https://folio-org.atlassian.net/browse/MODBULKOPS-406) Handling Data Import notification
+* [MODBULKOPS-398](https://folio-org.atlassian.net/browse/MODBULKOPS-398) TD: Align MARC flow with FOLIO flow
+* [MODBULKOPS-379](https://folio-org.atlassian.net/browse/MODBULKOPS-379) TD: Graceful handling S3 errors
+
+### Stories
+* [MODEXPW-564](https://folio-org.atlassian.net/browse/MODEXPW-564) Preventing bulk editing corrupted MARC instances  through error handling
+* [MODEXPW-547](https://folio-org.atlassian.net/browse/MODEXPW-547) Provide error and warnings for matched records
+* [MODBULKOPS-475](https://folio-org.atlassian.net/browse/MODBULKOPS-475) Data Import completion event and log entries availability synchronization
+* [MODBULKOPS-449](https://folio-org.atlassian.net/browse/MODBULKOPS-449) Query search failed in Bulk Operations
+* [MODBULKOPS-429](https://folio-org.atlassian.net/browse/MODBULKOPS-429) Commit changes - MARC Bib records with administrative data
+* [MODBULKOPS-428](https://folio-org.atlassian.net/browse/MODBULKOPS-428) Apply changes locally - MARC Bib records with administrative data
+* [MODBULKOPS-390](https://folio-org.atlassian.net/browse/MODBULKOPS-390) Previewing bulk edit changes
+* [MODBULKOPS-389](https://folio-org.atlassian.net/browse/MODBULKOPS-389) Supported actions for bulk editing Instances statistical codes
+* [MODBULKOPS-377](https://folio-org.atlassian.net/browse/MODBULKOPS-377) Create log with error message from another module
+* [MODBULKOPS-325](https://folio-org.atlassian.net/browse/MODBULKOPS-325) Modify Find action on Bulk edit form for Inventory records to match part of the text
+* [MODBULKOPS-301](https://folio-org.atlassian.net/browse/MODBULKOPS-301) Handling errors and warnings while committing changes
+* [MODBULKOPS-270](https://folio-org.atlassian.net/browse/MODBULKOPS-270) Differentiate between errors and warnings (updating schema)
+* [MODBULKOPS-247](https://folio-org.atlassian.net/browse/MODBULKOPS-247) MARC Instance - Previewing Records
+
+### Bugs
+* [MODBULKOPS-467](https://folio-org.atlassian.net/browse/MODBULKOPS-467) Errors on Confirmation screen are increasing over time for bulk edit of MARC Instances due to reoccurring event of DI job completion
+* [MODBULKOPS-457](https://folio-org.atlassian.net/browse/MODBULKOPS-457) "Something went wrong" error appears and list of Users is empty in Bulk edit app on Eureka environment
+* [MODBULKOPS-455](https://folio-org.atlassian.net/browse/MODBULKOPS-455) Modify "Remove" action followed by “Find” action on Bulk edit form for Inventory records to remove part of the text
+* [MODBULKOPS-454](https://folio-org.atlassian.net/browse/MODBULKOPS-454) Issue with data-import.splitconfig.get
+* [MODBULKOPS-440](https://folio-org.atlassian.net/browse/MODBULKOPS-440) Upgrade vulnerable dependencies for Ramsons
+* [MODBULKOPS-434](https://folio-org.atlassian.net/browse/MODBULKOPS-434) For Bulk edit of MARC Instances Confirmation screen fails to display when no changes are required
+* [MODBULKOPS-423](https://folio-org.atlassian.net/browse/MODBULKOPS-423) For bulk edit of MARC Instances file with changed records is available for downloading before commit completes
+* [MODBULKOPS-421](https://folio-org.atlassian.net/browse/MODBULKOPS-421) Cataloged date omitted from Are you sure? form
+* [MODBULKOPS-416](https://folio-org.atlassian.net/browse/MODBULKOPS-416) MARC instances set as deleted cannot be previewed or updated
+* [MODBULKOPS-402](https://folio-org.atlassian.net/browse/MODBULKOPS-402) Issues with bulk edit of URL relationship on non-ECS and ECS environments
+* [MODBULKOPS-393](https://folio-org.atlassian.net/browse/MODBULKOPS-393) Issues related to display errors from DI on Confirmation screen of bulk edit MARC fields
+* [MODBULKOPS-341](https://folio-org.atlassian.net/browse/MODBULKOPS-341) Errors on Confirmation screen when bulk edit Instances on ECS environment and apply changes to Holdings, Items
+
 ## v2.1.2 - Released 2024/11/15
 
 This release contains bugfixes.
