@@ -330,4 +330,39 @@ class MetadataProviderServiceTest extends BaseTest {
       assertThat(entries).noneMatch(entry -> entry.getSourceRecordActionStatus() == null);
     }
   }
+
+  @Test
+  void shouldReturnEntriesWithNullStatusesWhenRetryCountWasExceeded() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var dataImportJobId = UUID.randomUUID();
+
+      when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), 1))
+        .thenReturn(JobLogEntryCollection.builder()
+          .entries(Collections.emptyList())
+          .totalRecords(2)
+          .build());
+      var entriesContainingNullStatus = JobLogEntryCollection.builder()
+        .entries(List.of(
+          JobLogEntry.builder()
+            .sourceRecordActionStatus(UPDATED)
+            .build(),
+          JobLogEntry.builder()
+            .sourceRecordActionStatus(null)
+            .build()))
+        .totalRecords(2)
+        .build();
+      when(metadataProviderClient.getJobLogEntries(eq(dataImportJobId.toString()), anyLong(), anyLong()))
+        .thenReturn(entriesContainingNullStatus);
+      var executions = Collections.singletonList(new DataImportJobExecution()
+        .id(dataImportJobId)
+        .progress(new DataImportProgress().current(2).total(2)));
+      var operation = new BulkOperation();
+
+      var entries = metadataProviderService.getJobLogEntries(operation, executions);
+
+      verify(metadataProviderClient, times(10)).getJobLogEntries(dataImportJobId.toString(), 0, 3);
+      assertThat(entries).hasSize(2);
+      assertThat(entries).anyMatch(entry -> entry.getSourceRecordActionStatus() == null);
+    }
+  }
 }
