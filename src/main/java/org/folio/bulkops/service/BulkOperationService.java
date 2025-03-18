@@ -724,6 +724,7 @@ public class BulkOperationService {
         // while commit is in progress, no download links should be available
         updatedOperation.setLinkToCommittedRecordsCsvFile(null);
         updatedOperation.setLinkToCommittedRecordsErrorsCsvFile(null);
+        updatedOperation.setLinkToCommittedRecordsMarcFile(null);
         yield updatedOperation;
       }
       default -> operation;

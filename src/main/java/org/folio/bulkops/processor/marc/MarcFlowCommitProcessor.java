@@ -88,8 +88,6 @@ public class MarcFlowCommitProcessor implements CommitProcessor {
             remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsCsvFile()),
             new ByteArrayInputStream(appendedCsvRecords.getBytes()));
           remoteFileSystemClient.put(appendedCsvStream, committedCsvFileName);
-          remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsCsvFile());
-          bulkOperation.setLinkToCommittedRecordsCsvFile(committedCsvFileName);
         }
         if (nonNull(bulkOperation.getLinkToCommittedRecordsCsvFile())) {
           remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsCsvFile());
