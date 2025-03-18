@@ -66,12 +66,12 @@ public class MarcFlowCommitProcessor implements CommitProcessor {
 
   public void enrichCommittedCsvWithUpdatedMarcRecords(BulkOperation bulkOperation, List<String> csvHrids, List<String> marcHrids) {
     var hrids = CollectionUtils.subtract(marcHrids, csvHrids);
+    var csvFileName = bulkOperation.getLinkToCommittedRecordsCsvFile();
     if (!hrids.isEmpty() && nonNull(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
-      var dirName = isNull(bulkOperation.getLinkToCommittedRecordsCsvFile()) ? bulkOperation.getId().toString() : ENRICHED_PREFIX + bulkOperation.getId();
+      var dirName = isNull(csvFileName) ? bulkOperation.getId().toString() : ENRICHED_PREFIX + bulkOperation.getId();
       var committedCsvFileName = CHANGED_CSV_PATH_TEMPLATE.formatted(dirName, LocalDate.now(), getBaseName(bulkOperation.getLinkToTriggeringCsvFile()));
       try (var matchedFileReader = new InputStreamReader(new BufferedInputStream(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())));
-           var writer = isNull(bulkOperation.getLinkToCommittedRecordsCsvFile()) ?
-             remoteFileSystemClient.writer(committedCsvFileName) : new StringWriter()) {
+           var writer = isNull(csvFileName) ? remoteFileSystemClient.writer(committedCsvFileName) : new StringWriter()) {
         var matchedFileParser = new JsonFactory().createParser(matchedFileReader);
         var matchedFileIterator = objectMapper.readValues(matchedFileParser, ExtendedInstance.class);
         var csvWriter = new BulkOperationsEntityCsvWriter(writer, Instance.class);
@@ -81,15 +81,13 @@ public class MarcFlowCommitProcessor implements CommitProcessor {
             writeBeanToCsv(csvWriter, instance);
           }
         }
-        if (nonNull(bulkOperation.getLinkToCommittedRecordsCsvFile())) {
+        if (nonNull(csvFileName)) {
           var appendedCsvRecords = writer.toString();
           appendedCsvRecords = appendedCsvRecords.substring(appendedCsvRecords.indexOf(LINE_BREAK) + 1);
           var appendedCsvStream = new SequenceInputStream(
             remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsCsvFile()),
             new ByteArrayInputStream(appendedCsvRecords.getBytes()));
           remoteFileSystemClient.put(appendedCsvStream, committedCsvFileName);
-        }
-        if (nonNull(bulkOperation.getLinkToCommittedRecordsCsvFile())) {
           remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsCsvFile());
         }
         bulkOperation.setLinkToCommittedRecordsCsvFile(committedCsvFileName);
