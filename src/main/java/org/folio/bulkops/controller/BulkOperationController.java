@@ -13,6 +13,7 @@ import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 import static org.folio.bulkops.util.Constants.CSV_EXTENSION;
 import static org.folio.bulkops.util.Constants.NON_PRINTING_DELIMITER;
 import static org.folio.bulkops.util.Constants.SPLIT_NOTE_ENTITIES;
+import static org.folio.bulkops.util.Constants.UTF_8_BOM;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -72,8 +73,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Log4j2
 public class BulkOperationController implements BulkOperationsApi {
-
-  private final byte[] utf8Bom = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 
   private final BulkOperationService bulkOperationService;
   private final PreviewService previewService;
@@ -210,9 +209,9 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   private byte[] getCsvContentWithUtf8Bom(byte[] content) {
-    var contentCharsByUtf8BomLen = Arrays.copyOfRange(content, 0, utf8Bom.length);
-    if (!Arrays.equals(utf8Bom, contentCharsByUtf8BomLen)) {
-      return ArrayUtils.addAll(utf8Bom, content);
+    var contentCharsByUtf8BomLen = Arrays.copyOfRange(content, 0, UTF_8_BOM.length);
+    if (!Arrays.equals(UTF_8_BOM, contentCharsByUtf8BomLen)) {
+      return ArrayUtils.addAll(UTF_8_BOM, content);
     }
     return content;
   }
