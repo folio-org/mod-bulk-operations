@@ -1,3 +1,10 @@
+## v2.2.2 - Released 2025/04/10
+
+This release contains update of system user permissions.
+
+### Tech debts
+* Adding missed permission inventory-storage.instance-note-types.collection.get.
+
 ## v2.2.1 - Released 2025/03/27
 
 This release contains tech debt, data import integration story and bugfix for BOM.
