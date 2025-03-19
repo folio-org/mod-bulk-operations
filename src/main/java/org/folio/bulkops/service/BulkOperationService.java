@@ -51,6 +51,7 @@ import java.util.concurrent.Executors;
 
 import com.opencsv.CSVWriterBuilder;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
@@ -198,7 +199,8 @@ public class BulkOperationService {
         operation.setMatchedNumOfRecords(numOfLines);
         operation.setApproach(MANUAL);
       } else {
-        var linkToTriggeringFile = remoteFileSystemClient.put(multipartFile.getInputStream(), operation.getId() + "/" + multipartFile.getOriginalFilename());
+        var bomInputStream = BOMInputStream.builder().setInputStream(multipartFile.getInputStream()).get();
+        var linkToTriggeringFile = remoteFileSystemClient.put(bomInputStream, operation.getId() + "/" + multipartFile.getOriginalFilename());
         operation.setLinkToTriggeringCsvFile(linkToTriggeringFile);
       }
     } catch (S3ClientException e) {
