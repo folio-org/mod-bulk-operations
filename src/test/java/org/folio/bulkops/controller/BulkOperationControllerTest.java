@@ -2,6 +2,7 @@ package org.folio.bulkops.controller;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.folio.bulkops.controller.BulkOperationController.APPLY_CHANGES_SET;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
@@ -16,6 +17,7 @@ import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_MARC
 import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
 import static org.folio.bulkops.domain.dto.IdentifierType.BARCODE;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationType.UPDATE;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
@@ -57,6 +59,7 @@ import org.folio.bulkops.domain.bean.Personal;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.FileContentType;
+import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.processor.note.HoldingsNotesProcessor;
@@ -67,36 +70,44 @@ import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ListUsersService;
 import org.folio.bulkops.service.LogFilesService;
 import org.folio.bulkops.service.RuleService;
+import org.folio.spring.cql.JpaCqlRepository;
+import org.folio.spring.data.OffsetRequest;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class BulkOperationControllerTest extends BaseTest {
 
-   @MockitoBean
+  @MockitoBean
   private BulkOperationService bulkOperationService;
-   @MockitoBean
+  @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
-   @MockitoBean
+  @MockitoBean
   private RuleService ruleService;
-   @MockitoBean
+  @MockitoBean
   private ItemNoteProcessor itemNoteProcessor;
-   @MockitoBean
+  @MockitoBean
   private HoldingsNotesProcessor holdingsNotesProcessor;
 
-   @MockitoBean
+  @MockitoBean
   private ListUsersService listUsersService;
 
-   @MockitoBean
+  @MockitoBean
   private LogFilesService logFilesService;
 
-   @MockitoBean
+  @MockitoBean
   private ConsortiaService consortiaService;
+
+  @MockitoBean
+  private JpaCqlRepository<BulkOperation, UUID> bulkOperationCqlRepository;
 
   @Autowired
   private BulkOperationRepository bulkOperationRepository;
@@ -396,6 +407,32 @@ class BulkOperationControllerTest extends BaseTest {
       .andReturn();
 
     assertEquals("[\"member1\",\"member2\"]", res.getResponse().getContentAsString());
+  }
+
+  @ParameterizedTest
+  @EnumSource(OperationStatusType.class)
+  @SneakyThrows
+  void shouldHideMarcDownloadLinkForApplyChanges(OperationStatusType statusType) {
+    var query = "query";
+    var path = "path";
+    when(bulkOperationCqlRepository.findByCql(query, OffsetRequest.of(0, 2)))
+      .thenReturn(new PageImpl<>(List.of(
+        BulkOperation.builder()
+          .status(statusType)
+          .linkToCommittedRecordsMarcFile(path)
+          .build())));
+
+    var res = mockMvc.perform(get(String.format("/bulk-operations?query=%s&offset=0&limit=2", query))
+        .headers(defaultHeaders())
+        .contentType(APPLICATION_JSON))
+      .andExpect(status().isOk())
+      .andReturn();
+
+    if (APPLY_CHANGES_SET.contains(statusType)) {
+      assertThat(res.getResponse().getContentAsString()).doesNotContain(path);
+    } else {
+      assertThat(res.getResponse().getContentAsString()).contains(path);
+    }
   }
 
   private static Stream<Arguments> fileContentTypeToEntityTypeCollection() {

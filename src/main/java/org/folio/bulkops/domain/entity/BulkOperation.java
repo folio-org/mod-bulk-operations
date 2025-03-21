@@ -7,6 +7,7 @@ import java.util.UUID;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.Column;
 import lombok.Singular;
+import lombok.With;
 import org.folio.bulkops.domain.converter.PostgresUUIDConverter;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -35,6 +36,7 @@ import org.hibernate.type.SqlTypes;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@With
 @Entity
 @Table(name = "bulk_operation")
 public class BulkOperation {

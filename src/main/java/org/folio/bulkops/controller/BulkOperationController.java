@@ -10,6 +10,8 @@ import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE
 import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_MARC_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
+import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
 import static org.folio.bulkops.util.Constants.CSV_EXTENSION;
 import static org.folio.bulkops.util.Constants.NON_PRINTING_DELIMITER;
 import static org.folio.bulkops.util.Constants.SPLIT_NOTE_ENTITIES;
@@ -32,6 +34,7 @@ import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.Errors;
 import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.QueryRequest;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.dto.Users;
@@ -64,6 +67,7 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -73,6 +77,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Log4j2
 public class BulkOperationController implements BulkOperationsApi {
+  public static final Set<OperationStatusType> APPLY_CHANGES_SET = EnumSet.of(APPLY_CHANGES, APPLY_MARC_CHANGES);
 
   private final BulkOperationService bulkOperationService;
   private final PreviewService previewService;
@@ -91,7 +96,15 @@ public class BulkOperationController implements BulkOperationsApi {
   @Override
   public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(String query, Integer offset, Integer limit) {
     var page = bulkOperationCqlRepository.findByCql(query, OffsetRequest.of(Objects.isNull(offset) ? 0 : offset, Objects.isNull(limit) ? Integer.MAX_VALUE : limit));
-    return new ResponseEntity<>(new BulkOperationCollection().bulkOperations(bulkOperationMapper.mapToDtoList(page.toList())).totalRecords((int) page.getTotalElements()), HttpStatus.OK);
+    var operations = page.stream()
+      .map(this::hideMarcDownloadLinkForApplyChanges)
+      .toList();
+    return new ResponseEntity<>(new BulkOperationCollection().bulkOperations(bulkOperationMapper.mapToDtoList(operations)).totalRecords((int) page.getTotalElements()), HttpStatus.OK);
+  }
+
+  private BulkOperation hideMarcDownloadLinkForApplyChanges(BulkOperation bulkOperation) {
+    return APPLY_CHANGES_SET.contains(bulkOperation.getStatus()) ?
+      bulkOperation.withLinkToCommittedRecordsMarcFile(null) : bulkOperation;
   }
 
   @Override
