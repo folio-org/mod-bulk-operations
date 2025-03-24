@@ -36,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -210,6 +211,44 @@ class BulkOperationControllerTest extends BaseTest {
       var actualUtf8bom = Arrays.copyOfRange(actual, 0, utf8bom.length);
       assertArrayEquals(utf8bom, actualUtf8bom);
     }
+  }
+
+  @ParameterizedTest
+  @MethodSource("fileContentTypeToEntityTypeCollection")
+  void shouldNotAddUtf8BomToDownloadedCSVIfAlreadyPresent(FileContentType fileContentType, org.folio.bulkops.domain.dto.EntityType entityType) throws Exception {
+    var content = "content";
+    var csvfileName = "csvFileName.csv";
+    var mrcfileName = "mrcFileName.mrc";
+    var operationId = UUID.randomUUID();
+    byte[] utf8bom = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+
+    when(consortiaService.isTenantCentral(any())).thenReturn(false);
+    var stream = new SequenceInputStream(new ByteArrayInputStream(utf8bom), new ByteArrayInputStream(content.getBytes()));
+    when(remoteFileSystemClient.get(any(String.class))).thenReturn(stream);
+    when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(BulkOperation.builder()
+      .id(UUID.randomUUID())
+      .linkToTriggeringCsvFile(csvfileName)
+      .linkToMatchedRecordsCsvFile(csvfileName)
+      .linkToMatchedRecordsErrorsCsvFile(csvfileName)
+      .linkToModifiedRecordsCsvFile(csvfileName)
+      .linkToCommittedRecordsCsvFile(csvfileName)
+      .linkToCommittedRecordsErrorsCsvFile(csvfileName)
+      .linkToModifiedRecordsMarcFile(mrcfileName)
+      .linkToCommittedRecordsMarcFile(mrcfileName)
+      .entityType(entityType)
+      .build());
+    when(itemNoteProcessor.processCsvContent(any(), any())).thenReturn(content.getBytes());
+    when(holdingsNotesProcessor.processCsvContent(any(), any())).thenReturn(content.getBytes());
+
+    var result = mockMvc.perform(get(format("/bulk-operations/%s/download?fileContentType=%s", operationId, fileContentType))
+        .headers(defaultHeaders())
+        .contentType(APPLICATION_JSON))
+      .andExpect(status().isOk()).andReturn();
+    var actual = result.getResponse().getContentAsByteArray();
+
+    assertEquals(content.getBytes().length + utf8bom.length, actual.length);
+    var actualUtf8bom = Arrays.copyOfRange(actual, 0, utf8bom.length);
+    assertArrayEquals(utf8bom, actualUtf8bom);
   }
 
 

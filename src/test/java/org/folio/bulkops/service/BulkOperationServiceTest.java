@@ -22,11 +22,13 @@ import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
+import static org.folio.bulkops.util.Constants.UTF_8_BOM;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
 import static org.folio.bulkops.util.ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -53,11 +55,13 @@ import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.io.SequenceInputStream;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -329,7 +333,8 @@ class BulkOperationServiceTest extends BaseTest {
   @SneakyThrows
   void shouldThrowExceptionIfOperationIdIsNull() {
     var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/modified-user.csv").readAllBytes());
-    assertThrows(NotFoundException.class, () -> bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, true, null, UUID.randomUUID(), file));
+    var bulkOperationId = UUID.randomUUID();
+    assertThrows(NotFoundException.class, () -> bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, true, null, bulkOperationId, file));
   }
 
   @ParameterizedTest
@@ -1365,7 +1370,7 @@ class BulkOperationServiceTest extends BaseTest {
     assertThat(updatedExecution.getStatus(), equalTo(StatusType.FAILED));
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-    verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
+    verify(bulkOperationRepository, times(3)).save(operationCaptor.capture());
     var secondCapture = operationCaptor.getAllValues().get(1);
     assertThat(secondCapture.getStatus(), equalTo(OperationStatusType.FAILED));
     assertThat(secondCapture.getEndTime(), notNullValue());
@@ -1813,7 +1818,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
-    var lastCapture = operationCaptor.getAllValues().get(1);
+    var lastCapture = operationCaptor.getValue();
     assertNull(lastCapture.getLinkToCommittedRecordsMarcFile());
     assertNull(lastCapture.getLinkToCommittedRecordsCsvFile());
   }
@@ -1823,13 +1828,14 @@ class BulkOperationServiceTest extends BaseTest {
     true  | false
     false | true
     """, delimiter = '|')
-  void shouldStartCommitInstanceMarcIfRulesArePresent(boolean hasAdministrativeRules, boolean hasMarcRules) {
+  void shouldStartCommitInstanceMarcIfModifiedMarcFileIsPresent(boolean hasAdministrativeRules, boolean hasMarcRules) {
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
       .id(operationId)
       .entityType(INSTANCE_MARC)
       .linkToTriggeringCsvFile("instances.csv")
       .linkToModifiedRecordsJsonFile("modified.json")
+      .linkToModifiedRecordsMarcFile(hasMarcRules ? "modified.mrc" : null)
       .build();
 
     when(executionRepository.save(any(BulkOperationExecution.class)))
@@ -1849,5 +1855,22 @@ class BulkOperationServiceTest extends BaseTest {
     if (hasMarcRules) {
       verify(marcUpdateService).commitForInstanceMarc(any(BulkOperation.class));
     }
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldRemoveBOMOnFileUpload() {
+    var inputStream = new SequenceInputStream(new ByteArrayInputStream(UTF_8_BOM), new ByteArrayInputStream("abc".getBytes()));
+    var file = new MockMultipartFile("file", "uuids.csv", MediaType.TEXT_PLAIN_VALUE, inputStream);
+    var contentCaptor = ArgumentCaptor.forClass(InputStream.class);
+
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+      .thenReturn(new BulkOperation());
+
+    bulkOperationService.uploadCsvFile(USER, IdentifierType.ID, false, null, null, file);
+
+    verify(remoteFileSystemClient).put(contentCaptor.capture(), anyString());
+    var contentCharsByUtf8BomLen = Arrays.copyOfRange(contentCaptor.getValue().readAllBytes(), 0, UTF_8_BOM.length);
+    assertFalse(Arrays.equals(UTF_8_BOM, contentCharsByUtf8BomLen));
   }
 }

@@ -1,14 +1,12 @@
 package org.folio.bulkops.service;
 
-import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
-import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
+import static org.folio.bulkops.util.Constants.CHANGED_MARC_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.MarcHelper.fetchInstanceUuidOrElseHrid;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
@@ -35,15 +33,12 @@ import java.util.Date;
 @Log4j2
 @RequiredArgsConstructor
 public class MarcUpdateService {
-  public static final String CHANGED_MARC_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-%s.mrc";
-  public static final String CHANGED_MARC_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-CSV-%s.csv";
-
   private final BulkOperationExecutionRepository executionRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final MarcInstanceUpdateProcessor updateProcessor;
   private final ErrorService errorService;
   private final BulkOperationRepository bulkOperationRepository;
-  private final ObjectMapper objectMapper;
+  private final BulkOperationServiceHelper bulkOperationServiceHelper;
 
   @Transactional
   public void commitForInstanceMarc(BulkOperation bulkOperation) {
@@ -61,27 +56,15 @@ public class MarcUpdateService {
       try {
         bulkOperation.setLinkToCommittedRecordsMarcFile(prepareCommittedFile(bulkOperation));
         updateProcessor.updateMarcRecords(bulkOperation);
-        var path = bulkOperation.getLinkToCommittedRecordsMarcFile();
-        if (nonNull(path)) {
-          remoteFileSystemClient.remove(path);
-          bulkOperation.setLinkToCommittedRecordsMarcFile(null);
-        }
-        bulkOperationRepository.save(bulkOperation);
         execution = execution
           .withStatus(StatusType.COMPLETED)
           .withEndTime(LocalDateTime.now());
-      } catch (Exception e) {
+      } catch (IOException e) {
         log.error("Error while updating marc file", e);
         execution = execution
           .withStatus(StatusType.FAILED)
           .withEndTime(LocalDateTime.now());
-        bulkOperation.setStatus(FAILED);
-        bulkOperation.setEndTime(LocalDateTime.now());
-        bulkOperation.setErrorMessage(e.getMessage());
-        var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, bulkOperation.getErrorMessage());
-        bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
-        bulkOperation.setLinkToCommittedRecordsMarcFile(null);
-        bulkOperationRepository.save(bulkOperation);
+        bulkOperationServiceHelper.failCommit(bulkOperation, e);
       }
       executionRepository.save(execution);
     } else {

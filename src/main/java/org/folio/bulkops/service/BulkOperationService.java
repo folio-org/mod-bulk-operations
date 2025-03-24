@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
@@ -13,8 +12,6 @@ import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
-import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
-import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION_IN_PROGRESS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
@@ -24,7 +21,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORD
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
-import static org.folio.bulkops.util.Constants.COMMA_DELIMETER;
+import static org.folio.bulkops.util.Constants.CHANGED_CSV_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
@@ -54,6 +51,7 @@ import java.util.concurrent.Executors;
 
 import com.opencsv.CSVWriterBuilder;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
@@ -157,6 +155,7 @@ public class BulkOperationService {
   private final MetadataProviderService metadataProviderService;
   private final SrsService srsService;
   private final MarcCsvHelper marcCsvHelper;
+  private final BulkOperationServiceHelper bulkOperationServiceHelper;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
@@ -164,7 +163,7 @@ public class BulkOperationService {
   private static final String PREVIEW_MARC_PATH_TEMPLATE = "%s/%s-Updates-Preview-MARC-%s.mrc";
   private static final String PREVIEW_MARC_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-MARC-CSV-%s.csv";
   private static final String CHANGED_JSON_PATH_TEMPLATE = "%s/json/%s-Changed-Records-%s.json";
-  public static final String CHANGED_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-CSV-%s.csv";
+
   public static final String TMP_MATCHED_JSON_PATH_TEMPLATE = "%s/json/tmp-matched.json";
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
@@ -200,7 +199,8 @@ public class BulkOperationService {
         operation.setMatchedNumOfRecords(numOfLines);
         operation.setApproach(MANUAL);
       } else {
-        var linkToTriggeringFile = remoteFileSystemClient.put(multipartFile.getInputStream(), operation.getId() + "/" + multipartFile.getOriginalFilename());
+        var bomInputStream = BOMInputStream.builder().setInputStream(multipartFile.getInputStream()).get();
+        var linkToTriggeringFile = remoteFileSystemClient.put(bomInputStream, operation.getId() + "/" + multipartFile.getOriginalFilename());
         operation.setLinkToTriggeringCsvFile(linkToTriggeringFile);
       }
     } catch (S3ClientException e) {
@@ -240,8 +240,6 @@ public class BulkOperationService {
     var modifiedJsonFileName = String.format(PREVIEW_JSON_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
     var modifiedPreviewCsvFileName = String.format(PREVIEW_CSV_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
 
-    prepareMatchedJsonForInstanceMarc(operation, dataProcessing);
-
     try (var readerForMatchedJsonFile = remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile());
          var writerForModifiedPreviewCsvFile = remoteFileSystemClient.writer(modifiedPreviewCsvFileName);
          var writerForModifiedJsonFile = remoteFileSystemClient.writer(modifiedJsonFileName)) {
@@ -254,6 +252,13 @@ public class BulkOperationService {
 
       while (iterator.hasNext()) {
         var original = iterator.next();
+        if (INSTANCE_MARC.equals(operation.getEntityType()) && original instanceof ExtendedInstance extendedInstance
+          && !MARC.equals(extendedInstance.getEntity().getSource())) {
+          var instance = extendedInstance.getEntity();
+          var identifier = HRID.equals(operation.getIdentifierType()) ? instance.getHrid() : instance.getId();
+          errorService.saveError(operation.getId(), identifier, MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY.formatted(instance.getSource()), ErrorType.ERROR);
+          continue;
+        }
         var modified = processUpdate(original, operation, ruleCollection, extendedClazz);
         List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
         if (Objects.nonNull(modified)) {
@@ -291,38 +296,6 @@ public class BulkOperationService {
     } finally {
       dataProcessingRepository.save(dataProcessing);
       handleProcessingCompletion(operationId);
-    }
-  }
-
-  private void prepareMatchedJsonForInstanceMarc(BulkOperation bulkOperation, BulkOperationDataProcessing dataProcessing) {
-    if (INSTANCE_MARC.equals(bulkOperation.getEntityType())) {
-      var matchedJsonFileName = bulkOperation.getLinkToMatchedRecordsJsonFile();
-      var tmpMatchedJsonFileName = TMP_MATCHED_JSON_PATH_TEMPLATE.formatted(bulkOperation.getId());
-      remoteFileSystemClient.put(remoteFileSystemClient.get(matchedJsonFileName), tmpMatchedJsonFileName);
-      remoteFileSystemClient.remove(matchedJsonFileName);
-      try (var readerForMatchedJsonFile = remoteFileSystemClient.get(tmpMatchedJsonFileName);
-           var writerForMatchedJsonFile = remoteFileSystemClient.writer(matchedJsonFileName)) {
-        var iterator = objectMapper.readValues(new JsonFactory().createParser(readerForMatchedJsonFile), ExtendedInstance.class);
-        while (iterator.hasNext()) {
-          var original = iterator.next();
-          if (original instanceof ExtendedInstance extendedInstance) {
-            if (!MARC.equals(extendedInstance.getEntity().getSource())) {
-              var instance = extendedInstance.getEntity();
-              var identifier = HRID.equals(bulkOperation.getIdentifierType()) ? instance.getHrid() : instance.getId();
-              errorService.saveError(bulkOperation.getId(), identifier, MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY.formatted(instance.getSource()), ErrorType.ERROR);
-            } else {
-              var originalRecord = objectMapper.writeValueAsString(original) + LF;
-              writerForMatchedJsonFile.write(originalRecord);
-            }
-          }
-        }
-      } catch (S3ClientException e) {
-        handleException(bulkOperation.getId(), dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
-      } catch (Exception e) {
-        handleException(bulkOperation.getId(), dataProcessing, MSG_CONFIRM_FAILED, e);
-      } finally {
-        remoteFileSystemClient.remove(tmpMatchedJsonFileName);
-      }
     }
   }
 
@@ -472,6 +445,10 @@ public class BulkOperationService {
 
         while (hasNextRecord(originalFileIterator, modifiedFileIterator)) {
           var original = originalFileIterator.next();
+          if (INSTANCE_MARC.equals(operation.getEntityType()) && original instanceof ExtendedInstance extendedInstance
+            && !MARC.equals(extendedInstance.getEntity().getSource())) {
+            continue;
+          }
           var modified = modifiedFileIterator.next();
           List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
 
@@ -521,39 +498,17 @@ public class BulkOperationService {
         execution = execution
           .withStatus(StatusType.FAILED)
           .withEndTime(LocalDateTime.now());
-        operation.setStatus(OperationStatusType.FAILED);
-        operation.setEndTime(LocalDateTime.now());
-        operation.setErrorMessage(e.getMessage());
-        var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, operation.getErrorMessage());
-        operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
+        bulkOperationServiceHelper.failCommit(operation, e);
       }
       executionRepository.save(execution);
     }
 
     if (!INSTANCE_MARC.equals(operation.getEntityType()) || !hasMarcRules) {
-      operation.setProcessedNumOfRecords(operation.getCommittedNumOfRecords());
-      operation.setEndTime(LocalDateTime.now());
-
-      var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(operationId, ERROR_COMMITTING_FILE_NAME_PREFIX, null);
-      operation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
-      operation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(operationId));
-      operation.setCommittedNumOfWarnings(errorService.getCommittedNumOfWarnings(operationId));
-
       if (!FAILED.equals(operation.getStatus())) {
-        operation.setStatus(isEmpty(linkToCommittingErrorsFile) ? COMPLETED : COMPLETED_WITH_ERRORS);
-        processCommittedFiles(operation);
-      } else {
-        operation.setLinkToCommittedRecordsCsvFile(null);
+        bulkOperationServiceHelper.completeBulkOperation(operation);
       }
-      bulkOperationRepository.save(operation);
     } else {
       marcUpdateService.commitForInstanceMarc(operation);
-    }
-  }
-
-  private void processCommittedFiles(BulkOperation bulkOperation) {
-    if (INSTANCE_MARC.equals(bulkOperation.getEntityType())) {
-      marcCsvHelper.enrichMarcAndCsvCommittedFiles(bulkOperation);
     }
   }
 
@@ -748,6 +703,7 @@ public class BulkOperationService {
         // while commit is in progress, no download links should be available
         updatedOperation.setLinkToCommittedRecordsCsvFile(null);
         updatedOperation.setLinkToCommittedRecordsErrorsCsvFile(null);
+        updatedOperation.setLinkToCommittedRecordsMarcFile(null);
         yield updatedOperation;
       }
       default -> operation;
@@ -873,9 +829,6 @@ public class BulkOperationService {
 
   private synchronized void saveLinks(BulkOperation source) {
     var dest = getBulkOperationOrThrow(source.getId());
-    if (nonNull(source.getLinkToMatchedRecordsJsonFile())) {
-      dest.setLinkToMatchedRecordsJsonFile(source.getLinkToMatchedRecordsJsonFile());
-    }
     if (nonNull(source.getLinkToModifiedRecordsCsvFile())) {
       dest.setLinkToModifiedRecordsCsvFile(source.getLinkToModifiedRecordsCsvFile());
     }
