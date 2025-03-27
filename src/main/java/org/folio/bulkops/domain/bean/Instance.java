@@ -13,14 +13,15 @@ import lombok.NoArgsConstructor;
 import lombok.With;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.ContributorListConverter;
+import org.folio.bulkops.domain.converter.ElectronicAccessListConverter;
 import org.folio.bulkops.domain.converter.InstanceFormatListConverter;
 import org.folio.bulkops.domain.converter.InstanceNoteListConverter;
+import org.folio.bulkops.domain.converter.InstanceStatisticalCodeListConverter;
 import org.folio.bulkops.domain.converter.InstanceStatusConverter;
 import org.folio.bulkops.domain.converter.InstanceTypeConverter;
 import org.folio.bulkops.domain.converter.ModeOfIssuanceConverter;
 import org.folio.bulkops.domain.converter.NatureOfContentTermListConverter;
 import org.folio.bulkops.domain.converter.SeriesListConverter;
-import org.folio.bulkops.domain.converter.InstanceStatisticalCodeListConverter;
 import org.folio.bulkops.domain.converter.StringConverter;
 import org.folio.bulkops.domain.converter.StringListPipedConverter;
 import org.folio.bulkops.domain.dto.IdentifierType;
@@ -59,6 +60,7 @@ public class Instance implements BulkOperationsEntity {
   public static final String INSTANCE_STATUS_TERM = "Instance status term";
   public static final String INSTANCE_NATURE_OF_CONTENT = "Nature of content";
   public static final String INSTANCE_NOTES = "Notes";
+  public static final String INSTANCE_ELECTRONIC_ACCESS = "Electronic access";
 
   @JsonProperty("id")
   @CsvCustomBindByName(column = INSTANCE_UUID, converter = StringConverter.class)
@@ -208,6 +210,13 @@ public class Instance implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private List<InstanceNote> instanceNotes;
 
+  @JsonProperty("electronicAccess")
+  @Valid
+  @CsvCustomBindByName(column = INSTANCE_ELECTRONIC_ACCESS, converter = ElectronicAccessListConverter.class)
+  @CsvCustomBindByPosition(position = 24, converter = ElectronicAccessListConverter.class)
+  @UnifiedTableCell(visible = false)
+  private List<ElectronicAccess> electronicAccess = null;
+
   @JsonProperty("matchKey")
   private String matchKey;
   @JsonProperty("alternativeTitles")
@@ -220,8 +229,6 @@ public class Instance implements BulkOperationsEntity {
   private List<Classification> classifications;
   @JsonProperty("publication")
   private List<Publication> publications;
-  @JsonProperty("electronicAccess")
-  private List<ElectronicAccess> electronicAccesses;
   @JsonProperty("sourceRecordFormat")
   private String sourceRecordFormat;
   @JsonProperty("statusUpdatedDate")
