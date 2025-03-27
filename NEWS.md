@@ -1,4 +1,17 @@
-* ## v2.2.0 - Released 2025/03/13
+## v2.2.1 - Released 2025/03/27
+
+This release contains tech debt, data import integration story and bugfix for BOM.
+
+### Tech debts
+* [MODBULKOPS-500](https://folio-org.atlassian.net/browse/MODBULKOPS-500) Remove unused openssh sshpass (sftp) from Dockerfile
+
+### Stories
+* [MODBULKOPS-475](https://folio-org.atlassian.net/browse/MODBULKOPS-475) Data Import completion event and log entries availability synchronization
+
+### Bugs
+* [MODBULKOPS-501](https://folio-org.atlassian.net/browse/MODBULKOPS-501) First user UUID record from .csv file with "UTF-8 with BOM" encoding is processed as error in Bulk edit (Identifier > Users > User UUIDs)
+
+## v2.2.0 - Released 2025/03/13
 
 This release contains new functionality for errors handling and MARC operations, bugfixes, dependencies upgrading and migration to Java 21.
 
