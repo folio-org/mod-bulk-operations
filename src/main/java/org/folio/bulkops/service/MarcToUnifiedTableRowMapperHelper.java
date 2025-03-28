@@ -54,6 +54,45 @@ public class MarcToUnifiedTableRowMapperHelper {
       .toList();
   }
 
+  public List<String> fetchElectronicAccessCodes(DataField dataField) {
+    List<String> allCodes = new ArrayList<>();
+    allCodes.add(fetchRelationshipName(dataField));
+    allCodes.addAll(fetchElectronicAccessCode(dataField, 'u'));
+    allCodes.addAll(fetchElectronicAccessCode(dataField, 'y'));
+    allCodes.addAll(fetchElectronicAccessCode(dataField, '3'));
+    allCodes.addAll(fetchElectronicAccessCode(dataField, 'z'));
+    return allCodes;
+  }
+
+  private List<String> fetchElectronicAccessCode(DataField dataField, char code) {
+    var subfields = dataField.getSubfields(code);
+    if (subfields.isEmpty()) {
+      return List.of(HYPHEN);
+    }
+    return subfields.stream()
+      .map(subfield -> subfield.getData().isBlank() ? HYPHEN : subfield.getData())
+      .toList();
+  }
+
+  private String fetchRelationshipName(DataField dataField) {
+    var name = "No information provided";
+    var ind1 = dataField.getIndicator1();
+    var ind2 = dataField.getIndicator2();
+    if (ind1 != '4') {
+      ind1 = '4';
+    }
+    if (ind1 == '4') {
+      if (ind2 == '2') {
+        name = "Related resource";
+      } else if (ind2 == '0') {
+        name = "Resource";
+      } else if (ind2 == '1') {
+        name = "Version of resource";
+      }
+    }
+    return name;
+  }
+
   public String fetchContributorName(DataField dataField) {
     var subfields = switch (dataField.getTag()) {
       case "100" -> "abcdfgjklnpqtu";

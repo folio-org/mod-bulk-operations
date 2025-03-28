@@ -328,4 +328,87 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
 
     assertThat(res).isEqualTo('0' == ind1 ? "subfield a. (staff only)" : "subfield a.");
   }
+
+  @Test
+  void shouldReturnValidRelationshipNameDependingOnIndicators() {
+    var dataField = new DataFieldImpl("856", '4', '2');
+    var res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("Related resource");
+
+    dataField = new DataFieldImpl("856", '4', '8');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("No information provided");
+
+    dataField = new DataFieldImpl("856", '4', '0');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("Resource");
+
+    dataField = new DataFieldImpl("856", '4', '1');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("Version of resource");
+
+    dataField = new DataFieldImpl("856", '4', '3');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("No information provided");
+
+    dataField = new DataFieldImpl("856", '4', '4');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("No information provided");
+
+    dataField = new DataFieldImpl("856", '4', ' ');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("No information provided");
+
+    dataField = new DataFieldImpl("856", ' ', ' ');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("No information provided");
+
+    dataField = new DataFieldImpl("856", '0', '2');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("Related resource");
+
+    dataField = new DataFieldImpl("856", '0', '8');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("No information provided");
+
+    dataField = new DataFieldImpl("856", '0', '0');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("Resource");
+
+    dataField = new DataFieldImpl("856", '0', '1');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("Version of resource");
+
+    dataField = new DataFieldImpl("856", '0', '3');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("No information provided");
+
+    dataField = new DataFieldImpl("856", '0', '4');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("No information provided");
+
+    dataField = new DataFieldImpl("856", ' ', '2');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("Related resource");
+
+    dataField = new DataFieldImpl("856", ' ', '8');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("No information provided");
+
+    dataField = new DataFieldImpl("856", ' ', '0');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("Resource");
+
+    dataField = new DataFieldImpl("856", ' ', '1');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("Version of resource");
+
+    dataField = new DataFieldImpl("856", ' ', '3');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("No information provided");
+
+    dataField = new DataFieldImpl("856", ' ', '4');
+    res = mapperHelper.fetchElectronicAccessCodes(dataField);
+    assertThat(res.getFirst()).isEqualTo("No information provided");
+  }
 }

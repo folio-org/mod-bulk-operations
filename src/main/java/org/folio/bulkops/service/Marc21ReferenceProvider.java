@@ -3,6 +3,7 @@ package org.folio.bulkops.service;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CONTRIBUTORS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_EDITION;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_FORMATS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_LANGUAGES;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_NOTES;
@@ -582,6 +583,7 @@ public class Marc21ReferenceProvider {
     mappedFields.put("362", INSTANCE_PUBLICATION_RANGE);
     List.of("800", "810", "811", "830")
       .forEach(tag -> mappedFields.put(tag, INSTANCE_SERIES_STATEMENTS));
+    mappedFields.put("856", INSTANCE_ELECTRONIC_ACCESS);
   }
 
   public void updateMappingRules() {

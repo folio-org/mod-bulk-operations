@@ -84,6 +84,10 @@ public class FolioInstanceDataProcessor extends FolioAbstractDataProcessor<Exten
     if (instance.getStatisticalCodeIds() != null) {
       clone.setStatisticalCodeIds(new ArrayList<>(clone.getStatisticalCodeIds()));
     }
+    if (instance.getElectronicAccess() != null) {
+      var elAcc = instance.getElectronicAccess().stream().map(el -> el.toBuilder().build()).toList();
+      clone.setElectronicAccess(new ArrayList<>(elAcc));
+    }
     return ExtendedInstance.builder().tenantId(extendedInstance.getTenantId()).entity(clone).build();
   }
 
