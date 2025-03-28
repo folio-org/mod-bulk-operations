@@ -29,6 +29,7 @@ public class Constants {
   public static final int ITEM_NOTE_POSITION = 31;
   public static final int HOLDINGS_NOTE_POSITION = 24;
   public static final int INSTANCE_NOTE_POSITION = 23;
+  public static final int INSTANCE_ELECTRONIC_ACCESS_POSITION = 24;
 
   public static final String ITEM_DELIMITER_PATTERN = "\\|";
   public static final String KEY_VALUE_DELIMITER = ":";
