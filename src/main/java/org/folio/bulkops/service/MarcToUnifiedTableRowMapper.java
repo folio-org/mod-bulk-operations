@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CONTRIBUTORS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_EDITION;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_FORMATS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_HRID;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_INDEX_TITLE;
@@ -24,6 +25,8 @@ import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Constants.MARC;
+import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.SPECIAL_ITEM_DELIMITER;
 
 import lombok.RequiredArgsConstructor;
 import org.marc4j.marc.ControlField;
@@ -95,6 +98,7 @@ public class MarcToUnifiedTableRowMapper {
         case "338" -> processInstanceFormats(rowData, dataField, headers);
         case "362" -> processPublicationRange(rowData, dataField, headers);
         case "800", "810", "811", "830" -> processSeries(rowData, dataField, headers);
+        case "856" -> processElectronicAccess(rowData, dataField, headers);
         case "999" -> processInstanceId(rowData, dataField, headers);
         default -> {
           if (referenceProvider.isMappedNoteTag(tag)) {
@@ -103,6 +107,25 @@ public class MarcToUnifiedTableRowMapper {
         }
       }
     });
+  }
+
+  private void processElectronicAccess(List<String> rowData, DataField dataField, List<String> headers) {
+    var index = headers.indexOf(INSTANCE_ELECTRONIC_ACCESS);
+    if (index != -1) {
+      var newElAccCodes = new ArrayList<>(helper.fetchElectronicAccessCodes(dataField));
+      if (!newElAccCodes.isEmpty()) {
+        var existingElAcc = rowData.get(index);
+        List<String> existingElAccCodes = isNull(existingElAcc) ?
+          new ArrayList<>() :
+          new ArrayList<>(Arrays.asList(existingElAcc.split(SPECIAL_ARRAY_DELIMITER)));
+        var existingElAccStr = EMPTY;
+        if (!existingElAccCodes.isEmpty()) {
+          existingElAccStr = String.join(SPECIAL_ARRAY_DELIMITER, existingElAccCodes) + SPECIAL_ITEM_DELIMITER;
+        }
+        existingElAccStr += String.join(SPECIAL_ARRAY_DELIMITER, newElAccCodes);
+        rowData.set(index, existingElAccStr);
+      }
+    }
   }
 
   private void processLanguages(List<String> rowData, DataField dataField, List<String> headers) {
