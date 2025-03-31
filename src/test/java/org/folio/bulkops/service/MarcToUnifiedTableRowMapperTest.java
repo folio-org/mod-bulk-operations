@@ -3,6 +3,7 @@ package org.folio.bulkops.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
 import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
+import static org.folio.bulkops.util.Constants.NON_PRINTING_DELIMITER;
 
 import java.util.List;
 
@@ -35,7 +36,8 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     marcRecord.addVariableField(dataField);
     var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_ELECTRONIC_ACCESS), true);
 
-    assertThat(rowData.getFirst()).isEqualTo("Related resource;url;text;materials;public note");
+    assertThat(rowData.getFirst()).isEqualTo("Related resource%s;url%s;text%s;materials%s;public note"
+      .formatted(NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER));
   }
 
   @Test
@@ -54,6 +56,7 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     marcRecord.addVariableField(dataField);
     var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_ELECTRONIC_ACCESS), true);
 
-    assertThat(rowData.getFirst()).isEqualTo("Related resource;-;text;materials;public note");
+    assertThat(rowData.getFirst()).isEqualTo("Related resource%s;-%s;text%s;materials%s;public note"
+      .formatted(NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER));
   }
 }

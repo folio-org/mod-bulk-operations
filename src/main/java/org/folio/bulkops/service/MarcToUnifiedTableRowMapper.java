@@ -23,9 +23,10 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_UUID;
 import static org.folio.bulkops.service.Marc21ReferenceProvider.GENERAL_NOTE;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER_SPACED;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Constants.MARC;
+import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.SPECIAL_ITEM_DELIMITER;
 
 import lombok.RequiredArgsConstructor;
 import org.marc4j.marc.ControlField;
@@ -116,12 +117,12 @@ public class MarcToUnifiedTableRowMapper {
         var existingElAcc = rowData.get(index);
         List<String> existingElAccCodes = isNull(existingElAcc) ?
           new ArrayList<>() :
-          new ArrayList<>(Arrays.asList(existingElAcc.split(ARRAY_DELIMITER)));
+          new ArrayList<>(Arrays.asList(existingElAcc.split(SPECIAL_ARRAY_DELIMITER)));
         var existingElAccStr = EMPTY;
         if (!existingElAccCodes.isEmpty()) {
-          existingElAccStr = String.join(ARRAY_DELIMITER, existingElAccCodes) + ITEM_DELIMITER;
+          existingElAccStr = String.join(SPECIAL_ARRAY_DELIMITER, existingElAccCodes) + SPECIAL_ITEM_DELIMITER;
         }
-        existingElAccStr += String.join(ARRAY_DELIMITER, newElAccCodes);
+        existingElAccStr += String.join(SPECIAL_ARRAY_DELIMITER, newElAccCodes);
         rowData.set(index, existingElAccStr);
       }
     }
