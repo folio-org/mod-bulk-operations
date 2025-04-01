@@ -32,6 +32,7 @@ public class MarcToUnifiedTableRowMapperHelper {
   private static final String PERIOD = ".";
   private static final String COMMA = ",";
   private static final String HYPHEN = "-";
+  private static final String WHITE_SPACE = " ";
   private static final String REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD = "^(.*?)\\s.[.]$";
   private static final String REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD_FOLLOWED_BY_COMMA = "^(.*?)\\s.,[.]$";
   private static final String PUNCTUATION_TO_REMOVE = ";:,/+= ";
@@ -72,7 +73,7 @@ public class MarcToUnifiedTableRowMapperHelper {
 
     return List.of(subfields.stream()
       .map(subfield -> subfield.getData().isBlank() ? HYPHEN : subfield.getData())
-      .collect(Collectors.joining(ARRAY_DELIMITER)));
+      .collect(Collectors.joining(WHITE_SPACE)));
   }
 
   private String fetchRelationshipName(DataField dataField) {

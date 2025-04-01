@@ -58,7 +58,7 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     marcRecord.addVariableField(dataField);
     var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_ELECTRONIC_ACCESS), true);
 
-    assertThat(rowData.getFirst()).isEqualTo("Related resource%s;url%s;text;text2%s;materials%s;public note;public note2"
+    assertThat(rowData.getFirst()).isEqualTo("Related resource%s;url%s;text text2%s;materials%s;public note public note2"
       .formatted(NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER));
   }
 
