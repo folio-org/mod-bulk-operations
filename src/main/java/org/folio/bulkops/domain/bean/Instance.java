@@ -212,8 +212,8 @@ public class Instance implements BulkOperationsEntity {
 
   @JsonProperty("electronicAccess")
   @Valid
-  @CsvCustomBindByName(column = INSTANCE_ELECTRONIC_ACCESS, converter = ElectronicAccessListConverter.class)
-  @CsvCustomBindByPosition(position = 24, converter = ElectronicAccessListConverter.class)
+  @CsvCustomBindByName(column = INSTANCE_ELECTRONIC_ACCESS, converter = ElectronicAccessListInstanceConverter.class)
+  @CsvCustomBindByPosition(position = 24, converter = ElectronicAccessListInstanceConverter.class)
   @UnifiedTableCell(visible = false)
   private List<ElectronicAccess> electronicAccess = null;
 

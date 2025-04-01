@@ -27,12 +27,17 @@ public class ElectronicAccessService {
   private static final int ELECTRONIC_ACCESS_LINK_TEXT_INDEX = 2;
   private static final int ELECTRONIC_ACCESS_MATERIAL_SPECIFICATION_INDEX = 3;
   private static final int ELECTRONIC_ACCESS_PUBLIC_NOTE_INDEX = 4;
+  private static final String HYPHEN = "-";
 
   private final FolioExecutionContext folioExecutionContext;
 
 
   public String electronicAccessToString(ElectronicAccess access) {
     return electronicAccessToString(access, SPECIAL_ARRAY_DELIMITER);
+  }
+
+  public String electronicAccessInstanceToString(ElectronicAccess access) {
+    return electronicAccessInstanceToString(access, SPECIAL_ARRAY_DELIMITER);
   }
 
   public String itemElectronicAccessToString(ElectronicAccess access) {
@@ -55,6 +60,16 @@ public class ElectronicAccessService {
       isEmpty(access.getLinkText()) ? EMPTY : access.getLinkText(),
       isEmpty(access.getMaterialsSpecification()) ? EMPTY : access.getMaterialsSpecification(),
       isEmpty(access.getPublicNote()) ? EMPTY : access.getPublicNote());
+  }
+
+  private String electronicAccessInstanceToString(ElectronicAccess access, String delimiter) {
+    log.debug("electronicAccessInstanceToString: {}, {}", access.getRelationshipId(), folioExecutionContext.getTenantId());
+    return String.join(delimiter,
+      isEmpty(access.getRelationshipId()) ? HYPHEN : getRelationshipName(access),
+      isEmpty(access.getUri()) ? HYPHEN : access.getUri(),
+      isEmpty(access.getLinkText()) ? HYPHEN : access.getLinkText(),
+      isEmpty(access.getMaterialsSpecification()) ? HYPHEN : access.getMaterialsSpecification(),
+      isEmpty(access.getPublicNote()) ? HYPHEN : access.getPublicNote());
   }
 
   private ElectronicAccess restoreElectronicAccessItem(String access, String delimiter) {
