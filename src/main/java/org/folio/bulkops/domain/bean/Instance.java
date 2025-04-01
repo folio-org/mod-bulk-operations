@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.With;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.ContributorListConverter;
-import org.folio.bulkops.domain.converter.ElectronicAccessListConverter;
+import org.folio.bulkops.domain.converter.ElectronicAccessListInstanceConverter;
 import org.folio.bulkops.domain.converter.InstanceFormatListConverter;
 import org.folio.bulkops.domain.converter.InstanceNoteListConverter;
 import org.folio.bulkops.domain.converter.InstanceStatisticalCodeListConverter;
