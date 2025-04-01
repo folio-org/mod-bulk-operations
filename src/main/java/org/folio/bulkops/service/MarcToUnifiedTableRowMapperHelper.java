@@ -69,9 +69,10 @@ public class MarcToUnifiedTableRowMapperHelper {
     if (subfields.isEmpty()) {
       return List.of(HYPHEN);
     }
-    return subfields.stream()
+
+    return List.of(subfields.stream()
       .map(subfield -> subfield.getData().isBlank() ? HYPHEN : subfield.getData())
-      .toList();
+      .collect(Collectors.joining(ARRAY_DELIMITER)));
   }
 
   private String fetchRelationshipName(DataField dataField) {
