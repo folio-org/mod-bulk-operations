@@ -49,3 +49,7 @@ SYSTEM_USER_ENABLED (by default is `true`).
 | SYSTEM\_USER\_NAME              | mod-bulk-operations-system-user | Username of the system user                                                                                 |
 | SYSTEM\_USER\_PASSWORD          | -                               | Password of the system user                                                                                 |
 | SYSTEM\_USER\_ENABLED           | true                            | Defines if system user must be created at service tenant initialization or used for egress service requests |
+
+### Memory configuration
+To stable module operating the following mod-data-export-worker configuration is required: Java args -XX:MetaspaceSize=384m -XX:MaxMetaspaceSize=512m -Xmx2048m,
+AWS container: memory - 3072, memory (soft limit) - 2600, cpu - 1024.
