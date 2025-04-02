@@ -41,6 +41,28 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
   }
 
   @Test
+  void processRecordWithElectronicAccessAndRepeatableFieldsTest() {
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    var dataField = new DataFieldImpl("856", '4', '2');
+    dataField.addSubfield(new SubfieldImpl('u', "url"));
+    dataField.addSubfield(new SubfieldImpl('y', "text"));
+    dataField.addSubfield(new SubfieldImpl('y', "text2"));
+    dataField.addSubfield(new SubfieldImpl('3', "materials"));
+    dataField.addSubfield(new SubfieldImpl('z', "public note"));
+    dataField.addSubfield(new SubfieldImpl('z', "public note2"));
+    marcRecord.addVariableField(dataField);
+    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_ELECTRONIC_ACCESS), true);
+
+    assertThat(rowData.getFirst()).isEqualTo("Related resource%s;url%s;text text2%s;materials%s;public note public note2"
+      .formatted(NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER));
+  }
+
+  @Test
   void processRecordWithElectronicAccessIfSubfieldIsEmptyTest() {
     var marcRecord = new RecordImpl();
     marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));

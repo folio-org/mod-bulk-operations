@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -48,6 +49,27 @@ class ElectronicAccessServiceTest extends BaseTest {
 
     if (isNull(uri)) {
       assertEquals("\u001f;\u001f;\u001f;\u001f;", actual);
+    } else {
+      assertEquals("name\u001f;uri\u001f;text\u001f;specification\u001f;note", actual);
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource(value = { ",,,,", "id;tenant,uri,text,specification,note" }, delimiter = ',')
+  void testElectronicAccessInstanceToString(String relationshipId, String uri, String linkText, String materialsSpecification, String publicNote) {
+    when(electronicAccessReferenceService.getRelationshipNameById("id", "tenant")).thenReturn("name");
+    when(folioExecutionContext.getTenantId()).thenReturn("tenant");
+    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
+    var actual = electronicAccessService.electronicAccessInstanceToString(ElectronicAccess.builder()
+      .uri(uri)
+      .linkText(linkText)
+      .materialsSpecification(materialsSpecification)
+      .publicNote(publicNote)
+      .relationshipId(relationshipId)
+      .build());
+
+    if (isEmpty(uri)) {
+      assertEquals("-\u001f;-\u001f;-\u001f;-\u001f;-", actual);
     } else {
       assertEquals("name\u001f;uri\u001f;text\u001f;specification\u001f;note", actual);
     }
