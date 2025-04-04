@@ -99,7 +99,7 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     marcRecord.addVariableField(dataField);
     var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_SUBJECT), true);
 
-    assertThat(rowData.getFirst()).isEqualTo("- text subject c subject d%s;Medical Subject Headings%s;Personal name"
+    assertThat(rowData.getFirst()).isEqualTo("text subject c subject d%s;Medical Subject Headings%s;Personal name"
       .formatted(NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER));
   }
 
