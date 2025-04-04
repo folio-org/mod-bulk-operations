@@ -190,7 +190,7 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
       "611 a text subject c subject d\u001f;Medical Subject Headings\u001f;Meeting name\u001f|" +
       "text subject c subject d\u001f;Canadian Subject Headings\u001f;Uniform title\u001f|" +
       "text subject c subject d\u001f;Medical Subject Headings\u001f;Named event\u001f|" +
-      "text subject c subject d\u001f;-\u001f;Chronological term\u001f|" +
+      "text subject c subject d\u001f;text\u001f;Chronological term\u001f|" +
       "text subject c subject d\u001f;-\u001f;Topical term\u001f|" +
       "text subject c subject d\u001f;Medical Subject Headings\u001f;Geographic name\u001f|" +
       "a text subject c subject d\u001f;Library of Congress Children’s and Young Adults' Subject Headings\u001f;Geographic name\u001f|" +

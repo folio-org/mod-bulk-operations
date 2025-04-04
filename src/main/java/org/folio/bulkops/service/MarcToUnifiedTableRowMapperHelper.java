@@ -123,6 +123,8 @@ public class MarcToUnifiedTableRowMapperHelper {
       name = "Canadian Subject Headings";
     } else if (ind2 == '6') {
       name = "Répertoire de vedettes-matière";
+    } else if (ind2 == '7') {
+      name = dataField.getSubfield('2').getData();
     }
     return name;
   }

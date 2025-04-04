@@ -14,6 +14,9 @@ import lombok.With;
 @AllArgsConstructor
 public class SubjectSource {
 
+  @JsonProperty("id")
+  private String id;
+
   @JsonProperty("name")
   private String name;
 }

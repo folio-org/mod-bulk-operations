@@ -12,6 +12,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import static java.util.Objects.isNull;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 @Service
@@ -50,5 +51,21 @@ public class SubjectReferenceService {
       log.error("Subject type was not found by id={}", id);
       return id;
     }
+  }
+
+  @Cacheable(cacheNames = "subjectSourceIds")
+  public String getSubjectSourceIdByName(String name) {
+    var subjecSources = subjectSourcesClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
+    return subjecSources.getSubjectSources().isEmpty() ?
+      name :
+      subjecSources.getSubjectSources().get(0).getId();
+  }
+
+  @Cacheable(cacheNames = "subjectTypeIds")
+  public String getSubjectTypeIdByName(String name) {
+    var subjectTypes = subjectTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
+    return subjectTypes.getSubjectTypes().isEmpty() ?
+      name :
+      subjectTypes.getSubjectTypes().get(0).getId();
   }
 }

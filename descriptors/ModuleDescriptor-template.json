@@ -73,7 +73,9 @@
             "consortium-search.holdings.batch.collection.get",
             "consortium-search.items.batch.collection.get",
             "inventory-storage.subject-types.item.get",
-            "inventory-storage.subject-sources.item.get"
+            "inventory-storage.subject-sources.item.get",
+            "inventory-storage.subject-sources.collection.get",
+            "inventory-storage.subject-types.collection.get"
           ]
         },
         {
@@ -106,7 +108,9 @@
             "consortium-search.items.batch.collection.get",
             "mapping-rules.get",
             "inventory-storage.subject-types.item.get",
-            "inventory-storage.subject-sources.item.get"
+            "inventory-storage.subject-sources.item.get",
+            "inventory-storage.subject-sources.collection.get",
+            "inventory-storage.subject-types.collection.get"
           ]
         },
         {
@@ -202,7 +206,9 @@
             "perms.users.get",
             "permissions.users.item.get",
             "inventory-storage.subject-types.item.get",
-            "inventory-storage.subject-sources.item.get"
+            "inventory-storage.subject-sources.item.get",
+            "inventory-storage.subject-sources.collection.get",
+            "inventory-storage.subject-types.collection.get"
           ]
         },
         {

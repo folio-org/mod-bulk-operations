@@ -2,7 +2,6 @@ package org.folio.bulkops.service;
 
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
 
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,7 @@ public class SubjectService {
   private final SubjectReferenceService subjectReferenceService;
 
   public Subject restoreSubjectItem(@NotNull String subject) {
-    return restoreSubjectItem(subject, ARRAY_DELIMITER);
+    return restoreSubjectItem(subject, SPECIAL_ARRAY_DELIMITER);
   }
 
   public String subjectToString(Subject subject) {
@@ -46,8 +45,8 @@ public class SubjectService {
       if (NUMBER_OF_SUBJECT_COMPONENTS == tokens.length) {
         return Subject.builder()
           .value(tokens[SUBJECT_HEADINGS_INDEX])
-          .sourceId(tokens[SUBJECT_SOURCE_INDEX])
-          .typeId(tokens[SUBJECT_TYPE_INDEX])
+          .sourceId(subjectReferenceService.getSubjectSourceIdByName(tokens[SUBJECT_SOURCE_INDEX]))
+          .typeId(subjectReferenceService.getSubjectTypeIdByName(tokens[SUBJECT_TYPE_INDEX]))
           .build();
       }
       throw new EntityFormatException(String.format("Illegal number of subject elements: %d, expected: %d", tokens.length, NUMBER_OF_SUBJECT_COMPONENTS));
