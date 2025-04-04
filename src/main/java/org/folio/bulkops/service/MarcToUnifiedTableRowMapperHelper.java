@@ -36,6 +36,8 @@ public class MarcToUnifiedTableRowMapperHelper {
   private static final String REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD = "^(.*?)\\s.[.]$";
   private static final String REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD_FOLLOWED_BY_COMMA = "^(.*?)\\s.,[.]$";
   private static final String PUNCTUATION_TO_REMOVE = ";:,/+= ";
+  private static final String PERSONAL_NAME = "Personal name";
+  private static final String CORPORATE_NAME = "Corporate name";
 
   private final InstanceReferenceService instanceReferenceService;
   private final Marc21ReferenceProvider referenceProvider;
@@ -89,7 +91,7 @@ public class MarcToUnifiedTableRowMapperHelper {
       return List.of(HYPHEN);
     }
     return List.of(subfields.stream()
-      .map(subfield -> subfield.getData())
+      .map(Subfield::getData)
       .collect(Collectors.joining(WHITE_SPACE)).trim());
   }
 
@@ -132,8 +134,8 @@ public class MarcToUnifiedTableRowMapperHelper {
   private String fetchSubjectTypeName(DataField dataField) {
     var field = dataField.getTag();
     return switch (field) {
-      case "600" -> "Personal name";
-      case "610" -> "Corporate name";
+      case "600" -> PERSONAL_NAME;
+      case "610" -> CORPORATE_NAME;
       case "611" -> "Meeting name";
       case "630" -> "Uniform title";
       case "647" -> "Named event";
@@ -162,10 +164,10 @@ public class MarcToUnifiedTableRowMapperHelper {
 
   public String fetchNameType(DataField dataField) {
     return switch (dataField.getTag()) {
-      case "100", "700" -> "Personal name";
+      case "100", "700" -> PERSONAL_NAME;
       case "720" -> isDigit(dataField.getIndicator1()) && 2 == getNumericValue(dataField.getIndicator1()) ?
-        "Corporate name" : "Personal name";
-      case "110", "710" -> "Corporate name";
+        CORPORATE_NAME : PERSONAL_NAME;
+      case "110", "710" -> CORPORATE_NAME;
       case "111", "711" -> "Meeting name";
       default -> EMPTY;
     };
