@@ -19,6 +19,7 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TITLE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TYPE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SERIES_STATEMENTS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SOURCE;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUBJECT;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_UUID;
 import static org.folio.bulkops.service.Marc21ReferenceProvider.GENERAL_NOTE;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
@@ -97,6 +98,7 @@ public class MarcToUnifiedTableRowMapper {
         case "336" -> processResourceType(rowData, dataField, headers);
         case "338" -> processInstanceFormats(rowData, dataField, headers);
         case "362" -> processPublicationRange(rowData, dataField, headers);
+        case "600", "610", "611", "630", "647", "648", "650", "651", "655" -> processSubject(rowData, dataField, headers);
         case "800", "810", "811", "830" -> processSeries(rowData, dataField, headers);
         case "856" -> processElectronicAccess(rowData, dataField, headers);
         case "999" -> processInstanceId(rowData, dataField, headers);
@@ -124,6 +126,25 @@ public class MarcToUnifiedTableRowMapper {
         }
         existingElAccStr += String.join(SPECIAL_ARRAY_DELIMITER, newElAccCodes);
         rowData.set(index, existingElAccStr);
+      }
+    }
+  }
+
+  private void processSubject(List<String> rowData, DataField dataField, List<String> headers) {
+    var index = headers.indexOf(INSTANCE_SUBJECT);
+    if (index != -1) {
+      var newSubjCodes = new ArrayList<>(helper.fetchSubjectCodes(dataField));
+      if (!newSubjCodes.isEmpty()) {
+        var existingSubj = rowData.get(index);
+        List<String> existingSubjCodes = isNull(existingSubj) ?
+          new ArrayList<>() :
+          new ArrayList<>(Arrays.asList(existingSubj.split(SPECIAL_ARRAY_DELIMITER)));
+        var existingSubjStr = EMPTY;
+        if (!existingSubjCodes.isEmpty()) {
+          existingSubjStr = String.join(SPECIAL_ARRAY_DELIMITER, existingSubjCodes) + SPECIAL_ITEM_DELIMITER;
+        }
+        existingSubjStr += String.join(SPECIAL_ARRAY_DELIMITER, newSubjCodes);
+        rowData.set(index, existingSubjStr);
       }
     }
   }

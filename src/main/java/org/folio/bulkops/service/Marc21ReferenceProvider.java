@@ -13,6 +13,7 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION_RANGE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TITLE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TYPE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SERIES_STATEMENTS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUBJECT;
 
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -581,6 +582,8 @@ public class Marc21ReferenceProvider {
     mappedFields.put("336", INSTANCE_RESOURCE_TYPE);
     mappedFields.put("338", INSTANCE_FORMATS);
     mappedFields.put("362", INSTANCE_PUBLICATION_RANGE);
+    List.of("600", "610", "611", "630", "647", "648", "650", "651", "655")
+        .forEach(tag -> mappedFields.put(tag, INSTANCE_SUBJECT));
     List.of("800", "810", "811", "830")
       .forEach(tag -> mappedFields.put(tag, INSTANCE_SERIES_STATEMENTS));
     mappedFields.put("856", INSTANCE_ELECTRONIC_ACCESS);

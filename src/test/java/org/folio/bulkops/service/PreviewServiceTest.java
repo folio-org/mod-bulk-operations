@@ -768,8 +768,8 @@ class PreviewServiceTest extends BaseTest {
 
     var table = previewService.getPreview(bulkOperation, UPLOAD, offset, limit);
 
-    assertThat(table.getHeader().size(), equalTo(27));
-    assertThat(table.getRows().get(0).getRow().size(), equalTo(27));
+    assertThat(table.getHeader().size(), equalTo(28));
+    assertThat(table.getRows().get(0).getRow().size(), equalTo(28));
     assertThat(table.getRows().get(0).getRow().get(23), equalTo("Accumulation and Frequency of Use note text"));
     assertThat(table.getRows().get(0).getRow().get(24), equalTo("Bibliography note text"));
     assertThat(table.getRows().get(0).getRow().get(25), equalTo("General note text"));
