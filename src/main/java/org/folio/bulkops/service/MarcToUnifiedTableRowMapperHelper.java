@@ -65,34 +65,82 @@ public class MarcToUnifiedTableRowMapperHelper {
     return allCodes;
   }
 
+  public List<String> fetchSubjectCodes(DataField dataField) {
+    List<String> allCodes = new ArrayList<>();
+    allCodes.addAll(fetchAllSubjectCodes(dataField));
+    allCodes.add(fetchSubjectSourceName(dataField));
+    allCodes.add(fetchSubjectTypeName(dataField));
+    return allCodes;
+  }
+
   private List<String> fetchElectronicAccessCode(DataField dataField, char code) {
     var subfields = dataField.getSubfields(code);
     if (subfields.isEmpty()) {
       return List.of(HYPHEN);
     }
-
     return List.of(subfields.stream()
       .map(subfield -> subfield.getData().isBlank() ? HYPHEN : subfield.getData())
       .collect(Collectors.joining(WHITE_SPACE)));
   }
 
+  private List<String> fetchAllSubjectCodes(DataField dataField) {
+    var subfields = dataField.getSubfields();
+    if (subfields.isEmpty()) {
+      return List.of(HYPHEN);
+    }
+    return List.of(subfields.stream()
+      .map(subfield -> subfield.getData())
+      .collect(Collectors.joining(WHITE_SPACE)).trim());
+  }
+
   private String fetchRelationshipName(DataField dataField) {
     var name = "No information provided";
-    var ind1 = dataField.getIndicator1();
     var ind2 = dataField.getIndicator2();
-    if (ind1 != '4') {
-      ind1 = '4';
-    }
-    if (ind1 == '4') {
-      if (ind2 == '2') {
-        name = "Related resource";
-      } else if (ind2 == '0') {
-        name = "Resource";
-      } else if (ind2 == '1') {
-        name = "Version of resource";
-      }
+    if (ind2 == '2') {
+      name = "Related resource";
+    } else if (ind2 == '0') {
+      name = "Resource";
+    } else if (ind2 == '1') {
+      name = "Version of resource";
     }
     return name;
+  }
+
+  private String fetchSubjectSourceName(DataField dataField) {
+    var name = HYPHEN;
+    var ind2 = dataField.getIndicator2();
+    if (ind2 == '0') {
+      name = "Library of Congress Subject Headings";
+    } else if (ind2 == '1') {
+      name = "Library of Congress Children’s and Young Adults' Subject Headings";
+    } else if (ind2 == '2') {
+      name = "Medical Subject Headings";
+    } else if (ind2 == '3') {
+      name = "National Agriculture Library subject authority file";
+    } else if (ind2 == '4') {
+      name = "Source not specified";
+    } else if (ind2 == '5') {
+      name = "Canadian Subject Headings";
+    } else if (ind2 == '6') {
+      name = "Répertoire de vedettes-matière";
+    }
+    return name;
+  }
+
+  private String fetchSubjectTypeName(DataField dataField) {
+    var field = dataField.getTag();
+    return switch (field) {
+      case "600" -> "Personal name";
+      case "610" -> "Corporate name";
+      case "611" -> "Meeting name";
+      case "630" -> "Uniform title";
+      case "647" -> "Named event";
+      case "648" -> "Chronological term";
+      case "650" -> "Topical term";
+      case "651" -> "Geographic name";
+      case "655" -> "Genre/Form";
+      default -> HYPHEN;
+    };
   }
 
   public String fetchContributorName(DataField dataField) {

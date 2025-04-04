@@ -1,9 +1,12 @@
 package org.folio.bulkops.util;
 
 import static java.util.Objects.nonNull;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_HRID;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUBJECT;
 import static org.folio.bulkops.util.Constants.INSTANCE_ELECTRONIC_ACCESS_POSITION;
 import static org.folio.bulkops.util.Constants.INSTANCE_NOTE_POSITION;
+import static org.folio.bulkops.util.Constants.INSTANCE_SUBJECT_POSITION;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,15 +49,19 @@ public class MarcCsvHelper {
   public String[] getModifiedDataForCsv(Record marcRecord) {
     var instanceHeaderNames = getInstanceHeaderNames();
     var csvData = marcToUnifiedTableRowMapper.processRecord(marcRecord, instanceHeaderNames, true);
-    var concatenatedNotes = csvData.subList(INSTANCE_NOTE_POSITION, INSTANCE_ELECTRONIC_ACCESS_POSITION).stream()
+    var concatenatedNotes = csvData.subList(INSTANCE_NOTE_POSITION, instanceHeaderNames.indexOf(INSTANCE_ELECTRONIC_ACCESS)).stream()
       .filter(StringUtils::isNotBlank)
       .collect(Collectors.joining(ITEM_DELIMITER_SPACED));
-    var concatenatedElectronicAccess = csvData.subList(INSTANCE_ELECTRONIC_ACCESS_POSITION, csvData.size()).stream()
+    var concatenatedElectronicAccess = csvData.subList(instanceHeaderNames.indexOf(INSTANCE_ELECTRONIC_ACCESS), instanceHeaderNames.indexOf(INSTANCE_SUBJECT)).stream()
       .filter(StringUtils::isNotBlank)
       .collect(Collectors.joining(ITEM_DELIMITER_SPACED));
-    csvData = csvData.subList(0, INSTANCE_ELECTRONIC_ACCESS_POSITION + 1);
+    var concatenatedSubject = csvData.subList(instanceHeaderNames.indexOf(INSTANCE_SUBJECT), csvData.size()).stream()
+      .filter(StringUtils::isNotBlank)
+      .collect(Collectors.joining(ITEM_DELIMITER_SPACED));
+    csvData = csvData.subList(0, INSTANCE_SUBJECT_POSITION + 1);
     csvData.set(INSTANCE_NOTE_POSITION, concatenatedNotes);
     csvData.set(INSTANCE_ELECTRONIC_ACCESS_POSITION, concatenatedElectronicAccess);
+    csvData.set(INSTANCE_SUBJECT_POSITION, concatenatedSubject);
     return csvData.toArray(String[]::new);
   }
 

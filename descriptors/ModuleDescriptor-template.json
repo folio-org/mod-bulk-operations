@@ -71,7 +71,9 @@
             "consortia.user-tenants.collection.get",
             "mapping-rules.get",
             "consortium-search.holdings.batch.collection.get",
-            "consortium-search.items.batch.collection.get"
+            "consortium-search.items.batch.collection.get",
+            "inventory-storage.subject-types.item.get",
+            "inventory-storage.subject-sources.item.get"
           ]
         },
         {
@@ -102,7 +104,9 @@
             "inventory-storage.instance-note-types.item.get",
             "consortium-search.holdings.batch.collection.get",
             "consortium-search.items.batch.collection.get",
-            "mapping-rules.get"
+            "mapping-rules.get",
+            "inventory-storage.subject-types.item.get",
+            "inventory-storage.subject-sources.item.get"
           ]
         },
         {
@@ -196,7 +200,9 @@
             "data-import.assembleStorageFile.post",
             "source-storage.source-records.item.get",
             "perms.users.get",
-            "permissions.users.item.get"
+            "permissions.users.item.get",
+            "inventory-storage.subject-types.item.get",
+            "inventory-storage.subject-sources.item.get"
           ]
         },
         {
@@ -608,6 +614,14 @@
     },
     {
       "id": "user-tenants",
+      "version": "1.0"
+    },
+    {
+      "id": "subject-types",
+      "version": "1.0"
+    },
+    {
+      "id": "subject-sources",
       "version": "1.0"
     }
   ],

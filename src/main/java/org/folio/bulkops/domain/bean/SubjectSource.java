@@ -12,13 +12,8 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Subject {
-  @JsonProperty("value")
-  private String value;
+public class SubjectSource {
 
-  @JsonProperty("sourceId")
-  private String sourceId;
-
-  @JsonProperty("typeId")
-  private String typeId;
+  @JsonProperty("name")
+  private String name;
 }
