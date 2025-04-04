@@ -109,26 +109,18 @@ public class MarcToUnifiedTableRowMapperHelper {
   }
 
   private String fetchSubjectSourceName(DataField dataField) {
-    var name = HYPHEN;
-    var ind2 = dataField.getIndicator2();
-    if (ind2 == '0') {
-      name = "Library of Congress Subject Headings";
-    } else if (ind2 == '1') {
-      name = "Library of Congress Children’s and Young Adults' Subject Headings";
-    } else if (ind2 == '2') {
-      name = "Medical Subject Headings";
-    } else if (ind2 == '3') {
-      name = "National Agriculture Library subject authority file";
-    } else if (ind2 == '4') {
-      name = "Source not specified";
-    } else if (ind2 == '5') {
-      name = "Canadian Subject Headings";
-    } else if (ind2 == '6') {
-      name = "Répertoire de vedettes-matière";
-    } else if (ind2 == '7') {
-      name = dataField.getSubfield('2').getData();
-    }
-    return name;
+    char ind2 = dataField.getIndicator2();
+    return switch (ind2) {
+      case '0' -> "Library of Congress Subject Headings";
+      case '1' -> "Library of Congress Children’s and Young Adults' Subject Headings";
+      case '2' -> "Medical Subject Headings";
+      case '3' -> "National Agriculture Library subject authority file";
+      case '4' -> "Source not specified";
+      case '5' -> "Canadian Subject Headings";
+      case '6' -> "Répertoire de vedettes-matière";
+      case '7' -> dataField.getSubfield('2').getData();
+      default -> HYPHEN;
+    };
   }
 
   private String fetchSubjectTypeName(DataField dataField) {
