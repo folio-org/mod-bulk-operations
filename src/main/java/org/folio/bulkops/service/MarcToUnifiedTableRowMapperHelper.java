@@ -4,6 +4,7 @@ import static java.lang.Character.getNumericValue;
 import static java.lang.Character.isDigit;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -118,7 +119,7 @@ public class MarcToUnifiedTableRowMapperHelper {
       case '4' -> "Source not specified";
       case '5' -> "Canadian Subject Headings";
       case '6' -> "Répertoire de vedettes-matière";
-      case '7' -> dataField.getSubfield('2').getData();
+      case '7' -> ofNullable(dataField.getSubfield('2')).map(Subfield::getData).orElse(HYPHEN);
       default -> HYPHEN;
     };
   }
