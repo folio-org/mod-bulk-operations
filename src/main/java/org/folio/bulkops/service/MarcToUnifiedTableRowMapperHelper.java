@@ -119,7 +119,7 @@ public class MarcToUnifiedTableRowMapperHelper {
       case '4' -> "Source not specified";
       case '5' -> "Canadian Subject Headings";
       case '6' -> "Répertoire de vedettes-matière";
-      case '7' -> ofNullable(dataField.getSubfield('2')).map(subfield -> subfield.getData()).orElse(HYPHEN);
+      case '7' -> ofNullable(dataField.getSubfield('2')).map(Subfield::getData).orElse(HYPHEN);
       default -> HYPHEN;
     };
   }
