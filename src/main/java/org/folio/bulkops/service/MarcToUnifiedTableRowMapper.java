@@ -124,7 +124,11 @@ public class MarcToUnifiedTableRowMapper {
           new ArrayList<>(Arrays.asList(existingElAcc.split(forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER)));
         var existingElAccStr = EMPTY;
         if (!existingElAccCodes.isEmpty()) {
-          existingElAccStr = String.join(forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER, existingElAccCodes) + (forCsv ? ITEM_DELIMITER_SPACED : SPECIAL_ITEM_DELIMITER);
+          if (forCsv) {
+            existingElAccStr = String.join(ARRAY_DELIMITER, existingElAccCodes) + ITEM_DELIMITER_SPACED;
+          } else {
+            existingElAccStr = String.join(SPECIAL_ARRAY_DELIMITER, existingElAccCodes) + SPECIAL_ITEM_DELIMITER;
+          }
         } else if (forCsv) {
           existingElAccStr += ELECTRONIC_ACCESS_HEADINGS;
         }
@@ -145,7 +149,11 @@ public class MarcToUnifiedTableRowMapper {
           new ArrayList<>(Arrays.asList(existingSubj.split(forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER)));
         var existingSubjStr = EMPTY;
         if (!existingSubjCodes.isEmpty()) {
-          existingSubjStr = String.join(forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER, existingSubjCodes) + (forCsv ? ITEM_DELIMITER_SPACED : SPECIAL_ITEM_DELIMITER);
+          if (forCsv) {
+            existingSubjStr = String.join(ARRAY_DELIMITER, existingSubjCodes) + ITEM_DELIMITER_SPACED;
+          } else {
+            existingSubjStr = String.join(SPECIAL_ARRAY_DELIMITER, existingSubjCodes) + SPECIAL_ITEM_DELIMITER;
+          }
         } else if (forCsv) {
           existingSubjStr += SUBJECT_HEADINGS;
         }
