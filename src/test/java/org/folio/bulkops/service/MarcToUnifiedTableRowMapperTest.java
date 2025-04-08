@@ -86,6 +86,10 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
 
     assertThat(rowData.getFirst()).isEqualTo(("URL relationship;URI;Link text;Materials specified;URL public note\n" +
       "Related resource;-;text;materials;public note"));
+
+    rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_ELECTRONIC_ACCESS), false);
+
+    assertThat(rowData.getFirst()).isEqualTo(("Related resource\u001f;-\u001f;text\u001f;materials\u001f;public note"));
   }
 
   @Test
