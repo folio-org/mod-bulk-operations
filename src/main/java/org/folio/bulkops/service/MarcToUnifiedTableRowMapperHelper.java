@@ -4,6 +4,7 @@ import static java.lang.Character.getNumericValue;
 import static java.lang.Character.isDigit;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -36,6 +37,8 @@ public class MarcToUnifiedTableRowMapperHelper {
   private static final String REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD = "^(.*?)\\s.[.]$";
   private static final String REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD_FOLLOWED_BY_COMMA = "^(.*?)\\s.,[.]$";
   private static final String PUNCTUATION_TO_REMOVE = ";:,/+= ";
+  private static final String PERSONAL_NAME = "Personal name";
+  private static final String CORPORATE_NAME = "Corporate name";
 
   private final InstanceReferenceService instanceReferenceService;
   private final Marc21ReferenceProvider referenceProvider;
@@ -65,34 +68,76 @@ public class MarcToUnifiedTableRowMapperHelper {
     return allCodes;
   }
 
+  public List<String> fetchSubjectCodes(DataField dataField) {
+    List<String> allCodes = new ArrayList<>();
+    allCodes.addAll(fetchAllSubjectCodes(dataField));
+    allCodes.add(fetchSubjectSourceName(dataField));
+    allCodes.add(fetchSubjectTypeName(dataField));
+    return allCodes;
+  }
+
   private List<String> fetchElectronicAccessCode(DataField dataField, char code) {
     var subfields = dataField.getSubfields(code);
     if (subfields.isEmpty()) {
       return List.of(HYPHEN);
     }
-
     return List.of(subfields.stream()
       .map(subfield -> subfield.getData().isBlank() ? HYPHEN : subfield.getData())
       .collect(Collectors.joining(WHITE_SPACE)));
   }
 
+  private List<String> fetchAllSubjectCodes(DataField dataField) {
+    var subfields = dataField.getSubfields();
+    if (subfields.isEmpty()) {
+      return List.of(HYPHEN);
+    }
+    return List.of(subfields.stream()
+      .map(Subfield::getData)
+      .collect(Collectors.joining(WHITE_SPACE)).trim());
+  }
+
   private String fetchRelationshipName(DataField dataField) {
     var name = "No information provided";
-    var ind1 = dataField.getIndicator1();
     var ind2 = dataField.getIndicator2();
-    if (ind1 != '4') {
-      ind1 = '4';
-    }
-    if (ind1 == '4') {
-      if (ind2 == '2') {
-        name = "Related resource";
-      } else if (ind2 == '0') {
-        name = "Resource";
-      } else if (ind2 == '1') {
-        name = "Version of resource";
-      }
+    if (ind2 == '2') {
+      name = "Related resource";
+    } else if (ind2 == '0') {
+      name = "Resource";
+    } else if (ind2 == '1') {
+      name = "Version of resource";
     }
     return name;
+  }
+
+  private String fetchSubjectSourceName(DataField dataField) {
+    char ind2 = dataField.getIndicator2();
+    return switch (ind2) {
+      case '0' -> "Library of Congress Subject Headings";
+      case '1' -> "Library of Congress Children’s and Young Adults' Subject Headings";
+      case '2' -> "Medical Subject Headings";
+      case '3' -> "National Agriculture Library subject authority file";
+      case '4' -> "Source not specified";
+      case '5' -> "Canadian Subject Headings";
+      case '6' -> "Répertoire de vedettes-matière";
+      case '7' -> ofNullable(dataField.getSubfield('2')).map(Subfield::getData).orElse(HYPHEN);
+      default -> HYPHEN;
+    };
+  }
+
+  private String fetchSubjectTypeName(DataField dataField) {
+    var field = dataField.getTag();
+    return switch (field) {
+      case "600" -> PERSONAL_NAME;
+      case "610" -> CORPORATE_NAME;
+      case "611" -> "Meeting name";
+      case "630" -> "Uniform title";
+      case "647" -> "Named event";
+      case "648" -> "Chronological term";
+      case "650" -> "Topical term";
+      case "651" -> "Geographic name";
+      case "655" -> "Genre/Form";
+      default -> HYPHEN;
+    };
   }
 
   public String fetchContributorName(DataField dataField) {
@@ -112,10 +157,10 @@ public class MarcToUnifiedTableRowMapperHelper {
 
   public String fetchNameType(DataField dataField) {
     return switch (dataField.getTag()) {
-      case "100", "700" -> "Personal name";
+      case "100", "700" -> PERSONAL_NAME;
       case "720" -> isDigit(dataField.getIndicator1()) && 2 == getNumericValue(dataField.getIndicator1()) ?
-        "Corporate name" : "Personal name";
-      case "110", "710" -> "Corporate name";
+        CORPORATE_NAME : PERSONAL_NAME;
+      case "110", "710" -> CORPORATE_NAME;
       case "111", "711" -> "Meeting name";
       default -> EMPTY;
     };

@@ -24,6 +24,7 @@ import org.folio.bulkops.domain.converter.NatureOfContentTermListConverter;
 import org.folio.bulkops.domain.converter.SeriesListConverter;
 import org.folio.bulkops.domain.converter.StringConverter;
 import org.folio.bulkops.domain.converter.StringListPipedConverter;
+import org.folio.bulkops.domain.converter.SubjectListConverter;
 import org.folio.bulkops.domain.dto.IdentifierType;
 
 import java.util.List;
@@ -61,6 +62,7 @@ public class Instance implements BulkOperationsEntity {
   public static final String INSTANCE_NATURE_OF_CONTENT = "Nature of content";
   public static final String INSTANCE_NOTES = "Notes";
   public static final String INSTANCE_ELECTRONIC_ACCESS = "Electronic access";
+  public static final String INSTANCE_SUBJECT = "Subject";
 
   @JsonProperty("id")
   @CsvCustomBindByName(column = INSTANCE_UUID, converter = StringConverter.class)
@@ -217,14 +219,19 @@ public class Instance implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private List<ElectronicAccess> electronicAccess = null;
 
+  @JsonProperty("subjects")
+  @Valid
+  @CsvCustomBindByName(column = INSTANCE_SUBJECT, converter = SubjectListConverter.class)
+  @CsvCustomBindByPosition(position = 25, converter = SubjectListConverter.class)
+  @UnifiedTableCell(visible = false)
+  private List<Subject> subject = null;
+
   @JsonProperty("matchKey")
   private String matchKey;
   @JsonProperty("alternativeTitles")
   private List<AlternativeTitle> alternativeTitles;
   @JsonProperty("identifiers")
   private List<Identifier> identifiers;
-  @JsonProperty("subjects")
-  private List<Subject> subjects;
   @JsonProperty("classifications")
   private List<Classification> classifications;
   @JsonProperty("publication")

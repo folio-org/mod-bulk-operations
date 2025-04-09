@@ -19,14 +19,17 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TITLE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TYPE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SERIES_STATEMENTS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SOURCE;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUBJECT;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_UUID;
 import static org.folio.bulkops.service.Marc21ReferenceProvider.GENERAL_NOTE;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER_SPACED;
+import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.SPECIAL_ITEM_DELIMITER;
+import static org.folio.bulkops.util.Constants.SUBJECT_HEADINGS;
 
 import lombok.RequiredArgsConstructor;
 import org.marc4j.marc.ControlField;
@@ -97,8 +100,9 @@ public class MarcToUnifiedTableRowMapper {
         case "336" -> processResourceType(rowData, dataField, headers);
         case "338" -> processInstanceFormats(rowData, dataField, headers);
         case "362" -> processPublicationRange(rowData, dataField, headers);
+        case "600", "610", "611", "630", "647", "648", "650", "651", "655" -> processSubject(rowData, dataField, headers, forCsv);
         case "800", "810", "811", "830" -> processSeries(rowData, dataField, headers);
-        case "856" -> processElectronicAccess(rowData, dataField, headers);
+        case "856" -> processElectronicAccess(rowData, dataField, headers, forCsv);
         case "999" -> processInstanceId(rowData, dataField, headers);
         default -> {
           if (referenceProvider.isMappedNoteTag(tag)) {
@@ -109,7 +113,7 @@ public class MarcToUnifiedTableRowMapper {
     });
   }
 
-  private void processElectronicAccess(List<String> rowData, DataField dataField, List<String> headers) {
+  private void processElectronicAccess(List<String> rowData, DataField dataField, List<String> headers, boolean forCsv) {
     var index = headers.indexOf(INSTANCE_ELECTRONIC_ACCESS);
     if (index != -1) {
       var newElAccCodes = new ArrayList<>(helper.fetchElectronicAccessCodes(dataField));
@@ -117,13 +121,44 @@ public class MarcToUnifiedTableRowMapper {
         var existingElAcc = rowData.get(index);
         List<String> existingElAccCodes = isNull(existingElAcc) ?
           new ArrayList<>() :
-          new ArrayList<>(Arrays.asList(existingElAcc.split(SPECIAL_ARRAY_DELIMITER)));
+          new ArrayList<>(Arrays.asList(existingElAcc.split(forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER)));
         var existingElAccStr = EMPTY;
         if (!existingElAccCodes.isEmpty()) {
-          existingElAccStr = String.join(SPECIAL_ARRAY_DELIMITER, existingElAccCodes) + SPECIAL_ITEM_DELIMITER;
+          if (forCsv) {
+            existingElAccStr = String.join(ARRAY_DELIMITER, existingElAccCodes) + ITEM_DELIMITER_SPACED;
+          } else {
+            existingElAccStr = String.join(SPECIAL_ARRAY_DELIMITER, existingElAccCodes) + SPECIAL_ITEM_DELIMITER;
+          }
+        } else if (forCsv) {
+          existingElAccStr += ELECTRONIC_ACCESS_HEADINGS;
         }
-        existingElAccStr += String.join(SPECIAL_ARRAY_DELIMITER, newElAccCodes);
+        existingElAccStr += String.join(forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER, newElAccCodes);
         rowData.set(index, existingElAccStr);
+      }
+    }
+  }
+
+  private void processSubject(List<String> rowData, DataField dataField, List<String> headers, boolean forCsv) {
+    var index = headers.indexOf(INSTANCE_SUBJECT);
+    if (index != -1) {
+      var newSubjCodes = new ArrayList<>(helper.fetchSubjectCodes(dataField));
+      if (!newSubjCodes.isEmpty()) {
+        var existingSubj = rowData.get(index);
+        List<String> existingSubjCodes = isNull(existingSubj) ?
+          new ArrayList<>() :
+          new ArrayList<>(Arrays.asList(existingSubj.split(forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER)));
+        var existingSubjStr = EMPTY;
+        if (!existingSubjCodes.isEmpty()) {
+          if (forCsv) {
+            existingSubjStr = String.join(ARRAY_DELIMITER, existingSubjCodes) + ITEM_DELIMITER_SPACED;
+          } else {
+            existingSubjStr = String.join(SPECIAL_ARRAY_DELIMITER, existingSubjCodes) + SPECIAL_ITEM_DELIMITER;
+          }
+        } else if (forCsv) {
+          existingSubjStr += SUBJECT_HEADINGS;
+        }
+        existingSubjStr += String.join(forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER, newSubjCodes);
+        rowData.set(index, existingSubjStr);
       }
     }
   }
