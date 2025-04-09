@@ -4,3 +4,4 @@ metadata-provider.jobLogEntries.collection.get
 source-storage.parsed-records.fetch.collection.post
 users.collection.get
 inventory-storage.contributor-types.collection.get
+inventory-storage.instance-note-types.collection.get
