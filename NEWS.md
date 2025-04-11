@@ -1,3 +1,10 @@
+## v2.2.3 - Released 2025/04/11
+
+This release contains logging update.
+
+### Bugs
+* [MODBULKOPS-507](https://folio-org.atlassian.net/browse/MODBULKOPS-507) Unexpected end of stream error  - non-ECS
+
 ## v2.2.2 - Released 2025/04/10
 
 This release contains update of system user permissions.
