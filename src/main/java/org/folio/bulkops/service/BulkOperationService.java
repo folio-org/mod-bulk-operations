@@ -495,6 +495,7 @@ public class BulkOperationService {
           operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
         }
       } catch (Exception e) {
+        log.error("Error committing changes", e);
         execution = execution
           .withStatus(StatusType.FAILED)
           .withEndTime(LocalDateTime.now());
