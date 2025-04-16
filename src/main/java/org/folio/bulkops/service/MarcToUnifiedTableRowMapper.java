@@ -3,7 +3,9 @@ package org.folio.bulkops.service;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CLASSIFICATION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CONTRIBUTORS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_EDITION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
@@ -24,7 +26,9 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_UUID;
 import static org.folio.bulkops.service.Marc21ReferenceProvider.GENERAL_NOTE;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER_SPACED;
+import static org.folio.bulkops.util.Constants.CLASSIFICATION_HEADINGS;
 import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
+import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
@@ -32,6 +36,7 @@ import static org.folio.bulkops.util.Constants.SPECIAL_ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.SUBJECT_HEADINGS;
 
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.marc4j.marc.ControlField;
 import org.marc4j.marc.DataField;
 import org.marc4j.marc.Leader;
@@ -41,6 +46,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -92,6 +98,7 @@ public class MarcToUnifiedTableRowMapper {
       var tag = dataField.getTag();
       switch (tag) {
         case "041" -> processLanguages(rowData, dataField, headers);
+        case "050", "060", "080", "082", "086", "090" -> processClassification(rowData, dataField, headers, forCsv);
         case "100", "110", "111", "700", "710", "711", "720" -> processContributors(rowData, dataField, headers);
         case "245" -> processTitles(rowData, dataField, headers);
         case "250" -> processEdition(rowData, dataField, headers);
@@ -111,6 +118,29 @@ public class MarcToUnifiedTableRowMapper {
         }
       }
     });
+  }
+
+  private void processClassification(List<String> rowData, DataField dataField, List<String> headers, boolean forCsv) {
+    var index = headers.indexOf(INSTANCE_CLASSIFICATION);
+    if (index != -1) {
+      var newClassifications = helper.fetchClassifications(dataField);
+      if (!newClassifications.isEmpty()) {
+        var arrayDelimiter = forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER;
+        var itemDelimiter = forCsv ? ITEM_DELIMITER_SPACED : SPECIAL_ITEM_DELIMITER;
+        var classificationType = referenceProvider.getClassificationTypeByTag(dataField.getTag());
+        var newClassificationString = newClassifications.stream()
+          .map(classification -> isEmpty(classification.trim()) ? HYPHEN : classification)
+          .map(classification -> String.join(arrayDelimiter, classificationType, classification))
+          .collect(Collectors.joining(itemDelimiter));
+        var classificationString = rowData.get(index);
+        if (StringUtils.isEmpty(classificationString)) {
+          classificationString = (forCsv ? CLASSIFICATION_HEADINGS : EMPTY) + newClassificationString;
+        } else {
+          classificationString = String.join(itemDelimiter, classificationString, newClassificationString);
+        }
+        rowData.set(index, classificationString);
+      }
+    }
   }
 
   private void processElectronicAccess(List<String> rowData, DataField dataField, List<String> headers, boolean forCsv) {
