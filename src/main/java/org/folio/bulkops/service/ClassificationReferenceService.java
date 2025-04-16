@@ -39,7 +39,7 @@ public class ClassificationReferenceService {
 
   @Cacheable(cacheNames = "classificationTypeIds")
   public String getClassificationTypeIdByName(String name) {
-    var classifications = classificationTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
+    var classifications = classificationTypesClient.getByQuery(QUERY_PATTERN_NAME.formatted(name));
     return classifications.getClassificationTypes().isEmpty() ?
       name :
       classifications.getClassificationTypes().getFirst().getId();
