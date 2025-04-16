@@ -75,7 +75,9 @@
             "inventory-storage.subject-types.item.get",
             "inventory-storage.subject-sources.item.get",
             "inventory-storage.subject-sources.collection.get",
-            "inventory-storage.subject-types.collection.get"
+            "inventory-storage.subject-types.collection.get",
+            "inventory-storage.classification-types.collection.get",
+            "inventory-storage.classification-types.item.get"
           ]
         },
         {
@@ -110,7 +112,9 @@
             "inventory-storage.subject-types.item.get",
             "inventory-storage.subject-sources.item.get",
             "inventory-storage.subject-sources.collection.get",
-            "inventory-storage.subject-types.collection.get"
+            "inventory-storage.subject-types.collection.get",
+            "inventory-storage.classification-types.collection.get",
+            "inventory-storage.classification-types.item.get"
           ]
         },
         {
@@ -208,7 +212,9 @@
             "inventory-storage.subject-types.item.get",
             "inventory-storage.subject-sources.item.get",
             "inventory-storage.subject-sources.collection.get",
-            "inventory-storage.subject-types.collection.get"
+            "inventory-storage.subject-types.collection.get",
+            "inventory-storage.classification-types.collection.get",
+            "inventory-storage.classification-types.item.get"
           ]
         },
         {
@@ -629,6 +635,10 @@
     {
       "id": "subject-sources",
       "version": "1.0"
+    },
+    {
+      "id": "classification-types",
+      "version": "1.2"
     }
   ],
   "optional": [
