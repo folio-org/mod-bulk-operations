@@ -31,6 +31,7 @@ import static org.folio.bulkops.processor.folio.InstanceNotesUpdaterFactory.INST
 import static org.folio.bulkops.processor.folio.ItemsNotesUpdater.ITEM_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
 import static org.folio.bulkops.util.Constants.FOLIO;
+import static org.folio.bulkops.util.Constants.SUBJECT_HEADINGS;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 
 import java.io.IOException;
@@ -434,9 +435,7 @@ public class PreviewService {
         }
       processNoteFields(table, clazz, forceVisible, bulkOperation);
       table.getRows().forEach(row -> {
-        var rowData = row.getRow().stream()
-          .map(s -> isEmpty(s) ? s : s.replace(ELECTRONIC_ACCESS_HEADINGS, EMPTY))
-          .toList();
+        var rowData = removeSubColumnsAndGetRowForPreview(row);
         row.setRow(SpecialCharacterEscaper.restore(rowData));
       });
       tenantTableUpdater.updateTenantInHeadersAndRows(table, clazz);
@@ -446,6 +445,13 @@ public class PreviewService {
     }
     tenantTableUpdater.updateTenantInHeadersAndRows(table, clazz);
     return table;
+  }
+
+  private List<String> removeSubColumnsAndGetRowForPreview(Row row) {
+    return row.getRow().stream()
+        .map(s -> isEmpty(s) ? s : s.replace(ELECTRONIC_ACCESS_HEADINGS, EMPTY))
+        .map(s -> isEmpty(s) ? s : s.replace(SUBJECT_HEADINGS, EMPTY))
+        .toList();
   }
 
   private void processNoteFields(UnifiedTable table, Class<? extends BulkOperationsEntity> clazz, Set<String> forceVisible, BulkOperation bulkOperation) {
