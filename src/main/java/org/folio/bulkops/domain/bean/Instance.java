@@ -12,6 +12,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.With;
 import org.folio.bulkops.domain.converter.BooleanConverter;
+import org.folio.bulkops.domain.converter.ClassificationListConverter;
 import org.folio.bulkops.domain.converter.ContributorListConverter;
 import org.folio.bulkops.domain.converter.ElectronicAccessListInstanceConverter;
 import org.folio.bulkops.domain.converter.InstanceFormatListConverter;
@@ -63,6 +64,7 @@ public class Instance implements BulkOperationsEntity {
   public static final String INSTANCE_NOTES = "Notes";
   public static final String INSTANCE_ELECTRONIC_ACCESS = "Electronic access";
   public static final String INSTANCE_SUBJECT = "Subject";
+  public static final String INSTANCE_CLASSIFICATION = "Classification";
 
   @JsonProperty("id")
   @CsvCustomBindByName(column = INSTANCE_UUID, converter = StringConverter.class)
@@ -226,14 +228,19 @@ public class Instance implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private List<Subject> subject = null;
 
+  @JsonProperty("classifications")
+  @Valid
+  @CsvCustomBindByName(column = INSTANCE_CLASSIFICATION, converter = ClassificationListConverter.class)
+  @CsvCustomBindByPosition(position = 26, converter = ClassificationListConverter.class)
+  @UnifiedTableCell(visible = false)
+  private List<Classification> classifications;
+
   @JsonProperty("matchKey")
   private String matchKey;
   @JsonProperty("alternativeTitles")
   private List<AlternativeTitle> alternativeTitles;
   @JsonProperty("identifiers")
   private List<Identifier> identifiers;
-  @JsonProperty("classifications")
-  private List<Classification> classifications;
   @JsonProperty("publication")
   private List<Publication> publications;
   @JsonProperty("sourceRecordFormat")
