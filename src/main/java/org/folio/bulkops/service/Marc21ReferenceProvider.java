@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CLASSIFICATION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CONTRIBUTORS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_EDITION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
@@ -14,6 +15,7 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TITLE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TYPE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SERIES_STATEMENTS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUBJECT;
+import static org.folio.bulkops.util.Constants.HYPHEN;
 
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -41,6 +43,7 @@ public class Marc21ReferenceProvider {
   private static final String LOCAL_NOTES = "Local notes";
 
   private static final Map<String, String> languages = new HashMap<>();
+  private static final Map<String, String> classificationTypeNames = new HashMap<>();
   private static Map<String, String> mappedFields = new HashMap<>();
 
   private final MappingRulesClient mappingRulesClient;
@@ -573,6 +576,8 @@ public class Marc21ReferenceProvider {
     languages.put("zza", "Zaza");
 
     mappedFields.put("041", INSTANCE_LANGUAGES);
+    List.of("050", "060", "080", "082", "086", "090")
+      .forEach(tag -> mappedFields.put(tag, INSTANCE_CLASSIFICATION));
     List.of("100", "110", "111", "700", "710", "711", "720")
       .forEach(tag -> mappedFields.put(tag, INSTANCE_CONTRIBUTORS));
     mappedFields.put("245", INSTANCE_RESOURCE_TITLE);
@@ -587,6 +592,13 @@ public class Marc21ReferenceProvider {
     List.of("800", "810", "811", "830")
       .forEach(tag -> mappedFields.put(tag, INSTANCE_SERIES_STATEMENTS));
     mappedFields.put("856", INSTANCE_ELECTRONIC_ACCESS);
+
+    classificationTypeNames.put("050", "LC");
+    classificationTypeNames.put("060", "NLM");
+    classificationTypeNames.put("080", "UDC");
+    classificationTypeNames.put("082", "Dewey");
+    classificationTypeNames.put("086", "GDC");
+    classificationTypeNames.put("090", "LC");
   }
 
   public void updateMappingRules() {
@@ -676,5 +688,9 @@ public class Marc21ReferenceProvider {
       .filter(this::isMappedTag)
       .map(this::getFieldNameByTagForCsv)
       .collect(Collectors.toSet());
+  }
+
+  public String getClassificationTypeByTag(String tag) {
+    return classificationTypeNames.getOrDefault(tag, HYPHEN);
   }
 }

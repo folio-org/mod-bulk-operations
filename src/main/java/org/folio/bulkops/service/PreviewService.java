@@ -29,6 +29,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
 import static org.folio.bulkops.processor.folio.HoldingsNotesUpdater.HOLDINGS_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.processor.folio.InstanceNotesUpdaterFactory.INSTANCE_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.processor.folio.ItemsNotesUpdater.ITEM_NOTE_TYPE_ID_KEY;
+import static org.folio.bulkops.util.Constants.CLASSIFICATION_HEADINGS;
 import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
 import static org.folio.bulkops.util.Constants.FOLIO;
 import static org.folio.bulkops.util.Constants.SUBJECT_HEADINGS;
@@ -451,6 +452,7 @@ public class PreviewService {
     return row.getRow().stream()
         .map(s -> isEmpty(s) ? s : s.replace(ELECTRONIC_ACCESS_HEADINGS, EMPTY))
         .map(s -> isEmpty(s) ? s : s.replace(SUBJECT_HEADINGS, EMPTY))
+        .map(s -> isEmpty(s) ? s : s.replace(CLASSIFICATION_HEADINGS, EMPTY))
         .toList();
   }
 

@@ -83,8 +83,8 @@ class MarcFlowCommitProcessorTest extends BaseTest {
 
     assertThat(bulkOperation.getLinkToCommittedRecordsCsvFile()).isNotNull();
     var expectedCsvContent = """
-      Instance UUID,Suppress from discovery,Staff suppress,Previously held,Instance HRID,Source,Cataloged date,Instance status term,Mode of issuance,Statistical code,Administrative note,Resource title,Index title,Series statements,Contributors,Edition,Physical description,Resource type,Nature of content,Formats,Languages,Publication frequency,Publication range,Notes,Electronic access,Subject
-      043c77e9-3653-43d6-a064-5d99b9e5adb4,,,,hrid3,MARC,,,,,,,,,,,,,,,,,,,,
+      Instance UUID,Suppress from discovery,Staff suppress,Previously held,Instance HRID,Source,Cataloged date,Instance status term,Mode of issuance,Statistical code,Administrative note,Resource title,Index title,Series statements,Contributors,Edition,Physical description,Resource type,Nature of content,Formats,Languages,Publication frequency,Publication range,Notes,Electronic access,Subject,Classification
+      043c77e9-3653-43d6-a064-5d99b9e5adb4,,,,hrid3,MARC,,,,,,,,,,,,,,,,,,,,,
       """;
     assertThat(writer).hasToString(expectedCsvContent);
   }

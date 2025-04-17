@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CLASSIFICATION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUBJECT;
 import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
@@ -10,6 +11,8 @@ import java.util.List;
 
 import org.folio.bulkops.BaseTest;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.marc4j.marc.impl.ControlFieldImpl;
 import org.marc4j.marc.impl.DataFieldImpl;
 import org.marc4j.marc.impl.LeaderImpl;
@@ -211,5 +214,54 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
       "text subject c subject d;-;Genre/Form";
 
     assertThat(rowData.getFirst()).isEqualTo(expectedRowData);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void processRecordWithClassificationTest(boolean forCsv) {
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    var dataField = new DataFieldImpl("050", ' ', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "a 050"));
+    dataField.addSubfield(new SubfieldImpl('b', "b 050"));
+    marcRecord.addVariableField(dataField);
+
+    dataField = new DataFieldImpl("060", ' ', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "a 060"));
+    dataField.addSubfield(new SubfieldImpl('b', "b 060"));
+    marcRecord.addVariableField(dataField);
+
+    dataField = new DataFieldImpl("080", ' ', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "a 080"));
+    dataField.addSubfield(new SubfieldImpl('b', "b 080"));
+    marcRecord.addVariableField(dataField);
+
+    dataField = new DataFieldImpl("082", ' ', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "a 082-1/"));
+    dataField.addSubfield(new SubfieldImpl('a', "a 082-2/"));
+    dataField.addSubfield(new SubfieldImpl('b', "b 082"));
+    marcRecord.addVariableField(dataField);
+
+    dataField = new DataFieldImpl("086", ' ', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "a 086"));
+    dataField.addSubfield(new SubfieldImpl('z', "z 086"));
+    marcRecord.addVariableField(dataField);
+
+    dataField = new DataFieldImpl("090", ' ', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "a 090"));
+    dataField.addSubfield(new SubfieldImpl('b', "b 090"));
+    marcRecord.addVariableField(dataField);
+
+    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_CLASSIFICATION), forCsv);
+
+    var expectedCsvRowData = "Classification identifier type;Classification\n" +
+      "LC;a 050 b 050 | NLM;a 060 b 060 | UDC;a 080 b 080 | Dewey;a 082-1 | Dewey;a 082-2 b 082 | GDC;a 086 | GDC;z 086 | LC;a 090 b 090";
+    var expectedPreviewData = "LC\u001F;a 050 b 050\u001F|NLM\u001F;a 060 b 060\u001F|UDC\u001F;a 080 b 080\u001F|Dewey\u001F;a 082-1\u001F|Dewey\u001F;a 082-2 b 082\u001F|GDC\u001F;a 086\u001F|GDC\u001F;z 086\u001F|LC\u001F;a 090 b 090";
+
+    assertThat(rowData.getFirst()).isEqualTo(forCsv ? expectedCsvRowData : expectedPreviewData);
   }
 }

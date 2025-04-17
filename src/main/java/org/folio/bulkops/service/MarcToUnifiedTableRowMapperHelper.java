@@ -7,12 +7,17 @@ import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.SLASH;
+import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
+import static org.folio.bulkops.util.Constants.SPECIAL_ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.STAFF_ONLY;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.InstanceType;
@@ -29,6 +34,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
+@Log4j2
 public class MarcToUnifiedTableRowMapperHelper {
   private static final String PERIOD = ".";
   private static final String COMMA = ",";
@@ -66,6 +72,38 @@ public class MarcToUnifiedTableRowMapperHelper {
     allCodes.addAll(fetchElectronicAccessCode(dataField, '3'));
     allCodes.addAll(fetchElectronicAccessCode(dataField, 'z'));
     return allCodes;
+  }
+
+  public List<String> fetchClassifications(DataField dataField) {
+    List<String> classifications = new ArrayList<>();
+    switch (dataField.getTag()) {
+      case "086" -> {
+        classifications.addAll(fetchSubfieldsDataByCode(dataField, 'a'));
+        classifications.addAll(fetchSubfieldsDataByCode(dataField, 'z'));
+      }
+      case "050", "060", "080", "090" ->
+        classifications.add(dataField.getSubfield('a').getData() +
+          SPACE + dataField.getSubfield('b').getData());
+      case "082" -> {
+        classifications.addAll(dataField.getSubfields('a').stream()
+          .map(Subfield::getData)
+          .map(s -> s.replace(SLASH, EMPTY))
+          .toList());
+        var itemNumber = dataField.getSubfield('b');
+        if (nonNull(itemNumber) && !classifications.isEmpty()) {
+          classifications.set(classifications.size() - 1, String.join(SPACE, classifications.getLast(), itemNumber.getData()));
+        }
+      }
+      default -> log.error("Tag {} is not classification or not supported yet.", dataField.getTag());
+    }
+    return classifications;
+  }
+
+  private List<String> fetchSubfieldsDataByCode(DataField dataField, char code) {
+    return dataField.getSubfields(code).stream()
+      .map(Subfield::getData)
+      .map(s -> isEmpty(s) ? HYPHEN : s)
+      .toList();
   }
 
   public List<String> fetchSubjectCodes(DataField dataField) {
