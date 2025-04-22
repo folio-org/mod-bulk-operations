@@ -12,8 +12,6 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ZERO;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.SLASH;
-import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
-import static org.folio.bulkops.util.Constants.SPECIAL_ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.STAFF_ONLY;
 
 import lombok.RequiredArgsConstructor;
@@ -81,9 +79,10 @@ public class MarcToUnifiedTableRowMapperHelper {
         classifications.addAll(fetchSubfieldsDataByCode(dataField, 'a'));
         classifications.addAll(fetchSubfieldsDataByCode(dataField, 'z'));
       }
-      case "050", "060", "080", "090" ->
-        classifications.add(dataField.getSubfield('a').getData() +
-          SPACE + dataField.getSubfield('b').getData());
+      case "050", "060", "080", "090" -> {
+        var value = String.join(SPACE, fetchSingleSubfieldDataByCode(dataField, 'a'), fetchSingleSubfieldDataByCode(dataField, 'b')).trim();
+        classifications.add(value.isEmpty() ? HYPHEN : value);
+      }
       case "082" -> {
         classifications.addAll(dataField.getSubfields('a').stream()
           .map(Subfield::getData)
@@ -106,9 +105,16 @@ public class MarcToUnifiedTableRowMapperHelper {
       .toList();
   }
 
+  private String fetchSingleSubfieldDataByCode(DataField dataField, char code) {
+    var subfield = dataField.getSubfield(code);
+    if (nonNull(subfield)) {
+      return isNull(subfield.getData()) ? EMPTY : subfield.getData();
+    }
+    return EMPTY;
+  }
+
   public List<String> fetchSubjectCodes(DataField dataField) {
-    List<String> allCodes = new ArrayList<>();
-    allCodes.addAll(fetchAllSubjectCodes(dataField));
+    List<String> allCodes = new ArrayList<>(fetchAllSubjectCodes(dataField));
     allCodes.add(fetchSubjectSourceName(dataField));
     allCodes.add(fetchSubjectTypeName(dataField));
     return allCodes;
