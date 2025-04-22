@@ -1,8 +1,11 @@
 package org.folio.bulkops.service;
 
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
+import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.mockito.Mockito.when;
 
 import lombok.SneakyThrows;
@@ -20,8 +23,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.marc4j.marc.impl.ControlFieldImpl;
 import org.marc4j.marc.impl.DataFieldImpl;
 import org.marc4j.marc.impl.LeaderImpl;
+import org.marc4j.marc.impl.RecordImpl;
 import org.marc4j.marc.impl.SubfieldImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -29,6 +34,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.List;
 
 class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
    @MockitoBean
@@ -410,5 +416,45 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
     dataField = new DataFieldImpl("856", ' ', '4');
     res = mapperHelper.fetchElectronicAccessCodes(dataField);
     assertThat(res.getFirst()).isEqualTo("No information provided");
+  }
+
+  @ParameterizedTest
+  @CsvSource(textBlock = """
+    a  | textA | b   | textB
+    a  | textA | ' ' |
+    a  |       | b   | textB
+    a  | textA | b   |
+    ' '|       | b   | textB
+    a  | textA | ' ' |
+    ' '|       | ' ' |
+    """, delimiter = '|')
+  void shouldFetchClassificationDataOrHyphenIfNotPresent(char codeA, String dataA, char codeB, String dataB) {
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    var dataField = new DataFieldImpl("050", ' ', ' ');
+    if (' ' != codeA) {
+      dataField.addSubfield(new SubfieldImpl(codeA, dataA));
+    }
+    if (' ' != codeB) {
+      dataField.addSubfield(new SubfieldImpl(codeB, dataB));
+    }
+    marcRecord.addVariableField(dataField);
+
+    var res = mapperHelper.fetchClassifications(dataField);
+
+    if (' ' == codeA && ' ' == codeB) {
+      assertThat(res).isEqualTo(List.of(HYPHEN));
+    } else if (nonNull(dataA) && nonNull(dataB)) {
+      assertThat(res).isEqualTo(List.of("textA textB"));
+    } else if (nonNull(dataA)) {
+      assertThat(res).isEqualTo(List.of("textA"));
+    } else if (nonNull(dataB)) {
+      assertThat(res).isEqualTo(List.of("textB"));
+    }
+    System.out.println(res);
   }
 }
