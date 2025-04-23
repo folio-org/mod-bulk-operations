@@ -265,6 +265,8 @@ public class Instance implements BulkOperationsEntity {
   private Dates dates;
   @JsonProperty("isBoundWith")
   private Boolean isBoundWith = false;
+  @JsonProperty("deleted")
+  private Boolean deleted = false;
 
 
 
