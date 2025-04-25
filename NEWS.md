@@ -1,3 +1,10 @@
+## v2.2.4 - Released 2025/04/25
+
+This release contains schema update.
+
+### Technical tasks
+* Instance schema update (added 'deleted' field)
+
 ## v2.2.3 - Released 2025/04/11
 
 This release contains logging update.
