@@ -7,6 +7,7 @@ import static org.folio.bulkops.domain.bean.CirculationNote.NoteTypeEnum.OUT;
 import lombok.SneakyThrows;
 import org.folio.bulkops.domain.bean.CirculationNote;
 import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
 import org.junit.jupiter.api.Test;
 
 import java.io.FileInputStream;

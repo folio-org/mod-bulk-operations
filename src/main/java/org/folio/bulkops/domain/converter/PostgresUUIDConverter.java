@@ -5,6 +5,7 @@ import java.util.UUID;
 import jakarta.persistence.AttributeConverter;
 
 public class PostgresUUIDConverter implements AttributeConverter<UUID, String> {
+
   @Override
   public String convertToDatabaseColumn(UUID attribute) {
     return attribute == null ? null : attribute.toString();

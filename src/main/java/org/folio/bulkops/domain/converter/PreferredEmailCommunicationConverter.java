@@ -1,5 +1,6 @@
 package org.folio.bulkops.domain.converter;
 
+import java.util.Optional;
 import org.folio.bulkops.domain.bean.PreferredEmailCommunication;
 
 import java.util.Arrays;
@@ -7,7 +8,6 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
@@ -24,6 +24,6 @@ public class PreferredEmailCommunicationConverter extends BaseConverter<Set<Pref
 
   @Override
   public String convertToString(Set<PreferredEmailCommunication> object) {
-    return ofNullable(String.join(ARRAY_DELIMITER, object.stream().map(PreferredEmailCommunication::getValue).toList())).orElse(EMPTY);
+    return Optional.of(String.join(ARRAY_DELIMITER, object.stream().map(PreferredEmailCommunication::getValue).toList())).orElse(EMPTY);
   }
 }

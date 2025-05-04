@@ -66,7 +66,7 @@ import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
-import org.folio.bulkops.domain.converter.BulkOperationsEntityCsvWriter;
+import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
@@ -650,11 +650,12 @@ public class BulkOperationService {
     }
   }
 
-  private String uploadCsvFile(UUID dataExportJobId, MultipartFile file) throws BulkOperationException {
+  private void uploadCsvFile(UUID dataExportJobId, MultipartFile file) throws BulkOperationException {
     var retryCount = 0;
     while (true) {
       try {
-        return bulkEditClient.uploadFile(dataExportJobId, file);
+        bulkEditClient.uploadFile(dataExportJobId, file);
+        return;
       } catch (NotFoundException e) {
         if (++retryCount == maxRetryCount) {
           throw new BulkOperationException("Failed to upload file with identifiers: data export job was not found");

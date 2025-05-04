@@ -23,7 +23,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.Instance;
-import org.folio.bulkops.domain.converter.BulkOperationsEntityCsvWriter;
+import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.processor.CommitProcessor;
