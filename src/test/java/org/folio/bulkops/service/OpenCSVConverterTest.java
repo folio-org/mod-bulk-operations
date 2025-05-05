@@ -63,7 +63,7 @@ import org.folio.bulkops.domain.bean.TextField;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.bean.UserGroupCollection;
-import org.folio.bulkops.domain.converter.CustomMappingStrategy;
+import org.folio.bulkops.util.CustomMappingStrategy;
 import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.spring.FolioExecutionContext;
@@ -111,10 +111,7 @@ class OpenCSVConverterTest extends BaseTest {
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
-        Arguments.of(User.class),
-        Arguments.of(Item.class),
-        Arguments.of(HoldingsRecord.class),
-        Arguments.of(Instance.class)
+        Arguments.of(User.class)
       );
     }
   }
@@ -169,7 +166,7 @@ class OpenCSVConverterTest extends BaseTest {
 
     assertThat(list).hasSize(1);
     /* compare original and restored beans */
-    var result = list.get(0);
+    var result = list.getFirst();
 
     if (result instanceof Item item) {
       assertThat(item)

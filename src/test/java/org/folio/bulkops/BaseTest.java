@@ -109,6 +109,7 @@ public abstract class BaseTest {
   public static final String REGION = "us-west-2";
   private static final String MINIO_ENDPOINT;
   private static final String OKAPI_URL = "http://okapi:9130";
+  public static final int ASYNC_OPERATION_TIMEOUT_IN_SECONDS = 10;
 
   public static final PostgreSQLContainer<?> postgresDBContainer;
   private static final GenericContainer<?> s3;

@@ -11,10 +11,6 @@ import org.folio.bulkops.domain.bean.EffectiveCallNumberComponents;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 
 public class EffectiveCallNumberComponentsConverter extends BaseConverter<EffectiveCallNumberComponents> {
-  @Override
-  public EffectiveCallNumberComponents convertToObject(String value) {
-    return null;
-  }
 
   @Override
   public String convertToString(EffectiveCallNumberComponents object) {

@@ -1,4 +1,4 @@
-package org.folio.bulkops.domain.converter;
+package org.folio.bulkops.util;
 
 import com.opencsv.bean.BeanField;
 import com.opencsv.bean.ColumnPositionMappingStrategy;

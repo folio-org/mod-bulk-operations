@@ -1,4 +1,4 @@
-package org.folio.bulkops.domain.converter;
+package org.folio.bulkops.util;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
 import static org.folio.bulkops.domain.bean.CirculationNote.NoteTypeEnum.IN;
@@ -16,11 +16,11 @@ import org.springframework.util.ObjectUtils;
 import java.io.Writer;
 
 public class BulkOperationsEntityCsvWriter {
-  private CustomMappingStrategy<BulkOperationsEntity> strategy;
-  private StatefulBeanToCsv<BulkOperationsEntity> delegate;
+
+  private final StatefulBeanToCsv<BulkOperationsEntity> delegate;
 
   public BulkOperationsEntityCsvWriter(Writer writer, Class<? extends BulkOperationsEntity> clazz) {
-    strategy = new CustomMappingStrategy<>();
+    CustomMappingStrategy<BulkOperationsEntity> strategy = new CustomMappingStrategy<>();
     strategy.setType(clazz);
     delegate = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writer)
       .withSeparator(DEFAULT_SEPARATOR)

@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 
 public class ElectronicAccessListInstanceConverter extends ElectronicAccessListConverter {
 
-
   @Override
   public String convertToString(List<ElectronicAccess> object) {
     return ObjectUtils.isEmpty(object) ?
