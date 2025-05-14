@@ -501,7 +501,7 @@ public class BulkOperationService {
     var step = bulkOperationStart.getStep();
     var approach = bulkOperationStart.getApproach();
     BulkOperation operation = bulkOperationRepository.findById(bulkOperationId)
-        .orElseThrow(() -> new NotFoundException("Bulk operation was not found bu id=" + bulkOperationId));
+        .orElseThrow(() -> new NotFoundException("Bulk operation was not found by id=" + bulkOperationId));
     operation.setUserId(xOkapiUserId);
 
     String errorMessage = null;
@@ -659,6 +659,11 @@ public class BulkOperationService {
     var operation = getBulkOperationOrThrow(bulkOperationId);
     return switch (operation.getStatus()) {
       case EXECUTING_QUERY -> startBulkOperation(operation.getId(), operation.getUserId(), new BulkOperationStart()
+        .step(UPLOAD)
+        .approach(QUERY)
+        .entityType(operation.getEntityType())
+        .entityCustomIdentifierType(IdentifierType.ID));
+      case SAVED_IDENTIFIERS -> startBulkOperation(operation.getId(), operation.getUserId(), new BulkOperationStart()
         .step(UPLOAD)
         .approach(IN_APP)
         .entityType(operation.getEntityType())

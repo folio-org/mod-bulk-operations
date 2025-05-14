@@ -117,8 +117,6 @@ public class QueryDataRetrieverService {
       var queryDetails = queryService.getResult(queryId);
       queryService.checkQueryExecutionStatus(operation, queryDetails);
 
-      queryService.saveIdentifiers(operation, retrieveIdentifiers(queryDetails));
-
       var matchedJsonFileName = operation.getId() + SLASH + "json" + SLASH + LocalDate.now() + MATCHED_RECORDS + FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile()) + ".json";
       var matchedMrcFileName = operation.getId() + SLASH + LocalDate.now() + MARC_RECORDS + FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
       var matchedCsvFileName = operation.getId() + SLASH + LocalDate.now() + MATCHED_RECORDS + FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile()) + ".csv";
@@ -180,10 +178,6 @@ public class QueryDataRetrieverService {
       }
       errorService.saveErrorsAfterQuery(bulkOperationExecutionContents, operation);
     }
-  }
-
-  private List<String> retrieveIdentifiers(QueryDetails queryDetails) {
-    return queryDetails.getContent().stream().map(content -> content.get("instance.id").toString()).sorted().distinct().toList();
   }
 
   private void checkPermissions(BulkOperation operation, BulkOperationsEntity record) throws UploadFromQueryException {

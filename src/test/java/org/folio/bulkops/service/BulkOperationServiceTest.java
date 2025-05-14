@@ -131,6 +131,7 @@ import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.CSVHelper;
 import org.folio.bulkops.util.MarcCsvHelper;
 import org.folio.querytool.domain.dto.QueryDetails;
+import org.folio.querytool.domain.dto.SubmitQuery;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.RemoteStorageWriter;
 import org.folio.s3.exception.S3ClientException;
@@ -1606,13 +1607,20 @@ class BulkOperationServiceTest extends BaseTest {
   @Test
   void shouldCheckQueryExecution() {
     var operationId = UUID.randomUUID();
+    var queryId = UUID.randomUUID();
     var operation = new BulkOperation();
     operation.setStatus(EXECUTING_QUERY);
+    operation.setId(operationId);
+    operation.setApproach(ApproachType.QUERY);
+    var queryDetails = new QueryDetails().content(List.of());
+
     when(bulkOperationRepository.findById(operationId)).thenReturn(Optional.of(operation));
+    when(queryService.executeQuery(any(SubmitQuery.class))).thenReturn(queryId);
+    when(queryService.getResult(queryId)).thenReturn(queryDetails);
 
     bulkOperationService.getOperationById(operationId);
 
-    verify(queryService).checkQueryExecutionStatus(operation, any(QueryDetails.class));
+    verify(queryService).checkQueryExecutionStatus(operation, queryDetails);
   }
 
   @Test

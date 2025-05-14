@@ -6,6 +6,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_IDENTI
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.NEW_LINE_SEPARATOR;
+import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -21,6 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 @Log4j2
@@ -32,6 +35,8 @@ public class QueryService {
   private final BulkOperationRepository bulkOperationRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final ErrorService errorService;
+
+  private final ExecutorService executor = Executors.newCachedThreadPool();
 
   public UUID executeQuery(SubmitQuery submitQuery) {
     return queryClient.executeQuery(submitQuery).getQueryId();
@@ -47,6 +52,7 @@ public class QueryService {
         if (queryResult.getTotalRecords() == 0) {
           yield failBulkOperation(bulkOperation, "No records found for the query");
         }
+        executor.execute(getRunnableWithCurrentFolioContext(() -> saveIdentifiers(bulkOperation, retrieveIdentifiers(queryResult))));
         bulkOperation.setStatus(RETRIEVING_IDENTIFIERS);
         yield bulkOperationRepository.save(bulkOperation);
       }
@@ -85,5 +91,9 @@ public class QueryService {
     bulkOperation.setErrorMessage("Query execution was cancelled");
     bulkOperation.setEndTime(LocalDateTime.now());
     return bulkOperationRepository.save(bulkOperation);
+  }
+
+  private List<String> retrieveIdentifiers(QueryDetails queryDetails) {
+    return queryDetails.getContent().stream().map(content -> content.get("instance.id").toString()).sorted().distinct().toList();
   }
 }
