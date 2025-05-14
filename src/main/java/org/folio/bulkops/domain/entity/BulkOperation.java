@@ -96,6 +96,7 @@ public class BulkOperation {
   private UUID fqlQueryId;
   private String fqlQuery;
   private String userFriendlyQuery;
+  private UUID entityTypeId;
 
   @Type(JsonBinaryType.class)
   @Column(columnDefinition = "jsonb[]")

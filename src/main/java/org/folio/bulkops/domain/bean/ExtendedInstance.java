@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.With;
 import org.folio.bulkops.domain.dto.IdentifierType;
 
+import java.util.UUID;
+
 @Data
 @With
 @Builder(toBuilder = true)
@@ -28,6 +30,16 @@ public class ExtendedInstance implements BulkOperationsEntity {
   @Override
   public Integer _version() {
     return entity._version();
+  }
+
+  @Override
+  public boolean isMarcInstance() {
+    return entity.isMarcInstance();
+  }
+
+  @Override
+  public String getId() {
+    return entity.getId();
   }
 
   @Override

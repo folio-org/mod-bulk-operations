@@ -10,8 +10,10 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ER
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEWED_NO_MARC_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
+import static org.folio.bulkops.util.Constants.COMMA_DELIMETER;
 import static org.folio.bulkops.util.Constants.DATA_IMPORT_ERROR_DISCARDED;
 import static org.folio.bulkops.util.Constants.ERROR_FILE_NAME_ENDING;
+import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 
 import java.io.BufferedReader;
@@ -241,6 +243,24 @@ public class ErrorService {
     return remoteFileSystemClient.put(new ByteArrayInputStream(errors.getBytes()), bulkOperationId + "/" + errorsFileName);
   }
 
+  public void saveErrorsAfterQuery(List<BulkOperationExecutionContent> bulkOperationExecutionContents, BulkOperation operation) {
+    StringBuilder sb = new StringBuilder();
+    bulkOperationExecutionContents.forEach(exCont -> {
+      if (exCont.getErrorType() == ErrorType.ERROR) {
+        operation.setMatchedNumOfErrors(operation.getMatchedNumOfErrors() + 1);
+      }
+      if (exCont.getErrorType() == ErrorType.WARNING) {
+        operation.setMatchedNumOfWarnings(operation.getMatchedNumOfWarnings() + 1);
+      }
+      var errorLine = "%s%s%s%s%s%s".formatted(exCont.getErrorType(), COMMA_DELIMETER,
+        StringUtils.strip(exCont.getIdentifier(), "\""), COMMA_DELIMETER, exCont.getErrorMessage(), System.lineSeparator());
+      sb.append(errorLine);
+    });
+    if (!sb.isEmpty()) {
+      var linkToMatchingErrorsFile = uploadErrorsToStorage(operation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, sb.toString());
+      operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
+    }
+  }
 
   public int getCommittedNumOfErrors(UUID bulkOperationId) {
     return executionContentRepository.countAllByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIs(bulkOperationId, ErrorType.ERROR);

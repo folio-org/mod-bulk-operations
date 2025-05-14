@@ -646,3 +646,5 @@ components:
           description: Example response
     errorType:
       $ref: 'schemas/error_type.json#/ErrorType'
+    batchIdsDto:
+      $ref: 'schemas/batchIds.json#/BatchIdsDto'
