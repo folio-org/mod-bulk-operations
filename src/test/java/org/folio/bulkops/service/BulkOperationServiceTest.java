@@ -128,7 +128,9 @@ import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.util.CSVHelper;
 import org.folio.bulkops.util.MarcCsvHelper;
+import org.folio.querytool.domain.dto.QueryDetails;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.RemoteStorageWriter;
 import org.folio.s3.exception.S3ClientException;
@@ -1437,7 +1439,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(metadataProviderService.calculateProgress(anyList()))
       .thenReturn(new DataImportProgress().total(10).current(5));
 
-    when(queryService.checkQueryExecutionStatus(any(BulkOperation.class)))
+    when(queryService.checkQueryExecutionStatus(any(BulkOperation.class), any(QueryDetails.class)))
       .thenReturn(experctedBulkOperation);
 
     var operation = bulkOperationService.getOperationById(operationId);
@@ -1610,7 +1612,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     bulkOperationService.getOperationById(operationId);
 
-    verify(queryService).checkQueryExecutionStatus(operation);
+    verify(queryService).checkQueryExecutionStatus(operation, any(QueryDetails.class));
   }
 
   @Test
@@ -1649,7 +1651,7 @@ class BulkOperationServiceTest extends BaseTest {
     try (var stringWriter = new StringWriter()) {
       var writer = new BulkOperationsEntityCsvWriter(stringWriter, Item.class);
       List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
-      bulkOperationService.writeBeanToCsv(operation, writer, item, bulkOperationExecutionContents);
+      CSVHelper.writeBeanToCsv(operation, writer, item, bulkOperationExecutionContents);
       assertThat(stringWriter.toString(), containsString("FAILED"));
       if (APPLY_CHANGES.equals(operation.getStatus())) {
         assertThat(bulkOperationExecutionContents, hasSize(0));

@@ -46,4 +46,5 @@
   <include file="changes/30-01-2025_add_marc_csv_links_to_bulk_operation_table.xml" relativeToChangelogFile="true"/>
   <include file="changes/05-02-2025_add_migration_script_for_warnings.xml" relativeToChangelogFile="true"/>
   <include file="changes/03-03-2025_delete_enum_types.xml" relativeToChangelogFile="true"/>
+  <include file="changes/08-05-2025_update_bulk_operation_add_entity_type_id.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

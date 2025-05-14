@@ -14,6 +14,18 @@ public interface BulkOperationsEntity {
   String getIdentifier(IdentifierType identifierType);
   Integer _version();
   @JsonIgnore
+  default String getId() {
+    return null;
+  }
+  @JsonIgnore
+  default boolean isMarcInstance() {
+    return false;
+  }
+  @JsonIgnore
+  default String getSource() {
+    return "";
+  }
+  @JsonIgnore
   default BulkOperationsEntity getRecordBulkOperationEntity() {
     return null;
   }

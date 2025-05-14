@@ -52,13 +52,13 @@ class QueryServiceTest extends BaseTest {
         .fqlQueryId(fqlQueryId)
         .build();
 
-      when(queryClient.getQuery(fqlQueryId)).thenReturn(new QueryDetails()
+      when(queryClient.getQuery(fqlQueryId, false)).thenReturn(new QueryDetails()
         .status(QueryDetails.StatusEnum.SUCCESS)
         .totalRecords(2));
       when(queryClient.getSortedIds(fqlQueryId, 0, Integer.MAX_VALUE))
         .thenReturn(Collections.singletonList(List.of(UUID.randomUUID().toString(), UUID.randomUUID().toString())));
 
-      queryService.checkQueryExecutionStatus(operation);
+      queryService.checkQueryExecutionStatus(operation, null); // TODO
 
       await().untilAsserted(() ->
         verify(remoteFileSystemClient).put(any(ByteArrayInputStream.class), eq(expectedPath)));
@@ -76,12 +76,12 @@ class QueryServiceTest extends BaseTest {
       .fqlQueryId(fqlQueryId)
       .build();
 
-    when(queryClient.getQuery(fqlQueryId)).thenReturn(new QueryDetails()
+    when(queryClient.getQuery(fqlQueryId, false)).thenReturn(new QueryDetails()
       .status(status)
       .failureReason("some reason")
       .totalRecords(0));
 
-    queryService.checkQueryExecutionStatus(operation);
+    queryService.checkQueryExecutionStatus(operation, null); // TODO
 
     verify(remoteFileSystemClient, times(0)).put(any(ByteArrayInputStream.class), eq(expectedPath));
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
@@ -99,10 +99,10 @@ class QueryServiceTest extends BaseTest {
       .fqlQueryId(fqlQueryId)
       .build();
 
-    when(queryClient.getQuery(fqlQueryId)).thenReturn(new QueryDetails()
+    when(queryClient.getQuery(fqlQueryId, false)).thenReturn(new QueryDetails()
       .status(QueryDetails.StatusEnum.CANCELLED));
 
-    queryService.checkQueryExecutionStatus(operation);
+    queryService.checkQueryExecutionStatus(operation, null); // TODO
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository).save(operationCaptor.capture());
@@ -119,10 +119,10 @@ class QueryServiceTest extends BaseTest {
       .status(EXECUTING_QUERY)
       .build();
 
-    when(queryClient.getQuery(fqlQueryId)).thenReturn(new QueryDetails()
+    when(queryClient.getQuery(fqlQueryId, false)).thenReturn(new QueryDetails()
       .status(QueryDetails.StatusEnum.IN_PROGRESS));
 
-    var result = queryService.checkQueryExecutionStatus(operation);
+    var result = queryService.checkQueryExecutionStatus(operation, null); // TODO
 
     assertThat(result.getStatus()).isEqualTo(EXECUTING_QUERY);
   }

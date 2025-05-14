@@ -21,10 +21,10 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORD
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
+import static org.folio.bulkops.util.CSVHelper.writeBeanToCsv;
 import static org.folio.bulkops.util.Constants.CHANGED_CSV_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
-import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
@@ -63,7 +63,6 @@ import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
-import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
@@ -83,7 +82,6 @@ import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.BulkOperationException;
-import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.OptimisticLockingException;
@@ -113,8 +111,7 @@ import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
+
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -156,6 +153,7 @@ public class BulkOperationService {
   private final SrsService srsService;
   private final MarcCsvHelper marcCsvHelper;
   private final BulkOperationServiceHelper bulkOperationServiceHelper;
+  private final QueryDataRetrieverService queryDataRetriever;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
@@ -225,6 +223,7 @@ public class BulkOperationService {
         .fqlQuery(queryRequest.getFqlQuery())
         .fqlQueryId(queryRequest.getQueryId())
         .userFriendlyQuery(queryRequest.getUserFriendlyQuery())
+        .entityTypeId(queryRequest.getEntityTypeId())
       .build());
   }
 
@@ -357,25 +356,6 @@ public class BulkOperationService {
     }
   }
 
-  public void writeBeanToCsv(BulkOperation operation, BulkOperationsEntityCsvWriter csvWriter, BulkOperationsEntity bean, List<BulkOperationExecutionContent> bulkOperationExecutionContents) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
-    try {
-      csvWriter.write(bean);
-    } catch (ConverterException e) {
-      if (APPLY_CHANGES.equals(operation.getStatus())) {
-        log.error("Record {}, field: {}, converter exception: {}", bean.getIdentifier(operation.getIdentifierType()), e.getField().getName(), e.getMessage());
-      } else {
-        bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
-          .identifier(bean.getIdentifier(operation.getIdentifierType()))
-          .bulkOperationId(operation.getId())
-          .state(StateType.FAILED)
-          .errorType(e.getErrorType())
-          .errorMessage(format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()))
-          .build());
-      }
-      writeBeanToCsv(operation, csvWriter, bean, bulkOperationExecutionContents);
-    }
-  }
-
   protected UpdatedEntityHolder<BulkOperationsEntity> processUpdate(BulkOperationsEntity original, BulkOperation operation, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> entityClass) {
     var processor = dataProcessorFactory.getProcessorFromFactory(entityClass);
     UpdatedEntityHolder<BulkOperationsEntity> modified = null;
@@ -391,7 +371,7 @@ public class BulkOperationService {
 
     var operationId = operation.getId();
     operation.setCommittedNumOfRecords(0);
-    operation.setStatus(OperationStatusType.APPLY_CHANGES);
+    operation.setStatus(APPLY_CHANGES);
 
     var totalNumOfRecords = operation.getMatchedNumOfRecords();
 
@@ -526,7 +506,11 @@ public class BulkOperationService {
 
     String errorMessage = null;
     if (UPLOAD == step) {
-      errorMessage = executeDataExportJob(step, approach, operation, errorMessage);
+      if (operation.getApproach() == QUERY) {
+        errorMessage = queryDataRetriever.retrieveDataByQueryAndUpdateBulkOperation(step, approach, operation);
+      } else {
+        errorMessage = executeDataExportJob(step, approach, operation, errorMessage);
+      }
 
       if (nonNull(errorMessage)) {
         log.error(errorMessage);
@@ -674,8 +658,7 @@ public class BulkOperationService {
   public BulkOperation getOperationById(UUID bulkOperationId) {
     var operation = getBulkOperationOrThrow(bulkOperationId);
     return switch (operation.getStatus()) {
-      case EXECUTING_QUERY -> queryService.checkQueryExecutionStatus(operation);
-      case SAVED_IDENTIFIERS -> startBulkOperation(operation.getId(), operation.getUserId(), new BulkOperationStart()
+      case EXECUTING_QUERY -> startBulkOperation(operation.getId(), operation.getUserId(), new BulkOperationStart()
         .step(UPLOAD)
         .approach(IN_APP)
         .entityType(operation.getEntityType())
