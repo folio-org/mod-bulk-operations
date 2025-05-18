@@ -1,8 +1,5 @@
 package org.folio.bulkops.processor.permissions.check;
 
-import org.folio.bulkops.domain.dto.EntityType;
-import org.springframework.stereotype.Component;
-
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_INSTANCES_ITEM_GET_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_INSTANCES_ITEM_PUT;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_ITEMS_ITEM_GET_PERMISSION;
@@ -11,6 +8,9 @@ import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVEN
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_STORAGE_HOLDINGS_ITEM_PUT;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.USERS_ITEM_PUT;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.USER_ITEM_GET_PERMISSION;
+
+import org.folio.bulkops.domain.dto.EntityType;
+import org.springframework.stereotype.Component;
 
 @Component
 public class RequiredPermissionResolver {

@@ -6,11 +6,13 @@ import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_WRITE_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_INSTANCES_ITEM_GET_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_ITEMS_ITEM_PUT;
-import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_STORAGE_HOLDINGS_ITEM_GET_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.USERS_ITEM_PUT;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.USER_ITEM_GET_PERMISSION;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.when;
@@ -18,18 +20,26 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.UUID;
 
+import org.folio.bulkops.client.UserClient;
+import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.exception.ReadPermissionException;
 import org.folio.bulkops.exception.WritePermissionDoesNotExist;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.spring.FolioExecutionContext;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class PermissionsValidatorTest {
@@ -38,13 +48,24 @@ class PermissionsValidatorTest {
   private PermissionsProvider permissionsProvider;
   @Mock
   private FolioExecutionContext folioExecutionContext;
-  @InjectMocks
+  @Mock
   private ReadPermissionsValidator readPermissionsValidator;
-  @Spy
+  @Mock
+  private ConsortiaService consortiaService;
+  @Mock
+  private UserClient userClient;
+  @Mock
   private RequiredPermissionResolver requiredPermissionResolver;
 
   @InjectMocks
   private PermissionsValidator permissionsValidator;
+
+  @BeforeEach
+  void setup() {
+    ReflectionTestUtils.setField(readPermissionsValidator, "requiredPermissionResolver", requiredPermissionResolver);
+    ReflectionTestUtils.setField(readPermissionsValidator, "folioExecutionContext", folioExecutionContext);
+    ReflectionTestUtils.setField(readPermissionsValidator, "permissionsProvider", permissionsProvider);
+  }
 
   @Test
   void testCheckIfBulkEditWritePermissionExistsForInventory() {
@@ -52,8 +73,8 @@ class PermissionsValidatorTest {
     when(permissionsProvider.getUserPermissions(eq("tenant2"), isA(UUID.class))).thenReturn(List.of("not_write_permission"));
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
 
-    Assertions.assertDoesNotThrow(() -> permissionsValidator.checkIfBulkEditWritePermissionExists("tenant1", EntityType.ITEM, "errorMessage"));
-    Assertions.assertThrows(WritePermissionDoesNotExist.class, () -> permissionsValidator.checkIfBulkEditWritePermissionExists("tenant2", EntityType.ITEM, "errorMessage"));
+    assertDoesNotThrow(() -> permissionsValidator.checkIfBulkEditWritePermissionExists("tenant1", EntityType.ITEM, "errorMessage"));
+    assertThrows(WritePermissionDoesNotExist.class, () -> permissionsValidator.checkIfBulkEditWritePermissionExists("tenant2", EntityType.ITEM, "errorMessage"));
   }
 
   @Test
@@ -62,8 +83,8 @@ class PermissionsValidatorTest {
     when(permissionsProvider.getUserPermissions(eq("tenant2"), isA(UUID.class))).thenReturn(List.of("not_write_permission"));
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
 
-    Assertions.assertDoesNotThrow(() -> permissionsValidator.checkIfBulkEditWritePermissionExists("tenant1", EntityType.USER, "errorMessage"));
-    Assertions.assertThrows(WritePermissionDoesNotExist.class, () -> permissionsValidator.checkIfBulkEditWritePermissionExists("tenant2", EntityType.USER, "errorMessage"));
+    assertDoesNotThrow(() -> permissionsValidator.checkIfBulkEditWritePermissionExists("tenant1", EntityType.USER, "errorMessage"));
+    assertThrows(WritePermissionDoesNotExist.class, () -> permissionsValidator.checkIfBulkEditWritePermissionExists("tenant2", EntityType.USER, "errorMessage"));
   }
 
   @Test
@@ -87,13 +108,49 @@ class PermissionsValidatorTest {
     assertTrue(readPermissionsValidator.isBulkEditReadPermissionExists("tenant2", entityType));
   }
 
-  @Test
-  void testCheckIfBulkEditReadPermissionExistsForHoldings() {
-    when(permissionsProvider.getUserPermissions(eq("tenant1"),  isA(UUID.class))).thenReturn(List.of(BULK_EDIT_USERS_VIEW_PERMISSION.getValue()));
-    when(permissionsProvider.getUserPermissions(eq("tenant2"), isA(UUID.class))).thenReturn(List.of(BULK_EDIT_INVENTORY_VIEW_PERMISSION.getValue(), INVENTORY_STORAGE_HOLDINGS_ITEM_GET_PERMISSION.getValue()));
-    when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
+  @ParameterizedTest
+  @EnumSource(value = EntityType.class, names = {"HOLDINGS_RECORD","INSTANCE","ITEM","USER","INSTANCE_MARC"})
+  void shouldThrowExceptionIfBulkEditReadPermissionNotExistsForCurrentTenant(EntityType entityType) {
+    var operation = BulkOperation.builder().entityType(entityType).build();
+    var entityWithNotAllowedTenant = new ExtendedHoldingsRecord().withTenantId("tenant1").withEntity(
+            HoldingsRecord.builder().id(UUID.randomUUID().toString()).build());
+    var userId = UUID.randomUUID();
 
-    assertFalse(readPermissionsValidator.isBulkEditReadPermissionExists("tenant1", EntityType.HOLDINGS_RECORD));
-    assertTrue(readPermissionsValidator.isBulkEditReadPermissionExists("tenant2", EntityType.HOLDINGS_RECORD));
+    when(permissionsProvider.getUserPermissions(eq("tenant1"),  isA(UUID.class))).thenReturn(List.of(BULK_EDIT_USERS_VIEW_PERMISSION.getValue()));
+    when(folioExecutionContext.getUserId()).thenReturn(userId);
+    when(folioExecutionContext.getTenantId()).thenReturn("tenant1");
+    if (entityType == EntityType.ITEM || entityType == EntityType.HOLDINGS_RECORD) {
+      when(consortiaService.getCentralTenantId("tenant1")).thenReturn("central");
+    }
+    when(userClient.getUserById(userId.toString())).thenReturn(User.builder().id(userId.toString()).username("username").build());
+    when(requiredPermissionResolver.getReadPermission(any(EntityType.class))).thenCallRealMethod();
+    when(readPermissionsValidator.isBulkEditReadPermissionExists("tenant1", entityType)).thenCallRealMethod();
+
+    assertThrows(ReadPermissionException.class, () -> permissionsValidator.checkPermissions(operation, entityWithNotAllowedTenant));
+  }
+
+  @ParameterizedTest
+  @CsvSource(value = {
+          "HOLDINGS_RECORD,INVENTORY_STORAGE_HOLDINGS_ITEM_GET_PERMISSION,BULK_EDIT_INVENTORY_VIEW_PERMISSION",
+          "INSTANCE,INVENTORY_INSTANCES_ITEM_GET_PERMISSION,BULK_EDIT_INVENTORY_VIEW_PERMISSION",
+          "ITEM,INVENTORY_ITEMS_ITEM_GET_PERMISSION,BULK_EDIT_INVENTORY_VIEW_PERMISSION",
+          "USER,USER_ITEM_GET_PERMISSION,BULK_EDIT_USERS_VIEW_PERMISSION",
+          "INSTANCE_MARC,INVENTORY_INSTANCES_ITEM_GET_PERMISSION,BULK_EDIT_INVENTORY_VIEW_PERMISSION"})
+  void shouldNotThrowExceptionIfBulkEditReadPermissionExistsForCurrentTenant(EntityType entityType, PermissionEnum inventoryOrUsersPermission, PermissionEnum bulkEditPermission) {
+    var operation = BulkOperation.builder().entityType(entityType).build();
+    var entityWithAllowedTenant = new ExtendedHoldingsRecord().withTenantId("tenant1").withEntity(
+            HoldingsRecord.builder().id(UUID.randomUUID().toString()).build());
+    var userId = UUID.randomUUID();
+
+    when(permissionsProvider.getUserPermissions(eq("tenant1"),  isA(UUID.class))).thenReturn(List.of(bulkEditPermission.getValue(), inventoryOrUsersPermission.getValue()));
+    when(folioExecutionContext.getUserId()).thenReturn(userId);
+    when(folioExecutionContext.getTenantId()).thenReturn("tenant1");
+    if (entityType == EntityType.ITEM || entityType == EntityType.HOLDINGS_RECORD) {
+      when(consortiaService.getCentralTenantId("tenant1")).thenReturn("central");
+    }
+    when(requiredPermissionResolver.getReadPermission(any(EntityType.class))).thenCallRealMethod();
+    when(readPermissionsValidator.isBulkEditReadPermissionExists("tenant1", entityType)).thenCallRealMethod();
+
+    assertDoesNotThrow( () -> permissionsValidator.checkPermissions(operation, entityWithAllowedTenant));
   }
 }
