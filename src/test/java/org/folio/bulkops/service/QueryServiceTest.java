@@ -14,6 +14,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.QueryClient;
@@ -27,6 +36,7 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.ReadPermissionException;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
+import org.folio.bulkops.processor.permissions.check.ReadPermissionsValidator;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.querytool.domain.dto.QueryDetails;
 import org.folio.querytool.domain.dto.QueryIdentifier;
@@ -39,15 +49,6 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
-
-import java.io.ByteArrayInputStream;
-import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 class QueryServiceTest extends BaseTest {
 
@@ -70,6 +71,8 @@ class QueryServiceTest extends BaseTest {
   private Writer writer;
   @MockitoBean
   private BulkOperationService bulkOperationService;
+  @MockitoBean
+  private ReadPermissionsValidator readPermissionsValidator;
 
   @Test
   void shouldSaveIdentifiersAndStartBulkOperationOnSuccessfulQueryExecution() {
@@ -191,7 +194,7 @@ class QueryServiceTest extends BaseTest {
       when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
       when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
-      when(permissionsValidator.isBulkEditReadPermissionExists("diku", EntityType.INSTANCE)).thenReturn(true);
+      when(readPermissionsValidator.isBulkEditReadPermissionExists("diku", EntityType.INSTANCE)).thenReturn(true);
       when(remoteFileSystemClient.writer(any(String.class))).thenReturn(writer);
 
       queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);

@@ -1,5 +1,15 @@
 package org.folio.bulkops.processor.permissions.check;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Stream;
+
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -15,16 +25,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 class TenantResolverTest {
 
@@ -36,6 +36,8 @@ class TenantResolverTest {
   private UserClient userClient;
   @Mock
   private PermissionsValidator permissionsValidator;
+  @Mock
+  private ReadPermissionsValidator readPermissionsValidator;
 
   @InjectMocks
   private TenantResolver tenantResolver;
@@ -51,7 +53,7 @@ class TenantResolverTest {
     when(folioExecutionContext.getUserId()).thenReturn(userId);
     when(folioExecutionContext.getTenantId()).thenReturn(currentTenant);
     when(consortiaService.getAffiliatedTenants(currentTenant, userId.toString())).thenReturn(affiliatedTenants);
-    when(permissionsValidator.isBulkEditReadPermissionExists(currentTenant, entityType)).thenReturn(true);
+    when(readPermissionsValidator.isBulkEditReadPermissionExists(currentTenant, entityType)).thenReturn(true);
 
     assertDoesNotThrow(() -> tenantResolver.checkAffiliatedPermittedTenantIds(entityType, identifierType.getValue(),
             Set.of(currentTenant), identifier));
