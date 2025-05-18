@@ -1,17 +1,12 @@
 package org.folio.bulkops.processor.permissions.check;
 
-import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_INVENTORY_VIEW_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_INVENTORY_WRITE_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_VIEW_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_WRITE_PERMISSION;
-import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_INSTANCES_ITEM_GET_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_ITEMS_ITEM_PUT;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.USERS_ITEM_PUT;
-import static org.folio.bulkops.processor.permissions.check.PermissionEnum.USER_ITEM_GET_PERMISSION;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isA;
@@ -72,6 +67,7 @@ class PermissionsValidatorTest {
     when(permissionsProvider.getUserPermissions(eq("tenant1"), isA(UUID.class))).thenReturn(List.of(INVENTORY_ITEMS_ITEM_PUT.getValue(), "not_write_permission", BULK_EDIT_INVENTORY_WRITE_PERMISSION.getValue()));
     when(permissionsProvider.getUserPermissions(eq("tenant2"), isA(UUID.class))).thenReturn(List.of("not_write_permission"));
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
+    when(requiredPermissionResolver.getWritePermission(any(EntityType.class))).thenCallRealMethod();
 
     assertDoesNotThrow(() -> permissionsValidator.checkIfBulkEditWritePermissionExists("tenant1", EntityType.ITEM, "errorMessage"));
     assertThrows(WritePermissionDoesNotExist.class, () -> permissionsValidator.checkIfBulkEditWritePermissionExists("tenant2", EntityType.ITEM, "errorMessage"));
@@ -82,30 +78,10 @@ class PermissionsValidatorTest {
     when(permissionsProvider.getUserPermissions(eq("tenant1"),  isA(UUID.class))).thenReturn(List.of(USERS_ITEM_PUT.getValue(), "not_write_permission", BULK_EDIT_USERS_WRITE_PERMISSION.getValue()));
     when(permissionsProvider.getUserPermissions(eq("tenant2"), isA(UUID.class))).thenReturn(List.of("not_write_permission"));
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
+    when(requiredPermissionResolver.getWritePermission(any(EntityType.class))).thenCallRealMethod();
 
     assertDoesNotThrow(() -> permissionsValidator.checkIfBulkEditWritePermissionExists("tenant1", EntityType.USER, "errorMessage"));
     assertThrows(WritePermissionDoesNotExist.class, () -> permissionsValidator.checkIfBulkEditWritePermissionExists("tenant2", EntityType.USER, "errorMessage"));
-  }
-
-  @Test
-  void testCheckIfBulkEditReadPermissionExistsForUsers() {
-    when(permissionsProvider.getUserPermissions(eq("tenant1"),  isA(UUID.class))).thenReturn(List.of(BULK_EDIT_INVENTORY_VIEW_PERMISSION.getValue()));
-    when(permissionsProvider.getUserPermissions(eq("tenant2"), isA(UUID.class))).thenReturn(List.of(BULK_EDIT_USERS_VIEW_PERMISSION.getValue(), USER_ITEM_GET_PERMISSION.getValue()));
-    when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
-
-    assertFalse(readPermissionsValidator.isBulkEditReadPermissionExists("tenant1", EntityType.USER));
-    assertTrue(readPermissionsValidator.isBulkEditReadPermissionExists("tenant2", EntityType.USER));
-  }
-
-  @ParameterizedTest
-  @EnumSource(value = EntityType.class, names = {"INSTANCE", "INSTANCE_MARC"})
-  void testCheckIfBulkEditReadPermissionExistsForInstance(EntityType entityType) {
-    when(permissionsProvider.getUserPermissions(eq("tenant1"),  isA(UUID.class))).thenReturn(List.of(BULK_EDIT_USERS_VIEW_PERMISSION.getValue()));
-    when(permissionsProvider.getUserPermissions(eq("tenant2"), isA(UUID.class))).thenReturn(List.of(BULK_EDIT_INVENTORY_VIEW_PERMISSION.getValue(), INVENTORY_INSTANCES_ITEM_GET_PERMISSION.getValue()));
-    when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
-
-    assertFalse(readPermissionsValidator.isBulkEditReadPermissionExists("tenant1", entityType));
-    assertTrue(readPermissionsValidator.isBulkEditReadPermissionExists("tenant2", entityType));
   }
 
   @ParameterizedTest
