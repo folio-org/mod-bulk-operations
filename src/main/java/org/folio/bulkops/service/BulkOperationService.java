@@ -24,7 +24,6 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LO
 import static org.folio.bulkops.util.Constants.CHANGED_CSV_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
-import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
@@ -34,14 +33,27 @@ import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
 
+import java.io.BufferedInputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.Writer;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVWriterBuilder;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
@@ -57,7 +69,6 @@ import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
-import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.ApproachType;
@@ -76,7 +87,6 @@ import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.BulkOperationException;
-import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.OptimisticLockingException;
@@ -89,6 +99,7 @@ import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
+import org.folio.bulkops.util.CSVHelper;
 import org.folio.bulkops.util.IdentifiersResolver;
 import org.folio.bulkops.util.MarcCsvHelper;
 import org.folio.bulkops.util.Utils;
@@ -101,21 +112,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.BufferedInputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.Writer;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Service
 @Log4j2
@@ -263,12 +259,12 @@ public class BulkOperationService {
         if (Objects.nonNull(modified)) {
           // Prepare CSV for download and preview
           if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId()) || clazz == User.class) {
-            writeBeanToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity(), bulkOperationExecutionContents);
+            CSVHelper.writeBeanToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity(), bulkOperationExecutionContents);
           } else {
             var tenantIdOfEntity = modified.getPreview().getTenant();
             try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
               modified.getPreview().setTenantToNotes(operation.getTenantNotePairs());
-              writeBeanToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity(), bulkOperationExecutionContents);
+              CSVHelper.writeBeanToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity(), bulkOperationExecutionContents);
             }
           }
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
@@ -356,24 +352,24 @@ public class BulkOperationService {
     }
   }
 
-  public void writeBeanToCsv(BulkOperation operation, BulkOperationsEntityCsvWriter csvWriter, BulkOperationsEntity bean, List<BulkOperationExecutionContent> bulkOperationExecutionContents) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
-    try {
-      csvWriter.write(bean);
-    } catch (ConverterException e) {
-      if (APPLY_CHANGES.equals(operation.getStatus())) {
-        log.error("Record {}, field: {}, converter exception: {}", bean.getIdentifier(operation.getIdentifierType()), e.getField().getName(), e.getMessage());
-      } else {
-        bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
-                .identifier(bean.getIdentifier(operation.getIdentifierType()))
-                .bulkOperationId(operation.getId())
-                .state(StateType.FAILED)
-                .errorType(e.getErrorType())
-                .errorMessage(format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()))
-                .build());
-      }
-      writeBeanToCsv(operation, csvWriter, bean, bulkOperationExecutionContents);
-    }
-  }
+//  public void writeBeanToCsv(BulkOperation operation, BulkOperationsEntityCsvWriter csvWriter, BulkOperationsEntity bean, List<BulkOperationExecutionContent> bulkOperationExecutionContents) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
+//    try {
+//      csvWriter.write(bean);
+//    } catch (ConverterException e) {
+//      if (APPLY_CHANGES.equals(operation.getStatus())) {
+//        log.error("Record {}, field: {}, converter exception: {}", bean.getIdentifier(operation.getIdentifierType()), e.getField().getName(), e.getMessage());
+//      } else {
+//        bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
+//                .identifier(bean.getIdentifier(operation.getIdentifierType()))
+//                .bulkOperationId(operation.getId())
+//                .state(StateType.FAILED)
+//                .errorType(e.getErrorType())
+//                .errorMessage(format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()))
+//                .build());
+//      }
+//      writeBeanToCsv(operation, csvWriter, bean, bulkOperationExecutionContents);
+//    }
+//  }
 
   protected UpdatedEntityHolder<BulkOperationsEntity> processUpdate(BulkOperationsEntity original, BulkOperation operation, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> entityClass) {
     var processor = dataProcessorFactory.getProcessorFromFactory(entityClass);
@@ -459,13 +455,13 @@ public class BulkOperationService {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
               if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId()) || entityClass == User.class ) {
-                writeBeanToCsv(operation, csvWriter, result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
+                CSVHelper.writeBeanToCsv(operation, csvWriter, result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
               } else {
                 var tenantIdOfEntity = result.getTenant();
                 try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
                   result.getRecordBulkOperationEntity().setTenant(tenantIdOfEntity);
                   result.getRecordBulkOperationEntity().setTenantToNotes(operation.getTenantNotePairs());
-                  writeBeanToCsv(operation, csvWriter, result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
+                  CSVHelper.writeBeanToCsv(operation, csvWriter, result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
                 }
               }
               bulkOperationExecutionContents.forEach(errorService::saveError);

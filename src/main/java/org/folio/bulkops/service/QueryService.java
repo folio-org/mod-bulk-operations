@@ -19,6 +19,20 @@ import static org.folio.bulkops.util.Constants.SRS_MISSING;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.Writer;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.StreamSupport;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,24 +61,11 @@ import org.folio.bulkops.exception.UploadFromQueryException;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
+import org.folio.bulkops.util.CSVHelper;
 import org.folio.querytool.domain.dto.QueryDetails;
 import org.folio.querytool.domain.dto.SubmitQuery;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.Writer;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.StreamSupport;
 
 @Service
 @Log4j2
@@ -74,7 +75,6 @@ public class QueryService {
 
   private final BulkOperationRepository bulkOperationRepository;
   private final ErrorService errorService;
-  private final BulkOperationService bulkOperationService;
 
   private final FolioExecutionContext folioExecutionContext;
 
@@ -193,7 +193,7 @@ public class QueryService {
           var extendedRecordAsJsonString = objectMapper.writeValueAsString(extendedRecord);
 
           writerForResultJsonFile.append(extendedRecordAsJsonString);
-          bulkOperationService.writeBeanToCsv(operation, csvWriter, extendedRecord.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
+          CSVHelper.writeBeanToCsv(operation, csvWriter, extendedRecord.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
           numMatched ++;
         } catch (UploadFromQueryException e) {
           handleError(bulkOperationExecutionContents, e, record, operation);

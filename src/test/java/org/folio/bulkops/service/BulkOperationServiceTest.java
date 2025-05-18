@@ -107,6 +107,7 @@ import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
+import org.folio.bulkops.util.CSVHelper;
 import org.folio.bulkops.util.MarcCsvHelper;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.RemoteStorageWriter;
@@ -1651,7 +1652,7 @@ class BulkOperationServiceTest extends BaseTest {
     try (var stringWriter = new StringWriter()) {
       var writer = new BulkOperationsEntityCsvWriter(stringWriter, Item.class);
       List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
-      bulkOperationService.writeBeanToCsv(operation, writer, item, bulkOperationExecutionContents);
+      CSVHelper.writeBeanToCsv(operation, writer, item, bulkOperationExecutionContents);
       assertThat(stringWriter.toString(), containsString("FAILED"));
       if (APPLY_CHANGES.equals(operation.getStatus())) {
         assertThat(bulkOperationExecutionContents, hasSize(0));
