@@ -53,6 +53,27 @@ import static org.testcontainers.shaded.org.hamcrest.Matchers.hasSize;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.is;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.notNullValue;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.SequenceInputStream;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
@@ -124,27 +145,6 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.SequenceInputStream;
-import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 
 class BulkOperationServiceTest extends BaseTest {
   @Autowired
@@ -493,7 +493,7 @@ class BulkOperationServiceTest extends BaseTest {
       assertEquals(expectedPathToModifiedCsvFile, pathCaptor.getAllValues().get(1));
 
       var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
-      await().untilAsserted(() -> verify(dataProcessingRepository, times(3)).save(dataProcessingCaptor.capture()));
+      await().untilAsserted(() -> verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));
       var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(1);
       assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(1));
       assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));

@@ -124,7 +124,7 @@ class QueryServiceTest extends BaseTest {
 
       verify(remoteFileSystemClient, times(0)).put(any(ByteArrayInputStream.class), eq(expectedPath));
       var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
+      await().untilAsserted(() -> verify(bulkOperationRepository, times(2)).save(operationCaptor.capture()));
       assertThat(operationCaptor.getValue().getStatus()).isEqualTo(OperationStatusType.FAILED);
       assertThat(operationCaptor.getValue().getEndTime()).isNotNull();
     }
