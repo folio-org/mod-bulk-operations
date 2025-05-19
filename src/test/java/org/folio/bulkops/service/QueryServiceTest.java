@@ -7,7 +7,11 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ER
 import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
 import static org.folio.bulkops.service.QueryService.QUERY_FILENAME_TEMPLATE;
+import static org.folio.bulkops.util.Constants.MULTIPLE_SRS;
+import static org.folio.bulkops.util.Constants.SRS_MISSING;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -27,6 +31,7 @@ import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -53,6 +58,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 class QueryServiceTest extends BaseTest {
 
   private final static String INSTANCE_JSON_PATH = "src/test/resources/files/instance.json";
+  private final static String INSTANCE_MARC_JSON_PATH = "src/test/resources/files/instance_marc_1.json";
 
   @Autowired
   private QueryService queryService;
@@ -73,6 +79,8 @@ class QueryServiceTest extends BaseTest {
   private BulkOperationService bulkOperationService;
   @MockitoBean
   private ReadPermissionsValidator readPermissionsValidator;
+  @MockitoBean
+  private SrsClient srsClient;
 
   @Test
   void shouldSaveIdentifiersAndStartBulkOperationOnSuccessfulQueryExecution() {
@@ -240,6 +248,93 @@ class QueryServiceTest extends BaseTest {
       verify(errorService).saveErrorsAfterQuery(executionContentsCaptor.capture(), operationCaptor.capture());
       assertThat(((BulkOperationExecutionContent)executionContentsCaptor.getValue().getFirst()).getErrorMessage())
         .isEqualTo("User username does not have required permission to view the instance record - id=69640328-788e-43fc-9c3c-af39e243f3b7 on the tenant diku");
+      assertThat(operationCaptor.getValue().getStatus()).isEqualTo(COMPLETED_WITH_ERRORS);
+      assertThat(operationCaptor.getValue().getTotalNumOfRecords()).isEqualTo(1);
+      assertThat(operationCaptor.getValue().getProcessedNumOfRecords()).isEqualTo(1);
+      assertThat(operationCaptor.getValue().getMatchedNumOfErrors()).isEqualTo(1);
+      assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isEqualTo(0);
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowSrsMissingExceptionWhenNoSrs() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var operation = BulkOperation.builder().id(UUID.randomUUID())
+              .status(OperationStatusType.EXECUTING_QUERY).approach(org.folio.bulkops.domain.dto.ApproachType.QUERY)
+              .entityType(EntityType.INSTANCE_MARC)
+              .build();
+      var queryId = UUID.randomUUID();
+      var instanceJsonb = Files.readString(Path.of(INSTANCE_MARC_JSON_PATH));
+      var queryDetails = new QueryDetails().content(List.of(Map.of("instance.jsonb", instanceJsonb,
+                      "instance.id", "69640328-788e-43fc-9c3c-af39e243f3b7")))
+              .status(QueryDetails.StatusEnum.SUCCESS).totalRecords(1);
+
+      when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
+      when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
+      when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
+      when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
+      var srsRecordsNode = objectMapper.createObjectNode();
+      srsRecordsNode.set("sourceRecords", objectMapper.valueToTree(List.of()));
+      when(srsClient.getMarc(anyString(), anyString(), anyBoolean())).thenReturn(srsRecordsNode);
+
+      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+
+      await().untilAsserted(() -> verify(bulkOperationRepository, times(5))
+              .save(ArgumentCaptor.forClass(BulkOperation.class).capture()));
+
+      var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+      var executionContentsCaptor = ArgumentCaptor.forClass(List.class);
+      verify(errorService).saveErrorsAfterQuery(executionContentsCaptor.capture(), operationCaptor.capture());
+      assertThat(((BulkOperationExecutionContent)executionContentsCaptor.getValue().getFirst()).getErrorMessage())
+              .isEqualTo(SRS_MISSING);
+      assertThat(operationCaptor.getValue().getStatus()).isEqualTo(COMPLETED_WITH_ERRORS);
+      assertThat(operationCaptor.getValue().getTotalNumOfRecords()).isEqualTo(1);
+      assertThat(operationCaptor.getValue().getProcessedNumOfRecords()).isEqualTo(1);
+      assertThat(operationCaptor.getValue().getMatchedNumOfErrors()).isEqualTo(1);
+      assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isEqualTo(0);
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowMultipleSrsExceptionWhenMoreThanOneMarc() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var operation = BulkOperation.builder().id(UUID.randomUUID())
+              .status(OperationStatusType.EXECUTING_QUERY).approach(org.folio.bulkops.domain.dto.ApproachType.QUERY)
+              .entityType(EntityType.INSTANCE_MARC)
+              .build();
+      var queryId = UUID.randomUUID();
+      var instanceJsonb = Files.readString(Path.of(INSTANCE_MARC_JSON_PATH));
+      var queryDetails = new QueryDetails().content(List.of(Map.of("instance.jsonb", instanceJsonb,
+                      "instance.id", "69640328-788e-43fc-9c3c-af39e243f3b7")))
+              .status(QueryDetails.StatusEnum.SUCCESS).totalRecords(1);
+      String srsJson = """
+              {
+                "sourceRecords": [
+                    { "recordId": "22240328-788e-43fc-9c3c-af39e243f3b7" },
+                    { "recordId": "33340328-788e-43fc-9c3c-af39e243f3b7" }
+                  ]
+              }
+              """;
+
+      when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
+      when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
+      when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
+      when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
+      var srsRecordsNode = objectMapper.readTree(srsJson);
+      when(srsClient.getMarc(anyString(), anyString(), anyBoolean())).thenReturn(srsRecordsNode);
+
+      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+
+      await().untilAsserted(() -> verify(bulkOperationRepository, times(5))
+              .save(ArgumentCaptor.forClass(BulkOperation.class).capture()));
+
+      var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+      var executionContentsCaptor = ArgumentCaptor.forClass(List.class);
+      verify(errorService).saveErrorsAfterQuery(executionContentsCaptor.capture(), operationCaptor.capture());
+      assertThat(((BulkOperationExecutionContent)executionContentsCaptor.getValue().getFirst()).getErrorMessage())
+              .isEqualTo(MULTIPLE_SRS.formatted("22240328-788e-43fc-9c3c-af39e243f3b7, 33340328-788e-43fc-9c3c-af39e243f3b7"));
       assertThat(operationCaptor.getValue().getStatus()).isEqualTo(COMPLETED_WITH_ERRORS);
       assertThat(operationCaptor.getValue().getTotalNumOfRecords()).isEqualTo(1);
       assertThat(operationCaptor.getValue().getProcessedNumOfRecords()).isEqualTo(1);
