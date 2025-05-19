@@ -1,5 +1,7 @@
 package org.folio.bulkops.domain.bean;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,8 +10,6 @@ import lombok.NoArgsConstructor;
 import lombok.With;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
-
-import java.util.List;
 
 @Data
 @With
@@ -57,5 +57,10 @@ public class ExtendedItem implements BulkOperationsEntity {
         note.setTenantId(tenantId);
       }
     });
+  }
+
+  @Override
+  public String getId() {
+    return entity.getId();
   }
 }

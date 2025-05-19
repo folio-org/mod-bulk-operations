@@ -4,19 +4,19 @@ import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
-import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
-import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
-import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.service.BulkOperationService.FILE_UPLOADING_FAILED;
 import static org.folio.bulkops.service.BulkOperationService.MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY;
 import static org.folio.bulkops.service.BulkOperationService.TMP_MATCHED_JSON_PATH_TEMPLATE;
@@ -94,9 +94,9 @@ import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.bean.UserGroupCollection;
-import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.ApproachType;
+import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -118,7 +118,6 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
-import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
@@ -128,6 +127,8 @@ import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
+import org.folio.bulkops.util.CSVHelper;
 import org.folio.bulkops.util.MarcCsvHelper;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.RemoteStorageWriter;
@@ -144,7 +145,6 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.multipart.MultipartFile;
-
 
 class BulkOperationServiceTest extends BaseTest {
   @Autowired
@@ -1437,7 +1437,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(metadataProviderService.calculateProgress(anyList()))
       .thenReturn(new DataImportProgress().total(10).current(5));
 
-    when(queryService.checkQueryExecutionStatus(any(BulkOperation.class)))
+    when(queryService.retrieveRecordsAndCheckQueryExecutionStatus(any(BulkOperation.class)))
       .thenReturn(experctedBulkOperation);
 
     var operation = bulkOperationService.getOperationById(operationId);
@@ -1606,11 +1606,14 @@ class BulkOperationServiceTest extends BaseTest {
     var operationId = UUID.randomUUID();
     var operation = new BulkOperation();
     operation.setStatus(EXECUTING_QUERY);
+    operation.setId(operationId);
+    operation.setApproach(ApproachType.QUERY);
+
     when(bulkOperationRepository.findById(operationId)).thenReturn(Optional.of(operation));
 
     bulkOperationService.getOperationById(operationId);
 
-    verify(queryService).checkQueryExecutionStatus(operation);
+    verify(queryService).retrieveRecordsAndCheckQueryExecutionStatus(operation);
   }
 
   @Test
@@ -1649,7 +1652,7 @@ class BulkOperationServiceTest extends BaseTest {
     try (var stringWriter = new StringWriter()) {
       var writer = new BulkOperationsEntityCsvWriter(stringWriter, Item.class);
       List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
-      bulkOperationService.writeBeanToCsv(operation, writer, item, bulkOperationExecutionContents);
+      CSVHelper.writeBeanToCsv(operation, writer, item, bulkOperationExecutionContents);
       assertThat(stringWriter.toString(), containsString("FAILED"));
       if (APPLY_CHANGES.equals(operation.getStatus())) {
         assertThat(bulkOperationExecutionContents, hasSize(0));

@@ -1,5 +1,7 @@
 package org.folio.bulkops.domain.bean;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
@@ -9,9 +11,6 @@ import lombok.NoArgsConstructor;
 import lombok.With;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
-
-import java.util.List;
-import java.util.Optional;
 
 @Data
 @With
@@ -64,5 +63,10 @@ public class ExtendedHoldingsRecord implements BulkOperationsEntity, ElectronicA
         note.setTenantId(tenantId);
       }
     });
+  }
+
+  @Override
+  public String getId() {
+    return entity.getId();
   }
 }

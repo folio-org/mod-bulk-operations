@@ -20,7 +20,7 @@ public interface QueryClient {
   QueryIdentifier executeQuery(@RequestBody SubmitQuery submitQuery);
 
   @GetMapping("/{queryId}")
-  QueryDetails getQuery(@RequestHeader UUID queryId);
+  QueryDetails getQuery(@RequestHeader UUID queryId, @RequestParam Boolean includeResults);
 
   @GetMapping("/{queryId}?includeResults=true")
   QueryDetails getQuery(@RequestHeader UUID queryId, @RequestParam Integer offset, @RequestParam Integer limit);

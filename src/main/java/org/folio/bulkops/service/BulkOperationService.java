@@ -24,7 +24,6 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LO
 import static org.folio.bulkops.util.Constants.CHANGED_CSV_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
-import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
@@ -49,7 +48,14 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVWriterBuilder;
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.CsvToBeanBuilder;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
@@ -63,10 +69,8 @@ import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.Job;
 import org.folio.bulkops.domain.bean.JobStatus;
-import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
-import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
@@ -83,18 +87,19 @@ import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.BulkOperationException;
-import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.OptimisticLockingException;
 import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.exception.WritePermissionDoesNotExist;
+import org.folio.bulkops.processor.UpdatedEntityHolder;
 import org.folio.bulkops.processor.folio.DataProcessorFactory;
 import org.folio.bulkops.processor.marc.MarcInstanceDataProcessor;
-import org.folio.bulkops.processor.UpdatedEntityHolder;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
+import org.folio.bulkops.util.CSVHelper;
 import org.folio.bulkops.util.IdentifiersResolver;
 import org.folio.bulkops.util.MarcCsvHelper;
 import org.folio.bulkops.util.Utils;
@@ -107,17 +112,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.opencsv.bean.CsvToBean;
-import com.opencsv.bean.CsvToBeanBuilder;
-import com.opencsv.exceptions.CsvDataTypeMismatchException;
-import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 
 @Service
 @Log4j2
@@ -145,7 +139,6 @@ public class BulkOperationService {
   private final LogFilesService logFilesService;
   private final RecordUpdateService recordUpdateService;
   private final EntityTypeService entityTypeService;
-  private final QueryService queryService;
   private final MarcInstanceDataProcessor marcInstanceDataProcessor;
   private final FolioModuleMetadata folioModuleMetadata;
   private final FolioExecutionContext folioExecutionContext;
@@ -156,6 +149,7 @@ public class BulkOperationService {
   private final SrsService srsService;
   private final MarcCsvHelper marcCsvHelper;
   private final BulkOperationServiceHelper bulkOperationServiceHelper;
+  private final QueryService queryService;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
@@ -225,6 +219,7 @@ public class BulkOperationService {
         .fqlQuery(queryRequest.getFqlQuery())
         .fqlQueryId(queryRequest.getQueryId())
         .userFriendlyQuery(queryRequest.getUserFriendlyQuery())
+        .entityTypeId(queryRequest.getEntityTypeId())
       .build());
   }
 
@@ -264,12 +259,12 @@ public class BulkOperationService {
         if (Objects.nonNull(modified)) {
           // Prepare CSV for download and preview
           if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId()) || clazz == User.class) {
-            writeBeanToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity(), bulkOperationExecutionContents);
+            CSVHelper.writeBeanToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity(), bulkOperationExecutionContents);
           } else {
             var tenantIdOfEntity = modified.getPreview().getTenant();
             try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
               modified.getPreview().setTenantToNotes(operation.getTenantNotePairs());
-              writeBeanToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity(), bulkOperationExecutionContents);
+              CSVHelper.writeBeanToCsv(operation, csvWriter, modified.getPreview().getRecordBulkOperationEntity(), bulkOperationExecutionContents);
             }
           }
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
@@ -357,24 +352,24 @@ public class BulkOperationService {
     }
   }
 
-  public void writeBeanToCsv(BulkOperation operation, BulkOperationsEntityCsvWriter csvWriter, BulkOperationsEntity bean, List<BulkOperationExecutionContent> bulkOperationExecutionContents) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
-    try {
-      csvWriter.write(bean);
-    } catch (ConverterException e) {
-      if (APPLY_CHANGES.equals(operation.getStatus())) {
-        log.error("Record {}, field: {}, converter exception: {}", bean.getIdentifier(operation.getIdentifierType()), e.getField().getName(), e.getMessage());
-      } else {
-        bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
-          .identifier(bean.getIdentifier(operation.getIdentifierType()))
-          .bulkOperationId(operation.getId())
-          .state(StateType.FAILED)
-          .errorType(e.getErrorType())
-          .errorMessage(format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()))
-          .build());
-      }
-      writeBeanToCsv(operation, csvWriter, bean, bulkOperationExecutionContents);
-    }
-  }
+//  public void writeBeanToCsv(BulkOperation operation, BulkOperationsEntityCsvWriter csvWriter, BulkOperationsEntity bean, List<BulkOperationExecutionContent> bulkOperationExecutionContents) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
+//    try {
+//      csvWriter.write(bean);
+//    } catch (ConverterException e) {
+//      if (APPLY_CHANGES.equals(operation.getStatus())) {
+//        log.error("Record {}, field: {}, converter exception: {}", bean.getIdentifier(operation.getIdentifierType()), e.getField().getName(), e.getMessage());
+//      } else {
+//        bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
+//                .identifier(bean.getIdentifier(operation.getIdentifierType()))
+//                .bulkOperationId(operation.getId())
+//                .state(StateType.FAILED)
+//                .errorType(e.getErrorType())
+//                .errorMessage(format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()))
+//                .build());
+//      }
+//      writeBeanToCsv(operation, csvWriter, bean, bulkOperationExecutionContents);
+//    }
+//  }
 
   protected UpdatedEntityHolder<BulkOperationsEntity> processUpdate(BulkOperationsEntity original, BulkOperation operation, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> entityClass) {
     var processor = dataProcessorFactory.getProcessorFromFactory(entityClass);
@@ -391,7 +386,7 @@ public class BulkOperationService {
 
     var operationId = operation.getId();
     operation.setCommittedNumOfRecords(0);
-    operation.setStatus(OperationStatusType.APPLY_CHANGES);
+    operation.setStatus(APPLY_CHANGES);
 
     var totalNumOfRecords = operation.getMatchedNumOfRecords();
 
@@ -460,13 +455,13 @@ public class BulkOperationService {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
               if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId()) || entityClass == User.class ) {
-                writeBeanToCsv(operation, csvWriter, result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
+                CSVHelper.writeBeanToCsv(operation, csvWriter, result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
               } else {
                 var tenantIdOfEntity = result.getTenant();
                 try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
                   result.getRecordBulkOperationEntity().setTenant(tenantIdOfEntity);
                   result.getRecordBulkOperationEntity().setTenantToNotes(operation.getTenantNotePairs());
-                  writeBeanToCsv(operation, csvWriter, result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
+                  CSVHelper.writeBeanToCsv(operation, csvWriter, result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
                 }
               }
               bulkOperationExecutionContents.forEach(errorService::saveError);
@@ -521,11 +516,11 @@ public class BulkOperationService {
     var step = bulkOperationStart.getStep();
     var approach = bulkOperationStart.getApproach();
     BulkOperation operation = bulkOperationRepository.findById(bulkOperationId)
-        .orElseThrow(() -> new NotFoundException("Bulk operation was not found bu id=" + bulkOperationId));
+        .orElseThrow(() -> new NotFoundException("Bulk operation was not found by id=" + bulkOperationId));
     operation.setUserId(xOkapiUserId);
 
     String errorMessage = null;
-    if (UPLOAD == step) {
+    if (UPLOAD == step && operation.getApproach() != QUERY) {
       errorMessage = executeDataExportJob(step, approach, operation, errorMessage);
 
       if (nonNull(errorMessage)) {
@@ -674,12 +669,17 @@ public class BulkOperationService {
   public BulkOperation getOperationById(UUID bulkOperationId) {
     var operation = getBulkOperationOrThrow(bulkOperationId);
     return switch (operation.getStatus()) {
-      case EXECUTING_QUERY -> queryService.checkQueryExecutionStatus(operation);
-      case SAVED_IDENTIFIERS -> startBulkOperation(operation.getId(), operation.getUserId(), new BulkOperationStart()
-        .step(UPLOAD)
-        .approach(IN_APP)
-        .entityType(operation.getEntityType())
-        .entityCustomIdentifierType(IdentifierType.ID));
+      case EXECUTING_QUERY -> queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      case SAVED_IDENTIFIERS -> {
+        if (operation.getApproach() != QUERY) {
+          yield startBulkOperation(operation.getId(), operation.getUserId(), new BulkOperationStart()
+            .step(UPLOAD)
+            .approach(IN_APP)
+            .entityType(operation.getEntityType())
+            .entityCustomIdentifierType(IdentifierType.ID));
+        }
+        yield operation;
+      }
       case DATA_MODIFICATION -> {
         var processing = dataProcessingRepository.findById(bulkOperationId);
         if (processing.isPresent() && StatusType.ACTIVE.equals(processing.get().getStatus())) {
