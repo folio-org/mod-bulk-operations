@@ -92,7 +92,7 @@ public class PermissionsValidator {
     };
   }
 
-  public void checkPermissionsAndAffiliationsForHoldings(String itemIdentifier) throws UploadFromQueryException {
+  private void checkPermissionsAndAffiliationsForHoldings(String itemIdentifier) throws UploadFromQueryException {
     var centralTenantId = consortiaService.getCentralTenantId(folioExecutionContext.getTenantId());
     if (isCurrentTenantCentral(centralTenantId)) {
       // Process central tenant
@@ -116,7 +116,7 @@ public class PermissionsValidator {
     }
   }
 
-  public void checkPermissionsAndAffiliationsForItem(String itemIdentifier) throws UploadFromQueryException {
+  private void checkPermissionsAndAffiliationsForItem(String itemIdentifier) throws UploadFromQueryException {
     var centralTenantId = consortiaService.getCentralTenantId(folioExecutionContext.getTenantId());
     if (isCurrentTenantCentral(centralTenantId)) {
       // Assuming item is requested by only one identifier not a collection of identifiers
