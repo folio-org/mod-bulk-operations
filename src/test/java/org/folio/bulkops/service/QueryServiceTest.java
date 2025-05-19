@@ -90,7 +90,7 @@ class QueryServiceTest extends BaseTest {
       var expectedPath = String.format(QUERY_FILENAME_TEMPLATE, operationId);
       var operation = BulkOperation.builder()
         .id(operationId)
-        .fqlQueryId(fqlQueryId)
+        .fqlQueryId(fqlQueryId).entityType(EntityType.INSTANCE)
         .build();
       var queryDetails = new QueryDetails()
         .status(QueryDetails.StatusEnum.SUCCESS)

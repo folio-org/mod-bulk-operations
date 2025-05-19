@@ -122,7 +122,7 @@ public class QueryService {
 
   private void saveIdentifiersAndStartBulkOperation(BulkOperation bulkOperation, QueryDetails queryResult) {
     try {
-      var identifiers = retrieveIdentifiers(queryResult);
+      var identifiers = retrieveIdentifiers(queryResult, getIdField(bulkOperation));
       var identifiersString = String.join(NEW_LINE_SEPARATOR, identifiers);
       var path = String.format(QUERY_FILENAME_TEMPLATE, bulkOperation.getId());
       remoteFileSystemClient.put(new ByteArrayInputStream(identifiersString.getBytes()), path);
@@ -136,6 +136,15 @@ public class QueryService {
       log.error(errorMessage);
       failBulkOperation(bulkOperation, errorMessage);
     }
+  }
+
+  private String getIdField(BulkOperation operation) {
+    return switch (operation.getEntityType()) {
+        case USER -> "user.id";
+        case ITEM -> "items.id";
+        case HOLDINGS_RECORD -> "holdings.id";
+        case INSTANCE, INSTANCE_MARC -> "instance.id";
+    };
   }
 
   private void startQueryOperation(QueryDetails queryResult, BulkOperation operation) {
@@ -227,8 +236,8 @@ public class QueryService {
     bulkOperationRepository.save(bulkOperation);
   }
 
-  private List<String> retrieveIdentifiers(QueryDetails queryDetails) {
-    return queryDetails.getContent().stream().map(content -> content.get("instance.id").toString()).sorted().distinct().toList();
+  private List<String> retrieveIdentifiers(QueryDetails queryDetails, String idField) {
+    return queryDetails.getContent().stream().map(content -> content.get(idField).toString()).sorted().distinct().toList();
   }
 
   private void processQueryResultForMarc(BulkOperationsEntity entityRecord, Writer writerForResultMrcFile,
