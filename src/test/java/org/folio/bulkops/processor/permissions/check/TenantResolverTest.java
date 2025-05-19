@@ -18,6 +18,7 @@ import org.folio.bulkops.exception.AffiliationException;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.spring.FolioExecutionContext;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -89,8 +90,14 @@ class TenantResolverTest {
     when(userClient.getUserById(userId.toString())).thenReturn(User.builder().id(userId.toString()).build());
     when(consortiaService.getAffiliatedTenants(currentTenant, userId.toString())).thenReturn(affiliatedTenants);
 
-    assertThrows(UnsupportedOperationException.class, () -> tenantResolver.checkAffiliatedPermittedTenantIds(entityType, identifierType.getValue(),
-            Set.of(currentTenant), identifier));
+    Executable action = () -> tenantResolver.checkAffiliatedPermittedTenantIds(
+            entityType,
+            identifierType.getValue(),
+            Set.of(currentTenant),
+            identifier
+    );
+
+    assertThrows(UnsupportedOperationException.class, action);
   }
 
   private static Stream<Arguments> supportedEntityTypesAndIdentifierTypes() {

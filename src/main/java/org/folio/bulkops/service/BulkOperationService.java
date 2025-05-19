@@ -24,6 +24,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LO
 import static org.folio.bulkops.util.Constants.CHANGED_CSV_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
+import static org.folio.bulkops.util.Constants.ERROR_STARTING_BULK_OPERATION;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
@@ -119,7 +120,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class BulkOperationService {
   public static final String FILE_UPLOADING_FAILED = "File uploading failed";
   public static final String STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS = "Step %s is not applicable for bulk operation status %s";
-  public static final String ERROR_STARTING_BULK_OPERATION = "Error starting Bulk Operation: ";
   public static final String MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY = "Instance with source %s is not supported by MARC records bulk edit and cannot be updated.";
   public static final String MSG_CONFIRM_FAILED = "Confirm failed";
 
@@ -351,25 +351,6 @@ public class BulkOperationService {
       bulkOperationRepository.save(operation);
     }
   }
-
-//  public void writeBeanToCsv(BulkOperation operation, BulkOperationsEntityCsvWriter csvWriter, BulkOperationsEntity bean, List<BulkOperationExecutionContent> bulkOperationExecutionContents) throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
-//    try {
-//      csvWriter.write(bean);
-//    } catch (ConverterException e) {
-//      if (APPLY_CHANGES.equals(operation.getStatus())) {
-//        log.error("Record {}, field: {}, converter exception: {}", bean.getIdentifier(operation.getIdentifierType()), e.getField().getName(), e.getMessage());
-//      } else {
-//        bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
-//                .identifier(bean.getIdentifier(operation.getIdentifierType()))
-//                .bulkOperationId(operation.getId())
-//                .state(StateType.FAILED)
-//                .errorType(e.getErrorType())
-//                .errorMessage(format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()))
-//                .build());
-//      }
-//      writeBeanToCsv(operation, csvWriter, bean, bulkOperationExecutionContents);
-//    }
-//  }
 
   protected UpdatedEntityHolder<BulkOperationsEntity> processUpdate(BulkOperationsEntity original, BulkOperation operation, BulkOperationRuleCollection rules, Class<? extends BulkOperationsEntity> entityClass) {
     var processor = dataProcessorFactory.getProcessorFromFactory(entityClass);
