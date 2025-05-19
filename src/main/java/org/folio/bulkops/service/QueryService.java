@@ -140,7 +140,7 @@ public class QueryService {
 
   private String getIdField(BulkOperation operation) {
     return switch (operation.getEntityType()) {
-        case USER -> "user.id";
+        case USER -> "users.id";
         case ITEM -> "items.id";
         case HOLDINGS_RECORD -> "holdings.id";
         case INSTANCE, INSTANCE_MARC -> "instance.id";
