@@ -72,8 +72,8 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
 
     rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_ELECTRONIC_ACCESS), false);
 
-//    assertThat(rowData.getFirst()).isEqualTo("Related resource%s;url%s;text text2%s;materials%s;public note public note2"
-//      .formatted(NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER));
+    assertThat(rowData.getFirst()).isEqualTo("Related resource%s;url%s;text text2%s;materials%s;public note public note2"
+      .formatted(NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER));
   }
 
   @Test
@@ -92,12 +92,12 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     marcRecord.addVariableField(dataField);
     var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_ELECTRONIC_ACCESS), true);
 
-//    assertThat(rowData.getFirst()).isEqualTo(("URL relationship;URI;Link text;Materials specified;URL public note\n" +
-//      "Related resource;-;text;materials;public note"));
+    assertThat(rowData.getFirst()).isEqualTo(("URL relationship;URI;Link text;Materials specified;URL public note\n" +
+      "Related resource;-;text;materials;public note"));
 
     rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_ELECTRONIC_ACCESS), false);
 
-//    assertThat(rowData.getFirst()).isEqualTo(("Related resource\u001f;-\u001f;text\u001f;materials\u001f;public note"));
+    assertThat(rowData.getFirst()).isEqualTo(("Related resource\u001f;-\u001f;text\u001f;materials\u001f;public note"));
   }
 
   @Test
@@ -116,12 +116,12 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     marcRecord.addVariableField(dataField);
     var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_SUBJECT), true);
 
-//    assertThat(rowData.getFirst()).isEqualTo(("Subject headings;Subject source;Subject type\n" +
-//      "text subject c subject d;Medical Subject Headings;Personal name"));
+    assertThat(rowData.getFirst()).isEqualTo(("Subject headings;Subject source;Subject type\n" +
+      "text subject c subject d;Medical Subject Headings;Personal name"));
 
     rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_SUBJECT), false);
 
-//    assertThat(rowData.getFirst()).isEqualTo(("text subject c subject d\u001f;Medical Subject Headings\u001f;Personal name"));
+    assertThat(rowData.getFirst()).isEqualTo(("text subject c subject d\u001f;Medical Subject Headings\u001f;Personal name"));
   }
 
   @Test
@@ -218,7 +218,7 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
       "a text subject c subject d;Library of Congress Children’s and Young Adults' Subject Headings;Geographic name | " +
       "text subject c subject d;-;Genre/Form";
 
-//    assertThat(rowData.getFirst()).isEqualTo(expectedRowData);
+    assertThat(rowData.getFirst()).isEqualTo(expectedRowData);
   }
 
   @ParameterizedTest
@@ -267,6 +267,6 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
       "LC;a 050 b 050 | NLM;a 060 b 060 | UDC;a 080 b 080 | Dewey;a 082-1 | Dewey;a 082-2 b 082 | GDC;a 086 | GDC;z 086 | LC;a 090 b 090";
     var expectedPreviewData = "LC\u001F;a 050 b 050\u001F|NLM\u001F;a 060 b 060\u001F|UDC\u001F;a 080 b 080\u001F|Dewey\u001F;a 082-1\u001F|Dewey\u001F;a 082-2 b 082\u001F|GDC\u001F;a 086\u001F|GDC\u001F;z 086\u001F|LC\u001F;a 090 b 090";
 
-//    assertThat(rowData.getFirst()).isEqualTo(forCsv ? expectedCsvRowData : expectedPreviewData);
+    assertThat(rowData.getFirst()).isEqualTo(forCsv ? expectedCsvRowData : expectedPreviewData);
   }
 }
