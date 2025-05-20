@@ -91,7 +91,10 @@ public class MarcToUnifiedTableRowMapperHelper {
           .toList());
         var itemNumber = dataField.getSubfield('b');
         if (nonNull(itemNumber) && !classifications.isEmpty()) {
-          classifications.set(classifications.size() - 1, String.join(SPACE, classifications.getLast(), itemNumber.getData()));
+          classifications.set(
+            classifications.size() - 1,
+            String.join(SPACE, classifications.get(classifications.size() - 1), itemNumber.getData())
+          );
         }
       }
       default -> log.error("Tag {} is not classification or not supported yet.", dataField.getTag());

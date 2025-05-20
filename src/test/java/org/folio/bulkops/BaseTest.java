@@ -181,8 +181,6 @@ public abstract class BaseTest {
   public InstanceNoteTypesClient instanceNoteTypesClient;
   @MockitoBean
   public PrepareSystemUserService prepareSystemUserService;
-  @MockitoBean
-  public PublicationClient  publicationClient;
 
   @Autowired
   protected MockMvc mockMvc;
