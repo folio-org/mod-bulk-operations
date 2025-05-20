@@ -57,8 +57,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 class QueryServiceTest extends BaseTest {
 
-  private final static String INSTANCE_JSON_PATH = "src/test/resources/files/instance.json";
-  private final static String INSTANCE_MARC_JSON_PATH = "src/test/resources/files/instance_marc_1.json";
+  private static final String INSTANCE_JSON_PATH = "src/test/resources/files/instance.json";
+  private static final String INSTANCE_MARC_JSON_PATH = "src/test/resources/files/instance_marc_1.json";
 
   @Autowired
   private QueryService queryService;
@@ -90,7 +90,7 @@ class QueryServiceTest extends BaseTest {
       var expectedPath = String.format(QUERY_FILENAME_TEMPLATE, operationId);
       var operation = BulkOperation.builder()
         .id(operationId)
-        .fqlQueryId(fqlQueryId)
+        .fqlQueryId(fqlQueryId).entityType(EntityType.INSTANCE)
         .build();
       var queryDetails = new QueryDetails()
         .status(QueryDetails.StatusEnum.SUCCESS)
@@ -252,7 +252,7 @@ class QueryServiceTest extends BaseTest {
       assertThat(operationCaptor.getValue().getTotalNumOfRecords()).isEqualTo(1);
       assertThat(operationCaptor.getValue().getProcessedNumOfRecords()).isEqualTo(1);
       assertThat(operationCaptor.getValue().getMatchedNumOfErrors()).isEqualTo(1);
-      assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isEqualTo(0);
+      assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isZero();
     }
   }
 
@@ -292,7 +292,7 @@ class QueryServiceTest extends BaseTest {
       assertThat(operationCaptor.getValue().getTotalNumOfRecords()).isEqualTo(1);
       assertThat(operationCaptor.getValue().getProcessedNumOfRecords()).isEqualTo(1);
       assertThat(operationCaptor.getValue().getMatchedNumOfErrors()).isEqualTo(1);
-      assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isEqualTo(0);
+      assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isZero();
     }
   }
 
@@ -339,7 +339,7 @@ class QueryServiceTest extends BaseTest {
       assertThat(operationCaptor.getValue().getTotalNumOfRecords()).isEqualTo(1);
       assertThat(operationCaptor.getValue().getProcessedNumOfRecords()).isEqualTo(1);
       assertThat(operationCaptor.getValue().getMatchedNumOfErrors()).isEqualTo(1);
-      assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isEqualTo(0);
+      assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isZero();
     }
   }
 }

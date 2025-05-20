@@ -7,8 +7,8 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
-import static org.folio.bulkops.service.BulkOperationService.ERROR_STARTING_BULK_OPERATION;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
+import static org.folio.bulkops.util.Constants.ERROR_STARTING_BULK_OPERATION;
 import static org.folio.bulkops.util.Constants.MARC_RECORDS;
 import static org.folio.bulkops.util.Constants.MATCHED_RECORDS;
 import static org.folio.bulkops.util.Constants.MULTIPLE_SRS;
@@ -95,7 +95,8 @@ public class QueryService {
       var queryId = executeQuery(new SubmitQuery(bulkOperation.getFqlQuery(), bulkOperation.getEntityTypeId()));
       var queryResult = getResult(queryId);
       switch (queryResult.getStatus()) {
-        case SUCCESS -> {
+          case IN_PROGRESS -> log.info("Retrieving records by FKM for operation {} in progress...", bulkOperation.getId());
+          case SUCCESS -> {
           if (queryResult.getTotalRecords() == 0) {
             failBulkOperation(bulkOperation, "No records found for the query");
           } else {
@@ -121,7 +122,7 @@ public class QueryService {
 
   private void saveIdentifiersAndStartBulkOperation(BulkOperation bulkOperation, QueryDetails queryResult) {
     try {
-      var identifiers = retrieveIdentifiers(queryResult);
+      var identifiers = retrieveIdentifiers(queryResult, getIdField(bulkOperation));
       var identifiersString = String.join(NEW_LINE_SEPARATOR, identifiers);
       var path = String.format(QUERY_FILENAME_TEMPLATE, bulkOperation.getId());
       remoteFileSystemClient.put(new ByteArrayInputStream(identifiersString.getBytes()), path);
@@ -135,6 +136,15 @@ public class QueryService {
       log.error(errorMessage);
       failBulkOperation(bulkOperation, errorMessage);
     }
+  }
+
+  private String getIdField(BulkOperation operation) {
+    return switch (operation.getEntityType()) {
+        case USER -> "users.id";
+        case ITEM -> "items.id";
+        case HOLDINGS_RECORD -> "holdings.id";
+        case INSTANCE, INSTANCE_MARC -> "instance.id";
+    };
   }
 
   private void startQueryOperation(QueryDetails queryResult, BulkOperation operation) {
@@ -176,27 +186,28 @@ public class QueryService {
       var csvWriter = new BulkOperationsEntityCsvWriter(writerForResultCsvFile, entityClass);
       List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
 
-      int numMatched = 0, numProcessed = 0;
+      int numMatched = 0;
+      int numProcessed = 0;
       for (var content : queryDetails.getContent()) {
 
-        var record = constructRecord(operation, content);
+        var entityRecord = constructRecord(operation, content);
 
         try {
-          permissionsValidator.checkPermissions(operation, record);
+          permissionsValidator.checkPermissions(operation, entityRecord);
 
-          var extendedRecord = constructExtendedRecord(operation, record);
+          var extendedRecord = constructExtendedRecord(operation, entityRecord);
 
-          if (record.isMarcInstance()) {
-            processQueryResultForMarc(record, writerForResultMrcFile, operation, matchedMrcFileName);
+          if (entityRecord.isMarcInstance()) {
+            processQueryResultForMarc(entityRecord, writerForResultMrcFile, operation, matchedMrcFileName);
           }
 
           var extendedRecordAsJsonString = objectMapper.writeValueAsString(extendedRecord);
 
           writerForResultJsonFile.append(extendedRecordAsJsonString);
           CSVHelper.writeBeanToCsv(operation, csvWriter, extendedRecord.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
-          numMatched ++;
+          numMatched++;
         } catch (UploadFromQueryException e) {
-          handleError(bulkOperationExecutionContents, e, record, operation);
+          handleError(bulkOperationExecutionContents, e, entityRecord, operation);
         }
         updateProgress(operation, numMatched, ++numProcessed);
       }
@@ -225,14 +236,14 @@ public class QueryService {
     bulkOperationRepository.save(bulkOperation);
   }
 
-  private List<String> retrieveIdentifiers(QueryDetails queryDetails) {
-    return queryDetails.getContent().stream().map(content -> content.get("instance.id").toString()).sorted().distinct().toList();
+  private List<String> retrieveIdentifiers(QueryDetails queryDetails, String idField) {
+    return queryDetails.getContent().stream().map(content -> content.get(idField).toString()).sorted().distinct().toList();
   }
 
-  private void processQueryResultForMarc(BulkOperationsEntity record, Writer writerForResultMrcFile,
+  private void processQueryResultForMarc(BulkOperationsEntity entityRecord, Writer writerForResultMrcFile,
                                          BulkOperation operation, String matchedMrcFileName) throws UploadFromQueryException {
     try {
-      var listMarcRecords = getMarcContent(record.getId());
+      var listMarcRecords = getMarcContent(entityRecord.getId());
       writerForResultMrcFile.append(listMarcRecords.getFirst());
       if (isNull(operation.getLinkToMatchedRecordsMarcFile())) {
         operation.setLinkToMatchedRecordsMarcFile(matchedMrcFileName);
@@ -240,15 +251,15 @@ public class QueryService {
     } catch (UploadFromQueryException e) {
       throw e;
     } catch (Exception e) {
-      throw new UploadFromQueryException(NO_MARC_CONTENT.formatted(record.getId(), e.getMessage()), record.getId());
+      throw new UploadFromQueryException(NO_MARC_CONTENT.formatted(entityRecord.getId(), e.getMessage()), entityRecord.getId());
     }
   }
 
   private void handleError(List<BulkOperationExecutionContent> bulkOperationExecutionContents, Exception e,
-                           BulkOperationsEntity record, BulkOperation operation) {
+                           BulkOperationsEntity entityRecord, BulkOperation operation) {
     log.error(e);
     bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
-      .identifier(record.getId())
+      .identifier(entityRecord.getId())
       .bulkOperationId(operation.getId())
       .state(StateType.FAILED)
       .errorType(org.folio.bulkops.domain.dto.ErrorType.ERROR)
@@ -270,12 +281,12 @@ public class QueryService {
     return objectMapper.convertValue(recordJsonbAsMap, recordClass);
   }
 
-  private BulkOperationsEntity constructExtendedRecord(BulkOperation operation, BulkOperationsEntity record) {
+  private BulkOperationsEntity constructExtendedRecord(BulkOperation operation, BulkOperationsEntity entityRecord) {
     Map<String, Object> extendedRecordAsMap = new LinkedHashMap<>();
     extendedRecordAsMap.put("tenantId", folioExecutionContext.getTenantId());
-    extendedRecordAsMap.put("entity", record);
+    extendedRecordAsMap.put("entity", entityRecord);
     return switch(operation.getEntityType()) {
-      case USER -> objectMapper.convertValue(record, User.class);
+      case USER -> objectMapper.convertValue(entityRecord, User.class);
       case ITEM -> objectMapper.convertValue(extendedRecordAsMap, ExtendedItem.class);
       case HOLDINGS_RECORD -> objectMapper.convertValue(extendedRecordAsMap, ExtendedHoldingsRecord.class);
       case INSTANCE, INSTANCE_MARC -> objectMapper.convertValue(extendedRecordAsMap, ExtendedInstance.class);

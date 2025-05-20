@@ -56,19 +56,19 @@ public class PermissionsValidator {
     }
   }
 
-  public void checkPermissions(BulkOperation operation, BulkOperationsEntity record) throws UploadFromQueryException {
+  public void checkPermissions(BulkOperation operation, BulkOperationsEntity entityRecord) throws UploadFromQueryException {
     if (Set.of(USER, INSTANCE, INSTANCE_MARC).contains(operation.getEntityType())) {
       if (!readPermissionsValidator.isBulkEditReadPermissionExists(folioExecutionContext.getTenantId(), operation.getEntityType())) {
         var user = userClient.getUserById(folioExecutionContext.getUserId().toString());
-        throw new ReadPermissionException(buildReadPermissionErrorMessage(operation, record.getId(), user), record.getId());
+        throw new ReadPermissionException(buildReadPermissionErrorMessage(operation, entityRecord.getId(), user), entityRecord.getId());
       }
-      if (LINKED_DATA_SOURCE.equals(record.getSource())) {
-        throw new UploadFromQueryException(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED, record.getId());
+      if (LINKED_DATA_SOURCE.equals(entityRecord.getSource())) {
+        throw new UploadFromQueryException(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED, entityRecord.getId());
       }
     } else if (HOLDINGS_RECORD == operation.getEntityType()) {
-      checkPermissionsAndAffiliationsForHoldings(record.getId());
+      checkPermissionsAndAffiliationsForHoldings(entityRecord.getId());
     } else if (ITEM == operation.getEntityType()) {
-      checkPermissionsAndAffiliationsForItem(record.getId());
+      checkPermissionsAndAffiliationsForItem(entityRecord.getId());
     }
   }
 
