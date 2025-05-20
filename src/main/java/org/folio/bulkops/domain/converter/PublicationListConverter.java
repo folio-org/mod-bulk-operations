@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.util.Constants.PUBLICATION;
+import static org.folio.bulkops.util.Constants.PUBLICATION_HEADINGS;
 import static org.folio.bulkops.util.Constants.SPECIAL_ITEM_DELIMITER;
 
 public class PublicationListConverter extends BaseConverter<List<Publication>> {
@@ -17,7 +17,7 @@ public class PublicationListConverter extends BaseConverter<List<Publication>> {
   public String convertToString(List<Publication> object) {
     return ObjectUtils.isEmpty(object) ?
       EMPTY :
-      PUBLICATION +
+      PUBLICATION_HEADINGS +
         object.stream()
           .filter(Objects::nonNull)
           .map(PublicationHelper.service()::publicationToString)
