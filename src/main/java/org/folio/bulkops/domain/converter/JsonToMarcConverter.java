@@ -1,15 +1,15 @@
 package org.folio.bulkops.domain.converter;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 import lombok.extern.log4j.Log4j2;
 import org.marc4j.MarcException;
 import org.marc4j.MarcJsonReader;
 import org.marc4j.MarcStreamWriter;
 import org.springframework.stereotype.Component;
-
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 @Log4j2
 @Component
@@ -36,8 +36,9 @@ public class JsonToMarcConverter {
         marcStreamWriter.write(marc);
       }
     } catch (Exception e) {
-      log.error(e.getMessage());
-      throw new MarcException(e.getMessage());
+      var msg = e.getMessage();
+      log.error(msg);
+      throw new MarcException(msg);
     }
   }
 }

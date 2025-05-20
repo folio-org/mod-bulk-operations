@@ -9,20 +9,17 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORD
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_STARTING_BULK_OPERATION;
-import static org.folio.bulkops.util.Constants.MARC_RECORDS;
-import static org.folio.bulkops.util.Constants.MATCHED_RECORDS;
 import static org.folio.bulkops.util.Constants.MULTIPLE_SRS;
 import static org.folio.bulkops.util.Constants.NEW_LINE_SEPARATOR;
 import static org.folio.bulkops.util.Constants.NO_MARC_CONTENT;
-import static org.folio.bulkops.util.Constants.SLASH;
 import static org.folio.bulkops.util.Constants.SRS_MISSING;
+import static org.folio.bulkops.util.Utils.getMatchedFileName;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Writer;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -40,7 +37,6 @@ import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
@@ -63,7 +59,6 @@ import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.util.CSVHelper;
 import org.folio.querytool.domain.dto.QueryDetails;
-import org.folio.querytool.domain.dto.SubmitQuery;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
 
@@ -92,8 +87,7 @@ public class QueryService {
 
   public BulkOperation retrieveRecordsAndCheckQueryExecutionStatus(BulkOperation bulkOperation) {
     executor.execute(getRunnableWithCurrentFolioContext(() -> {
-      var queryId = executeQuery(new SubmitQuery(bulkOperation.getFqlQuery(), bulkOperation.getEntityTypeId()));
-      var queryResult = getResult(queryId);
+      var queryResult = getResult(bulkOperation.getFqlQueryId());
       switch (queryResult.getStatus()) {
           case IN_PROGRESS -> log.info("Retrieving records by FKM for operation {} in progress...", bulkOperation.getId());
           case SUCCESS -> {
@@ -110,10 +104,6 @@ public class QueryService {
     bulkOperation.setStatus(RETRIEVING_RECORDS);
     bulkOperationRepository.save(bulkOperation);
     return bulkOperation;
-  }
-
-  private UUID executeQuery(SubmitQuery submitQuery) {
-    return queryClient.executeQuery(submitQuery).getQueryId();
   }
 
   private QueryDetails getResult(UUID queryId) {
@@ -149,9 +139,9 @@ public class QueryService {
 
   private void startQueryOperation(QueryDetails queryResult, BulkOperation operation) {
     try {
-      var matchedJsonFileName = operation.getId() + SLASH + "json" + SLASH + LocalDate.now() + MATCHED_RECORDS + FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile()) + ".json";
-      var matchedMrcFileName = operation.getId() + SLASH + LocalDate.now() + MARC_RECORDS + FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
-      var matchedCsvFileName = operation.getId() + SLASH + LocalDate.now() + MATCHED_RECORDS + FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile()) + ".csv";
+      var matchedJsonFileName = getMatchedFileName(operation, "json/", "Matched", "json");
+      var matchedMrcFileName = getMatchedFileName(operation, StringUtils.EMPTY, "Marc", "mrc");
+      var matchedCsvFileName = getMatchedFileName(operation, StringUtils.EMPTY, "Matched", "csv");
 
       operation.setStatus(RETRIEVING_RECORDS);
       bulkOperationRepository.save(operation);

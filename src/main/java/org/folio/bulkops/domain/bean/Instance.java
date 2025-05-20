@@ -1,5 +1,9 @@
 package org.folio.bulkops.domain.bean;
 
+import static org.folio.bulkops.util.Constants.MARC;
+
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.opencsv.bean.CsvCustomBindByName;
@@ -27,8 +31,6 @@ import org.folio.bulkops.domain.converter.StringConverter;
 import org.folio.bulkops.domain.converter.StringListPipedConverter;
 import org.folio.bulkops.domain.converter.SubjectListConverter;
 import org.folio.bulkops.domain.dto.IdentifierType;
-
-import java.util.List;
 
 @Data
 @With
@@ -287,6 +289,6 @@ public class Instance implements BulkOperationsEntity {
 
   @Override
   public boolean isMarcInstance() {
-    return source.equals("MARC");
+    return source.equals(MARC);
   }
 }

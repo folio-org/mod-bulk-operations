@@ -107,6 +107,7 @@ public class Constants {
   public static final String CHANGED_MARC_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-CSV-%s.csv";
   public static final String MATCHED_RECORDS = "-Matched-Records-";
   public static final String MARC_RECORDS = "-Marc-Records-";
+  public static final String MATCHED_RECORDS_FILE_TEMPLATE = "%s/%s%s-%s-Records-%s.%s";
 
   public static final byte[] UTF_8_BOM = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 }

@@ -14,7 +14,6 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
-import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.service.BulkOperationService.FILE_UPLOADING_FAILED;
@@ -1442,7 +1441,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     var operation = bulkOperationService.getOperationById(operationId);
 
-    if (Set.of(DATA_MODIFICATION, EXECUTING_QUERY, APPLY_CHANGES, APPLY_MARC_CHANGES).contains(operation.getStatus())) {
+    if (Set.of(DATA_MODIFICATION, APPLY_CHANGES, APPLY_MARC_CHANGES).contains(operation.getStatus())) {
       assertThat(operation.getProcessedNumOfRecords(), equalTo(5));
     } else {
       assertThat(operation.getProcessedNumOfRecords(), equalTo(0));
@@ -1599,21 +1598,6 @@ class BulkOperationServiceTest extends BaseTest {
     if (nonNull(testData.expectedErrorMessage)) {
       verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage), eq(ErrorType.WARNING));
     }
-  }
-
-  @Test
-  void shouldCheckQueryExecution() {
-    var operationId = UUID.randomUUID();
-    var operation = new BulkOperation();
-    operation.setStatus(EXECUTING_QUERY);
-    operation.setId(operationId);
-    operation.setApproach(ApproachType.QUERY);
-
-    when(bulkOperationRepository.findById(operationId)).thenReturn(Optional.of(operation));
-
-    bulkOperationService.getOperationById(operationId);
-
-    verify(queryService).retrieveRecordsAndCheckQueryExecutionStatus(operation);
   }
 
   @Test

@@ -208,19 +208,24 @@ public class BulkOperationService {
   }
 
   public BulkOperation triggerByQuery(UUID userId, QueryRequest queryRequest) {
+    var operation = saveQueryBulkOperation(userId, queryRequest);
+    return queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+  }
+
+  private BulkOperation saveQueryBulkOperation(UUID userId, QueryRequest queryRequest) {
     return bulkOperationRepository.save(BulkOperation.builder()
-        .id(UUID.randomUUID())
-        .entityType(entityTypeService.getEntityTypeById(queryRequest.getEntityTypeId()))
-        .approach(QUERY)
-        .identifierType(IdentifierType.ID)
-        .status(EXECUTING_QUERY)
-        .startTime(LocalDateTime.now())
-        .userId(userId)
-        .fqlQuery(queryRequest.getFqlQuery())
-        .fqlQueryId(queryRequest.getQueryId())
-        .userFriendlyQuery(queryRequest.getUserFriendlyQuery())
-        .entityTypeId(queryRequest.getEntityTypeId())
-      .build());
+            .id(UUID.randomUUID())
+            .entityType(entityTypeService.getEntityTypeById(queryRequest.getEntityTypeId()))
+            .approach(QUERY)
+            .identifierType(IdentifierType.ID)
+            .status(EXECUTING_QUERY)
+            .startTime(LocalDateTime.now())
+            .userId(userId)
+            .fqlQuery(queryRequest.getFqlQuery())
+            .fqlQueryId(queryRequest.getQueryId())
+            .userFriendlyQuery(queryRequest.getUserFriendlyQuery())
+            .entityTypeId(queryRequest.getEntityTypeId())
+            .build());
   }
 
   public void confirm(BulkOperationDataProcessing dataProcessing)  {
@@ -650,7 +655,7 @@ public class BulkOperationService {
   public BulkOperation getOperationById(UUID bulkOperationId) {
     var operation = getBulkOperationOrThrow(bulkOperationId);
     return switch (operation.getStatus()) {
-      case EXECUTING_QUERY -> queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+//      case EXECUTING_QUERY -> queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
       case SAVED_IDENTIFIERS -> {
         if (operation.getApproach() != QUERY) {
           yield startBulkOperation(operation.getId(), operation.getUserId(), new BulkOperationStart()
