@@ -187,12 +187,13 @@ class QueryServiceTest extends BaseTest {
   @SneakyThrows
   void shouldStartQueryOperation() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var operation = BulkOperation.builder().id(UUID.randomUUID())
-        .status(OperationStatusType.EXECUTING_QUERY).approach(org.folio.bulkops.domain.dto.ApproachType.QUERY)
-        .entityType(org.folio.bulkops.domain.dto.EntityType.INSTANCE)
-        .identifierType(IdentifierType.ID)
-        .build();
       var queryId = UUID.randomUUID();
+      var operation = BulkOperation.builder().id(UUID.randomUUID())
+              .status(OperationStatusType.EXECUTING_QUERY).approach(org.folio.bulkops.domain.dto.ApproachType.QUERY)
+              .entityType(org.folio.bulkops.domain.dto.EntityType.INSTANCE)
+              .identifierType(IdentifierType.ID)
+              .fqlQueryId(queryId)
+              .build();
       var instanceJsonb = Files.readString(Path.of(INSTANCE_JSON_PATH));
       var queryDetails = new QueryDetails().content(List.of(Map.of("instance.jsonb", instanceJsonb,
           "instance.id", "69640328-788e-43fc-9c3c-af39e243f3b7")))
@@ -221,11 +222,12 @@ class QueryServiceTest extends BaseTest {
   @SneakyThrows
   void shouldThrowReadExceptionWhenNoPermission() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var operation = BulkOperation.builder().id(UUID.randomUUID())
-        .status(OperationStatusType.EXECUTING_QUERY).approach(org.folio.bulkops.domain.dto.ApproachType.QUERY)
-        .entityType(org.folio.bulkops.domain.dto.EntityType.INSTANCE)
-        .build();
       var queryId = UUID.randomUUID();
+      var operation = BulkOperation.builder().id(UUID.randomUUID())
+              .status(OperationStatusType.EXECUTING_QUERY).approach(org.folio.bulkops.domain.dto.ApproachType.QUERY)
+              .entityType(org.folio.bulkops.domain.dto.EntityType.INSTANCE)
+              .fqlQueryId(queryId)
+              .build();
       var instanceJsonb = Files.readString(Path.of(INSTANCE_JSON_PATH));
       var queryDetails = new QueryDetails().content(List.of(Map.of("instance.jsonb", instanceJsonb,
                       "instance.id", "69640328-788e-43fc-9c3c-af39e243f3b7")))
@@ -260,11 +262,12 @@ class QueryServiceTest extends BaseTest {
   @SneakyThrows
   void shouldThrowSrsMissingExceptionWhenNoSrs() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var queryId = UUID.randomUUID();
       var operation = BulkOperation.builder().id(UUID.randomUUID())
               .status(OperationStatusType.EXECUTING_QUERY).approach(org.folio.bulkops.domain.dto.ApproachType.QUERY)
               .entityType(EntityType.INSTANCE_MARC)
+              .fqlQueryId(queryId)
               .build();
-      var queryId = UUID.randomUUID();
       var instanceJsonb = Files.readString(Path.of(INSTANCE_MARC_JSON_PATH));
       var queryDetails = new QueryDetails().content(List.of(Map.of("instance.jsonb", instanceJsonb,
                       "instance.id", "69640328-788e-43fc-9c3c-af39e243f3b7")))
@@ -300,11 +303,12 @@ class QueryServiceTest extends BaseTest {
   @SneakyThrows
   void shouldThrowMultipleSrsExceptionWhenMoreThanOneMarc() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var queryId = UUID.randomUUID();
       var operation = BulkOperation.builder().id(UUID.randomUUID())
               .status(OperationStatusType.EXECUTING_QUERY).approach(org.folio.bulkops.domain.dto.ApproachType.QUERY)
               .entityType(EntityType.INSTANCE_MARC)
+              .fqlQueryId(queryId)
               .build();
-      var queryId = UUID.randomUUID();
       var instanceJsonb = Files.readString(Path.of(INSTANCE_MARC_JSON_PATH));
       var queryDetails = new QueryDetails().content(List.of(Map.of("instance.jsonb", instanceJsonb,
                       "instance.id", "69640328-788e-43fc-9c3c-af39e243f3b7")))
