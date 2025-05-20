@@ -1637,7 +1637,7 @@ class BulkOperationServiceTest extends BaseTest {
       var writer = new BulkOperationsEntityCsvWriter(stringWriter, Item.class);
       List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
       CSVHelper.writeBeanToCsv(operation, writer, item, bulkOperationExecutionContents);
-      assertThat(stringWriter.toString(), containsString("FAILED"));
+      assertThat(stringWriter.toString(), containsString("UNKNOWN"));
       if (APPLY_CHANGES.equals(operation.getStatus())) {
         assertThat(bulkOperationExecutionContents, hasSize(0));
       } else {

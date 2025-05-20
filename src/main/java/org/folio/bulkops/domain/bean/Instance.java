@@ -289,6 +289,6 @@ public class Instance implements BulkOperationsEntity {
 
   @Override
   public boolean isMarcInstance() {
-    return source.equals(MARC);
+    return MARC.equals(source);
   }
 }
