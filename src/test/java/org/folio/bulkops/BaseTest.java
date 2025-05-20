@@ -165,6 +165,9 @@ public abstract class BaseTest {
   public MaterialTypeClient materialTypeClient;
   @MockitoBean
   public ElectronicAccessRelationshipClient relationshipClient;
+
+  @MockitoBean
+  public PublicationClient publicationClient;
   @MockitoBean
   public InstanceStatusesClient instanceStatusesClient;
   @MockitoBean
