@@ -1,7 +1,21 @@
 package org.folio.bulkops.service;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.domain.bean.Instance.*;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CLASSIFICATION;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CONTRIBUTORS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_EDITION;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_FORMATS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_LANGUAGES;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_NOTES;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PHYSICAL_DESCRIPTION;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION_FREQUENCY;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION_RANGE;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TITLE;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TYPE;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SERIES_STATEMENTS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUBJECT;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 
 import com.jayway.jsonpath.DocumentContext;
