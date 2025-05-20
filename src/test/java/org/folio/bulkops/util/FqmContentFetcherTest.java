@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.QueryClient;
+import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.exception.FqmFetcherException;
 import org.folio.querytool.domain.dto.QueryDetails;
 import org.junit.jupiter.api.Test;
@@ -55,7 +56,7 @@ public class FqmContentFetcherTest {
       when(queryClient.getQuery(queryId, offset, limit)).thenReturn(getMockedData(offset, limit));
     });
 
-    try (var is = fqmContentFetcher.fetch(queryId, total)) {
+    try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total)) {
       var actual = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(actual).contains(expected);
     }
@@ -82,7 +83,7 @@ public class FqmContentFetcherTest {
         .request(Request.create(Request.HttpMethod.GET, "", Map.of(), new byte[]{}, Charset.defaultCharset(), null))
         .build())).when(queryClient).getQuery(queryId, offset, limit);
 
-    Exception exception = assertThrows(FqmFetcherException.class, () -> fqmContentFetcher.fetch(queryId, total));
+    Exception exception = assertThrows(FqmFetcherException.class, () -> fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total));
 
     assertThat(exception.getCause().getCause()).isInstanceOf(FeignException.class);
   }
