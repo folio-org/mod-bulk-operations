@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.domain.bean.Classification;
 import org.folio.bulkops.domain.bean.Publication;
 import org.folio.bulkops.exception.EntityFormatException;
 import org.jetbrains.annotations.NotNull;
@@ -39,18 +40,32 @@ public class PublicationService {
     if (isNotEmpty(publicationString)) {
       var tokens = publicationString.split(delimiter, -1);
       if (NUMBER_OF_PUBLICATION_COMPONENTS == tokens.length) {
+        var publisher = tokens[PUBLISHER_INDEX];
+        var role = tokens[PUBLISHER_ROLE_INDEX];
+        var place = tokens[PLACE_OF_PUBLICATION_INDEX];
+        var date = tokens[PUBLICATION_DATE_INDEX];
+
+        Publication refPublication = HYPHEN.equals(publisher)
+          ? null
+          : publicationReferenceService.getPublicationByPublisherName(publisher);
+
         return Publication.builder()
-          .publisher(HYPHEN.equals(tokens[PUBLISHER_INDEX]) ? null : tokens[PUBLISHER_INDEX])
-          .role(HYPHEN.equals(tokens[PUBLISHER_ROLE_INDEX]) ? null : tokens[PUBLISHER_ROLE_INDEX])
-          .place(HYPHEN.equals(tokens[PLACE_OF_PUBLICATION_INDEX]) ? null : tokens[PLACE_OF_PUBLICATION_INDEX])
-          .dateOfPublication(HYPHEN.equals(tokens[PUBLICATION_DATE_INDEX]) ? null : tokens[PUBLICATION_DATE_INDEX])
+          .publisher(refPublication != null ? refPublication.getPublisher() : (HYPHEN.equals(publisher) ? null : publisher))
+          .role(refPublication != null ? refPublication.getRole() : (HYPHEN.equals(role) ? null : role))
+          .place(refPublication != null ? refPublication.getPlace() : (HYPHEN.equals(place) ? null : place))
+          .dateOfPublication(refPublication != null ? refPublication.getDateOfPublication() : (HYPHEN.equals(date) ? null : date))
           .build();
       }
+
       throw new EntityFormatException(String.format(
         "Illegal number of publication elements: %d, expected: %d",
         tokens.length, NUMBER_OF_PUBLICATION_COMPONENTS));
     }
     return null;
   }
+
+
+
+
 }
 
