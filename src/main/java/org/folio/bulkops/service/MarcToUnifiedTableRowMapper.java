@@ -342,8 +342,6 @@ public class MarcToUnifiedTableRowMapper {
     }
   }
 
-
-
   private void processInstanceNotes(List<String> rowData, DataField dataField, List<String> headers, boolean forCsv) {
     var tag = dataField.getTag();
     var index = !headers.contains(referenceProvider.getNoteTypeByTag(tag)) ? headers.indexOf(GENERAL_NOTE) : headers.indexOf(referenceProvider.getNoteTypeByTag(tag));
