@@ -461,26 +461,24 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
 
   @Test
   void fetchPublication_roleFor264Indicators() {
-    var indicators = Map.of(
-      '0', "production",
-      '1', "publication",
-      '2', "distribution",
-      '3', "manufacture",
-      '4', "copyright"
-    );
+    var dataField = new DataFieldImpl("264", ' ', '0');
+    var res = mapperHelper.fetchPublication(dataField);
+    assertThat(res.getRole()).isEqualTo("production");
 
-    for (var entry : indicators.entrySet()) {
-      var indicator2 = entry.getKey();
-      var expectedRole = entry.getValue();
+    dataField = new DataFieldImpl("264", ' ', '1');
+    res = mapperHelper.fetchPublication(dataField);
+    assertThat(res.getRole()).isEqualTo("publication");
 
-      var dataField = new DataFieldImpl("264", ' ', indicator2);
-      dataField.addSubfield(new SubfieldImpl('a', "Place"));
-      dataField.addSubfield(new SubfieldImpl('b', "Publisher"));
-      dataField.addSubfield(new SubfieldImpl('c', "2023"));
+    dataField = new DataFieldImpl("264", ' ', '2');
+    res = mapperHelper.fetchPublication(dataField);
+    assertThat(res.getRole()).isEqualTo("distribution");
 
-      var publication = mapperHelper.fetchPublication(dataField);
+    dataField = new DataFieldImpl("264", ' ', '3');
+    res = mapperHelper.fetchPublication(dataField);
+    assertThat(res.getRole()).isEqualTo("manufacture");
 
-      assertThat(publication.getRole()).isEqualTo(expectedRole);
-    }
+    dataField = new DataFieldImpl("264", ' ', '4');
+    res = mapperHelper.fetchPublication(dataField);
+    assertThat(res.getRole()).isEqualTo("copyright");
   }
 }
