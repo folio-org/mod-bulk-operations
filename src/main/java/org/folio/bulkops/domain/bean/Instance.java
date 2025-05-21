@@ -15,21 +15,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import org.folio.bulkops.domain.converter.BooleanConverter;
-import org.folio.bulkops.domain.converter.ClassificationListConverter;
-import org.folio.bulkops.domain.converter.ContributorListConverter;
-import org.folio.bulkops.domain.converter.ElectronicAccessListInstanceConverter;
-import org.folio.bulkops.domain.converter.InstanceFormatListConverter;
-import org.folio.bulkops.domain.converter.InstanceNoteListConverter;
-import org.folio.bulkops.domain.converter.InstanceStatisticalCodeListConverter;
-import org.folio.bulkops.domain.converter.InstanceStatusConverter;
-import org.folio.bulkops.domain.converter.InstanceTypeConverter;
-import org.folio.bulkops.domain.converter.ModeOfIssuanceConverter;
-import org.folio.bulkops.domain.converter.NatureOfContentTermListConverter;
-import org.folio.bulkops.domain.converter.SeriesListConverter;
-import org.folio.bulkops.domain.converter.StringConverter;
-import org.folio.bulkops.domain.converter.StringListPipedConverter;
-import org.folio.bulkops.domain.converter.SubjectListConverter;
+import org.folio.bulkops.domain.converter.*;
 import org.folio.bulkops.domain.dto.IdentifierType;
 
 @Data
@@ -67,6 +53,7 @@ public class Instance implements BulkOperationsEntity {
   public static final String INSTANCE_ELECTRONIC_ACCESS = "Electronic access";
   public static final String INSTANCE_SUBJECT = "Subject";
   public static final String INSTANCE_CLASSIFICATION = "Classification";
+  public static final String INSTANCE_PUBLICATION = "Publication";
 
   @JsonProperty("id")
   @CsvCustomBindByName(column = INSTANCE_UUID, converter = StringConverter.class)
@@ -237,14 +224,21 @@ public class Instance implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private List<Classification> classifications;
 
+  @JsonProperty("publication")
+  @Valid
+  @CsvCustomBindByName(column = INSTANCE_PUBLICATION, converter = PublicationListConverter.class)
+  @CsvCustomBindByPosition(position = 27, converter = PublicationListConverter.class)
+  @UnifiedTableCell(visible = false)
+  private List<Classification> publication;
+
   @JsonProperty("matchKey")
   private String matchKey;
   @JsonProperty("alternativeTitles")
   private List<AlternativeTitle> alternativeTitles;
   @JsonProperty("identifiers")
   private List<Identifier> identifiers;
-  @JsonProperty("publication")
-  private List<Publication> publications;
+//  @JsonProperty("publication")
+//  private List<Publication> publications;
   @JsonProperty("sourceRecordFormat")
   private String sourceRecordFormat;
   @JsonProperty("statusUpdatedDate")

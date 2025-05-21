@@ -2,12 +2,11 @@ package org.folio.bulkops.service;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.*;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CLASSIFICATION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CONTRIBUTORS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_EDITION;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_FORMATS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_HRID;
@@ -24,16 +23,7 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SOURCE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUBJECT;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_UUID;
 import static org.folio.bulkops.service.Marc21ReferenceProvider.GENERAL_NOTE;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER_SPACED;
-import static org.folio.bulkops.util.Constants.CLASSIFICATION_HEADINGS;
-import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
-import static org.folio.bulkops.util.Constants.HYPHEN;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
-import static org.folio.bulkops.util.Constants.MARC;
-import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
-import static org.folio.bulkops.util.Constants.SPECIAL_ITEM_DELIMITER;
-import static org.folio.bulkops.util.Constants.SUBJECT_HEADINGS;
+import static org.folio.bulkops.util.Constants.*;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -102,6 +92,7 @@ public class MarcToUnifiedTableRowMapper {
         case "100", "110", "111", "700", "710", "711", "720" -> processContributors(rowData, dataField, headers);
         case "245" -> processTitles(rowData, dataField, headers);
         case "250" -> processEdition(rowData, dataField, headers);
+        case "260", "264" -> processPublication(rowData, dataField, headers, forCsv);
         case "300" -> processPhysicalDescription(rowData, dataField, headers);
         case "310", "321" -> processPublicationFrequency(rowData, dataField, headers);
         case "336" -> processResourceType(rowData, dataField, headers);
@@ -311,6 +302,30 @@ public class MarcToUnifiedTableRowMapper {
       rowData.set(index, isNotEmpty(rowData.get(index)) && isNotEmpty(seriesStatement) ?
         String.join(ITEM_DELIMITER_SPACED, rowData.get(index), seriesStatement) :
         seriesStatement);
+    }
+  }
+
+  private void processPublication(List<String> rowData, DataField dataField, List<String> headers, boolean forCsv) {
+    var index = headers.indexOf(INSTANCE_PUBLICATION);
+    if (index != -1) {
+      var publication = helper.fetchPublication(dataField);
+      if (publication != null) {
+        var arrayDelimiter = forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER;
+        var itemDelimiter = forCsv ? ITEM_DELIMITER_SPACED : SPECIAL_ITEM_DELIMITER;
+        var publicationString = String.join(arrayDelimiter,
+          defaultIfEmpty(publication.getPlace(), EMPTY),
+          defaultIfEmpty(publication.getPublisher(), EMPTY),
+          defaultIfEmpty(publication.getDateOfPublication(), EMPTY),
+          defaultIfEmpty(publication.getRole(), EMPTY)
+        );
+        var existingPublication = rowData.get(index);
+        if (StringUtils.isEmpty(existingPublication)) {
+          publicationString = (forCsv ? PUBLICATION_HEADINGS : EMPTY) + publicationString;
+        } else {
+          publicationString = String.join(itemDelimiter, existingPublication, publicationString);
+        }
+        rowData.set(index, publicationString);
+      }
     }
   }
 
