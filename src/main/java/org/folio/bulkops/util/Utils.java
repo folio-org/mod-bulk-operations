@@ -1,8 +1,30 @@
 package org.folio.bulkops.util;
 
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.util.Constants.MATCHED_RECORDS_FILE_TEMPLATE;
+import static org.folio.bulkops.util.Constants.MSG_ERROR_OPTIMISTIC_LOCKING_DEFAULT;
+import static org.folio.bulkops.util.Constants.MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING;
+import static org.folio.bulkops.util.Constants.NEW_LINE_SEPARATOR;
+
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.regex.MatchResult;
+import java.util.regex.Pattern;
+
 import feign.FeignException;
 import lombok.experimental.UtilityClass;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
@@ -14,25 +36,7 @@ import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
-
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.regex.Pattern;
-import java.util.regex.MatchResult;
-
-import static java.lang.String.format;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.util.Constants.MSG_ERROR_OPTIMISTIC_LOCKING_DEFAULT;
-import static org.folio.bulkops.util.Constants.MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING;
-import static org.folio.bulkops.util.Constants.NEW_LINE_SEPARATOR;
+import org.folio.bulkops.domain.entity.BulkOperation;
 
 @UtilityClass
 @Log4j2
@@ -121,6 +125,10 @@ public class Utils {
     Collections.sort(lines);
     var content = String.join(NEW_LINE_SEPARATOR, lines) + NEW_LINE_SEPARATOR;
     return new ByteArrayInputStream(content.getBytes());
+  }
+
+  public static String getMatchedFileName(BulkOperation operation, String folder, String matched, String fileExtension) {
+    return MATCHED_RECORDS_FILE_TEMPLATE.formatted(operation.getId(), folder, LocalDate.now(), matched, FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile()), fileExtension);
   }
 
 }

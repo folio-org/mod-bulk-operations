@@ -32,7 +32,7 @@ import org.folio.bulkops.exception.ReferenceDataNotFoundException;
  */
 public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
 
-  public static final String FAILED_FIELD_MARKER = "FAILED";
+  public static final String FAILED_FIELD_MARKER = "UNKNOWN";
   private boolean failed = false;
   private final Lock lock = new ReentrantLock();
 

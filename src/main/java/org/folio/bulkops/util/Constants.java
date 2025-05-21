@@ -69,6 +69,19 @@ public class Constants {
   public static final String STAFF_ONLY_NOTE_PARAMETER_KEY = "STAFF_ONLY";
   public static final String MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING = "The record cannot be saved because it is not the most recent version. Stored version is %s, bulk edit version is %s.";
   public static final String MSG_ERROR_OPTIMISTIC_LOCKING_DEFAULT = "The record cannot be saved because it is not the most recent version.";
+  public static final String NO_MARC_CONTENT = "Cannot get marc content for record with id = %s, reason: %s";
+  public static final String LINKED_DATA_SOURCE_IS_NOT_SUPPORTED = "Bulk edit of instances with source set to LINKED_DATA is not supported.";
+  public static final String MULTIPLE_SRS = "Multiple SRS records are associated with the instance. The following SRS have been identified: %s.";
+  public static final String SRS_MISSING = "SRS record associated with the instance is missing.";
+  public static final String NO_ITEM_VIEW_PERMISSIONS = "User %s does not have required permission to view the item record - %s=%s on the tenant %s";
+  public static final String NO_ITEM_AFFILIATION = "User %s does not have required affiliation to view the item record - %s=%s on the tenant %s";
+  public static final String NO_HOLDING_AFFILIATION = "User %s does not have required affiliation to view the holdings record - %s=%s on the tenant %s";
+  public static final String NO_HOLDING_VIEW_PERMISSIONS = "User %s does not have required permission to view the holdings record - %s=%s on the tenant %s";
+  public static final String DUPLICATES_ACROSS_TENANTS = "Duplicates across tenants";
+  public static final String NO_MATCH_FOUND_MESSAGE = "No match found";
+  public static final String NO_USER_VIEW_PERMISSIONS = "User %s does not have required permission to view the user record - %s=%s on the tenant %s";
+  public static final String NO_INSTANCE_VIEW_PERMISSIONS = "User %s does not have required permission to view the instance record - %s=%s on the tenant %s";
+  public static final String ERROR_STARTING_BULK_OPERATION = "Error starting Bulk Operation: ";
 
   public static final String CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING = "The record cannot be saved because it is not the most recent version. Stored version is %s, bulk edit version is %s.";
   public static final String RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE = "%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.";
@@ -76,6 +89,7 @@ public class Constants {
   public static final String ITEM_TYPE = "ITEM";
   public static final String HOLDING_TYPE = "HOLDINGS_RECORD";
   public static final Set<String> SPLIT_NOTE_ENTITIES = Set.of(ITEM_TYPE, HOLDING_TYPE);
+  public static final String LINKED_DATA_SOURCE = "LINKED_DATA";
 
   public static final String FIELD_999 = "999";
   public static final char INDICATOR_F = 'f';
@@ -91,6 +105,7 @@ public class Constants {
   public static final String CHANGED_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-CSV-%s.csv";
   public static final String CHANGED_MARC_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-%s.mrc";
   public static final String CHANGED_MARC_CSV_PATH_TEMPLATE = "%s/%s-Changed-Records-MARC-CSV-%s.csv";
+  public static final String MATCHED_RECORDS_FILE_TEMPLATE = "%s/%s%s-%s-Records-%s.%s";
 
   public static final byte[] UTF_8_BOM = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 }
