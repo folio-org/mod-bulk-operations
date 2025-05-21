@@ -229,7 +229,7 @@ public class Instance implements BulkOperationsEntity {
   @CsvCustomBindByName(column = INSTANCE_PUBLICATION, converter = PublicationListConverter.class)
   @CsvCustomBindByPosition(position = 27, converter = PublicationListConverter.class)
   @UnifiedTableCell(visible = false)
-  private List<Classification> publication;
+  private List<Publication> publication;
 
   @JsonProperty("matchKey")
   private String matchKey;

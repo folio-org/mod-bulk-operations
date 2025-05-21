@@ -22,27 +22,36 @@ public class PublicationService {
   private static final int DATE_INDEX = 3;
   private final String delimiter = SPECIAL_ARRAY_DELIMITER;
   public String publicationToString(Publication publication) {
-    return String.join(delimiter,
-      isEmpty(publication.getPublisher())  ? HYPHEN : publication.getPublisher(),
-      isEmpty(publication.getRole())  ? HYPHEN : publication.getRole(),
-      isEmpty(publication.getPlace())  ? HYPHEN : publication.getPlace(),
-      isEmpty(publication.getDateOfPublication())  ? HYPHEN : publication.getDateOfPublication()
+    log.debug("before running publicationToString in publication service", publication.toString());
+    String result = String.join(delimiter,
+      isEmpty(publication.getPublisher()) ? HYPHEN : publication.getPublisher(),
+      isEmpty(publication.getRole()) ? HYPHEN : publication.getRole(),
+      isEmpty(publication.getPlace()) ? HYPHEN : publication.getPlace(),
+      isEmpty(publication.getDateOfPublication()) ? HYPHEN : publication.getDateOfPublication()
     );
+
+    log.debug("Converted publication to string: {}, from publication: {}", result, publication);
+    return result;
   }
 
+
   public Publication restorePublicationItem(String publicationString) {
+    log.debug("before running restorePublicationItem in publication service", publicationString.toString());
     if (isNotEmpty(publicationString)) {
       var tokens = publicationString.split(delimiter, -1);
       if (NUMBER_OF_PUBLICATION_COMPONENTS == tokens.length) {
-        return Publication.builder()
+        var publication = Publication.builder()
           .publisher(tokens[PUBLISHER_INDEX])
           .role(tokens[ROLE_INDEX])
           .place(tokens[PLACE_INDEX])
           .dateOfPublication(tokens[DATE_INDEX])
           .build();
+
+        log.debug("Restored publication from string: '{}', result: {}", publicationString, publication);
+        return publication;
       }
       throw new EntityFormatException(String.format("Illegal number of publication elements: %d, expected: %d", tokens.length, NUMBER_OF_PUBLICATION_COMPONENTS));
     }
     return null;
-  }
-}
+  }}
+
