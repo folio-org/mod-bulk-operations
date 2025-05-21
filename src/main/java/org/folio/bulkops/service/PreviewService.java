@@ -33,6 +33,7 @@ import static org.folio.bulkops.util.Constants.CLASSIFICATION_HEADINGS;
 import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
 import static org.folio.bulkops.util.Constants.FOLIO;
 import static org.folio.bulkops.util.Constants.SUBJECT_HEADINGS;
+import static org.folio.bulkops.util.Constants.PUBLICATION_HEADINGS;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 
 import java.io.IOException;
@@ -453,6 +454,7 @@ public class PreviewService {
         .map(s -> isEmpty(s) ? s : s.replace(ELECTRONIC_ACCESS_HEADINGS, EMPTY))
         .map(s -> isEmpty(s) ? s : s.replace(SUBJECT_HEADINGS, EMPTY))
         .map(s -> isEmpty(s) ? s : s.replace(CLASSIFICATION_HEADINGS, EMPTY))
+        .map(s -> isEmpty(s) ? s : s.replace(PUBLICATION_HEADINGS, EMPTY))
         .toList();
   }
 

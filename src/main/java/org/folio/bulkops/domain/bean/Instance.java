@@ -30,6 +30,7 @@ import org.folio.bulkops.domain.converter.SeriesListConverter;
 import org.folio.bulkops.domain.converter.StringConverter;
 import org.folio.bulkops.domain.converter.StringListPipedConverter;
 import org.folio.bulkops.domain.converter.SubjectListConverter;
+import org.folio.bulkops.domain.converter.PublicationListConverter;
 import org.folio.bulkops.domain.dto.IdentifierType;
 
 @Data
@@ -67,6 +68,7 @@ public class Instance implements BulkOperationsEntity {
   public static final String INSTANCE_ELECTRONIC_ACCESS = "Electronic access";
   public static final String INSTANCE_SUBJECT = "Subject";
   public static final String INSTANCE_CLASSIFICATION = "Classification";
+  public static final String INSTANCE_PUBLICATION = "Publication";
 
   @JsonProperty("id")
   @CsvCustomBindByName(column = INSTANCE_UUID, converter = StringConverter.class)
@@ -237,14 +239,20 @@ public class Instance implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private List<Classification> classifications;
 
+  @JsonProperty("publication")
+  @Valid
+  @CsvCustomBindByName(column = INSTANCE_PUBLICATION, converter = PublicationListConverter.class)
+  @CsvCustomBindByPosition(position = 27, converter = PublicationListConverter.class)
+  @UnifiedTableCell(visible = false)
+  private List<Publication> publication;
+
   @JsonProperty("matchKey")
   private String matchKey;
   @JsonProperty("alternativeTitles")
   private List<AlternativeTitle> alternativeTitles;
   @JsonProperty("identifiers")
   private List<Identifier> identifiers;
-  @JsonProperty("publication")
-  private List<Publication> publications;
+
   @JsonProperty("sourceRecordFormat")
   private String sourceRecordFormat;
   @JsonProperty("statusUpdatedDate")

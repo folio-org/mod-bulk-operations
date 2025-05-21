@@ -14,6 +14,7 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION_RANGE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TITLE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TYPE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SERIES_STATEMENTS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUBJECT;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 
@@ -592,6 +593,7 @@ public class Marc21ReferenceProvider {
     List.of("800", "810", "811", "830")
       .forEach(tag -> mappedFields.put(tag, INSTANCE_SERIES_STATEMENTS));
     mappedFields.put("856", INSTANCE_ELECTRONIC_ACCESS);
+    List.of("260", "264").forEach(tag -> mappedFields.put(tag, INSTANCE_PUBLICATION));
 
     classificationTypeNames.put("050", "LC");
     classificationTypeNames.put("060", "NLM");

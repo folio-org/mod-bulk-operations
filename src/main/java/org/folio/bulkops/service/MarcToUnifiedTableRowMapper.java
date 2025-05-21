@@ -8,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CLASSIFICATION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CONTRIBUTORS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_EDITION;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_FORMATS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_HRID;
@@ -28,6 +29,7 @@ import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Constants.CLASSIFICATION_HEADINGS;
 import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
+import static org.folio.bulkops.util.Constants.PUBLICATION_HEADINGS;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Constants.MARC;
@@ -102,6 +104,7 @@ public class MarcToUnifiedTableRowMapper {
         case "100", "110", "111", "700", "710", "711", "720" -> processContributors(rowData, dataField, headers);
         case "245" -> processTitles(rowData, dataField, headers);
         case "250" -> processEdition(rowData, dataField, headers);
+        case "260", "264" -> processPublication(rowData, dataField, headers, forCsv);
         case "300" -> processPhysicalDescription(rowData, dataField, headers);
         case "310", "321" -> processPublicationFrequency(rowData, dataField, headers);
         case "336" -> processResourceType(rowData, dataField, headers);
@@ -164,6 +167,31 @@ public class MarcToUnifiedTableRowMapper {
         }
         existingElAccStr += String.join(forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER, newElAccCodes);
         rowData.set(index, existingElAccStr);
+      }
+    }
+  }
+
+
+  private void processPublication(List<String> rowData, DataField dataField, List<String> headers, boolean forCsv) {
+    var index = headers.indexOf(INSTANCE_PUBLICATION);
+    if (index != -1) {
+      var publication = helper.fetchPublication(dataField);
+      if (publication != null) {
+        var arrayDelimiter = forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER;
+        var itemDelimiter = forCsv ? ITEM_DELIMITER_SPACED : SPECIAL_ITEM_DELIMITER;
+        var publicationString = String.join(arrayDelimiter,
+          isEmpty(publication.getPublisher())  ? HYPHEN : publication.getPublisher(),
+          isEmpty(publication.getRole())  ? HYPHEN : publication.getRole(),
+          isEmpty(publication.getPlace())  ? HYPHEN : publication.getPlace(),
+          isEmpty(publication.getDateOfPublication())  ? HYPHEN : publication.getDateOfPublication()
+        );
+        var existingPublication = rowData.get(index);
+        if (StringUtils.isEmpty(existingPublication)) {
+          publicationString = (forCsv ? PUBLICATION_HEADINGS : EMPTY) + publicationString;
+        } else {
+          publicationString = String.join(itemDelimiter, existingPublication, publicationString);
+        }
+        rowData.set(index, publicationString);
       }
     }
   }
