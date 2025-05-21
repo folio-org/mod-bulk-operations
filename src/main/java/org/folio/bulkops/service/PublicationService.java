@@ -22,15 +22,12 @@ public class PublicationService {
   private static final int DATE_INDEX = 3;
   private final String delimiter = SPECIAL_ARRAY_DELIMITER;
   public String publicationToString(Publication publication) {
-    String result = String.join(delimiter,
+    return String.join(delimiter,
       isEmpty(publication.getPublisher()) ? HYPHEN : publication.getPublisher(),
       isEmpty(publication.getRole()) ? HYPHEN : publication.getRole(),
       isEmpty(publication.getPlace()) ? HYPHEN : publication.getPlace(),
       isEmpty(publication.getDateOfPublication()) ? HYPHEN : publication.getDateOfPublication()
     );
-
-    log.debug("Converted publication to string: {}, from publication: {}", result, publication);
-    return result;
   }
 
 
