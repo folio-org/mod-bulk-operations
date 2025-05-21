@@ -237,8 +237,7 @@ public class Instance implements BulkOperationsEntity {
   private List<AlternativeTitle> alternativeTitles;
   @JsonProperty("identifiers")
   private List<Identifier> identifiers;
-//  @JsonProperty("publication")
-//  private List<Publication> publications;
+
   @JsonProperty("sourceRecordFormat")
   private String sourceRecordFormat;
   @JsonProperty("statusUpdatedDate")
