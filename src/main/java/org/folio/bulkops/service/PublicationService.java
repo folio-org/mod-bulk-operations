@@ -20,9 +20,9 @@ public class PublicationService {
   private static final int ROLE_INDEX = 1;
   private static final int PLACE_INDEX = 2;
   private static final int DATE_INDEX = 3;
-  private static final String delimiter = SPECIAL_ARRAY_DELIMITER;
+  private static final String DELIMITER = SPECIAL_ARRAY_DELIMITER;
   public String publicationToString(Publication publication) {
-    return String.join(delimiter,
+    return String.join(DELIMITER,
       isEmpty(publication.getPublisher()) ? HYPHEN : publication.getPublisher(),
       isEmpty(publication.getRole()) ? HYPHEN : publication.getRole(),
       isEmpty(publication.getPlace()) ? HYPHEN : publication.getPlace(),
@@ -33,7 +33,7 @@ public class PublicationService {
 
   public Publication restorePublicationItem(String publicationString) {
     if (isNotEmpty(publicationString)) {
-      var tokens = publicationString.split(delimiter, -1);
+      var tokens = publicationString.split(DELIMITER, -1);
       if (NUMBER_OF_PUBLICATION_COMPONENTS == tokens.length) {
         return Publication.builder()
           .publisher(tokens[PUBLISHER_INDEX])
