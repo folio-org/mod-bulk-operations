@@ -49,14 +49,14 @@ public class MarcCsvHelper {
       .collect(Collectors.joining(ITEM_DELIMITER_SPACED));
     var electronicAccessData = csvData.get(instanceHeaderNames.indexOf(INSTANCE_ELECTRONIC_ACCESS));
     var subjectData = csvData.get(instanceHeaderNames.indexOf(INSTANCE_SUBJECT));
-    var classificationData = csvData.get(instanceHeaderNames.indexOf(INSTANCE_CLASSIFICATION));
     var publicationData = csvData.get(instanceHeaderNames.indexOf(INSTANCE_PUBLICATION));
-    csvData = csvData.subList(0, INSTANCE_CLASSIFICATION_POSITION + 1);
+    var classificationData = csvData.get(instanceHeaderNames.indexOf(INSTANCE_CLASSIFICATION));
     csvData.set(INSTANCE_NOTE_POSITION, concatenatedNotes);
     csvData.set(INSTANCE_ELECTRONIC_ACCESS_POSITION, electronicAccessData);
     csvData.set(INSTANCE_SUBJECT_POSITION, subjectData);
     csvData.set(INSTANCE_PUBLICATION_POSITION, publicationData);
     csvData.set(INSTANCE_CLASSIFICATION_POSITION, classificationData);
+    csvData = csvData.subList(0, INSTANCE_CLASSIFICATION_POSITION + 1);
     return csvData.toArray(String[]::new);
   }
 
