@@ -35,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
    @MockitoBean
@@ -456,5 +457,30 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
       assertThat(res).isEqualTo(List.of("textB"));
     }
     System.out.println(res);
+  }
+
+  @Test
+  void fetchPublication_roleFor264Indicators() {
+    var indicators = Map.of(
+      '0', "production",
+      '1', "publication",
+      '2', "distribution",
+      '3', "manufacture",
+      '4', "copyright"
+    );
+
+    for (var entry : indicators.entrySet()) {
+      var indicator2 = entry.getKey();
+      var expectedRole = entry.getValue();
+
+      var dataField = new DataFieldImpl("264", ' ', indicator2);
+      dataField.addSubfield(new SubfieldImpl('a', "Place"));
+      dataField.addSubfield(new SubfieldImpl('b', "Publisher"));
+      dataField.addSubfield(new SubfieldImpl('c', "2023"));
+
+      var publication = mapperHelper.fetchPublication(dataField);
+
+      assertThat(publication.getRole()).isEqualTo(expectedRole);
+    }
   }
 }
