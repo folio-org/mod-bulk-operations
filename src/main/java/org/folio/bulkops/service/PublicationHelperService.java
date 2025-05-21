@@ -11,32 +11,27 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Log4j2
 public class PublicationHelperService implements InitializingBean {
-  public String publicationToString(Publication pub) {
-    if (pub == null) {
-      return ";;;";
+
+    private final PublicationService publicationService;
+
+    public Publication restorePublicationItem(String str) {
+      return publicationService.restorePublicationItem(str);
     }
 
-    return String.join(";",
-      nullSafe(pub.getPublisher()),              // Publisher
-      nullSafe(pub.getRole()),                   // Publisher role
-      nullSafe(pub.getPlace()),                  // Place of publication
-      nullSafe(pub.getDateOfPublication())       // Publication date
-    );
-  }
-
-  private static String nullSafe(String val) {
-    return val == null ? "" : val.trim();
-  }
+    public String publicationToString(Publication publication) {
+      return publicationService.publicationToString(publication);
+    }
 
   private static PublicationHelperService service;
 
   @Override
-  public void afterPropertiesSet() {
+  public void afterPropertiesSet() throws Exception {
     service = this;
   }
 
   public static PublicationHelperService service() {
     return service;
   }
+
 }
 
