@@ -29,7 +29,11 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
 import static org.folio.bulkops.processor.folio.HoldingsNotesUpdater.HOLDINGS_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.processor.folio.InstanceNotesUpdaterFactory.INSTANCE_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.processor.folio.ItemsNotesUpdater.ITEM_NOTE_TYPE_ID_KEY;
-import static org.folio.bulkops.util.Constants.*;
+import static org.folio.bulkops.util.Constants.CLASSIFICATION_HEADINGS;
+import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
+import static org.folio.bulkops.util.Constants.FOLIO;
+import static org.folio.bulkops.util.Constants.SUBJECT_HEADINGS;
+import static org.folio.bulkops.util.Constants.PUBLICATION_HEADINGS;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 
 import java.io.IOException;

@@ -15,7 +15,22 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import org.folio.bulkops.domain.converter.*;
+import org.folio.bulkops.domain.converter.BooleanConverter;
+import org.folio.bulkops.domain.converter.ClassificationListConverter;
+import org.folio.bulkops.domain.converter.ContributorListConverter;
+import org.folio.bulkops.domain.converter.ElectronicAccessListInstanceConverter;
+import org.folio.bulkops.domain.converter.InstanceFormatListConverter;
+import org.folio.bulkops.domain.converter.InstanceNoteListConverter;
+import org.folio.bulkops.domain.converter.InstanceStatisticalCodeListConverter;
+import org.folio.bulkops.domain.converter.InstanceStatusConverter;
+import org.folio.bulkops.domain.converter.InstanceTypeConverter;
+import org.folio.bulkops.domain.converter.ModeOfIssuanceConverter;
+import org.folio.bulkops.domain.converter.NatureOfContentTermListConverter;
+import org.folio.bulkops.domain.converter.SeriesListConverter;
+import org.folio.bulkops.domain.converter.StringConverter;
+import org.folio.bulkops.domain.converter.StringListPipedConverter;
+import org.folio.bulkops.domain.converter.SubjectListConverter;
+import org.folio.bulkops.domain.converter.PublicationListConverter;
 import org.folio.bulkops.domain.dto.IdentifierType;
 
 @Data
