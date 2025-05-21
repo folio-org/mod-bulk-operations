@@ -27,7 +27,7 @@ class PublicationServiceTest extends BaseTest {
 
     var res = publicationService.publicationToString(publication);
 
-    Assertions.assertEquals(res, "Springer\u001f;Editor\u001f;Berlin\u001f;2020");
+    Assertions.assertEquals("Springer\u001f;Editor\u001f;Berlin\u001f;2020",res);
   }
 
   @Test
@@ -41,7 +41,7 @@ class PublicationServiceTest extends BaseTest {
 
     var res = publicationService.publicationToString(publication);
 
-    Assertions.assertEquals(res, "-\u001f;-\u001f;Paris\u001f;-");
+    Assertions.assertEquals("-\u001f;-\u001f;Paris\u001f;-",res);
 
   }
 
