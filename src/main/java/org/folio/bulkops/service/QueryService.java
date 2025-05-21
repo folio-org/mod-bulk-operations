@@ -107,7 +107,7 @@ public class QueryService {
   }
 
   private QueryDetails getResult(UUID queryId) {
-    return queryClient.getQuery(queryId, true);
+    return queryClient.getQuery(queryId, true, 100000);
   }
 
   private void saveIdentifiersAndStartBulkOperation(BulkOperation bulkOperation, QueryDetails queryResult) {

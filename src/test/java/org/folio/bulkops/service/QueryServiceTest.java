@@ -97,7 +97,7 @@ class QueryServiceTest extends BaseTest {
         .totalRecords(2)
         .content(List.of());
 
-      when(queryClient.getQuery(fqlQueryId, true)).thenReturn(queryDetails);
+      when(queryClient.getQuery(fqlQueryId, true, 1000)).thenReturn(queryDetails);
       when(queryClient.getSortedIds(fqlQueryId, 0, Integer.MAX_VALUE))
         .thenReturn(Collections.singletonList(List.of(UUID.randomUUID().toString(), UUID.randomUUID().toString())));
       when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(fqlQueryId));
@@ -125,7 +125,7 @@ class QueryServiceTest extends BaseTest {
         .failureReason("some reason")
         .totalRecords(0);
 
-      when(queryClient.getQuery(fqlQueryId, true)).thenReturn(queryDetails);
+      when(queryClient.getQuery(fqlQueryId, true, 1000)).thenReturn(queryDetails);
       when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(fqlQueryId));
 
       queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
@@ -150,7 +150,7 @@ class QueryServiceTest extends BaseTest {
       var queryDetails = new QueryDetails()
         .status(QueryDetails.StatusEnum.CANCELLED);
 
-      when(queryClient.getQuery(fqlQueryId, true)).thenReturn(queryDetails);
+      when(queryClient.getQuery(fqlQueryId, true, 1000)).thenReturn(queryDetails);
       when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(fqlQueryId));
 
       queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
@@ -174,7 +174,7 @@ class QueryServiceTest extends BaseTest {
       var queryDetails = new QueryDetails()
         .status(QueryDetails.StatusEnum.IN_PROGRESS);
 
-      when(queryClient.getQuery(fqlQueryId, true)).thenReturn(queryDetails);
+      when(queryClient.getQuery(fqlQueryId, true, 1000)).thenReturn(queryDetails);
       when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(fqlQueryId));
 
       var result = queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
@@ -200,7 +200,7 @@ class QueryServiceTest extends BaseTest {
         .status(QueryDetails.StatusEnum.SUCCESS).totalRecords(1);
 
       when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
-      when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
+      when(queryClient.getQuery(queryId, true, 1000)).thenReturn(queryDetails);
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
       when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
       when(readPermissionsValidator.isBulkEditReadPermissionExists("diku", EntityType.INSTANCE)).thenReturn(true);
@@ -234,7 +234,7 @@ class QueryServiceTest extends BaseTest {
         .status(QueryDetails.StatusEnum.SUCCESS).totalRecords(1);
 
       when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
-      when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
+      when(queryClient.getQuery(queryId, true, 1000)).thenReturn(queryDetails);
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
       when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
       doThrow(new ReadPermissionException("User username does not have required permission to view the instance record - id=69640328-788e-43fc-9c3c-af39e243f3b7 on the tenant diku", "69640328-788e-43fc-9c3c-af39e243f3b7"))
@@ -274,7 +274,7 @@ class QueryServiceTest extends BaseTest {
               .status(QueryDetails.StatusEnum.SUCCESS).totalRecords(1);
 
       when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
-      when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
+      when(queryClient.getQuery(queryId, true, 1000)).thenReturn(queryDetails);
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
       when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
       var srsRecordsNode = objectMapper.createObjectNode();
@@ -323,7 +323,7 @@ class QueryServiceTest extends BaseTest {
               """;
 
       when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
-      when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
+      when(queryClient.getQuery(queryId, true, 1000)).thenReturn(queryDetails);
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
       when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
       var srsRecordsNode = objectMapper.readTree(srsJson);
