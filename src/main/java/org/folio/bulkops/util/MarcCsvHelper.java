@@ -1,8 +1,17 @@
 package org.folio.bulkops.util;
 
 import static java.util.Objects.nonNull;
-import static org.folio.bulkops.domain.bean.Instance.*;
-import static org.folio.bulkops.util.Constants.*;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CLASSIFICATION;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_HRID;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUBJECT;
+import static org.folio.bulkops.util.Constants.INSTANCE_CLASSIFICATION_POSITION;
+import static org.folio.bulkops.util.Constants.INSTANCE_PUBLICATION_POSITION;
+import static org.folio.bulkops.util.Constants.INSTANCE_ELECTRONIC_ACCESS_POSITION;
+import static org.folio.bulkops.util.Constants.INSTANCE_NOTE_POSITION;
+import static org.folio.bulkops.util.Constants.INSTANCE_SUBJECT_POSITION;
+import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReaderBuilder;
