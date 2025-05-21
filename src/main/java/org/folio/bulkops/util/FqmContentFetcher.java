@@ -61,13 +61,13 @@ public class FqmContentFetcher {
           );
 
       var futures = future.join();
-      futures.addFirst(
-          new ByteArrayInputStream("[".getBytes(StandardCharsets.UTF_8))
-      );
-
-      futures.addLast(
-          new ByteArrayInputStream("]".getBytes(StandardCharsets.UTF_8))
-      );
+//      futures.addFirst(
+//          new ByteArrayInputStream("[".getBytes(StandardCharsets.UTF_8))
+//      );
+//
+//      futures.addLast(
+//          new ByteArrayInputStream("]".getBytes(StandardCharsets.UTF_8))
+//      );
 
       try {
         return new SequenceInputStream(Collections.enumeration(futures));
