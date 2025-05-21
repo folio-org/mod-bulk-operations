@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
 
@@ -22,13 +23,12 @@ public class PublicationService {
   private static final int DATE_INDEX = 3;
 
   private String delimiter = SPECIAL_ARRAY_DELIMITER;
-
   public String publicationToString(Publication publication) {
-    return String.join("|",
-      defaultIfEmpty(publication.getPublisher(), HYPHEN),
-      defaultIfEmpty(publication.getRole(), HYPHEN),
-      defaultIfEmpty(publication.getPlace(), HYPHEN),
-      defaultIfEmpty(publication.getDateOfPublication(), HYPHEN)
+    return String.join(delimiter,
+      isEmpty(publication.getPublisher())  ? HYPHEN : publication.getPublisher(),
+      isEmpty(publication.getRole())  ? HYPHEN : publication.getRole(),
+      isEmpty(publication.getPlace())  ? HYPHEN : publication.getPlace(),
+      isEmpty(publication.getDateOfPublication())  ? HYPHEN : publication.getDateOfPublication()
     );
   }
 
