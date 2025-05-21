@@ -655,7 +655,6 @@ public class BulkOperationService {
   public BulkOperation getOperationById(UUID bulkOperationId) {
     var operation = getBulkOperationOrThrow(bulkOperationId);
     return switch (operation.getStatus()) {
-//      case EXECUTING_QUERY -> queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
       case SAVED_IDENTIFIERS -> {
         if (operation.getApproach() != QUERY) {
           yield startBulkOperation(operation.getId(), operation.getUserId(), new BulkOperationStart()
