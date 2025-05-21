@@ -20,7 +20,7 @@ public class PublicationService {
   private static final int ROLE_INDEX = 1;
   private static final int PLACE_INDEX = 2;
   private static final int DATE_INDEX = 3;
-  private final String delimiter = SPECIAL_ARRAY_DELIMITER;
+  private static final String delimiter = SPECIAL_ARRAY_DELIMITER;
   public String publicationToString(Publication publication) {
     return String.join(delimiter,
       isEmpty(publication.getPublisher()) ? HYPHEN : publication.getPublisher(),

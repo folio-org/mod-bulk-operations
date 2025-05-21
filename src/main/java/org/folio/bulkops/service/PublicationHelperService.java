@@ -22,7 +22,7 @@ public class PublicationHelperService implements InitializingBean {
       return publicationService.publicationToString(publication);
     }
 
-  private static PublicationHelperService service;
+  public static PublicationHelperService service;
 
   @Override
   public void afterPropertiesSet() throws Exception {

@@ -9,7 +9,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.junit.jupiter.api.Assertions;
 
 
-public class PublicationServiceTest extends BaseTest {
+class PublicationServiceTest extends BaseTest {
 
   @Autowired
   private PublicationService publicationService;
