@@ -7,7 +7,6 @@ import org.folio.bulkops.exception.EntityFormatException;
 import org.springframework.stereotype.Service;
 
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;

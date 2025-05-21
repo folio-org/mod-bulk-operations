@@ -159,6 +159,31 @@ public class MarcToUnifiedTableRowMapper {
     }
   }
 
+
+  private void processPublication(List<String> rowData, DataField dataField, List<String> headers, boolean forCsv) {
+    var index = headers.indexOf(INSTANCE_PUBLICATION);
+    if (index != -1) {
+      var publication = helper.fetchPublication(dataField);
+      if (publication != null) {
+        var arrayDelimiter = forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER;
+        var itemDelimiter = forCsv ? ITEM_DELIMITER_SPACED : SPECIAL_ITEM_DELIMITER;
+        var publicationString = String.join(arrayDelimiter,
+          isEmpty(publication.getPublisher())  ? HYPHEN : publication.getPublisher(),
+          isEmpty(publication.getRole())  ? HYPHEN : publication.getRole(),
+          isEmpty(publication.getPlace())  ? HYPHEN : publication.getPlace(),
+          isEmpty(publication.getDateOfPublication())  ? HYPHEN : publication.getDateOfPublication()
+        );
+        var existingPublication = rowData.get(index);
+        if (StringUtils.isEmpty(existingPublication)) {
+          publicationString = (forCsv ? PUBLICATION_HEADINGS : EMPTY) + publicationString;
+        } else {
+          publicationString = String.join(itemDelimiter, existingPublication, publicationString);
+        }
+        rowData.set(index, publicationString);
+      }
+    }
+  }
+
   private void processSubject(List<String> rowData, DataField dataField, List<String> headers, boolean forCsv) {
     var index = headers.indexOf(INSTANCE_SUBJECT);
     if (index != -1) {
@@ -305,29 +330,7 @@ public class MarcToUnifiedTableRowMapper {
     }
   }
 
-  private void processPublication(List<String> rowData, DataField dataField, List<String> headers, boolean forCsv) {
-    var index = headers.indexOf(INSTANCE_PUBLICATION);
-    if (index != -1) {
-      var publication = helper.fetchPublication(dataField);
-      if (publication != null) {
-        var arrayDelimiter = forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER;
-        var itemDelimiter = forCsv ? ITEM_DELIMITER_SPACED : SPECIAL_ITEM_DELIMITER;
-        var publicationString = String.join(arrayDelimiter,
-          defaultIfEmpty(publication.getPlace(), EMPTY),
-          defaultIfEmpty(publication.getPublisher(), EMPTY),
-          defaultIfEmpty(publication.getDateOfPublication(), EMPTY),
-          defaultIfEmpty(publication.getRole(), EMPTY)
-        );
-        var existingPublication = rowData.get(index);
-        if (StringUtils.isEmpty(existingPublication)) {
-          publicationString = (forCsv ? PUBLICATION_HEADINGS : EMPTY) + publicationString;
-        } else {
-          publicationString = String.join(itemDelimiter, existingPublication, publicationString);
-        }
-        rowData.set(index, publicationString);
-      }
-    }
-  }
+
 
   private void processInstanceNotes(List<String> rowData, DataField dataField, List<String> headers, boolean forCsv) {
     var tag = dataField.getTag();
