@@ -1,13 +1,19 @@
 package org.folio.bulkops.service;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.Publication;
 import org.folio.bulkops.exception.EntityFormatException;
+import org.springframework.stereotype.Service;
 
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
 
+@Service
+@RequiredArgsConstructor
+@Log4j2
 public class PublicationService {
   private static final int NUMBER_OF_PUBLICATION_COMPONENTS = 4;
   private static final int PUBLISHER_INDEX = 0;
