@@ -1,7 +1,5 @@
 package org.folio.bulkops.domain.converter;
 
-
-import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.domain.bean.Publication;
 import org.folio.bulkops.service.PublicationHelperService;
@@ -14,21 +12,17 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.Constants.PUBLICATION_HEADINGS;
 import static org.folio.bulkops.util.Constants.SPECIAL_ITEM_DELIMITER;
 
-@Log4j2
 public class PublicationListConverter extends BaseConverter<List<Publication>> {
   @Override
   public String convertToString(List<Publication> publications) {
-    String result = ObjectUtils.isEmpty(publications) ?
+
+    return ObjectUtils.isEmpty(publications) ?
       EMPTY :
       PUBLICATION_HEADINGS +
         publications.stream()
           .filter(Objects::nonNull)
           .map(PublicationHelperService.service()::publicationToString)
           .collect(Collectors.joining(SPECIAL_ITEM_DELIMITER));
-
-    log.debug("Converted publications to string: {}", result);
-    return result;
   }
-
 }
 
