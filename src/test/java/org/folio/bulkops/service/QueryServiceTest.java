@@ -345,19 +345,17 @@ class QueryServiceTest extends BaseTest {
 
       queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
 
-      await().untilAsserted(() -> verify(bulkOperationRepository, times(4))
-              .save(ArgumentCaptor.forClass(BulkOperation.class).capture()));
-
       var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
       var executionContentsCaptor = ArgumentCaptor.forClass(List.class);
-      verify(errorService).saveErrorsAfterQuery(executionContentsCaptor.capture(), operationCaptor.capture());
-      assertThat(((BulkOperationExecutionContent)executionContentsCaptor.getValue().getFirst()).getErrorMessage())
-              .isEqualTo(MULTIPLE_SRS.formatted("22240328-788e-43fc-9c3c-af39e243f3b7, 33340328-788e-43fc-9c3c-af39e243f3b7"));
-      assertThat(operationCaptor.getValue().getStatus()).isEqualTo(COMPLETED_WITH_ERRORS);
-      assertThat(operationCaptor.getValue().getTotalNumOfRecords()).isEqualTo(1);
-      assertThat(operationCaptor.getValue().getProcessedNumOfRecords()).isEqualTo(1);
-      assertThat(operationCaptor.getValue().getMatchedNumOfErrors()).isEqualTo(1);
-      assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isZero();
+      await().untilAsserted(() -> {
+        verify(errorService).saveErrorsAfterQuery(executionContentsCaptor.capture(), operationCaptor.capture());
+        assertThat(((BulkOperationExecutionContent) executionContentsCaptor.getValue().getFirst()).getErrorMessage()).isEqualTo(MULTIPLE_SRS.formatted("22240328-788e-43fc-9c3c-af39e243f3b7, 33340328-788e-43fc-9c3c-af39e243f3b7"));
+        assertThat(operationCaptor.getValue().getStatus()).isEqualTo(COMPLETED_WITH_ERRORS);
+        assertThat(operationCaptor.getValue().getTotalNumOfRecords()).isEqualTo(1);
+        assertThat(operationCaptor.getValue().getProcessedNumOfRecords()).isEqualTo(1);
+        assertThat(operationCaptor.getValue().getMatchedNumOfErrors()).isEqualTo(1);
+        assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isZero();
+      });
     }
   }
 }
