@@ -7,7 +7,9 @@ import org.springframework.stereotype.Component;
 
 import lombok.RequiredArgsConstructor;
 
+import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_INVENTORY_VIEW_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_INVENTORY_WRITE_PERMISSION;
+import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_VIEW_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_WRITE_PERMISSION;
 
 @Component
@@ -17,6 +19,18 @@ public class PermissionsValidator {
   private final PermissionsProvider permissionsProvider;
   private final RequiredPermissionResolver requiredPermissionResolver;
   private final FolioExecutionContext folioExecutionContext;
+
+  public boolean isBulkEditReadPermissionExists(String tenantId, EntityType entityType) {
+    var readPermissionForEntity = requiredPermissionResolver.getReadPermission(entityType);
+    var userPermissions = permissionsProvider.getUserPermissions(tenantId, folioExecutionContext.getUserId());
+    var isReadPermissionsExist = false;
+    if (entityType == EntityType.USER) {
+      isReadPermissionsExist = userPermissions.contains(readPermissionForEntity.getValue()) && userPermissions.contains(BULK_EDIT_USERS_VIEW_PERMISSION.getValue());
+    } else {
+      isReadPermissionsExist = userPermissions.contains(readPermissionForEntity.getValue()) && userPermissions.contains(BULK_EDIT_INVENTORY_VIEW_PERMISSION.getValue());
+    }
+    return isReadPermissionsExist;
+  }
 
   public void checkIfBulkEditWritePermissionExists(String tenantId, EntityType entityType, String errorMessage) {
     if (!isBulkEditWritePermissionExists(tenantId, entityType)) {

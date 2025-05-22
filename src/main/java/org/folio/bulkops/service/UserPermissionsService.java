@@ -20,7 +20,6 @@ import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVEN
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_STORAGE_HOLDINGS_ITEM_PUT;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.USERS_ITEM_PUT;
 
-
 @RequiredArgsConstructor
 @Log4j2
 @Service
