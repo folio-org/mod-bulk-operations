@@ -1,5 +1,6 @@
 package org.folio.bulkops.batch;
 
+import static org.folio.bulkops.domain.bean.JobParameterNames.BULK_OPERATION_ID;
 import static org.folio.bulkops.domain.bean.JobParameterNames.ENTITY_TYPE;
 import static org.folio.bulkops.domain.bean.JobParameterNames.IDENTIFIER_TYPE;
 import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_FILE_PATH;
@@ -35,6 +36,7 @@ public class JobCommandHelper {
     var fileName = MATCHED_RECORDS_PATH_TEMPLATE.formatted(bulkOperation.getId(), LocalDate.now(), baseFileName);
     var marcFileName = MARC_RECORDS_PATH_TEMPLATE.formatted(bulkOperation.getId(), LocalDate.now(), baseFileName);
     var paramsBuilder = new JobParametersBuilder();
+    paramsBuilder.addString(BULK_OPERATION_ID, bulkOperation.getId().toString());
     paramsBuilder.addString(IDENTIFIERS_FILE_NAME, bulkOperation.getLinkToTriggeringCsvFile(), JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
     paramsBuilder.addString(FILE_NAME, bulkOperation.getLinkToTriggeringCsvFile(), JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
     paramsBuilder.addLong(TOTAL_CSV_LINES, (long) numOfLines, JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
