@@ -58,7 +58,7 @@ public class JobCommandHelper {
       Files.deleteIfExists(path);
       Files.createDirectories(path);
     } catch (IOException e) {
-      log.error("Failed to create temporary working directory");
+      log.error("Failed to create temporary working directory", e);
     }
   }
 }
