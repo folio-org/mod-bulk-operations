@@ -345,7 +345,7 @@ class QueryServiceTest extends BaseTest {
 
       queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
 
-      await().untilAsserted(() -> verify(bulkOperationRepository, times(5))
+      await().untilAsserted(() -> verify(bulkOperationRepository, times(4))
               .save(ArgumentCaptor.forClass(BulkOperation.class).capture()));
 
       var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);

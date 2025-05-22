@@ -62,11 +62,7 @@ public class FqmContentFetcher {
 
       var futures = future.join();
 
-      try {
-        return new SequenceInputStream(Collections.enumeration(futures));
-      } catch (CompletionException ex) {
-        throw new FqmFetcherException("Failed to fetch one or more chunks", ex);
-      }
+      return new SequenceInputStream(Collections.enumeration(futures));
     } catch (Exception e) {
       log.error("Error fetching content", e);
       throw new FqmFetcherException("Error fetching content", e);
