@@ -61,19 +61,15 @@ public class FqmContentFetcher {
           );
 
       var futures = future.join();
-//      futures.addFirst(
-//          new ByteArrayInputStream("[".getBytes(StandardCharsets.UTF_8))
-//      );
-//
-//      futures.addLast(
-//          new ByteArrayInputStream("]".getBytes(StandardCharsets.UTF_8))
-//      );
 
       try {
         return new SequenceInputStream(Collections.enumeration(futures));
       } catch (CompletionException ex) {
         throw new FqmFetcherException("Failed to fetch one or more chunks", ex);
       }
+    } catch (Exception e) {
+      log.error("Error fetching content", e);
+      throw new FqmFetcherException("Error fetching content", e);
     }
   }
 

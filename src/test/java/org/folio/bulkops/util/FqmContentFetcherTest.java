@@ -63,7 +63,7 @@ public class FqmContentFetcherTest {
   }
 
   @Test
-  void fetchShouldFailMultipleChunksInParallel() throws IOException {
+  void fetchShouldFailMultipleChunksInParallel() {
 
     var queryId = UUID.randomUUID();
     var data = getMockedData(0, Integer.MAX_VALUE);
