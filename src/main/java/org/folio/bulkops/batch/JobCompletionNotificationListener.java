@@ -104,7 +104,8 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
     try {
       var tmpFileName = jobParameters.getString(TEMP_LOCAL_FILE_PATH);
       if (nonNull(tmpFileName)) {
-        moveFileToStorage(jobParameters.getString(STORAGE_FILE_PATH), tmpFileName);
+        var csvFileName = tmpFileName + ".csv";
+        moveFileToStorage(jobParameters.getString(STORAGE_FILE_PATH), csvFileName);
         bulkOperation.setLinkToMatchedRecordsCsvFile(tmpFileName);
         var jsonFileName = tmpFileName + ".json";
         moveFileToStorage(jobParameters.getString(STORAGE_FILE_PATH) + ".json", jsonFileName);
