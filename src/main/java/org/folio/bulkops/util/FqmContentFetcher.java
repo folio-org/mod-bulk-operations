@@ -8,14 +8,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.client.QueryClient;
+import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.exception.FqmFetcherException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,7 +74,7 @@ public class FqmContentFetcher {
     int limit = Math.min(chunkSize, total - offset);
     var response = queryClient.getQuery(queryId, offset, limit).getContent();
     return new ByteArrayInputStream(response.stream()
-        .map(json -> json.get(getContentJsonKey(entityType)).toString()).collect(Collectors.joining(",\n"))
+        .map(json -> json.get(getContentJsonKey(entityType)).toString()).collect(Collectors.joining("\n"))
         .getBytes(StandardCharsets.UTF_8));
   }
 
