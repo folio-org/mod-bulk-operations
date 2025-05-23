@@ -17,7 +17,6 @@ import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.exception.FqmFetcherException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -31,8 +30,8 @@ public class FqmContentFetcher {
   private int maxParallelChunks;
   @Value("${application.fqm-fetcher.max_chunk_size}")
   private int chunkSize;
-  @Autowired
-  private QueryClient queryClient;
+
+  private final QueryClient queryClient;
 
   /**
    * Fetches content in parallel using multiple threads.

@@ -5,18 +5,18 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import feign.FeignException;
-import feign.Request;
-import feign.Response;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.FeignException;
+import feign.Request;
+import feign.Response;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -31,7 +31,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest
 @ContextConfiguration(initializers = BaseTest.Initializer.class)
-public class FqmContentFetcherTest {
+class FqmContentFetcherTest {
 
   @Autowired
   private FqmContentFetcher fqmContentFetcher;
@@ -48,7 +48,7 @@ public class FqmContentFetcherTest {
     var queryId = UUID.randomUUID();
     var data = getMockedData(0, Integer.MAX_VALUE);
     var total = data.getContent().size();
-    var expected = data.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(Collectors.toList());
+    var expected = data.getContent().stream().map(json -> json.get("instance.jsonb").toString()).toList();
 
     IntStream.range(0, (total + chunkSize - 1) / chunkSize).forEach(chunk -> {
       int offset = chunk * chunkSize;
