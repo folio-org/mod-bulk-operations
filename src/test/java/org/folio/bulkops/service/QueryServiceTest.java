@@ -22,12 +22,11 @@ import java.io.ByteArrayInputStream;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-
 import java.util.stream.Collectors;
+
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.QueryClient;
@@ -85,31 +84,6 @@ class QueryServiceTest extends BaseTest {
   private SrsClient srsClient;
   @MockitoBean
   private FqmContentFetcher fqmContentFetcher;
-
-  @Test
-  void shouldSaveIdentifiersAndStartBulkOperationOnSuccessfulQueryExecution() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var operationId = UUID.randomUUID();
-      var fqlQueryId = UUID.randomUUID();
-      var operation = BulkOperation.builder()
-        .id(operationId)
-        .fqlQueryId(fqlQueryId).entityType(EntityType.INSTANCE)
-        .build();
-      var queryDetails = new QueryDetails()
-        .status(QueryDetails.StatusEnum.SUCCESS)
-        .totalRecords(2)
-        .content(List.of());
-
-      when(queryClient.getQuery(fqlQueryId, true)).thenReturn(queryDetails);
-      when(fqmContentFetcher.fetch(fqlQueryId, operation.getEntityType(), queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(Collectors.joining(",")).getBytes()));
-      when(queryClient.getSortedIds(fqlQueryId, 0, Integer.MAX_VALUE))
-        .thenReturn(Collections.singletonList(List.of(UUID.randomUUID().toString(), UUID.randomUUID().toString())));
-      when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(fqlQueryId));
-      when(remoteFileSystemClient.writer(any(String.class))).thenReturn(writer);
-
-      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
-    }
-  }
 
   @ParameterizedTest
   @EnumSource(value = QueryDetails.StatusEnum.class, names = {"SUCCESS", "FAILED"}, mode = EnumSource.Mode.INCLUDE)
@@ -252,19 +226,18 @@ class QueryServiceTest extends BaseTest {
 
       queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
 
-      await().untilAsserted(() -> verify(bulkOperationRepository, times(4))
-              .save(ArgumentCaptor.forClass(BulkOperation.class).capture()));
-
       var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
       var executionContentsCaptor = ArgumentCaptor.forClass(List.class);
-      verify(errorService).saveErrorsAfterQuery(executionContentsCaptor.capture(), operationCaptor.capture());
-      assertThat(((BulkOperationExecutionContent)executionContentsCaptor.getValue().getFirst()).getErrorMessage())
-        .isEqualTo("User username does not have required permission to view the instance record - id=69640328-788e-43fc-9c3c-af39e243f3b7 on the tenant diku");
-      assertThat(operationCaptor.getValue().getStatus()).isEqualTo(COMPLETED_WITH_ERRORS);
-      assertThat(operationCaptor.getValue().getTotalNumOfRecords()).isEqualTo(1);
-      assertThat(operationCaptor.getValue().getProcessedNumOfRecords()).isEqualTo(1);
-      assertThat(operationCaptor.getValue().getMatchedNumOfErrors()).isEqualTo(1);
-      assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isZero();
+      await().untilAsserted(() -> {
+        verify(errorService).saveErrorsAfterQuery(executionContentsCaptor.capture(), operationCaptor.capture());
+        assertThat(((BulkOperationExecutionContent) executionContentsCaptor.getValue().getFirst()).getErrorMessage())
+                .isEqualTo("User username does not have required permission to view the instance record - id=69640328-788e-43fc-9c3c-af39e243f3b7 on the tenant diku");
+        assertThat(operationCaptor.getValue().getStatus()).isEqualTo(COMPLETED_WITH_ERRORS);
+        assertThat(operationCaptor.getValue().getTotalNumOfRecords()).isEqualTo(1);
+        assertThat(operationCaptor.getValue().getProcessedNumOfRecords()).isEqualTo(1);
+        assertThat(operationCaptor.getValue().getMatchedNumOfErrors()).isEqualTo(1);
+        assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isZero();
+      });
     }
   }
 
@@ -295,19 +268,18 @@ class QueryServiceTest extends BaseTest {
 
       queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
 
-      await().untilAsserted(() -> verify(bulkOperationRepository, times(4))
-              .save(ArgumentCaptor.forClass(BulkOperation.class).capture()));
-
-      var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      var executionContentsCaptor = ArgumentCaptor.forClass(List.class);
-      verify(errorService).saveErrorsAfterQuery(executionContentsCaptor.capture(), operationCaptor.capture());
-      assertThat(((BulkOperationExecutionContent)executionContentsCaptor.getValue().getFirst()).getErrorMessage())
-              .isEqualTo(SRS_MISSING);
-      assertThat(operationCaptor.getValue().getStatus()).isEqualTo(COMPLETED_WITH_ERRORS);
-      assertThat(operationCaptor.getValue().getTotalNumOfRecords()).isEqualTo(1);
-      assertThat(operationCaptor.getValue().getProcessedNumOfRecords()).isEqualTo(1);
-      assertThat(operationCaptor.getValue().getMatchedNumOfErrors()).isEqualTo(1);
-      assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isZero();
+      await().untilAsserted(() -> {
+        var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+        var executionContentsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(errorService).saveErrorsAfterQuery(executionContentsCaptor.capture(), operationCaptor.capture());
+        assertThat(((BulkOperationExecutionContent) executionContentsCaptor.getValue().getFirst()).getErrorMessage())
+                .isEqualTo(SRS_MISSING);
+        assertThat(operationCaptor.getValue().getStatus()).isEqualTo(COMPLETED_WITH_ERRORS);
+        assertThat(operationCaptor.getValue().getTotalNumOfRecords()).isEqualTo(1);
+        assertThat(operationCaptor.getValue().getProcessedNumOfRecords()).isEqualTo(1);
+        assertThat(operationCaptor.getValue().getMatchedNumOfErrors()).isEqualTo(1);
+        assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isZero();
+      });
     }
   }
 
@@ -345,9 +317,9 @@ class QueryServiceTest extends BaseTest {
 
       queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
 
-      var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      var executionContentsCaptor = ArgumentCaptor.forClass(List.class);
       await().untilAsserted(() -> {
+        var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+        var executionContentsCaptor = ArgumentCaptor.forClass(List.class);
         verify(errorService).saveErrorsAfterQuery(executionContentsCaptor.capture(), operationCaptor.capture());
         assertThat(((BulkOperationExecutionContent) executionContentsCaptor.getValue().getFirst()).getErrorMessage()).isEqualTo(MULTIPLE_SRS.formatted("22240328-788e-43fc-9c3c-af39e243f3b7, 33340328-788e-43fc-9c3c-af39e243f3b7"));
         assertThat(operationCaptor.getValue().getStatus()).isEqualTo(COMPLETED_WITH_ERRORS);

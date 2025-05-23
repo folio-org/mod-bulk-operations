@@ -106,9 +106,9 @@ public class QueryService {
   private void startQueryOperation(InputStream is, BulkOperation operation) {
     try {
       var triggeringCsvFileName = String.format(QUERY_FILENAME_TEMPLATE, operation.getId());
-      var matchedJsonFileName = getMatchedFileName(operation, "json/", "Matched", "json");
-      var matchedMrcFileName = getMatchedFileName(operation, StringUtils.EMPTY, "Marc", "mrc");
-      var matchedCsvFileName = getMatchedFileName(operation, StringUtils.EMPTY, "Matched", "csv");
+      var matchedJsonFileName = getMatchedFileName(operation.getId(), "json/", "Matched", triggeringCsvFileName, "json");
+      var matchedMrcFileName = getMatchedFileName(operation.getId(), StringUtils.EMPTY, "Marc", triggeringCsvFileName, "mrc");
+      var matchedCsvFileName = getMatchedFileName(operation.getId(), StringUtils.EMPTY, "Matched", triggeringCsvFileName, "csv");
 
       operation.setStatus(RETRIEVING_RECORDS);
       bulkOperationRepository.save(operation);
