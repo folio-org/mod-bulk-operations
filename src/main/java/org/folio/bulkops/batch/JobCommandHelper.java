@@ -57,7 +57,6 @@ public class JobCommandHelper {
   private static void createTmpWorkDir(BulkOperation bulkOperation) {
     var path = Path.of(getWorkDir() + SLASH + bulkOperation.getId());
     try {
-      Files.deleteIfExists(path);
       Files.createDirectories(path);
     } catch (IOException e) {
       log.error("Failed to create temporary working directory", e);
