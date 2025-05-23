@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 
@@ -36,7 +37,6 @@ import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
-import org.folio.bulkops.domain.entity.BulkOperation;
 
 @UtilityClass
 @Log4j2
@@ -127,8 +127,8 @@ public class Utils {
     return new ByteArrayInputStream(content.getBytes());
   }
 
-  public static String getMatchedFileName(BulkOperation operation, String folder, String matched, String fileExtension) {
-    return MATCHED_RECORDS_FILE_TEMPLATE.formatted(operation.getId(), folder, LocalDate.now(), matched, FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile()), fileExtension);
+  public static String getMatchedFileName(UUID operationId, String folder, String matched, String linkToTriggering, String fileExtension) {
+    return MATCHED_RECORDS_FILE_TEMPLATE.formatted(operationId, folder, LocalDate.now(), matched, FilenameUtils.getBaseName(linkToTriggering), fileExtension);
   }
 
 }
