@@ -1,5 +1,7 @@
 package org.folio.bulkops.batch;
 
+import static java.util.Optional.ofNullable;
+import static org.folio.bulkops.domain.bean.JobParameterNames.BULK_OPERATION_ID;
 import static org.folio.bulkops.util.Constants.NUMBER_OF_PROCESSED_IDENTIFIERS;
 
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import org.springframework.batch.core.annotation.OnSkipInProcess;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import java.util.UUID;
 
 @Log4j2
 @RequiredArgsConstructor
@@ -27,14 +30,17 @@ public class BulkEditSkipListener {
 
   @OnSkipInProcess
   public void onSkipInProcess(ItemIdentifier itemIdentifier, BulkEditException exception) {
-    var jobId = jobExecution.getJobId();
-    bulkOperationRepository.findByBatchJobId(jobId).ifPresent(bulkOperation ->
-      errorService.saveError(bulkOperation.getId(), itemIdentifier.getItemId(), exception.getMessage(), exception.getErrorType()));
-      var context = jobExecution.getExecutionContext();
-      int processed = 1;
-      if (context.containsKey(NUMBER_OF_PROCESSED_IDENTIFIERS)) {
-        processed += context.getInt(NUMBER_OF_PROCESSED_IDENTIFIERS);
-      }
-      context.putInt(NUMBER_OF_PROCESSED_IDENTIFIERS, processed);
+    ofNullable(jobExecution.getJobParameters().getString(BULK_OPERATION_ID))
+      .map(UUID::fromString)
+      .map(bulkOperationRepository::findById)
+      .flatMap(opt -> opt)
+      .ifPresent(bulkOperation ->
+        errorService.saveError(bulkOperation.getId(), itemIdentifier.getItemId(), exception.getMessage(), exception.getErrorType()));
+    var context = jobExecution.getExecutionContext();
+    int processed = 1;
+    if (context.containsKey(NUMBER_OF_PROCESSED_IDENTIFIERS)) {
+      processed += context.getInt(NUMBER_OF_PROCESSED_IDENTIFIERS);
+    }
+    context.putInt(NUMBER_OF_PROCESSED_IDENTIFIERS, processed);
   }
 }

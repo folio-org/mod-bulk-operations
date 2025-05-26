@@ -19,6 +19,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.exception.BulkOperationException;
+import org.folio.bulkops.service.ErrorService;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -45,6 +46,7 @@ public class BulkEditHoldingsIdentifiersJobConfig {
   private final BulkEditHoldingsProcessor bulkEditHoldingsProcessor;
   private final BulkEditSkipListener bulkEditSkipListener;
   private final RemoteFileSystemClient remoteFileSystemClient;
+  private final ErrorService errorService;
 
   @Value("${application.batch.chunk-size}")
   private int chunkSize;
@@ -115,7 +117,7 @@ public class BulkEditHoldingsIdentifiersJobConfig {
     @Value("#{stepExecutionContext['" + TEMP_OUTPUT_JSON_PATH + "']}") String jsonPath) {
     var writer = new CompositeItemWriter<List<ExtendedHoldingsRecord>>();
     writer.setDelegates(Arrays.asList(
-      new CsvListItemWriter<>(csvPath, ExtendedHoldingsRecord.class),
+      new CsvListItemWriter<>(csvPath, ExtendedHoldingsRecord.class, errorService),
       new JsonListFileWriter<>(new FileSystemResource(jsonPath))));
     return writer;
   }

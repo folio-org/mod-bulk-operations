@@ -1,7 +1,9 @@
 package org.folio.bulkops.batch;
 
 import static java.util.Objects.nonNull;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.folio.bulkops.domain.bean.JobParameterNames.BULK_OPERATION_ID;
 import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_FILE_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_OUTPUT_MARC_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_FILE_PATH;
@@ -34,6 +36,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -56,26 +59,29 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
 
   @SneakyThrows
   private void processJobUpdate(JobExecution jobExecution, boolean after) {
-    var jobId = jobExecution.getJobId();
-    bulkOperationRepository.findByBatchJobId(jobId).ifPresent(bulkOperation -> {
-      if (after) {
-        var jobParameters = jobExecution.getJobParameters();
-        moveTemporaryFilesToStorage(jobParameters, bulkOperation);
-        handleProcessingMatchedErrors(bulkOperation);
-        log.info("-----------------------------JOB---ENDS-----------------------------");
-      }
-      var context = jobExecution.getExecutionContext();
-      bulkOperation.setProcessedNumOfRecords(context.containsKey(NUMBER_OF_PROCESSED_IDENTIFIERS) ? context.getInt(NUMBER_OF_PROCESSED_IDENTIFIERS) : 0);
-      bulkOperation.setMatchedNumOfRecords(context.containsKey(NUMBER_OF_MATCHED_RECORDS) ? context.getInt(NUMBER_OF_MATCHED_RECORDS) : 0);
-      if (COMPLETED.equals(jobExecution.getStatus())) {
-        bulkOperation.setStatus(OperationStatusType.DATA_MODIFICATION);
-      } else if (Set.of(FAILED, ABANDONED).contains(jobExecution.getStatus())) {
-        bulkOperation.setStatus(OperationStatusType.FAILED);
-        bulkOperation.setErrorMessage(fetchFailureCause(jobExecution));
-        bulkOperation.setEndTime(LocalDateTime.now());
-      }
-      bulkOperationRepository.save(bulkOperation);
-    });
+    ofNullable(jobExecution.getJobParameters().getString(BULK_OPERATION_ID))
+      .map(UUID::fromString)
+      .map(bulkOperationRepository::findById)
+      .flatMap(opt -> opt)
+      .ifPresent(bulkOperation -> {
+        if (after) {
+          var jobParameters = jobExecution.getJobParameters();
+          moveTemporaryFilesToStorage(jobParameters, bulkOperation);
+          handleProcessingMatchedErrors(bulkOperation);
+          log.info("-----------------------------JOB---ENDS-----------------------------");
+        }
+        var context = jobExecution.getExecutionContext();
+        bulkOperation.setProcessedNumOfRecords(context.containsKey(NUMBER_OF_PROCESSED_IDENTIFIERS) ? context.getInt(NUMBER_OF_PROCESSED_IDENTIFIERS) : 0);
+        bulkOperation.setMatchedNumOfRecords(context.containsKey(NUMBER_OF_MATCHED_RECORDS) ? context.getInt(NUMBER_OF_MATCHED_RECORDS) : 0);
+        if (COMPLETED.equals(jobExecution.getStatus())) {
+          bulkOperation.setStatus(OperationStatusType.DATA_MODIFICATION);
+        } else if (Set.of(FAILED, ABANDONED).contains(jobExecution.getStatus())) {
+          bulkOperation.setStatus(OperationStatusType.FAILED);
+          bulkOperation.setErrorMessage(fetchFailureCause(jobExecution));
+          bulkOperation.setEndTime(LocalDateTime.now());
+        }
+        bulkOperationRepository.save(bulkOperation);
+      });
   }
 
   private String fetchFailureCause(JobExecution jobExecution) {
@@ -132,7 +138,6 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
   private void moveFileToStorage(String destFileName, String sourceFileName) throws IOException {
     var sourcePath = Path.of(sourceFileName);
     if (Files.exists(sourcePath)) {
-      var content = new String(new FileInputStream(sourceFileName).readAllBytes());
       remoteFileSystemClient.put(new FileInputStream(sourceFileName), destFileName);
       if (Files.deleteIfExists(sourcePath)) {
         log.info("Deleted temporary file: {}", sourceFileName);

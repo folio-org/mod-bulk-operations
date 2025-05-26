@@ -7,6 +7,7 @@ import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_FILE_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_MARC_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_FILE_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_MARC_PATH;
+import static org.folio.bulkops.domain.bean.JobParameterNames.UNIQUE_EXECUTION_ID;
 import static org.folio.bulkops.util.Constants.FILE_NAME;
 import static org.folio.bulkops.util.Constants.MARC_RECORDS_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.MATCHED_RECORDS_PATH_TEMPLATE;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.UUID;
 
 @UtilityClass
 @Log4j2
@@ -37,6 +39,7 @@ public class JobCommandHelper {
     var marcFileName = MARC_RECORDS_PATH_TEMPLATE.formatted(bulkOperation.getId(), LocalDate.now(), baseFileName);
     var paramsBuilder = new JobParametersBuilder();
     paramsBuilder.addString(BULK_OPERATION_ID, bulkOperation.getId().toString());
+    paramsBuilder.addString(UNIQUE_EXECUTION_ID, UUID.randomUUID().toString());
     paramsBuilder.addString(IDENTIFIERS_FILE_NAME, bulkOperation.getLinkToTriggeringCsvFile(), JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
     paramsBuilder.addString(FILE_NAME, bulkOperation.getLinkToTriggeringCsvFile(), JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
     paramsBuilder.addLong(TOTAL_CSV_LINES, (long) numOfLines, JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);

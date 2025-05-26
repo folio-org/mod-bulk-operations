@@ -25,11 +25,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.folio.bulkops.domain.dto.TenantNotePair;
-import org.hibernate.annotations.JdbcType;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
-import org.hibernate.dialect.PostgreSQLEnumJdbcType;
-import org.hibernate.type.SqlTypes;
 
 @Data
 @Builder
@@ -96,7 +92,6 @@ public class BulkOperation {
   private UUID fqlQueryId;
   private String fqlQuery;
   private String userFriendlyQuery;
-  private Long batchJobId;
 
   @Type(JsonBinaryType.class)
   @Column(columnDefinition = "jsonb[]")

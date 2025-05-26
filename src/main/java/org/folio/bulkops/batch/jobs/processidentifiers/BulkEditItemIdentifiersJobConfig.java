@@ -19,6 +19,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.exception.BulkEditException;
+import org.folio.bulkops.service.ErrorService;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -47,6 +48,7 @@ public class BulkEditItemIdentifiersJobConfig {
   private final ItemFetcher itemFetcher;
   private final BulkEditSkipListener bulkEditSkipListener;
   private final RemoteFileSystemClient remoteFileSystemClient;
+  private final ErrorService errorService;
 
   @Value("${application.batch.chunk-size}")
   private int chunkSize;
@@ -123,7 +125,7 @@ public class BulkEditItemIdentifiersJobConfig {
     @Value("#{stepExecutionContext['" + TEMP_OUTPUT_JSON_PATH + "']}") String jsonPath) {
     var writer = new CompositeItemWriter<List<ExtendedItem>>();
     writer.setDelegates(Arrays.asList(
-      new CsvListItemWriter<>(csvPath, ExtendedItem.class),
+      new CsvListItemWriter<>(csvPath, ExtendedItem.class, errorService),
       new JsonListFileWriter<>(new FileSystemResource(jsonPath))));
     return writer;
   }

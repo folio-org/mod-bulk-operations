@@ -523,20 +523,19 @@ public class BulkOperationService {
       operation.setTotalNumOfRecords(numOfLines);
       var jobLaunchRequest = new JobLaunchRequest(getBatchJob(operation), prepareJobParameters(operation, numOfLines));
       log.info("Launching batch job");
-      new Thread(getRunnableWithCurrentFolioContext(() -> {
+      operation.setStatus(RETRIEVING_RECORDS);
+      executor.execute(getRunnableWithCurrentFolioContext(() -> {
         try {
-          var jobExecution = exportJobManagerSync.launchJob(jobLaunchRequest);
-          operation.setBatchJobId(jobExecution.getJobId());
-          operation.setStatus(RETRIEVING_RECORDS);
+          exportJobManagerSync.launchJob(jobLaunchRequest);
         } catch (JobExecutionException e) {
           log.error(ERROR_STARTING_BULK_OPERATION, e);
           operation.setStatus(FAILED);
           operation.setErrorMessage(e.getMessage());
           operation.setEndTime(LocalDateTime.now());
+          bulkOperationRepository.save(operation);
         }
-      })).start();
-      bulkOperationRepository.save(operation);
-      return operation;
+      }));
+      return bulkOperationRepository.save(operation);
     } else if (BulkOperationStep.EDIT == step) {
       errorService.deleteErrorsByBulkOperationId(bulkOperationId);
       operation.setCommittedNumOfErrors(0);

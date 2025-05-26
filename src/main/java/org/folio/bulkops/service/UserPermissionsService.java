@@ -13,12 +13,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 
+import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_INVENTORY_VIEW_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_INVENTORY_WRITE_PERMISSION;
+import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_VIEW_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_WRITE_PERMISSION;
+import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_INSTANCES_ITEM_GET_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_INSTANCES_ITEM_PUT;
+import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_ITEMS_ITEM_GET_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_ITEMS_ITEM_PUT;
+import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_STORAGE_HOLDINGS_ITEM_GET_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_STORAGE_HOLDINGS_ITEM_PUT;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.USERS_ITEM_PUT;
+import static org.folio.bulkops.processor.permissions.check.PermissionEnum.USER_ITEM_GET_PERMISSION;
 
 @RequiredArgsConstructor
 @Log4j2
@@ -47,6 +53,9 @@ public class UserPermissionsService {
 
   private List<String> getDesiredPermissions() {
     return List.of(BULK_EDIT_INVENTORY_WRITE_PERMISSION.getValue(), BULK_EDIT_USERS_WRITE_PERMISSION.getValue(),
-      USERS_ITEM_PUT.getValue(), INVENTORY_ITEMS_ITEM_PUT.getValue(), INVENTORY_STORAGE_HOLDINGS_ITEM_PUT.getValue(), INVENTORY_INSTANCES_ITEM_PUT.getValue());
+      USERS_ITEM_PUT.getValue(), INVENTORY_ITEMS_ITEM_PUT.getValue(), INVENTORY_STORAGE_HOLDINGS_ITEM_PUT.getValue(), INVENTORY_INSTANCES_ITEM_PUT.getValue(),
+      BULK_EDIT_INVENTORY_VIEW_PERMISSION.getValue(), BULK_EDIT_USERS_VIEW_PERMISSION.getValue(),
+      USER_ITEM_GET_PERMISSION.getValue(), INVENTORY_ITEMS_ITEM_GET_PERMISSION.getValue(),
+      INVENTORY_STORAGE_HOLDINGS_ITEM_GET_PERMISSION.getValue(), INVENTORY_INSTANCES_ITEM_GET_PERMISSION.getValue());
   }
 }

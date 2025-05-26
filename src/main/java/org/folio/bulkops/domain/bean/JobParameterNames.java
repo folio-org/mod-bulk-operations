@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 public class JobParameterNames {
 
   public static final String BULK_OPERATION_ID = "bulkOperationId";
+  public static final String UNIQUE_EXECUTION_ID = "uniqueExecutionId";
   public static final String TEMP_LOCAL_FILE_PATH = "tempLocalFilePath";
   public static final String STORAGE_FILE_PATH = "storageFilePath";
   public static final String TEMP_LOCAL_MARC_PATH = "tempLocalMarcPath";
