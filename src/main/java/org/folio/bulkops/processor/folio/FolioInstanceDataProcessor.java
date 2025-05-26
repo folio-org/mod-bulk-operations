@@ -10,23 +10,23 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STAFF_SUPPRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 
+import java.util.ArrayList;
+import java.util.Objects;
+import java.util.Set;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.dto.Action;
-import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
+import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.processor.FolioAbstractDataProcessor;
 import org.folio.bulkops.processor.Updater;
 import org.folio.bulkops.processor.Validator;
 import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.Set;
 
 @Log4j2
 @Component
@@ -91,6 +91,10 @@ public class FolioInstanceDataProcessor extends FolioAbstractDataProcessor<Exten
     if (instance.getSubject() != null) {
       var subj = instance.getSubject().stream().map(sub -> sub.toBuilder().build()).toList();
       clone.setSubject(new ArrayList<>(subj));
+    }
+    if (instance.getPublication() != null) {
+      var pubs = instance.getPublication().stream().map(pub -> pub.toBuilder().build()).toList();
+      clone.setPublication(new ArrayList<>(pubs));
     }
     return ExtendedInstance.builder().tenantId(extendedInstance.getTenantId()).entity(clone).build();
   }
