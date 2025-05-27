@@ -146,7 +146,8 @@ public class QueryService {
       var csvWriter = new BulkOperationsEntityCsvWriter(writerForResultCsvFile, entityClass);
       List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
 
-      int numMatched = 0; int numProcessed = 0;
+      int numMatched = 0;
+      int numProcessed = 0;
       var factory = objectMapper.getFactory();
       var parser = factory.createParser(is);
       var iterator = objectMapper.readValues(parser, entityClass);
