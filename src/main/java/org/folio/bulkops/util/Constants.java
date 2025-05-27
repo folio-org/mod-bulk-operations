@@ -118,23 +118,9 @@ public class Constants {
   public static final String FILE_NAME = "fileName";
   public static final String IDENTIFIERS_FILE_NAME = "identifiersFileName";
 
-  public static final String NO_MATCH_FOUND_MESSAGE = "No match found";
   public static final String MULTIPLE_MATCHES_MESSAGE = "Multiple matches for the same identifier.";
-  public static final String NO_MARC_CONTENT = "Cannot get marc content for record with id = %s, reason: %s";
-  public static final String NO_ITEM_AFFILIATION = "User %s does not have required affiliation to view the item record - %s=%s on the tenant %s";
-  public static final String NO_ITEM_VIEW_PERMISSIONS = "User %s does not have required permission to view the item record - %s=%s on the tenant %s";
-  public static final String NO_HOLDING_AFFILIATION = "User %s does not have required affiliation to view the holdings record - %s=%s on the tenant %s";
-  public static final String NO_HOLDING_VIEW_PERMISSIONS = "User %s does not have required permission to view the holdings record - %s=%s on the tenant %s";
-  public static final String NO_INSTANCE_VIEW_PERMISSIONS = "User %s does not have required permission to view the instance record - %s=%s on the tenant %s";
-  public static final String NO_USER_VIEW_PERMISSIONS = "User %s does not have required permission to view the user record - %s=%s on the tenant %s";
-  public static final String DUPLICATES_ACROSS_TENANTS = "Duplicates across tenants";
   public static final String DUPLICATE_ENTRY = "Duplicate entry";
-  public static final String CANNOT_GET_RECORD = "Cannot get data from %s due to %s";
-  public static final String LINKED_DATA_SOURCE_IS_NOT_SUPPORTED = "Bulk edit of instances with source set to LINKED_DATA is not supported.";
-  public static final String MULTIPLE_SRS = "Multiple SRS records are associated with the instance. The following SRS have been identified: %s.";
-  public static final String SRS_MISSING = "SRS record associated with the instance is missing.";
 
-  public static final String LINKED_DATA_SOURCE = "LINKED_DATA";
   public static final String MARC_SOURCE = "MARC";
 
   public static final int MIN_YEAR_FOR_BIRTH_DATE = 1900;
