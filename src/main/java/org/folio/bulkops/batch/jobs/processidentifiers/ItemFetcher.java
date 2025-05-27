@@ -43,6 +43,7 @@ import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.exception.BulkEditException;
+import org.folio.bulkops.processor.EntityExtractor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.HoldingsReferenceService;
@@ -66,7 +67,7 @@ import java.util.stream.Stream;
 @StepScope
 @RequiredArgsConstructor
 @Log4j2
-public class ItemFetcher implements ItemProcessor<ItemIdentifier, ExtendedItemCollection> {
+public class ItemFetcher implements ItemProcessor<ItemIdentifier, ExtendedItemCollection>, EntityExtractor {
   private final ItemClient itemClient;
   private final ConsortiaService consortiaService;
   private final SearchClient searchClient;

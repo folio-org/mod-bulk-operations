@@ -29,6 +29,7 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.exception.BulkEditException;
+import org.folio.bulkops.processor.EntityExtractor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.batch.core.JobExecution;
@@ -43,7 +44,7 @@ import java.util.stream.StreamSupport;
 @StepScope
 @RequiredArgsConstructor
 @Log4j2
-public class BulkEditInstanceProcessor implements ItemProcessor<ItemIdentifier, List<ExtendedInstance>> {
+public class BulkEditInstanceProcessor implements ItemProcessor<ItemIdentifier, List<ExtendedInstance>>, EntityExtractor {
   private final InstanceClient instanceClient;
   private final FolioExecutionContext folioExecutionContext;
   private final PermissionsValidator permissionsValidator;

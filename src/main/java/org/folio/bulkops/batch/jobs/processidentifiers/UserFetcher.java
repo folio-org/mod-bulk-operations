@@ -17,6 +17,7 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.exception.BulkEditException;
+import org.folio.bulkops.processor.EntityExtractor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.util.ExceptionHelper;
 import org.folio.spring.FolioExecutionContext;
@@ -34,7 +35,7 @@ import java.util.Date;
 @StepScope
 @RequiredArgsConstructor
 @Log4j2
-public class UserFetcher implements ItemProcessor<ItemIdentifier, User> {
+public class UserFetcher implements ItemProcessor<ItemIdentifier, User>, EntityExtractor {
   private static final String USER_SEARCH_QUERY = "(cql.allRecords=1 NOT type=\"\" or type<>\"shadow\") and %s==\"%s\"";
 
   private final UserClient userClient;
