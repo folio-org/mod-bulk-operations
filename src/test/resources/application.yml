@@ -52,3 +52,6 @@ application:
   data-import-integration:
     num_of_concurrent_requests: ${DI_NUMBER_OF_CONCURRENT_REQUESTS:2}
     chunk_size: ${DI_CHUNK_SIZE:3}
+  fqm-fetcher:
+    max_chunk_size: 3
+    max_parallel_chunks: 3
