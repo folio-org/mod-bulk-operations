@@ -47,4 +47,5 @@
   <include file="changes/05-02-2025_add_migration_script_for_warnings.xml" relativeToChangelogFile="true"/>
   <include file="changes/03-03-2025_delete_enum_types.xml" relativeToChangelogFile="true"/>
   <include file="changes/08-05-2025_update_bulk_operation_add_entity_type_id.xml" relativeToChangelogFile="true"/>
+  <include file="changes/create_batch_tables.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

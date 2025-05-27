@@ -1,5 +1,6 @@
 package org.folio.bulkops.util;
 
+import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Set;
@@ -42,6 +43,8 @@ public class Constants {
   public static final String LINE_BREAK_REPLACEMENT = "\\n";
 
   public static final String QUERY_PATTERN_NAME = "name==%s";
+  public static final String QUERY_PATTERN_HRID = "hrid==\"%s\"";
+  public static final String QUERY_PATTERN_BARCODE = "barcode==\"%s\"";
   public static final String BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE = "module==%s and configName==%s";
   public static final String QUERY_PATTERN_CODE = "code==%s";
   public static final String QUERY_PATTERN_USERNAME = "username==%s";
@@ -108,4 +111,46 @@ public class Constants {
   public static final String MATCHED_RECORDS_FILE_TEMPLATE = "%s/%s%s-%s-Records-%s.%s";
 
   public static final byte[] UTF_8_BOM = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+  public static final String UTF8_BOM = new String(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF}, StandardCharsets.UTF_8);
+
+  // from mod-data-export-worker
+  public static final String BULK_EDIT_IDENTIFIERS = "BULK_EDIT_IDENTIFIERS";
+  public static final String FILE_NAME = "fileName";
+  public static final String IDENTIFIERS_FILE_NAME = "identifiersFileName";
+
+  public static final String NO_MATCH_FOUND_MESSAGE = "No match found";
+  public static final String MULTIPLE_MATCHES_MESSAGE = "Multiple matches for the same identifier.";
+  public static final String NO_MARC_CONTENT = "Cannot get marc content for record with id = %s, reason: %s";
+  public static final String NO_ITEM_AFFILIATION = "User %s does not have required affiliation to view the item record - %s=%s on the tenant %s";
+  public static final String NO_ITEM_VIEW_PERMISSIONS = "User %s does not have required permission to view the item record - %s=%s on the tenant %s";
+  public static final String NO_HOLDING_AFFILIATION = "User %s does not have required affiliation to view the holdings record - %s=%s on the tenant %s";
+  public static final String NO_HOLDING_VIEW_PERMISSIONS = "User %s does not have required permission to view the holdings record - %s=%s on the tenant %s";
+  public static final String NO_INSTANCE_VIEW_PERMISSIONS = "User %s does not have required permission to view the instance record - %s=%s on the tenant %s";
+  public static final String NO_USER_VIEW_PERMISSIONS = "User %s does not have required permission to view the user record - %s=%s on the tenant %s";
+  public static final String DUPLICATES_ACROSS_TENANTS = "Duplicates across tenants";
+  public static final String DUPLICATE_ENTRY = "Duplicate entry";
+  public static final String CANNOT_GET_RECORD = "Cannot get data from %s due to %s";
+  public static final String LINKED_DATA_SOURCE_IS_NOT_SUPPORTED = "Bulk edit of instances with source set to LINKED_DATA is not supported.";
+  public static final String MULTIPLE_SRS = "Multiple SRS records are associated with the instance. The following SRS have been identified: %s.";
+  public static final String SRS_MISSING = "SRS record associated with the instance is missing.";
+
+  public static final String LINKED_DATA_SOURCE = "LINKED_DATA";
+  public static final String MARC_SOURCE = "MARC";
+
+  public static final int MIN_YEAR_FOR_BIRTH_DATE = 1900;
+
+  public static final String TOTAL_CSV_LINES = "totalCsvLines";
+  public static final String NUMBER_OF_PROCESSED_IDENTIFIERS = "numberOfProcessedIdentifiers";
+  public static final String NUMBER_OF_MATCHED_RECORDS = "numberOfMatchedRecords";
+
+  public static final String MATCHED_RECORDS_PATH_TEMPLATE = "%s/%s-Matched-Records-%s";
+  public static final String MARC_RECORDS_PATH_TEMPLATE = "%s/%s-Marc-Records-%s";
+  public static final String PERMANENT_LOCATION_ID = "permanentLocationId";
+  public static final String IS_ACTIVE = "isActive";
+  public static final String INACTIVE = "Inactive ";
+  public static final String NAME = "name";
+  public static final String CALL_NUMBER_PREFIX = "callNumberPrefix";
+  public static final String CALL_NUMBER = "callNumber";
+  public static final String CALL_NUMBER_SUFFIX = "callNumberSuffix";
+  public static final String HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER = " > ";
 }
