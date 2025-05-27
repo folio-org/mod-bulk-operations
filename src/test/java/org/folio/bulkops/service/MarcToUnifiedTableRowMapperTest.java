@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CLASSIFICATION;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUBJECT;
 import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
@@ -263,5 +264,25 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     var expectedPreviewData = "LC\u001F;a 050 b 050\u001F|NLM\u001F;a 060 b 060\u001F|UDC\u001F;a 080 b 080\u001F|Dewey\u001F;a 082-1\u001F|Dewey\u001F;a 082-2 b 082\u001F|GDC\u001F;a 086\u001F|GDC\u001F;z 086\u001F|LC\u001F;a 090 b 090";
 
     assertThat(rowData.getFirst()).isEqualTo(forCsv ? expectedCsvRowData : expectedPreviewData);
+  }
+
+  @Test
+  void processRecordWithSinglePublicationTest() {
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    var dataField = new DataFieldImpl("260", ' ', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "London"));
+    dataField.addSubfield(new SubfieldImpl('b', "Penguin Books"));
+    dataField.addSubfield(new SubfieldImpl('c', "2023"));
+    marcRecord.addVariableField(dataField);
+
+    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_PUBLICATION), true);
+
+    assertThat(rowData.getFirst()).isEqualTo("Publisher;Publisher role;Place of publication;Publication date\n" +
+      "Penguin Books;-;London;2023");
   }
 }
