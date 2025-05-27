@@ -91,4 +91,4 @@ application:
     chunk_size: ${DI_CHUNK_SIZE:1000}
   fqm-fetcher:
     max_chunk_size: ${FQM_MAX_CHUNK_SIZE:10000}
-    max_parallel_chunks: ${FQM_MAX_PARALLEL_CHUNKS:5}
+    max_parallel_chunks: ${FQM_MAX_PARALLEL_CHUNKS:10}

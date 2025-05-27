@@ -709,8 +709,8 @@
       {"name": "MAX_UPLOADING_RETRIES", "value": "50"},
       {"name": "DI_NUMBER_OF_CONCURRENT_REQUESTS", "value": "5"},
       {"name": "DI_CHUNK_SIZE", "value": "1000"},
-      {"name": "FQM_MAX_CHUNK_SIZE", "value": "1000"},
-      {"name": "FQM_MAX_PARALLEL_CHUNKS", "value": "5"}
+      {"name": "FQM_MAX_CHUNK_SIZE", "value": "10000"},
+      {"name": "FQM_MAX_PARALLEL_CHUNKS", "value": "10"}
     ]
   }
 }
