@@ -1,9 +1,5 @@
 package org.folio.bulkops.batch;
 
-import static java.util.Optional.ofNullable;
-import static org.folio.bulkops.domain.bean.JobParameterNames.BULK_OPERATION_ID;
-import static org.folio.bulkops.domain.bean.JobParameterNames.IDENTIFIER_TYPE;
-
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
@@ -18,28 +14,23 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.converter.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.service.ErrorService;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemStream;
 import org.springframework.batch.item.ItemWriter;
-import org.springframework.beans.factory.annotation.Value;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.UUID;
 
 @Log4j2
-@StepScope
 public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter<T>, ItemStream {
   private BufferedWriter writer;
   private BulkOperationsEntityCsvWriter delegate;
   private ErrorService errorService;
+  private UUID bulkOperationId;
+  private IdentifierType identifierType;
 
-  @Value("#{stepExecution.jobExecution}")
-  private JobExecution jobExecution;
-
-  public CsvItemWriter(String path, Class<T> clazz, ErrorService errorService) throws IOException {
+  public CsvItemWriter(String path, Class<T> clazz, ErrorService errorService, String bulkOperationId, String identifierType) throws IOException {
     this.writer = new BufferedWriter(new FileWriter(path));
     if (clazz == ExtendedItem.class) {
       delegate = new BulkOperationsEntityCsvWriter(writer, Item.class);
@@ -53,6 +44,8 @@ public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter
       throw new IllegalArgumentException("Class " + clazz.getName() + " is not supported for writing");
     }
     this.errorService = errorService;
+    this.bulkOperationId = UUID.fromString(bulkOperationId);
+    this.identifierType = IdentifierType.fromValue(identifierType);
   }
 
   @Override
@@ -77,10 +70,7 @@ public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter
   }
 
   private void saveError(BulkOperationsEntity entity, ConverterException converterException) {
-    var identifierType = IdentifierType.fromValue(jobExecution.getJobParameters().getString(IDENTIFIER_TYPE));
-    ofNullable(jobExecution.getJobParameters().getString(BULK_OPERATION_ID))
-      .map(UUID::fromString)
-      .ifPresent(bulkOperationId -> errorService.saveError(bulkOperationId, entity.getIdentifier(identifierType),
-        converterException.getMessage(), ErrorType.WARNING));
+    errorService.saveError(bulkOperationId, entity.getIdentifier(identifierType), converterException.getMessage(),
+      ErrorType.WARNING);
   }
 }

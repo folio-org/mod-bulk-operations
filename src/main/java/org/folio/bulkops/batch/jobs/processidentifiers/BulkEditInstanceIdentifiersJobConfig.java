@@ -1,5 +1,7 @@
 package org.folio.bulkops.batch.jobs.processidentifiers;
 
+import static org.folio.bulkops.domain.bean.JobParameterNames.BULK_OPERATION_ID;
+import static org.folio.bulkops.domain.bean.JobParameterNames.IDENTIFIER_TYPE;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_FILE_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_MARC_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_OUTPUT_MARC_PATH;
@@ -123,10 +125,12 @@ public class BulkEditInstanceIdentifiersJobConfig {
   public CompositeItemWriter<List<ExtendedInstance>> compositeInstanceListWriter(
     @Value("#{stepExecutionContext['" + TEMP_OUTPUT_CSV_PATH + "']}") String csvPath,
     @Value("#{stepExecutionContext['" + TEMP_OUTPUT_JSON_PATH + "']}") String jsonPath,
-    @Value("#{stepExecutionContext['" + TEMP_OUTPUT_MARC_PATH + "']}") String marcPath) {
+    @Value("#{stepExecutionContext['" + TEMP_OUTPUT_MARC_PATH + "']}") String marcPath,
+    @Value("#{jobParameters['" + BULK_OPERATION_ID + "']}") String bulkOperationId,
+    @Value("#{jobParameters['" + IDENTIFIER_TYPE + "']}") String identifierType) {
     var writer = new CompositeItemWriter<List<ExtendedInstance>>();
     writer.setDelegates(Arrays.asList(
-      new CsvListItemWriter<>(csvPath, ExtendedInstance.class, errorService),
+      new CsvListItemWriter<>(csvPath, ExtendedInstance.class, errorService, bulkOperationId, identifierType),
       new JsonListFileWriter<>(new FileSystemResource(jsonPath)),
       new MarcAsListStringsWriter<>(marcPath, srsClient, jsonToMarcConverter)));
     return writer;

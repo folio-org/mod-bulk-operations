@@ -110,19 +110,19 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
     try {
       var tmpFileName = jobParameters.getString(TEMP_LOCAL_FILE_PATH);
       if (nonNull(tmpFileName)) {
-        var csvFileName = tmpFileName + ".csv";
-        moveFileToStorage(jobParameters.getString(STORAGE_FILE_PATH), csvFileName);
-        bulkOperation.setLinkToMatchedRecordsCsvFile(tmpFileName);
-        var jsonFileName = tmpFileName + ".json";
-        moveFileToStorage(jobParameters.getString(STORAGE_FILE_PATH) + ".json", jsonFileName);
+        var csvFileName = jobParameters.getString(STORAGE_FILE_PATH) + ".csv";
+        moveFileToStorage(csvFileName, tmpFileName);
+        bulkOperation.setLinkToMatchedRecordsCsvFile(csvFileName);
+        var jsonFileName = jobParameters.getString(STORAGE_FILE_PATH) + ".json";
+        moveFileToStorage(jsonFileName, tmpFileName + ".json");
         bulkOperation.setLinkToCommittedRecordsJsonFile(jsonFileName);
       }
       var tmpMarcName = jobParameters.getString(TEMP_OUTPUT_MARC_PATH);
       if (nonNull(tmpMarcName)) {
-        tmpMarcName += ".mrc";
+        var marcFileName = jobParameters.getString(STORAGE_MARC_PATH) + ".mrc";;
         if (Files.exists(Path.of(tmpMarcName))) {
-          moveFileToStorage(jobParameters.getString(STORAGE_MARC_PATH) + ".mrc", tmpMarcName);
-          bulkOperation.setLinkToMatchedRecordsMarcFile(tmpMarcName);
+          moveFileToStorage(marcFileName, tmpMarcName + ".mrc");
+          bulkOperation.setLinkToMatchedRecordsMarcFile(marcFileName);
         }
       }
 

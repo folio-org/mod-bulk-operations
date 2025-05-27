@@ -521,11 +521,11 @@ public class BulkOperationService {
     if (UPLOAD == step) {
       var numOfLines = remoteFileSystemClient.getNumOfLines(operation.getLinkToTriggeringCsvFile());
       operation.setTotalNumOfRecords(numOfLines);
-      var jobLaunchRequest = new JobLaunchRequest(getBatchJob(operation), prepareJobParameters(operation, numOfLines));
-      log.info("Launching batch job");
       operation.setStatus(RETRIEVING_RECORDS);
       executor.execute(getRunnableWithCurrentFolioContext(() -> {
         try {
+          log.info("Launching batch job");
+          var jobLaunchRequest = new JobLaunchRequest(getBatchJob(operation), prepareJobParameters(operation, numOfLines));
           exportJobManagerSync.launchJob(jobLaunchRequest);
         } catch (JobExecutionException e) {
           log.error(ERROR_STARTING_BULK_OPERATION, e);

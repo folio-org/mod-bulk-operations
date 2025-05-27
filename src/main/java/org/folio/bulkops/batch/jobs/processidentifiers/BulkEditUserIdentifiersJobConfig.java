@@ -1,5 +1,7 @@
 package org.folio.bulkops.batch.jobs.processidentifiers;
 
+import static org.folio.bulkops.domain.bean.JobParameterNames.BULK_OPERATION_ID;
+import static org.folio.bulkops.domain.bean.JobParameterNames.IDENTIFIER_TYPE;
 import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_FILE_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_OUTPUT_CSV_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_OUTPUT_JSON_PATH;
@@ -111,10 +113,12 @@ public class BulkEditUserIdentifiersJobConfig {
   @SneakyThrows
   public CompositeItemWriter<User> compositeItemWriter(
     @Value("#{stepExecutionContext['" + TEMP_OUTPUT_CSV_PATH + "']}") String csvPath,
-    @Value("#{stepExecutionContext['" + TEMP_OUTPUT_JSON_PATH + "']}") String jsonPath) {
+    @Value("#{stepExecutionContext['" + TEMP_OUTPUT_JSON_PATH + "']}") String jsonPath,
+    @Value("#{jobParameters['" + BULK_OPERATION_ID + "']}") String bulkOperationId,
+    @Value("#{jobParameters['" + IDENTIFIER_TYPE + "']}") String identifierType) {
     var writer = new CompositeItemWriter<User>();
     writer.setDelegates(Arrays.asList(
-      new CsvItemWriter<>(csvPath, User.class, errorService),
+      new CsvItemWriter<>(csvPath, User.class, errorService, bulkOperationId, identifierType),
       new JsonFileWriter<>(new FileSystemResource(jsonPath))));
     return writer;
   }
