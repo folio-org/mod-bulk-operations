@@ -61,6 +61,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class QueryService {
   public static final String QUERY_FILENAME_TEMPLATE = "%1$s/Query-%1$s.csv";
+  private static final int STATISTICS_UPDATING_STEP = 100;
 
   private final BulkOperationRepository bulkOperationRepository;
   private final ErrorService errorService;
@@ -145,8 +146,7 @@ public class QueryService {
       var csvWriter = new BulkOperationsEntityCsvWriter(writerForResultCsvFile, entityClass);
       List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
 
-      int numMatched = 0;
-      int numProcessed = 0;
+      int numMatched = 0; int numProcessed = 0;
       var factory = objectMapper.getFactory();
       var parser = factory.createParser(is);
       var iterator = objectMapper.readValues(parser, entityClass);
@@ -173,12 +173,23 @@ public class QueryService {
         } finally {
           writerForTriggeringCsvFile.write(entityRecord.getId() + NEW_LINE_SEPARATOR);
         }
-        operation.setProcessedNumOfRecords(++numProcessed);
-        operation.setMatchedNumOfRecords(numMatched);
-        bulkOperationRepository.save(operation);
+        ++numProcessed;
+
+        if (numProcessed % STATISTICS_UPDATING_STEP == 0) {
+          updateOperationExecutionStatus(operation, numProcessed, numMatched);
+        }
+      }
+      if (numProcessed % STATISTICS_UPDATING_STEP != 0) {
+        updateOperationExecutionStatus(operation, numProcessed, numMatched);
       }
       errorService.saveErrorsAfterQuery(bulkOperationExecutionContents, operation);
     }
+  }
+
+  private void updateOperationExecutionStatus(BulkOperation operation, int numProcessed, int numMatched) {
+    operation.setProcessedNumOfRecords(numProcessed);
+    operation.setMatchedNumOfRecords(numMatched);
+    bulkOperationRepository.save(operation);
   }
 
   private void failBulkOperation(BulkOperation bulkOperation, String errorMessage) {

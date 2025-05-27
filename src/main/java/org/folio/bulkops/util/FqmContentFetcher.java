@@ -1,5 +1,6 @@
 package org.folio.bulkops.util;
 
+import jakarta.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
@@ -32,6 +33,11 @@ public class FqmContentFetcher {
   private int chunkSize;
 
   private final QueryClient queryClient;
+
+  @PostConstruct
+  private void logStartup() {
+    log.info("FqmContentFetcher initialized with parameters - max_parallel_chunks: {}, max_chunk_size: {}", maxParallelChunks, chunkSize);
+  }
 
   /**
    * Fetches content in parallel using multiple threads.
