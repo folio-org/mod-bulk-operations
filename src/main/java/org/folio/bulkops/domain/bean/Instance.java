@@ -163,88 +163,88 @@ public class Instance implements BulkOperationsEntity {
   @UnifiedTableCell
   private List<ContributorName> contributors;
 
+  @JsonProperty("publication")
+  @Valid
+  @CsvCustomBindByName(column = INSTANCE_PUBLICATION, converter = PublicationListConverter.class)
+  @CsvCustomBindByPosition(position = 15, converter = PublicationListConverter.class)
+  @UnifiedTableCell(visible = false)
+  private List<Publication> publication;
+
   @JsonProperty("editions")
   @CsvCustomBindByName(column = INSTANCE_EDITION, converter = StringListPipedConverter.class)
-  @CsvCustomBindByPosition(position = 15, converter = StringListPipedConverter.class)
+  @CsvCustomBindByPosition(position = 16, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> editions;
 
   @JsonProperty("physicalDescriptions")
   @CsvCustomBindByName(column = INSTANCE_PHYSICAL_DESCRIPTION, converter = StringListPipedConverter.class)
-  @CsvCustomBindByPosition(position = 16, converter = StringListPipedConverter.class)
+  @CsvCustomBindByPosition(position = 17, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> physicalDescriptions;
 
   @JsonProperty("instanceTypeId")
   @CsvCustomBindByName(column = INSTANCE_RESOURCE_TYPE, converter = InstanceTypeConverter.class)
-  @CsvCustomBindByPosition(position = 17, converter = InstanceTypeConverter.class)
+  @CsvCustomBindByPosition(position = 18, converter = InstanceTypeConverter.class)
   @UnifiedTableCell
   private String instanceTypeId;
 
   @JsonProperty("natureOfContentTermIds")
   @CsvCustomBindByName(column = INSTANCE_NATURE_OF_CONTENT, converter = NatureOfContentTermListConverter.class)
-  @CsvCustomBindByPosition(position = 18, converter = NatureOfContentTermListConverter.class)
+  @CsvCustomBindByPosition(position = 19, converter = NatureOfContentTermListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> natureOfContentTermIds;
 
   @JsonProperty("instanceFormatIds")
   @CsvCustomBindByName(column = INSTANCE_FORMATS, converter = InstanceFormatListConverter.class)
-  @CsvCustomBindByPosition(position = 19, converter = InstanceFormatListConverter.class)
+  @CsvCustomBindByPosition(position = 20, converter = InstanceFormatListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> instanceFormatIds;
 
   @JsonProperty("languages")
   @CsvCustomBindByName(column = INSTANCE_LANGUAGES, converter = StringListPipedConverter.class)
-  @CsvCustomBindByPosition(position = 20, converter = StringListPipedConverter.class)
+  @CsvCustomBindByPosition(position = 21, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> languages;
 
   @JsonProperty("publicationFrequency")
   @Valid
   @CsvCustomBindByName(column = INSTANCE_PUBLICATION_FREQUENCY, converter = StringListPipedConverter.class)
-  @CsvCustomBindByPosition(position = 21, converter = StringListPipedConverter.class)
+  @CsvCustomBindByPosition(position = 22, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> publicationFrequency;
 
   @JsonProperty("publicationRange")
   @CsvCustomBindByName(column = INSTANCE_PUBLICATION_RANGE, converter = StringListPipedConverter.class)
-  @CsvCustomBindByPosition(position = 22, converter = StringListPipedConverter.class)
+  @CsvCustomBindByPosition(position = 23, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> publicationRange;
 
   @JsonProperty("notes")
   @CsvCustomBindByName(column = INSTANCE_NOTES, converter = InstanceNoteListConverter.class)
-  @CsvCustomBindByPosition(position = 23, converter = InstanceNoteListConverter.class)
+  @CsvCustomBindByPosition(position = 24, converter = InstanceNoteListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<InstanceNote> instanceNotes;
 
   @JsonProperty("electronicAccess")
   @Valid
   @CsvCustomBindByName(column = INSTANCE_ELECTRONIC_ACCESS, converter = ElectronicAccessListInstanceConverter.class)
-  @CsvCustomBindByPosition(position = 24, converter = ElectronicAccessListInstanceConverter.class)
+  @CsvCustomBindByPosition(position = 25, converter = ElectronicAccessListInstanceConverter.class)
   @UnifiedTableCell(visible = false)
   private List<ElectronicAccess> electronicAccess = null;
 
   @JsonProperty("subjects")
   @Valid
   @CsvCustomBindByName(column = INSTANCE_SUBJECT, converter = SubjectListConverter.class)
-  @CsvCustomBindByPosition(position = 25, converter = SubjectListConverter.class)
+  @CsvCustomBindByPosition(position = 26, converter = SubjectListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<Subject> subject = null;
 
   @JsonProperty("classifications")
   @Valid
   @CsvCustomBindByName(column = INSTANCE_CLASSIFICATION, converter = ClassificationListConverter.class)
-  @CsvCustomBindByPosition(position = 26, converter = ClassificationListConverter.class)
+  @CsvCustomBindByPosition(position = 27, converter = ClassificationListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<Classification> classifications;
-
-  @JsonProperty("publication")
-  @Valid
-  @CsvCustomBindByName(column = INSTANCE_PUBLICATION, converter = PublicationListConverter.class)
-  @CsvCustomBindByPosition(position = 27, converter = PublicationListConverter.class)
-  @UnifiedTableCell(visible = false)
-  private List<Publication> publication;
 
   @JsonProperty("matchKey")
   private String matchKey;
