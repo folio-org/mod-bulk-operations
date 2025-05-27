@@ -5,7 +5,7 @@ import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.domain.bean.JobParameterNames.BULK_OPERATION_ID;
 import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_FILE_PATH;
-import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_OUTPUT_MARC_PATH;
+import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_MARC_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_FILE_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_MARC_PATH;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
@@ -115,15 +115,13 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
         bulkOperation.setLinkToMatchedRecordsCsvFile(csvFileName);
         var jsonFileName = jobParameters.getString(STORAGE_FILE_PATH) + ".json";
         moveFileToStorage(jsonFileName, tmpFileName + ".json");
-        bulkOperation.setLinkToCommittedRecordsJsonFile(jsonFileName);
+        bulkOperation.setLinkToMatchedRecordsJsonFile(jsonFileName);
       }
-      var tmpMarcName = jobParameters.getString(TEMP_OUTPUT_MARC_PATH);
-      if (nonNull(tmpMarcName)) {
-        var marcFileName = jobParameters.getString(STORAGE_MARC_PATH) + ".mrc";;
-        if (Files.exists(Path.of(tmpMarcName))) {
-          moveFileToStorage(marcFileName, tmpMarcName + ".mrc");
-          bulkOperation.setLinkToMatchedRecordsMarcFile(marcFileName);
-        }
+      var tmpMarcName = jobParameters.getString(TEMP_LOCAL_MARC_PATH) + ".mrc";
+      var marcFileName = jobParameters.getString(STORAGE_MARC_PATH) + ".mrc";
+      if (Files.exists(Path.of(tmpMarcName))) {
+        moveFileToStorage(marcFileName, tmpMarcName);
+        bulkOperation.setLinkToMatchedRecordsMarcFile(marcFileName);
       }
 
       var tmpIdentifiersFileName = jobParameters.getString(IDENTIFIERS_FILE_NAME);

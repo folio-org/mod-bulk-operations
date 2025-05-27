@@ -109,7 +109,7 @@ public class BulkEditInstanceProcessor implements ItemProcessor<ItemIdentifier, 
           log.error(NO_MATCH_FOUND_MESSAGE);
           throw new BulkEditException(NO_MATCH_FOUND_MESSAGE, ErrorType.ERROR);
         }
-          yield instances.getInstances().getFirst();
+        yield instances.getInstances().getFirst();
       }
       default -> throw new BulkEditException(String.format("Identifier type \"%s\" is not supported", identifierType), ErrorType.ERROR);
     };
