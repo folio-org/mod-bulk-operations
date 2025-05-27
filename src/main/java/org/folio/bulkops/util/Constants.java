@@ -108,9 +108,4 @@ public class Constants {
   public static final String MATCHED_RECORDS_FILE_TEMPLATE = "%s/%s%s-%s-Records-%s.%s";
 
   public static final byte[] UTF_8_BOM = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
-
-  public static final String ITEM_ENTITY_TYPE_ID = "d0213d22-32cf-490f-9196-d81c3c66e53f";
-  public static final String USER_ENTITY_TYPE_ID = "ddc93926-d15a-4a45-9d9c-93eadc3d9bbf";
-  public static final String HOLDINGS_ENTITY_TYPE_ID = "8418e512-feac-4a6a-a56d-9006aab31e33";
-  public static final String INSTANCE_ENTITY_TYPE_ID = "6b08439b-4f8e-4468-8046-ea620f5cfb74";
 }
