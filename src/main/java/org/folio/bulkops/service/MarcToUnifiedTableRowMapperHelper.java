@@ -19,6 +19,7 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.InstanceType;
+import org.folio.bulkops.domain.bean.Publication;
 import org.marc4j.marc.DataField;
 import org.marc4j.marc.Leader;
 import org.marc4j.marc.Subfield;
@@ -96,6 +97,43 @@ public class MarcToUnifiedTableRowMapperHelper {
       default -> log.error("Tag {} is not classification or not supported yet.", dataField.getTag());
     }
     return classifications;
+  }
+
+  public Publication fetchPublication(DataField dataField) {
+    var place = extractDelimitedSubfields(dataField, 'a');
+    var publisher = extractDelimitedSubfields(dataField, 'b');
+    var date = extractDelimitedSubfields(dataField, 'c');
+    var role = determinePublisherRole(dataField);
+
+    return Publication.builder()
+      .place(place)
+      .publisher(publisher)
+      .dateOfPublication(date)
+      .role(role)
+      .build();
+  }
+
+  private String extractDelimitedSubfields(DataField dataField, char code) {
+    return dataField.getSubfields(code).stream()
+      .map(Subfield::getData)
+      .filter(Objects::nonNull)
+      .map(this::removeEndingPunctuation)
+      .map(String::trim)
+      .collect(Collectors.joining(" ; "));
+  }
+
+  private String determinePublisherRole(DataField dataField) {
+    if (!"264".equals(dataField.getTag())) {
+      return null;
+    }
+    return switch (dataField.getIndicator2()) {
+      case '0' -> "production";
+      case '1' -> "publication";
+      case '2' -> "distribution";
+      case '3' -> "manufacture";
+      case '4' -> "copyright";
+      default -> null;
+    };
   }
 
   private List<String> fetchSubfieldsDataByCode(DataField dataField, char code) {

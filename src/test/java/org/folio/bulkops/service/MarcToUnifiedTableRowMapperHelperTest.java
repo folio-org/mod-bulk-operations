@@ -457,4 +457,27 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
     }
     System.out.println(res);
   }
+
+  @Test
+  void fetchPublication_roleFor264Indicators() {
+    var dataField = new DataFieldImpl("264", ' ', '0');
+    var res = mapperHelper.fetchPublication(dataField);
+    assertThat(res.getRole()).isEqualTo("production");
+
+    dataField = new DataFieldImpl("264", ' ', '1');
+    res = mapperHelper.fetchPublication(dataField);
+    assertThat(res.getRole()).isEqualTo("publication");
+
+    dataField = new DataFieldImpl("264", ' ', '2');
+    res = mapperHelper.fetchPublication(dataField);
+    assertThat(res.getRole()).isEqualTo("distribution");
+
+    dataField = new DataFieldImpl("264", ' ', '3');
+    res = mapperHelper.fetchPublication(dataField);
+    assertThat(res.getRole()).isEqualTo("manufacture");
+
+    dataField = new DataFieldImpl("264", ' ', '4');
+    res = mapperHelper.fetchPublication(dataField);
+    assertThat(res.getRole()).isEqualTo("copyright");
+  }
 }

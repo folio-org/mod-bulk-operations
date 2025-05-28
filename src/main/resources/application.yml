@@ -101,3 +101,6 @@ application:
     minutes-for-merge: ${MINUTES_FOR_MERGE:10}
     core-pool-size: ${CORE_POOL_SIZE:10}
     max-pool-size: ${MAX_POOL_SIZE:10}
+  fqm-fetcher:
+    max_chunk_size: ${FQM_MAX_CHUNK_SIZE:10000}
+    max_parallel_chunks: ${FQM_MAX_PARALLEL_CHUNKS:10}
