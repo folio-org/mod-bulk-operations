@@ -3,6 +3,8 @@ package org.folio.bulkops.service;
 import static java.lang.String.format;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 
+import java.util.Objects;
+
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
@@ -15,8 +17,6 @@ import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.util.EntityPathResolver;
 import org.folio.bulkops.util.Utils;
 import org.springframework.stereotype.Service;
-
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -42,6 +42,9 @@ public class RecordUpdateService {
           throw new OptimisticLockingException(format("%s %s", message, link), message, link);
         }
         throw e;
+      } catch (Exception e) {
+        e.printStackTrace();
+
       }
       executionContentRepository.save(BulkOperationExecutionContent.builder()
         .bulkOperationId(operation.getId())

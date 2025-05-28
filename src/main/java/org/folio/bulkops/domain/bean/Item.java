@@ -11,6 +11,7 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.CsvCustomBindByPosition;
 import jakarta.validation.Valid;
@@ -37,6 +38,7 @@ import org.folio.bulkops.domain.converter.MaterialTypeConverter;
 import org.folio.bulkops.domain.converter.StringConverter;
 import org.folio.bulkops.domain.converter.StringListConverter;
 import org.folio.bulkops.domain.converter.TagsConverter;
+import org.folio.bulkops.domain.deserializer.LoanTypeDeserializer;
 import org.folio.bulkops.domain.dto.DataType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
@@ -248,10 +250,11 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   private List<ItemNote> notes;
 
   @JsonProperty("permanentLoanTypeId")
+  @JsonDeserialize(using = LoanTypeDeserializer.class)
   @CsvCustomBindByName(column = "Permanent loan type", converter = LoanTypeConverter.class)
   @CsvCustomBindByPosition(position = 32, converter = LoanTypeConverter.class)
   @UnifiedTableCell
-  private String permanentLoanType;
+  private LoanType permanentLoanType;
 
   @JsonProperty("temporaryLoanType")
   @CsvCustomBindByName(column = "Temporary loan type", converter = LoanTypeConverter.class)

@@ -1,11 +1,12 @@
 package org.folio.bulkops.domain.converter;
 
+import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.service.ItemReferenceHelper;
 
-public class LoanTypeConverter extends BaseConverter<String> {
+public class LoanTypeConverter extends BaseConverter<LoanType> {
 
   @Override
-  public String convertToString(String id) {
-    return ItemReferenceHelper.service().getLoanTypeById(id).getName();
+  public String convertToString(LoanType object) {
+    return ItemReferenceHelper.service().getLoanTypeById(object.getId()).getName();
   }
 }

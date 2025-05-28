@@ -178,7 +178,7 @@ public class ItemDataProcessor extends FolioAbstractDataProcessor<ExtendedItem> 
   private void replacePermanentLoanType(Action action, ExtendedItem extendedItem) {
     var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
     try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
-      extendedItem.getEntity().setPermanentLoanType(itemReferenceService.getLoanTypeById(action.getUpdated(), tenant).getId());
+      extendedItem.getEntity().setPermanentLoanType(itemReferenceService.getLoanTypeById(action.getUpdated(), tenant));
     }
   }
 
