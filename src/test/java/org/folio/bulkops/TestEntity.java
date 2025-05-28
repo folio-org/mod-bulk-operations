@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
@@ -90,7 +91,7 @@ public enum TestEntity {
         .notes(List.of(ItemNote.builder().build()))
         .status(InventoryItemStatus.builder().build())
         .materialType(MaterialType.builder().build())
-        .permanentLoanType(LoanType.builder().build())
+        .permanentLoanType(UUID.randomUUID().toString())
         .temporaryLoanType(LoanType.builder().build())
         .permanentLocation(ItemLocation.builder().build())
         .temporaryLocation(ItemLocation.builder().build())

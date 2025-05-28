@@ -142,7 +142,7 @@ class ItemDataProcessorTest extends BaseTest {
       .withHoldingsRecordId(holdingsId)
       .withPermanentLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Permanent location"))
       .withTemporaryLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Temporary location"))
-      .withPermanentLoanType(new LoanType().withId(UUID.randomUUID().toString()).withName("Permanent loan type"));
+      .withPermanentLoanType(UUID.randomUUID().toString());
 
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
 
@@ -174,7 +174,7 @@ class ItemDataProcessorTest extends BaseTest {
     var item = new Item()
       .withPermanentLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Permanent location"))
       .withTemporaryLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Temporary location"))
-      .withPermanentLoanType(new LoanType().withId(UUID.randomUUID().toString()).withName("Permanent loan type"))
+      .withPermanentLoanType(UUID.randomUUID().toString())
       .withTemporaryLoanType(new LoanType().withId(UUID.randomUUID().toString()).withName("Temporary loan type"));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
 
@@ -187,7 +187,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertNotNull(result);
     assertEquals(updatedLocationId, result.getUpdated().getEntity().getPermanentLocation().getId());
     assertEquals(updatedLocationId, result.getUpdated().getEntity().getTemporaryLocation().getId());
-    assertEquals(updatedLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType().getId());
+    assertEquals(updatedLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType());
     assertEquals(updatedLoanTypeId, result.getUpdated().getEntity().getTemporaryLoanType().getId());
   }
 
@@ -926,7 +926,7 @@ class ItemDataProcessorTest extends BaseTest {
       var actionTenants = List.of("memberB");
       var itemId = UUID.randomUUID().toString();
       var initPermanentLoanTypeId = UUID.randomUUID().toString();
-      var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId).withPermanentLoanType(new LoanType().withId(initPermanentLoanTypeId))).tenantId("memberA").build();
+      var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId).withPermanentLoanType(initPermanentLoanTypeId)).tenantId("memberA").build();
 
       var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, loanTypeFromMemberB, actionTenants, List.of()));
       var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
@@ -934,7 +934,7 @@ class ItemDataProcessorTest extends BaseTest {
       var result = processor.process(IDENTIFIER, extendedItem, rules);
 
       assertNotNull(result);
-      assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType().getId());
+      assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
         itemId, "memberA", "permanent loan type").trim(), ErrorType.ERROR);
@@ -953,7 +953,7 @@ class ItemDataProcessorTest extends BaseTest {
       var ruleTenants = List.of("memberB");
       var itemId = UUID.randomUUID().toString();
       var initPermanentLoanTypeId = UUID.randomUUID().toString();
-      var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId).withPermanentLoanType(new LoanType().withId(initPermanentLoanTypeId))).tenantId("memberA").build();
+      var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId).withPermanentLoanType(initPermanentLoanTypeId)).tenantId("memberA").build();
 
       var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, adminNoteFromMemberB, List.of(), ruleTenants));
       var operationId = rules.getBulkOperationRules().get(0).getBulkOperationId();
@@ -961,7 +961,7 @@ class ItemDataProcessorTest extends BaseTest {
       var result = processor.process(IDENTIFIER, extendedItem, rules);
 
       assertNotNull(result);
-      assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType().getId());
+      assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
         itemId, "memberA", "permanent loan type").trim(), ErrorType.ERROR);
@@ -980,14 +980,14 @@ class ItemDataProcessorTest extends BaseTest {
     var ruleTenants = List.of("memberB", "memberA");
     var itemId = UUID.randomUUID().toString();
     var initPermanentLoanTypeId = UUID.randomUUID().toString();
-    var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId).withPermanentLoanType(new LoanType().withId(initPermanentLoanTypeId))).tenantId("memberA").build();
+    var extendedItem = ExtendedItem.builder().entity(new Item().withId(itemId).withPermanentLoanType(initPermanentLoanTypeId)).tenantId("memberA").build();
 
     var rules = rules(rule(PERMANENT_LOAN_TYPE, REPLACE_WITH, permanentLoanTypeFromMemberB, List.of(), ruleTenants));
 
     var result = processor.process(IDENTIFIER, extendedItem, rules);
 
     assertNotNull(result);
-    assertEquals(permanentLoanTypeFromMemberB, result.getUpdated().getEntity().getPermanentLoanType().getId());
+    assertEquals(permanentLoanTypeFromMemberB, result.getUpdated().getEntity().getPermanentLoanType());
 
     verifyNoInteractions(errorService);
   }
