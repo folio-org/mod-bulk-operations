@@ -1,5 +1,13 @@
 package org.folio.bulkops.domain.bean;
 
+import static java.lang.Boolean.FALSE;
+import static java.util.Collections.emptyList;
+import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
+import java.util.Date;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -32,14 +40,6 @@ import org.folio.bulkops.domain.converter.TagsConverter;
 import org.folio.bulkops.domain.dto.DataType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
-
-import java.util.Date;
-import java.util.List;
-
-import static java.lang.Boolean.FALSE;
-import static java.util.Collections.emptyList;
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 @Data
 @With
@@ -247,11 +247,11 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private List<ItemNote> notes;
 
-  @JsonProperty("permanentLoanType")
+  @JsonProperty("permanentLoanTypeId")
   @CsvCustomBindByName(column = "Permanent loan type", converter = LoanTypeConverter.class)
   @CsvCustomBindByPosition(position = 32, converter = LoanTypeConverter.class)
   @UnifiedTableCell
-  private LoanType permanentLoanType;
+  private String permanentLoanType;
 
   @JsonProperty("temporaryLoanType")
   @CsvCustomBindByName(column = "Temporary loan type", converter = LoanTypeConverter.class)
