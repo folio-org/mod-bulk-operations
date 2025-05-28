@@ -72,6 +72,10 @@ public class ItemReferenceHelper implements InitializingBean {
     return itemReferenceService.getLoanTypeByName(name);
   }
 
+  public LoanType getLoanTypeById(String id) {
+    return itemReferenceService.getLoanTypeById(id, null);
+  }
+
   private static ItemReferenceHelper service;
 
   @Override
