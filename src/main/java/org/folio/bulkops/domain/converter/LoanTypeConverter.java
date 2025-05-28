@@ -6,6 +6,6 @@ public class LoanTypeConverter extends BaseConverter<LoanType> {
 
   @Override
   public String convertToString(LoanType object) {
-    return object.getName();
+    return object.getId();
   }
 }
