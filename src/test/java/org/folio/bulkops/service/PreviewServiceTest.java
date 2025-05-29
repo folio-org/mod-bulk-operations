@@ -655,7 +655,7 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getHeader().get(25).getValue(), equalTo("Summary"));
     assertThat(res.getHeader().get(25).getForceVisible(), equalTo(Boolean.TRUE));
 
-    assertThat(res.getRows().get(0).getRow().get(15), equalTo("Miramax Books/Hyperion Books for Children\u001f;-\u001f;New York\u001f;c2002."));
+    assertThat(res.getRows().get(0).getRow().get(15), equalTo("Miramax Books/Hyperion Books for Children,\u001f;-\u001f;New York :\u001f;c2002."));
     assertThat(res.getRows().get(0).getRow().get(16), equalTo("1st ed."));
     assertThat(res.getRows().get(0).getRow().get(17), equalTo("500 p. ; 22 cm."));
     assertThat(res.getRows().get(0).getRow().get(18), equalTo("Text"));
