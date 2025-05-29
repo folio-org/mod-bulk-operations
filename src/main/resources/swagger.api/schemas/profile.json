@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Profile Entity",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "UUID"
+    },
+    "name": {
+      "description": "The name of the profile, used for identification and display.",
+      "type": "string"
+    },
+    "description": {
+      "description": "Indicates description of the profile.",
+      "type": "string"
+    },
+    "locked": {
+      "description": "Indicates whether the profile is locked and cannot be modified.",
+      "type": "boolean"
+    },
+    "entityType": {
+      "description": "Entity type",
+      "$ref": "entity_type.json#/EntityType"
+    },
+    "bulkOperationRuleCollection": {
+      "description": "Bulk Operation Rule",
+      "$ref": "bulk_operation_rule.json#/BulkOperationRule"
+    },
+    "bulkOperationMarcRuleCollection": {
+      "description": "Bulk Operation Marc Rule",
+      "$ref": "bulk_operation_marc_rule.json#/BulkOperationMarcRule"
+    },
+    "createdDate": {
+      "description": "Date and time when the record was created",
+      "type": "string",
+      "format": "date-time"
+    },
+    "createdBy": {
+      "description": "ID of the user who created the record (when available)",
+      "type": "string",
+      "format": "UUID"
+    },
+    "createdByUser": {
+      "description": "Created By User",
+      "type": "string"
+    },
+    "updatedDate": {
+      "description": "Date and time when the record was last updated",
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedBy": {
+      "description": "ID of the user who last updated the record (when available)",
+      "type": "string",
+      "format": "UUID"
+    },
+    "updatedByUser": {
+      "description": "User who last updated the record (when available)",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "entityType"
+  ]
+}
