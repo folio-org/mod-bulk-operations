@@ -1,3 +1,10 @@
+## v2.2.5 - Released 2025/05/29
+
+This release contains bug fix.
+
+### Bugs
+* [MODBULKOPS-520](https://folio-org.atlassian.net/browse/MODBULKOPS-520) Error after "Run Query" when the UI is set to a language other than English
+
 ## v2.2.4 - Released 2025/04/25
 
 This release contains schema update.
