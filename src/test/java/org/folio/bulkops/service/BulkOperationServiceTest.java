@@ -195,46 +195,6 @@ class BulkOperationServiceTest extends BaseTest {
    @MockitoBean
   private MarcUpdateService marcUpdateService;
 
-//  @Test
-//  @SneakyThrows
-//  void shouldUploadIdentifiers() {
-//    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
-//
-//    when(bulkOperationRepository.save(any(BulkOperation.class)))
-//      .thenReturn(BulkOperation.builder().id(UUID.randomUUID()).build());
-//
-//    var jobId = UUID.randomUUID();
-//    when(dataExportSpringClient.upsertJob(any(Job.class)))
-//      .thenReturn(Job.builder().id(jobId).status(JobStatus.SCHEDULED).build());
-//
-//    when(dataExportSpringClient.getJob(jobId))
-//      .thenReturn(Job.builder().id(jobId).status(JobStatus.IN_PROGRESS).build());
-//
-//    when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
-//      .thenReturn("3");
-//
-//    var bulkOperation = bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
-//    var bulkOperationId = bulkOperation.getId();
-//
-//    when(bulkOperationRepository.findById(bulkOperationId))
-//      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringCsvFile("barcodes.csv").build()));
-//
-//    bulkOperationService.startBulkOperation(bulkOperation.getId(), any(UUID.class), new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD));
-//
-//    verify(dataExportSpringClient).upsertJob(any(Job.class));
-//    verify(dataExportSpringClient).getJob(jobId);
-//    verify(bulkEditClient, times(0)).uploadFile(jobId, file);
-//    verify(bulkEditClient, times(0)).startJob(jobId);
-//
-//    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-//    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
-//    assertEquals(OperationStatusType.NEW, operationCaptor.getAllValues().get(0).getStatus());
-//    // saving during upload
-//    assertEquals(OperationStatusType.RETRIEVING_RECORDS, operationCaptor.getAllValues().get(2).getStatus());
-//    // saving during start
-//    assertEquals(OperationStatusType.RETRIEVING_RECORDS, operationCaptor.getAllValues().get(3).getStatus());
-//  }
-
   @Test
   @SneakyThrows
   void shouldPopulateErrorToBulkOperationIfS3IssuesForUploadIdentifiersInApp() {
@@ -325,79 +285,6 @@ class BulkOperationServiceTest extends BaseTest {
     var bulkOperationId = UUID.randomUUID();
     assertThrows(NotFoundException.class, () -> bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, true, null, bulkOperationId, file));
   }
-
-//  @ParameterizedTest
-//  @EnumSource(value = JobStatus.class, names = { "FAILED", "SCHEDULED" }, mode = EnumSource.Mode.INCLUDE)
-//  @SneakyThrows
-//  void shouldFailOperationWhenDataExportJobFails(JobStatus jobStatus) {
-//    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
-//
-//    var bulkOperationId = UUID.randomUUID();
-//
-//    when(bulkOperationRepository.save(any(BulkOperation.class)))
-//      .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
-//
-//    var jobId = UUID.randomUUID();
-//
-//    when(bulkOperationRepository.findById(any(UUID.class)))
-//      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringCsvFile("barcodes.csv").build()));
-//
-//    when(dataExportSpringClient.upsertJob(any(Job.class)))
-//      .thenReturn(Job.builder().id(jobId).status(jobStatus).build());
-//
-//    when(dataExportSpringClient.getJob(jobId))
-//      .thenReturn(Job.builder().id(jobId).status(JobStatus.FAILED).build());
-//
-//    if (jobStatus == JobStatus.FAILED) {
-//      when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX, "File uploading failed - invalid job status: FAILED (expected: SCHEDULED)"))
-//        .thenReturn("/linkToMatchingErrorsFile.csv");
-//    }
-//
-//    bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
-//    bulkOperationService.startBulkOperation(bulkOperationId, any(UUID.class), new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD));
-//
-//    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-//    verify(bulkOperationRepository, times(4)).save(operationCaptor.capture());
-//    assertEquals(OperationStatusType.FAILED, operationCaptor.getAllValues().get(3).getStatus());
-//    if (jobStatus == JobStatus.FAILED) {
-//      assertThat(operationCaptor.getValue().getLinkToMatchedRecordsErrorsCsvFile(), equalTo("/linkToMatchingErrorsFile.csv"));
-//    }
-//  }
-
-//  @Test
-//  @SneakyThrows
-//  void shouldFailIfDataExportJobNotFound() {
-//    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
-//
-//    var bulkOperationId = UUID.randomUUID();
-//
-//    when(bulkOperationRepository.save(any(BulkOperation.class)))
-//      .thenReturn(BulkOperation.builder().id(bulkOperationId).status(OperationStatusType.NEW).build());
-//
-//    when(bulkOperationRepository.findById(bulkOperationId))
-//      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).status(OperationStatusType.NEW).build()));
-//
-//    var jobId = UUID.randomUUID();
-//    when(dataExportSpringClient.upsertJob(any(Job.class)))
-//      .thenReturn(Job.builder().id(jobId).status(JobStatus.SCHEDULED).build());
-//
-//    when(dataExportSpringClient.getJob(jobId))
-//      .thenReturn(Job.builder().id(jobId).status(JobStatus.SCHEDULED).build());
-//
-//    when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
-//      .thenThrow(new NotFoundException("Job was not found"));
-//
-//    when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX,FILE_UPLOADING_FAILED + " : Failed to upload file with identifiers: data export job was not found"))
-//      .thenReturn("/linkToMatchingErrorsFile.csv");
-//
-//    bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
-//    bulkOperationService.startBulkOperation(bulkOperationId, any(UUID.class), new BulkOperationStart().approach(ApproachType.IN_APP).step(BulkOperationStep.UPLOAD));
-//
-//    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-//    await().untilAsserted(() -> verify(bulkOperationRepository, times(4)).save(operationCaptor.capture()));
-//    assertEquals(OperationStatusType.FAILED, operationCaptor.getAllValues().get(3).getStatus());
-//    assertThat(operationCaptor.getValue().getLinkToMatchedRecordsErrorsCsvFile(), equalTo("/linkToMatchingErrorsFile.csv"));
-//  }
 
   @ParameterizedTest
   @EnumSource(value = ApproachType.class, names = {"IN_APP"}, mode = EnumSource.Mode.INCLUDE)
@@ -1588,20 +1475,6 @@ class BulkOperationServiceTest extends BaseTest {
       verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage), eq(ErrorType.WARNING));
     }
   }
-
-//  @Test
-//  void shouldStartDataExportJobWhenIdentifiersWereSaved() {
-//    var operationId = UUID.randomUUID();
-//    var operation = new BulkOperation();
-//    operation.setId(operationId);
-//    operation.setStatus(SAVED_IDENTIFIERS);
-//    operation.setEntityType(ITEM);
-//    when(bulkOperationRepository.findById(operationId)).thenReturn(Optional.of(operation));
-//
-//    bulkOperationService.getOperationById(operationId);
-//
-//    verify(dataExportSpringClient).upsertJob(any(Job.class));
-//  }
 
   @ParameterizedTest
   @EnumSource(OperationStatusType.class)

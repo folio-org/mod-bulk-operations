@@ -68,10 +68,6 @@ import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
-import org.folio.bulkops.domain.dto.ApproachType;
-import org.folio.bulkops.domain.bean.StateType;
-import org.folio.bulkops.domain.bean.StatusType;
-import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
@@ -616,16 +612,6 @@ public class BulkOperationService {
   public BulkOperation getOperationById(UUID bulkOperationId) {
     var operation = getBulkOperationOrThrow(bulkOperationId);
     return switch (operation.getStatus()) {
-      case SAVED_IDENTIFIERS -> {
-        if (operation.getApproach() != QUERY) {
-          yield startBulkOperation(operation.getId(), operation.getUserId(), new BulkOperationStart()
-            .step(UPLOAD)
-            .approach(IN_APP)
-            .entityType(operation.getEntityType())
-            .entityCustomIdentifierType(IdentifierType.ID));
-        }
-        yield operation;
-      }
       case DATA_MODIFICATION -> {
         var processing = dataProcessingRepository.findById(bulkOperationId);
         if (processing.isPresent() && StatusType.ACTIVE.equals(processing.get().getStatus())) {
