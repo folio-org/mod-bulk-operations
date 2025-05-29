@@ -75,6 +75,7 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
         bulkOperation.setMatchedNumOfRecords(context.containsKey(NUMBER_OF_MATCHED_RECORDS) ? context.getInt(NUMBER_OF_MATCHED_RECORDS) : 0);
         if (COMPLETED.equals(jobExecution.getStatus())) {
           bulkOperation.setStatus(OperationStatusType.DATA_MODIFICATION);
+          bulkOperation.setEndTime(LocalDateTime.now());
         } else if (Set.of(FAILED, ABANDONED).contains(jobExecution.getStatus())) {
           bulkOperation.setStatus(OperationStatusType.FAILED);
           bulkOperation.setErrorMessage(fetchFailureCause(jobExecution));
