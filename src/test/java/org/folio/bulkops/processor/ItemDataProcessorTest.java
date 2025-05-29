@@ -187,7 +187,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertNotNull(result);
     assertEquals(updatedLocationId, result.getUpdated().getEntity().getPermanentLocation().getId());
     assertEquals(updatedLocationId, result.getUpdated().getEntity().getTemporaryLocation().getId());
-    assertEquals(updatedLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType());
+    assertEquals(updatedLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType().getId());
     assertEquals(updatedLoanTypeId, result.getUpdated().getEntity().getTemporaryLoanType().getId());
   }
 
@@ -934,7 +934,7 @@ class ItemDataProcessorTest extends BaseTest {
       var result = processor.process(IDENTIFIER, extendedItem, rules);
 
       assertNotNull(result);
-      assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType());
+      assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType().getId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
         itemId, "memberA", "permanent loan type").trim(), ErrorType.ERROR);
@@ -961,7 +961,7 @@ class ItemDataProcessorTest extends BaseTest {
       var result = processor.process(IDENTIFIER, extendedItem, rules);
 
       assertNotNull(result);
-      assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType());
+      assertEquals(initPermanentLoanTypeId, result.getUpdated().getEntity().getPermanentLoanType().getId());
 
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
         itemId, "memberA", "permanent loan type").trim(), ErrorType.ERROR);
@@ -987,7 +987,7 @@ class ItemDataProcessorTest extends BaseTest {
     var result = processor.process(IDENTIFIER, extendedItem, rules);
 
     assertNotNull(result);
-    assertEquals(permanentLoanTypeFromMemberB, result.getUpdated().getEntity().getPermanentLoanType());
+    assertEquals(permanentLoanTypeFromMemberB, result.getUpdated().getEntity().getPermanentLoanType().getId());
 
     verifyNoInteractions(errorService);
   }
