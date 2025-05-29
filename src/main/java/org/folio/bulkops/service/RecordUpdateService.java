@@ -42,9 +42,6 @@ public class RecordUpdateService {
           throw new OptimisticLockingException(format("%s %s", message, link), message, link);
         }
         throw e;
-      } catch (Exception e) {
-        e.printStackTrace();
-
       }
       executionContentRepository.save(BulkOperationExecutionContent.builder()
         .bulkOperationId(operation.getId())

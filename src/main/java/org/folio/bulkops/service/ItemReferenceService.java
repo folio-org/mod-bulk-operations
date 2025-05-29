@@ -179,12 +179,28 @@ public class ItemReferenceService {
     return locations.getLocations().get(0);
   }
 
+  public ItemLocation getLocationById(String id) {
+    try {
+      return locationClient.getLocationById(id);
+    } catch (Exception e) {
+      throw new ReferenceDataNotFoundException(format("Location not found by id=%s", id));
+    }
+  }
+
   public MaterialType getMaterialTypeByName(String name) {
     var types = materialTypeClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     if (types.getMtypes().isEmpty()) {
       throw new ReferenceDataNotFoundException(format("Material type not found by name=%s", name));
     }
     return types.getMtypes().get(0);
+  }
+
+  public MaterialType getMaterialTypeById(String id) {
+    try {
+      return materialTypeClient.getById(id);
+    } catch (Exception e) {
+      throw new ReferenceDataNotFoundException(format("Material type not found by id=%s", id));
+    }
   }
 
   @Cacheable(cacheNames = "loanTypes")
