@@ -252,6 +252,9 @@ public class BulkOperationService {
 
       while (iterator.hasNext()) {
         var original = iterator.next();
+        if (original.isItem()) {
+          original.enrichItemWithReferenceDataNames();
+        }
         if (INSTANCE_MARC.equals(operation.getEntityType()) && original instanceof ExtendedInstance extendedInstance
           && !MARC.equals(extendedInstance.getEntity().getSource())) {
           var instance = extendedInstance.getEntity();
@@ -426,11 +429,17 @@ public class BulkOperationService {
 
         while (hasNextRecord(originalFileIterator, modifiedFileIterator)) {
           var original = originalFileIterator.next();
+          if (original.isItem()) {
+            original.enrichItemWithReferenceDataNames();
+          }
           if (INSTANCE_MARC.equals(operation.getEntityType()) && original instanceof ExtendedInstance extendedInstance
             && !MARC.equals(extendedInstance.getEntity().getSource())) {
             continue;
           }
           var modified = modifiedFileIterator.next();
+          if (modified.isItem()) {
+            modified.enrichItemWithReferenceDataNames();
+          }
           List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
 
           processedNumOfRecords++;

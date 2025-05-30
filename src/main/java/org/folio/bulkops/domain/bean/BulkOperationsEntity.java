@@ -13,6 +13,8 @@ import org.folio.bulkops.domain.dto.TenantNotePair;
 public interface BulkOperationsEntity {
   String getIdentifier(IdentifierType identifierType);
   Integer _version();
+  default void enrichItemWithReferenceDataNames() {
+  }
   @JsonIgnore
   default String getId() {
     return null;
@@ -24,6 +26,10 @@ public interface BulkOperationsEntity {
   @JsonIgnore
   default String getSource() {
     return StringUtils.EMPTY;
+  }
+  @JsonIgnore
+  default boolean isItem() {
+    return false;
   }
   @JsonIgnore
   default BulkOperationsEntity getRecordBulkOperationEntity() {
