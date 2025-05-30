@@ -6,7 +6,9 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.await;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
+import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
@@ -74,6 +76,7 @@ import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.batch.ExportJobManagerSync;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
@@ -132,6 +135,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.marc4j.marc.Record;
 import org.mockito.ArgumentCaptor;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.integration.launch.JobLaunchRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
@@ -194,6 +199,12 @@ class BulkOperationServiceTest extends BaseTest {
 
    @MockitoBean
   private MarcUpdateService marcUpdateService;
+
+   @MockitoBean
+   private ExportJobManagerSync exportJobManagerSync;
+
+   @Autowired
+   private List<Job> jobs;
 
   @Test
   @SneakyThrows
@@ -1730,5 +1741,30 @@ class BulkOperationServiceTest extends BaseTest {
     verify(remoteFileSystemClient).put(contentCaptor.capture(), anyString());
     var contentCharsByUtf8BomLen = Arrays.copyOfRange(contentCaptor.getValue().readAllBytes(), 0, UTF_8_BOM.length);
     assertFalse(Arrays.equals(UTF_8_BOM, contentCharsByUtf8BomLen));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldLaunchBatchJobOnUploadStep() {
+    var bulkOperationId = UUID.randomUUID();
+    var filename = "file.csv";
+    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
+    var bulkOperation = BulkOperation.builder()
+      .id(bulkOperationId)
+      .linkToTriggeringCsvFile(filename)
+      .entityType(INSTANCE)
+      .identifierType(IdentifierType.ID)
+      .build();
+
+    when(bulkOperationRepository.findById(bulkOperationId))
+      .thenReturn(Optional.of(bulkOperation));
+    when(remoteFileSystemClient.getNumOfLines(filename))
+      .thenReturn(1);
+
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), bulkOperationStart);
+
+      await().untilAsserted(() -> verify(exportJobManagerSync).launchJob(any(JobLaunchRequest.class)));
+    }
   }
 }
