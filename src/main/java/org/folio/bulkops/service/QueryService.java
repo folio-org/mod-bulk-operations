@@ -22,7 +22,9 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.StreamSupport;
@@ -147,9 +149,11 @@ public class QueryService {
       var factory = objectMapper.getFactory();
       var parser = factory.createParser(is);
       var iterator = objectMapper.readValues(parser, extendedEntityClass);
+      Set<String> usedTenants = new HashSet<>();
       while (iterator.hasNext()) {
 
         var extendedRecord = iterator.next();
+        usedTenants.add(extendedRecord.getTenant());
 
         try {
           permissionsValidator.checkPermissions(operation, extendedRecord);
@@ -178,6 +182,7 @@ public class QueryService {
           updateOperationExecutionStatus(operation, numProcessed, numMatched);
         }
       }
+      operation.setUsedTenants(new ArrayList<>(usedTenants));
       if (numProcessed % STATISTICS_UPDATING_STEP != 0) {
         updateOperationExecutionStatus(operation, numProcessed, numMatched);
       }
