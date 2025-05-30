@@ -1,4 +1,4 @@
-package org.folio.bulkops.batch.jobs.processidentifiers;
+package org.folio.bulkops.batch.jobs;
 
 import static java.util.Objects.nonNull;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.dateToString;
@@ -11,6 +11,7 @@ import static org.folio.bulkops.util.Constants.NO_USER_VIEW_PERMISSIONS;
 import feign.codec.DecodeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.bean.User;
@@ -35,7 +36,7 @@ import java.util.Date;
 @StepScope
 @RequiredArgsConstructor
 @Log4j2
-public class UserFetcher implements ItemProcessor<ItemIdentifier, User>, EntityExtractor {
+public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User>, EntityExtractor {
   private static final String USER_SEARCH_QUERY = "(cql.allRecords=1 NOT type=\"\" or type<>\"shadow\") and %s==\"%s\"";
 
   private final UserClient userClient;
@@ -61,8 +62,7 @@ public class UserFetcher implements ItemProcessor<ItemIdentifier, User>, EntityE
       var limit = 1;
       var userCollection = userClient.getByQuery(
         USER_SEARCH_QUERY.formatted(resolveIdentifier(identifierType), itemIdentifier.getItemId()),
-        limit
-      );
+        limit);
 
       if (userCollection.getUsers().isEmpty()) {
         throw new BulkEditException(NO_MATCH_FOUND_MESSAGE, ErrorType.ERROR);

@@ -4,9 +4,11 @@ import static org.folio.bulkops.util.Constants.UTF8_BOM;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.With;
 import java.io.Serializable;
 
 @Data
+@With
 @NoArgsConstructor
 public class ItemIdentifier implements Serializable {
   private String itemId;

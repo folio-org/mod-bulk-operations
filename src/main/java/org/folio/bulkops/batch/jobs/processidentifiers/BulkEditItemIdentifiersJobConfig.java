@@ -17,6 +17,7 @@ import org.folio.bulkops.batch.JobCompletionNotificationListener;
 import org.folio.bulkops.batch.JsonListFileWriter;
 import org.folio.bulkops.batch.CsvListItemWriter;
 import org.folio.bulkops.batch.jobs.BulkEditItemListProcessor;
+import org.folio.bulkops.batch.jobs.BulkEditItemProcessor;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
@@ -47,7 +48,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BulkEditItemIdentifiersJobConfig {
   private final BulkEditItemListProcessor bulkEditItemListProcessor;
-  private final ItemFetcher itemFetcher;
+  private final BulkEditItemProcessor bulkEditItemProcessor;
   private final BulkEditSkipListener bulkEditSkipListener;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final ErrorService errorService;
@@ -115,7 +116,7 @@ public class BulkEditItemIdentifiersJobConfig {
   @Bean
   public CompositeItemProcessor<ItemIdentifier, List<ExtendedItem>> identifierItemProcessor() {
     var processor = new CompositeItemProcessor<ItemIdentifier, List<ExtendedItem>>();
-    processor.setDelegates(Arrays.asList(itemFetcher, bulkEditItemListProcessor));
+    processor.setDelegates(Arrays.asList(bulkEditItemProcessor, bulkEditItemListProcessor));
     return processor;
   }
 

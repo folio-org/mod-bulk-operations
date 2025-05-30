@@ -15,6 +15,7 @@ import org.folio.bulkops.batch.BulkEditSkipListener;
 import org.folio.bulkops.batch.JobCompletionNotificationListener;
 import org.folio.bulkops.batch.JsonFileWriter;
 import org.folio.bulkops.batch.CsvItemWriter;
+import org.folio.bulkops.batch.jobs.BulkEditUserProcessor;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.bean.User;
@@ -43,7 +44,7 @@ import java.util.Arrays;
 @Configuration
 @RequiredArgsConstructor
 public class BulkEditUserIdentifiersJobConfig {
-  private final UserFetcher userFetcher;
+  private final BulkEditUserProcessor bulkEditUserProcessor;
   private final BulkEditSkipListener bulkEditSkipListener;
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final ErrorService errorService;
@@ -97,7 +98,7 @@ public class BulkEditUserIdentifiersJobConfig {
     return new StepBuilder("bulkEditUserStep", jobRepository)
       .<ItemIdentifier, User> chunk(chunkSize, transactionManager)
       .reader(csvItemIdentifierReader)
-      .processor(userFetcher)
+      .processor(bulkEditUserProcessor)
       .faultTolerant()
       .skipLimit(1_000_000)
       .processorNonTransactional() // Required to avoid repeating BulkEditItemProcessor#process after skip.

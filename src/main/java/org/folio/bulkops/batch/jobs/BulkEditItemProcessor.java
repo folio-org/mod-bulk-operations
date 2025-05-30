@@ -1,4 +1,4 @@
-package org.folio.bulkops.batch.jobs.processidentifiers;
+package org.folio.bulkops.batch.jobs;
 
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -29,6 +29,8 @@ import feign.codec.DecodeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
+import org.folio.bulkops.batch.jobs.processidentifiers.HttpEncoder;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.SearchClient;
 import org.folio.bulkops.client.UserClient;
@@ -67,7 +69,7 @@ import java.util.stream.Stream;
 @StepScope
 @RequiredArgsConstructor
 @Log4j2
-public class ItemFetcher implements ItemProcessor<ItemIdentifier, ExtendedItemCollection>, EntityExtractor {
+public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, ExtendedItemCollection>, EntityExtractor {
   private final ItemClient itemClient;
   private final ConsortiaService consortiaService;
   private final SearchClient searchClient;
