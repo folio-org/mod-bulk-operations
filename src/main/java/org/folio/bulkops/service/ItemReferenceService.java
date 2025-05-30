@@ -1,18 +1,25 @@
 package org.folio.bulkops.service;
 
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.Constants.BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_CODE;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_USERNAME;
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.encode;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.client.CallNumberTypeClient;
 import org.folio.bulkops.client.ConfigurationClient;
@@ -32,15 +39,11 @@ import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.bean.ServicePoint;
 import org.folio.bulkops.exception.ConfigurationException;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 
 @Service
 @Log4j2
@@ -60,6 +63,8 @@ public class ItemReferenceService {
   private final LocationClient locationClient;
   private final MaterialTypeClient materialTypeClient;
   private final LoanTypeClient loanTypeClient;
+  private final FolioExecutionContext folioExecutionContext;
+  private final FolioModuleMetadata folioModuleMetadata;
 
   private final ObjectMapper objectMapper;
 
@@ -164,7 +169,10 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "locations")
   public ItemLocation getLocationById(String id, String tenantId) {
-    try {
+    if (isNull(tenantId)) {
+      tenantId = folioExecutionContext.getTenantId();
+    }
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return locationClient.getLocationById(id);
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Location was not found by id=%s", id));
@@ -195,8 +203,12 @@ public class ItemReferenceService {
     return types.getMtypes().get(0);
   }
 
-  public MaterialType getMaterialTypeById(String id) {
-    try {
+  @Cacheable(cacheNames = "materialTypes")
+  public MaterialType getMaterialTypeById(String id, String tenantId) {
+    if (isNull(tenantId)) {
+      tenantId = folioExecutionContext.getTenantId();
+    }
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return materialTypeClient.getById(id);
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Material type not found by id=%s", id));
@@ -205,7 +217,10 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "loanTypes")
   public LoanType getLoanTypeById(String id, String tenantId) {
-    try {
+    if (isNull(tenantId)) {
+      tenantId = folioExecutionContext.getTenantId();
+    }
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return loanTypeClient.getLoanTypeById(id);
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Loan type not found by id=%s", id));

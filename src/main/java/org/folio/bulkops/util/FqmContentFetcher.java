@@ -1,6 +1,5 @@
 package org.folio.bulkops.util;
 
-import jakarta.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
@@ -13,11 +12,15 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.exception.FqmFetcherException;
+import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +36,8 @@ public class FqmContentFetcher {
   private int chunkSize;
 
   private final QueryClient queryClient;
+  private final ObjectMapper objectMapper;
+  private final FolioExecutionContext folioExecutionContext;
 
   @PostConstruct
   private void logStartup() {
@@ -79,7 +84,22 @@ public class FqmContentFetcher {
     int limit = Math.min(chunkSize, total - offset);
     var response = queryClient.getQuery(queryId, offset, limit).getContent();
     return new ByteArrayInputStream(response.stream()
-        .map(json -> json.get(getContentJsonKey(entityType)).toString()).collect(Collectors.joining("\n"))
+        .map(json -> {
+          var tenant = json.get(getContentTenantKey(entityType));
+          if (tenant == null) {
+            tenant = folioExecutionContext.getTenantId();
+          }
+          var jsonb = json.get(getContentJsonKey(entityType));
+          try {
+            ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
+            extendedRecordWrapper.set("entity", objectMapper.readTree(jsonb.toString()));
+            extendedRecordWrapper.put("tenantId", tenant.toString());
+            return objectMapper.writeValueAsString(extendedRecordWrapper);
+          } catch (Exception e) {
+            log.error("Error processing JSON content for entity type {}: {}", entityType, e.getMessage());
+            throw new FqmFetcherException("Error processing JSON content", e);
+          }
+        }).collect(Collectors.joining("\n"))
         .getBytes(StandardCharsets.UTF_8));
   }
 
@@ -89,6 +109,15 @@ public class FqmContentFetcher {
       case ITEM -> "items.jsonb";
       case HOLDINGS_RECORD -> "holdings.jsonb";
       case INSTANCE, INSTANCE_MARC -> "instance.jsonb";
+    };
+  }
+
+  private String getContentTenantKey(EntityType entityType) {
+    return switch(entityType) {
+      case USER -> null;
+      case ITEM -> "items.tenant_id";
+      case HOLDINGS_RECORD -> "holdings.tenant_id";
+      case INSTANCE, INSTANCE_MARC -> "instance.tenant_id";
     };
   }
 }

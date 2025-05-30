@@ -40,7 +40,6 @@ import org.folio.bulkops.domain.converter.TagsConverter;
 import org.folio.bulkops.domain.dto.DataType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
-import org.folio.bulkops.service.ItemReferenceHelper;
 
 @Data
 @With
@@ -77,8 +76,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("effectiveLocationId")
   public void setEffectiveLocationId(String id) {
-    var name = ItemReferenceHelper.service().getLocationById(id).getName();
-    this.effectiveLocation = new ItemLocation().withId(id).withName(name);
+    this.effectiveLocation = new ItemLocation().withId(id);
   }
 
   @JsonProperty("effectiveLocationId")
@@ -156,8 +154,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("materialTypeId")
   public void setMaterialTypeId(String id) {
-    var name = ItemReferenceHelper.service().getMaterialTypeById(id).getName();
-    this.materialType = new MaterialType().withId(id).withName(name);
+    this.materialType = new MaterialType().withId(id);
   }
 
   @JsonProperty("materialTypeId")
@@ -288,8 +285,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("permanentLoanTypeId")
   public void setPermanentLoanTypeId(String id) {
-    var name = ItemReferenceHelper.service().getLoanTypeById(id).getName();
-    this.permanentLoanType = new LoanType().withId(id).withName(name);
+    this.permanentLoanType = new LoanType().withId(id);
   }
 
   @JsonProperty("permanentLoanTypeId")
@@ -310,8 +306,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("temporaryLoanTypeId")
   public void setTemporaryLoanTypeId(String id) {
-    var name = ItemReferenceHelper.service().getLoanTypeById(id).getName();
-    this.temporaryLoanType = new LoanType().withId(id).withName(name);
+    this.temporaryLoanType = new LoanType().withId(id);
   }
 
   @JsonProperty("temporaryLoanTypeId")
@@ -350,17 +345,16 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("permanentLocationId")
   public void setPermanentLocationId(String id) {
-    var name = ItemReferenceHelper.service().getLocationById(id).getName();
-    this.permanentLocation = new ItemLocation().withId(id).withName(name);
+    this.permanentLocation = new ItemLocation().withId(id);
   }
 
   @JsonProperty("permanentLocationId")
-  public String getPermanentLocationLocationId() {
+  public String getPermanentLocationId() {
     return permanentLocation != null ? permanentLocation.getId() : null;
   }
 
   @JsonProperty("permanentLocation")
-  public ItemLocation getPermanentLocationLocation() {
+  public ItemLocation getPermanentLocation() {
     return permanentLocation;
   }
 
@@ -372,8 +366,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("temporaryLocationId")
   public void setTemporaryLocationId(String id) {
-    var name = ItemReferenceHelper.service().getLocationById(id).getName();
-    this.temporaryLocation = new ItemLocation().withId(id).withName(name);
+    this.temporaryLocation = new ItemLocation().withId(id);
   }
 
   @JsonProperty("temporaryLocationId")
@@ -464,5 +457,10 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @Override
   public void setTenant(String tenantId) {
     this.tenantId = tenantId;
+  }
+
+  @Override
+  public boolean isItem() {
+    return true;
   }
 }

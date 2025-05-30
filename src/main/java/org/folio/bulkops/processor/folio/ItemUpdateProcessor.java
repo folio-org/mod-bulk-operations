@@ -2,7 +2,6 @@ package org.folio.bulkops.processor.folio;
 
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.client.ItemClient;
@@ -42,11 +41,6 @@ public class ItemUpdateProcessor extends FolioAbstractUpdateProcessor<ExtendedIt
     } else {
       permissionsValidator.checkIfBulkEditWritePermissionExists(folioExecutionContext.getTenantId(), EntityType.ITEM,
         NO_ITEM_WRITE_PERMISSIONS_TEMPLATE + folioExecutionContext.getTenantId());
-        try {
-            System.out.println("here object: " + objectMapper.writeValueAsString(item));
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
         itemClient.updateItem(item.withHoldingsData(null), item.getId());
     }
   }

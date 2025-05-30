@@ -7,7 +7,7 @@ public class LoanTypeConverter extends BaseConverter<LoanType> {
 
   @Override
   public String convertToString(LoanType object) {
-    return ItemReferenceHelper.service().getLoanTypeById(object.getId()).getName();
+    return object.getName();
   }
 
   @Override
