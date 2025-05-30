@@ -25,7 +25,6 @@ import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-
 @RequiredArgsConstructor
 @Log4j2
 @Service
@@ -53,9 +52,9 @@ public class UserPermissionsService {
 
   private List<String> getDesiredPermissions() {
     return List.of(BULK_EDIT_INVENTORY_WRITE_PERMISSION.getValue(), BULK_EDIT_USERS_WRITE_PERMISSION.getValue(),
-      USERS_ITEM_PUT.getValue(), INVENTORY_ITEMS_ITEM_PUT.getValue(), INVENTORY_STORAGE_HOLDINGS_ITEM_PUT.getValue(),
-            INVENTORY_INSTANCES_ITEM_PUT.getValue(), BULK_EDIT_INVENTORY_VIEW_PERMISSION.getValue(), BULK_EDIT_USERS_VIEW_PERMISSION.getValue(),
-            USER_ITEM_GET_PERMISSION.getValue(), INVENTORY_ITEMS_ITEM_GET_PERMISSION.getValue(),
-            INVENTORY_INSTANCES_ITEM_GET_PERMISSION.getValue(), INVENTORY_STORAGE_HOLDINGS_ITEM_GET_PERMISSION.getValue());
+      USERS_ITEM_PUT.getValue(), INVENTORY_ITEMS_ITEM_PUT.getValue(), INVENTORY_STORAGE_HOLDINGS_ITEM_PUT.getValue(), INVENTORY_INSTANCES_ITEM_PUT.getValue(),
+      BULK_EDIT_INVENTORY_VIEW_PERMISSION.getValue(), BULK_EDIT_USERS_VIEW_PERMISSION.getValue(),
+      USER_ITEM_GET_PERMISSION.getValue(), INVENTORY_ITEMS_ITEM_GET_PERMISSION.getValue(),
+      INVENTORY_STORAGE_HOLDINGS_ITEM_GET_PERMISSION.getValue(), INVENTORY_INSTANCES_ITEM_GET_PERMISSION.getValue());
   }
 }

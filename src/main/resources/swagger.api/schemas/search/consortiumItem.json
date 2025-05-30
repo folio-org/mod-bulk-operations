@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A consortium item record",
+  "ConsortiumItem": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "description": "Item id",
+        "type": "string"
+      },
+      "hrid": {
+        "type": "string",
+        "description": "Item HRID"
+      },
+      "tenantId": {
+        "type": "string",
+        "description": "Tenant ID of the Item"
+      },
+      "instanceId": {
+        "description": "Related Instance Id",
+        "type": "string"
+      },
+      "holdingsRecordId": {
+        "description": "Related Holding Record Id",
+        "type": "string"
+      },
+      "barcode": {
+        "description": "Item barcode",
+        "type": "string"
+      }
+    }
+  }
+}

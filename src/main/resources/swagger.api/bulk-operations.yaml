@@ -627,6 +627,12 @@ components:
       $ref: 'schemas/bulk_operation_marc_rule_collection.json#/BulkOperationMarcRuleCollection'
     dataImportJobExecutionCollection:
       $ref: 'schemas/data_import_job_execution_collection.json#/DataImportJobExecutionCollection'
+    batchIdsDto:
+      $ref: 'schemas/search/batchIds.json#/BatchIdsDto'
+    consortiumHoldingCollection:
+      $ref: 'schemas/search/consortiumHoldingCollection.json#/ConsortiumHoldingCollection'
+    consortiumItemCollection:
+      $ref: 'schemas/search/consortiumItemCollection.json#/ConsortiumItemCollection'
     UUID:
       type: string
       format: uuid
@@ -646,5 +652,3 @@ components:
           description: Example response
     errorType:
       $ref: 'schemas/error_type.json#/ErrorType'
-    batchIdsDto:
-      $ref: 'schemas/batchIds.json#/BatchIdsDto'
