@@ -78,7 +78,7 @@ public class QueryService {
 
   public BulkOperation retrieveRecordsAndCheckQueryExecutionStatus(BulkOperation bulkOperation) {
     executor.execute(getRunnableWithCurrentFolioContext(() -> {
-      var queryResult = queryClient.getQuery(bulkOperation.getFqlQueryId(), true);
+      var queryResult = queryClient.getQuery(bulkOperation.getFqlQueryId(), false);
       switch (queryResult.getStatus()) {
           case IN_PROGRESS -> log.info("Retrieving records by FQM for operation {} in progress...", bulkOperation.getId());
           case SUCCESS -> {
