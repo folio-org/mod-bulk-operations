@@ -117,7 +117,6 @@ public class MarcToUnifiedTableRowMapperHelper {
     return dataField.getSubfields(code).stream()
       .map(Subfield::getData)
       .filter(Objects::nonNull)
-      .map(this::removeEndingPunctuation)
       .map(String::trim)
       .collect(Collectors.joining(" ; "));
   }
@@ -127,11 +126,10 @@ public class MarcToUnifiedTableRowMapperHelper {
       return null;
     }
     return switch (dataField.getIndicator2()) {
-      case '0' -> "production";
-      case '1' -> "publication";
-      case '2' -> "distribution";
-      case '3' -> "manufacture";
-      case '4' -> "copyright";
+      case '0' -> "Production";
+      case '1' -> "Publication";
+      case '2' -> "Distribution";
+      case '3' -> "Manufacture";
       default -> null;
     };
   }
