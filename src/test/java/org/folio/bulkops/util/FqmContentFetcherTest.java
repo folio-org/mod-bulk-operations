@@ -12,7 +12,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import feign.Request;
@@ -22,6 +24,7 @@ import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.exception.FqmFetcherException;
 import org.folio.querytool.domain.dto.QueryDetails;
+import org.folio.spring.FolioExecutionContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,18 +45,37 @@ class FqmContentFetcherTest {
   @MockitoBean
   private QueryClient queryClient;
 
+  @MockitoBean
+  private FolioExecutionContext folioExecutionContext;
+
+  @Autowired
+  public ObjectMapper objectMapper;
+
   @Test
   void fetchShouldProcessMultipleChunksInParallel() throws IOException {
 
     var queryId = UUID.randomUUID();
     var data = getMockedData(0, Integer.MAX_VALUE);
     var total = data.getContent().size();
-    var expected = data.getContent().stream().map(json -> json.get("instance.jsonb").toString()).toList();
+
+    var expected = data.getContent().stream().map(json -> {
+        JsonNode instanceJsonb;
+        try {
+            instanceJsonb = objectMapper.readTree(json.get("instance.jsonb").toString());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+        var record1 = objectMapper.createObjectNode();
+      record1.set("entity", instanceJsonb);
+      record1.put("tenantId", "test_tenant");
+      return record1.toString();
+    }).toList();
 
     IntStream.range(0, (total + chunkSize - 1) / chunkSize).forEach(chunk -> {
       int offset = chunk * chunkSize;
       int limit = Math.min(chunkSize, total - offset);
       when(queryClient.getQuery(queryId, offset, limit)).thenReturn(getMockedData(offset, limit));
+      when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
     });
 
     try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total)) {
@@ -73,6 +95,7 @@ class FqmContentFetcherTest {
       int offset = chunk * chunkSize;
       int limit = Math.min(chunkSize, total - offset);
       when(queryClient.getQuery(queryId, offset, limit)).thenReturn(getMockedData(offset, limit));
+      when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
     });
 
     int offset =  ((total + chunkSize - 1) / chunkSize - 1) * chunkSize;
