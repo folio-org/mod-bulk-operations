@@ -29,7 +29,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <sonar.exclusions>
       **/src/main/java/org/folio/bulkops/domain/**,
-      **/src/main/java/org/folio/bulkops/error/**
+      **/src/main/java/org/folio/bulkops/exception/**
     </sonar.exclusions>
     <argLine />
     <bulk-operations.yaml.file>${project.basedir}/src/main/resources/swagger.api/bulk-operations.yaml</bulk-operations.yaml.file>
