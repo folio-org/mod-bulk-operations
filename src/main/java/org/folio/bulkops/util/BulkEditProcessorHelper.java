@@ -1,10 +1,7 @@
 package org.folio.bulkops.util;
 
-import static java.time.ZoneOffset.UTC;
 import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.domain.dto.IdentifierType.ACCESSION_NUMBER;
 import static org.folio.bulkops.domain.dto.IdentifierType.BARCODE;
 import static org.folio.bulkops.domain.dto.IdentifierType.EXTERNAL_SYSTEM_ID;
@@ -26,9 +23,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.Optional;
@@ -67,22 +61,6 @@ public class BulkEditProcessorHelper {
     return nonNull(date) ? dateFormat.format(date) : EMPTY;
   }
 
-  public static String dateToStringWithoutTime(Date date) {
-    return nonNull(date) ? dateWithoutTimeFormat.format(date) : EMPTY;
-  }
-
-  public static Date dateFromString(String date) {
-    if (isNotEmpty(date)) {
-      LocalDateTime localDateTime = LocalDateTime.parse(date, DateTimeFormatter.ofPattern(DATE_TIME_PATTERN));
-      return Date.from(localDateTime.atZone(UTC).toInstant());
-    }
-    return null;
-  }
-
-  public static Date convertToDate(LocalDateTime dateTime) {
-    return dateTime == null ? null : Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
-  }
-
   public static String resolveIdentifier(String identifier) {
     return identifiersMap.get(IdentifierType.fromValue(identifier));
   }
@@ -93,10 +71,6 @@ public class BulkEditProcessorHelper {
 
   public static Optional<String> ofEmptyString(String string) {
     return StringUtils.isNotEmpty(string) ? Optional.of(string) : Optional.empty();
-  }
-
-  public static String booleanToStringNullSafe(Boolean b) {
-    return isEmpty(b) ? EMPTY : b.toString();
   }
 
   public static String getResponseAsString(Object obj) {
