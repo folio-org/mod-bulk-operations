@@ -506,6 +506,7 @@ public class BulkOperationService {
     operation.setUserId(xOkapiUserId);
 
     if (UPLOAD == step && operation.getApproach() != QUERY) {
+      bulkOperationRepository.save(operation);
       return queryService.startBulkOperationByIds(operation);
     } else if (BulkOperationStep.EDIT == step) {
       errorService.deleteErrorsByBulkOperationId(bulkOperationId);
