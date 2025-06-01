@@ -31,10 +31,10 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest
 @ContextConfiguration(initializers = BaseTest.Initializer.class)
-class FqmContentFetcherTest {
+class QueryContentFetcherTest {
 
   @Autowired
-  private FqmContentFetcher fqmContentFetcher;
+  private QueryContentFetcher queryContentFetcher;
 
   @Value("${application.fqm-fetcher.max_chunk_size}")
   private int chunkSize;
@@ -56,7 +56,7 @@ class FqmContentFetcherTest {
       when(queryClient.getQuery(queryId, offset, limit)).thenReturn(getMockedData(offset, limit));
     });
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total)) {
+    try (var is = queryContentFetcher.fetch(queryId, EntityType.INSTANCE, total)) {
       var actual = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(actual).contains(expected);
     }
@@ -83,7 +83,7 @@ class FqmContentFetcherTest {
         .request(Request.create(Request.HttpMethod.GET, "", Map.of(), new byte[]{}, Charset.defaultCharset(), null))
         .build())).when(queryClient).getQuery(queryId, offset, limit);
 
-    Exception exception = assertThrows(FqmFetcherException.class, () -> fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total));
+    Exception exception = assertThrows(FqmFetcherException.class, () -> queryContentFetcher.fetch(queryId, EntityType.INSTANCE, total));
 
     assertThat(exception.getCause().getCause()).isInstanceOf(FeignException.class);
   }

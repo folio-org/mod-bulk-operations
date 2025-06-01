@@ -1436,7 +1436,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(metadataProviderService.calculateProgress(anyList()))
       .thenReturn(new DataImportProgress().total(10).current(5));
 
-    when(queryService.retrieveRecordsAndCheckQueryExecutionStatus(any(BulkOperation.class)))
+    when(queryService.startBulkOperationByQuery(any(BulkOperation.class)))
       .thenReturn(experctedBulkOperation);
 
     var operation = bulkOperationService.getOperationById(operationId);

@@ -43,10 +43,8 @@ import org.folio.bulkops.exception.ReadPermissionException;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.processor.permissions.check.ReadPermissionsValidator;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.folio.bulkops.util.FqmContentFetcher;
+import org.folio.bulkops.util.QueryContentFetcher;
 import org.folio.querytool.domain.dto.QueryDetails;
-import org.folio.querytool.domain.dto.QueryIdentifier;
-import org.folio.querytool.domain.dto.SubmitQuery;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -83,7 +81,7 @@ class QueryServiceTest extends BaseTest {
   @MockitoBean
   private SrsClient srsClient;
   @MockitoBean
-  private FqmContentFetcher fqmContentFetcher;
+  private QueryContentFetcher queryContentFetcher;
 
   @ParameterizedTest
   @EnumSource(value = QueryDetails.StatusEnum.class, names = {"SUCCESS", "FAILED"}, mode = EnumSource.Mode.INCLUDE)
@@ -101,10 +99,9 @@ class QueryServiceTest extends BaseTest {
         .failureReason("some reason")
         .totalRecords(0);
 
-      when(queryClient.getQuery(fqlQueryId, true)).thenReturn(queryDetails);
-      when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(fqlQueryId));
+      when(queryClient.getQuery(fqlQueryId)).thenReturn(queryDetails);
 
-      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      queryService.startBulkOperationByQuery(operation);
 
       verify(remoteFileSystemClient, times(0)).put(any(ByteArrayInputStream.class), eq(expectedPath));
       var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
@@ -126,10 +123,9 @@ class QueryServiceTest extends BaseTest {
       var queryDetails = new QueryDetails()
         .status(QueryDetails.StatusEnum.CANCELLED);
 
-      when(queryClient.getQuery(fqlQueryId, true)).thenReturn(queryDetails);
-      when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(fqlQueryId));
+      when(queryClient.getQuery(fqlQueryId)).thenReturn(queryDetails);
 
-      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      queryService.startBulkOperationByQuery(operation);
 
       var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
       await().untilAsserted(() -> verify(bulkOperationRepository, times(2)).save(operationCaptor.capture()));
@@ -152,11 +148,10 @@ class QueryServiceTest extends BaseTest {
           .totalRecords(1)
         .status(QueryDetails.StatusEnum.IN_PROGRESS);
 
-      when(queryClient.getQuery(fqlQueryId, true)).thenReturn(queryDetails);
-      when(fqmContentFetcher.fetch(fqlQueryId, operation.getEntityType(), queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(Collectors.joining(",")).getBytes()));
-      when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(fqlQueryId));
+      when(queryClient.getQuery(fqlQueryId)).thenReturn(queryDetails);
+      when(queryContentFetcher.fetch(fqlQueryId, operation.getEntityType(), queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(Collectors.joining(",")).getBytes()));
 
-      var result = queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      var result = queryService.startBulkOperationByQuery(operation);
 
       assertThat(result.getStatus()).isEqualTo(RETRIEVING_RECORDS);
     }
@@ -164,7 +159,7 @@ class QueryServiceTest extends BaseTest {
 
   @Test
   @SneakyThrows
-  void shouldStartQueryOperation() {
+  void shouldStartBulkOperationByQuery() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var queryId = UUID.randomUUID();
       var operation = BulkOperation.builder().id(UUID.randomUUID())
@@ -178,9 +173,8 @@ class QueryServiceTest extends BaseTest {
           "instance.id", "69640328-788e-43fc-9c3c-af39e243f3b7")))
         .status(QueryDetails.StatusEnum.SUCCESS).totalRecords(1);
 
-      when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
-      when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
-      when(fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(
+      when(queryClient.getQuery(queryId)).thenReturn(queryDetails);
+      when(queryContentFetcher.fetch(queryId, EntityType.INSTANCE, queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(
           Collectors.joining(",")).getBytes()));
 
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
@@ -188,7 +182,7 @@ class QueryServiceTest extends BaseTest {
       when(readPermissionsValidator.isBulkEditReadPermissionExists("diku", EntityType.INSTANCE)).thenReturn(true);
       when(remoteFileSystemClient.writer(any(String.class))).thenReturn(writer);
 
-      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      queryService.startBulkOperationByQuery(operation);
 
       var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
       await().untilAsserted(() -> verify(bulkOperationRepository, times(4)).save(operationCaptor.capture()));
@@ -215,16 +209,15 @@ class QueryServiceTest extends BaseTest {
                       "instance.id", "69640328-788e-43fc-9c3c-af39e243f3b7")))
         .status(QueryDetails.StatusEnum.SUCCESS).totalRecords(1);
 
-      when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
-      when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
-      when(fqmContentFetcher.fetch(queryId, operation.getEntityType(), queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(Collectors.joining(",")).getBytes()));
+      when(queryClient.getQuery(queryId)).thenReturn(queryDetails);
+      when(queryContentFetcher.fetch(queryId, operation.getEntityType(), queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(Collectors.joining(",")).getBytes()));
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
       when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
       when(remoteFileSystemClient.writer(any(String.class))).thenReturn(writer);
       doThrow(new ReadPermissionException("User username does not have required permission to view the instance record - id=69640328-788e-43fc-9c3c-af39e243f3b7 on the tenant diku", "69640328-788e-43fc-9c3c-af39e243f3b7"))
               .when(permissionsValidator).checkPermissions(any(BulkOperation.class), any(BulkOperationsEntity.class));
 
-      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      queryService.startBulkOperationByQuery(operation);
 
       var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
       var executionContentsCaptor = ArgumentCaptor.forClass(List.class);
@@ -256,9 +249,8 @@ class QueryServiceTest extends BaseTest {
                       "instance.id", "69640328-788e-43fc-9c3c-af39e243f3b7")))
               .status(QueryDetails.StatusEnum.SUCCESS).totalRecords(1);
 
-      when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
-      when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
-      when(fqmContentFetcher.fetch(queryId, operation.getEntityType(), queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(Collectors.joining(",")).getBytes()));
+      when(queryClient.getQuery(queryId)).thenReturn(queryDetails);
+      when(queryContentFetcher.fetch(queryId, operation.getEntityType(), queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(Collectors.joining(",")).getBytes()));
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
       when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
       var srsRecordsNode = objectMapper.createObjectNode();
@@ -266,7 +258,7 @@ class QueryServiceTest extends BaseTest {
       when(srsClient.getMarc(anyString(), anyString(), anyBoolean())).thenReturn(srsRecordsNode);
       when(remoteFileSystemClient.writer(any(String.class))).thenReturn(writer);
 
-      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      queryService.startBulkOperationByQuery(operation);
 
       await().untilAsserted(() -> {
         var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
@@ -306,16 +298,15 @@ class QueryServiceTest extends BaseTest {
               }
               """;
 
-      when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
-      when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
-      when(fqmContentFetcher.fetch(queryId, operation.getEntityType(), queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(Collectors.joining(",")).getBytes()));
+      when(queryClient.getQuery(queryId)).thenReturn(queryDetails);
+      when(queryContentFetcher.fetch(queryId, operation.getEntityType(), queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(Collectors.joining(",")).getBytes()));
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
       when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
       var srsRecordsNode = objectMapper.readTree(srsJson);
       when(srsClient.getMarc(anyString(), anyString(), anyBoolean())).thenReturn(srsRecordsNode);
       when(remoteFileSystemClient.writer(any(String.class))).thenReturn(writer);
 
-      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      queryService.startBulkOperationByQuery(operation);
 
       await().untilAsserted(() -> {
         var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);

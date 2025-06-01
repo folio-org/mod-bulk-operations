@@ -209,7 +209,7 @@ public class BulkOperationService {
 
   public BulkOperation triggerByQuery(UUID userId, QueryRequest queryRequest) {
     var operation = saveQueryBulkOperation(userId, queryRequest);
-    return queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+    return queryService.startBulkOperationByQuery(operation);
   }
 
   private BulkOperation saveQueryBulkOperation(UUID userId, QueryRequest queryRequest) {
@@ -505,20 +505,8 @@ public class BulkOperationService {
         .orElseThrow(() -> new NotFoundException("Bulk operation was not found by id=" + bulkOperationId));
     operation.setUserId(xOkapiUserId);
 
-    String errorMessage = null;
     if (UPLOAD == step && operation.getApproach() != QUERY) {
-      errorMessage = executeDataExportJob(step, approach, operation, errorMessage);
-
-      if (nonNull(errorMessage)) {
-        log.error(errorMessage);
-        operation.setStatus(FAILED);
-        operation.setErrorMessage(errorMessage);
-        operation.setEndTime(LocalDateTime.now());
-        var linkToMatchingErrorsFile = errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX, errorMessage);
-        operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
-      }
-      bulkOperationRepository.save(operation);
-      return operation;
+      return queryService.startBulkOperationByIds(operation);
     } else if (BulkOperationStep.EDIT == step) {
       errorService.deleteErrorsByBulkOperationId(bulkOperationId);
       operation.setCommittedNumOfErrors(0);
