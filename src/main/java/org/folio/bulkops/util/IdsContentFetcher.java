@@ -49,6 +49,7 @@ public class IdsContentFetcher {
    * @return an InputStream containing the fetched content
    */
   public InputStream fetch(List<UUID> uuids, EntityType entityType) {
+    log.info("Fetching content for {} UUIDs of type {} by IdsContentFetcher", uuids.size(), entityType);
     try (var executor = Executors.newFixedThreadPool(maxParallelChunks)) {
 
       var tasks = executeParallelTasks(uuids, entityType, executor);
