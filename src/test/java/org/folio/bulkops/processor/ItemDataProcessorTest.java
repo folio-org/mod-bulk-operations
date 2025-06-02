@@ -142,7 +142,7 @@ class ItemDataProcessorTest extends BaseTest {
       .withHoldingsRecordId(holdingsId)
       .withPermanentLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Permanent location"))
       .withTemporaryLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Temporary location"))
-            .withPermanentLoanType(new LoanType().withId(UUID.randomUUID().toString()).withName("Permanent loan type"));
+      .withPermanentLoanType(new LoanType().withId(UUID.randomUUID().toString()).withName("Permanent loan type"));
 
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
 
@@ -174,7 +174,7 @@ class ItemDataProcessorTest extends BaseTest {
     var item = new Item()
       .withPermanentLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Permanent location"))
       .withTemporaryLocation(new ItemLocation().withId(UUID.randomUUID().toString()).withName("Temporary location"))
-            .withPermanentLoanType(new LoanType().withId(UUID.randomUUID().toString()).withName("Permanent loan type"))
+      .withPermanentLoanType(new LoanType().withId(UUID.randomUUID().toString()).withName("Permanent loan type"))
       .withTemporaryLoanType(new LoanType().withId(UUID.randomUUID().toString()).withName("Temporary loan type"));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
 

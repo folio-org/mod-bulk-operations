@@ -2,7 +2,6 @@ package org.folio.bulkops.processor.folio;
 
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
@@ -26,7 +25,6 @@ public class ItemUpdateProcessor extends FolioAbstractUpdateProcessor<ExtendedIt
   private final FolioExecutionContext folioExecutionContext;
   private final ConsortiaService consortiaService;
   private final PermissionsValidator permissionsValidator;
-  private final ObjectMapper objectMapper;
 
   @Override
   public void updateRecord(ExtendedItem extendedItem) {

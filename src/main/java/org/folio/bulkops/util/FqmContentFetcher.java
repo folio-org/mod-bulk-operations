@@ -1,5 +1,9 @@
 package org.folio.bulkops.util;
 
+import static org.folio.bulkops.util.Constants.ENTITY;
+import static org.folio.bulkops.util.Constants.LINE_BREAK;
+import static org.folio.bulkops.util.Constants.TENANT_ID;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
@@ -17,6 +21,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.exception.FqmFetcherException;
@@ -92,14 +97,14 @@ public class FqmContentFetcher {
           var jsonb = json.get(getContentJsonKey(entityType));
           try {
             ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
-            extendedRecordWrapper.set("entity", objectMapper.readTree(jsonb.toString()));
-            extendedRecordWrapper.put("tenantId", tenant.toString());
+            extendedRecordWrapper.set(ENTITY, objectMapper.readTree(jsonb.toString()));
+            extendedRecordWrapper.put(TENANT_ID, tenant.toString());
             return objectMapper.writeValueAsString(extendedRecordWrapper);
           } catch (Exception e) {
             log.error("Error processing JSON content for entity type {}: {}", entityType, e.getMessage());
             throw new FqmFetcherException("Error processing JSON content", e);
           }
-        }).collect(Collectors.joining("\n"))
+        }).collect(Collectors.joining(LINE_BREAK))
         .getBytes(StandardCharsets.UTF_8));
   }
 
@@ -114,7 +119,7 @@ public class FqmContentFetcher {
 
   private String getContentTenantKey(EntityType entityType) {
     return switch(entityType) {
-      case USER -> null;
+      case USER -> StringUtils.EMPTY;
       case ITEM -> "items.tenant_id";
       case HOLDINGS_RECORD -> "holdings.tenant_id";
       case INSTANCE, INSTANCE_MARC -> "instance.tenant_id";
