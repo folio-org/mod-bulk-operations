@@ -48,6 +48,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.MappingIterator;
@@ -82,10 +83,7 @@ import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.QueryRequest;
-import org.folio.bulkops.domain.entity.BulkOperation;
-import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
-import org.folio.bulkops.domain.entity.BulkOperationExecution;
-import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.domain.entity.*;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
@@ -93,12 +91,16 @@ import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.OptimisticLockingException;
 import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.exception.WritePermissionDoesNotExist;
+import org.folio.bulkops.mapper.ProfileMapper;
+import org.folio.bulkops.domain.dto.ProfileSummaryDTO;
+import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
 import org.folio.bulkops.processor.UpdatedEntityHolder;
 import org.folio.bulkops.processor.folio.DataProcessorFactory;
 import org.folio.bulkops.processor.marc.MarcInstanceDataProcessor;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.repository.ProfileRepository;
 import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.util.CSVHelper;
 import org.folio.bulkops.util.IdentifiersResolver;
@@ -150,6 +152,8 @@ public class BulkOperationService {
   private final MarcCsvHelper marcCsvHelper;
   private final BulkOperationServiceHelper bulkOperationServiceHelper;
   private final QueryService queryService;
+  private final ProfileMapper profileMapper;
+  private final ProfileRepository profileRepository;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
@@ -841,4 +845,18 @@ public class BulkOperationService {
     }
     return 1;
   }
+  public ProfileSummaryResultsDto getProfileSummaries() {
+    List<Profile> profiles = profileRepository.findAll();
+    List<ProfileSummaryDTO> items = profiles.stream()
+      .map(profileMapper::toSummmaryDTO)
+      .toList();
+
+    ProfileSummaryResultsDto response = new ProfileSummaryResultsDto();
+    response.setContent(items);
+    response.setTotalRecords(items.stream().count());
+
+    return response;
+  }
+
+
 }

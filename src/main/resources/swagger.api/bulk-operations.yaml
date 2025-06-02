@@ -598,6 +598,23 @@ paths:
               schema:
                 type: string
                 example: Internal server error
+  /bulk-operations/profiles:
+    get:
+      description: Get a list of Profiles
+      operationId: getProfiles
+      responses:
+        '200':
+          description: 'returns list of profile'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profileSummaryResultsDto'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/errors"
 
 components:
   schemas:
@@ -607,6 +624,8 @@ components:
       $ref: 'schemas/bulk_operation_dto.json#/BulkOperationDto'
     bulkOperationRuleCollection:
       $ref: 'schemas/bulk_operation_rule_collection.json#/BulkOperationRuleCollection'
+    profileSummaryResultsDto:
+      $ref: 'schemas/profile_summary_results_dto.json'
     unifiedTable:
       $ref: 'schemas/unified_table.json'
     entityType:

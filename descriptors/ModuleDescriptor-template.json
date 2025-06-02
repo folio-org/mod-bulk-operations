@@ -298,6 +298,12 @@
           "pathPattern": "/bulk-operations/used-tenants/{operationId}",
           "permissionsRequired": ["bulk-operations.used.tenants.get"],
           "modulePermissions": [ ]
+        },
+        {
+          "methods": [ "GET" ],
+          "pathPattern": "/bulk-operations/profiles",
+          "permissionsRequired": [  ],
+          "modulePermissions": [ ]
         }
       ]
     },
