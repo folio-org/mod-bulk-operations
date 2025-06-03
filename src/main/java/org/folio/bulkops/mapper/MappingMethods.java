@@ -13,24 +13,24 @@ import java.util.Map;
 @Component
 public class MappingMethods {
 
-  private final ObjectMapper objectMapper;
-
-  public MappingMethods(ObjectMapper objectMapper) {
-    this.objectMapper = objectMapper;
-  }
+//  private final ObjectMapper objectMapper;
+//
+//  public MappingMethods(ObjectMapper objectMapper) {
+//    this.objectMapper = objectMapper;
+ // }
   public Date offsetDateTimeAsDate(OffsetDateTime offsetDateTime) {
     return offsetDateTime == null ? null : Date.from(offsetDateTime.toInstant());
   }
-
-  @Named("mapToBulkOperationRuleCollection")
-  public BulkOperationRuleCollection mapToBulkOperationRuleCollection(Map<String, Object> source) {
-    if (source == null) return null;
-    return objectMapper.convertValue(source, BulkOperationRuleCollection.class);
-  }
-
-  @Named("mapToBulkOperationMarcRuleCollection")
-  public BulkOperationMarcRuleCollection mapToBulkOperationMarcRuleCollection(Map<String, Object> source) {
-    if (source == null) return null;
-    return objectMapper.convertValue(source, BulkOperationMarcRuleCollection.class);
-  }
+//
+//  @Named("mapToBulkOperationRuleCollection")
+//  public BulkOperationRuleCollection mapToBulkOperationRuleCollection(Map<String, Object> source) {
+//    if (source == null) return null;
+//    return objectMapper.convertValue(source, BulkOperationRuleCollection.class);
+//  }
+//
+//  @Named("mapToBulkOperationMarcRuleCollection")
+//  public BulkOperationMarcRuleCollection mapToBulkOperationMarcRuleCollection(Map<String, Object> source) {
+//    if (source == null) return null;
+//    return objectMapper.convertValue(source, BulkOperationMarcRuleCollection.class);
+//  }
 }

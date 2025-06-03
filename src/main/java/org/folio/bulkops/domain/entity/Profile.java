@@ -1,8 +1,6 @@
 package org.folio.bulkops.domain.entity;
 
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
-import io.hypersistence.utils.hibernate.type.json.JsonStringType;
-import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -16,9 +14,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
+import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.hibernate.annotations.Type;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -48,11 +49,11 @@ public class Profile {
 
   @Type(JsonBinaryType.class)
   @Column(name = "bulk_operation_rule_collection", columnDefinition = "jsonb")
-  private Map<String, Object> bulkOperationRuleCollection;
+  private BulkOperationRuleCollection bulkOperationRuleCollection;
 
   @Type(JsonBinaryType.class)
   @Column(name = "bulk_operation_marc_rule_collection", columnDefinition = "jsonb")
-  private Map<String, Object> bulkOperationMarcRuleCollection;
+  private BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection;
 
   @Column(name = "created_date")
   private OffsetDateTime createdDate;
