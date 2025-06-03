@@ -28,10 +28,6 @@ public interface BulkOperationsEntity {
     return StringUtils.EMPTY;
   }
   @JsonIgnore
-  default boolean isItem() {
-    return false;
-  }
-  @JsonIgnore
   default BulkOperationsEntity getRecordBulkOperationEntity() {
     return null;
   }

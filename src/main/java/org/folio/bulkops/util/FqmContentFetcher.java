@@ -23,8 +23,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.QueryClient;
+import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.ErrorType;
+import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.FqmFetcherException;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -43,6 +47,7 @@ public class FqmContentFetcher {
   private final QueryClient queryClient;
   private final ObjectMapper objectMapper;
   private final FolioExecutionContext folioExecutionContext;
+  private final ConsortiaService consortiaService;
 
   @PostConstruct
   private void logStartup() {
@@ -57,13 +62,14 @@ public class FqmContentFetcher {
    * @param total the total number of records to fetch
    * @return an InputStream containing the fetched content
    */
-  public InputStream fetch(UUID queryId, EntityType entityType, int total) {
+  public InputStream fetch(UUID queryId, EntityType entityType, int total, List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+                           UUID operationId) {
     try (var executor = Executors.newFixedThreadPool(maxParallelChunks)) {
       int chunks = (total + chunkSize - 1) / chunkSize;
 
       List<CompletableFuture<InputStream>> tasks = IntStream.range(0, chunks)
           .mapToObj(chunk ->
-              CompletableFuture.supplyAsync(() -> task(queryId, entityType, chunk, total), executor)
+              CompletableFuture.supplyAsync(() -> task(queryId, entityType, chunk, total, bulkOperationExecutionContents, operationId), executor)
           )
           .toList();
 
@@ -84,20 +90,27 @@ public class FqmContentFetcher {
     }
   }
 
-  private InputStream task(UUID queryId, EntityType entityType, int chunk, int total) {
+  private InputStream task(UUID queryId, EntityType entityType, int chunk, int total, List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+                           UUID operationId) {
     int offset = chunk * chunkSize;
     int limit = Math.min(chunkSize, total - offset);
     var response = queryClient.getQuery(queryId, offset, limit).getContent();
     return new ByteArrayInputStream(response.stream()
         .map(json -> {
-          var tenant = json.get(getContentTenantKey(entityType));
-          if (tenant == null) {
-            tenant = folioExecutionContext.getTenantId();
-          }
-          var jsonb = json.get(getContentJsonKey(entityType));
           try {
+            var jsonb = json.get(getContentJsonKey(entityType));
+            if (entityType == EntityType.USER) {
+              return jsonb.toString();
+            }
+            var jsonNode = (ObjectNode) objectMapper.readTree(jsonb.toString());
+            var tenant = json.get(getContentTenantKey(entityType));
+            if (tenant == null) {
+              checkForTenantFieldExistenceInEcs(jsonNode.get("id").asText(), operationId, bulkOperationExecutionContents);
+              tenant = folioExecutionContext.getTenantId();
+            }
+            jsonNode.put(TENANT_ID, tenant.toString());
             ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
-            extendedRecordWrapper.set(ENTITY, objectMapper.readTree(jsonb.toString()));
+            extendedRecordWrapper.set(ENTITY, jsonNode);
             extendedRecordWrapper.put(TENANT_ID, tenant.toString());
             return objectMapper.writeValueAsString(extendedRecordWrapper);
           } catch (Exception e) {
@@ -124,5 +137,19 @@ public class FqmContentFetcher {
       case HOLDINGS_RECORD -> "holdings.tenant_id";
       case INSTANCE, INSTANCE_MARC -> "instance.tenant_id";
     };
+  }
+
+  private void checkForTenantFieldExistenceInEcs(String recordId, UUID operationId, List<BulkOperationExecutionContent> bulkOperationExecutionContents) {
+    if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
+      var errorMessage = "Cannot get reference data: tenant field is missing in the FQM response for ECS environment.";
+      log.warn(errorMessage);
+      bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
+              .identifier(recordId)
+              .bulkOperationId(operationId)
+              .state(StateType.PROCESSED)
+              .errorType(ErrorType.WARNING)
+              .errorMessage(errorMessage)
+              .build());
+    }
   }
 }

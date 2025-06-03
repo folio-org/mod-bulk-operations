@@ -83,8 +83,9 @@ public class QueryService {
             failBulkOperation(bulkOperation, "No records found for the query");
           } else {
             bulkOperation.setTotalNumOfRecords(queryResult.getTotalRecords());
-            try (var is = fqmContentFetcher.fetch(bulkOperation.getFqlQueryId(), bulkOperation.getEntityType(), queryResult.getTotalRecords())) {
-              startQueryOperation(is, bulkOperation);
+            List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
+            try (var is = fqmContentFetcher.fetch(bulkOperation.getFqlQueryId(), bulkOperation.getEntityType(), queryResult.getTotalRecords(), bulkOperationExecutionContents, bulkOperation.getId())) {
+              startQueryOperation(is, bulkOperation, bulkOperationExecutionContents);
             } catch (Exception e) {
               var errorMessage = "Failed to save identifiers, reason: " + e.getMessage();
               log.error(errorMessage);
@@ -101,7 +102,7 @@ public class QueryService {
     return bulkOperation;
   }
 
-  private void startQueryOperation(InputStream is, BulkOperation operation) {
+  private void startQueryOperation(InputStream is, BulkOperation operation, List<BulkOperationExecutionContent> bulkOperationExecutionContents) {
     try {
       var triggeringCsvFileName = String.format(QUERY_FILENAME_TEMPLATE, operation.getId());
       var matchedJsonFileName = getMatchedFileName(operation.getId(), "json/", "Matched", triggeringCsvFileName, "json");
@@ -111,7 +112,7 @@ public class QueryService {
       operation.setStatus(RETRIEVING_RECORDS);
       bulkOperationRepository.save(operation);
 
-      processQueryResult(is, triggeringCsvFileName, matchedCsvFileName, matchedJsonFileName, matchedMrcFileName, operation);
+      processQueryResult(is, triggeringCsvFileName, matchedCsvFileName, matchedJsonFileName, matchedMrcFileName, operation, bulkOperationExecutionContents);
 
       if (operation.getMatchedNumOfRecords() > 0) {
         operation.setLinkToMatchedRecordsCsvFile(matchedCsvFileName);
@@ -134,7 +135,7 @@ public class QueryService {
   }
 
   private void processQueryResult(InputStream is, String triggeringCsvFileName, String matchedCsvFileName, String matchedJsonFileName,
-                                  String matchedMrcFileName, BulkOperation operation) throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
+                                  String matchedMrcFileName, BulkOperation operation, List<BulkOperationExecutionContent> bulkOperationExecutionContents) throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
     try (var writerForTriggeringCsvFile = remoteFileSystemClient.writer(triggeringCsvFileName);
          var writerForResultCsvFile = remoteFileSystemClient.writer(matchedCsvFileName);
          var writerForResultJsonFile = remoteFileSystemClient.writer(matchedJsonFileName);
@@ -142,7 +143,6 @@ public class QueryService {
       var entityClass = resolveEntityClass(operation.getEntityType());
       var extendedEntityClass = resolveExtendedEntityClass(operation.getEntityType());
       var csvWriter = new BulkOperationsEntityCsvWriter(writerForResultCsvFile, entityClass);
-      List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
 
       int numMatched = 0;
       int numProcessed = 0;
@@ -157,10 +157,6 @@ public class QueryService {
 
         try {
           permissionsValidator.checkPermissions(operation, extendedRecord);
-
-          if (extendedRecord.isItem()) {
-            extendedRecord.enrichItemWithReferenceDataNames();
-          }
 
           if (extendedRecord.isMarcInstance()) {
             processQueryResultForMarc(extendedRecord.getRecordBulkOperationEntity(), writerForResultMrcFile, operation, matchedMrcFileName);

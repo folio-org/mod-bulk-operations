@@ -9,8 +9,9 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
@@ -23,8 +24,11 @@ import feign.Request;
 import feign.Response;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.QueryClient;
+import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.FqmFetcherException;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.querytool.domain.dto.QueryDetails;
 import org.folio.spring.FolioExecutionContext;
 import org.junit.jupiter.api.Test;
@@ -50,6 +54,9 @@ class FqmContentFetcherTest {
   @MockitoBean
   private FolioExecutionContext folioExecutionContext;
 
+  @MockitoBean
+  private ConsortiaService consortiaService;
+
   @Autowired
   public ObjectMapper objectMapper;
 
@@ -59,6 +66,8 @@ class FqmContentFetcherTest {
     var queryId = UUID.randomUUID();
     var data = getMockedData(0, Integer.MAX_VALUE);
     var total = data.getContent().size();
+    var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
     var expected = data.getContent().stream().map(json -> {
         JsonNode instanceJsonb;
@@ -80,7 +89,7 @@ class FqmContentFetcherTest {
       when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
     });
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total)) {
+    try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
       var actual = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(actual).contains(expected);
     }
@@ -92,6 +101,8 @@ class FqmContentFetcherTest {
     var queryId = UUID.randomUUID();
     var data = getMockedData(0, Integer.MAX_VALUE);
     var total = data.getContent().size();
+    var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
     IntStream.range(0, ((total + chunkSize - 1) / chunkSize) - 1).forEach(chunk -> {
       int offset = chunk * chunkSize;
@@ -108,7 +119,7 @@ class FqmContentFetcherTest {
         .request(Request.create(Request.HttpMethod.GET, "", Map.of(), new byte[]{}, Charset.defaultCharset(), null))
         .build())).when(queryClient).getQuery(queryId, offset, limit);
 
-    Exception exception = assertThrows(FqmFetcherException.class, () -> fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total));
+    Exception exception = assertThrows(FqmFetcherException.class, () -> fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId));
 
     assertThat(exception.getCause().getCause()).isInstanceOf(FeignException.class);
   }
@@ -136,13 +147,16 @@ class FqmContentFetcherTest {
   void fetchReturnsCorrectContentForUserEntityType() throws Exception {
     var queryId = UUID.randomUUID();
     int total = 2;
+    var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(getMockedDataForEntityType(EntityType.USER, total));
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total)) {
+    try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total, contents, operationId)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-      assertThat(result).contains("\"entity\"");
-      assertThat(result).contains("\"tenantId\":\"tenant\"");
+      assertThat(result).doesNotContain("\"entity\"");
+      assertThat(result).doesNotContain("\"tenantId\":\"tenant\"");
+      assertThat(result).contains("\"id\":\"user-id-0\"");
     }
   }
 
@@ -150,10 +164,12 @@ class FqmContentFetcherTest {
   void fetchReturnsCorrectContentForItemEntityType() throws Exception {
     var queryId = UUID.randomUUID();
     int total = 2;
+    var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(getMockedDataForEntityType(EntityType.ITEM, total));
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.ITEM, total)) {
+    try (var is = fqmContentFetcher.fetch(queryId, EntityType.ITEM, total, contents, operationId)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"item-tenant\"");
@@ -164,10 +180,12 @@ class FqmContentFetcherTest {
   void fetchReturnsCorrectContentForHoldingsRecordEntityType() throws Exception {
     var queryId = UUID.randomUUID();
     int total = 2;
+    var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(getMockedDataForEntityType(EntityType.HOLDINGS_RECORD, total));
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.HOLDINGS_RECORD, total)) {
+    try (var is = fqmContentFetcher.fetch(queryId, EntityType.HOLDINGS_RECORD, total, contents, operationId)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"holdings-tenant\"");
@@ -178,10 +196,12 @@ class FqmContentFetcherTest {
   void fetchReturnsCorrectContentForInstanceEntityType() throws Exception {
     var queryId = UUID.randomUUID();
     int total = 2;
+    var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(getMockedDataForEntityType(EntityType.INSTANCE, total));
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total)) {
+    try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"instance-tenant\"");
@@ -192,15 +212,76 @@ class FqmContentFetcherTest {
   void fetchReturnsCorrectContentForInstanceMarcEntityType() throws Exception {
     var queryId = UUID.randomUUID();
     int total = 2;
+    var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(getMockedDataForEntityType(EntityType.INSTANCE_MARC, total));
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE_MARC, total)) {
+    try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE_MARC, total, contents, operationId)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"instance-tenant\"");
     }
   }
+
+    @Test
+    void fetchAddsWarningForCentralTenantAndNonUserEntity() throws Exception {
+      var queryId = UUID.randomUUID();
+      int total = 1;
+      var operationId = UUID.randomUUID();
+      List<BulkOperationExecutionContent> contents = new ArrayList<>();
+      when(folioExecutionContext.getTenantId()).thenReturn("central-tenant");
+      when(consortiaService.isTenantCentral("central-tenant")).thenReturn(true);
+      var mockForInstanceWithoutTenant = getMockedDataForEntityType(EntityType.INSTANCE, total);
+      mockForInstanceWithoutTenant.getContent().forEach(map -> map.remove("instance.tenant_id"));
+      when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockForInstanceWithoutTenant);
+
+      try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
+        is.readAllBytes();
+      }
+
+      assertThat(contents).hasSize(1);
+      BulkOperationExecutionContent content = contents.getFirst();
+      assertThat(content.getIdentifier()).isEqualTo("instance-id-0");
+      assertThat(content.getBulkOperationId()).isEqualTo(operationId);
+      assertThat(content.getState()).isEqualTo(StateType.PROCESSED);
+      assertThat(content.getErrorType()).isEqualTo(org.folio.bulkops.domain.dto.ErrorType.WARNING);
+      assertThat(content.getErrorMessage()).contains("tenant field is missing");
+    }
+
+    @Test
+    void fetchDoesNotAddWarningForNonCentralTenant() throws Exception {
+      var queryId = UUID.randomUUID();
+      int total = 1;
+      var operationId = UUID.randomUUID();
+      List<BulkOperationExecutionContent> contents = new ArrayList<>();
+      when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
+      when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
+      when(queryClient.getQuery(queryId, 0, total)).thenReturn(getMockedDataForEntityType(EntityType.INSTANCE, total));
+
+      try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
+        is.readAllBytes();
+      }
+
+      assertThat(contents).isEmpty();
+    }
+
+    @Test
+    void fetchDoesNotAddWarningForUserEntityTypeIfNotCentralTenant() throws Exception {
+      var queryId = UUID.randomUUID();
+      int total = 1;
+      var operationId = UUID.randomUUID();
+      List<BulkOperationExecutionContent> contents = new ArrayList<>();
+      when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
+      when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
+      when(queryClient.getQuery(queryId, 0, total)).thenReturn(getMockedDataForEntityType(EntityType.USER, total));
+
+      try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total, contents, operationId)) {
+        is.readAllBytes();
+      }
+
+      assertThat(contents).isEmpty();
+    }
 
   // Helper for mocking QueryDetails for each EntityType
   private QueryDetails getMockedDataForEntityType(EntityType entityType, int total) {
