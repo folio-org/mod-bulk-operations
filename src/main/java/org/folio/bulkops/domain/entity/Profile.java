@@ -20,6 +20,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
 import org.hibernate.type.SqlTypes;
 
+import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @Entity
 @Table(name = "profile")
-public class Profile {
+public class Profile implements Serializable {
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
@@ -51,12 +52,12 @@ public class Profile {
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "bulk_operation_rule_collection", columnDefinition = "jsonb")
-  private BulkOperationRuleCollection bulkOperationRuleCollection;
+  private Map<String, Object> bulkOperationRuleCollection;
 
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "bulk_operation_marc_rule_collection", columnDefinition = "jsonb")
-  private BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection;
+  private Map<String, Object> bulkOperationMarcRuleCollection;
 
   @Column(name = "created_date")
   private OffsetDateTime createdDate;
