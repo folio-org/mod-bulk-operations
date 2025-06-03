@@ -848,7 +848,7 @@ public class BulkOperationService {
   public ProfileSummaryResultsDto getProfileSummaries() {
     List<Profile> profiles = profileRepository.findAll();
     List<ProfileSummaryDTO> items = profiles.stream()
-      .map(profileMapper::toSummaryDto)
+      .map(profileMapper::toSummmaryDTO)
       .toList();
 
     ProfileSummaryResultsDto response = new ProfileSummaryResultsDto();

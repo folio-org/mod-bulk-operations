@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 import org.folio.bulkops.domain.dto.EntityType;
 
 import java.time.OffsetDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -31,6 +32,9 @@ public class Profile {
   @Column(name = "name")
   private String name;
 
+  @Column(name = "description")
+  private String description;
+
   @Column(name = "locked")
   private boolean locked;
 
@@ -39,10 +43,10 @@ public class Profile {
   private EntityType entityType;
 
   @Column(name = "bulk_operation_rule_collection", columnDefinition = "jsonb")
-  private String bulkOperationRuleCollection;
+  private Map<String, Object> bulkOperationRuleCollection;
 
   @Column(name = "bulk_operation_marc_rule_collection", columnDefinition = "jsonb")
-  private String bulkOperationMarcRuleCollection;
+  private Map<String, Object> bulkOperationMarcRuleCollection;
 
   @Column(name = "created_date")
   private OffsetDateTime createdDate;
