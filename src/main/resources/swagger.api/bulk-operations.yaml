@@ -608,7 +608,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/profileSummaryDto'
+                $ref: '#/components/schemas/profileSummaryResultsDto'
         default:
           description: unexpected error
           content:
@@ -624,8 +624,8 @@ components:
       $ref: 'schemas/bulk_operation_dto.json#/BulkOperationDto'
     bulkOperationRuleCollection:
       $ref: 'schemas/bulk_operation_rule_collection.json#/BulkOperationRuleCollection'
-    profileSummaryDto:
-      $ref: 'schemas/profile_summary_dto.json'
+    profileSummaryResultsDto:
+      $ref: 'schemas/profile_summary_results_dto.json'
     unifiedTable:
       $ref: 'schemas/unified_table.json'
     entityType:

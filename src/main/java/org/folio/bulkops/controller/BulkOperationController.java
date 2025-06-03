@@ -35,7 +35,7 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.QueryRequest;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.dto.Users;
-import org.folio.bulkops.domain.dto.ProfileSummaryDto;
+import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.mapper.BulkOperationMapper;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -258,8 +258,8 @@ public class BulkOperationController implements BulkOperationsApi {
     return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.triggerByQuery(xOkapiUserId, queryRequest)), HttpStatus.OK);
   }
   @Override
-  public ResponseEntity<ProfileSummaryDto> getProfiles() {
-    ProfileSummaryDto response = bulkOperationService.getProfileSummaries();
+  public ResponseEntity<ProfileSummaryResultsDto> getProfiles() {
+    ProfileSummaryResultsDto response = bulkOperationService.getProfileSummaries();
     return ResponseEntity.ok(response);
   }
 }

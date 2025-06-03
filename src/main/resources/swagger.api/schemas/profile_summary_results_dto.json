@@ -45,42 +45,6 @@
         "entityType": {
           "description": "Entity type",
           "$ref": "entity_type.json#/EntityType"
-        },
-        "bulkOperationRuleCollection": {
-          "description": "Bulk Operation Rule Collection",
-          "$ref": "bulk_operation_rule_collection.json#/BulkOperationRuleCollection"
-        },
-        "bulkOperationMarcRuleCollection": {
-          "description": "Bulk Operation Marc Rule Collection",
-          "$ref": "bulk_operation_marc_rule_collection.json#/BulkOperationMarcRuleCollection"
-        },
-        "createdDate": {
-          "description": "Date and time when the record was created",
-          "type": "string",
-          "format": "date-time"
-        },
-        "createdBy": {
-          "description": "ID of the user who created the record (when available)",
-          "type": "string",
-          "format": "UUID"
-        },
-        "createdByUser": {
-          "description": "Created By User",
-          "type": "string"
-        },
-        "updatedDate": {
-          "description": "Date and time when the record was last updated",
-          "type": "string",
-          "format": "date-time"
-        },
-        "updatedBy": {
-          "description": "ID of the user who last updated the record (when available)",
-          "type": "string",
-          "format": "UUID"
-        },
-        "updatedByUser": {
-          "description": "User who last updated the record (when available)",
-          "type": "string"
         }
       },
       "required": [

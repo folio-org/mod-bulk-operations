@@ -92,7 +92,8 @@ import org.folio.bulkops.exception.OptimisticLockingException;
 import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.exception.WritePermissionDoesNotExist;
 import org.folio.bulkops.mapper.ProfileMapper;
-import  org.folio.bulkops.domain.dto.ProfileSummaryDto;
+import org.folio.bulkops.domain.dto.ProfileSummaryDTO;
+import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
 import org.folio.bulkops.processor.UpdatedEntityHolder;
 import org.folio.bulkops.processor.folio.DataProcessorFactory;
 import org.folio.bulkops.processor.marc.MarcInstanceDataProcessor;
@@ -844,15 +845,18 @@ public class BulkOperationService {
     }
     return 1;
   }
-  public ProfileSummaryDto getProfileSummaries() {
+  public ProfileSummaryResultsDto getProfileSummaries() {
     List<Profile> profiles = profileRepository.findAll();
-    List<ProfileSummaryDto> items = profiles.stream()
+    List<ProfileSummaryDTO> items = profiles.stream()
       .map(profileMapper::toSummaryDto)
       .toList();
 
-    ProfileSummaryDto profileSummaryDto = new ProfileSummaryDto();
-    profileSummaryDto.setContent(items);
-    profileSummaryDto.setTotalRecords(items.stream().count());
-    return profileSummaryDto;
+    ProfileSummaryResultsDto response = new ProfileSummaryResultsDto();
+    response.setContent(items);
+    response.setTotalRecords(items.stream().count());
+
+    return response;
   }
+
+
 }
