@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.CsvCustomBindByPosition;
@@ -43,6 +44,7 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
 import org.folio.bulkops.service.ItemReferenceHelper;
 
+@JsonPropertyOrder({ "tenantId", "materialTypeId", "permanentLoanTypeId", "temporaryLocationId", "effectiveLocationId", "temporaryLoanTypeId", "permanentLocationId" })
 @Log4j2
 @Data
 @With
