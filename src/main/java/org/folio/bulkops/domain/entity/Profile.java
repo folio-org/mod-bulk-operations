@@ -1,5 +1,6 @@
 package org.folio.bulkops.domain.entity;
 
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import io.hypersistence.utils.hibernate.type.json.JsonStringType;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.Entity;
@@ -45,11 +46,11 @@ public class Profile {
   @Column(name = "entity_type")
   private EntityType entityType;
 
-  @Type(JsonType.class)
+  @Type(JsonBinaryType.class)
   @Column(name = "bulk_operation_rule_collection", columnDefinition = "jsonb")
   private Map<String, Object> bulkOperationRuleCollection;
 
-  @Type(JsonType.class)
+  @Type(JsonBinaryType.class)
   @Column(name = "bulk_operation_marc_rule_collection", columnDefinition = "jsonb")
   private Map<String, Object> bulkOperationMarcRuleCollection;
 
