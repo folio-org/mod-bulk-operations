@@ -84,11 +84,15 @@ public class IdsContentFetcher {
 
   private InputStream task(List<UUID> chunk, EntityType entityType) {
 
+    var start = System.currentTimeMillis();
+
     var content = queryClient.getContents(ContentRequest.builder()
         .ids(chunk)
         .fields(List.of(getContentJsonKey(entityType)))
         .localize(false)
         .entityTypeId(UUID.fromString("6b08439b-4f8e-4468-8046-ea620f5cfb74")).build());
+
+    log.info("IdsContentFetcher: fetched {} records for {} in {} ms", content.size(), entityType, System.currentTimeMillis() - start);
 
     return new ByteArrayInputStream(content.stream()
         .map(json -> json.get(getContentJsonKey(entityType)).toString()).collect(Collectors.joining("\n"))
