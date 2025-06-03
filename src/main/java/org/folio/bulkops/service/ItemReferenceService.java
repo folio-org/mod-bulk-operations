@@ -205,12 +205,14 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "materialTypes")
   public MaterialType getMaterialTypeById(String id, String tenantId) {
+    log.info("getMaterialTypeById, tenant {}", tenantId);
     if (isNull(tenantId)) {
       tenantId = folioExecutionContext.getTenantId();
     }
     try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return materialTypeClient.getById(id);
     } catch (Exception e) {
+      e.printStackTrace();
       throw new ReferenceDataNotFoundException(format("Material type not found by id=%s", id));
     }
   }

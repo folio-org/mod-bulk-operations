@@ -451,7 +451,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
     getNotes().forEach(note -> note.setTenantId(
       tenantNotePairs.stream()
         .filter(pair -> pair.getNoteTypeId().equals(note.getItemNoteTypeId()))
-        .map(pair -> pair.getTenantId()).findFirst().orElseGet(() -> tenantId)
+        .map(TenantNotePair::getTenantId).findFirst().orElseGet(() -> tenantId)
     ));
   }
 

@@ -50,7 +50,6 @@ import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.util.CSVHelper;
 import org.folio.bulkops.util.FqmContentFetcher;
-import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -62,7 +61,6 @@ public class QueryService {
 
   private final BulkOperationRepository bulkOperationRepository;
   private final ErrorService errorService;
-  private final FolioExecutionContext folioExecutionContext;
   private final ObjectMapper objectMapper;
   private final JsonToMarcConverter jsonToMarcConverter;
   private final PermissionsValidator permissionsValidator;
