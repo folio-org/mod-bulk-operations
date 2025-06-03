@@ -304,6 +304,12 @@
           "pathPattern": "/bulk-operations/profiles",
           "permissionsRequired": [  ],
           "modulePermissions": [ ]
+        },
+        {
+          "methods": [ "POST" ],
+          "pathPattern": "/bulk-operations/profiles",
+          "permissionsRequired": [  ],
+          "modulePermissions": [ ]
         }
       ]
     },

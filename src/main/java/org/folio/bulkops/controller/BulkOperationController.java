@@ -36,6 +36,8 @@ import org.folio.bulkops.domain.dto.QueryRequest;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.dto.Users;
 import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
+import org.folio.bulkops.domain.dto.ProfileDto;
+import org.folio.bulkops.domain.dto.ProfileRequest;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.mapper.BulkOperationMapper;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -261,5 +263,12 @@ public class BulkOperationController implements BulkOperationsApi {
   public ResponseEntity<ProfileSummaryResultsDto> getProfiles() {
     ProfileSummaryResultsDto response = bulkOperationService.getProfileSummaries();
     return ResponseEntity.ok(response);
+  }
+
+  @Override
+  public ResponseEntity<ProfileDto> createProfile(ProfileRequest profileRequest){
+    ProfileDto profileDto = bulkOperationService.createProfile(profileRequest);
+    return ResponseEntity.status(HttpStatus.CREATED).body(profileDto);
+
   }
 }

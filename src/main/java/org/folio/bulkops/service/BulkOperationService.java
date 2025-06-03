@@ -91,6 +91,8 @@ import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.OptimisticLockingException;
 import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.exception.WritePermissionDoesNotExist;
+import org.folio.bulkops.domain.dto.ProfileRequest;
+import org.folio.bulkops.domain.dto.ProfileDto;
 import org.folio.bulkops.mapper.ProfileMapper;
 import org.folio.bulkops.domain.dto.ProfileSummaryDTO;
 import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
@@ -857,6 +859,9 @@ public class BulkOperationService {
 
     return response;
   }
-
-
+  public ProfileDto createProfile(org.folio.bulkops.domain.dto.ProfileRequest profileRequest) {
+    Profile entity = profileMapper.toEntity(profileRequest);
+    Profile saved = profileRepository.save(entity);
+    return profileMapper.toDto(saved);
+  }
 }
