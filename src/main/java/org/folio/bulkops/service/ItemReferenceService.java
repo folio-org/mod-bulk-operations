@@ -205,7 +205,6 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "materialTypes")
   public MaterialType getMaterialTypeById(String id, String tenantId) {
-    log.info("getMaterialTypeById, tenant {}", tenantId);
     if (isNull(tenantId)) {
       tenantId = folioExecutionContext.getTenantId();
     }
