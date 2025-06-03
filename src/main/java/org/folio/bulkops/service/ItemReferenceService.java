@@ -212,7 +212,6 @@ public class ItemReferenceService {
     try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return materialTypeClient.getById(id);
     } catch (Exception e) {
-      e.printStackTrace();
       throw new ReferenceDataNotFoundException(format("Material type not found by id=%s", id));
     }
   }

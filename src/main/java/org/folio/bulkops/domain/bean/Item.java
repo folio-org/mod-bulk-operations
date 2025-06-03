@@ -20,6 +20,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.With;
+import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.BoundWithTitlesConverter;
 import org.folio.bulkops.domain.converter.CallNumberTypeConverter;
@@ -42,6 +43,7 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
 import org.folio.bulkops.service.ItemReferenceHelper;
 
+@Log4j2
 @Data
 @With
 @Builder(toBuilder = true)
@@ -155,6 +157,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("materialTypeId")
   public void setMaterialTypeId(String id) {
+    log.info("tenant bean: {}", tenantId);
     this.materialType = new MaterialType().withId(id).withName(ItemReferenceHelper.service().getMaterialTypeById(id, tenantId).getName());
   }
 

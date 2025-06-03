@@ -104,11 +104,13 @@ public class FqmContentFetcher {
             }
             var jsonNode = (ObjectNode) objectMapper.readTree(jsonb.toString());
             var tenant = json.get(getContentTenantKey(entityType));
+            log.info("tenant:: {}", tenant);
             if (tenant == null) {
               checkForTenantFieldExistenceInEcs(jsonNode.get("id").asText(), operationId, bulkOperationExecutionContents);
               tenant = folioExecutionContext.getTenantId();
             }
             jsonNode.put(TENANT_ID, tenant.toString());
+            log.info("jsonnode: {}", jsonNode);
             ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
             extendedRecordWrapper.set(ENTITY, jsonNode);
             extendedRecordWrapper.put(TENANT_ID, tenant.toString());
