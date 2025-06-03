@@ -5,7 +5,7 @@ import org.folio.bulkops.domain.dto.ProfileSummaryDTO;
 import org.mapstruct.*;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, injectionStrategy = InjectionStrategy.CONSTRUCTOR,
-  uses = {MappingMethods.class, ProfileMapper.class}, builder = @Builder(disableBuilder = true))
+  uses = {MappingMethods.class}, builder = @Builder(disableBuilder = true))
 public interface ProfileMapper {
   @Mapping(target = "id", source = "profile.id")
   @Mapping(target = "name", source = "profile.name")
