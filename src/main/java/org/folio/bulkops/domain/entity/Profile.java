@@ -16,7 +16,9 @@ import lombok.NoArgsConstructor;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -47,11 +49,12 @@ public class Profile {
   @Column(name = "entity_type")
   private EntityType entityType;
 
-  @Type(JsonBinaryType.class)
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "bulk_operation_rule_collection", columnDefinition = "jsonb")
   private BulkOperationRuleCollection bulkOperationRuleCollection;
 
-  @Type(JsonBinaryType.class)
+
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "bulk_operation_marc_rule_collection", columnDefinition = "jsonb")
   private BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection;
 
