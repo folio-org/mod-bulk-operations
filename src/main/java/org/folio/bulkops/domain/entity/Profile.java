@@ -47,11 +47,9 @@ public class Profile {
   @Column(name = "entity_type")
   private EntityType entityType;
 
-  @Type(JsonBinaryType.class)
   @Column(name = "bulk_operation_rule_collection", columnDefinition = "jsonb")
   private BulkOperationRuleCollection bulkOperationRuleCollection;
 
-  @Type(JsonBinaryType.class)
   @Column(name = "bulk_operation_marc_rule_collection", columnDefinition = "jsonb")
   private BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection;
 
