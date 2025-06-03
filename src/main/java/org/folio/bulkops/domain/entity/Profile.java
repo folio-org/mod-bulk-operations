@@ -52,12 +52,14 @@ public class Profile implements Serializable {
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "bulk_operation_rule_collection", columnDefinition = "jsonb")
-  private Map<String, Object> bulkOperationRuleCollection;
+  private BulkOperationRuleCollection bulkOperationRuleCollection;
+//  private Map<String, Object> bulkOperationRuleCollection;
 
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "bulk_operation_marc_rule_collection", columnDefinition = "jsonb")
-  private Map<String, Object> bulkOperationMarcRuleCollection;
+  private BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection;
+//  private Map<String, Object> bulkOperationMarcRuleCollection;
 
   @Column(name = "created_date")
   private OffsetDateTime createdDate;
