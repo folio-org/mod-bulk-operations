@@ -10,7 +10,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.CsvCustomBindByPosition;
@@ -44,7 +43,6 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
 import org.folio.bulkops.service.ItemReferenceHelper;
 
-@JsonPropertyOrder({ "tenantId", "materialTypeId", "permanentLoanTypeId", "temporaryLocationId", "effectiveLocationId", "temporaryLoanTypeId", "permanentLocationId" })
 @Log4j2
 @Data
 @With
@@ -54,6 +52,10 @@ import org.folio.bulkops.service.ItemReferenceHelper;
 @JsonTypeName("item")
 @EqualsAndHashCode(exclude = {"effectiveCallNumberComponents", "effectiveLocation", "boundWithTitles", "holdingsData", "tenantId"})
 public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
+
+  public Item(@JsonProperty("tenantId") String tenantId) {
+    this.tenantId = tenantId;
+  }
 
   @JsonProperty("id")
   @CsvCustomBindByName(column = "Item UUID", converter = StringConverter.class)
@@ -418,6 +420,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private String holdingsRecordId;
 
+  @JsonProperty("tenantId")
   @CsvCustomBindByName(column = "Tenant", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 44, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
