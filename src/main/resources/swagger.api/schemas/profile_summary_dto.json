@@ -7,7 +7,7 @@
       "description": "Array of profile summary DTOs",
       "type": "array",
       "items": {
-        "$ref": "#/$defs/ProfileSummaryDTO"
+        "$ref": "#/ProfileSummaryDTO"
       }
     },
     "totalRecords": {
@@ -16,13 +16,12 @@
       "format": "int64"
     }
   },
+  "additionalProperties": false,
   "required": [
     "content",
     "totalRecords"
   ],
-  "additionalProperties": false,
-  "$defs": {
-    "ProfileSummaryDTO": {
+  "ProfileSummaryDTO": {
       "description": "Profile Summary DTO",
       "type": "object",
       "properties": {
@@ -92,5 +91,4 @@
       ],
       "additionalProperties": false
     }
-  }
 }
