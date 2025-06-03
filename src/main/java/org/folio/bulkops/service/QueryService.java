@@ -108,6 +108,7 @@ public class QueryService {
       var matchedCsvFileName = getMatchedFileName(operation.getId(), StringUtils.EMPTY, "Matched", triggeringCsvFileName, "csv");
 
       operation.setStatus(RETRIEVING_RECORDS);
+      operation.setLinkToTriggeringCsvFile(triggeringCsvFileName);
       bulkOperationRepository.save(operation);
 
       processQueryResult(is, triggeringCsvFileName, matchedCsvFileName, matchedJsonFileName, matchedMrcFileName, operation, bulkOperationExecutionContents);
@@ -120,7 +121,6 @@ public class QueryService {
         operation.setStatus(COMPLETED_WITH_ERRORS);
       }
       operation.setEndTime(LocalDateTime.now());
-      operation.setLinkToTriggeringCsvFile(triggeringCsvFileName);
       bulkOperationRepository.save(operation);
     } catch (Exception e) {
       log.error(ERROR_STARTING_BULK_OPERATION, e);
