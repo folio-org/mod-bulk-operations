@@ -1,7 +1,9 @@
 package org.folio.bulkops.mapper;
 
 import org.folio.bulkops.domain.entity.Profile;
+import org.folio.bulkops.domain.dto.ProfileRequest;
 import org.folio.bulkops.domain.dto.ProfileSummaryDTO;
+import org.folio.bulkops.domain.dto.ProfileDto;
 import org.mapstruct.*;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, injectionStrategy = InjectionStrategy.CONSTRUCTOR,
@@ -23,6 +25,8 @@ public interface ProfileMapper {
   @Mapping(target = "updatedBy", source = "profile.updatedBy")
   @Mapping(target = "updatedByUser", source = "profile.updatedByUser")
   ProfileSummaryDTO toSummmaryDTO(Profile profile);
+  ProfileDto toDto(org.folio.bulkops.domain.entity.Profile entity);
+  Profile toEntity(ProfileRequest dto);
 
   }
 

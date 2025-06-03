@@ -615,7 +615,28 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/errors"
-
+    post:
+      description: Create a new Profile
+      operationId: createProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/profileRequest'
+      responses:
+        '201':
+          description: Profile created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profileDto'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/errors"
 components:
   schemas:
     bulkOperationCollection:
@@ -624,6 +645,10 @@ components:
       $ref: 'schemas/bulk_operation_dto.json#/BulkOperationDto'
     bulkOperationRuleCollection:
       $ref: 'schemas/bulk_operation_rule_collection.json#/BulkOperationRuleCollection'
+    profileRequest:
+      $ref: 'schemas/profile_request.json'
+    profileDto:
+      $ref: 'schemas/profile_dto.json'
     profileSummaryResultsDto:
       $ref: 'schemas/profile_summary_results_dto.json'
     unifiedTable:
