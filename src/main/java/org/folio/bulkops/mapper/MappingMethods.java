@@ -1,6 +1,5 @@
 package org.folio.bulkops.mapper;
 
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
