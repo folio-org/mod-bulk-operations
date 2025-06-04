@@ -97,6 +97,9 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "noteTypeNames")
   public String getNoteTypeNameById(String noteTypeId, String tenantId) {
+    if (isNull(tenantId)) {
+      tenantId = folioExecutionContext.getTenantId();
+    }
     try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return isEmpty(noteTypeId) ? EMPTY : itemNoteTypeClient.getNoteTypeById(noteTypeId).getName();
     } catch (Exception e) {

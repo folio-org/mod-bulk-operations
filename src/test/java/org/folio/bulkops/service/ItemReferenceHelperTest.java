@@ -73,20 +73,21 @@ class ItemReferenceHelperTest extends BaseTest {
 
   @Test
   void testGetNoteType() {
-    when(itemNoteTypeClient.getNoteTypeById("id_1")).thenReturn(new NoteType().withName("name_1"));
-    var actual = itemReferenceHelper.getNoteTypeNameById("id_1", "tenant");
-    assertEquals("name_1", actual);
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      when(itemNoteTypeClient.getNoteTypeById("id_1")).thenReturn(new NoteType().withName("name_1"));
+      var actual = itemReferenceHelper.getNoteTypeNameById("id_1", "tenant");
+      assertEquals("name_1", actual);
 
-    when(itemNoteTypeClient.getNoteTypesByQuery("name==\"name_2\"", 1)).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.singletonList(new NoteType().withId("id_2"))));
-    actual = itemReferenceHelper.getNoteTypeIdByName("name_2");
-    assertEquals("id_2", actual);
+      when(itemNoteTypeClient.getNoteTypesByQuery("name==\"name_2\"", 1)).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.singletonList(new NoteType().withId("id_2"))));
+      actual = itemReferenceHelper.getNoteTypeIdByName("name_2");
+      assertEquals("id_2", actual);
 
-    when(itemNoteTypeClient.getNoteTypeById("id_3")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getNoteTypeNameById("id_3", "tenant"));
+      when(itemNoteTypeClient.getNoteTypeById("id_3")).thenThrow(new NotFoundException("Not found"));
+      assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getNoteTypeNameById("id_3", "tenant"));
 
-    when(itemNoteTypeClient.getNoteTypesByQuery("name==\"name_4\"", 1)).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.emptyList()));
-    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getNoteTypeIdByName("name_4"));
-
+      when(itemNoteTypeClient.getNoteTypesByQuery("name==\"name_4\"", 1)).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.emptyList()));
+      assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getNoteTypeIdByName("name_4"));
+    }
   }
 
   @Test
