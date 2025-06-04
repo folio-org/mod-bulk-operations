@@ -310,6 +310,12 @@
           "pathPattern": "/bulk-operations/profiles",
           "permissionsRequired": [  ],
           "modulePermissions": [ ]
+        },
+        {
+          "methods": [ "DELETE" ],
+          "pathPattern": "/bulk-operations/profiles/{id}",
+          "permissionsRequired": [  ],
+          "modulePermissions": [ ]
         }
       ]
     },
