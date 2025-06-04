@@ -40,12 +40,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -65,6 +60,7 @@ import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.UserClient;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExportType;
 import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
@@ -109,8 +105,8 @@ import org.folio.bulkops.util.IdentifiersResolver;
 import org.folio.bulkops.util.MarcCsvHelper;
 import org.folio.bulkops.util.Utils;
 import org.folio.s3.exception.S3ClientException;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.client.UsersClient;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.marc4j.MarcStreamReader;
 import org.springframework.beans.factory.annotation.Value;
@@ -134,6 +130,7 @@ public class BulkOperationService {
   private final DataExportSpringClient dataExportSpringClient;
   private final BulkEditClient bulkEditClient;
   private final RuleService ruleService;
+
   private final BulkOperationDataProcessingRepository dataProcessingRepository;
   private final BulkOperationExecutionRepository executionRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
@@ -156,6 +153,8 @@ public class BulkOperationService {
   private final QueryService queryService;
   private final ProfileMapper profileMapper;
   private final ProfileRepository profileRepository;
+
+  private final FolioExecutionContext executionContext;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
@@ -859,9 +858,33 @@ public class BulkOperationService {
 
     return response;
   }
-  public ProfileDto createProfile(org.folio.bulkops.domain.dto.ProfileRequest profileRequest) {
-    Profile entity = profileMapper.toEntity(profileRequest);
+//  public ProfileDto createProfile(org.folio.bulkops.domain.dto.ProfileRequest profileRequest) {
+//    Profile entity = profileMapper.toEntity(profileRequest);
+//    Profile saved = profileRepository.save(entity);
+//    return profileMapper.toDto(saved);
+//  }
+
+  public ProfileDto createProfile(ProfileRequest profileRequest) {
+    UUID currentUserId = executionContext.getUserId();
+    String username = getUsername(currentUserId);
+    Profile entity = profileMapper.toEntity(profileRequest, currentUserId, username);
     Profile saved = profileRepository.save(entity);
     return profileMapper.toDto(saved);
+  }
+
+  private String getUsername(UUID userId) {
+    try {
+      log.info("Attempting to retrieve username for id {}", userId);
+      User user = userClient.getUserById(userId.toString());
+
+      var personal = user.getPersonal();
+      if (personal != null && personal.getFirstName() != null && personal.getLastName() != null) {
+        return String.format("%s, %s", personal.getLastName(), personal.getFirstName());
+      }
+      return userId.toString();
+    } catch (Exception exception) {
+      log.error("Unexpected error when fetching user: {}", exception.getMessage(), exception);
+      return userId.toString();
+    }
   }
 }
