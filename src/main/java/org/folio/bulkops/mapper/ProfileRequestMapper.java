@@ -23,4 +23,5 @@ public interface ProfileRequestMapper {
   @Mapping(target = "updatedBy", source = "createdById")
   @Mapping(target = "updatedByUser", source = "createdByUsername")
   Profile toEntity(ProfileRequest dto, UUID createdById, String createdByUsername);
+
 }

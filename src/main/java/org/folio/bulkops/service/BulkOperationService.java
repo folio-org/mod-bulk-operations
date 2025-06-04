@@ -43,7 +43,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.MappingIterator;
@@ -107,7 +106,6 @@ import org.folio.bulkops.util.MarcCsvHelper;
 import org.folio.bulkops.util.Utils;
 import org.folio.s3.exception.S3ClientException;
 import org.folio.spring.FolioModuleMetadata;
-import org.folio.spring.client.UsersClient;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.marc4j.MarcStreamReader;
 import org.springframework.beans.factory.annotation.Value;
@@ -130,6 +128,8 @@ public class BulkOperationService {
   private final BulkOperationRepository bulkOperationRepository;
   private final DataExportSpringClient dataExportSpringClient;
   private final BulkEditClient bulkEditClient;
+
+  private final ProfileRequestMapper profileRequestMapper;
   private final RuleService ruleService;
   private final BulkOperationDataProcessingRepository dataProcessingRepository;
   private final BulkOperationExecutionRepository executionRepository;
@@ -152,7 +152,6 @@ public class BulkOperationService {
   private final BulkOperationServiceHelper bulkOperationServiceHelper;
   private final QueryService queryService;
   private final ProfileMapper profileMapper;
-  private final ProfileRequestMapper profileRequestMapper;
   private final ProfileRepository profileRepository;
 
 
