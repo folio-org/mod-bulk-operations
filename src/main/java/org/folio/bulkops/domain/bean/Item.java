@@ -73,7 +73,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private String holdingsData;
 
-  @JsonIgnore
+  @JsonProperty("effectiveLocation")
   @CsvCustomBindByName(column = "Item effective location", converter = ItemLocationConverter.class)
   @CsvCustomBindByPosition(position = 3, converter = ItemLocationConverter.class)
   @UnifiedTableCell
@@ -151,7 +151,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private List<String> administrativeNotes;
 
-  @JsonIgnore
+  @JsonProperty("materialType")
   @CsvCustomBindByName(column = "Material type", converter = MaterialTypeConverter.class)
   @CsvCustomBindByPosition(position = 13, converter = MaterialTypeConverter.class)
   @UnifiedTableCell
@@ -282,7 +282,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private List<ItemNote> notes;
 
-  @JsonIgnore
+  @JsonProperty("permanentLoanType")
   @CsvCustomBindByName(column = "Permanent loan type", converter = LoanTypeConverter.class)
   @CsvCustomBindByPosition(position = 32, converter = LoanTypeConverter.class)
   @UnifiedTableCell
@@ -303,7 +303,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
     return permanentLoanType;
   }
 
-  @JsonIgnore
+  @JsonProperty("temporaryLoanType")
   @CsvCustomBindByName(column = "Temporary loan type", converter = LoanTypeConverter.class)
   @CsvCustomBindByPosition(position = 33, converter = LoanTypeConverter.class)
   @UnifiedTableCell
@@ -342,7 +342,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private List<CirculationNote> checkOutNotes;
 
-  @JsonIgnore
+  @JsonProperty("permanentLocation")
   @CsvCustomBindByName(column = "Item permanent location", converter = ItemLocationConverter.class)
   @CsvCustomBindByPosition(position = 37, converter = ItemLocationConverter.class)
   @UnifiedTableCell(visible = false)
@@ -363,7 +363,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
     return permanentLocation;
   }
 
-  @JsonIgnore
+  @JsonProperty("temporaryLocation")
   @CsvCustomBindByName(column = "Item temporary location", converter = ItemLocationConverter.class)
   @CsvCustomBindByPosition(position = 38, converter = ItemLocationConverter.class)
   @UnifiedTableCell(visible = false)
