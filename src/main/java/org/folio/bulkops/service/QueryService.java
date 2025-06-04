@@ -152,6 +152,7 @@ public class QueryService {
 
         var extendedRecord = iterator.next();
         usedTenants.add(extendedRecord.getTenant());
+        extendedRecord.setTenantToNotes(operation.getTenantNotePairs());
 
         try {
           permissionsValidator.checkPermissions(operation, extendedRecord);
