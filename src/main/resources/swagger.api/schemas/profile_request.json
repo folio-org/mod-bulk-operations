@@ -48,7 +48,6 @@
   },
   "additionalProperties": false,
   "required": [
-    "id",
     "name",
     "entityType",
     "locked"
