@@ -112,6 +112,7 @@ public class FqmContentFetcher {
             ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
             extendedRecordWrapper.set(ENTITY, jsonNode);
             extendedRecordWrapper.put(TENANT_ID, tenant.toString());
+            log.info("task {}, {}", tenant, jsonNode.get("id").asText());
             return objectMapper.writeValueAsString(extendedRecordWrapper);
           } catch (Exception e) {
             log.error("Error processing JSON content for entity type {}: {}", entityType, e.getMessage());

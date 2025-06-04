@@ -8,9 +8,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
+import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
 
+@Log4j2
 @Data
 @With
 @Builder(toBuilder = true)
@@ -54,6 +56,7 @@ public class ExtendedItem implements BulkOperationsEntity {
         note.setTenantId(tenantNotePair.get().getTenantId());
         note.setItemNoteTypeName(tenantNotePair.get().getNoteTypeName());
       } else {
+        log.info("setTenantToNotes tenantId: {}", tenantId);
         note.setTenantId(tenantId);
       }
     });
