@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -245,6 +246,7 @@ public class ErrorService {
 
   public void saveErrorsAfterQuery(List<BulkOperationExecutionContent> bulkOperationExecutionContents, BulkOperation operation) {
     StringBuilder sb = new StringBuilder();
+    bulkOperationExecutionContents.sort(Comparator.comparing(BulkOperationExecutionContent::getErrorType));
     bulkOperationExecutionContents.forEach(exCont -> {
       if (exCont.getErrorType() == ErrorType.ERROR) {
         operation.setMatchedNumOfErrors(operation.getMatchedNumOfErrors() + 1);

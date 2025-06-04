@@ -1,5 +1,14 @@
 package org.folio.bulkops.domain.bean;
 
+import static java.lang.Boolean.FALSE;
+import static java.util.Collections.emptyList;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+
+import java.util.Date;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -32,14 +41,7 @@ import org.folio.bulkops.domain.converter.TagsConverter;
 import org.folio.bulkops.domain.dto.DataType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
-
-import java.util.Date;
-import java.util.List;
-
-import static java.lang.Boolean.FALSE;
-import static java.util.Collections.emptyList;
-import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
+import org.folio.bulkops.service.ItemReferenceHelper;
 
 @Data
 @With
@@ -49,6 +51,10 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 @JsonTypeName("item")
 @EqualsAndHashCode(exclude = {"effectiveCallNumberComponents", "effectiveLocation", "boundWithTitles", "holdingsData", "tenantId"})
 public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
+
+  public Item(@JsonProperty("tenantId") String tenantId) {
+    this.tenantId = tenantId;
+  }
 
   @JsonProperty("id")
   @CsvCustomBindByName(column = "Item UUID", converter = StringConverter.class)
@@ -73,6 +79,21 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @CsvCustomBindByPosition(position = 3, converter = ItemLocationConverter.class)
   @UnifiedTableCell
   private ItemLocation effectiveLocation;
+
+  @JsonProperty("effectiveLocationId")
+  public void setEffectiveLocationId(String id) {
+    this.effectiveLocation = new ItemLocation().withId(id).withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
+  }
+
+  @JsonProperty("effectiveLocationId")
+  public String getEffectiveLocationId() {
+    return effectiveLocation != null ? effectiveLocation.getId() : null;
+  }
+
+  @JsonProperty("effectiveLocation")
+  public ItemLocation getEffectiveLocation() {
+    return effectiveLocation;
+  }
 
   @JsonProperty("effectiveCallNumberComponents")
   @CsvCustomBindByName(column = "Effective call number", converter = EffectiveCallNumberComponentsConverter.class)
@@ -136,6 +157,21 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @CsvCustomBindByPosition(position = 13, converter = MaterialTypeConverter.class)
   @UnifiedTableCell
   private MaterialType materialType;
+
+  @JsonProperty("materialTypeId")
+  public void setMaterialTypeId(String id) {
+    this.materialType = new MaterialType().withId(id).withName(ItemReferenceHelper.service().getMaterialTypeById(id, tenantId).getName());
+  }
+
+  @JsonProperty("materialTypeId")
+  public String getMaterialTypeId() {
+    return materialType != null ? materialType.getId() : null;
+  }
+
+  @JsonProperty("materialType")
+  public MaterialType getMaterialType() {
+    return materialType;
+  }
 
   @JsonProperty("copyNumber")
   @CsvCustomBindByName(column = "Copy number", converter = StringConverter.class)
@@ -247,17 +283,55 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private List<ItemNote> notes;
 
+  @JsonProperty("notes")
+  public void setNotes(List<ItemNote> notes) {
+    if (nonNull(notes)) {
+      notes.forEach(note -> note.setTenantId(tenantId));
+    }
+    this.notes = notes;
+  }
+
   @JsonProperty("permanentLoanType")
   @CsvCustomBindByName(column = "Permanent loan type", converter = LoanTypeConverter.class)
   @CsvCustomBindByPosition(position = 32, converter = LoanTypeConverter.class)
   @UnifiedTableCell
   private LoanType permanentLoanType;
 
+  @JsonProperty("permanentLoanTypeId")
+  public void setPermanentLoanTypeId(String id) {
+    this.permanentLoanType = new LoanType().withId(id).withName(ItemReferenceHelper.service().getLoanTypeById(id, tenantId).getName());
+  }
+
+  @JsonProperty("permanentLoanTypeId")
+  public String getPermanentLoanTypeId() {
+    return permanentLoanType != null ? permanentLoanType.getId() : null;
+  }
+
+  @JsonProperty("permanentLoanType")
+  public LoanType getPermanentLoanType() {
+    return permanentLoanType;
+  }
+
   @JsonProperty("temporaryLoanType")
   @CsvCustomBindByName(column = "Temporary loan type", converter = LoanTypeConverter.class)
   @CsvCustomBindByPosition(position = 33, converter = LoanTypeConverter.class)
   @UnifiedTableCell
   private LoanType temporaryLoanType;
+
+  @JsonProperty("temporaryLoanTypeId")
+  public void setTemporaryLoanTypeId(String id) {
+    this.temporaryLoanType = new LoanType().withId(id).withName(ItemReferenceHelper.service().getLoanTypeById(id, tenantId).getName());
+  }
+
+  @JsonProperty("temporaryLoanTypeId")
+  public String getTemporaryLoanTypeId() {
+    return temporaryLoanType != null ? temporaryLoanType.getId() : null;
+  }
+
+  @JsonProperty("temporaryLoanType")
+  public LoanType getTemporaryLoanType() {
+    return temporaryLoanType;
+  }
 
   @JsonProperty("status")
   @CsvCustomBindByName(column = "Status", converter = ItemStatusConverter.class)
@@ -283,11 +357,41 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private ItemLocation permanentLocation;
 
+  @JsonProperty("permanentLocationId")
+  public void setPermanentLocationId(String id) {
+    this.permanentLocation = new ItemLocation().withId(id).withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
+  }
+
+  @JsonProperty("permanentLocationId")
+  public String getPermanentLocationId() {
+    return permanentLocation != null ? permanentLocation.getId() : null;
+  }
+
+  @JsonProperty("permanentLocation")
+  public ItemLocation getPermanentLocation() {
+    return permanentLocation;
+  }
+
   @JsonProperty("temporaryLocation")
   @CsvCustomBindByName(column = "Item temporary location", converter = ItemLocationConverter.class)
   @CsvCustomBindByPosition(position = 38, converter = ItemLocationConverter.class)
   @UnifiedTableCell(visible = false)
   private ItemLocation temporaryLocation;
+
+  @JsonProperty("temporaryLocationId")
+  public void setTemporaryLocationId(String id) {
+    this.temporaryLocation = new ItemLocation().withId(id).withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
+  }
+
+  @JsonProperty("temporaryLocationId")
+  public String getTemporaryLocationId() {
+    return temporaryLocation != null ? temporaryLocation.getId() : null;
+  }
+
+  @JsonProperty("temporaryLocation")
+  public ItemLocation getTemporaryLocation() {
+    return temporaryLocation;
+  }
 
   @JsonProperty("electronicAccess")
   @Valid
@@ -321,6 +425,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private String holdingsRecordId;
 
+  @JsonProperty("tenantId")
   @CsvCustomBindByName(column = "Tenant", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 44, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
@@ -359,7 +464,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
     getNotes().forEach(note -> note.setTenantId(
       tenantNotePairs.stream()
         .filter(pair -> pair.getNoteTypeId().equals(note.getItemNoteTypeId()))
-        .map(pair -> pair.getTenantId()).findFirst().orElseGet(() -> tenantId)
+        .map(TenantNotePair::getTenantId).findFirst().orElseGet(() -> tenantId)
     ));
   }
 

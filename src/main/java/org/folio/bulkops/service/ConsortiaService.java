@@ -1,5 +1,15 @@
 package org.folio.bulkops.service;
 
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.ConsortiaClient;
 import org.folio.bulkops.client.ConsortiumClient;
@@ -9,17 +19,6 @@ import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 @Service
 @RequiredArgsConstructor

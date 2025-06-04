@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -151,9 +152,10 @@ class QueryServiceTest extends BaseTest {
           .content(List.of())
           .totalRecords(1)
         .status(QueryDetails.StatusEnum.IN_PROGRESS);
+      List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
       when(queryClient.getQuery(fqlQueryId, true)).thenReturn(queryDetails);
-      when(fqmContentFetcher.fetch(fqlQueryId, operation.getEntityType(), queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(Collectors.joining(",")).getBytes()));
+      when(fqmContentFetcher.fetch(fqlQueryId, operation.getEntityType(), queryDetails.getTotalRecords(), contents, operationId)).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(Collectors.joining(",")).getBytes()));
       when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(fqlQueryId));
 
       var result = queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
@@ -178,10 +180,15 @@ class QueryServiceTest extends BaseTest {
           "instance.id", "69640328-788e-43fc-9c3c-af39e243f3b7")))
         .status(QueryDetails.StatusEnum.SUCCESS).totalRecords(1);
 
+      var record1 = objectMapper.createObjectNode();
+      record1.set("entity", objectMapper.readTree(instanceJsonb));
+      record1.put("tenantId", "diku");
+      List<BulkOperationExecutionContent> contents = new ArrayList<>();
+
       when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
       when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
-      when(fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(
-          Collectors.joining(",")).getBytes()));
+      when(fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, queryDetails.getTotalRecords(), contents, operation.getId()))
+              .thenReturn(new ByteArrayInputStream(record1.toString().getBytes()));
 
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
       when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
@@ -215,9 +222,15 @@ class QueryServiceTest extends BaseTest {
                       "instance.id", "69640328-788e-43fc-9c3c-af39e243f3b7")))
         .status(QueryDetails.StatusEnum.SUCCESS).totalRecords(1);
 
+      var record1 = objectMapper.createObjectNode();
+      record1.set("entity", objectMapper.readTree(instanceJsonb));
+      record1.put("tenantId", "diku");
+      List<BulkOperationExecutionContent> contents = new ArrayList<>();
+
       when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
       when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
-      when(fqmContentFetcher.fetch(queryId, operation.getEntityType(), queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(Collectors.joining(",")).getBytes()));
+      when(fqmContentFetcher.fetch(queryId, operation.getEntityType(), queryDetails.getTotalRecords(), contents, operation.getId()))
+              .thenReturn(new ByteArrayInputStream(record1.toString().getBytes()));
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
       when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
       when(remoteFileSystemClient.writer(any(String.class))).thenReturn(writer);
@@ -255,10 +268,15 @@ class QueryServiceTest extends BaseTest {
       var queryDetails = new QueryDetails().content(List.of(Map.of("instance.jsonb", instanceJsonb,
                       "instance.id", "69640328-788e-43fc-9c3c-af39e243f3b7")))
               .status(QueryDetails.StatusEnum.SUCCESS).totalRecords(1);
+      var record1 = objectMapper.createObjectNode();
+      record1.set("entity", objectMapper.readTree(instanceJsonb));
+      record1.put("tenantId", "diku");
+      List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
       when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
       when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
-      when(fqmContentFetcher.fetch(queryId, operation.getEntityType(), queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(Collectors.joining(",")).getBytes()));
+      when(fqmContentFetcher.fetch(queryId, operation.getEntityType(), queryDetails.getTotalRecords(), contents, operation.getId()))
+              .thenReturn(new ByteArrayInputStream(record1.toString().getBytes()));
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
       when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
       var srsRecordsNode = objectMapper.createObjectNode();
@@ -306,9 +324,15 @@ class QueryServiceTest extends BaseTest {
               }
               """;
 
+      var record1 = objectMapper.createObjectNode();
+      record1.set("entity", objectMapper.readTree(instanceJsonb));
+      record1.put("tenantId", "diku");
+      List<BulkOperationExecutionContent> contents = new ArrayList<>();
+
       when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
       when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
-      when(fqmContentFetcher.fetch(queryId, operation.getEntityType(), queryDetails.getTotalRecords())).thenReturn(new ByteArrayInputStream(queryDetails.getContent().stream().map(json -> json.get("instance.jsonb").toString()).collect(Collectors.joining(",")).getBytes()));
+      when(fqmContentFetcher.fetch(queryId, operation.getEntityType(), queryDetails.getTotalRecords(), contents, operation.getId()))
+              .thenReturn(new ByteArrayInputStream(record1.toString().getBytes()));
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
       when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
       var srsRecordsNode = objectMapper.readTree(srsJson);
@@ -327,6 +351,56 @@ class QueryServiceTest extends BaseTest {
         assertThat(operationCaptor.getValue().getProcessedNumOfRecords()).isEqualTo(1);
         assertThat(operationCaptor.getValue().getMatchedNumOfErrors()).isEqualTo(1);
         assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isZero();
+      });
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldCollectUsedTenantsFromProcessedRecords() {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      var queryId = UUID.randomUUID();
+      var operation = BulkOperation.builder()
+              .id(UUID.randomUUID())
+              .status(OperationStatusType.EXECUTING_QUERY)
+              .approach(org.folio.bulkops.domain.dto.ApproachType.QUERY)
+              .entityType(org.folio.bulkops.domain.dto.EntityType.INSTANCE)
+              .fqlQueryId(queryId)
+              .build();
+
+      var instanceJsonb = objectMapper.createObjectNode();
+      instanceJsonb.put("id", "69640328-788e-43fc-9c3c-af39e243f3b7");
+      instanceJsonb.put("title", "Test Instance");
+      instanceJsonb.put("source", "FOLIO");
+
+      // Mock two records with different tenants
+      var record1 = objectMapper.createObjectNode();
+      record1.set("entity", instanceJsonb);
+      record1.put("tenantId", "tenantA");
+      var record2 = objectMapper.createObjectNode();
+      record2.set("entity", instanceJsonb);
+      record2.put("tenantId", "tenantB");
+
+      var queryDetails = new QueryDetails().content(List.of(
+              Map.of("instance.jsonb", instanceJsonb, "instance.tenant_id", "tenantA"),
+              Map.of("instance.jsonb", instanceJsonb, "instance.tenant_id", "tenantB")))
+              .totalRecords(2).status(QueryDetails.StatusEnum.SUCCESS);
+      List<BulkOperationExecutionContent> contents = new ArrayList<>();
+
+      when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
+      when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
+      when(fqmContentFetcher.fetch(queryId, operation.getEntityType(), queryDetails.getTotalRecords(), contents, operation.getId()))
+              .thenReturn(new ByteArrayInputStream(String.join("\n", record1.toString(), record2.toString()).getBytes()));
+
+      when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
+      when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
+      when(remoteFileSystemClient.writer(any(String.class))).thenReturn(writer);
+      when(readPermissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(true);
+
+      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+
+      await().untilAsserted(() -> {
+        assertThat(operation.getUsedTenants()).containsExactlyInAnyOrder("tenantA", "tenantB");
       });
     }
   }
