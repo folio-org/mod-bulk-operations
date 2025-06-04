@@ -2,7 +2,6 @@ package org.folio.bulkops.mapper;
 
 import org.folio.bulkops.domain.entity.Profile;
 import org.folio.bulkops.domain.dto.ProfileSummaryDTO;
-import org.folio.bulkops.domain.dto.ProfileDto;
 import org.mapstruct.*;
 
 import java.util.UUID;
