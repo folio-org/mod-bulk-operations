@@ -3,10 +3,6 @@
   "description": "Profile Entity",
   "type": "object",
   "properties": {
-    "id": {
-      "type": "string",
-      "format": "UUID"
-    },
     "name": {
       "description": "The name of the profile, used for identification and display.",
       "type": "string"
