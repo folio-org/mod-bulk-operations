@@ -40,6 +40,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -900,4 +901,22 @@ public class BulkOperationService {
       .orElseThrow(() -> new NotFoundException("Profile not found with ID: " + id));
     profileRepository.delete(profile);
   }
+
+  public ProfileDto updateProfile(UUID profileId, org.folio.bulkops.domain.dto.ProfileUpdateRequest profileUpdateRequest) {
+    UUID a = folioExecutionContext.getUserId();
+    User user = userClient.getUserById(folioExecutionContext.getUserId().toString());
+    UUID kk = UUID.fromString(user.getId());
+    String username = getUsername(kk);
+    Profile existing = profileRepository.findById(profileId)
+      .orElseThrow(() -> new NotFoundException("Profile not found with ID: " + profileId));
+
+    profileRequestMapper.updateEntity(existing, profileUpdateRequest);
+    existing.setUpdatedDate(OffsetDateTime.now());
+    existing.setUpdatedBy(kk);
+    existing.setUpdatedByUser(username);
+
+    Profile saved = profileRepository.save(existing);
+    return profileMapper.toDto(saved);
+  }
+
 }

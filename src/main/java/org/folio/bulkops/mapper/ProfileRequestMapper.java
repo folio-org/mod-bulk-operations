@@ -2,6 +2,7 @@ package org.folio.bulkops.mapper;
 
 import org.folio.bulkops.domain.entity.Profile;
 import org.folio.bulkops.domain.dto.ProfileRequest;
+import org.folio.bulkops.domain.dto.ProfileUpdateRequest;
 import org.mapstruct.*;
 
 import java.util.UUID;
@@ -24,4 +25,12 @@ public interface ProfileRequestMapper {
   @Mapping(target = "updatedByUser", source = "createdByUsername")
   Profile toEntity(ProfileRequest dto, UUID createdById, String createdByUsername);
 
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "createdDate", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdByUser", ignore = true)
+  @Mapping(target = "updatedDate", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedByUser", ignore = true)
+  void updateEntity(@MappingTarget Profile entity, ProfileUpdateRequest dto);
 }

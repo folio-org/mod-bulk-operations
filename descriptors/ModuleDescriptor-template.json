@@ -316,6 +316,12 @@
           "pathPattern": "/bulk-operations/profiles/{id}",
           "permissionsRequired": [  ],
           "modulePermissions": [ ]
+        },
+        {
+          "methods": [ "PUT" ],
+          "pathPattern": "/bulk-operations/profiles/{id}",
+          "permissionsRequired": [  ],
+          "modulePermissions": [ ]
         }
       ]
     },

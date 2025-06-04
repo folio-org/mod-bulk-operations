@@ -656,6 +656,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/errors'
+    put:
+      summary: Update a profile
+      operationId: updateProfile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      requestBody:
+        description: Profile object
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/profileUpdateRequest'
+      responses:
+        '200':
+          description: 'returns if a profile updated successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profileDto'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/errors"
 components:
   schemas:
     bulkOperationCollection:
@@ -668,6 +697,8 @@ components:
       $ref: 'schemas/profile_request.json'
     profileDto:
       $ref: 'schemas/profile_dto.json'
+    profileUpdateRequest:
+      $ref: 'schemas/profile_update_request_dto.json'
     profileSummaryResultsDto:
       $ref: 'schemas/profile_summary_results_dto.json'
     unifiedTable:

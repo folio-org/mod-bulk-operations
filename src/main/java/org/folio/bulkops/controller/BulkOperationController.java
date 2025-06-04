@@ -272,9 +272,17 @@ public class BulkOperationController implements BulkOperationsApi {
     return ResponseEntity.status(HttpStatus.CREATED).body(profileDto);
   }
 
+  @Override
   public ResponseEntity<Void> deleteProfile(UUID id) {
     bulkOperationService.deleteById(id);
     return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
+
+  @Override
+  public ResponseEntity<ProfileDto> updateProfile(@PathVariable UUID id, org.folio.bulkops.domain.dto.ProfileUpdateRequest profileUpdateRequest) {
+    ProfileDto response = bulkOperationService.updateProfile(id, profileUpdateRequest);
+    return ResponseEntity.ok(response);
+  }
+
 
 }
