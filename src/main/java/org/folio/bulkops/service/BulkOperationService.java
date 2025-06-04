@@ -867,7 +867,7 @@ public class BulkOperationService {
     UUID a = folioExecutionContext.getUserId();
     log.debug("printing a " +a);
     log.info("printing a " +a);
-    User user = userClient.getUserById(a.toString());
+    User user = userClient.getUserById(folioExecutionContext.getUserId().toString());
     UUID kk = UUID.fromString(user.getId());
     log.debug("printing kk " +kk);
     log.info("printing kk " +kk);
@@ -894,5 +894,10 @@ public class BulkOperationService {
       log.error("Unexpected error when fetching user: {}", exception.getMessage(), exception);
       return userId.toString();
     }
+  }
+  public void deleteById(UUID id) {
+    Profile profile = profileRepository.findById(id)
+      .orElseThrow(() -> new NotFoundException("Profile not found with ID: " + id));
+    profileRepository.delete(profile);
   }
 }

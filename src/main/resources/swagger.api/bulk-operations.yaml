@@ -637,6 +637,25 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/errors"
+  /bulk-operations/profiles/{id}:
+    delete:
+      description: Delete a Profile by ID
+      operationId: deleteProfile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        '204':
+          description: Profile deleted successfully
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
 components:
   schemas:
     bulkOperationCollection:
