@@ -3,13 +3,20 @@ package org.folio.bulkops.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.folio.spring.integration.XOkapiHeaders.TENANT;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.InstanceClient;
+import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.LocationClient;
+import org.folio.bulkops.domain.bean.BriefInstance;
+import org.folio.bulkops.domain.bean.BriefInstanceCollection;
+import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.exception.NotFoundException;
@@ -36,6 +43,8 @@ class HoldingsReferenceServiceTest {
   private FolioExecutionContext folioExecutionContext;
   @Mock
   private FolioModuleMetadata folioModuleMetadata;
+  @Mock
+  private ItemClient itemClient;
   @InjectMocks
   private HoldingsReferenceService service;
 
@@ -124,5 +133,51 @@ class HoldingsReferenceServiceTest {
 
     JsonNode result = service.getHoldingsLocationById("loc1", "tenant");
     assertThat(result.get("id").asText()).isEqualTo("loc1");
+  }
+
+  @Test
+  void getInstanceIdByHrid_returnsIdIfFound() {
+    var instance = new BriefInstance().withId("inst-123");
+    var collection = new BriefInstanceCollection();
+    collection.setInstances(List.of(instance));
+    when(instanceClient.getByQuery(anyString())).thenReturn(collection);
+
+    String result = service.getInstanceIdByHrid("hrid-1");
+    assertThat(result).isEqualTo("inst-123");
+  }
+
+  @Test
+  void getInstanceIdByHrid_throwsBulkEditExceptionIfNotFound() {
+    var collection = new BriefInstanceCollection().withInstances(List.of());
+    when(instanceClient.getByQuery(anyString())).thenReturn(collection);
+
+    assertThatThrownBy(() -> service.getInstanceIdByHrid("hrid-2"))
+      .isInstanceOf(BulkEditException.class)
+      .hasMessageContaining("Instance not found by hrid=hrid-2")
+      .extracting("errorType").isEqualTo(ErrorType.WARNING);
+  }
+
+  @Test
+  void getHoldingsIdByItemBarcode_returnsHoldingsIdIfFound() {
+    Item item = new Item();
+    item.setHoldingsRecordId("holdings-123");
+    ItemCollection collection = new ItemCollection();
+    collection.setItems(List.of(item));
+    when(itemClient.getByQuery(anyString(), eq(1))).thenReturn(collection);
+
+    String result = service.getHoldingsIdByItemBarcode("barcode-1");
+    assertThat(result).isEqualTo("holdings-123");
+  }
+
+  @Test
+  void getHoldingsIdByItemBarcode_throwsBulkEditExceptionIfNotFound() {
+    ItemCollection collection = new ItemCollection();
+    collection.setItems(List.of());
+    when(itemClient.getByQuery(anyString(), eq(1))).thenReturn(collection);
+
+    assertThatThrownBy(() -> service.getHoldingsIdByItemBarcode("barcode-2"))
+      .isInstanceOf(BulkEditException.class)
+      .hasMessageContaining("Item not found by barcode=barcode-2")
+      .extracting("errorType").isEqualTo(ErrorType.WARNING);
   }
 }
