@@ -130,7 +130,6 @@ public class BulkOperationService {
   private final DataExportSpringClient dataExportSpringClient;
   private final BulkEditClient bulkEditClient;
   private final RuleService ruleService;
-
   private final BulkOperationDataProcessingRepository dataProcessingRepository;
   private final BulkOperationExecutionRepository executionRepository;
   private final RemoteFileSystemClient remoteFileSystemClient;
@@ -154,7 +153,6 @@ public class BulkOperationService {
   private final ProfileMapper profileMapper;
   private final ProfileRepository profileRepository;
 
-  private final FolioExecutionContext executionContext;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
@@ -865,9 +863,14 @@ public class BulkOperationService {
 //  }
 
   public ProfileDto createProfile(ProfileRequest profileRequest) {
-    UUID currentUserId = executionContext.getUserId();
-    String username = getUsername(currentUserId);
-    Profile entity = profileMapper.toEntity(profileRequest, currentUserId, username);
+    UUID a = folioExecutionContext.getUserId();
+    log.debug("printing a " +a);
+    User user = userClient.getUserById(a.toString());
+    UUID kk = UUID.fromString(user.getId());
+    log.debug("printing kk " +kk);
+    String username = getUsername(kk);
+    log.debug("printing username " +username);
+    Profile entity = profileMapper.toEntity(profileRequest,  kk, username);
     Profile saved = profileRepository.save(entity);
     return profileMapper.toDto(saved);
   }
@@ -876,7 +879,6 @@ public class BulkOperationService {
     try {
       log.info("Attempting to retrieve username for id {}", userId);
       User user = userClient.getUserById(userId.toString());
-
       var personal = user.getPersonal();
       if (personal != null && personal.getFirstName() != null && personal.getLastName() != null) {
         return String.format("%s, %s", personal.getLastName(), personal.getFirstName());
