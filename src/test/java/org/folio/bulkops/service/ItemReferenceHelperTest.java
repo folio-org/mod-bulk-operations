@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 
+import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.CallNumberType;
 import org.folio.bulkops.domain.bean.DamagedStatus;
@@ -28,6 +29,7 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserCollection;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -71,20 +73,21 @@ class ItemReferenceHelperTest extends BaseTest {
 
   @Test
   void testGetNoteType() {
-    when(itemNoteTypeClient.getNoteTypeById("id_1")).thenReturn(new NoteType().withName("name_1"));
-    var actual = itemReferenceHelper.getNoteTypeNameById("id_1", "tenant");
-    assertEquals("name_1", actual);
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      when(itemNoteTypeClient.getNoteTypeById("id_1")).thenReturn(new NoteType().withName("name_1"));
+      var actual = itemReferenceHelper.getNoteTypeNameById("id_1", "tenant");
+      assertEquals("name_1", actual);
 
-    when(itemNoteTypeClient.getNoteTypesByQuery("name==\"name_2\"", 1)).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.singletonList(new NoteType().withId("id_2"))));
-    actual = itemReferenceHelper.getNoteTypeIdByName("name_2");
-    assertEquals("id_2", actual);
+      when(itemNoteTypeClient.getNoteTypesByQuery("name==\"name_2\"", 1)).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.singletonList(new NoteType().withId("id_2"))));
+      actual = itemReferenceHelper.getNoteTypeIdByName("name_2");
+      assertEquals("id_2", actual);
 
-    when(itemNoteTypeClient.getNoteTypeById("id_3")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getNoteTypeNameById("id_3", "tenant"));
+      when(itemNoteTypeClient.getNoteTypeById("id_3")).thenThrow(new NotFoundException("Not found"));
+      assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getNoteTypeNameById("id_3", "tenant"));
 
-    when(itemNoteTypeClient.getNoteTypesByQuery("name==\"name_4\"", 1)).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.emptyList()));
-    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getNoteTypeIdByName("name_4"));
-
+      when(itemNoteTypeClient.getNoteTypesByQuery("name==\"name_4\"", 1)).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.emptyList()));
+      assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getNoteTypeIdByName("name_4"));
+    }
   }
 
   @Test
@@ -166,5 +169,62 @@ class ItemReferenceHelperTest extends BaseTest {
 
     when(loanTypeClient.getByQuery("name==\"name_2\"")).thenThrow(new NotFoundException("Not found"));
     assertThrows(NotFoundException.class, () -> itemReferenceHelper.getLoanTypeByName("name_2"));
+  }
+
+  @Test
+  @SneakyThrows
+  void getLoanTypeByIdReturnsCorrectLoanType() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      when(loanTypeClient.getLoanTypeById("id_1")).thenReturn(new LoanType().withName("Loan Type 1"));
+      var actual = itemReferenceHelper.getLoanTypeById("id_1", "tenant");
+      assertEquals("Loan Type 1", actual.getName());
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void getLoanTypeByIdThrowsExceptionForInvalidId() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      when(loanTypeClient.getLoanTypeById("invalid_id")).thenThrow(new NotFoundException("Not found"));
+      assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getLoanTypeById("invalid_id", "tenant"));
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void getMaterialTypeByIdReturnsCorrectMaterialType() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      when(materialTypeClient.getById("id_1")).thenReturn(new MaterialType().withName("Material Type 1"));
+      var actual = itemReferenceHelper.getMaterialTypeById("id_1", "tenant");
+      assertEquals("Material Type 1", actual.getName());
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void getMaterialTypeByIdThrowsExceptionForInvalidId() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      when(materialTypeClient.getById("invalid_id")).thenThrow(new NotFoundException("Not found"));
+      assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getMaterialTypeById("invalid_id", "tenant"));
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void getLocationByIdReturnsCorrectLocation() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      when(locationClient.getLocationById("id_1")).thenReturn(new ItemLocation().withName("Location 1"));
+      var actual = itemReferenceHelper.getLocationById("id_1", "tenant");
+      assertEquals("Location 1", actual.getName());
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void getLocationByIdThrowsExceptionForInvalidId() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      when(locationClient.getLocationById("invalid_id")).thenThrow(new NotFoundException("Not found"));
+      assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getLocationById("invalid_id", "tenant"));
+    }
   }
 }

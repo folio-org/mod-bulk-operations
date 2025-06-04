@@ -92,6 +92,8 @@ public class Constants {
   public static final String HOLDING_TYPE = "HOLDINGS_RECORD";
   public static final Set<String> SPLIT_NOTE_ENTITIES = Set.of(ITEM_TYPE, HOLDING_TYPE);
   public static final String LINKED_DATA_SOURCE = "LINKED_DATA";
+  public static final String ENTITY = "entity";
+  public static final String TENANT_ID = "tenantId";
 
   public static final String FIELD_999 = "999";
   public static final char INDICATOR_F = 'f';
