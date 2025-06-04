@@ -3,6 +3,7 @@ package org.folio.bulkops.domain.bean;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.util.Date;
@@ -281,6 +282,14 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @CsvCustomBindByPosition(position = 31, converter = ItemNoteListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<ItemNote> notes;
+
+  @JsonProperty("notes")
+  public void setNotes(List<ItemNote> notes) {
+    if (nonNull(notes)) {
+      notes.forEach(note -> note.setTenantId(tenantId));
+    }
+    this.notes = notes;
+  }
 
   @JsonProperty("permanentLoanType")
   @CsvCustomBindByName(column = "Permanent loan type", converter = LoanTypeConverter.class)
