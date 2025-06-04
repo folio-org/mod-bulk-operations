@@ -1,5 +1,6 @@
 package org.folio.bulkops.domain.entity;
 
+import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -13,8 +14,16 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
+import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
 
+import java.io.Serializable;
 import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -23,13 +32,16 @@ import java.util.UUID;
 @NoArgsConstructor
 @Entity
 @Table(name = "profile")
-public class Profile {
+public class Profile implements Serializable {
   @Id
   @GeneratedValue(strategy = GenerationType.AUTO)
   private UUID id;
 
   @Column(name = "name")
   private String name;
+
+  @Column(name = "description")
+  private String description;
 
   @Column(name = "locked")
   private boolean locked;
@@ -38,11 +50,16 @@ public class Profile {
   @Column(name = "entity_type")
   private EntityType entityType;
 
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "bulk_operation_rule_collection", columnDefinition = "jsonb")
-  private String bulkOperationRuleCollection;
+  private BulkOperationRuleCollection bulkOperationRuleCollection;
+//  private Map<String, Object> bulkOperationRuleCollection;
 
+
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "bulk_operation_marc_rule_collection", columnDefinition = "jsonb")
-  private String bulkOperationMarcRuleCollection;
+  private BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection;
+//  private Map<String, Object> bulkOperationMarcRuleCollection;
 
   @Column(name = "created_date")
   private OffsetDateTime createdDate;

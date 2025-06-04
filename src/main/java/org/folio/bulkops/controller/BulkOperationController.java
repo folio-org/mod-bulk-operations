@@ -21,6 +21,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.codehaus.plexus.util.FileUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.dto.BulkOperationCollection;
 import org.folio.bulkops.domain.dto.BulkOperationDto;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -35,6 +36,9 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.QueryRequest;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.dto.Users;
+import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
+import org.folio.bulkops.domain.dto.ProfileDto;
+import org.folio.bulkops.domain.dto.ProfileRequest;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.mapper.BulkOperationMapper;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -48,6 +52,7 @@ import org.folio.bulkops.service.PreviewService;
 import org.folio.bulkops.service.RuleService;
 import org.folio.bulkops.service.UserPermissionsService;
 import org.folio.bulkops.util.MarcCsvHelper;
+import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.core.io.InputStreamResource;
@@ -56,6 +61,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -63,11 +69,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -87,6 +89,8 @@ public class BulkOperationController implements BulkOperationsApi {
   private final BulkOperationRepository bulkOperationRepository;
   private final UserPermissionsService userPermissionsService;
   private final MarcCsvHelper marcCsvHelper;
+
+  private final FolioExecutionContext executionContext;
 
   @Override
   public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(String query, Integer offset, Integer limit) {
@@ -256,4 +260,29 @@ public class BulkOperationController implements BulkOperationsApi {
   public ResponseEntity<BulkOperationDto> triggerBulkEditByQuery(UUID xOkapiUserId, QueryRequest queryRequest) {
     return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.triggerByQuery(xOkapiUserId, queryRequest)), HttpStatus.OK);
   }
+  @Override
+  public ResponseEntity<ProfileSummaryResultsDto> getProfiles() {
+    ProfileSummaryResultsDto response = bulkOperationService.getProfileSummaries();
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
+  public ResponseEntity<ProfileDto> createProfile(ProfileRequest profileRequest){
+    ProfileDto profileDto = bulkOperationService.createProfile(profileRequest);
+    return ResponseEntity.status(HttpStatus.CREATED).body(profileDto);
+  }
+
+  @Override
+  public ResponseEntity<Void> deleteProfile(UUID id) {
+    bulkOperationService.deleteById(id);
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
+  @Override
+  public ResponseEntity<ProfileDto> updateProfile(@PathVariable UUID id, org.folio.bulkops.domain.dto.ProfileUpdateRequest profileUpdateRequest) {
+    ProfileDto response = bulkOperationService.updateProfile(id, profileUpdateRequest);
+    return ResponseEntity.ok(response);
+  }
+
+
 }

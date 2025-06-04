@@ -5,10 +5,7 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserCollection;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 
@@ -25,6 +22,6 @@ public interface UserClient {
   User getUserById(@PathVariable String userId);
 
   @PutMapping(value = "/{userId}", consumes = MediaType.APPLICATION_JSON_VALUE)
-
   void updateUser(@RequestBody User user, @PathVariable String userId);
+
 }
