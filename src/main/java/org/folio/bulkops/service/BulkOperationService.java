@@ -865,11 +865,14 @@ public class BulkOperationService {
   public ProfileDto createProfile(ProfileRequest profileRequest) {
     UUID a = folioExecutionContext.getUserId();
     log.debug("printing a " +a);
+    log.info("printing a " +a);
     User user = userClient.getUserById(a.toString());
     UUID kk = UUID.fromString(user.getId());
     log.debug("printing kk " +kk);
+    log.info("printing kk " +kk);
     String username = getUsername(kk);
     log.debug("printing username " +username);
+    log.info("printing username " +username);
     Profile entity = profileMapper.toEntity(profileRequest,  kk, username);
     Profile saved = profileRepository.save(entity);
     return profileMapper.toDto(saved);
@@ -879,6 +882,8 @@ public class BulkOperationService {
     try {
       log.info("Attempting to retrieve username for id {}", userId);
       User user = userClient.getUserById(userId.toString());
+      log.debug("printing user " +user);
+      log.info("printing user " +user);
       var personal = user.getPersonal();
       if (personal != null && personal.getFirstName() != null && personal.getLastName() != null) {
         return String.format("%s, %s", personal.getLastName(), personal.getFirstName());
