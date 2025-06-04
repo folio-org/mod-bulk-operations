@@ -61,6 +61,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -267,9 +268,13 @@ public class BulkOperationController implements BulkOperationsApi {
 
   @Override
   public ResponseEntity<ProfileDto> createProfile(ProfileRequest profileRequest){
-
     ProfileDto profileDto = bulkOperationService.createProfile(profileRequest);
     return ResponseEntity.status(HttpStatus.CREATED).body(profileDto);
+  }
+
+  public ResponseEntity<Void> deleteProfile(UUID id) {
+    bulkOperationService.deleteById(id);
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 
 }
