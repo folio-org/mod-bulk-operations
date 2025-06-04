@@ -9,7 +9,7 @@ import java.util.UUID;
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, injectionStrategy = InjectionStrategy.CONSTRUCTOR,
   uses = {MappingMethods.class}, builder = @Builder(disableBuilder = true))
 public interface ProfileRequestMapper {
-  @Mapping(target = "id", expression = "java(java.util.UUID.randomUUID())")
+//  @Mapping(target = "id", expression = "java(java.util.UUID.randomUUID())")
   @Mapping(target = "name", source = "dto.name")
   @Mapping(target = "description", source = "dto.description")
   @Mapping(target = "locked", source = "dto.locked")
