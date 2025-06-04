@@ -27,7 +27,6 @@ public interface ProfileMapper {
   ProfileSummaryDTO toSummmaryDTO(Profile profile);
   ProfileDto toDto(org.folio.bulkops.domain.entity.Profile entity);
 
-  @Mapping(target = "id", expression = "java(java.util.UUID.randomUUID())")
   Profile toEntity(ProfileRequest dto);
 
   }
