@@ -2,7 +2,7 @@ package org.folio.bulkops.batch.jobs.processidentifiers;
 
 import static org.folio.bulkops.domain.bean.JobParameterNames.BULK_OPERATION_ID;
 import static org.folio.bulkops.domain.bean.JobParameterNames.IDENTIFIER_TYPE;
-import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_FILE_PATH;
+import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_FILE_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_OUTPUT_CSV_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_OUTPUT_JSON_PATH;
 import static org.folio.bulkops.util.Constants.BULK_EDIT_IDENTIFIERS;
@@ -85,7 +85,7 @@ public class BulkEditUserIdentifiersJobConfig {
 
   @Bean
   @StepScope
-  public Partitioner bulkEditUserPartitioner(@Value("#{jobParameters['" + STORAGE_FILE_PATH + "']}") String outputCsvJsonFilePath,
+  public Partitioner bulkEditUserPartitioner(@Value("#{jobParameters['" + TEMP_LOCAL_FILE_PATH + "']}") String outputCsvJsonFilePath,
                                              @Value("#{jobParameters['" + IDENTIFIERS_FILE_NAME + "']}") String uploadedFileName) {
     return new BulkEditPartitioner(outputCsvJsonFilePath, outputCsvJsonFilePath, null, remoteFileSystemClient.getNumOfLines(uploadedFileName));
   }
