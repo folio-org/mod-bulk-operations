@@ -60,6 +60,7 @@ import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.UserClient;
+import org.folio.bulkops.mapper.ProfileRequestMapper;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExportType;
@@ -151,6 +152,7 @@ public class BulkOperationService {
   private final BulkOperationServiceHelper bulkOperationServiceHelper;
   private final QueryService queryService;
   private final ProfileMapper profileMapper;
+  private final ProfileRequestMapper profileRequestMapper;
   private final ProfileRepository profileRepository;
 
 
@@ -873,7 +875,7 @@ public class BulkOperationService {
     String username = getUsername(kk);
     log.debug("printing username " +username);
     log.info("printing username " +username);
-    Profile entity = profileMapper.toEntity(profileRequest,  kk, username);
+    Profile entity = profileRequestMapper.toEntity(profileRequest,  kk, username);
     Profile saved = profileRepository.save(entity);
     return profileMapper.toDto(saved);
   }
