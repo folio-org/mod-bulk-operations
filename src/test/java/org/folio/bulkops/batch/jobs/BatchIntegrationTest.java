@@ -81,12 +81,10 @@ class BatchIntegrationTest extends BaseTest {
   private final String linkToTriggeringCsvFile = "path/to/identifiers.csv";
 
   private UUID bulkOperationId;
-  private String recordId;
 
   @BeforeEach
   void initializeVariables() {
     bulkOperationId = UUID.randomUUID();
-    recordId = UUID.randomUUID().toString();
   }
 
   @Test

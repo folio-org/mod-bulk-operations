@@ -14,7 +14,6 @@ import org.folio.bulkops.exception.BulkEditException;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.ItemStream;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.util.Assert;
 import java.util.ArrayList;
@@ -70,21 +69,21 @@ public class MarcAsListStringsWriter<T extends BulkOperationsEntity> extends Fla
   @Override
   public void open(ExecutionContext executionContext) {
     if (nonNull(delegateToStringWriter)) {
-      ((ItemStream) delegateToStringWriter).open(executionContext);
+      (delegateToStringWriter).open(executionContext);
     }
   }
 
   @Override
   public void update(ExecutionContext executionContext) {
     if (nonNull(delegateToStringWriter)) {
-      ((ItemStream) delegateToStringWriter).update(executionContext);
+      (delegateToStringWriter).update(executionContext);
     }
   }
 
   @Override
   public void close() {
     if (nonNull(delegateToStringWriter)) {
-      ((ItemStream) delegateToStringWriter).close();
+      (delegateToStringWriter).close();
     }
   }
 

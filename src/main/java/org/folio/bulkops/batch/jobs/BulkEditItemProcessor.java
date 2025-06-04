@@ -23,6 +23,7 @@ import static org.folio.bulkops.util.Constants.NO_ITEM_VIEW_PERMISSIONS;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.Constants.PERMANENT_LOCATION_ID;
 import static org.folio.bulkops.util.SearchIdentifierTypeResolver.getSearchIdentifierType;
+import static org.folio.bulkops.util.Utils.encode;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import feign.codec.DecodeException;
@@ -30,7 +31,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
-import org.folio.bulkops.batch.jobs.processidentifiers.HttpEncoder;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.SearchClient;
 import org.folio.bulkops.client.UserClient;
@@ -94,7 +94,7 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
     var type = IdentifierType.fromValue(identifierType);
     var limit = HOLDINGS_RECORD_ID.equals(type) ? Integer.MAX_VALUE : 1;
     var idType = resolveIdentifier(identifierType);
-    var identifier = "barcode".equals(idType) ? HttpEncoder.encode(itemIdentifier.getItemId()) : itemIdentifier.getItemId();
+    var identifier = "barcode".equals(idType) ? encode(itemIdentifier.getItemId()) : itemIdentifier.getItemId();
     try {
       final ExtendedItemCollection extendedItemCollection = new ExtendedItemCollection()
         .withExtendedItems(new ArrayList<>())
