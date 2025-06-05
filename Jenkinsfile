@@ -8,7 +8,7 @@ buildMvn {
     buildJavaDocker {
       publishMaster = true
       healthChk = true
-      healthChkCmd = 'wget --no-verbose --tries=1 --timeout=10000 --spider http://localhost:8081/admin/health || exit 1'
+      healthChkCmd = 'wget --no-verbose --tries=1 --spider http://localhost:8081/admin/health || exit 1'
     }
   }
 }
