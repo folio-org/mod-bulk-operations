@@ -38,6 +38,7 @@ import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.dto.Users;
 import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
 import org.folio.bulkops.domain.dto.ProfileDto;
+import org.folio.bulkops.domain.dto.ProfileUpdateRequest;
 import org.folio.bulkops.domain.dto.ProfileRequest;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.mapper.BulkOperationMapper;
@@ -90,7 +91,6 @@ public class BulkOperationController implements BulkOperationsApi {
   private final UserPermissionsService userPermissionsService;
   private final MarcCsvHelper marcCsvHelper;
 
-  private final FolioExecutionContext executionContext;
 
   @Override
   public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(String query, Integer offset, Integer limit) {
@@ -139,7 +139,7 @@ public class BulkOperationController implements BulkOperationsApi {
 
   @Override
   public ResponseEntity<BulkOperationDto> startBulkOperation(UUID operationId, BulkOperationStart bulkOperationStart, UUID xOkapiUserId) {
-      return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.startBulkOperation(operationId, xOkapiUserId, bulkOperationStart)), HttpStatus.OK);
+    return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.startBulkOperation(operationId, xOkapiUserId, bulkOperationStart)), HttpStatus.OK);
   }
 
   @Override
@@ -260,6 +260,7 @@ public class BulkOperationController implements BulkOperationsApi {
   public ResponseEntity<BulkOperationDto> triggerBulkEditByQuery(UUID xOkapiUserId, QueryRequest queryRequest) {
     return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.triggerByQuery(xOkapiUserId, queryRequest)), HttpStatus.OK);
   }
+
   @Override
   public ResponseEntity<ProfileSummaryResultsDto> getProfiles() {
     ProfileSummaryResultsDto response = bulkOperationService.getProfileSummaries();
@@ -267,7 +268,7 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   @Override
-  public ResponseEntity<ProfileDto> createProfile(ProfileRequest profileRequest){
+  public ResponseEntity<ProfileDto> createProfile(ProfileRequest profileRequest) {
     ProfileDto profileDto = bulkOperationService.createProfile(profileRequest);
     return ResponseEntity.status(HttpStatus.CREATED).body(profileDto);
   }
@@ -279,10 +280,9 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   @Override
-  public ResponseEntity<ProfileDto> updateProfile(@PathVariable UUID id, org.folio.bulkops.domain.dto.ProfileUpdateRequest profileUpdateRequest) {
+  public ResponseEntity<ProfileDto> updateProfile(UUID id, ProfileUpdateRequest profileUpdateRequest) {
     ProfileDto response = bulkOperationService.updateProfile(id, profileUpdateRequest);
     return ResponseEntity.ok(response);
   }
-
 
 }

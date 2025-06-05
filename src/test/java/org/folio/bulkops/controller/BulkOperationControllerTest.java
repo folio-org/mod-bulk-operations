@@ -7,6 +7,9 @@ import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
+
+import org.folio.bulkops.domain.dto.EntityType;
+
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_MARC_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.COMMITTING_CHANGES_ERROR_FILE;
@@ -25,13 +28,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.ByteArrayInputStream;
@@ -56,10 +59,17 @@ import org.folio.bulkops.domain.bean.NoteTypeCollection;
 import org.folio.bulkops.domain.bean.Personal;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.folio.bulkops.domain.dto.ProfileSummaryDTO;
+import org.folio.bulkops.domain.dto.ProfileUpdateRequest;
 import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
+import org.folio.bulkops.domain.dto.ProfileDto;
+import org.folio.bulkops.domain.dto.ProfileRequest;
+import org.folio.bulkops.domain.entity.Profile;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.processor.note.HoldingsNotesProcessor;
+import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
 import org.folio.bulkops.processor.note.ItemNoteProcessor;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.BulkOperationService;
@@ -76,30 +86,36 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+
+
 class BulkOperationControllerTest extends BaseTest {
 
-   @MockitoBean
+  @MockitoBean
   private BulkOperationService bulkOperationService;
-   @MockitoBean
+  @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
-   @MockitoBean
+  @MockitoBean
   private RuleService ruleService;
-   @MockitoBean
+  @MockitoBean
   private ItemNoteProcessor itemNoteProcessor;
-   @MockitoBean
+  @MockitoBean
   private HoldingsNotesProcessor holdingsNotesProcessor;
 
-   @MockitoBean
+  @MockitoBean
   private ListUsersService listUsersService;
 
-   @MockitoBean
+  @MockitoBean
   private LogFilesService logFilesService;
 
-   @MockitoBean
+  @MockitoBean
   private ConsortiaService consortiaService;
 
   @Autowired
   private BulkOperationRepository bulkOperationRepository;
+
+  private static final String USER_ID = "413ce292-d38f-426f-bb10-2450f03b4705";
 
   @Test
   @SneakyThrows
@@ -363,7 +379,7 @@ class BulkOperationControllerTest extends BaseTest {
       """;
 
     var bulkOperation = BulkOperation.builder()
-        .id(bulkoperationId).build();
+      .id(bulkoperationId).build();
 
     when(bulkOperationService.getBulkOperationOrThrow(bulkoperationId))
       .thenReturn(bulkOperation);
@@ -456,4 +472,147 @@ class BulkOperationControllerTest extends BaseTest {
       .holdingsNoteTypes(List.of(HoldingsNoteType.builder().name("name_1").build()))
       .build());
   }
+
+  @Test
+  void shouldReturnProfileSummaries() throws Exception {
+    ProfileSummaryDTO profile1 = buildProfileSummaryDto(UUID.randomUUID(), "Test Profile 1", "Sample description 1", "test-user", false);
+    ProfileSummaryDTO profile2 = buildProfileSummaryDto(UUID.randomUUID(), "Test Profile 2", "Sample description 2", "test-user", false);
+
+    ProfileSummaryResultsDto summaryDto = new ProfileSummaryResultsDto();
+    summaryDto.setTotalRecords((long) 2);
+    summaryDto.setContent(List.of(profile1, profile2));
+
+    when(bulkOperationService.getProfileSummaries()).thenReturn(summaryDto);
+
+    var requestBuilder = get("/bulk-operations/profiles")
+      .headers(defaultHeaders())
+      .contentType(APPLICATION_JSON);
+
+    mockMvc.perform(requestBuilder).
+      andExpect(status().isOk())
+      .andExpect(jsonPath("$.totalRecords", is(2)))
+      .andExpect(jsonPath("$.content[0].name", is(profile1.getName())))
+      .andExpect(jsonPath("$.content[0].description", is(profile1.getDescription())))
+      .andExpect(jsonPath("$.content[0].locked", is(profile1.getLocked())))
+      .andExpect(jsonPath("$.content[0].createdByUser", is(profile1.getCreatedByUser())))
+      .andExpect(jsonPath("$.content[1].name", is(profile2.getName())))
+      .andExpect(jsonPath("$.content[1].description", is(profile2.getDescription())))
+      .andExpect(jsonPath("$.content[1].locked", is(profile2.getLocked())))
+      .andExpect(jsonPath("$.content[1].createdByUser", is(profile2.getCreatedByUser())));
+  }
+
+  @Test
+  void shouldCreateProfile() throws Exception {
+    UUID profileId = UUID.randomUUID();
+
+    ProfileRequest request = new ProfileRequest();
+    request.setName("test");
+    request.setLocked(false);
+    request.setEntityType(USER);
+
+    ProfileDto createdProfile = buildProfileDto(profileId, "Updated Name", "Updated description", USER, false, "test-user");
+
+    when(bulkOperationService.createProfile(any(ProfileRequest.class)))
+      .thenReturn(createdProfile);
+
+    mockMvc.perform(post("/bulk-operations/profiles")
+        .headers(defaultHeaders())
+        .contentType(APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(request)))
+      .andExpect(status().isCreated())
+      .andExpect(jsonPath("$.id", is(createdProfile.getId().toString())))
+      .andExpect(jsonPath("$.name", is(createdProfile.getName())));
+  }
+
+  @Test
+  void shouldDeleteProfile() throws Exception {
+    var id = UUID.randomUUID();
+    doNothing().when(bulkOperationService).deleteById(id);
+
+    mockMvc.perform(delete("/bulk-operations/profiles/{id}", id)
+        .headers(defaultHeaders())
+        .contentType(APPLICATION_JSON))
+      .andExpect(status().isNoContent());
+  }
+
+  @Test
+  void shouldReturnNotFoundWhenDeletingNonExistentProfile() throws Exception {
+    UUID id = UUID.randomUUID();
+    doThrow(new NotFoundException("Profile not found with ID: " + id))
+      .when(bulkOperationService).deleteById(id);
+
+    mockMvc.perform(delete("/bulk-operations/profiles/{id}", id)
+        .headers(defaultHeaders())
+        .contentType(APPLICATION_JSON))
+      .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void shouldUpdateProfile() throws Exception {
+    UUID profileId = UUID.randomUUID();
+    ProfileUpdateRequest updateRequest = buildProfileUpdateRequest("Updated Name", "Updated description", USER, false);
+    ProfileDto updatedProfile = buildProfileDto(profileId, "Updated Name", "Updated description", USER, false, "test-user");
+
+    when(bulkOperationService.updateProfile(eq(profileId), any(ProfileUpdateRequest.class)))
+      .thenReturn(updatedProfile);
+
+    mockMvc.perform(put("/bulk-operations/profiles/{id}", profileId)
+        .headers(defaultHeaders())
+        .contentType(APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(updateRequest)))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.id", is(updatedProfile.getId().toString())))
+      .andExpect(jsonPath("$.name", is(updatedProfile.getName())))
+      .andExpect(jsonPath("$.description", is(updatedProfile.getDescription())))
+      .andExpect(jsonPath("$.entityType", is(updatedProfile.getEntityType().toString())))
+      .andExpect(jsonPath("$.locked", is(updatedProfile.getLocked())));
+  }
+
+  @Test
+  void shouldReturnNotFoundWhenUpdatingNonExistentProfile() throws Exception {
+    UUID profileId = UUID.randomUUID();
+
+    ProfileUpdateRequest updateRequest = buildProfileUpdateRequest("Updated Name", "Updated description", USER, false);
+
+    when(bulkOperationService.updateProfile(eq(profileId), any(ProfileUpdateRequest.class)))
+      .thenThrow(new NotFoundException("Profile not found with ID: " + profileId));
+
+    mockMvc.perform(put("/bulk-operations/profiles/{id}", profileId)
+        .headers(defaultHeaders())
+        .contentType(APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(updateRequest)))
+      .andExpect(status().isNotFound());
+  }
+
+  private ProfileUpdateRequest buildProfileUpdateRequest(String name, String description, org.folio.bulkops.domain.dto.EntityType entityType, boolean locked) {
+    ProfileUpdateRequest request = new ProfileUpdateRequest();
+    request.setName(name);
+    request.setDescription(description);
+    request.setEntityType(entityType);
+    request.setLocked(locked);
+    return request;
+  }
+
+  private ProfileDto buildProfileDto(UUID id, String name, String description, EntityType entityType, boolean locked, String createdByUser) {
+    ProfileDto dto = new ProfileDto();
+    dto.setId(id);
+    dto.setName(name);
+    dto.setDescription(description);
+    dto.setEntityType(entityType);
+    dto.setLocked(locked);
+    dto.setCreatedByUser(createdByUser);
+    return dto;
+  }
+
+  private ProfileSummaryDTO buildProfileSummaryDto(UUID id, String name, String description, String createdByUser, boolean locked) {
+    ProfileSummaryDTO dto = new ProfileSummaryDTO();
+    dto.setId(id);
+    dto.setName(name);
+    dto.setDescription(description);
+    dto.setCreatedByUser(createdByUser);
+    dto.setLocked(locked);
+    return dto;
+  }
+
+
 }

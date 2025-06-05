@@ -38,13 +38,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.testcontainers.shaded.org.hamcrest.MatcherAssert.assertThat;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.containsString;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.equalTo;
@@ -80,30 +74,22 @@ import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.DataExportSpringClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
-import org.folio.bulkops.domain.bean.ExtendedItem;
-import org.folio.bulkops.domain.bean.HoldingsRecord;
-import org.folio.bulkops.domain.bean.Item;
-import org.folio.bulkops.domain.bean.ItemCollection;
-import org.folio.bulkops.domain.bean.ItemLocation;
-import org.folio.bulkops.domain.bean.Job;
-import org.folio.bulkops.domain.bean.JobStatus;
-import org.folio.bulkops.domain.bean.StateType;
-import org.folio.bulkops.domain.bean.StatusType;
-import org.folio.bulkops.domain.bean.User;
-import org.folio.bulkops.domain.bean.UserGroup;
-import org.folio.bulkops.domain.bean.UserGroupCollection;
+import org.folio.bulkops.domain.bean.*;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
+import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
+import org.folio.bulkops.domain.dto.ProfileUpdateRequest;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.DataImportJobExecution;
+import org.folio.bulkops.domain.dto.ProfileSummaryDTO;
 import org.folio.bulkops.domain.dto.DataImportProgress;
+import org.folio.bulkops.domain.dto.ProfileRequest;
 import org.folio.bulkops.domain.dto.DataImportStatus;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
@@ -111,21 +97,18 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.MarcAction;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.Parameter;
+import org.folio.bulkops.domain.dto.ProfileDto;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
-import org.folio.bulkops.domain.entity.BulkOperation;
-import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
-import org.folio.bulkops.domain.entity.BulkOperationExecution;
-import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.domain.entity.*;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.mapper.ProfileMapper;
+import org.folio.bulkops.mapper.ProfileRequestMapper;
 import org.folio.bulkops.processor.marc.MarcInstanceDataProcessor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
-import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
-import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
-import org.folio.bulkops.repository.BulkOperationExecutionRepository;
-import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.repository.*;
 import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.util.CSVHelper;
 import org.folio.bulkops.util.MarcCsvHelper;
@@ -139,11 +122,15 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.marc4j.marc.Record;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.multipart.MultipartFile;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class BulkOperationServiceTest extends BaseTest {
   @Autowired
@@ -172,6 +159,9 @@ class BulkOperationServiceTest extends BaseTest {
 
    @MockitoBean
   private BulkOperationExecutionRepository executionRepository;
+
+  @MockitoBean
+  private ProfileRepository profileRepository;
 
    @MockitoBean
   private BulkOperationExecutionContentRepository executionContentRepository;
@@ -205,6 +195,12 @@ class BulkOperationServiceTest extends BaseTest {
 
    @MockitoBean
   private MarcUpdateService marcUpdateService;
+
+  @MockitoBean
+  private ProfileMapper profileMapper;
+
+  @MockitoBean
+  private ProfileRequestMapper profileRequestMapper;
 
   @Test
   @SneakyThrows
@@ -1869,4 +1865,108 @@ class BulkOperationServiceTest extends BaseTest {
     var contentCharsByUtf8BomLen = Arrays.copyOfRange(contentCaptor.getValue().readAllBytes(), 0, UTF_8_BOM.length);
     assertFalse(Arrays.equals(UTF_8_BOM, contentCharsByUtf8BomLen));
   }
+
+  @Test
+  void shouldReturnAllProfileSummaries() {
+    Profile profile = new Profile();
+    List<Profile> profileList = List.of(profile);
+    ProfileSummaryDTO summaryDto = new ProfileSummaryDTO();
+
+    when(profileRepository.findAll()).thenReturn(profileList);
+    when(profileMapper.toSummmaryDTO(profile)).thenReturn(summaryDto);
+
+    ProfileSummaryResultsDto result = bulkOperationService.getProfileSummaries();
+
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).containsExactly(summaryDto);
+    assertThat(result.getTotalRecords()).isEqualTo(1);
+  }
+
+  @Test
+  void shouldCreateProfile() {
+    UUID userId = UUID.randomUUID();
+    String userIdStr = userId.toString();
+    String username = "testuser";
+
+    ProfileRequest profileRequest = new ProfileRequest().name("test");
+    Profile profile = new Profile();
+    Profile savedProfile = new Profile();
+    ProfileDto profileDto = new ProfileDto();
+
+    //when(userClient.getUserById(Mockito.anyString())).thenReturn(any(User.class));
+//  when(folioExecutionContext.getUserId()).thenReturn(any(UUID.class));
+    when(folioExecutionContext.getUserId()).thenReturn(userId);
+
+    User user = new User();
+    user.setId(userIdStr);
+    when(userClient.getUserById(userIdStr)).thenReturn(user);
+    doReturn(username).when(errorService).saveError(userId);
+    when(profileRequestMapper.toEntity(profileRequest, userId, "Doe")).thenReturn(profile);
+    when(profileRepository.save(profile)).thenReturn(savedProfile);
+    when(profileMapper.toDto(savedProfile)).thenReturn(profileDto);
+
+    ProfileDto result = bulkOperationService.createProfile(profileRequest);
+
+    assertThat(result).isEqualTo(profileDto);
+  }
+
+
+
+
+  @Test
+  void shouldDeleteProfile() {
+    UUID id = UUID.randomUUID();
+    Profile profile = new Profile();
+    when(profileRepository.findById(id)).thenReturn(Optional.of(profile));
+
+    bulkOperationService.deleteById(id);
+
+    verify(profileRepository).delete(profile);
+  }
+
+  @Test
+  void shouldThrowOnDeleteWhenProfileNotFound() {
+    UUID id = UUID.randomUUID();
+    when(profileRepository.findById(id)).thenReturn(Optional.empty());
+    assertThrows(NotFoundException.class, () -> bulkOperationService.deleteById(id));
+  }
+
+//  @Test
+//  void shouldUpdateProfile() {
+//    UUID profileId = UUID.randomUUID();
+//    UUID userId = UUID.randomUUID();
+//    String userIdStr = userId.toString();
+//    String username = "Doe, John";
+//
+//    ProfileUpdateRequest updateRequest = new ProfileUpdateRequest().name("Updated Name");
+//    Profile existing = new Profile();
+//    Profile saved = new Profile();
+//    ProfileDto profileDto = new ProfileDto();
+//
+//    User user = new User().id(userIdStr).personal(new User.Personal().firstName("John").lastName("Doe"));
+//
+//    when(folioExecutionContext.getUserId()).thenReturn(userId);
+//    when(userClient.getUserById(userIdStr)).thenReturn(user);
+//    when(profileRepository.findById(profileId)).thenReturn(Optional.of(existing));
+//    when(profileRepository.save(existing)).thenReturn(saved);
+//    when(profileMapper.toDto(saved)).thenReturn(profileDto);
+//
+//    ProfileDto result = bulkOperationService.updateProfile(profileId, updateRequest);
+//
+//    verify(profileRequestMapper).updateEntity(existing, updateRequest);
+//    assertThat(existing.getUpdatedBy()).isEqualTo(userId);
+//    assertThat(existing.getUpdatedByUser()).isEqualTo(username);
+//    assertThat(existing.getUpdatedDate()).isNotNull();
+//    assertThat(result).isEqualTo(profileDto);
+//  }
+
+  @Test
+  void shouldThrowOnUpdateWhenProfileNotFound() {
+    UUID profileId = UUID.randomUUID();
+    ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
+    when(profileRepository.findById(profileId)).thenReturn(Optional.empty());
+
+    assertThrows(NotFoundException.class, () -> bulkOperationService.updateProfile(profileId, updateRequest));
+  }
+
 }

@@ -3,14 +3,19 @@ package org.folio.bulkops.mapper;
 import org.folio.bulkops.domain.entity.Profile;
 import org.folio.bulkops.domain.dto.ProfileRequest;
 import org.folio.bulkops.domain.dto.ProfileUpdateRequest;
-import org.mapstruct.*;
+import org.mapstruct.Mapper;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.InjectionStrategy;
+import org.mapstruct.Builder;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
 
 import java.util.UUID;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, injectionStrategy = InjectionStrategy.CONSTRUCTOR,
   uses = {MappingMethods.class}, builder = @Builder(disableBuilder = true))
 public interface ProfileRequestMapper {
-//  @Mapping(target = "id", expression = "java(java.util.UUID.randomUUID())")
+
   @Mapping(target = "name", source = "dto.name")
   @Mapping(target = "description", source = "dto.description")
   @Mapping(target = "locked", source = "dto.locked")

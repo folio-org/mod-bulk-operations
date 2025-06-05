@@ -92,6 +92,7 @@ import org.folio.bulkops.domain.dto.ProfileRequest;
 import org.folio.bulkops.domain.dto.ProfileDto;
 import org.folio.bulkops.mapper.ProfileMapper;
 import org.folio.bulkops.domain.dto.ProfileSummaryDTO;
+import org.folio.bulkops.domain.dto.ProfileUpdateRequest;
 import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
 import org.folio.bulkops.processor.UpdatedEntityHolder;
 import org.folio.bulkops.processor.folio.DataProcessorFactory;
@@ -154,8 +155,6 @@ public class BulkOperationService {
   private final QueryService queryService;
   private final ProfileMapper profileMapper;
   private final ProfileRepository profileRepository;
-
-
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
   private static final String PREVIEW_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-CSV-%s.csv";
@@ -219,21 +218,21 @@ public class BulkOperationService {
 
   private BulkOperation saveQueryBulkOperation(UUID userId, QueryRequest queryRequest) {
     return bulkOperationRepository.save(BulkOperation.builder()
-            .id(UUID.randomUUID())
-            .entityType(entityTypeService.getEntityTypeById(queryRequest.getEntityTypeId()))
-            .approach(QUERY)
-            .identifierType(IdentifierType.ID)
-            .status(EXECUTING_QUERY)
-            .startTime(LocalDateTime.now())
-            .userId(userId)
-            .fqlQuery(queryRequest.getFqlQuery())
-            .fqlQueryId(queryRequest.getQueryId())
-            .userFriendlyQuery(queryRequest.getUserFriendlyQuery())
-            .entityTypeId(queryRequest.getEntityTypeId())
-            .build());
+      .id(UUID.randomUUID())
+      .entityType(entityTypeService.getEntityTypeById(queryRequest.getEntityTypeId()))
+      .approach(QUERY)
+      .identifierType(IdentifierType.ID)
+      .status(EXECUTING_QUERY)
+      .startTime(LocalDateTime.now())
+      .userId(userId)
+      .fqlQuery(queryRequest.getFqlQuery())
+      .fqlQueryId(queryRequest.getQueryId())
+      .userFriendlyQuery(queryRequest.getUserFriendlyQuery())
+      .entityTypeId(queryRequest.getEntityTypeId())
+      .build());
   }
 
-  public void confirm(BulkOperationDataProcessing dataProcessing)  {
+  public void confirm(BulkOperationDataProcessing dataProcessing) {
     var operationId = dataProcessing.getBulkOperationId();
     var operation = getBulkOperationOrThrow(operationId);
 
@@ -304,7 +303,7 @@ public class BulkOperationService {
     }
   }
 
-  public void confirmForInstanceMarc(BulkOperationDataProcessing dataProcessing)  {
+  public void confirmForInstanceMarc(BulkOperationDataProcessing dataProcessing) {
     var operationId = dataProcessing.getBulkOperationId();
     var operation = getBulkOperationOrThrow(operationId);
 
@@ -366,7 +365,7 @@ public class BulkOperationService {
     var processor = dataProcessorFactory.getProcessorFromFactory(entityClass);
     UpdatedEntityHolder<BulkOperationsEntity> modified = null;
     try {
-        modified = processor.process(original.getRecordBulkOperationEntity().getIdentifier(operation.getIdentifierType()), original, rules);
+      modified = processor.process(original.getRecordBulkOperationEntity().getIdentifier(operation.getIdentifierType()), original, rules);
     } catch (Exception e) {
       log.error("Failed to modify entity", e);
     }
@@ -445,7 +444,7 @@ public class BulkOperationService {
             if (result != original) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
-              if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId()) || entityClass == User.class ) {
+              if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId()) || entityClass == User.class) {
                 CSVHelper.writeBeanToCsv(operation, csvWriter, result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
               } else {
                 var tenantIdOfEntity = result.getTenant();
@@ -461,7 +460,7 @@ public class BulkOperationService {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLinkToFailedEntity(), ErrorType.ERROR);
           } catch (WritePermissionDoesNotExist e) {
             var userName = userClient.getUserById(folioExecutionContext.getUserId().toString()).getUsername();
-            var errorMessage = String.format(e.getMessage(), userName, IdentifiersResolver.resolve(operation.getIdentifierType()), original.getIdentifier(operation.getIdentifierType()))  ;
+            var errorMessage = String.format(e.getMessage(), userName, IdentifiersResolver.resolve(operation.getIdentifierType()), original.getIdentifier(operation.getIdentifierType()));
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), errorMessage, ErrorType.ERROR);
           } catch (Exception e) {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage(), ErrorType.ERROR);
@@ -507,7 +506,7 @@ public class BulkOperationService {
     var step = bulkOperationStart.getStep();
     var approach = bulkOperationStart.getApproach();
     BulkOperation operation = bulkOperationRepository.findById(bulkOperationId)
-        .orElseThrow(() -> new NotFoundException("Bulk operation was not found by id=" + bulkOperationId));
+      .orElseThrow(() -> new NotFoundException("Bulk operation was not found by id=" + bulkOperationId));
     operation.setUserId(xOkapiUserId);
 
     String errorMessage = null;
@@ -776,21 +775,21 @@ public class BulkOperationService {
     bulkOperationRepository.save(operation);
 
     var folioProcessing = dataProcessingRepository.save(BulkOperationDataProcessing.builder()
+      .bulkOperationId(operation.getId())
+      .status(StatusType.ACTIVE)
+      .startTime(LocalDateTime.now())
+      .totalNumOfRecords(operation.getTotalNumOfRecords())
+      .processedNumOfRecords(0)
+      .build());
+
+    if (INSTANCE_MARC.equals(operation.getEntityType())) {
+      var marcProcessing = dataProcessingRepository.save(BulkOperationDataProcessing.builder()
         .bulkOperationId(operation.getId())
         .status(StatusType.ACTIVE)
         .startTime(LocalDateTime.now())
         .totalNumOfRecords(operation.getTotalNumOfRecords())
         .processedNumOfRecords(0)
         .build());
-
-    if (INSTANCE_MARC.equals(operation.getEntityType())) {
-      var marcProcessing = dataProcessingRepository.save(BulkOperationDataProcessing.builder()
-          .bulkOperationId(operation.getId())
-          .status(StatusType.ACTIVE)
-          .startTime(LocalDateTime.now())
-          .totalNumOfRecords(operation.getTotalNumOfRecords())
-          .processedNumOfRecords(0)
-          .build());
       executor.execute(getRunnableWithCurrentFolioContext(() -> confirmForInstanceMarc(marcProcessing)));
     }
     executor.execute(getRunnableWithCurrentFolioContext(() -> confirm(folioProcessing)));
@@ -858,25 +857,36 @@ public class BulkOperationService {
 
     return response;
   }
-//  public ProfileDto createProfile(org.folio.bulkops.domain.dto.ProfileRequest profileRequest) {
-//    Profile entity = profileMapper.toEntity(profileRequest);
-//    Profile saved = profileRepository.save(entity);
-//    return profileMapper.toDto(saved);
-//  }
+
 
   public ProfileDto createProfile(ProfileRequest profileRequest) {
-    UUID a = folioExecutionContext.getUserId();
-    log.debug("printing a " +a);
-    log.info("printing a " +a);
     User user = userClient.getUserById(folioExecutionContext.getUserId().toString());
-    UUID kk = UUID.fromString(user.getId());
-    log.debug("printing kk " +kk);
-    log.info("printing kk " +kk);
-    String username = getUsername(kk);
-    log.debug("printing username " +username);
-    log.info("printing username " +username);
-    Profile entity = profileRequestMapper.toEntity(profileRequest,  kk, username);
+    UUID userId = UUID.fromString(user.getId());
+    String username = getUsername(userId);
+    Profile entity = profileRequestMapper.toEntity(profileRequest, userId, username);
     Profile saved = profileRepository.save(entity);
+    return profileMapper.toDto(saved);
+  }
+
+  public void deleteById(UUID id) {
+    Profile profile = profileRepository.findById(id)
+      .orElseThrow(() -> new NotFoundException("Profile not found with ID: " + id));
+    profileRepository.delete(profile);
+  }
+
+  public ProfileDto updateProfile(UUID profileId, ProfileUpdateRequest profileUpdateRequest) {
+    User user = userClient.getUserById(folioExecutionContext.getUserId().toString());
+    UUID userId = UUID.fromString(user.getId());
+    String username = getUsername(userId);
+    Profile existing = profileRepository.findById(profileId)
+      .orElseThrow(() -> new NotFoundException("Profile not found with ID: " + profileId));
+
+    profileRequestMapper.updateEntity(existing, profileUpdateRequest);
+    existing.setUpdatedDate(OffsetDateTime.now());
+    existing.setUpdatedBy(userId);
+    existing.setUpdatedByUser(username);
+
+    Profile saved = profileRepository.save(existing);
     return profileMapper.toDto(saved);
   }
 
@@ -884,8 +894,6 @@ public class BulkOperationService {
     try {
       log.info("Attempting to retrieve username for id {}", userId);
       User user = userClient.getUserById(userId.toString());
-      log.debug("printing user " +user);
-      log.info("printing user " +user);
       var personal = user.getPersonal();
       if (personal != null && personal.getFirstName() != null && personal.getLastName() != null) {
         return String.format("%s, %s", personal.getLastName(), personal.getFirstName());
@@ -896,27 +904,6 @@ public class BulkOperationService {
       return userId.toString();
     }
   }
-  public void deleteById(UUID id) {
-    Profile profile = profileRepository.findById(id)
-      .orElseThrow(() -> new NotFoundException("Profile not found with ID: " + id));
-    profileRepository.delete(profile);
-  }
 
-  public ProfileDto updateProfile(UUID profileId, org.folio.bulkops.domain.dto.ProfileUpdateRequest profileUpdateRequest) {
-    UUID a = folioExecutionContext.getUserId();
-    User user = userClient.getUserById(folioExecutionContext.getUserId().toString());
-    UUID kk = UUID.fromString(user.getId());
-    String username = getUsername(kk);
-    Profile existing = profileRepository.findById(profileId)
-      .orElseThrow(() -> new NotFoundException("Profile not found with ID: " + profileId));
-
-    profileRequestMapper.updateEntity(existing, profileUpdateRequest);
-    existing.setUpdatedDate(OffsetDateTime.now());
-    existing.setUpdatedBy(kk);
-    existing.setUpdatedByUser(username);
-
-    Profile saved = profileRepository.save(existing);
-    return profileMapper.toDto(saved);
-  }
 
 }
