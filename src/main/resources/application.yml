@@ -43,8 +43,8 @@ spring:
   batch:
     job:
       enabled: false
-#    jdbc:
-#      initialize-schema: never
+    jdbc:
+      initialize-schema: never
 folio:
   system-user:
     enabled: ${SYSTEM_USER_ENABLED:true}
