@@ -131,71 +131,70 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 class BulkOperationServiceTest extends BaseTest {
 
-   // Replace with constructor if needed
   @Autowired
   private BulkOperationService bulkOperationService;
 
-   @MockitoBean
+  @MockitoBean
   private BulkOperationRepository bulkOperationRepository;
 
-   @MockitoBean
+  @MockitoBean
   private DataExportSpringClient dataExportSpringClient;
 
-   @MockitoBean
+  @MockitoBean
   private BulkEditClient bulkEditClient;
 
-   @MockitoBean
+  @MockitoBean
   private RuleService ruleService;
 
-   @MockitoBean
+  @MockitoBean
   private BulkOperationDataProcessingRepository dataProcessingRepository;
 
-   @MockitoBean
+  @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
 
-   @MockitoBean
+  @MockitoBean
   private FolioS3Client remoteFolioS3Client;
 
-   @MockitoBean
+  @MockitoBean
   private BulkOperationExecutionRepository executionRepository;
 
   @MockitoBean
   private ProfileRepository profileRepository;
 
-   @MockitoBean
+  @MockitoBean
   private BulkOperationExecutionContentRepository executionContentRepository;
 
-   @MockitoBean
+  @MockitoBean
   private ErrorService errorService;
 
-   @MockitoBean
+  @MockitoBean
   private ItemReferenceService itemReferenceService;
 
-   @MockitoBean
+  @MockitoBean
   private QueryService queryService;
 
-   @MockitoBean
+  @MockitoBean
   private ConsortiaService consortiaService;
 
-   @MockitoBean
+  @MockitoBean
   private PermissionsValidator permissionsValidator;
 
-   @MockitoBean
+  @MockitoBean
   private MetadataProviderService metadataProviderService;
 
-   @MockitoBean
+  @MockitoBean
   private SrsService srsService;
 
-   @MockitoBean
+  @MockitoBean
   private MarcCsvHelper marcCsvHelper;
 
-
-   @MockitoBean
+  @MockitoBean
   private MarcInstanceDataProcessor marcInstanceDataProcessor;
 
-   @MockitoBean
+  @MockitoBean
   private MarcUpdateService marcUpdateService;
 
   @MockitoBean
@@ -206,6 +205,8 @@ class BulkOperationServiceTest extends BaseTest {
 
   @Mock
   private FolioExecutionContext ec;
+
+  private UUID contextUserId = UUID.randomUUID();
 
   @Test
   @SneakyThrows
@@ -260,7 +261,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(remoteFileSystemClient.put(any(), any()))
       .thenThrow(new S3ClientException("error"));
 
-    when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX,ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE + " : error"))
+    when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX, ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE + " : error"))
       .thenReturn("/linkToMatchingErrorsFile.csv");
 
     bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
@@ -272,7 +273,7 @@ class BulkOperationServiceTest extends BaseTest {
     verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
     var capturedBulkOperation = operationCaptor.getValue();
     assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, "error")));
+    assertThat(capturedBulkOperation.getErrorMessage(), equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, "error")));
     assertThat(capturedBulkOperation.getLinkToMatchedRecordsErrorsCsvFile(), equalTo("/linkToMatchingErrorsFile.csv"));
   }
 
@@ -327,7 +328,7 @@ class BulkOperationServiceTest extends BaseTest {
     verify(bulkOperationRepository, times(1)).save(operationCaptor.capture());
     var capturedBulkOperation = operationCaptor.getValue();
     assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, "error")));
+    assertThat(capturedBulkOperation.getErrorMessage(), equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, "error")));
   }
 
   @Test
@@ -339,7 +340,7 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = JobStatus.class, names = { "FAILED", "SCHEDULED" }, mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(value = JobStatus.class, names = {"FAILED", "SCHEDULED"}, mode = EnumSource.Mode.INCLUDE)
   @SneakyThrows
   void shouldFailOperationWhenDataExportJobFails(JobStatus jobStatus) {
     var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
@@ -399,7 +400,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkEditClient.uploadFile(eq(jobId), any(MultipartFile.class)))
       .thenThrow(new NotFoundException("Job was not found"));
 
-    when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX,FILE_UPLOADING_FAILED + " : Failed to upload file with identifiers: data export job was not found"))
+    when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX, FILE_UPLOADING_FAILED + " : Failed to upload file with identifiers: data export job was not found"))
       .thenReturn("/linkToMatchingErrorsFile.csv");
 
     bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
@@ -415,7 +416,7 @@ class BulkOperationServiceTest extends BaseTest {
   @EnumSource(value = ApproachType.class, names = {"IN_APP"}, mode = EnumSource.Mode.INCLUDE)
   @SneakyThrows
   void shouldConfirmChanges(ApproachType approach) {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var originalPatronGroupId = "3684a786-6671-4268-8ed0-9db82ebca60b";
       var newPatronGroupId = "56c86552-20ec-41d1-964a-5a2be46969e5";
@@ -510,7 +511,7 @@ class BulkOperationServiceTest extends BaseTest {
   @Test
   @SneakyThrows
   void shouldPopulateErrorToBulkOperationIfS3IssuesForConfirmChanges() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var newPatronGroupId = "56c86552-20ec-41d1-964a-5a2be46969e5";
       var pathToTriggering = "/some/path/identifiers.csv";
@@ -562,7 +563,7 @@ class BulkOperationServiceTest extends BaseTest {
       when(remoteFileSystemClient.get(pathToModified))
         .thenReturn(new FileInputStream(pathToUserJson));
 
-      when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_COMMITTING_FILE_NAME_PREFIX,ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE + " : error"))
+      when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_COMMITTING_FILE_NAME_PREFIX, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE + " : error"))
         .thenReturn("/linkToCommittingErrorsFile.csv");
 
       bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
@@ -572,7 +573,7 @@ class BulkOperationServiceTest extends BaseTest {
       var capturedBulkOperation = bulkOperationCaptor.getValue();
 
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, "error")));
+      assertThat(capturedBulkOperation.getErrorMessage(), equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, "error")));
       assertThat(capturedBulkOperation.getLinkToCommittedRecordsErrorsCsvFile(), equalTo("/linkToCommittingErrorsFile.csv"));
     }
   }
@@ -580,7 +581,7 @@ class BulkOperationServiceTest extends BaseTest {
   @Test
   @SneakyThrows
   void shouldConfirmChangesForInstanceMarc() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var marcAction = new MarcAction();
       marcAction.setName(UpdateActionType.CLEAR_FIELD);
@@ -597,7 +598,7 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToTriggering = "/some/path/instance_marc.csv";
       var pathToMatchedRecordsMarcFile = "/some/path/Marc-Records-instance_marc.mrc";
       var pathToMatchedJson = bulkOperationId + "/instance_marc.json";
-      var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
+      var pathToModifiedRecordsMarcFileName = "Updates-Preview-Marc-Records-instance_marc.mrc";
       var pathToInstanceMarc = "src/test/resources/files/instance_marc.mrc";
       var pathToInstanceJson = "src/test/resources/files/instance_marc.json";
       var pathToFilteredInstanceJson = "src/test/resources/files/instance_marc_filtered.json";
@@ -678,7 +679,7 @@ class BulkOperationServiceTest extends BaseTest {
   @Test
   @SneakyThrows
   void shouldNotBeProcessedRecordsIfUploadedNotMarcAndSelectedMarcEdit() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var marcAction = new MarcAction();
       marcAction.setName(UpdateActionType.CLEAR_FIELD);
@@ -695,7 +696,7 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToTriggering = "/some/path/instance_marc.csv";
       String pathToMatchedRecordsMarcFile = null;
       var pathToMatchedJson = bulkOperationId + "/instance_marc.json";
-      var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
+      var pathToModifiedRecordsMarcFileName = "Updates-Preview-Marc-Records-instance_marc.mrc";
       var pathToInstanceMarc = "src/test/resources/files/instance_marc.mrc";
       var pathToInstanceJson = "src/test/resources/files/instance_marc.json";
       var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-MARC-instance_marc.mrc";
@@ -748,8 +749,8 @@ class BulkOperationServiceTest extends BaseTest {
 
   @Test
   @SneakyThrows
-  void  shouldPopulateErrorToBulkOperationIfS3IssuesForConfirmChangesForInstanceMarc() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+  void shouldPopulateErrorToBulkOperationIfS3IssuesForConfirmChangesForInstanceMarc() {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var marcAction = new MarcAction();
       marcAction.setName(UpdateActionType.CLEAR_FIELD);
@@ -768,7 +769,7 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToMatchedRecordsJsonFile = "/some/path/Marc-Records-instance_marc.json";
       var pathToInstanceJson = "src/test/resources/files/instance_marc.json";
       var pathToOriginalCsv = bulkOperationId + "/origin.csv";
-      var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
+      var pathToModifiedRecordsMarcFileName = "Updates-Preview-Marc-Records-instance_marc.mrc";
       var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-Marc-Records-instance_marc.mrc";
 
       when(bulkOperationRepository.findById(any(UUID.class)))
@@ -809,14 +810,14 @@ class BulkOperationServiceTest extends BaseTest {
       await().untilAsserted(() -> verify(bulkOperationRepository, atLeast(6)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, "error")));
+      assertThat(capturedBulkOperation.getErrorMessage(), equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, "error")));
     }
   }
 
   @Test
   @SneakyThrows
   void shouldFailConfirmChangesForInstanceMarcIfMarcWriterNotAvailable() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var marcAction = new MarcAction();
       marcAction.setName(UpdateActionType.CLEAR_FIELD);
@@ -834,7 +835,7 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToMatchedRecordsMarcFile = "/some/path/Marc-Records-instance_marc.mrc";
       var pathToMatchedRecordsJsonFile = "/some/path/Marc-Records-instance_marc.json";
       var pathToOriginalJson = bulkOperationId + "/instance_marc.json";
-      var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
+      var pathToModifiedRecordsMarcFileName = "Updates-Preview-Marc-Records-instance_marc.mrc";
       var pathToInstanceMarc = "src/test/resources/files/instance_marc.mrc";
       var pathToInstanceJson = "src/test/resources/files/instance_marc.json";
 
@@ -884,7 +885,7 @@ class BulkOperationServiceTest extends BaseTest {
   @ParameterizedTest
   @EnumSource(value = ApproachType.class, names = {"IN_APP"}, mode = EnumSource.Mode.INCLUDE)
   void shouldConfirmChangesForItemWhenValidationErrorAndOtherValidChangesExist(ApproachType approach) throws FileNotFoundException {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var pathToTriggering = "/some/path/identifiers.csv";
       var pathToOrigin = "path/origin.json";
@@ -1024,13 +1025,13 @@ class BulkOperationServiceTest extends BaseTest {
       .thenReturn(Optional.of(operation));
 
     var rules = new BulkOperationRuleCollection()
-        .bulkOperationRules(List.of(new BulkOperationRule()
-          .ruleDetails(new BulkOperationRuleRuleDetails()
-            .option(UpdateOptionType.PATRON_GROUP)
-            .actions(List.of(new Action()
-              .type(UpdateActionType.REPLACE_WITH)
-              .updated(newPatronGroupId))))))
-        .totalRecords(1);
+      .bulkOperationRules(List.of(new BulkOperationRule()
+        .ruleDetails(new BulkOperationRuleRuleDetails()
+          .option(UpdateOptionType.PATRON_GROUP)
+          .actions(List.of(new Action()
+            .type(UpdateActionType.REPLACE_WITH)
+            .updated(newPatronGroupId))))))
+      .totalRecords(1);
     when(ruleService.getRules(bulkOperationId)).thenReturn(rules);
 
     var dataProcessing = BulkOperationDataProcessing.builder()
@@ -1058,7 +1059,7 @@ class BulkOperationServiceTest extends BaseTest {
   @CsvSource(value = {"'',COMPLETED", "path/to/file,COMPLETED_WITH_ERRORS"}, delimiter = ',')
   @SneakyThrows
   void shouldCommitChanges(String linkToErrors, OperationStatusType statusType) {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
 
       var bulkOperationId = UUID.randomUUID();
       var pathToTriggering = "/some/path/identifiers.csv";
@@ -1175,7 +1176,7 @@ class BulkOperationServiceTest extends BaseTest {
   @Test
   @SneakyThrows
   void shouldApplyChanges() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var pathToTriggering = "/some/path/identifiers.csv";
       var pathToOrigin = bulkOperationId + "/json/origin.json";
@@ -1550,10 +1551,10 @@ class BulkOperationServiceTest extends BaseTest {
       .build();
     var holdingsId = UUID.randomUUID().toString();
     var originalHoldingsString = objectMapper.writeValueAsString(ExtendedHoldingsRecord.builder().entity(HoldingsRecord.builder()
-        .id(holdingsId)
+      .id(holdingsId)
       .discoverySuppress(testData.originalHoldingsDiscoverySuppress).build()).build());
     var modifiedHoldingsString = objectMapper.writeValueAsString(ExtendedHoldingsRecord.builder().entity(HoldingsRecord.builder()
-        .id(holdingsId)
+      .id(holdingsId)
       .discoverySuppress(testData.modifiedHoldingsDiscoverySuppress).build()).build());
     when(bulkOperationRepository.save(any()))
       .thenReturn(operation);
@@ -1676,7 +1677,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     when(consortiaService.isTenantCentral(any())).thenReturn(true);
 
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var modified = bulkOperationService.processUpdate(extendedItem, operation, rulesCollection, ExtendedItem.class);
       var itemEntity = (Item) modified.getUpdated().getRecordBulkOperationEntity();
 
@@ -1686,7 +1687,7 @@ class BulkOperationServiceTest extends BaseTest {
 
   @Test
   void shouldProcessDataImportResult() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       UUID dataImportJobProfileId = UUID.randomUUID();
       BulkOperation operation = BulkOperation.builder()
         .id(UUID.randomUUID())
@@ -1701,16 +1702,16 @@ class BulkOperationServiceTest extends BaseTest {
       bulkOperationService.processDataImportResult(operation);
 
       await().atMost(ASYNC_OPERATION_TIMEOUT_IN_SECONDS, SECONDS).untilAsserted(() ->
-          verify(metadataProviderService).getJobExecutions(dataImportJobProfileId)
+        verify(metadataProviderService).getJobExecutions(dataImportJobProfileId)
       );
       await().atMost(ASYNC_OPERATION_TIMEOUT_IN_SECONDS, SECONDS).untilAsserted(() ->
-          verify(metadataProviderService).calculateProgress(any())
+        verify(metadataProviderService).calculateProgress(any())
       );
       await().atMost(ASYNC_OPERATION_TIMEOUT_IN_SECONDS, SECONDS).untilAsserted(() ->
-          verify(metadataProviderService).isDataImportJobCompleted(any())
+        verify(metadataProviderService).isDataImportJobCompleted(any())
       );
       await().atMost(ASYNC_OPERATION_TIMEOUT_IN_SECONDS, SECONDS).untilAsserted(() ->
-          verify(metadataProviderService).fetchUpdatedInstanceIds(any())
+        verify(metadataProviderService).fetchUpdatedInstanceIds(any())
       );
     }
   }
@@ -1888,63 +1889,6 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   @Test
-  void testCreateProfile() {
-    UUID contextUserId = UUID.randomUUID();
-    User user = new User();
-    user.setId(contextUserId.toString());
-
-    Personal personal = new Personal();
-    personal.setFirstName("Abc");
-    personal.setLastName("Abc");
-    user.setPersonal(personal);
-    user.setUsername("Abc");
-    String fullName = String.format("%s, %s", personal.getLastName(), personal.getFirstName());
-
-    ProfileRequest profileRequest = new ProfileRequest();
-    profileRequest.name("profile name");
-    profileRequest.setLocked(false);
-    profileRequest.setEntityType(USER);
-    profileRequest.createdBy(contextUserId);
-    profileRequest.createdByUser(fullName);
-
-    Profile entity = new Profile();
-    entity.setId(UUID.randomUUID());
-    entity.setName(profileRequest.getName());
-    entity.setLocked(profileRequest.getLocked());
-    entity.setEntityType(profileRequest.getEntityType());
-    entity.setCreatedBy(profileRequest.getCreatedBy());
-    entity.setCreatedByUser(profileRequest.getCreatedByUser());
-
-    Profile savedEntity = new Profile();
-    savedEntity.setId(entity.getId());
-    savedEntity.setName(entity.getName());
-    savedEntity.setLocked(entity.isLocked());
-    savedEntity.setEntityType(entity.getEntityType());
-    savedEntity.setCreatedBy(entity.getCreatedBy());
-    savedEntity.setCreatedByUser(entity.getCreatedByUser());
-    savedEntity.setCreatedDate(entity.getCreatedDate());
-
-    ProfileDto expectedDto = new ProfileDto();
-    expectedDto.setId(savedEntity.getId());
-    expectedDto.setName(savedEntity.getName());
-    expectedDto.setLocked(savedEntity.isLocked());
-    expectedDto.setEntityType(savedEntity.getEntityType());
-    expectedDto.setCreatedBy(savedEntity.getCreatedBy());
-    expectedDto.setCreatedByUser(savedEntity.getCreatedByUser());
-
-    when(ec.getUserId()).thenReturn(contextUserId);
-    ReflectionTestUtils.setField(bulkOperationService, "folioExecutionContext", ec);
-    when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
-    when(profileRequestMapper.toEntity(profileRequest, contextUserId, fullName)).thenReturn(entity);
-    when(profileRepository.save(entity)).thenReturn(savedEntity);
-    when(profileMapper.toDto(savedEntity)).thenReturn(expectedDto);
-
-
-    ProfileDto result = bulkOperationService.createProfile(profileRequest);
-    assertEquals(expectedDto, result);
-  }
-
-  @Test
   void shouldDeleteProfile() {
     UUID id = UUID.randomUUID();
     Profile profile = new Profile();
@@ -1963,63 +1907,50 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   @Test
-  void testUpdateProfile() {
-    UUID contextUserId = UUID.randomUUID();
-    UUID profileId = UUID.randomUUID();
-
-    User user = new User();
-    user.setId(contextUserId.toString());
-
-    Personal personal = new Personal();
-    personal.setFirstName("Abc");
-    personal.setLastName("Abc");
-    user.setPersonal(personal);
-    user.setUsername("Abc");
-
-    String fullName = String.format("%s, %s", personal.getLastName(), personal.getFirstName());
-
-    ProfileUpdateRequest profileUpdateRequest = new ProfileUpdateRequest();
-    profileUpdateRequest.name("Updated Profile Name");
-    profileUpdateRequest.setLocked(true);
-    profileUpdateRequest.setDescription("Updated description");
-
-    Profile existingProfile = new Profile();
-    existingProfile.setId(profileId);
-    existingProfile.setName("Old Name");
-    existingProfile.setLocked(false);
-    existingProfile.setEntityType(USER);
-    existingProfile.setCreatedBy(contextUserId);
-    existingProfile.setCreatedByUser(fullName);
-
-    Profile updatedProfile = new Profile();
-    updatedProfile.setId(profileId);
-    updatedProfile.setName(profileUpdateRequest.getName());
-    updatedProfile.setLocked(profileUpdateRequest.getLocked());
-    updatedProfile.setDescription(profileUpdateRequest.getDescription());
-    updatedProfile.setEntityType(USER);
-    updatedProfile.setCreatedBy(existingProfile.getCreatedBy());
-    updatedProfile.setCreatedByUser(existingProfile.getCreatedByUser());
-    updatedProfile.setUpdatedBy(contextUserId);
-    updatedProfile.setUpdatedByUser(fullName);
-//    updatedProfile.setUpdatedDate(OffsetDateTime.now());
-
-    ProfileDto expectedDto = new ProfileDto();
-    expectedDto.setId(updatedProfile.getId());
-    expectedDto.setName(updatedProfile.getName());
-    expectedDto.setLocked(updatedProfile.isLocked());
-    expectedDto.setEntityType(updatedProfile.getEntityType());
-    expectedDto.setCreatedBy(updatedProfile.getCreatedBy());
-    expectedDto.setCreatedByUser(updatedProfile.getCreatedByUser());
-    expectedDto.setUpdatedBy(updatedProfile.getUpdatedBy());
-    expectedDto.setUpdatedByUser(updatedProfile.getUpdatedByUser());
-//    expectedDto.setUpdatedDate(updatedProfile.getUpdatedDate());
-    expectedDto.setDescription(updatedProfile.getDescription());
+  void testCreateProfile() {
+    User user = createUser();
+    String fullName = getFullName(user);
+    ProfileRequest request = createProfileRequest();
+    Profile entity = createProfile(request, UUID.randomUUID());
+    Profile saved = createProfile(request, entity.getId());
+    ProfileDto expected = createProfileDto(saved);
 
     when(ec.getUserId()).thenReturn(contextUserId);
     ReflectionTestUtils.setField(bulkOperationService, "folioExecutionContext", ec);
-
     when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
-    when(profileRepository.findById(profileId)).thenReturn(Optional.of(existingProfile));
+    when(profileRequestMapper.toEntity(request, contextUserId, fullName)).thenReturn(entity);
+    when(profileRepository.save(entity)).thenReturn(saved);
+    when(profileMapper.toDto(saved)).thenReturn(expected);
+
+    ProfileDto result = bulkOperationService.createProfile(request);
+    assertEquals(expected, result);
+  }
+
+  @Test
+  void testUpdateProfile() {
+    UUID profileId = UUID.randomUUID();
+    User user = createUser();
+    String fullName = getFullName(user);
+
+    ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
+    updateRequest.name("Updated Profile Name");
+    updateRequest.setLocked(true);
+    updateRequest.setDescription("Updated description");
+
+    Profile existing = createProfile(createProfileRequest(), profileId);
+    Profile updated = createProfile(createProfileRequest(), profileId);
+    updated.setName(updateRequest.getName());
+    updated.setLocked(updateRequest.getLocked());
+    updated.setDescription(updateRequest.getDescription());
+    updated.setUpdatedBy(contextUserId);
+    updated.setUpdatedByUser(fullName);
+
+    ProfileDto expected = createProfileDto(updated);
+
+    when(ec.getUserId()).thenReturn(contextUserId);
+    ReflectionTestUtils.setField(bulkOperationService, "folioExecutionContext", ec);
+    when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
+    when(profileRepository.findById(profileId)).thenReturn(Optional.of(existing));
     doAnswer(invocation -> {
       Profile entity = invocation.getArgument(0);
       ProfileUpdateRequest req = invocation.getArgument(1);
@@ -2027,35 +1958,81 @@ class BulkOperationServiceTest extends BaseTest {
       entity.setLocked(req.getLocked());
       entity.setDescription(req.getDescription());
       return null;
-    }).when(profileRequestMapper).updateEntity(existingProfile, profileUpdateRequest);
-    when(profileRepository.save(existingProfile)).thenReturn(updatedProfile);
-    when(profileMapper.toDto(updatedProfile)).thenReturn(expectedDto);
+    }).when(profileRequestMapper).updateEntity(existing, updateRequest);
+    when(profileRepository.save(existing)).thenReturn(updated);
+    when(profileMapper.toDto(updated)).thenReturn(expected);
 
-    ProfileDto result = bulkOperationService.updateProfile(profileId, profileUpdateRequest);
-
-    assertEquals(expectedDto, result);
+    ProfileDto result = bulkOperationService.updateProfile(profileId, updateRequest);
+    assertEquals(expected, result);
   }
 
   @Test
   void testUpdateProfile_notFound() {
-    UUID contextUserId = UUID.randomUUID();
-    UUID nonExistentProfileId = UUID.randomUUID();
+    UUID nonExistentId = UUID.randomUUID();
 
-    ProfileUpdateRequest profileUpdateRequest = new ProfileUpdateRequest();
-    profileUpdateRequest.name("Doesn't matter");
-    profileUpdateRequest.setLocked(false);
+    ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
+    updateRequest.name("Doesn't matter");
+    updateRequest.setLocked(false);
 
     when(ec.getUserId()).thenReturn(contextUserId);
     ReflectionTestUtils.setField(bulkOperationService, "folioExecutionContext", ec);
+    when(userClient.getUserById(contextUserId.toString())).thenReturn(createUser());
+    when(profileRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
-    when(userClient.getUserById(contextUserId.toString()))
-      .thenReturn(new User() {{ setId(contextUserId.toString()); }});
-
-    when(profileRepository.findById(nonExistentProfileId)).thenReturn(Optional.empty());
-
-    NotFoundException exception = assertThrows(NotFoundException.class,
-      () -> bulkOperationService.updateProfile(nonExistentProfileId, profileUpdateRequest)
+    NotFoundException ex = assertThrows(NotFoundException.class, () ->
+      bulkOperationService.updateProfile(nonExistentId, updateRequest)
     );
-    assertEquals("Profile not found with ID: " + nonExistentProfileId, exception.getMessage());
+    assertEquals("Profile not found with ID: " + nonExistentId, ex.getMessage());
+  }
+
+  private User createUser() {
+    Personal personal = new Personal();
+    personal.setFirstName("Abc");
+    personal.setLastName("Abc");
+
+    User user = new User();
+    user.setId(contextUserId.toString());
+    user.setPersonal(personal);
+    user.setUsername("Abc");
+    return user;
+  }
+
+  private String getFullName(User user) {
+    return String.format("%s, %s", user.getPersonal().getLastName(), user.getPersonal().getFirstName());
+  }
+
+  private ProfileRequest createProfileRequest() {
+    ProfileRequest request = new ProfileRequest();
+    request.name("profile name");
+    request.setLocked(false);
+    request.setEntityType(USER);
+    request.createdBy(contextUserId);
+    request.createdByUser(getFullName(createUser()));
+    return request;
+  }
+
+  private Profile createProfile(ProfileRequest request, UUID id) {
+    Profile profile = new Profile();
+    profile.setId(id);
+    profile.setName(request.getName());
+    profile.setLocked(request.getLocked());
+    profile.setEntityType(request.getEntityType());
+    profile.setCreatedBy(request.getCreatedBy());
+    profile.setCreatedByUser(request.getCreatedByUser());
+    return profile;
+  }
+
+  private ProfileDto createProfileDto(Profile profile) {
+    ProfileDto dto = new ProfileDto();
+    dto.setId(profile.getId());
+    dto.setName(profile.getName());
+    dto.setLocked(profile.isLocked());
+    dto.setEntityType(profile.getEntityType());
+    dto.setCreatedBy(profile.getCreatedBy());
+    dto.setCreatedByUser(profile.getCreatedByUser());
+    dto.setUpdatedBy(profile.getUpdatedBy());
+    dto.setUpdatedByUser(profile.getUpdatedByUser());
+    dto.setDescription(profile.getDescription());
+    return dto;
   }
 }
