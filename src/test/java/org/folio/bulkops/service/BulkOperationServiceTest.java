@@ -122,19 +122,18 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.marc4j.marc.Record;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
 class BulkOperationServiceTest extends BaseTest {
+
+   // Replace with constructor if needed
   @Autowired
   private BulkOperationService bulkOperationService;
 
@@ -204,6 +203,9 @@ class BulkOperationServiceTest extends BaseTest {
 
   @MockitoBean
   private ProfileRequestMapper profileRequestMapper;
+
+  @Mock
+  private FolioExecutionContext ec;
 
   @Test
   @SneakyThrows
@@ -1885,58 +1887,62 @@ class BulkOperationServiceTest extends BaseTest {
     assertThat(result.getTotalRecords()).isEqualTo(1);
   }
 
-//  @Test
-//  void shouldCreateProfile() {
-//    UUID userId = UUID.randomUUID();
-//    String userIdStr = userId.toString();
-//    String username = "testuser";
-//
-//    ProfileRequest profileRequest = new ProfileRequest().name("test");
-//    Profile profile = new Profile();
-//    Profile savedProfile = new Profile();
-//    ProfileDto profileDto = new ProfileDto();
-//
-//    //when(userClient.getUserById(Mockito.anyString())).thenReturn(any(User.class));
-////  when(folioExecutionContext.getUserId()).thenReturn(any(UUID.class));
-//    when(folioExecutionContext.getUserId()).thenReturn(userId);
-//
-//    User user = new User();
-//    user.setId(userIdStr);
-//    when(userClient.getUserById(userIdStr)).thenReturn(user);
-//    doReturn(username).when(e);
-//    when(profileRequestMapper.toEntity(profileRequest, userId, "Doe")).thenReturn(profile);
-//    when(profileRepository.save(profile)).thenReturn(savedProfile);
-//    when(profileMapper.toDto(savedProfile)).thenReturn(profileDto);
-//
-//    ProfileDto result = bulkOperationService.createProfile(profileRequest);
-//
-//    assertThat(result).isEqualTo(profileDto);
-//  }
-//@Test
-//void testCreateProfile() {
-//  UUID contextUserId = UUID.randomUUID();
-//  String username = "testuser";
-//
-//  ProfileRequest profileRequest = new ProfileRequest();
-//  User user = new User();
-//  user.setId(contextUserId.toString());
-//
-//  Profile entity = new Profile();
-//  Profile savedEntity = new Profile();
-//  ProfileDto expectedDto = new ProfileDto();
-//  try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-//  when(folioExecutionContext.getUserId()).thenReturn(contextUserId);
-//    when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
-//
-//    when(profileRequestMapper.toEntity(profileRequest, contextUserId, username)).thenReturn(entity);
-//    when(profileRepository.save(entity)).thenReturn(savedEntity);
-//    when(profileMapper.toDto(savedEntity)).thenReturn(expectedDto);
-//
-//    ProfileDto result = bulkOperationService.createProfile(profileRequest);
-//
-//    assertEquals(expectedDto, result);
-//  }
-//}
+  @Test
+  void testCreateProfile() {
+    UUID contextUserId = UUID.randomUUID();
+    User user = new User();
+    user.setId(contextUserId.toString());
+
+    Personal personal = new Personal();
+    personal.setFirstName("Abc");
+    personal.setLastName("Abc");
+    user.setPersonal(personal);
+    user.setUsername("Abc");
+    String fullName = String.format("%s, %s", personal.getLastName(), personal.getFirstName());
+
+    ProfileRequest profileRequest = new ProfileRequest();
+    profileRequest.name("profile name");
+    profileRequest.setLocked(false);
+    profileRequest.setEntityType(USER);
+    profileRequest.createdBy(contextUserId);
+    profileRequest.createdByUser(fullName);
+
+    Profile entity = new Profile();
+    entity.setId(UUID.randomUUID());
+    entity.setName(profileRequest.getName());
+    entity.setLocked(profileRequest.getLocked());
+    entity.setEntityType(profileRequest.getEntityType());
+    entity.setCreatedBy(profileRequest.getCreatedBy());
+    entity.setCreatedByUser(profileRequest.getCreatedByUser());
+
+    Profile savedEntity = new Profile();
+    savedEntity.setId(entity.getId());
+    savedEntity.setName(entity.getName());
+    savedEntity.setLocked(entity.isLocked());
+    savedEntity.setEntityType(entity.getEntityType());
+    savedEntity.setCreatedBy(entity.getCreatedBy());
+    savedEntity.setCreatedByUser(entity.getCreatedByUser());
+    savedEntity.setCreatedDate(entity.getCreatedDate());
+
+    ProfileDto expectedDto = new ProfileDto();
+    expectedDto.setId(savedEntity.getId());
+    expectedDto.setName(savedEntity.getName());
+    expectedDto.setLocked(savedEntity.isLocked());
+    expectedDto.setEntityType(savedEntity.getEntityType());
+    expectedDto.setCreatedBy(savedEntity.getCreatedBy());
+    expectedDto.setCreatedByUser(savedEntity.getCreatedByUser());
+
+    when(ec.getUserId()).thenReturn(contextUserId);
+    ReflectionTestUtils.setField(bulkOperationService, "folioExecutionContext", ec);
+    when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
+    when(profileRequestMapper.toEntity(profileRequest, contextUserId, fullName)).thenReturn(entity);
+    when(profileRepository.save(entity)).thenReturn(savedEntity);
+    when(profileMapper.toDto(savedEntity)).thenReturn(expectedDto);
+
+
+    ProfileDto result = bulkOperationService.createProfile(profileRequest);
+    assertEquals(expectedDto, result);
+  }
 
   @Test
   void shouldDeleteProfile() {
@@ -1956,38 +1962,6 @@ class BulkOperationServiceTest extends BaseTest {
     assertThrows(NotFoundException.class, () -> bulkOperationService.deleteById(id));
   }
 
-//  @Test
-//  void shouldUpdateProfile() {
-//    UUID profileId = UUID.randomUUID();
-//    UUID userId = UUID.randomUUID();
-//    String userIdStr = userId.toString();
-//    String username = "Doe, John";
-//
-//    ProfileUpdateRequest updateRequest = new ProfileUpdateRequest().name("Updated Name").locked(false);
-//    User user = new User();
-//    user.setId(userId.toString());
-//    Profile existing = new Profile();
-//    Profile saved = new Profile();
-//    ProfileDto profileDto = new ProfileDto();
-//
-////    User user = new User().id(userIdStr).personal(new User.Personal().firstName("John").lastName("Doe"));
-//
-//    when(folioExecutionContext.getUserId()).thenReturn(userId);
-//    when(userClient.getUserById(userId.toString())).thenReturn(user);
-//    doReturn(username).when(bulkOperationService).getUsername(userId);
-//    when(profileRepository.findById(profileId)).thenReturn(Optional.of(existing));
-//    when(profileRepository.save(existing)).thenReturn(saved);
-//    when(profileMapper.toDto(saved)).thenReturn(profileDto);
-//
-//    ProfileDto result = bulkOperationService.updateProfile(profileId, updateRequest);
-//
-//    verify(profileRequestMapper).updateEntity(existing, updateRequest);
-//    assertThat(existing.getUpdatedBy()).isEqualTo(userId);
-//    assertThat(existing.getUpdatedByUser()).isEqualTo(username);
-//    assertThat(existing.getUpdatedDate()).isNotNull();
-//    assertThat(result).isEqualTo(profileDto);
-//  }
-
   @Test
   void shouldThrowOnUpdateWhenProfileNotFound() {
     UUID profileId = UUID.randomUUID();
@@ -1998,72 +1972,99 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   @Test
-  void shouldReturnUserIdStringWhenPersonalInfoIsMissing() {
-    UUID userId = UUID.randomUUID();
+  void testUpdateProfile() {
+    UUID contextUserId = UUID.randomUUID();
+    UUID profileId = UUID.randomUUID();
+
     User user = new User();
-    user.setPersonal(null);
+    user.setId(contextUserId.toString());
 
-    when(userClient.getUserById(userId.toString())).thenReturn(user);
-    String username = bulkOperationService.getUsername(userId);
+    Personal personal = new Personal();
+    personal.setFirstName("Abc");
+    personal.setLastName("Abc");
+    user.setPersonal(personal);
+    user.setUsername("Abc");
 
-    assertEquals(userId.toString(), username);
+    String fullName = String.format("%s, %s", personal.getLastName(), personal.getFirstName());
+
+    ProfileUpdateRequest profileUpdateRequest = new ProfileUpdateRequest();
+    profileUpdateRequest.name("Updated Profile Name");
+    profileUpdateRequest.setLocked(true);
+    profileUpdateRequest.setDescription("Updated description");
+
+    Profile existingProfile = new Profile();
+    existingProfile.setId(profileId);
+    existingProfile.setName("Old Name");
+    existingProfile.setLocked(false);
+    existingProfile.setEntityType(USER);
+    existingProfile.setCreatedBy(contextUserId);
+    existingProfile.setCreatedByUser(fullName);
+
+    Profile updatedProfile = new Profile();
+    updatedProfile.setId(profileId);
+    updatedProfile.setName(profileUpdateRequest.getName());
+    updatedProfile.setLocked(profileUpdateRequest.getLocked());
+    updatedProfile.setDescription(profileUpdateRequest.getDescription());
+    updatedProfile.setEntityType(USER);
+    updatedProfile.setCreatedBy(existingProfile.getCreatedBy());
+    updatedProfile.setCreatedByUser(existingProfile.getCreatedByUser());
+    updatedProfile.setUpdatedBy(contextUserId);
+    updatedProfile.setUpdatedByUser(fullName);
+//    updatedProfile.setUpdatedDate(OffsetDateTime.now());
+
+    ProfileDto expectedDto = new ProfileDto();
+    expectedDto.setId(updatedProfile.getId());
+    expectedDto.setName(updatedProfile.getName());
+    expectedDto.setLocked(updatedProfile.isLocked());
+    expectedDto.setEntityType(updatedProfile.getEntityType());
+    expectedDto.setCreatedBy(updatedProfile.getCreatedBy());
+    expectedDto.setCreatedByUser(updatedProfile.getCreatedByUser());
+    expectedDto.setUpdatedBy(updatedProfile.getUpdatedBy());
+    expectedDto.setUpdatedByUser(updatedProfile.getUpdatedByUser());
+//    expectedDto.setUpdatedDate(updatedProfile.getUpdatedDate());
+    expectedDto.setDescription(updatedProfile.getDescription());
+
+    when(ec.getUserId()).thenReturn(contextUserId);
+    ReflectionTestUtils.setField(bulkOperationService, "folioExecutionContext", ec);
+
+    when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
+    when(profileRepository.findById(profileId)).thenReturn(Optional.of(existingProfile));
+    doAnswer(invocation -> {
+      Profile entity = invocation.getArgument(0);
+      ProfileUpdateRequest req = invocation.getArgument(1);
+      entity.setName(req.getName());
+      entity.setLocked(req.getLocked());
+      entity.setDescription(req.getDescription());
+      return null;
+    }).when(profileRequestMapper).updateEntity(existingProfile, profileUpdateRequest);
+    when(profileRepository.save(existingProfile)).thenReturn(updatedProfile);
+    when(profileMapper.toDto(updatedProfile)).thenReturn(expectedDto);
+
+    ProfileDto result = bulkOperationService.updateProfile(profileId, profileUpdateRequest);
+
+    assertEquals(expectedDto, result);
   }
 
-//  @Test
-//  void testCreateProfile_withUserCollection() {
-//    // Arrange
-//    UUID firstUserId = UUID.randomUUID();
-//    UUID secondUserId = UUID.randomUUID();
-//    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
-//
-//    ProfileRequest profileRequest = new ProfileRequest();
-//
-//
-//    // UserCollection mock response
-//    UserCollection userCollection = new UserCollection()
-//      .withUsers(List.of(
-//        new User().withId(firstUserId.toString()).withPersonal(new Personal()
-//          .withFirstName("Test unique")
-//          .withLastName("Test last name unique")
-//          .withPreferredFirstName("Test preferred first name unique")
-//          .withMiddleName("Test middle name unique")),
-//        new User().withId(secondUserId.toString()).withPersonal(new Personal()
-//          .withFirstName("Test repeated")
-//          .withLastName("Test last name repeated")
-//          .withPreferredFirstName("Test preferred first name repeated")
-//          .withMiddleName("Test middle name repeated"))
-//      ));
-//
-//
-//
-////      // Mock context userId (let's say it's firstUserId)
-////      when(folioExecutionContext.getUserId()).thenReturn(firstUserId);
-//
-//      // Mock userClient.getByQuery to return userCollection when queried for these user IDs
-//      String query = "id==(" + firstUserId + " or " + secondUserId + ")";
-//      when(userClient.getByQuery(query, 2)).thenReturn(userCollection);
-//
-//      // Prepare profile entities and DTOs for mapping and saving
-//      Profile profileEntity = new Profile();
-//      Profile savedProfile = new Profile();
-//      ProfileDto profileDto = new ProfileDto();
-//
-//      // Simulate username based on firstUserId, e.g., "lastName, firstName"
-//      String username = "Test last name unique, Test unique";
-//
-//      // Mock mapping and saving methods
-//      when(profileRequestMapper.toEntity(profileRequest, firstUserId, username)).thenReturn(profileEntity);
-//      when(profileRepository.save(profileEntity)).thenReturn(savedProfile);
-//      when(profileMapper.toDto(savedProfile)).thenReturn(profileDto);
-//
-//      // Act
-//      ProfileDto result = bulkOperationService.createProfile(profileRequest);
-//
-//      // Assert
-////    assertNotNull(result);
-//      assertEquals(profileDto, result);
-//
-//      verify(profileRepository).save(profileEntity);
-//    }
-//  }
+  @Test
+  void testUpdateProfile_notFound() {
+    UUID contextUserId = UUID.randomUUID();
+    UUID nonExistentProfileId = UUID.randomUUID();
+
+    ProfileUpdateRequest profileUpdateRequest = new ProfileUpdateRequest();
+    profileUpdateRequest.name("Doesn't matter");
+    profileUpdateRequest.setLocked(false);
+
+    when(ec.getUserId()).thenReturn(contextUserId);
+    ReflectionTestUtils.setField(bulkOperationService, "folioExecutionContext", ec);
+
+    when(userClient.getUserById(contextUserId.toString()))
+      .thenReturn(new User() {{ setId(contextUserId.toString()); }});
+
+    when(profileRepository.findById(nonExistentProfileId)).thenReturn(Optional.empty());
+
+    NotFoundException exception = assertThrows(NotFoundException.class,
+      () -> bulkOperationService.updateProfile(nonExistentProfileId, profileUpdateRequest)
+    );
+    assertEquals("Profile not found with ID: " + nonExistentProfileId, exception.getMessage());
+  }
 }

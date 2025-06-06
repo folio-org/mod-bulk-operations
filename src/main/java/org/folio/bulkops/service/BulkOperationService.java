@@ -860,7 +860,8 @@ public class BulkOperationService {
 
 
   public ProfileDto createProfile(ProfileRequest profileRequest) {
-    User user = userClient.getUserById(folioExecutionContext.getUserId().toString());
+    String a = folioExecutionContext.getUserId().toString();
+    User user = userClient.getUserById(a);
     UUID userId = UUID.fromString(user.getId());
     String username = getUsername(userId);
     Profile entity = profileRequestMapper.toEntity(profileRequest, userId, username);
@@ -890,7 +891,7 @@ public class BulkOperationService {
     return profileMapper.toDto(saved);
   }
 
-  public String getUsername(UUID userId) {
+  private String getUsername(UUID userId) {
     try {
       log.info("Attempting to retrieve username for id {}", userId);
       User user = userClient.getUserById(userId.toString());
