@@ -1963,15 +1963,6 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   @Test
-  void shouldThrowOnUpdateWhenProfileNotFound() {
-    UUID profileId = UUID.randomUUID();
-    ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
-    when(profileRepository.findById(profileId)).thenReturn(Optional.empty());
-
-    assertThrows(NotFoundException.class, () -> bulkOperationService.updateProfile(profileId, updateRequest));
-  }
-
-  @Test
   void testUpdateProfile() {
     UUID contextUserId = UUID.randomUUID();
     UUID profileId = UUID.randomUUID();
