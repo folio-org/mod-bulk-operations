@@ -890,7 +890,7 @@ public class BulkOperationService {
     return profileMapper.toDto(saved);
   }
 
-  private String getUsername(UUID userId) {
+  public String getUsername(UUID userId) {
     try {
       log.info("Attempting to retrieve username for id {}", userId);
       User user = userClient.getUserById(userId.toString());
