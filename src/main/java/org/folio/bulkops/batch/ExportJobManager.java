@@ -28,9 +28,4 @@ public class ExportJobManager {
     log.info("Launching {}.", jobLaunchRequest);
     return jobLaunchingMessageHandler.launch(jobLaunchRequest);
   }
-
-  public JobExecution getJobExecution(Long jobId) {
-    return jobExplorer.getJobExecution(jobId);
-  }
-
 }
