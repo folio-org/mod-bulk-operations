@@ -1,6 +1,5 @@
 package org.folio.bulkops.client;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.folio.bulkops.configs.FeignClientConfiguration;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.ItemLocationCollection;
@@ -19,7 +18,4 @@ public interface LocationClient {
 
   @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
   ItemLocation getLocationById(@PathVariable String id);
-
-  @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-  JsonNode getLocationJsonById(@PathVariable String id);
 }
