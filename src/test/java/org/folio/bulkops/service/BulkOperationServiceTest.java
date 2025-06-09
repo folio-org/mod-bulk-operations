@@ -149,65 +149,65 @@ class BulkOperationServiceTest extends BaseTest {
   @Autowired
   private BulkOperationService bulkOperationService;
 
-   @MockitoBean
+  @MockitoBean
   private BulkOperationRepository bulkOperationRepository;
 
-   @MockitoBean
+  @MockitoBean
   private BulkEditClient bulkEditClient;
 
-   @MockitoBean
+  @MockitoBean
   private RuleService ruleService;
 
-   @MockitoBean
+  @MockitoBean
   private BulkOperationDataProcessingRepository dataProcessingRepository;
 
-   @MockitoBean
+  @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
 
-   @MockitoBean
+  @MockitoBean
   private FolioS3Client remoteFolioS3Client;
 
-   @MockitoBean
+  @MockitoBean
   private BulkOperationExecutionRepository executionRepository;
 
-   @MockitoBean
+  @MockitoBean
   private BulkOperationExecutionContentRepository executionContentRepository;
 
-   @MockitoBean
+  @MockitoBean
   private ErrorService errorService;
 
-   @MockitoBean
+  @MockitoBean
   private ItemReferenceService itemReferenceService;
 
-   @MockitoBean
+  @MockitoBean
   private QueryService queryService;
 
-   @MockitoBean
+  @MockitoBean
   private ConsortiaService consortiaService;
 
-   @MockitoBean
+  @MockitoBean
   private PermissionsValidator permissionsValidator;
 
-   @MockitoBean
+  @MockitoBean
   private MetadataProviderService metadataProviderService;
 
-   @MockitoBean
+  @MockitoBean
   private SrsService srsService;
 
-   @MockitoBean
+  @MockitoBean
   private MarcCsvHelper marcCsvHelper;
 
-   @MockitoBean
+  @MockitoBean
   private MarcInstanceDataProcessor marcInstanceDataProcessor;
 
-   @MockitoBean
+  @MockitoBean
   private MarcUpdateService marcUpdateService;
 
-   @MockitoBean
-   private ExportJobManagerSync exportJobManagerSync;
+  @MockitoBean
+  private ExportJobManagerSync exportJobManagerSync;
 
-   @Autowired
-   private List<Job> jobs;
+  @Autowired
+  private List<Job> jobs;
 
   @Test
   @SneakyThrows
@@ -913,13 +913,13 @@ class BulkOperationServiceTest extends BaseTest {
       .thenReturn(Optional.of(operation));
 
     var rules = new BulkOperationRuleCollection()
-        .bulkOperationRules(List.of(new BulkOperationRule()
-          .ruleDetails(new BulkOperationRuleRuleDetails()
-            .option(UpdateOptionType.PATRON_GROUP)
-            .actions(List.of(new Action()
-              .type(UpdateActionType.REPLACE_WITH)
-              .updated(newPatronGroupId))))))
-        .totalRecords(1);
+      .bulkOperationRules(List.of(new BulkOperationRule()
+        .ruleDetails(new BulkOperationRuleRuleDetails()
+          .option(UpdateOptionType.PATRON_GROUP)
+          .actions(List.of(new Action()
+            .type(UpdateActionType.REPLACE_WITH)
+            .updated(newPatronGroupId))))))
+      .totalRecords(1);
     when(ruleService.getRules(bulkOperationId)).thenReturn(rules);
 
     var dataProcessing = BulkOperationDataProcessing.builder()
@@ -1439,10 +1439,10 @@ class BulkOperationServiceTest extends BaseTest {
       .build();
     var holdingsId = UUID.randomUUID().toString();
     var originalHoldingsString = objectMapper.writeValueAsString(ExtendedHoldingsRecord.builder().entity(HoldingsRecord.builder()
-        .id(holdingsId)
+      .id(holdingsId)
       .discoverySuppress(testData.originalHoldingsDiscoverySuppress).build()).build());
     var modifiedHoldingsString = objectMapper.writeValueAsString(ExtendedHoldingsRecord.builder().entity(HoldingsRecord.builder()
-        .id(holdingsId)
+      .id(holdingsId)
       .discoverySuppress(testData.modifiedHoldingsDiscoverySuppress).build()).build());
     when(bulkOperationRepository.save(any()))
       .thenReturn(operation);
@@ -1576,16 +1576,16 @@ class BulkOperationServiceTest extends BaseTest {
       bulkOperationService.processDataImportResult(operation);
 
       await().atMost(ASYNC_OPERATION_TIMEOUT_IN_SECONDS, SECONDS).untilAsserted(() ->
-          verify(metadataProviderService).getJobExecutions(dataImportJobProfileId)
+        verify(metadataProviderService).getJobExecutions(dataImportJobProfileId)
       );
       await().atMost(ASYNC_OPERATION_TIMEOUT_IN_SECONDS, SECONDS).untilAsserted(() ->
-          verify(metadataProviderService).calculateProgress(any())
+        verify(metadataProviderService).calculateProgress(any())
       );
       await().atMost(ASYNC_OPERATION_TIMEOUT_IN_SECONDS, SECONDS).untilAsserted(() ->
-          verify(metadataProviderService).isDataImportJobCompleted(any())
+        verify(metadataProviderService).isDataImportJobCompleted(any())
       );
       await().atMost(ASYNC_OPERATION_TIMEOUT_IN_SECONDS, SECONDS).untilAsserted(() ->
-          verify(metadataProviderService).fetchUpdatedInstanceIds(any())
+        verify(metadataProviderService).fetchUpdatedInstanceIds(any())
       );
     }
   }
@@ -1778,7 +1778,7 @@ class BulkOperationServiceTest extends BaseTest {
     var bulkOperationId = UUID.randomUUID();
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-            .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
+      .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
 
     bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
 
@@ -1786,8 +1786,8 @@ class BulkOperationServiceTest extends BaseTest {
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, atLeastOnce()).save(operationCaptor.capture());
     assertTrue(
-            operationCaptor.getAllValues().stream()
-                    .anyMatch(op -> op.getErrorMessage() != null && op.getErrorMessage().toLowerCase().contains("empty"))
+      operationCaptor.getAllValues().stream()
+        .anyMatch(op -> op.getErrorMessage() != null && op.getErrorMessage().toLowerCase().contains("empty"))
     );
   }
 
@@ -1798,9 +1798,9 @@ class BulkOperationServiceTest extends BaseTest {
     var bulkOperationId = UUID.randomUUID();
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-            .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
+      .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
     when(remoteFileSystemClient.put(any(), any()))
-            .thenReturn("uploadedFilePath");
+      .thenReturn("uploadedFilePath");
 
     var operation = bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
 
