@@ -5,9 +5,7 @@ import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
-import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_INVENTORY_VIEW_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_INVENTORY_WRITE_PERMISSION;
-import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_VIEW_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_WRITE_PERMISSION;
 import static org.folio.bulkops.util.Constants.DUPLICATES_ACROSS_TENANTS;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE;
@@ -18,12 +16,11 @@ import static org.folio.bulkops.util.Constants.NO_ITEM_VIEW_PERMISSIONS;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.Constants.NO_USER_VIEW_PERMISSIONS;
 
-import lombok.RequiredArgsConstructor;
-
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.SearchConsortium;
 import org.folio.bulkops.client.UserClient;
@@ -40,7 +37,6 @@ import org.folio.bulkops.service.ConsortiaService;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;
 
-
 @Component
 @RequiredArgsConstructor
 public class PermissionsValidator {
@@ -53,18 +49,6 @@ public class PermissionsValidator {
   private final TenantResolver tenantResolver;
   private final SearchConsortium searchClient;
   private final ReadPermissionsValidator readPermissionsValidator;
-
-  public boolean isBulkEditReadPermissionExists(String tenantId, EntityType entityType) {
-    var readPermissionForEntity = requiredPermissionResolver.getReadPermission(entityType);
-    var userPermissions = permissionsProvider.getUserPermissions(tenantId, folioExecutionContext.getUserId());
-    var isReadPermissionsExist = false;
-    if (entityType == EntityType.USER) {
-      isReadPermissionsExist = userPermissions.contains(readPermissionForEntity.getValue()) && userPermissions.contains(BULK_EDIT_USERS_VIEW_PERMISSION.getValue());
-    } else {
-      isReadPermissionsExist = userPermissions.contains(readPermissionForEntity.getValue()) && userPermissions.contains(BULK_EDIT_INVENTORY_VIEW_PERMISSION.getValue());
-    }
-    return isReadPermissionsExist;
-  }
 
   public void checkIfBulkEditWritePermissionExists(String tenantId, EntityType entityType, String errorMessage) {
     if (!isBulkEditWritePermissionExists(tenantId, entityType)) {

@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class RuleHttpEncoderTest {
+class RuleUtilsTest {
 
   private static final String CURRENT_TENANT = "current_tenant";
   private static final String TENANT_FROM_UI = "tenant_from_ui";

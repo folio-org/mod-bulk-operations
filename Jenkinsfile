@@ -7,7 +7,7 @@ buildMvn {
   doDocker = {
     buildJavaDocker {
       publishMaster = true
-      healthChk = false
+      healthChk = true
       healthChkCmd = 'wget --no-verbose --tries=1 --spider http://localhost:8081/admin/health || exit 1'
     }
   }

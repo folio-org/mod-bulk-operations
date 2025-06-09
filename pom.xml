@@ -29,7 +29,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <sonar.exclusions>
       **/src/main/java/org/folio/bulkops/domain/**,
-      **/src/main/java/org/folio/bulkops/exception/**
+      **/src/main/java/org/folio/bulkops/error/**
     </sonar.exclusions>
     <argLine />
     <bulk-operations.yaml.file>${project.basedir}/src/main/resources/swagger.api/bulk-operations.yaml</bulk-operations.yaml.file>
@@ -139,16 +139,6 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-configuration-processor</artifactId>
       <optional>true</optional>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.batch</groupId>
-      <artifactId>spring-batch-core</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.batch</groupId>
-      <artifactId>spring-batch-integration</artifactId>
     </dependency>
 
     <dependency>
@@ -313,12 +303,6 @@
       <groupId>com.opencsv</groupId>
       <artifactId>opencsv</artifactId>
       <version>${opencsv.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.batch</groupId>
-      <artifactId>spring-batch-test</artifactId>
-      <scope>test</scope>
     </dependency>
 
   </dependencies>
