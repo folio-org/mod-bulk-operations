@@ -82,7 +82,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("effectiveLocationId")
   public void setEffectiveLocationId(String id) {
-    this.effectiveLocation = new ItemLocation().withId(id).withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
+    if (nonNull(id)) {
+      this.effectiveLocation = new ItemLocation().withId(id).withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
+    }
   }
 
   @JsonProperty("effectiveLocationId")
@@ -160,7 +162,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("materialTypeId")
   public void setMaterialTypeId(String id) {
-    this.materialType = new MaterialType().withId(id).withName(ItemReferenceHelper.service().getMaterialTypeById(id, tenantId).getName());
+    if (nonNull(id)) {
+      this.materialType = new MaterialType().withId(id).withName(ItemReferenceHelper.service().getMaterialTypeById(id, tenantId).getName());
+    }
   }
 
   @JsonProperty("materialTypeId")
@@ -299,7 +303,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("permanentLoanTypeId")
   public void setPermanentLoanTypeId(String id) {
-    this.permanentLoanType = new LoanType().withId(id).withName(ItemReferenceHelper.service().getLoanTypeById(id, tenantId).getName());
+    if (nonNull(id)) {
+      this.permanentLoanType = new LoanType().withId(id).withName(ItemReferenceHelper.service().getLoanTypeById(id, tenantId).getName());
+    }
   }
 
   @JsonProperty("permanentLoanTypeId")
@@ -320,7 +326,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("temporaryLoanTypeId")
   public void setTemporaryLoanTypeId(String id) {
-    this.temporaryLoanType = new LoanType().withId(id).withName(ItemReferenceHelper.service().getLoanTypeById(id, tenantId).getName());
+    if (nonNull(id)) {
+      this.temporaryLoanType = new LoanType().withId(id).withName(ItemReferenceHelper.service().getLoanTypeById(id, tenantId).getName());
+    }
   }
 
   @JsonProperty("temporaryLoanTypeId")
@@ -359,7 +367,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("permanentLocationId")
   public void setPermanentLocationId(String id) {
-    this.permanentLocation = new ItemLocation().withId(id).withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
+    if (nonNull(id)) {
+      this.permanentLocation = new ItemLocation().withId(id).withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
+    }
   }
 
   @JsonProperty("permanentLocationId")
@@ -380,7 +390,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("temporaryLocationId")
   public void setTemporaryLocationId(String id) {
-    this.temporaryLocation = new ItemLocation().withId(id).withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
+    if (nonNull(id)) {
+      this.temporaryLocation = new ItemLocation().withId(id).withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
+    }
   }
 
   @JsonProperty("temporaryLocationId")

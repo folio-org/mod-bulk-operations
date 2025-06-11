@@ -25,6 +25,7 @@ import static org.folio.bulkops.util.Constants.BULK_EDIT_IDENTIFIERS;
 import static org.folio.bulkops.util.Constants.CHANGED_CSV_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
+import static org.folio.bulkops.util.Constants.FILE_UPLOAD_ERROR;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
@@ -173,6 +174,9 @@ public class BulkOperationService {
         .status(NEW)
         .startTime(LocalDateTime.now())
         .build());
+      if (multipartFile.isEmpty()) {
+        handleException(operation, FILE_UPLOAD_ERROR.formatted("file is empty"));
+      }
     }
 
     try {
@@ -693,6 +697,15 @@ public class BulkOperationService {
   private void handleException(BulkOperation operation, String message, Exception exception) {
     log.error(message, exception);
     operation.setErrorMessage(format(ERROR_MESSAGE_PATTERN, message, exception.getMessage()));
+    operation.setStatus(FAILED);
+    operation.setEndTime(LocalDateTime.now());
+    var linkToMatchingErrorsFile = errorService.uploadErrorsToStorage(operation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, operation.getErrorMessage());
+    operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
+  }
+
+  private void handleException(BulkOperation operation, String message) {
+    log.error(message);
+    operation.setErrorMessage(message);
     operation.setStatus(FAILED);
     operation.setEndTime(LocalDateTime.now());
     var linkToMatchingErrorsFile = errorService.uploadErrorsToStorage(operation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, operation.getErrorMessage());

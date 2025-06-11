@@ -28,13 +28,15 @@ public class IdentifiersConfig {
     @Value("#{jobParameters['" + IDENTIFIERS_FILE_NAME + "']}") String uploadedFileName,
     @Value("#{stepExecutionContext['offset']}") Long offset,
     @Value("#{stepExecutionContext['limit']}") Long limit) {
-    return new FlatFileItemReaderBuilder<ItemIdentifier>()
+    var builder = new FlatFileItemReaderBuilder<ItemIdentifier>()
       .name("csvItemIdentifierReader")
       .resource(new InputStreamResource(remoteFileSystemClient.get(uploadedFileName)))
       .linesToSkip(Math.toIntExact(offset))
-      .maxItemCount(Math.toIntExact(limit))
-      .lineMapper(lineMapper())
-      .build();
+      .lineMapper(lineMapper());
+    if (limit != null && limit > 0) {
+      builder.maxItemCount(Math.toIntExact(limit));
+    }
+    return builder.build();
   }
 
   @Bean

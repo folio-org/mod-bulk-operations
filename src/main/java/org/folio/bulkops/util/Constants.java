@@ -124,6 +124,7 @@ public class Constants {
 
   public static final String MULTIPLE_MATCHES_MESSAGE = "Multiple matches for the same identifier.";
   public static final String DUPLICATE_ENTRY = "Duplicate entry";
+  public static final String FILE_UPLOAD_ERROR = "File uploading failed : Cannot upload a file. Reason: %s.";
 
   public static final String MARC_SOURCE = "MARC";
 
