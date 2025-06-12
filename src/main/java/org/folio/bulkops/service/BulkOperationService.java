@@ -2,7 +2,6 @@ package org.folio.bulkops.service;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
 import static java.lang.String.format;
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
@@ -175,7 +174,7 @@ public class BulkOperationService {
         .status(NEW)
         .startTime(LocalDateTime.now())
         .build());
-      if (isNull(multipartFile) || multipartFile.isEmpty()) {
+      if (multipartFile.isEmpty()) {
         handleException(operation, FILE_UPLOAD_ERROR.formatted("file is empty"));
       }
     }
