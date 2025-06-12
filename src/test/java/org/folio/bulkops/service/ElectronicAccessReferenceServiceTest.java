@@ -49,7 +49,6 @@ class ElectronicAccessReferenceServiceTest {
   @Test
   void shouldThrowExceptionIfRelationshipNotFound() {
     var id = "id;tenant";
-    var expectedName = id;
 
     HashMap<String, Collection<String>> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, List.of("tenant"));

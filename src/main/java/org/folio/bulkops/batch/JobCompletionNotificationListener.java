@@ -116,13 +116,16 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
   private void moveTemporaryFilesToStorage(JobParameters jobParameters, BulkOperation bulkOperation) {
     try {
       var tmpFileName = jobParameters.getString(TEMP_LOCAL_FILE_PATH);
-      if (nonNull(tmpFileName) && Files.size(Path.of(tmpFileName)) > 0) {
-        var csvFileName = jobParameters.getString(STORAGE_FILE_PATH) + ".csv";
-        moveFileToStorage(csvFileName, tmpFileName);
-        bulkOperation.setLinkToMatchedRecordsCsvFile(csvFileName);
-        var jsonFileName = jobParameters.getString(STORAGE_FILE_PATH) + ".json";
-        moveFileToStorage(jsonFileName, tmpFileName + ".json");
-        bulkOperation.setLinkToMatchedRecordsJsonFile(jsonFileName);
+      if (nonNull(tmpFileName)) {
+        var path = Path.of(tmpFileName);
+        if (Files.exists(path) && Files.size(path) > 0) {
+          var csvFileName = jobParameters.getString(STORAGE_FILE_PATH) + ".csv";
+          moveFileToStorage(csvFileName, tmpFileName);
+          bulkOperation.setLinkToMatchedRecordsCsvFile(csvFileName);
+          var jsonFileName = jobParameters.getString(STORAGE_FILE_PATH) + ".json";
+          moveFileToStorage(jsonFileName, tmpFileName + ".json");
+          bulkOperation.setLinkToMatchedRecordsJsonFile(jsonFileName);
+        }
       }
       var tmpMarcName = jobParameters.getString(TEMP_LOCAL_MARC_PATH) + ".mrc";
       var marcFileName = jobParameters.getString(STORAGE_MARC_PATH) + ".mrc";

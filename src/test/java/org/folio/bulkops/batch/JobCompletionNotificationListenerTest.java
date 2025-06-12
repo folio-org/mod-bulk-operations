@@ -14,6 +14,9 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -26,9 +29,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParametersBuilder;
-
-import java.util.Optional;
-import java.util.UUID;
 
 class JobCompletionNotificationListenerTest {
 
@@ -76,13 +76,13 @@ class JobCompletionNotificationListenerTest {
   }
 
   @Test
-  void afterJob_shouldSetStatusDataModificationOnCompleted() {
+  void afterJob_shouldSetStatusCompletedWithErrorsOnCompleted() {
     jobExecution.setStatus(BatchStatus.COMPLETED);
 
     listener.afterJob(jobExecution);
 
     verify(bulkOperationRepository).save(argThat(op ->
-      op.getStatus() == OperationStatusType.DATA_MODIFICATION && op.getEndTime() != null
+      op.getStatus() == OperationStatusType.COMPLETED_WITH_ERRORS && op.getEndTime() != null
     ));
   }
 
