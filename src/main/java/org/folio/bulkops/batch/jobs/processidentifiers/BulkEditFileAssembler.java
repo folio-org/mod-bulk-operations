@@ -1,21 +1,12 @@
 package org.folio.bulkops.batch.jobs.processidentifiers;
 
+import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static org.folio.bulkops.domain.bean.JobParameterNames.AT_LEAST_ONE_MARC_EXISTS;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
 import static org.folio.bulkops.util.Constants.UTF8_BOM;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
-import org.folio.bulkops.domain.bean.JobParameterNames;
-import org.folio.bulkops.exception.BulkEditException;
-import org.folio.bulkops.exception.FileOperationException;
-import org.springframework.batch.core.BatchStatus;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.partition.support.StepExecutionAggregator;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -32,6 +23,17 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.domain.bean.JobParameterNames;
+import org.folio.bulkops.exception.BulkEditException;
+import org.folio.bulkops.exception.FileOperationException;
+import org.springframework.batch.core.BatchStatus;
+import org.springframework.batch.core.StepExecution;
+import org.springframework.batch.core.partition.support.StepExecutionAggregator;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 @Component
 @Log4j2
@@ -92,7 +94,7 @@ public class BulkEditFileAssembler implements StepExecutionAggregator {
             for (int i = 0; i < csvFileParts.size(); i++) {
               var reader = new BufferedReader(new FileReader(csvFileParts.get(i)));
               String line = reader.readLine();
-              if (i == 0) {
+              if (i == 0 && nonNull(line)) {
                 writer.write(UTF8_BOM + line + LINE_BREAK);
               }
               while ((line = reader.readLine()) != null) {

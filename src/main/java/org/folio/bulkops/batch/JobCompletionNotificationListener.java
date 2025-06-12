@@ -1,13 +1,14 @@
 package org.folio.bulkops.batch;
 
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.domain.bean.JobParameterNames.BULK_OPERATION_ID;
 import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_FILE_PATH;
-import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_MARC_PATH;
-import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_FILE_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_MARC_PATH;
+import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_FILE_PATH;
+import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_MARC_PATH;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.IDENTIFIERS_FILE_NAME;
 import static org.folio.bulkops.util.Constants.NUMBER_OF_MATCHED_RECORDS;
@@ -15,6 +16,16 @@ import static org.folio.bulkops.util.Constants.NUMBER_OF_PROCESSED_IDENTIFIERS;
 import static org.springframework.batch.core.BatchStatus.ABANDONED;
 import static org.springframework.batch.core.BatchStatus.COMPLETED;
 import static org.springframework.batch.core.BatchStatus.FAILED;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -29,15 +40,6 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.stereotype.Component;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Component
 @Log4j2
@@ -76,6 +78,10 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
         if (COMPLETED.equals(jobExecution.getStatus())) {
           bulkOperation.setStatus(OperationStatusType.DATA_MODIFICATION);
           bulkOperation.setEndTime(LocalDateTime.now());
+          if (nonNull(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile()) &&
+                  isNull(bulkOperation.getLinkToMatchedRecordsCsvFile())) {
+            bulkOperation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);
+          }
         } else if (Set.of(FAILED, ABANDONED).contains(jobExecution.getStatus())) {
           bulkOperation.setStatus(OperationStatusType.FAILED);
           bulkOperation.setErrorMessage(fetchFailureCause(jobExecution));
@@ -110,7 +116,7 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
   private void moveTemporaryFilesToStorage(JobParameters jobParameters, BulkOperation bulkOperation) {
     try {
       var tmpFileName = jobParameters.getString(TEMP_LOCAL_FILE_PATH);
-      if (nonNull(tmpFileName)) {
+      if (nonNull(tmpFileName) && Files.size(Path.of(tmpFileName)) > 0) {
         var csvFileName = jobParameters.getString(STORAGE_FILE_PATH) + ".csv";
         moveFileToStorage(csvFileName, tmpFileName);
         bulkOperation.setLinkToMatchedRecordsCsvFile(csvFileName);
