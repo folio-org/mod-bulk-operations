@@ -29,6 +29,7 @@ import static org.folio.bulkops.util.ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -36,8 +37,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -1766,5 +1769,46 @@ class BulkOperationServiceTest extends BaseTest {
 
       await().untilAsserted(() -> verify(exportJobManagerSync).launchJob(any(JobLaunchRequest.class)));
     }
+  }
+
+  @SneakyThrows
+  @Test
+  void throwsExceptionWhenUploadedFileIsEmpty() {
+    var file = new MockMultipartFile("file", "empty.csv", MediaType.TEXT_PLAIN_VALUE, new byte[0]);
+    var bulkOperationId = UUID.randomUUID();
+
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+            .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
+
+    bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
+
+    verify(errorService).uploadErrorsToStorage(eq(bulkOperationId), anyString(), contains("empty"));
+    var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+    verify(bulkOperationRepository, atLeastOnce()).save(operationCaptor.capture());
+    assertTrue(
+            operationCaptor.getAllValues().stream()
+                    .anyMatch(op -> op.getErrorMessage() != null && op.getErrorMessage().toLowerCase().contains("empty"))
+    );
+  }
+
+  @SneakyThrows
+  @Test
+  void processesFileSuccessfullyWhenNotEmpty() {
+    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, "barcode1\nbarcode2".getBytes());
+    var bulkOperationId = UUID.randomUUID();
+
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+            .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
+    when(remoteFileSystemClient.put(any(), any()))
+            .thenReturn("uploadedFilePath");
+
+    var operation = bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
+
+    assertThat(operation.getId(), equalTo(bulkOperationId));
+    ArgumentCaptor<InputStream> streamCaptor = ArgumentCaptor.forClass(InputStream.class);
+    ArgumentCaptor<String> pathCaptor = ArgumentCaptor.forClass(String.class);
+    verify(remoteFileSystemClient).put(streamCaptor.capture(), pathCaptor.capture());
+    assertInstanceOf(org.apache.commons.io.input.BOMInputStream.class, streamCaptor.getValue());
+    assertThat(pathCaptor.getValue(), containsString("barcodes.csv"));
   }
 }
