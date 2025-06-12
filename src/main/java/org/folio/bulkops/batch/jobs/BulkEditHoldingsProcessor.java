@@ -17,27 +17,32 @@ import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.SearchIdentifierTypeResolver.getSearchIdentifierType;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
+import org.folio.bulkops.client.HoldingsClient;
+import org.folio.bulkops.client.SearchClient;
+import org.folio.bulkops.client.UserClient;
+import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
+import org.folio.bulkops.domain.bean.ExtendedHoldingsRecordCollection;
 import org.folio.bulkops.domain.bean.HoldingsRecordCollection;
+import org.folio.bulkops.domain.bean.ItemIdentifier;
+import org.folio.bulkops.domain.dto.BatchIdsDto;
+import org.folio.bulkops.domain.dto.ConsortiumHolding;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.processor.EntityExtractor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.processor.permissions.check.TenantResolver;
-import org.folio.bulkops.service.HoldingsReferenceService;
-import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
-import org.folio.bulkops.client.HoldingsClient;
-import org.folio.bulkops.client.SearchClient;
-import org.folio.bulkops.client.UserClient;
-import org.folio.bulkops.domain.dto.BatchIdsDto;
-import org.folio.bulkops.domain.dto.ConsortiumHolding;
-import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
-import org.folio.bulkops.domain.bean.ExtendedHoldingsRecordCollection;
-import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.service.ConsortiaService;
+import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
@@ -46,10 +51,6 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Component
 @StepScope
@@ -144,6 +145,7 @@ public class BulkEditHoldingsProcessor implements ItemProcessor<ItemIdentifier, 
       var extendedHoldingsRecordCollection =  new ExtendedHoldingsRecordCollection().withExtendedHoldingsRecords(holdingsRecordCollection.getHoldingsRecords().stream()
           .map(holdingsRecord -> holdingsRecord.withInstanceHrid(instanceHrid))
           .map(holdingsRecord -> holdingsRecord.withItemBarcode(itemBarcode))
+          .map(holdingsRecord -> holdingsRecord.withInstanceTitle(holdingsReferenceService.getInstanceTitleById(holdingsRecord.getInstanceId(), folioExecutionContext.getTenantId())))
           .map(holdingsRecord -> new ExtendedHoldingsRecord().withTenantId(folioExecutionContext.getTenantId()).withEntity(holdingsRecord)).toList())
         .withTotalRecords(holdingsRecordCollection.getTotalRecords());
       if (extendedHoldingsRecordCollection.getExtendedHoldingsRecords().isEmpty()) {
