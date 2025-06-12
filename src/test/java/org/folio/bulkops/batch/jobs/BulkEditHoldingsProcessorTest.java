@@ -9,6 +9,13 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.SearchClient;
@@ -37,12 +44,6 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.test.util.ReflectionTestUtils;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 class BulkEditHoldingsProcessorTest {
 
@@ -176,5 +177,36 @@ class BulkEditHoldingsProcessorTest {
     assertThatThrownBy(() -> processor.process(itemIdentifier))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining("Unexpected value 'UNSUPPORTED'");
+  }
+
+  @Test
+  void returnsExtendedHoldingsRecordsWithInstanceTitleAndTenantId() {
+    HoldingsRecord holdingsRecord = new HoldingsRecord().withId("holdingsId").withInstanceId("instanceId");
+    HoldingsRecordCollection holdingsRecordCollection = HoldingsRecordCollection.builder()
+            .holdingsRecords(List.of(holdingsRecord)).totalRecords(1).build();
+
+    when(holdingsReferenceService.getInstanceTitleById("instanceId", "tenantId")).thenReturn("Instance Title");
+
+    List<ExtendedHoldingsRecord> result = holdingsRecordCollection.getHoldingsRecords().stream()
+            .map(record -> record.withInstanceTitle(holdingsReferenceService.getInstanceTitleById(record.getInstanceId(), "tenantId")))
+            .map(record -> new ExtendedHoldingsRecord().withTenantId("tenantId").withEntity(record))
+            .toList();
+
+    assertThat(result).hasSize(1);
+    assertThat(result.get(0).getEntity().getInstanceTitle()).isEqualTo("Instance Title");
+    assertThat(result.get(0).getTenantId()).isEqualTo("tenantId");
+  }
+
+  @Test
+  void returnsEmptyListWhenNoHoldingsRecordsExist() {
+    HoldingsRecordCollection holdingsRecordCollection = HoldingsRecordCollection.builder()
+            .holdingsRecords(Collections.emptyList()).totalRecords(0).build();
+
+    List<ExtendedHoldingsRecord> result = holdingsRecordCollection.getHoldingsRecords().stream()
+            .map(record -> record.withInstanceTitle(holdingsReferenceService.getInstanceTitleById(record.getInstanceId(), "tenantId")))
+            .map(record -> new ExtendedHoldingsRecord().withTenantId("tenantId").withEntity(record))
+            .toList();
+
+    assertThat(result).isEmpty();
   }
 }
