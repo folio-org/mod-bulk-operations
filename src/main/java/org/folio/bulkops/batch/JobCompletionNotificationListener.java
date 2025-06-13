@@ -102,6 +102,7 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
   private void populateUsedTenants(BulkOperation bulkOperation) {
     if (bulkOperation.getEntityType() == org.folio.bulkops.domain.dto.EntityType.ITEM || bulkOperation.getEntityType() == org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD) {
       var clazz = Utils.resolveExtendedEntityClass(bulkOperation.getEntityType());
+      log.info("bulkOperation.getLinkToMatchedRecordsJsonFile(): {}", bulkOperation.getLinkToMatchedRecordsJsonFile());
       try (var is = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
         var parser = objectMapper.createParser(is);
         bulkOperation.setUsedTenants(
@@ -112,6 +113,7 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
                         .toList()
         );
       } catch (Exception e) {
+        e.printStackTrace();
         var error = "Error getting tenants list";
         log.error(error, e);
         bulkOperation.setStatus(OperationStatusType.FAILED);
@@ -150,8 +152,10 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
   private void moveTemporaryFilesToStorage(JobParameters jobParameters, BulkOperation bulkOperation) {
     try {
       var tmpFileName = jobParameters.getString(TEMP_LOCAL_FILE_PATH);
+      log.info("Moving temporary file: {}", tmpFileName);
       if (nonNull(tmpFileName)) {
         var path = Path.of(tmpFileName);
+        log.info("Checking if temporary file exists: {}, {}", Files.exists(path), Files.size(path));
         if (Files.exists(path) && Files.size(path) > 0) {
           var csvFileName = jobParameters.getString(STORAGE_FILE_PATH) + ".csv";
           moveFileToStorage(csvFileName, tmpFileName);
