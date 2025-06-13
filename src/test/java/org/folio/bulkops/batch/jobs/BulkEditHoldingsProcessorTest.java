@@ -188,13 +188,13 @@ class BulkEditHoldingsProcessorTest {
     when(holdingsReferenceService.getInstanceTitleById("instanceId", "tenantId")).thenReturn("Instance Title");
 
     List<ExtendedHoldingsRecord> result = holdingsRecordCollection.getHoldingsRecords().stream()
-            .map(record -> record.withInstanceTitle(holdingsReferenceService.getInstanceTitleById(record.getInstanceId(), "tenantId")))
-            .map(record -> new ExtendedHoldingsRecord().withTenantId("tenantId").withEntity(record))
+            .map(holdRec -> holdRec.withInstanceTitle(holdingsReferenceService.getInstanceTitleById(holdRec.getInstanceId(), "tenantId")))
+            .map(holdRec -> new ExtendedHoldingsRecord().withTenantId("tenantId").withEntity(holdRec))
             .toList();
 
     assertThat(result).hasSize(1);
-    assertThat(result.get(0).getEntity().getInstanceTitle()).isEqualTo("Instance Title");
-    assertThat(result.get(0).getTenantId()).isEqualTo("tenantId");
+    assertThat(result.getFirst().getEntity().getInstanceTitle()).isEqualTo("Instance Title");
+    assertThat(result.getFirst().getTenantId()).isEqualTo("tenantId");
   }
 
   @Test
@@ -203,8 +203,8 @@ class BulkEditHoldingsProcessorTest {
             .holdingsRecords(Collections.emptyList()).totalRecords(0).build();
 
     List<ExtendedHoldingsRecord> result = holdingsRecordCollection.getHoldingsRecords().stream()
-            .map(record -> record.withInstanceTitle(holdingsReferenceService.getInstanceTitleById(record.getInstanceId(), "tenantId")))
-            .map(record -> new ExtendedHoldingsRecord().withTenantId("tenantId").withEntity(record))
+            .map(holdRec -> holdRec.withInstanceTitle(holdingsReferenceService.getInstanceTitleById(holdRec.getInstanceId(), "tenantId")))
+            .map(holdRec -> new ExtendedHoldingsRecord().withTenantId("tenantId").withEntity(holdRec))
             .toList();
 
     assertThat(result).isEmpty();
