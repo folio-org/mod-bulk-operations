@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "A consortium holding record",
+  "ConsortiumHolding": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "description": "Holdings ID",
+        "type": "string"
+      },
+      "hrid": {
+        "type": "string",
+        "description": "Holdings HRID"
+      },
+      "tenantId": {
+        "type": "string",
+        "description": "Tenant ID of the Holding"
+      },
+      "instanceId": {
+        "description": "Related Instance Id",
+        "type": "string"
+      },
+      "discoverySuppress": {
+        "description": "Discovery suppress flag",
+        "type": "boolean"
+      },
+      "callNumberPrefix": {
+        "description": "Call number prefix",
+        "type": "string"
+      },
+      "callNumber": {
+        "description": "Call number",
+        "type": "string"
+      },
+      "callNumberSuffix": {
+        "description": "Call number suffix",
+        "type": "string"
+      },
+      "copyNumber": {
+        "description": "Copy number",
+        "type": "string"
+      },
+      "permanentLocationId": {
+        "description": "Permanent Location ID",
+        "type": "string"
+      }
+    }
+  }
+}

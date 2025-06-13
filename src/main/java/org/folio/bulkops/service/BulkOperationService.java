@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
+import static org.folio.bulkops.batch.JobCommandHelper.prepareJobParameters;
 import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
@@ -19,12 +20,13 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
-import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
+import static org.folio.bulkops.util.Constants.BULK_EDIT_IDENTIFIERS;
 import static org.folio.bulkops.util.Constants.CHANGED_CSV_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
-import static org.folio.bulkops.util.Constants.ERROR_STARTING_BULK_OPERATION;
+import static org.folio.bulkops.util.Constants.FILE_UPLOAD_ERROR;
+import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
@@ -60,19 +62,13 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.input.BOMInputStream;
 import org.apache.commons.lang3.StringUtils;
-import org.folio.bulkops.client.BulkEditClient;
-import org.folio.bulkops.client.DataExportSpringClient;
+import org.folio.bulkops.batch.ExportJobManagerSync;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
-import org.folio.bulkops.domain.bean.ExportType;
-import org.folio.bulkops.domain.bean.ExportTypeSpecificParameters;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
-import org.folio.bulkops.domain.bean.Job;
-import org.folio.bulkops.domain.bean.JobStatus;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
-import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
@@ -87,7 +83,6 @@ import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.BadRequestException;
-import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.OptimisticLockingException;
@@ -109,7 +104,9 @@ import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.marc4j.MarcStreamReader;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecutionException;
+import org.springframework.batch.integration.launch.JobLaunchRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -120,15 +117,11 @@ import org.springframework.web.multipart.MultipartFile;
 public class BulkOperationService {
   public static final String FILE_UPLOADING_FAILED = "File uploading failed";
   public static final String STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS = "Step %s is not applicable for bulk operation status %s";
+  public static final String ERROR_STARTING_BULK_OPERATION = "Error starting Bulk Operation";
   public static final String MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY = "Instance with source %s is not supported by MARC records bulk edit and cannot be updated.";
   public static final String MSG_CONFIRM_FAILED = "Confirm failed";
 
-  @Value("${application.file-uploading.max-retry-count}")
-  private int maxRetryCount;
-
   private final BulkOperationRepository bulkOperationRepository;
-  private final DataExportSpringClient dataExportSpringClient;
-  private final BulkEditClient bulkEditClient;
   private final RuleService ruleService;
   private final BulkOperationDataProcessingRepository dataProcessingRepository;
   private final BulkOperationExecutionRepository executionRepository;
@@ -150,6 +143,8 @@ public class BulkOperationService {
   private final MarcCsvHelper marcCsvHelper;
   private final BulkOperationServiceHelper bulkOperationServiceHelper;
   private final QueryService queryService;
+  private final ExportJobManagerSync exportJobManagerSync;
+  private final List<Job> jobs;
 
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
@@ -179,6 +174,9 @@ public class BulkOperationService {
         .status(NEW)
         .startTime(LocalDateTime.now())
         .build());
+      if (multipartFile.isEmpty()) {
+        handleException(operation, FILE_UPLOAD_ERROR.formatted("file is empty"));
+      }
     }
 
     try {
@@ -505,20 +503,24 @@ public class BulkOperationService {
         .orElseThrow(() -> new NotFoundException("Bulk operation was not found by id=" + bulkOperationId));
     operation.setUserId(xOkapiUserId);
 
-    String errorMessage = null;
-    if (UPLOAD == step && operation.getApproach() != QUERY) {
-      errorMessage = executeDataExportJob(step, approach, operation, errorMessage);
-
-      if (nonNull(errorMessage)) {
-        log.error(errorMessage);
-        operation.setStatus(FAILED);
-        operation.setErrorMessage(errorMessage);
-        operation.setEndTime(LocalDateTime.now());
-        var linkToMatchingErrorsFile = errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX, errorMessage);
-        operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
-      }
-      bulkOperationRepository.save(operation);
-      return operation;
+    if (UPLOAD == step) {
+      var numOfLines = remoteFileSystemClient.getNumOfLines(operation.getLinkToTriggeringCsvFile());
+      operation.setTotalNumOfRecords(numOfLines);
+      operation.setStatus(RETRIEVING_RECORDS);
+      executor.execute(getRunnableWithCurrentFolioContext(() -> {
+        try {
+          log.info("Launching batch job");
+          var jobLaunchRequest = new JobLaunchRequest(getBatchJob(operation), prepareJobParameters(operation, numOfLines));
+          exportJobManagerSync.launchJob(jobLaunchRequest);
+        } catch (JobExecutionException e) {
+          log.error(ERROR_STARTING_BULK_OPERATION, e);
+          operation.setStatus(FAILED);
+          operation.setErrorMessage(e.getMessage());
+          operation.setEndTime(LocalDateTime.now());
+          bulkOperationRepository.save(operation);
+        }
+      }));
+      return bulkOperationRepository.save(operation);
     } else if (BulkOperationStep.EDIT == step) {
       errorService.deleteErrorsByBulkOperationId(bulkOperationId);
       operation.setCommittedNumOfErrors(0);
@@ -547,39 +549,12 @@ public class BulkOperationService {
     }
   }
 
-  private String executeDataExportJob(BulkOperationStep step, ApproachType approach, BulkOperation operation, String errorMessage) {
-    try {
-      if (Set.of(NEW, SAVED_IDENTIFIERS).contains(operation.getStatus())) {
-        if (MANUAL != approach) {
-          var job = dataExportSpringClient.upsertJob(Job.builder()
-            .type(ExportType.BULK_EDIT_IDENTIFIERS)
-            .entityType(operation.getEntityType())
-            .exportTypeSpecificParameters(new ExportTypeSpecificParameters())
-            .identifierType(operation.getIdentifierType()).build());
-          operation.setDataExportJobId(job.getId());
-          bulkOperationRepository.save(operation);
-
-          if (JobStatus.SCHEDULED.equals(job.getStatus())) {
-            uploadCsvFile(job.getId(), new FolioMultiPartFile(FilenameUtils.getName(operation.getLinkToTriggeringCsvFile()), "application/json", remoteFileSystemClient.get(operation.getLinkToTriggeringCsvFile())));
-            job = dataExportSpringClient.getJob(job.getId());
-
-            if (JobStatus.FAILED.equals(job.getStatus())) {
-              errorMessage = "Data export job failed";
-            } else {
-              operation.setStatus(RETRIEVING_RECORDS);
-            }
-          } else {
-            errorMessage = format("File uploading failed - invalid job status: %s (expected: SCHEDULED)", job.getStatus().getValue());
-          }
-        }
-      } else {
-        throw new BadRequestException(format(STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
-      }
-    } catch (Exception e) {
-      log.error(ERROR_STARTING_BULK_OPERATION, e);
-      errorMessage = format(ERROR_MESSAGE_PATTERN, FILE_UPLOADING_FAILED, e.getMessage());
-    }
-    return errorMessage;
+  private Job getBatchJob(BulkOperation bulkOperation) {
+    var jobName = BULK_EDIT_IDENTIFIERS + HYPHEN + bulkOperation.getEntityType();
+    return jobs.stream()
+      .filter(job -> job.getName().contains(jobName))
+      .findFirst()
+      .orElseThrow(() -> new IllegalStateException("Batch job config was not found, aborting"));
   }
 
   public void apply(BulkOperation operation) {
@@ -631,20 +606,6 @@ public class BulkOperationService {
     }
   }
 
-  private void uploadCsvFile(UUID dataExportJobId, MultipartFile file) throws BulkOperationException {
-    var retryCount = 0;
-    while (true) {
-      try {
-        bulkEditClient.uploadFile(dataExportJobId, file);
-        return;
-      } catch (NotFoundException e) {
-        if (++retryCount == maxRetryCount) {
-          throw new BulkOperationException("Failed to upload file with identifiers: data export job was not found");
-        }
-      }
-    }
-  }
-
   @Transactional
   public void clearOperationProcessing(BulkOperation operation) {
     dataProcessingRepository.deleteAllByBulkOperationId(operation.getId());
@@ -655,16 +616,6 @@ public class BulkOperationService {
   public BulkOperation getOperationById(UUID bulkOperationId) {
     var operation = getBulkOperationOrThrow(bulkOperationId);
     return switch (operation.getStatus()) {
-      case SAVED_IDENTIFIERS -> {
-        if (operation.getApproach() != QUERY) {
-          yield startBulkOperation(operation.getId(), operation.getUserId(), new BulkOperationStart()
-            .step(UPLOAD)
-            .approach(IN_APP)
-            .entityType(operation.getEntityType())
-            .entityCustomIdentifierType(IdentifierType.ID));
-        }
-        yield operation;
-      }
       case DATA_MODIFICATION -> {
         var processing = dataProcessingRepository.findById(bulkOperationId);
         if (processing.isPresent() && StatusType.ACTIVE.equals(processing.get().getStatus())) {
@@ -746,6 +697,15 @@ public class BulkOperationService {
   private void handleException(BulkOperation operation, String message, Exception exception) {
     log.error(message, exception);
     operation.setErrorMessage(format(ERROR_MESSAGE_PATTERN, message, exception.getMessage()));
+    operation.setStatus(FAILED);
+    operation.setEndTime(LocalDateTime.now());
+    var linkToMatchingErrorsFile = errorService.uploadErrorsToStorage(operation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, operation.getErrorMessage());
+    operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
+  }
+
+  private void handleException(BulkOperation operation, String message) {
+    log.error(message);
+    operation.setErrorMessage(message);
     operation.setStatus(FAILED);
     operation.setEndTime(LocalDateTime.now());
     var linkToMatchingErrorsFile = errorService.uploadErrorsToStorage(operation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, operation.getErrorMessage());

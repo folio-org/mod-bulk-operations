@@ -15,6 +15,16 @@ import static org.folio.bulkops.util.Constants.NON_PRINTING_DELIMITER;
 import static org.folio.bulkops.util.Constants.SPLIT_NOTE_ENTITIES;
 import static org.folio.bulkops.util.Constants.UTF_8_BOM;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
@@ -23,8 +33,8 @@ import org.codehaus.plexus.util.FileUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.dto.BulkOperationCollection;
 import org.folio.bulkops.domain.dto.BulkOperationDto;
-import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
+import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -37,8 +47,8 @@ import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.dto.Users;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.mapper.BulkOperationMapper;
-import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.processor.note.NoteProcessorFactory;
+import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.rest.resource.BulkOperationsApi;
 import org.folio.bulkops.service.BulkOperationService;
 import org.folio.bulkops.service.ErrorService;
@@ -58,16 +68,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor

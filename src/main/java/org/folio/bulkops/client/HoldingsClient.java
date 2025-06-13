@@ -1,5 +1,6 @@
 package org.folio.bulkops.client;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.folio.bulkops.configs.FeignEncoderConfiguration;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordCollection;
@@ -24,4 +25,9 @@ public interface HoldingsClient {
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   HoldingsRecordCollection getByQuery(@RequestParam String query, @RequestParam long limit);
 
+  @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+  HoldingsRecordCollection getByQuery(@RequestParam String query);
+
+  @GetMapping(value = "/{holdingsRecordId}", produces = MediaType.APPLICATION_JSON_VALUE)
+  JsonNode getHoldingsJsonById(@PathVariable String holdingsRecordId);
 }
