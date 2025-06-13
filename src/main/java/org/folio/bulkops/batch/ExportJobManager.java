@@ -3,7 +3,6 @@ package org.folio.bulkops.batch;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionException;
-import org.springframework.batch.core.explore.JobExplorer;
 import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.integration.launch.JobLaunchRequest;
 import org.springframework.batch.integration.launch.JobLaunchingMessageHandler;
@@ -16,12 +15,10 @@ import org.springframework.stereotype.Component;
 public class ExportJobManager {
 
   private final JobLaunchingMessageHandler jobLaunchingMessageHandler;
-  private final JobExplorer jobExplorer;
 
   @Autowired
-  public ExportJobManager(@Qualifier("asyncJobLauncher") JobLauncher jobLauncher, JobExplorer jobExplorer) {
+  public ExportJobManager(@Qualifier("asyncJobLauncher") JobLauncher jobLauncher) {
     jobLaunchingMessageHandler = new JobLaunchingMessageHandler(jobLauncher);
-    this.jobExplorer = jobExplorer;
   }
 
   public JobExecution launchJob(JobLaunchRequest jobLaunchRequest) throws JobExecutionException {
