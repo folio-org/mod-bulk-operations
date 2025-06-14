@@ -81,7 +81,7 @@
             "visible": false
         },
         {
-            "value": "Date Of Birth",
+            "value": "Date of birth",
             "dataType": "STRING",
             "visible": false
         },
