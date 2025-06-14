@@ -12,12 +12,13 @@ public enum PermissionEnum {
   INVENTORY_ITEMS_ITEM_GET_PERMISSION("inventory.items.item.get"),
   INVENTORY_STORAGE_HOLDINGS_ITEM_GET_PERMISSION("inventory-storage.holdings.item.get"),
   INVENTORY_INSTANCES_ITEM_GET_PERMISSION("inventory.instances.item.get"),
+
   BULK_EDIT_INVENTORY_WRITE_PERMISSION("bulk-operations.item.inventory.put"),
   BULK_EDIT_USERS_WRITE_PERMISSION("bulk-operations.item.users.put"),
   USERS_ITEM_PUT("users.item.put"),
   INVENTORY_ITEMS_ITEM_PUT("inventory.items.item.put"),
   INVENTORY_STORAGE_HOLDINGS_ITEM_PUT("inventory-storage.holdings.item.put"),
-  INVENTORY_INSTANCES_ITEM_PUT("inventory.instances.item.put");
-
+  INVENTORY_INSTANCES_ITEM_PUT("inventory.instances.item.put"),
+  BULK_OPERATIONS_PROFILES_ITEM_LOCK("bulk-operations.profiles.item.lock.execute");
   private final String value;
 }

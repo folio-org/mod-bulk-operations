@@ -598,6 +598,113 @@ paths:
               schema:
                 type: string
                 example: Internal server error
+  /bulk-operations/profiles:
+    get:
+      description: Get a list of Profiles
+      operationId: getProfiles
+      parameters:
+        - in: query
+          name: query
+          required: false
+          schema:
+            type: string
+          description: Request query
+        - in: query
+          name: offset
+          required: false
+          schema:
+            type: integer
+          description: Query offset
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+          description: Query limit
+      responses:
+        '200':
+          description: 'returns list of profile'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profileSummaryResultsDto'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/errors"
+    post:
+      description: Create a new Profile
+      operationId: createProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/profileRequest'
+      responses:
+        '201':
+          description: Profile created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profileDto'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/errors"
+  /bulk-operations/profiles/{id}:
+    delete:
+      description: Delete a Profile by ID
+      operationId: deleteProfile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      responses:
+        '204':
+          description: Profile deleted successfully
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errors'
+    put:
+      summary: Update a profile
+      operationId: updateProfile
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            $ref: "#/components/schemas/UUID"
+      requestBody:
+        description: Profile object
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/profileUpdateRequest'
+      responses:
+        '200':
+          description: 'returns if a profile updated successfully'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profileDto'
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/errors"
+
 
 components:
   schemas:
@@ -615,6 +722,14 @@ components:
       $ref: 'schemas/identifier_type.json#/IdentifierType'
     fileContentType:
       $ref: 'schemas/file_content_type.json#/FileContentType'
+    profileRequest:
+      $ref: 'schemas/profile_request.json'
+    profileDto:
+      $ref: 'schemas/profile_dto.json'
+    profileUpdateRequest:
+      $ref: 'schemas/profile_update_request_dto.json'
+    profileSummaryResultsDto:
+      $ref: 'schemas/profile_summary_results_dto.json'
     approachType:
       $ref: 'schemas/approach_type.json#/ApproachType'
     bulkOperationStep:

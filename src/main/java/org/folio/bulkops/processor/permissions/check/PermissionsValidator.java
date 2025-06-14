@@ -9,6 +9,7 @@ import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_INVENTORY_WRITE_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_VIEW_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_WRITE_PERMISSION;
+import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_OPERATIONS_PROFILES_ITEM_LOCK;
 import static org.folio.bulkops.util.Constants.DUPLICATES_ACROSS_TENANTS;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
@@ -33,6 +34,7 @@ import org.folio.bulkops.domain.bean.ConsortiumItem;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.exception.ProfileLockedException;
 import org.folio.bulkops.exception.ReadPermissionException;
 import org.folio.bulkops.exception.UploadFromQueryException;
 import org.folio.bulkops.exception.WritePermissionDoesNotExist;
@@ -85,6 +87,15 @@ public class PermissionsValidator {
       checkPermissionsAndAffiliationsForHoldings(entityRecord.getId());
     } else if (ITEM == operation.getEntityType()) {
       checkPermissionsAndAffiliationsForItem(entityRecord.getId());
+    }
+  }
+  public void checkIfLockPermissionExists() {
+    List<String> userPermissions = permissionsProvider.getUserPermissions(
+      folioExecutionContext.getTenantId(),
+      folioExecutionContext.getUserId()
+    );
+    if (!userPermissions.contains(BULK_OPERATIONS_PROFILES_ITEM_LOCK.getValue())) {
+      throw new ProfileLockedException("User is restricted to manage locked profiles");
     }
   }
 
@@ -167,5 +178,4 @@ public class PermissionsValidator {
   private boolean isCurrentTenantCentral(String centralTenantId) {
     return StringUtils.isNotEmpty(centralTenantId) && centralTenantId.equals(folioExecutionContext.getTenantId());
   }
-
 }
