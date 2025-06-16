@@ -33,7 +33,7 @@ public class ElectronicAccessReferenceService {
     try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return relationshipClient.getById(id).getName();
     } catch (NotFoundException e) {
-      var msg = format("Electronic access relationship was not found by id=%s", id);
+      var msg = format("Electronic access relationship not found by id=%s", id);
       log.error(msg);
       throw new ReferenceDataNotFoundException(msg);
     }
