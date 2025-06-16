@@ -7,6 +7,9 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+import java.util.Map;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.folio.bulkops.client.HoldingsClient;
@@ -27,9 +30,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import java.util.List;
-import java.util.Map;
 
 class HoldingsReferenceServiceTest {
 
@@ -179,5 +179,84 @@ class HoldingsReferenceServiceTest {
       .isInstanceOf(BulkEditException.class)
       .hasMessageContaining("Item not found by barcode=barcode-2")
       .extracting("errorType").isEqualTo(ErrorType.WARNING);
+  }
+
+  @Test
+  void getInstanceTitleById_returnsTitleWithPublisherAndDate() {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode publication = mapper.createObjectNode()
+            .put("publisher", "Test Publisher")
+            .put("dateOfPublication", "2021");
+    JsonNode instanceJson = mapper.createObjectNode()
+            .put("title", "Title1")
+            .set("publication", mapper.createArrayNode().add(publication));
+    when(instanceClient.getInstanceJsonById("id-pub-date")).thenReturn(instanceJson);
+
+    String result = service.getInstanceTitleById("id-pub-date", "tenant");
+    assertThat(result).isEqualTo("Title1. Test Publisher, 2021");
+  }
+
+  @Test
+  void getInstanceTitleById_returnsTitleWithPublisherOnly2() {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode publication = mapper.createObjectNode()
+            .put("publisher", "Only Publisher");
+    JsonNode instanceJson = mapper.createObjectNode()
+            .put("title", "Title2")
+            .set("publication", mapper.createArrayNode().add(publication));
+    when(instanceClient.getInstanceJsonById("id-pub-only")).thenReturn(instanceJson);
+
+    String result = service.getInstanceTitleById("id-pub-only", "tenant");
+    assertThat(result).isEqualTo("Title2. Only Publisher");
+  }
+
+  @Test
+  void getInstanceTitleById_returnsTitleWithDateOnly() {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode publication = mapper.createObjectNode()
+            .put("dateOfPublication", "2022");
+    JsonNode instanceJson = mapper.createObjectNode()
+            .put("title", "Title3")
+            .set("publication", mapper.createArrayNode().add(publication));
+    when(instanceClient.getInstanceJsonById("id-date-only")).thenReturn(instanceJson);
+
+    String result = service.getInstanceTitleById("id-date-only", "tenant");
+    assertThat(result).isEqualTo("Title3. , 2022");
+  }
+
+  @Test
+  void getInstanceTitleById_returnsTitleWithEmptyPublication() {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode publication = mapper.createObjectNode();
+    JsonNode instanceJson = mapper.createObjectNode()
+            .put("title", "Title4")
+            .set("publication", mapper.createArrayNode().add(publication));
+    when(instanceClient.getInstanceJsonById("id-empty-pub")).thenReturn(instanceJson);
+
+    String result = service.getInstanceTitleById("id-empty-pub", "tenant");
+    assertThat(result).isEqualTo("Title4");
+  }
+
+  @Test
+  void getInstanceTitleById_returnsTitleWhenNoPublicationArray() {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode instanceJson = mapper.createObjectNode()
+            .put("title", "Title5");
+    when(instanceClient.getInstanceJsonById("id-no-pub")).thenReturn(instanceJson);
+
+    String result = service.getInstanceTitleById("id-no-pub", "tenant");
+    assertThat(result).isEqualTo("Title5");
+  }
+
+  @Test
+  void getInstanceTitleById_returnsTitleWhenPublicationArrayIsEmpty() {
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode instanceJson = mapper.createObjectNode()
+            .put("title", "Title6")
+            .set("publication", mapper.createArrayNode());
+    when(instanceClient.getInstanceJsonById("id-empty-pub-array")).thenReturn(instanceJson);
+
+    String result = service.getInstanceTitleById("id-empty-pub-array", "tenant");
+    assertThat(result).isEqualTo("Title6");
   }
 }

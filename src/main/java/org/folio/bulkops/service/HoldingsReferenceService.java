@@ -11,6 +11,8 @@ import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.encode;
 
+import java.util.List;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -42,8 +44,6 @@ import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -247,10 +247,10 @@ public class HoldingsReferenceService {
     if (nonNull(publication)) {
       var publisher = publication.get("publisher");
       var dateOfPublication = publication.get("dateOfPublication");
-      if (isNull(dateOfPublication)) {
-        return isNull(publisher) ? EMPTY : String.format(". %s", publisher.asText());
+      if (isNull(dateOfPublication) || dateOfPublication.isNull()) {
+        return isNull(publisher) || publisher.isNull() ? EMPTY : String.format(". %s", publisher.asText());
       }
-      return String.format(". %s, %s", isNull(publisher) ? EMPTY : publisher.asText(), dateOfPublication.asText());
+      return String.format(". %s, %s", isNull(publisher) || publisher.isNull() ? EMPTY : publisher.asText(), dateOfPublication.asText());
     }
     return EMPTY;
   }
