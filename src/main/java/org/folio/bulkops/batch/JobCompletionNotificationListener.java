@@ -77,7 +77,9 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
           var jobParameters = jobExecution.getJobParameters();
           moveTemporaryFilesToStorage(jobParameters, bulkOperation);
           handleProcessingMatchedErrors(bulkOperation);
-          populateUsedTenants(bulkOperation);
+          if (nonNull(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
+            populateUsedTenants(bulkOperation);
+          }
           log.info("-----------------------------JOB---ENDS-----------------------------");
         }
         var context = jobExecution.getExecutionContext();
@@ -100,9 +102,9 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
   }
 
   private void populateUsedTenants(BulkOperation bulkOperation) {
-    if (bulkOperation.getEntityType() == org.folio.bulkops.domain.dto.EntityType.ITEM || bulkOperation.getEntityType() == org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD) {
+    if (bulkOperation.getEntityType() == org.folio.bulkops.domain.dto.EntityType.ITEM ||
+            bulkOperation.getEntityType() == org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD) {
       var clazz = Utils.resolveExtendedEntityClass(bulkOperation.getEntityType());
-      log.info("bulkOperation.getLinkToMatchedRecordsJsonFile(): {}", bulkOperation.getLinkToMatchedRecordsJsonFile());
       try (var is = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
         var parser = objectMapper.createParser(is);
         bulkOperation.setUsedTenants(
@@ -113,7 +115,6 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
                         .toList()
         );
       } catch (Exception e) {
-        e.printStackTrace();
         var error = "Error getting tenants list";
         log.error(error, e);
         bulkOperation.setStatus(OperationStatusType.FAILED);
@@ -155,7 +156,6 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
       log.info("Moving temporary file: {}", tmpFileName);
       if (nonNull(tmpFileName)) {
         var path = Path.of(tmpFileName);
-        log.info("Checking if temporary file exists: {}, {}", Files.exists(path), Files.size(path));
         if (Files.exists(path) && Files.size(path) > 0) {
           var csvFileName = jobParameters.getString(STORAGE_FILE_PATH) + ".csv";
           moveFileToStorage(csvFileName, tmpFileName);
