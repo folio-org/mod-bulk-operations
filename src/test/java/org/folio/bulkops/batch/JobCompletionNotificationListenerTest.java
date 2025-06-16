@@ -1,6 +1,7 @@
 package org.folio.bulkops.batch;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.folio.bulkops.domain.bean.JobParameterNames.BULK_OPERATION_ID;
 import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_FILE_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_MARC_PATH;
@@ -11,23 +12,32 @@ import static org.folio.bulkops.util.Constants.NUMBER_OF_MATCHED_RECORDS;
 import static org.folio.bulkops.util.Constants.NUMBER_OF_PROCESSED_IDENTIFIERS;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.InputStream;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.ErrorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 
 class JobCompletionNotificationListenerTest {
@@ -36,6 +46,10 @@ class JobCompletionNotificationListenerTest {
   private BulkOperationRepository bulkOperationRepository;
   @Mock
   private ErrorService errorService;
+  @Mock
+  private ObjectMapper objectMapper;
+  @Mock
+  private RemoteFileSystemClient remoteFileSystemClient;
   @InjectMocks
   private JobCompletionNotificationListener listener;
 
@@ -121,5 +135,61 @@ class JobCompletionNotificationListenerTest {
     assertThat(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile()).isEqualTo("errors.csv");
     assertThat(bulkOperation.getMatchedNumOfErrors()).isEqualTo(2);
     assertThat(bulkOperation.getMatchedNumOfWarnings()).isEqualTo(1);
+  }
+  @Test
+  void setsUsedTenantsWhenJobCompletesSuccessfully() throws Exception {
+    UUID operationId = UUID.randomUUID();
+    BulkOperation operation = BulkOperation.builder()
+            .id(operationId)
+            .entityType(org.folio.bulkops.domain.dto.EntityType.ITEM)
+            .linkToMatchedRecordsJsonFile("valid-file.json")
+            .build();
+
+    when(bulkOperationRepository.findById(operationId)).thenReturn(Optional.of(operation));
+    when(remoteFileSystemClient.get("missing-file.json")).thenThrow(new RuntimeException("File not found"));
+    when(objectMapper.createParser(any(InputStream.class))).thenReturn(new ObjectMapper().createParser("[]"));
+    MappingIterator<BulkOperationsEntity> emptyMappingIterator = (MappingIterator<BulkOperationsEntity>) Mockito.mock(MappingIterator.class);
+    when(emptyMappingIterator.hasNext()).thenReturn(false);
+    when(objectMapper.readValues(any(), any(Class.class))).thenReturn(emptyMappingIterator);
+
+    JobParameters jobParameters = new JobParametersBuilder()
+            .addString(BULK_OPERATION_ID, operationId.toString())
+            .toJobParameters();
+    JobExecution job = new JobExecution(1L, jobParameters);
+    job.setStatus(org.springframework.batch.core.BatchStatus.COMPLETED);
+
+    listener.afterJob(job);
+
+    verify(bulkOperationRepository, atLeastOnce()).save(argThat(op ->
+            op.getUsedTenants() != null
+    ));
+  }
+
+  @Test
+  void setsErrorStatusAndMessageWhenJsonFileIsMissing() {
+    UUID operationId = UUID.randomUUID();
+    BulkOperation operation = BulkOperation.builder()
+            .id(operationId)
+            .entityType(org.folio.bulkops.domain.dto.EntityType.ITEM)
+            .linkToMatchedRecordsJsonFile("missing-file.json")
+            .build();
+
+    when(bulkOperationRepository.findById(operationId)).thenReturn(Optional.of(operation));
+    when(remoteFileSystemClient.get("missing-file.json")).thenThrow(new RuntimeException("File not found"));
+
+    JobParameters jobParameters = new JobParametersBuilder()
+            .addString(BULK_OPERATION_ID, operationId.toString())
+            .toJobParameters();
+    JobExecution execution = new JobExecution(2L, jobParameters);
+    execution.setStatus(org.springframework.batch.core.BatchStatus.COMPLETED);
+
+    assertThatThrownBy(() -> listener.afterJob(execution))
+            .isInstanceOf(ServerErrorException.class)
+            .hasMessageContaining("Error getting tenants list");
+
+    verify(bulkOperationRepository, atLeastOnce()).save(argThat(op ->
+            op.getStatus() == OperationStatusType.FAILED &&
+                    op.getErrorMessage().contains("Error getting tenants list")
+    ));
   }
 }

@@ -24,18 +24,24 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
+import java.util.Spliterators;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.ErrorService;
+import org.folio.bulkops.util.Utils;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.batch.core.JobParameters;
@@ -48,6 +54,7 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final BulkOperationRepository bulkOperationRepository;
   private final ErrorService errorService;
+  private final ObjectMapper objectMapper;
 
   @Override
   public void beforeJob(JobExecution jobExecution) {
@@ -70,6 +77,9 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
           var jobParameters = jobExecution.getJobParameters();
           moveTemporaryFilesToStorage(jobParameters, bulkOperation);
           handleProcessingMatchedErrors(bulkOperation);
+          if (nonNull(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
+            populateUsedTenants(bulkOperation);
+          }
           log.info("-----------------------------JOB---ENDS-----------------------------");
         }
         var context = jobExecution.getExecutionContext();
@@ -89,6 +99,33 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
         }
         bulkOperationRepository.save(bulkOperation);
       });
+  }
+
+  private void populateUsedTenants(BulkOperation bulkOperation) {
+    if (bulkOperation.getEntityType() == org.folio.bulkops.domain.dto.EntityType.ITEM ||
+            bulkOperation.getEntityType() == org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD) {
+      var clazz = Utils.resolveExtendedEntityClass(bulkOperation.getEntityType());
+      try (var is = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
+        var parser = objectMapper.createParser(is);
+        bulkOperation.setUsedTenants(
+                StreamSupport.stream(
+                                Spliterators.spliteratorUnknownSize(objectMapper.readValues(parser, clazz), 0), false)
+                        .map(BulkOperationsEntity::getTenant)
+                        .distinct()
+                        .toList()
+        );
+      } catch (Exception e) {
+        var error = "Error getting tenants list";
+        log.error(error, e);
+        bulkOperation.setStatus(OperationStatusType.FAILED);
+        bulkOperation.setErrorMessage(error);
+        var linkToMatchingErrorsFile = errorService.uploadErrorsToStorage(bulkOperation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, error + ":" + e.getMessage());
+        bulkOperation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
+        throw new ServerErrorException("Error getting tenants list: " + e.getMessage());
+      } finally {
+        bulkOperationRepository.save(bulkOperation);
+      }
+    }
   }
 
   private String fetchFailureCause(JobExecution jobExecution) {
@@ -116,6 +153,7 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
   private void moveTemporaryFilesToStorage(JobParameters jobParameters, BulkOperation bulkOperation) {
     try {
       var tmpFileName = jobParameters.getString(TEMP_LOCAL_FILE_PATH);
+      log.info("Moving temporary file: {}", tmpFileName);
       if (nonNull(tmpFileName)) {
         var path = Path.of(tmpFileName);
         if (Files.exists(path) && Files.size(path) > 0) {
