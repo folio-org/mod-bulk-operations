@@ -10,20 +10,25 @@ import static org.folio.bulkops.util.Constants.BULK_EDIT_IDENTIFIERS;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.IDENTIFIERS_FILE_NAME;
 
+import java.util.Arrays;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.folio.bulkops.batch.BulkEditSkipListener;
+import org.folio.bulkops.batch.CsvListItemWriter;
 import org.folio.bulkops.batch.JobCompletionNotificationListener;
 import org.folio.bulkops.batch.JsonListFileWriter;
-import org.folio.bulkops.batch.CsvListItemWriter;
 import org.folio.bulkops.batch.jobs.BulkEditItemListProcessor;
 import org.folio.bulkops.batch.jobs.BulkEditItemProcessor;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.exception.BulkEditException;
+import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.service.ErrorService;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -41,8 +46,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
-import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -107,6 +110,8 @@ public class BulkEditItemIdentifiersJobConfig {
       .skipLimit(1_000_000)
       .processorNonTransactional() // Required to avoid repeating BulkEditItemProcessor#process after skip.
       .skip(BulkEditException.class)
+      .skip(ConverterException.class)
+      .skip(JobExecutionException.class)
       .listener(bulkEditSkipListener)
       .writer(compositeItemListWriter)
       .listener(listIdentifiersWriteListener)

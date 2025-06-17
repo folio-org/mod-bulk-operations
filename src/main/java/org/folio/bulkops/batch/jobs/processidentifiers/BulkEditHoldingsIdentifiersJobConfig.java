@@ -24,8 +24,10 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.exception.BulkEditException;
+import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.service.ErrorService;
 import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -106,6 +108,8 @@ public class BulkEditHoldingsIdentifiersJobConfig {
       .skipLimit(1_000_000)
       .processorNonTransactional() // Required to avoid repeating BulkEditHoldingsProcessor#process after skip.
       .skip(BulkEditException.class)
+      .skip(ConverterException.class)
+      .skip(JobExecutionException.class)
       .listener(bulkEditSkipListener)
       .writer(writer)
       .listener(listIdentifiersWriteListener)
