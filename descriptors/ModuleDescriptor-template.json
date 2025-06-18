@@ -298,6 +298,39 @@
           "pathPattern": "/bulk-operations/used-tenants/{operationId}",
           "permissionsRequired": ["bulk-operations.used.tenants.get"],
           "modulePermissions": [ ]
+        },
+        {
+          "methods": [ "GET" ],
+          "pathPattern": "/bulk-operations/profiles",
+          "permissionsRequired": ["bulk-operations.profiles.collection.get"],
+          "modulePermissions": [ ]
+        },
+        {
+          "methods": [ "POST" ],
+          "pathPattern": "/bulk-operations/profiles",
+          "permissionsRequired": ["bulk-operations.profiles.item.post"],
+          "permissionsDesired": [
+            "bulk-operations.profiles.item.lock.execute"
+          ],
+          "modulePermissions": [ ]
+        },
+        {
+          "methods": [ "DELETE" ],
+          "pathPattern": "/bulk-operations/profiles/{id}",
+          "permissionsRequired": ["bulk-operations.profiles.item.delete"],
+          "permissionsDesired": [
+            "bulk-operations.profiles.item.lock.execute"
+          ],
+          "modulePermissions": [ ]
+        },
+        {
+          "methods": [ "PUT" ],
+          "pathPattern": "/bulk-operations/profiles/{id}",
+          "permissionsRequired": ["bulk-operations.profiles.item.put"],
+          "permissionsDesired": [
+            "bulk-operations.profiles.item.lock.execute"
+          ],
+          "modulePermissions": [ ]
         }
       ]
     },
@@ -452,6 +485,31 @@
       "description" : "Bulk edit users write permissions"
     },
     {
+      "permissionName": "bulk-operations.profiles.collection.get",
+      "displayName": "get list of bulk operation profiles",
+      "description": "Get list of bulk operation profiles"
+    },
+    {
+      "permissionName": "bulk-operations.profiles.item.post",
+      "displayName": "create or duplicate bulk operation profile",
+      "description": "Create or duplicate a bulk operation profile"
+    },
+    {
+      "permissionName": "bulk-operations.profiles.item.put",
+      "displayName": "edit bulk operation profile",
+      "description": "Edit an existing bulk operation profile"
+    },
+    {
+      "permissionName": "bulk-operations.profiles.item.delete",
+      "displayName": "delete bulk operation profile",
+      "description": "Delete a bulk operation profile"
+    },
+    {
+      "permissionName": "bulk-operations.profiles.item.lock.execute",
+      "displayName": "locking bulk operation profile",
+      "description": "Locking a bulk operation profile"
+    },
+    {
       "permissionName" : "bulk-operations.all",
       "displayName" : "bulk-operations all",
       "description" : "All permissions for bulk-operations module",
@@ -471,7 +529,12 @@
         "bulk-operations.files.item.delete",
         "bulk-operations.item.cancel.post",
         "bulk-operations.item.query.post",
-        "bulk-operations.used.tenants.get"
+        "bulk-operations.used.tenants.get",
+        "bulk-operations.profiles.item.delete",
+        "bulk-operations.profiles.item.put",
+        "bulk-operations.profiles.item.post",
+        "bulk-operations.profiles.collection.get",
+        "bulk-operations.profiles.item.lock.execute"
       ]
     }
   ],

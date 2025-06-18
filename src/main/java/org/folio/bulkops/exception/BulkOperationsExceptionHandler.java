@@ -16,4 +16,8 @@ public class BulkOperationsExceptionHandler {
   public ResponseEntity<String> handleIllegalOperationStateException(final IllegalOperationStateException e) {
     return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
   }
+  @ExceptionHandler(ProfileLockedException.class)
+  public ResponseEntity<String> handleProfileLockedException(final ProfileLockedException e) {
+    return new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+  }
 }
