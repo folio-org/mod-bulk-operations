@@ -106,8 +106,6 @@ public class BulkEditItemIdentifiersJobConfig {
       .reader(csvItemIdentifierReader)
       .processor(identifierItemProcessor())
       .faultTolerant()
-      .retry(ConverterException.class)
-      .retryLimit(2)
       .skipLimit(1_000_000)
       .processorNonTransactional() // Required to avoid repeating BulkEditItemProcessor#process after skip.
       .skip(BulkEditException.class)

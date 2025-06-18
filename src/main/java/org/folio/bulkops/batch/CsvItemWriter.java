@@ -19,12 +19,10 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
-import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemStream;
 import org.springframework.batch.item.ItemWriter;
 
-@StepScope
 @Log4j2
 public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter<T>, ItemStream {
   private BufferedWriter writer;
