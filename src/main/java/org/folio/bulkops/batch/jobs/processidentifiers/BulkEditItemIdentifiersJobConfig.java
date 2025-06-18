@@ -111,6 +111,7 @@ public class BulkEditItemIdentifiersJobConfig {
       .skipLimit(1_000_000)
       .processorNonTransactional() // Required to avoid repeating BulkEditItemProcessor#process after skip.
       .skip(BulkEditException.class)
+      .skip(ConverterException.class)
       .listener(bulkEditSkipListener)
       .writer(compositeItemListWriter)
       .listener(listIdentifiersWriteListener)
