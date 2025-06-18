@@ -54,8 +54,9 @@ public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter
     for (T entity: chunk) {
       try {
         delegate.write(entity.getRecordBulkOperationEntity());
+        log.info("written: {}", entity.getId());
       } catch (ConverterException converterException) {
-        log.error("CsvItemWriter#write", converterException);
+        log.error("CsvItemWriter#write {}", entity.getId());
         saveError(entity, converterException);
         delegate.write(entity.getRecordBulkOperationEntity());
       }
