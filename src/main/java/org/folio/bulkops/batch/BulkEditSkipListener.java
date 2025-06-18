@@ -9,13 +9,10 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
-import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.exception.BulkEditException;
-import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.ErrorService;
 import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.core.annotation.OnSkipInProcess;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,19 +30,14 @@ public class BulkEditSkipListener {
   private JobExecution jobExecution;
 
   @OnSkipInProcess
-  public void onSkipInProcess(ItemIdentifier itemIdentifier, Exception exception) {
-    if (exception instanceof JobExecutionException || exception instanceof ConverterException) {
-      exception = new BulkEditException(exception.getMessage(), ErrorType.WARNING);
-    }
-
-    BulkEditException bulkEditException = (BulkEditException) exception;
+  public void onSkipInProcess(ItemIdentifier itemIdentifier, BulkEditException exception) {
 
     ofNullable(jobExecution.getJobParameters().getString(BULK_OPERATION_ID))
       .map(UUID::fromString)
       .map(bulkOperationRepository::findById)
       .flatMap(opt -> opt)
       .ifPresent(bulkOperation ->
-        errorService.saveError(bulkOperation.getId(), itemIdentifier.getItemId(), bulkEditException.getMessage(), bulkEditException.getErrorType()));
+        errorService.saveError(bulkOperation.getId(), itemIdentifier.getItemId(), exception.getMessage(), exception.getErrorType()));
     var context = jobExecution.getExecutionContext();
     int processed = 1;
     if (context.containsKey(NUMBER_OF_PROCESSED_IDENTIFIERS)) {

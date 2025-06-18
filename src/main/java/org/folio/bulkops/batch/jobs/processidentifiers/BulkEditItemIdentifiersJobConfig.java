@@ -25,6 +25,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.exception.BulkEditException;
+import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.service.ErrorService;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -105,6 +106,8 @@ public class BulkEditItemIdentifiersJobConfig {
       .reader(csvItemIdentifierReader)
       .processor(identifierItemProcessor())
       .faultTolerant()
+      .retry(ConverterException.class)
+      .retryLimit(2)
       .skipLimit(1_000_000)
       .processorNonTransactional() // Required to avoid repeating BulkEditItemProcessor#process after skip.
       .skip(BulkEditException.class)
