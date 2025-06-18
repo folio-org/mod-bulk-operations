@@ -1,5 +1,10 @@
 package org.folio.bulkops.batch;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.UUID;
+
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
@@ -17,10 +22,6 @@ import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemStream;
 import org.springframework.batch.item.ItemWriter;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.UUID;
 
 @Log4j2
 public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter<T>, ItemStream {
@@ -54,6 +55,7 @@ public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter
       try {
         delegate.write(entity.getRecordBulkOperationEntity());
       } catch (ConverterException converterException) {
+        log.error("CsvItemWriter#write", converterException);
         saveError(entity, converterException);
         delegate.write(entity.getRecordBulkOperationEntity());
       }
