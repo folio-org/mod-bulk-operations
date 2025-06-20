@@ -1,24 +1,25 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "BulkOperationMarcRule",
-  "description": "Bulk Operation MARC Rule",
-  "allOf": [
-    {
-      "$ref": "marc_rule_details.json#/MarcRuleDetails"
-    },
-    {
-      "type": "object",
-      "properties": {
-        "bulkOperationId": {
-          "description": "Bulk operation ID",
-          "type": "string",
-          "format": "uuid"
-        }
+  "description": "Bulk Operation MARC Rule schema defines the structure for MARC rules used in bulk operations, including details about the operation ID and its associated properties.",
+  "BulkOperationMarcRule": {
+    "allOf": [
+      {
+        "$ref": "marc_rule_details.json#/MarcRuleDetails"
       },
-      "required": [
-        "bulkOperationId"
-      ],
-      "additionalProperties": false
-    }
-  ]
+      {
+        "type": "object",
+        "properties": {
+          "bulkOperationId": {
+            "description": "Bulk operation ID",
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "bulkOperationId"
+        ],
+        "additionalProperties": false
+      }
+    ]
+  }
 }
