@@ -1,61 +1,24 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "BulkOperationMarcRule",
   "description": "Bulk Operation MARC Rule",
-  "BulkOperationMarcRule": {
-    "type": "object",
-    "properties": {
-      "bulkOperationId": {
-        "description": "Bulk operation ID",
-        "type": "string",
-        "format": "uuid"
-      },
-      "tag": {
-        "description": "MARC field tag",
-        "type": "string"
-      },
-      "ind1": {
-        "description": "MARC field indicator 1",
-        "type": "string",
-        "pattern": "[a-z0-9#\\\\]"
-      },
-      "ind2": {
-        "description": "MARC field indicator 2",
-        "type": "string",
-        "pattern": "[a-z0-9#\\\\]"
-      },
-      "subfield": {
-        "description": "MARC subfield code",
-        "type": "string",
-        "pattern": "[a-z0-9]"
-      },
-      "actions": {
-        "type": "array",
-        "items": {
-          "$ref": "marc_action.json#/MarcAction"
-        },
-        "minItems": 1
-      },
-      "parameters": {
-        "type": "array",
-        "items": {
-          "$ref": "marc_parameter.json#/MarcParameter"
-        }
-      },
-      "subfields": {
-        "type": "array",
-        "items": {
-          "$ref": "marc_subfield_action.json#/MarcSubfieldAction"
-        }
-      }
+  "allOf": [
+    {
+      "$ref": "marc_rule_details.json#/MarcRuleDetails"
     },
-    "required": [
-      "bulkOperationId",
-      "tag",
-      "ind1",
-      "ind2",
-      "subfield",
-      "actions"
-    ],
-    "additionalProperties": false
-  }
+    {
+      "type": "object",
+      "properties": {
+        "bulkOperationId": {
+          "description": "Bulk operation ID",
+          "type": "string",
+          "format": "uuid"
+        }
+      },
+      "required": [
+        "bulkOperationId"
+      ],
+      "additionalProperties": false
+    }
+  ]
 }

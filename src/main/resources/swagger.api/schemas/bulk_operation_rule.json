@@ -14,28 +14,9 @@
         "type": "string",
         "format": "uuid"
       },
-      "rule_details" : {
+      "rule_details": {
         "description": "Rule details",
-        "type": "object",
-        "properties": {
-          "option": {
-            "description": "Option to change",
-            "$ref": "update_option_type.json#/UpdateOptionType"
-          },
-          "tenants": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "actions": {
-            "type": "array",
-            "items": {
-              "$ref": "action.json#/Action"
-            },
-            "minItems": 1
-          }
-        }
+        "$ref": "rule_details.json#/RuleDetails"
       }
     },
     "required": [

@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "MARC Rule details",
+  "MarcRuleDetails": {
+    "type": "object",
+    "properties": {
+      "tag": {
+        "description": "MARC field tag",
+        "type": "string"
+      },
+      "ind1": {
+        "description": "MARC field indicator 1",
+        "type": "string",
+        "pattern": "[a-z0-9#\\\\]"
+      },
+      "ind2": {
+        "description": "MARC field indicator 2",
+        "type": "string",
+        "pattern": "[a-z0-9#\\\\]"
+      },
+      "subfield": {
+        "description": "MARC subfield code",
+        "type": "string",
+        "pattern": "[a-z0-9]"
+      },
+      "actions": {
+        "type": "array",
+        "items": {
+          "$ref": "marc_action.json#/MarcAction"
+        },
+        "minItems": 1
+      },
+      "parameters": {
+        "type": "array",
+        "items": {
+          "$ref": "marc_parameter.json#/MarcParameter"
+        }
+      },
+      "subfields": {
+        "type": "array",
+        "items": {
+          "$ref": "marc_subfield_action.json#/MarcSubfieldAction"
+        }
+      }
+    },
+    "required": [
+      "tag",
+      "ind1",
+      "ind2",
+      "subfield",
+      "actions"
+    ],
+    "additionalProperties": false
+  }
+}
