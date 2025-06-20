@@ -91,17 +91,32 @@ class CustomFeignErrorDecoderTest {
     assertInstanceOf(BadRequestException.class, actual);
   }
 
-    @Test
-    void shouldReturnFeignExceptionForUnhandledStatus() {
-        Response response = Response.builder()
-                .request(Request.create(Request.HttpMethod.GET, "some url", Map.of(),
-                        Request.Body.create("Unhandled error"), new RequestTemplate()))
-                .status(418) // Example of an unhandled status code
-                .reason("I'm a teapot")
-                .build();
+  @Test
+  void shouldReturnFeignExceptionForUnhandledStatus() {
+      Response response = Response.builder()
+              .request(Request.create(Request.HttpMethod.GET, "some url", Map.of(),
+                      Request.Body.create("Unhandled error"), new RequestTemplate()))
+              .status(418) // Example of an unhandled status code
+              .reason("I'm a teapot")
+              .build();
 
-        Exception actual = customFeignErrorDecoder.decode("methodKey", response);
+      Exception actual = customFeignErrorDecoder.decode("methodKey", response);
 
-        assertInstanceOf(feign.FeignException.class, actual);
-    }
+      assertInstanceOf(feign.FeignException.class, actual);
+  }
+
+  @Test
+  void shouldReturnBulkEditExceptionWithUnknownErrorWhenReasonIsNull() {
+      Response response = Response.builder()
+              .request(Request.create(Request.HttpMethod.GET, "internal server error url", Map.of(),
+                      Request.Body.create(""), new RequestTemplate()))
+              .status(500)
+              .reason(null)
+              .build();
+
+      Exception actual = customFeignErrorDecoder.decode("", response);
+      assertInstanceOf(BulkEditException.class, actual);
+      // Optionally, check the message contains "Unknown error"
+      assert (actual.getMessage().contains("Unknown error"));
+  }
 }
