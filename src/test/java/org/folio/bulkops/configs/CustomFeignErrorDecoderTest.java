@@ -67,31 +67,7 @@ class CustomFeignErrorDecoderTest {
         Response response = Response.builder()
                 .request(Request.create(Request.HttpMethod.GET, "ioexception url", Map.of(),
                         Request.Body.create(""), new RequestTemplate()))
-                .body(new feign.Response.Body() {
-                    @Override
-                    public java.io.InputStream asInputStream() throws IOException {
-                        throw new IOException("Simulated IO error");
-                    }
-
-                    @Override
-                    public Reader asReader(Charset charset) throws IOException {
-                        throw new IOException("Simulated IO error");
-                    }
-
-                    @Override
-                    public void close() {
-                    }
-
-                    @Override
-                    public Integer length() {
-                        return null;
-                    }
-
-                    @Override
-                    public boolean isRepeatable() {
-                        return false;
-                    }
-                })
+                .body(getResponseBody())
                 .status(400)
                 .build();
 
@@ -142,6 +118,34 @@ class CustomFeignErrorDecoderTest {
         Exception actual = customFeignErrorDecoder.decode("", response);
         assertInstanceOf(BulkEditException.class, actual);
         assert (actual.getMessage().contains(reason));
+    }
+
+    private feign.Response.Body getResponseBody() {
+        return new feign.Response.Body() {
+            @Override
+            public java.io.InputStream asInputStream() throws IOException {
+                throw new IOException("Simulated IO error");
+            }
+
+            @Override
+            public Reader asReader(Charset charset) throws IOException {
+                throw new IOException("Simulated IO error");
+            }
+
+            @Override
+            public void close() {
+            }
+
+            @Override
+            public Integer length() {
+                return null;
+            }
+
+            @Override
+            public boolean isRepeatable() {
+                return false;
+            }
+        };
     }
 
 }
