@@ -2,6 +2,8 @@ package org.folio.bulkops.configs;
 
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+import java.io.IOException;
+import java.io.Reader;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.UUID;
@@ -55,6 +57,35 @@ class CustomFeignErrorDecoderTest {
             .request(Request.create(Request.HttpMethod.GET, "bad request url", Map.of(),
                     Request.Body.create(""), new RequestTemplate())).status(400)
             .body("bad request".getBytes()).build();
+    var actual = customFeignErrorDecoder.decode("", response);
+
+    assertInstanceOf(BadRequestException.class, actual);
+  }
+
+  @Test
+  void shouldReturnBadRequestExceptionWhenIOExceptionOccurs() {
+    Response response = Response.builder()
+            .request(Request.create(Request.HttpMethod.GET, "ioexception url", Map.of(),
+                    Request.Body.create(""), new RequestTemplate()))
+            .body(new feign.Response.Body() {
+                @Override
+                public java.io.InputStream asInputStream() throws IOException {
+                    throw new IOException("Simulated IO error");
+                }
+                @Override
+                public Reader asReader(Charset charset) throws IOException {
+                    throw new IOException("Simulated IO error");
+                }
+                @Override
+                public void close() {}
+                @Override
+                public Integer length() { return null; }
+                @Override
+                public boolean isRepeatable() { return false; }
+            })
+            .status(400)
+            .build();
+
     var actual = customFeignErrorDecoder.decode("", response);
 
     assertInstanceOf(BadRequestException.class, actual);
