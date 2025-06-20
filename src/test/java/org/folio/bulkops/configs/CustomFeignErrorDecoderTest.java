@@ -1,18 +1,18 @@
 package org.folio.bulkops.configs;
 
-import feign.Request;
-import feign.RequestTemplate;
-import feign.Response;
-import org.folio.bulkops.exception.BadRequestException;
-import org.folio.bulkops.exception.NotFoundException;
-import org.folio.bulkops.exception.ServerErrorException;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import feign.Request;
+import feign.RequestTemplate;
+import feign.Response;
+import org.folio.bulkops.exception.BadRequestException;
+import org.folio.bulkops.exception.BulkEditException;
+import org.folio.bulkops.exception.NotFoundException;
+import org.junit.jupiter.api.Test;
 
 class CustomFeignErrorDecoderTest {
 
@@ -46,6 +46,6 @@ class CustomFeignErrorDecoderTest {
         Request.Body.create(""), new RequestTemplate())).status(500).build();
     var actual = customFeignErrorDecoder.decode("", response);
 
-    assertInstanceOf(ServerErrorException.class, actual);
+    assertInstanceOf(BulkEditException.class, actual);
   }
 }
