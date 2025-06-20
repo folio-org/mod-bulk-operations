@@ -90,4 +90,18 @@ class CustomFeignErrorDecoderTest {
 
     assertInstanceOf(BadRequestException.class, actual);
   }
+
+    @Test
+    void shouldReturnFeignExceptionForUnhandledStatus() {
+        Response response = Response.builder()
+                .request(Request.create(Request.HttpMethod.GET, "some url", Map.of(),
+                        Request.Body.create("Unhandled error"), new RequestTemplate()))
+                .status(418) // Example of an unhandled status code
+                .reason("I'm a teapot")
+                .build();
+
+        Exception actual = customFeignErrorDecoder.decode("methodKey", response);
+
+        assertInstanceOf(feign.FeignException.class, actual);
+    }
 }
