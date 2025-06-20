@@ -31,7 +31,6 @@ public class BulkEditSkipListener {
 
   @OnSkipInProcess
   public void onSkipInProcess(ItemIdentifier itemIdentifier, BulkEditException exception) {
-
     ofNullable(jobExecution.getJobParameters().getString(BULK_OPERATION_ID))
       .map(UUID::fromString)
       .map(bulkOperationRepository::findById)
