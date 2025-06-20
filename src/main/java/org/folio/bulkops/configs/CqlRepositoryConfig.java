@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.domain.entity.Profile;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.cql.JpaCqlRepositoryImpl;
 import org.springframework.context.annotation.Bean;
@@ -24,5 +25,10 @@ public class CqlRepositoryConfig {
   @Bean
   public JpaCqlRepository<BulkOperation, UUID> bulkOperationCqlRepository() {
     return new JpaCqlRepositoryImpl<>(BulkOperation.class, entityManager);
+  }
+
+  @Bean
+  public JpaCqlRepository<Profile, UUID> profileUUIDJpaCqlRepository() {
+    return new JpaCqlRepositoryImpl<>(Profile.class, entityManager);
   }
 }

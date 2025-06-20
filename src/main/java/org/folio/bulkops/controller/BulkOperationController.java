@@ -40,6 +40,10 @@ import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.Errors;
+import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
+import org.folio.bulkops.domain.dto.ProfileDto;
+import org.folio.bulkops.domain.dto.ProfileUpdateRequest;
+import org.folio.bulkops.domain.dto.ProfileRequest;
 import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.QueryRequest;
@@ -57,6 +61,7 @@ import org.folio.bulkops.service.LogFilesService;
 import org.folio.bulkops.service.PreviewService;
 import org.folio.bulkops.service.RuleService;
 import org.folio.bulkops.service.UserPermissionsService;
+import org.folio.bulkops.service.ProfileService;
 import org.folio.bulkops.util.MarcCsvHelper;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
@@ -85,6 +90,7 @@ public class BulkOperationController implements BulkOperationsApi {
   private final ListUsersService listUsersService;
   private final NoteProcessorFactory noteProcessorFactory;
   private final BulkOperationRepository bulkOperationRepository;
+  private final ProfileService profileService;
   private final UserPermissionsService userPermissionsService;
   private final MarcCsvHelper marcCsvHelper;
 
@@ -255,5 +261,31 @@ public class BulkOperationController implements BulkOperationsApi {
   @Override
   public ResponseEntity<BulkOperationDto> triggerBulkEditByQuery(UUID xOkapiUserId, QueryRequest queryRequest) {
     return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.triggerByQuery(xOkapiUserId, queryRequest)), HttpStatus.OK);
+  }
+
+
+  @Override
+  public ResponseEntity<ProfileSummaryResultsDto> getProfiles(String query, Integer offset, Integer limit) {
+    var response = profileService.getProfileSummaries(query, offset, limit);
+    return ResponseEntity.ok(response);
+  }
+
+
+  @Override
+  public ResponseEntity<ProfileDto> createProfile(ProfileRequest profileRequest) {
+    ProfileDto profileDto = profileService.createProfile(profileRequest);
+    return ResponseEntity.status(HttpStatus.CREATED).body(profileDto);
+  }
+
+  @Override
+  public ResponseEntity<Void> deleteProfile(UUID id) {
+    profileService.deleteById(id);
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
+  @Override
+  public ResponseEntity<ProfileDto> updateProfile(UUID id, ProfileUpdateRequest profileUpdateRequest) {
+    ProfileDto response = profileService.updateProfile(id, profileUpdateRequest);
+    return ResponseEntity.ok(response);
   }
 }
