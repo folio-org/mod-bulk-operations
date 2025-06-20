@@ -48,4 +48,15 @@ class CustomFeignErrorDecoderTest {
 
     assertInstanceOf(BulkEditException.class, actual);
   }
+
+  @Test
+  void shouldReturnBadRequestExceptionWhenStatus500() {
+    Response response = Response.builder()
+            .request(Request.create(Request.HttpMethod.GET, "bad request url", Map.of(),
+                    Request.Body.create(""), new RequestTemplate())).status(400)
+            .body("bad request".getBytes()).build();
+    var actual = customFeignErrorDecoder.decode("", response);
+
+    assertInstanceOf(BadRequestException.class, actual);
+  }
 }
