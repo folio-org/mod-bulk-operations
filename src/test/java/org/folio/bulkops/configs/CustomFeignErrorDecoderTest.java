@@ -134,6 +134,7 @@ class CustomFeignErrorDecoderTest {
 
             @Override
             public void close() {
+                // No-op for closing resources
             }
 
             @Override
