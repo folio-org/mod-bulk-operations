@@ -2,6 +2,7 @@ package org.folio.bulkops.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import org.folio.bulkops.configs.FeignClientConfiguration;
 import org.folio.bulkops.domain.bean.BriefInstanceCollection;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.InstanceCollection;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "inventory/instances")
+@FeignClient(name = "inventory/instances", configuration = FeignClientConfiguration .class)
 public interface InstanceClient {
   @PutMapping(value = "/{instanceId}")
   void updateInstance(@RequestBody Instance instance, @PathVariable String instanceId);
