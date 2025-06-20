@@ -145,7 +145,6 @@ public class BulkOperationService {
   private final QueryService queryService;
   private final ExportJobManagerSync exportJobManagerSync;
   private final List<Job> jobs;
-
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
   private static final String PREVIEW_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-CSV-%s.csv";
@@ -158,7 +157,6 @@ public class BulkOperationService {
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
   public BulkOperation uploadCsvFile(EntityType entityType, IdentifierType identifierType, boolean manual, UUID operationId, UUID xOkapiUserId, MultipartFile multipartFile) {
-
     BulkOperation operation;
 
     if (manual && operationId == null) {
@@ -212,21 +210,21 @@ public class BulkOperationService {
 
   private BulkOperation saveQueryBulkOperation(UUID userId, QueryRequest queryRequest) {
     return bulkOperationRepository.save(BulkOperation.builder()
-            .id(UUID.randomUUID())
-            .entityType(entityTypeService.getEntityTypeById(queryRequest.getEntityTypeId()))
-            .approach(QUERY)
-            .identifierType(IdentifierType.ID)
-            .status(EXECUTING_QUERY)
-            .startTime(LocalDateTime.now())
-            .userId(userId)
-            .fqlQuery(queryRequest.getFqlQuery())
-            .fqlQueryId(queryRequest.getQueryId())
-            .userFriendlyQuery(queryRequest.getUserFriendlyQuery())
-            .entityTypeId(queryRequest.getEntityTypeId())
-            .build());
+      .id(UUID.randomUUID())
+      .entityType(entityTypeService.getEntityTypeById(queryRequest.getEntityTypeId()))
+      .approach(QUERY)
+      .identifierType(IdentifierType.ID)
+      .status(EXECUTING_QUERY)
+      .startTime(LocalDateTime.now())
+      .userId(userId)
+      .fqlQuery(queryRequest.getFqlQuery())
+      .fqlQueryId(queryRequest.getQueryId())
+      .userFriendlyQuery(queryRequest.getUserFriendlyQuery())
+      .entityTypeId(queryRequest.getEntityTypeId())
+      .build());
   }
 
-  public void confirm(BulkOperationDataProcessing dataProcessing)  {
+  public void confirm(BulkOperationDataProcessing dataProcessing) {
     var operationId = dataProcessing.getBulkOperationId();
     var operation = getBulkOperationOrThrow(operationId);
 
@@ -297,7 +295,7 @@ public class BulkOperationService {
     }
   }
 
-  public void confirmForInstanceMarc(BulkOperationDataProcessing dataProcessing)  {
+  public void confirmForInstanceMarc(BulkOperationDataProcessing dataProcessing) {
     var operationId = dataProcessing.getBulkOperationId();
     var operation = getBulkOperationOrThrow(operationId);
 
@@ -359,7 +357,7 @@ public class BulkOperationService {
     var processor = dataProcessorFactory.getProcessorFromFactory(entityClass);
     UpdatedEntityHolder<BulkOperationsEntity> modified = null;
     try {
-        modified = processor.process(original.getRecordBulkOperationEntity().getIdentifier(operation.getIdentifierType()), original, rules);
+      modified = processor.process(original.getRecordBulkOperationEntity().getIdentifier(operation.getIdentifierType()), original, rules);
     } catch (Exception e) {
       log.error("Failed to modify entity", e);
     }
@@ -438,7 +436,7 @@ public class BulkOperationService {
             if (result != original) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result) + (hasNextRecord ? LF : EMPTY));
-              if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId()) || entityClass == User.class ) {
+              if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId()) || entityClass == User.class) {
                 CSVHelper.writeBeanToCsv(operation, csvWriter, result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
               } else {
                 var tenantIdOfEntity = result.getTenant();
@@ -454,7 +452,7 @@ public class BulkOperationService {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLinkToFailedEntity(), ErrorType.ERROR);
           } catch (WritePermissionDoesNotExist e) {
             var userName = userClient.getUserById(folioExecutionContext.getUserId().toString()).getUsername();
-            var errorMessage = String.format(e.getMessage(), userName, IdentifiersResolver.resolve(operation.getIdentifierType()), original.getIdentifier(operation.getIdentifierType()))  ;
+            var errorMessage = String.format(e.getMessage(), userName, IdentifiersResolver.resolve(operation.getIdentifierType()), original.getIdentifier(operation.getIdentifierType()));
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), errorMessage, ErrorType.ERROR);
           } catch (Exception e) {
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage(), ErrorType.ERROR);
@@ -500,7 +498,7 @@ public class BulkOperationService {
     var step = bulkOperationStart.getStep();
     var approach = bulkOperationStart.getApproach();
     BulkOperation operation = bulkOperationRepository.findById(bulkOperationId)
-        .orElseThrow(() -> new NotFoundException("Bulk operation was not found by id=" + bulkOperationId));
+      .orElseThrow(() -> new NotFoundException("Bulk operation was not found by id=" + bulkOperationId));
     operation.setUserId(xOkapiUserId);
 
     if (UPLOAD == step) {
@@ -731,21 +729,21 @@ public class BulkOperationService {
     bulkOperationRepository.save(operation);
 
     var folioProcessing = dataProcessingRepository.save(BulkOperationDataProcessing.builder()
+      .bulkOperationId(operation.getId())
+      .status(StatusType.ACTIVE)
+      .startTime(LocalDateTime.now())
+      .totalNumOfRecords(operation.getTotalNumOfRecords())
+      .processedNumOfRecords(0)
+      .build());
+
+    if (INSTANCE_MARC.equals(operation.getEntityType())) {
+      var marcProcessing = dataProcessingRepository.save(BulkOperationDataProcessing.builder()
         .bulkOperationId(operation.getId())
         .status(StatusType.ACTIVE)
         .startTime(LocalDateTime.now())
         .totalNumOfRecords(operation.getTotalNumOfRecords())
         .processedNumOfRecords(0)
         .build());
-
-    if (INSTANCE_MARC.equals(operation.getEntityType())) {
-      var marcProcessing = dataProcessingRepository.save(BulkOperationDataProcessing.builder()
-          .bulkOperationId(operation.getId())
-          .status(StatusType.ACTIVE)
-          .startTime(LocalDateTime.now())
-          .totalNumOfRecords(operation.getTotalNumOfRecords())
-          .processedNumOfRecords(0)
-          .build());
       executor.execute(getRunnableWithCurrentFolioContext(() -> confirmForInstanceMarc(marcProcessing)));
     }
     executor.execute(getRunnableWithCurrentFolioContext(() -> confirm(folioProcessing)));

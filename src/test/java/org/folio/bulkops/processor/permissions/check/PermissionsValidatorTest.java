@@ -3,10 +3,12 @@ package org.folio.bulkops.processor.permissions.check;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_INVENTORY_WRITE_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_VIEW_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_WRITE_PERMISSION;
+import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_OPERATIONS_PROFILES_ITEM_LOCK;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_ITEMS_ITEM_PUT;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.USERS_ITEM_PUT;
 import static org.folio.bulkops.util.Constants.DUPLICATES_ACROSS_TENANTS;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
+import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,6 +36,7 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.BatchIdsDto;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.exception.ProfileLockedException;
 import org.folio.bulkops.exception.ReadPermissionException;
 import org.folio.bulkops.exception.UploadFromQueryException;
 import org.folio.bulkops.exception.WritePermissionDoesNotExist;
@@ -263,4 +266,29 @@ class PermissionsValidatorTest {
     verify(tenantResolver).checkAffiliatedPermittedTenantIds(any(EntityType.class), any(String.class), any(Set.class),
             any(String.class));
   }
+
+  @Test
+  void shouldPassWhenUserHasLockPermission() {
+    UUID userId = UUID.randomUUID();
+    when(folioExecutionContext.getUserId()).thenReturn(userId);
+    when(folioExecutionContext.getTenantId()).thenReturn("tenant1");
+    when(permissionsProvider.getUserPermissions("tenant1", userId))
+      .thenReturn(List.of(BULK_OPERATIONS_PROFILES_ITEM_LOCK.getValue()));
+
+    assertDoesNotThrow(() -> permissionsValidator.checkIfLockPermissionExists());
+  }
+
+  @Test
+  void shouldThrowWhenUserLacksLockPermission() {
+    UUID userId = UUID.randomUUID();
+    when(folioExecutionContext.getUserId()).thenReturn(userId);
+    when(folioExecutionContext.getTenantId()).thenReturn("tenant1");
+    when(permissionsProvider.getUserPermissions("tenant1", userId))
+      .thenReturn(List.of("some-other-permission"));
+
+    var exception = assertThrows(ProfileLockedException.class, () -> permissionsValidator.checkIfLockPermissionExists());
+    assertEquals("User is restricted to manage locked profiles", exception.getMessage());
+  }
+
+
 }
