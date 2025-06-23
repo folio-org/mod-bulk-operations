@@ -69,7 +69,7 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
-import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
+import org.folio.bulkops.domain.dto.RuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.Row;
@@ -220,7 +220,7 @@ public class PreviewService {
     var rules = ruleService.getRules(bulkOperation.getId());
     var forceVisibleFieldNames = rules.getBulkOperationRules().stream()
       .map(BulkOperationRule::getRuleDetails)
-      .map(BulkOperationRuleRuleDetails::getOption)
+      .map(org.folio.bulkops.domain.dto.RuleDetails::getOption)
       .map(option -> UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option, INSTANCE))
       .collect(Collectors.toSet());
     unifiedTable.getHeader().forEach(header -> {

@@ -41,11 +41,11 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
-import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.Parameter;
+import org.folio.bulkops.domain.dto.RuleDetails;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -159,7 +159,7 @@ class UpdateProcessorTest extends BaseTest {
       .identifierType(IdentifierType.ID)
       .build();
 
-    var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
+    var rule = new BulkOperationRule().ruleDetails(new RuleDetails()
       .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
       .actions(Collections.singletonList(new Action().type(actionType))));
     when(ruleService.getRules(operationId)).thenReturn(new BulkOperationRuleCollection()
@@ -203,7 +203,7 @@ class UpdateProcessorTest extends BaseTest {
       .identifierType(IdentifierType.ID)
       .build();
 
-    var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
+    var rule = new BulkOperationRule().ruleDetails(new RuleDetails()
       .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
       .actions(Collections.singletonList(new Action()
         .type(actionType)
@@ -318,7 +318,7 @@ class UpdateProcessorTest extends BaseTest {
       .identifierType(IdentifierType.ID)
       .build();
 
-    var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
+    var rule = new BulkOperationRule().ruleDetails(new RuleDetails()
       .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
       .actions(Collections.singletonList(new Action()
         .type(actionType)
@@ -372,7 +372,7 @@ class UpdateProcessorTest extends BaseTest {
       .build();
 
     when(consortiaService.isTenantCentral(isA(String.class))).thenReturn(false);
-    var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
+    var rule = new BulkOperationRule().ruleDetails(new RuleDetails()
       .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
       .actions(Collections.singletonList(new Action()
         .type(actionType)
@@ -425,7 +425,7 @@ class UpdateProcessorTest extends BaseTest {
       .id(operationId)
       .identifierType(IdentifierType.ID)
       .build();
-    var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
+    var rule = new BulkOperationRule().ruleDetails(new RuleDetails()
       .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
       .actions(Collections.singletonList(new Action()
         .type(SET_TO_FALSE)
@@ -491,7 +491,7 @@ class UpdateProcessorTest extends BaseTest {
       .identifierType(IdentifierType.ID)
       .build();
 
-    var rule = new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails()
+    var rule = new BulkOperationRule().ruleDetails(new RuleDetails()
       .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
       .actions(Collections.singletonList(new Action()
         .type(SET_TO_TRUE)

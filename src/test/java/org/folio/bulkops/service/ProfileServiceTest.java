@@ -1,20 +1,15 @@
 package org.folio.bulkops.service;
 
-
 import static org.folio.bulkops.domain.dto.EntityType.USER;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import static org.mockito.ArgumentMatchers.any;
-
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doAnswer;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,20 +26,17 @@ import org.folio.bulkops.domain.dto.ProfileDto;
 import org.folio.bulkops.domain.entity.Profile;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.ProfileLockedException;
-import org.folio.bulkops.mapper.ProfileMapper;
-import org.folio.bulkops.mapper.ProfileRequestMapper;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.repository.ProfileRepository;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.mockito.Mock;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
 import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,12 +52,6 @@ class ProfileServiceTest extends BaseTest {
   @MockitoBean
   private PermissionsValidator permissionsValidator;
 
-  @MockitoBean
-  private ProfileMapper profileMapper;
-
-  @MockitoBean
-  private ProfileRequestMapper profileRequestMapper;
-
   @Mock
   private FolioExecutionContext ec;
 
@@ -78,45 +64,60 @@ class ProfileServiceTest extends BaseTest {
   @Test
   void shouldReturnAllProfileSummaries() {
     Profile profile = new Profile();
-    List<Profile> profileList = List.of(profile);
-    ProfileSummaryDTO summaryDto = new ProfileSummaryDTO();
+    profile.setId(UUID.randomUUID());
+    profile.setName("Test Profile");
+    profile.setDescription("desc");
+    profile.setLocked(false);
+    profile.setEntityType(USER);
 
-    String expectedQuery = "cql.allRecords=1";
-    int expectedOffset = 0;
-    int expectedLimit = Integer.MAX_VALUE;
+    List<Profile> profileList = List.of(profile);
     Page<Profile> profilePage = new PageImpl<>(profileList);
 
-    when(profileUUIDJpaCqlRepository.findByCql(expectedQuery, OffsetRequest.of(expectedOffset, expectedLimit)))
+    when(profileUUIDJpaCqlRepository.findByCql("cql.allRecords=1", OffsetRequest.of(0, Integer.MAX_VALUE)))
       .thenReturn(profilePage);
-    when(profileMapper.toSummaryDTO(profile)).thenReturn(summaryDto);
 
     ProfileSummaryResultsDto result = profileService.getProfileSummaries(null, null, null);
 
     assertThat(result).isNotNull();
-    assertThat(result.getContent()).containsExactly(summaryDto);
+    assertThat(result.getContent()).hasSize(1);
+
+    ProfileSummaryDTO summary = result.getContent().get(0);
+    assertThat(summary.getId()).isEqualTo(profile.getId());
+    assertThat(summary.getName()).isEqualTo(profile.getName());
+    assertThat(summary.getDescription()).isEqualTo(profile.getDescription());
+    assertThat(summary.getLocked()).isEqualTo(profile.isLocked());
+    assertThat(summary.getEntityType()).isEqualTo(profile.getEntityType());
+
     assertThat(result.getTotalRecords()).isEqualTo(1);
   }
 
   @Test
   void shouldReturnFilteredProfileSummariesWithPagination() {
     Profile profile = new Profile();
+    profile.setId(UUID.randomUUID());
+    profile.setName("Filtered Profile");
+    profile.setDescription("desc");
+    profile.setLocked(false);
+    profile.setEntityType(USER);
+
     List<Profile> profileList = List.of(profile);
-    ProfileSummaryDTO summaryDto = new ProfileSummaryDTO();
+    Page<Profile> profilePage = new PageImpl<>(profileList);
 
     String query = "name==\"Test Profile\"";
     int offset = 10;
     int limit = 5;
 
-    Page<Profile> profilePage = new PageImpl<>(profileList);
-
     when(profileUUIDJpaCqlRepository.findByCql(query, OffsetRequest.of(offset, limit)))
       .thenReturn(profilePage);
-    when(profileMapper.toSummaryDTO(profile)).thenReturn(summaryDto);
 
     ProfileSummaryResultsDto result = profileService.getProfileSummaries(query, offset, limit);
 
     assertThat(result).isNotNull();
-    assertThat(result.getContent()).containsExactly(summaryDto);
+    assertThat(result.getContent()).hasSize(1);
+
+    ProfileSummaryDTO summary = result.getContent().get(0);
+    assertThat(summary.getId()).isEqualTo(profile.getId());
+
     assertThat(result.getTotalRecords()).isEqualTo(1);
   }
 
@@ -138,21 +139,23 @@ class ProfileServiceTest extends BaseTest {
   @Test
   void shouldUseDefaultQueryWhenOnlyPaginationProvided() {
     Profile profile = new Profile();
-    List<Profile> profileList = List.of(profile);
-    ProfileSummaryDTO summaryDto = new ProfileSummaryDTO();
+    profile.setId(UUID.randomUUID());
+    profile.setName("Paged Profile");
+    profile.setDescription("desc");
+    profile.setLocked(false);
+    profile.setEntityType(USER);
 
+    List<Profile> profileList = List.of(profile);
     Page<Profile> profilePage = new PageImpl<>(profileList);
 
     when(profileUUIDJpaCqlRepository.findByCql("cql.allRecords=1", OffsetRequest.of(20, 10)))
       .thenReturn(profilePage);
-    when(profileMapper.toSummaryDTO(profile)).thenReturn(summaryDto);
 
     ProfileSummaryResultsDto result = profileService.getProfileSummaries(null, 20, 10);
 
-    assertThat(result.getContent()).containsExactly(summaryDto);
+    assertThat(result.getContent()).hasSize(1);
     assertThat(result.getTotalRecords()).isEqualTo(1);
   }
-
 
   @Test
   void shouldDeleteProfile() {
@@ -191,25 +194,42 @@ class ProfileServiceTest extends BaseTest {
     assertEquals("Cannot delete a locked profile without proper permission", ex.getMessage());
   }
 
-
   @Test
   void testCreateProfile() {
     User user = createUser();
     String fullName = getFullName(user);
     ProfileRequest request = createProfileRequest();
-    Profile entity = createProfile(request, UUID.randomUUID());
-    Profile saved = createProfile(request, entity.getId());
-    ProfileDto expected = createProfileDto(saved);
 
-    when(ec.getUserId()).thenReturn(contextUserId);
+    UUID userId = contextUserId;
     ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
-    when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
-    when(profileRequestMapper.toEntity(request, contextUserId, fullName)).thenReturn(entity);
-    when(profileRepository.save(entity)).thenReturn(saved);
-    when(profileMapper.toDto(saved)).thenReturn(expected);
+
+    when(ec.getUserId()).thenReturn(userId);
+    when(userClient.getUserById(userId.toString())).thenReturn(user);
+
+    Profile entity = new Profile();
+    entity.setName(request.getName());
+    entity.setLocked(request.getLocked());
+    entity.setEntityType(request.getEntityType());
+    entity.setCreatedBy(userId);
+    entity.setCreatedByUser(fullName);
+    entity.setDescription(request.getDescription());
+
+    Profile saved = new Profile();
+    saved.setId(UUID.randomUUID());
+    saved.setName(entity.getName());
+    saved.setEntityType(entity.getEntityType());
+    saved.setCreatedBy(userId);
+    saved.setCreatedByUser(fullName);
+    saved.setDescription(entity.getDescription());
+
+    when(profileRepository.save(any(Profile.class))).thenReturn(saved);
 
     ProfileDto result = profileService.createProfile(request);
-    assertEquals(expected, result);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getId()).isEqualTo(saved.getId());
+    assertThat(result.getName()).isEqualTo(saved.getName());
+    assertThat(result.getLocked()).isEqualTo(saved.isLocked());
   }
 
   @Test
@@ -219,37 +239,37 @@ class ProfileServiceTest extends BaseTest {
     String fullName = getFullName(user);
 
     ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
-    updateRequest.name("Updated Profile Name");
+    updateRequest.setName("Updated Profile Name");
     updateRequest.setLocked(true);
     updateRequest.setDescription("Updated description");
 
-    Profile existing = createProfile(createProfileRequest(), profileId);
-    Profile updated = createProfile(createProfileRequest(), profileId);
+    Profile existing = new Profile();
+    existing.setId(profileId);
+    existing.setName("Old Name");
+    existing.setLocked(false);
+    existing.setDescription("Old description");
+
+    Profile updated = new Profile();
+    updated.setId(profileId);
     updated.setName(updateRequest.getName());
     updated.setLocked(updateRequest.getLocked());
     updated.setDescription(updateRequest.getDescription());
     updated.setUpdatedBy(contextUserId);
     updated.setUpdatedByUser(fullName);
 
-    ProfileDto expected = createProfileDto(updated);
+    ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
 
     when(ec.getUserId()).thenReturn(contextUserId);
-    ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
     when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(existing));
-    doAnswer(invocation -> {
-      Profile entity = invocation.getArgument(0);
-      ProfileUpdateRequest req = invocation.getArgument(1);
-      entity.setName(req.getName());
-      entity.setLocked(req.getLocked());
-      entity.setDescription(req.getDescription());
-      return null;
-    }).when(profileRequestMapper).updateEntity(existing, updateRequest);
     when(profileRepository.save(existing)).thenReturn(updated);
-    when(profileMapper.toDto(updated)).thenReturn(expected);
 
     ProfileDto result = profileService.updateProfile(profileId, updateRequest);
-    assertEquals(expected, result);
+
+    assertThat(result).isNotNull();
+    assertThat(result.getName()).isEqualTo(updated.getName());
+    assertThat(result.getLocked()).isEqualTo(updated.isLocked());
+    assertThat(result.getDescription()).isEqualTo(updated.getDescription());
   }
 
   @Test
@@ -257,7 +277,7 @@ class ProfileServiceTest extends BaseTest {
     UUID nonExistentId = UUID.randomUUID();
 
     ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
-    updateRequest.name("Doesn't matter");
+    updateRequest.setName("Doesn't matter");
     updateRequest.setLocked(false);
 
     when(ec.getUserId()).thenReturn(contextUserId);
@@ -276,8 +296,7 @@ class ProfileServiceTest extends BaseTest {
     UUID profileId = UUID.randomUUID();
 
     ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
-    updateRequest.setName("Attempted Update");
-    updateRequest.setLocked(false);
+    updateRequest.setLocked(true);
 
     Profile lockedProfile = createProfile(createProfileRequest(), profileId);
     lockedProfile.setLocked(true);
@@ -303,17 +322,16 @@ class ProfileServiceTest extends BaseTest {
     User user = createUser();
 
     ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
-    updateRequest.setLocked(false); // not trying to lock
+    updateRequest.setLocked(false);
 
     Profile unlockedProfile = createProfile(createProfileRequest(), profileId);
-    unlockedProfile.setLocked(false); // profile not locked
+    unlockedProfile.setLocked(false);
 
     when(ec.getUserId()).thenReturn(contextUserId);
     ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
     when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(unlockedProfile));
     when(profileRepository.save(any())).thenReturn(unlockedProfile);
-    when(profileMapper.toDto(any())).thenReturn(createProfileDto(unlockedProfile));
 
     ProfileDto result = profileService.updateProfile(profileId, updateRequest);
 
@@ -327,7 +345,7 @@ class ProfileServiceTest extends BaseTest {
     User user = createUser();
 
     ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
-    updateRequest.setLocked(true); // trying to lock
+    updateRequest.setLocked(true);
 
     Profile unlockedProfile = createProfile(createProfileRequest(), profileId);
     unlockedProfile.setLocked(false);
@@ -337,7 +355,8 @@ class ProfileServiceTest extends BaseTest {
     when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(unlockedProfile));
 
-    doThrow(new ProfileLockedException("Missing permission")).when(permissionsValidator).checkIfLockPermissionExists();
+    doThrow(new ProfileLockedException("Missing permission"))
+      .when(permissionsValidator).checkIfLockPermissionExists();
 
     ProfileLockedException ex = assertThrows(ProfileLockedException.class, () ->
       profileService.updateProfile(profileId, updateRequest)
@@ -353,7 +372,7 @@ class ProfileServiceTest extends BaseTest {
     String fullName = getFullName(user);
 
     ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
-    updateRequest.setLocked(true); // trying to lock
+    updateRequest.setLocked(true);
     updateRequest.setName("Locked Now");
     updateRequest.setDescription("Updated while locking");
 
@@ -367,32 +386,20 @@ class ProfileServiceTest extends BaseTest {
     updated.setUpdatedBy(contextUserId);
     updated.setUpdatedByUser(fullName);
 
-    ProfileDto expected = createProfileDto(updated);
+    ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
 
     when(ec.getUserId()).thenReturn(contextUserId);
-    ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
     when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(existing));
-
-    doAnswer(invocation -> {
-      Profile entity = invocation.getArgument(0);
-      ProfileUpdateRequest req = invocation.getArgument(1);
-      entity.setName(req.getName());
-      entity.setLocked(req.getLocked());
-      entity.setDescription(req.getDescription());
-      return null;
-    }).when(profileRequestMapper).updateEntity(existing, updateRequest);
-
     when(profileRepository.save(existing)).thenReturn(updated);
-    when(profileMapper.toDto(updated)).thenReturn(expected);
 
     doNothing().when(permissionsValidator).checkIfLockPermissionExists();
 
     ProfileDto result = profileService.updateProfile(profileId, updateRequest);
 
-    assertEquals(expected.getName(), result.getName());
-    assertEquals(expected.getLocked(), result.getLocked());
-    assertEquals(expected.getDescription(), result.getDescription());
+    assertEquals(updated.getName(), result.getName());
+    assertEquals(updated.isLocked(), result.getLocked());
+    assertEquals(updated.getDescription(), result.getDescription());
   }
 
   @Test
@@ -404,14 +411,16 @@ class ProfileServiceTest extends BaseTest {
     updateRequest.setLocked(true);
 
     Profile lockedProfile = createProfile(createProfileRequest(), profileId);
-    lockedProfile.setLocked(true); // already locked
+    lockedProfile.setLocked(true);
+
+    ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
 
     when(ec.getUserId()).thenReturn(contextUserId);
-    ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
     when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(lockedProfile));
 
-    doThrow(new ProfileLockedException("Missing permission")).when(permissionsValidator).checkIfLockPermissionExists();
+    doThrow(new ProfileLockedException("Missing permission"))
+      .when(permissionsValidator).checkIfLockPermissionExists();
 
     ProfileLockedException ex = assertThrows(ProfileLockedException.class, () ->
       profileService.updateProfile(profileId, updateRequest)
@@ -419,6 +428,7 @@ class ProfileServiceTest extends BaseTest {
 
     assertEquals("Missing permission", ex.getMessage());
   }
+
   @Test
   void testUpdateProfile_lockedProfile_withPermission_allows() {
     UUID profileId = UUID.randomUUID();
@@ -431,7 +441,7 @@ class ProfileServiceTest extends BaseTest {
     updateRequest.setDescription("Updated description");
 
     Profile lockedProfile = createProfile(createProfileRequest(), profileId);
-    lockedProfile.setLocked(true); // already locked
+    lockedProfile.setLocked(true);
 
     Profile updated = createProfile(createProfileRequest(), profileId);
     updated.setLocked(true);
@@ -440,32 +450,20 @@ class ProfileServiceTest extends BaseTest {
     updated.setUpdatedBy(contextUserId);
     updated.setUpdatedByUser(fullName);
 
-    ProfileDto expected = createProfileDto(updated);
+    ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
 
     when(ec.getUserId()).thenReturn(contextUserId);
-    ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
     when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(lockedProfile));
-
-    doAnswer(invocation -> {
-      Profile entity = invocation.getArgument(0);
-      ProfileUpdateRequest req = invocation.getArgument(1);
-      entity.setName(req.getName());
-      entity.setLocked(req.getLocked());
-      entity.setDescription(req.getDescription());
-      return null;
-    }).when(profileRequestMapper).updateEntity(lockedProfile, updateRequest);
-
     when(profileRepository.save(lockedProfile)).thenReturn(updated);
-    when(profileMapper.toDto(updated)).thenReturn(expected);
 
     doNothing().when(permissionsValidator).checkIfLockPermissionExists();
 
     ProfileDto result = profileService.updateProfile(profileId, updateRequest);
 
-    assertEquals(expected.getName(), result.getName());
-    assertEquals(expected.getLocked(), result.getLocked());
-    assertEquals(expected.getDescription(), result.getDescription());
+    assertEquals(updated.getName(), result.getName());
+    assertEquals(updated.isLocked(), result.getLocked());
+    assertEquals(updated.getDescription(), result.getDescription());
   }
 
   @Test
@@ -508,7 +506,6 @@ class ProfileServiceTest extends BaseTest {
     doThrow(new ProfileLockedException("Cannot delete a locked profile without proper permission"))
       .when(permissionsValidator).checkIfLockPermissionExists();
 
-    // Act & Assert
     ProfileLockedException ex = assertThrows(ProfileLockedException.class, () ->
       profileService.deleteById(profileId)
     );
@@ -518,30 +515,27 @@ class ProfileServiceTest extends BaseTest {
     verify(profileRepository, never()).delete(any());
   }
 
-
   private User createUser() {
-    Personal personal = new Personal();
-    personal.setFirstName("Abc");
-    personal.setLastName("Abc");
-
     User user = new User();
     user.setId(contextUserId.toString());
+    Personal personal = new Personal();
+    personal.setFirstName("John");
+    personal.setLastName("Doe");
     user.setPersonal(personal);
-    user.setUsername("Abc");
     return user;
   }
 
   private String getFullName(User user) {
-    return String.format("%s, %s", user.getPersonal().getLastName(), user.getPersonal().getFirstName());
+    Personal personal = user.getPersonal();
+    return (personal.getFirstName() + " " + personal.getLastName()).trim();
   }
 
   private ProfileRequest createProfileRequest() {
     ProfileRequest request = new ProfileRequest();
-    request.name("profile name");
+    request.setName("Sample Profile");
+    request.setDescription("Sample description");
     request.setLocked(false);
     request.setEntityType(USER);
-    request.createdBy(contextUserId);
-    request.createdByUser(getFullName(createUser()));
     return request;
   }
 
@@ -549,25 +543,9 @@ class ProfileServiceTest extends BaseTest {
     Profile profile = new Profile();
     profile.setId(id);
     profile.setName(request.getName());
+    profile.setDescription(request.getDescription());
     profile.setLocked(request.getLocked());
     profile.setEntityType(request.getEntityType());
-    profile.setCreatedBy(request.getCreatedBy());
-    profile.setCreatedByUser(request.getCreatedByUser());
     return profile;
   }
-
-  private ProfileDto createProfileDto(Profile profile) {
-    ProfileDto dto = new ProfileDto();
-    dto.setId(profile.getId());
-    dto.setName(profile.getName());
-    dto.setLocked(profile.isLocked());
-    dto.setEntityType(profile.getEntityType());
-    dto.setCreatedBy(profile.getCreatedBy());
-    dto.setCreatedByUser(profile.getCreatedByUser());
-    dto.setUpdatedBy(profile.getUpdatedBy());
-    dto.setUpdatedByUser(profile.getUpdatedByUser());
-    dto.setDescription(profile.getDescription());
-    return dto;
-  }
 }
-

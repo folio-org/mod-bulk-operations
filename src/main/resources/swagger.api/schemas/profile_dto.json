@@ -23,13 +23,19 @@
       "description": "Entity type",
       "$ref": "entity_type.json#/EntityType"
     },
-    "bulkOperationRuleCollection": {
-      "description": "Bulk Operation Rule Collection",
-      "$ref": "bulk_operation_rule_collection.json#/BulkOperationRuleCollection"
+    "ruleDetails": {
+      "description": "Rule Collection",
+      "type": "array",
+      "items": {
+        "$ref": "rule_details.json#/RuleDetails"
+      }
     },
-    "bulkOperationMarcRuleCollection": {
+    "marcRuleDetails": {
       "description": "Bulk Operation Marc Rule Collection",
-      "$ref": "bulk_operation_marc_rule_collection.json#/BulkOperationMarcRuleCollection"
+      "type": "array",
+      "items": {
+        "$ref": "marc_rule_details.json#/MarcRuleDetails"
+      }
     },
     "createdDate": {
       "description": "Date and time when the record was created",

@@ -19,14 +19,14 @@
       "description": "Entity type",
       "$ref": "entity_type.json#/EntityType"
     },
-    "bulkOperationRuleCollection": {
+    "ruleDetails": {
       "description": "Rule Collection",
       "type": "array",
       "items": {
         "$ref": "rule_details.json#/RuleDetails"
       }
     },
-    "bulkOperationMarcRuleCollection": {
+    "marcRuleDetails": {
       "description": "Bulk Operation Marc Rule Collection",
       "type": "array",
       "items": {

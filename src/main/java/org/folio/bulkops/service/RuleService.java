@@ -5,8 +5,8 @@ import java.util.UUID;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
-import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
+import org.folio.bulkops.domain.dto.RuleDetails;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.mapper.MarcRulesMapper;
 import org.folio.bulkops.repository.BulkOperationMarcRuleRepository;
@@ -60,7 +60,7 @@ public class RuleService {
   private BulkOperationRule mapBulkOperationRuleToDto(org.folio.bulkops.domain.entity.BulkOperationRule entity) {
     return new BulkOperationRule()
       .bulkOperationId(entity.getBulkOperationId())
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(entity.getUpdateOption())
         .actions(entity.getRuleDetails().stream()
           .map(details -> new Action()
