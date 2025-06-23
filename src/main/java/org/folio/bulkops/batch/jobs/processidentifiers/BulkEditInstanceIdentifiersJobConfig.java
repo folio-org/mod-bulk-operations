@@ -113,8 +113,6 @@ public class BulkEditInstanceIdentifiersJobConfig {
       .processor(bulkEditInstanceProcessor)
       .faultTolerant()
       .skipLimit(1_000_000)
-      .retry(ConverterException.class)
-      .retryLimit(1_000_000)
       .processorNonTransactional() // Required to avoid repeating BulkEditItemProcessor#process after skip.
       .skip(BulkEditException.class)
       .listener(bulkEditSkipListener)
