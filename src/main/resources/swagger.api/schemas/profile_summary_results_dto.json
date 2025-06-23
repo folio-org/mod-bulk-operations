@@ -7,7 +7,7 @@
       "description": "Array of profile summary DTOs",
       "type": "array",
       "items": {
-        "$ref": "#/ProfileSummaryDTO"
+        "$ref": "#/ProfileSummaryDto"
       }
     },
     "totalRecords": {
@@ -21,8 +21,8 @@
     "content",
     "totalRecords"
   ],
-  "ProfileSummaryDTO": {
-    "description": "Profile Summary DTO",
+  "ProfileSummaryDto": {
+    "description": "Profile Summary Dto",
     "type": "object",
     "properties": {
       "id": {
@@ -70,10 +70,6 @@
         "type": "string",
         "format": "UUID"
       },
-      "createdByUser": {
-        "description": "Created By User",
-        "type": "string"
-      },
       "updatedDate": {
         "description": "Date and time when the record was last updated",
         "type": "string",
@@ -83,10 +79,6 @@
         "description": "ID of the user who last updated the record (when available)",
         "type": "string",
         "format": "UUID"
-      },
-      "updatedByUser": {
-        "description": "User who last updated the record (when available)",
-        "type": "string"
       }
     },
     "required": [

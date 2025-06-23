@@ -16,11 +16,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.domain.bean.Personal;
-import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
 import org.folio.bulkops.domain.dto.ProfileUpdateRequest;
-import org.folio.bulkops.domain.dto.ProfileSummaryDTO;
+import org.folio.bulkops.domain.dto.ProfileSummaryDto;
 import org.folio.bulkops.domain.dto.ProfileRequest;
 import org.folio.bulkops.domain.dto.ProfileDto;
 import org.folio.bulkops.domain.entity.Profile;
@@ -81,7 +79,7 @@ class ProfileServiceTest extends BaseTest {
     assertThat(result).isNotNull();
     assertThat(result.getContent()).hasSize(1);
 
-    ProfileSummaryDTO summary = result.getContent().get(0);
+    ProfileSummaryDto summary = result.getContent().get(0);
     assertThat(summary.getId()).isEqualTo(profile.getId());
     assertThat(summary.getName()).isEqualTo(profile.getName());
     assertThat(summary.getDescription()).isEqualTo(profile.getDescription());
@@ -115,7 +113,7 @@ class ProfileServiceTest extends BaseTest {
     assertThat(result).isNotNull();
     assertThat(result.getContent()).hasSize(1);
 
-    ProfileSummaryDTO summary = result.getContent().get(0);
+    ProfileSummaryDto summary = result.getContent().get(0);
     assertThat(summary.getId()).isEqualTo(profile.getId());
 
     assertThat(result.getTotalRecords()).isEqualTo(1);
@@ -196,22 +194,18 @@ class ProfileServiceTest extends BaseTest {
 
   @Test
   void testCreateProfile() {
-    User user = createUser();
-    String fullName = getFullName(user);
     ProfileRequest request = createProfileRequest();
 
     UUID userId = contextUserId;
     ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
 
     when(ec.getUserId()).thenReturn(userId);
-    when(userClient.getUserById(userId.toString())).thenReturn(user);
 
     Profile entity = new Profile();
     entity.setName(request.getName());
     entity.setLocked(request.getLocked());
     entity.setEntityType(request.getEntityType());
     entity.setCreatedBy(userId);
-    entity.setCreatedByUser(fullName);
     entity.setDescription(request.getDescription());
 
     Profile saved = new Profile();
@@ -219,7 +213,6 @@ class ProfileServiceTest extends BaseTest {
     saved.setName(entity.getName());
     saved.setEntityType(entity.getEntityType());
     saved.setCreatedBy(userId);
-    saved.setCreatedByUser(fullName);
     saved.setDescription(entity.getDescription());
 
     when(profileRepository.save(any(Profile.class))).thenReturn(saved);
@@ -235,8 +228,6 @@ class ProfileServiceTest extends BaseTest {
   @Test
   void testUpdateProfile() {
     UUID profileId = UUID.randomUUID();
-    User user = createUser();
-    String fullName = getFullName(user);
 
     ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
     updateRequest.setName("Updated Profile Name");
@@ -255,12 +246,10 @@ class ProfileServiceTest extends BaseTest {
     updated.setLocked(updateRequest.getLocked());
     updated.setDescription(updateRequest.getDescription());
     updated.setUpdatedBy(contextUserId);
-    updated.setUpdatedByUser(fullName);
 
     ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
 
     when(ec.getUserId()).thenReturn(contextUserId);
-    when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(existing));
     when(profileRepository.save(existing)).thenReturn(updated);
 
@@ -282,7 +271,6 @@ class ProfileServiceTest extends BaseTest {
 
     when(ec.getUserId()).thenReturn(contextUserId);
     ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
-    when(userClient.getUserById(contextUserId.toString())).thenReturn(createUser());
     when(profileRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
     NotFoundException ex = assertThrows(NotFoundException.class, () ->
@@ -303,7 +291,6 @@ class ProfileServiceTest extends BaseTest {
 
     when(ec.getUserId()).thenReturn(contextUserId);
     ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
-    when(userClient.getUserById(contextUserId.toString())).thenReturn(createUser());
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(lockedProfile));
 
     doThrow(new ProfileLockedException("Cannot update a locked profile"))
@@ -319,7 +306,6 @@ class ProfileServiceTest extends BaseTest {
   @Test
   void testUpdateProfile_unlockedProfile_allowsEditWithoutPermissionCheck() {
     UUID profileId = UUID.randomUUID();
-    User user = createUser();
 
     ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
     updateRequest.setLocked(false);
@@ -329,7 +315,6 @@ class ProfileServiceTest extends BaseTest {
 
     when(ec.getUserId()).thenReturn(contextUserId);
     ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
-    when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(unlockedProfile));
     when(profileRepository.save(any())).thenReturn(unlockedProfile);
 
@@ -342,7 +327,6 @@ class ProfileServiceTest extends BaseTest {
   @Test
   void testUpdateProfile_unlockedProfile_tryLockWithoutPermission_throws() {
     UUID profileId = UUID.randomUUID();
-    User user = createUser();
 
     ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
     updateRequest.setLocked(true);
@@ -352,7 +336,6 @@ class ProfileServiceTest extends BaseTest {
 
     when(ec.getUserId()).thenReturn(contextUserId);
     ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
-    when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(unlockedProfile));
 
     doThrow(new ProfileLockedException("Missing permission"))
@@ -368,8 +351,6 @@ class ProfileServiceTest extends BaseTest {
   @Test
   void testUpdateProfile_unlockedProfile_tryLockWithPermission_allows() {
     UUID profileId = UUID.randomUUID();
-    User user = createUser();
-    String fullName = getFullName(user);
 
     ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
     updateRequest.setLocked(true);
@@ -384,12 +365,10 @@ class ProfileServiceTest extends BaseTest {
     updated.setName(updateRequest.getName());
     updated.setDescription(updateRequest.getDescription());
     updated.setUpdatedBy(contextUserId);
-    updated.setUpdatedByUser(fullName);
 
     ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
 
     when(ec.getUserId()).thenReturn(contextUserId);
-    when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(existing));
     when(profileRepository.save(existing)).thenReturn(updated);
 
@@ -405,7 +384,6 @@ class ProfileServiceTest extends BaseTest {
   @Test
   void testUpdateProfile_lockedProfile_withoutPermission_throws() {
     UUID profileId = UUID.randomUUID();
-    User user = createUser();
 
     ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
     updateRequest.setLocked(true);
@@ -416,7 +394,6 @@ class ProfileServiceTest extends BaseTest {
     ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
 
     when(ec.getUserId()).thenReturn(contextUserId);
-    when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(lockedProfile));
 
     doThrow(new ProfileLockedException("Missing permission"))
@@ -432,8 +409,6 @@ class ProfileServiceTest extends BaseTest {
   @Test
   void testUpdateProfile_lockedProfile_withPermission_allows() {
     UUID profileId = UUID.randomUUID();
-    User user = createUser();
-    String fullName = getFullName(user);
 
     ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
     updateRequest.setLocked(true);
@@ -448,12 +423,11 @@ class ProfileServiceTest extends BaseTest {
     updated.setName(updateRequest.getName());
     updated.setDescription(updateRequest.getDescription());
     updated.setUpdatedBy(contextUserId);
-    updated.setUpdatedByUser(fullName);
+
 
     ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
 
     when(ec.getUserId()).thenReturn(contextUserId);
-    when(userClient.getUserById(contextUserId.toString())).thenReturn(user);
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(lockedProfile));
     when(profileRepository.save(lockedProfile)).thenReturn(updated);
 
@@ -513,21 +487,6 @@ class ProfileServiceTest extends BaseTest {
     assertEquals("Cannot delete a locked profile without proper permission", ex.getMessage());
     verify(permissionsValidator).checkIfLockPermissionExists();
     verify(profileRepository, never()).delete(any());
-  }
-
-  private User createUser() {
-    User user = new User();
-    user.setId(contextUserId.toString());
-    Personal personal = new Personal();
-    personal.setFirstName("John");
-    personal.setLastName("Doe");
-    user.setPersonal(personal);
-    return user;
-  }
-
-  private String getFullName(User user) {
-    Personal personal = user.getPersonal();
-    return (personal.getFirstName() + " " + personal.getLastName()).trim();
   }
 
   private ProfileRequest createProfileRequest() {

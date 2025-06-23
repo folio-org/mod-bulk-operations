@@ -2,15 +2,13 @@ package org.folio.bulkops.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.bulkops.client.UserClient;
-import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.entity.Profile;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.domain.dto.ProfileUpdateRequest;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.repository.ProfileRepository;
 import org.folio.bulkops.domain.dto.ProfileDto;
-import org.folio.bulkops.domain.dto.ProfileSummaryDTO;
+import org.folio.bulkops.domain.dto.ProfileSummaryDto;
 import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.cql.JpaCqlRepository;
@@ -20,7 +18,6 @@ import org.springframework.stereotype.Service;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -29,11 +26,8 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ProfileService {
   private final FolioExecutionContext folioExecutionContext;
-  private final UserClient userClient;
-
   private final ProfileRepository profileRepository;
   private final JpaCqlRepository<Profile, UUID> profileCqlRepository;
-
   private final PermissionsValidator validator;
 
 
@@ -48,9 +42,9 @@ public class ProfileService {
       )
     );
 
-    List<ProfileSummaryDTO> items = page.stream()
+    List<ProfileSummaryDto> items = page.stream()
       .map(profile -> {
-        ProfileSummaryDTO dto = new ProfileSummaryDTO();
+        ProfileSummaryDto dto = new ProfileSummaryDto();
         dto.setId(profile.getId());
         dto.setName(profile.getName());
         dto.setDescription(profile.getDescription());
@@ -59,17 +53,13 @@ public class ProfileService {
         return dto;
       })
       .toList();
-
-    ProfileSummaryResultsDto result = new ProfileSummaryResultsDto();
-    result.setContent(items);
-    result.setTotalRecords(page.getTotalElements());
-    return result;
-
+    return new ProfileSummaryResultsDto()
+      .content(items)
+      .totalRecords(page.getTotalElements());
   }
 
   public ProfileDto createProfile(org.folio.bulkops.domain.dto.ProfileRequest profileRequest) {
     UUID userId = folioExecutionContext.getUserId();
-    String username = getUsername(userId);
 
     if (Boolean.TRUE.equals(profileRequest.getLocked())) {
       validator.checkIfLockPermissionExists();
@@ -84,10 +74,8 @@ public class ProfileService {
       .marcRuleDetails(profileRequest.getMarcRuleDetails())
       .createdDate(OffsetDateTime.now())
       .createdBy(userId)
-      .createdByUser(username)
       .updatedDate(OffsetDateTime.now())
       .updatedBy(userId)
-      .updatedByUser(username)
       .build();
 
     Profile saved = profileRepository.save(entity);
@@ -106,7 +94,6 @@ public class ProfileService {
 
   public ProfileDto updateProfile(UUID profileId, ProfileUpdateRequest profileUpdateRequest) {
     UUID userId = folioExecutionContext.getUserId();
-    String username = getUsername(userId);
 
     Profile existing = getProfile(profileId);
 
@@ -116,16 +103,14 @@ public class ProfileService {
     if (isLocked || isLockAttempt) {
       validator.checkIfLockPermissionExists();
     }
-    Optional.ofNullable(profileUpdateRequest.getName()).ifPresent(existing::setName);
-    Optional.ofNullable(profileUpdateRequest.getDescription()).ifPresent(existing::setDescription);
-    Optional.ofNullable(profileUpdateRequest.getEntityType()).ifPresent(existing::setEntityType);
-    Optional.ofNullable(profileUpdateRequest.getRuleDetails()).ifPresent(existing::setRuleDetails);
-    Optional.ofNullable(profileUpdateRequest.getMarcRuleDetails()).ifPresent(existing::setMarcRuleDetails);
-    Optional.ofNullable(profileUpdateRequest.getLocked()).ifPresent(existing::setLocked);
-
+    existing.setName(profileUpdateRequest.getName());
+    existing.setDescription(profileUpdateRequest.getDescription());
+    existing.setEntityType(profileUpdateRequest.getEntityType());
+    existing.setRuleDetails(profileUpdateRequest.getRuleDetails());
+    existing.setMarcRuleDetails(profileUpdateRequest.getMarcRuleDetails());
+    existing.setLocked(profileUpdateRequest.getLocked());
     existing.setUpdatedDate(OffsetDateTime.now());
     existing.setUpdatedBy(userId);
-    existing.setUpdatedByUser(username);
 
     Profile updated = profileRepository.save(existing);
     return toDto(updated);
@@ -134,21 +119,6 @@ public class ProfileService {
   private Profile getProfile(UUID profileId) {
     return profileRepository.findById(profileId)
       .orElseThrow(() -> new NotFoundException("Profile not found with ID: " + profileId));
-  }
-
-  private String getUsername(UUID userId) {
-    try {
-      log.info("Attempting to retrieve username for id {}", userId);
-      User user = userClient.getUserById(userId.toString());
-      var personal = user.getPersonal();
-      if (personal != null && personal.getFirstName() != null && personal.getLastName() != null) {
-        return String.format("%s, %s", personal.getLastName(), personal.getFirstName());
-      }
-      return userId.toString();
-    } catch (Exception exception) {
-      log.error("Unexpected error when fetching user: {}", exception.getMessage(), exception);
-      return userId.toString();
-    }
   }
 
   private ProfileDto toDto(Profile profile) {
@@ -162,10 +132,8 @@ public class ProfileService {
     dto.setMarcRuleDetails(profile.getMarcRuleDetails());
     dto.setCreatedDate(profile.getCreatedDate() == null ? null : Date.from(profile.getCreatedDate().toInstant()));
     dto.setCreatedBy(profile.getCreatedBy());
-    dto.setCreatedByUser(profile.getCreatedByUser());
     dto.setCreatedDate(profile.getCreatedDate() == null ? null : Date.from(profile.getUpdatedDate().toInstant()));
     dto.setUpdatedBy(profile.getUpdatedBy());
-    dto.setUpdatedByUser(profile.getUpdatedByUser());
     return dto;
   }
 }

@@ -66,7 +66,7 @@ import org.folio.bulkops.exception.ProfileLockedException;
 import org.folio.bulkops.processor.note.HoldingsNotesProcessor;
 import org.folio.bulkops.processor.note.ItemNoteProcessor;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.folio.bulkops.domain.dto.ProfileSummaryDTO;
+import org.folio.bulkops.domain.dto.ProfileSummaryDto;
 import org.folio.bulkops.domain.dto.ProfileUpdateRequest;
 import org.folio.bulkops.service.BulkOperationService;
 import org.folio.bulkops.service.ConsortiaService;
@@ -472,8 +472,8 @@ class BulkOperationControllerTest extends BaseTest {
 
   @Test
   void shouldReturnProfileSummaries() throws Exception {
-    ProfileSummaryDTO profile1 = buildProfileSummaryDto(UUID.randomUUID(), "Test Profile 1", "Sample description 1", "test-user", false);
-    ProfileSummaryDTO profile2 = buildProfileSummaryDto(UUID.randomUUID(), "Test Profile 2", "Sample description 2", "test-user", false);
+    ProfileSummaryDto profile1 = buildProfileSummaryDto(UUID.randomUUID(), "Test Profile 1", "Sample description 1",  false);
+    ProfileSummaryDto profile2 = buildProfileSummaryDto(UUID.randomUUID(), "Test Profile 2", "Sample description 2", false);
 
     ProfileSummaryResultsDto summaryDto = new ProfileSummaryResultsDto();
     summaryDto.setTotalRecords(2L);
@@ -495,11 +495,9 @@ class BulkOperationControllerTest extends BaseTest {
       .andExpect(jsonPath("$.content[0].name", is(profile1.getName())))
       .andExpect(jsonPath("$.content[0].description", is(profile1.getDescription())))
       .andExpect(jsonPath("$.content[0].locked", is(profile1.getLocked())))
-      .andExpect(jsonPath("$.content[0].createdByUser", is(profile1.getCreatedByUser())))
       .andExpect(jsonPath("$.content[1].name", is(profile2.getName())))
       .andExpect(jsonPath("$.content[1].description", is(profile2.getDescription())))
-      .andExpect(jsonPath("$.content[1].locked", is(profile2.getLocked())))
-      .andExpect(jsonPath("$.content[1].createdByUser", is(profile2.getCreatedByUser())));
+      .andExpect(jsonPath("$.content[1].locked", is(profile2.getLocked())));
   }
 
 
@@ -512,7 +510,7 @@ class BulkOperationControllerTest extends BaseTest {
     request.setLocked(false);
     request.setEntityType(USER);
 
-    ProfileDto createdProfile = buildProfileDto(profileId, "Updated Name", "Updated description", USER, false, "test-user");
+    ProfileDto createdProfile = buildProfileDto(profileId, "Updated Name", "Updated description", USER, false);
 
     when(profileService.createProfile(any(ProfileRequest.class)))
       .thenReturn(createdProfile);
@@ -528,7 +526,7 @@ class BulkOperationControllerTest extends BaseTest {
 
   @Test
   void shouldReturnProfilesWithQueryAndPagination() throws Exception {
-    ProfileSummaryDTO profile = buildProfileSummaryDto(UUID.randomUUID(), "Filtered Profile", "Desc", "user", false);
+    ProfileSummaryDto profile = buildProfileSummaryDto(UUID.randomUUID(), "Filtered Profile", "Desc", false);
 
     ProfileSummaryResultsDto summaryDto = new ProfileSummaryResultsDto();
     summaryDto.setTotalRecords(1L);
@@ -591,7 +589,7 @@ class BulkOperationControllerTest extends BaseTest {
   void shouldUpdateProfile() throws Exception {
     UUID profileId = UUID.randomUUID();
     ProfileUpdateRequest updateRequest = buildProfileUpdateRequest("Updated Name", "Updated description", USER, false);
-    ProfileDto updatedProfile = buildProfileDto(profileId, "Updated Name", "Updated description", USER, false, "test-user");
+    ProfileDto updatedProfile = buildProfileDto(profileId, "Updated Name", "Updated description", USER, false);
 
     when(profileService.updateProfile(eq(profileId), any(ProfileUpdateRequest.class)))
       .thenReturn(updatedProfile);
@@ -662,23 +660,21 @@ class BulkOperationControllerTest extends BaseTest {
     return request;
   }
 
-  private ProfileDto buildProfileDto(UUID id, String name, String description, EntityType entityType, boolean locked, String createdByUser) {
+  private ProfileDto buildProfileDto(UUID id, String name, String description, EntityType entityType, boolean locked) {
     ProfileDto dto = new ProfileDto();
     dto.setId(id);
     dto.setName(name);
     dto.setDescription(description);
     dto.setEntityType(entityType);
     dto.setLocked(locked);
-    dto.setCreatedByUser(createdByUser);
     return dto;
   }
 
-  private ProfileSummaryDTO buildProfileSummaryDto(UUID id, String name, String description, String createdByUser, boolean locked) {
-    ProfileSummaryDTO dto = new ProfileSummaryDTO();
+  private ProfileSummaryDto buildProfileSummaryDto(UUID id, String name, String description, boolean locked) {
+    ProfileSummaryDto dto = new ProfileSummaryDto();
     dto.setId(id);
     dto.setName(name);
     dto.setDescription(description);
-    dto.setCreatedByUser(createdByUser);
     dto.setLocked(locked);
     return dto;
   }

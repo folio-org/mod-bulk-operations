@@ -220,7 +220,7 @@ public class PreviewService {
     var rules = ruleService.getRules(bulkOperation.getId());
     var forceVisibleFieldNames = rules.getBulkOperationRules().stream()
       .map(BulkOperationRule::getRuleDetails)
-      .map(org.folio.bulkops.domain.dto.RuleDetails::getOption)
+      .map(RuleDetails::getOption)
       .map(option -> UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option, INSTANCE))
       .collect(Collectors.toSet());
     unifiedTable.getHeader().forEach(header -> {

@@ -14,6 +14,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.MarcRuleDetails;
+import org.folio.bulkops.domain.dto.RuleDetails;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -49,11 +51,11 @@ public class Profile implements Serializable {
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "bulk_operation_rule_collection", columnDefinition = "jsonb")
-  private List<org.folio.bulkops.domain.dto.RuleDetails> ruleDetails;
+  private List<RuleDetails> ruleDetails;
 
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(name = "bulk_operation_marc_rule_collection", columnDefinition = "jsonb")
-  private List<org.folio.bulkops.domain.dto.MarcRuleDetails> marcRuleDetails;
+  private List<MarcRuleDetails> marcRuleDetails;
 
   @Column(name = "created_date")
   private OffsetDateTime createdDate;
@@ -61,16 +63,10 @@ public class Profile implements Serializable {
   @Column(name = "created_by")
   private UUID createdBy;
 
-  @Column(name = "created_by_user")
-  private String createdByUser;
 
   @Column(name = "updated_date")
   private OffsetDateTime updatedDate;
 
   @Column(name = "updated_by")
   private UUID updatedBy;
-
-  @Column(name = "updated_by_user")
-  private String updatedByUser;
-
 }

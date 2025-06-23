@@ -42,10 +42,6 @@
       "description": "ID of the user who created the record (when available)",
       "type": "string",
       "format": "UUID"
-    },
-    "createdByUser": {
-      "description": "Created By User",
-      "type": "string"
     }
   },
   "additionalProperties": false,
