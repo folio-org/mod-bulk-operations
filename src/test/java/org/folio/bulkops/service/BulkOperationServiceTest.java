@@ -99,7 +99,6 @@ import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
-import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationStart;
 import org.folio.bulkops.domain.dto.DataImportJobExecution;
 import org.folio.bulkops.domain.dto.DataImportProgress;
@@ -110,6 +109,7 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.MarcAction;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.Parameter;
+import org.folio.bulkops.domain.dto.RuleDetails;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -334,7 +334,7 @@ class BulkOperationServiceTest extends BaseTest {
       when(ruleService.getRules(bulkOperationId))
         .thenReturn(new BulkOperationRuleCollection()
           .bulkOperationRules(List.of(new BulkOperationRule()
-            .ruleDetails(new BulkOperationRuleRuleDetails()
+            .ruleDetails(new RuleDetails()
               .option(UpdateOptionType.PATRON_GROUP)
               .actions(List.of(new Action()
                 .type(UpdateActionType.REPLACE_WITH)
@@ -427,7 +427,7 @@ class BulkOperationServiceTest extends BaseTest {
       when(ruleService.getRules(bulkOperationId))
         .thenReturn(new BulkOperationRuleCollection()
           .bulkOperationRules(List.of(new BulkOperationRule()
-            .ruleDetails(new BulkOperationRuleRuleDetails()
+            .ruleDetails(new RuleDetails()
               .option(UpdateOptionType.PATRON_GROUP)
               .actions(List.of(new Action()
                 .type(UpdateActionType.REPLACE_WITH)
@@ -803,14 +803,14 @@ class BulkOperationServiceTest extends BaseTest {
 
       var tempLocationRules = new BulkOperationRule()
         .bulkOperationId(bulkOperationId)
-        .ruleDetails(new BulkOperationRuleRuleDetails().
+        .ruleDetails(new RuleDetails().
           option(UpdateOptionType.TEMPORARY_LOCATION)
           .actions(List.of(new Action()
             .type(UpdateActionType.REPLACE_WITH)
             .updated("fcd51ce2-1111-48f0-840e-89ffa2288371"))));
       var statusRules = new BulkOperationRule()
         .bulkOperationId(bulkOperationId)
-        .ruleDetails(new BulkOperationRuleRuleDetails()
+        .ruleDetails(new RuleDetails()
           .option(UpdateOptionType.STATUS)
           .actions(List.of(new Action()
             .type(UpdateActionType.REPLACE_WITH)
@@ -914,7 +914,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     var rules = new BulkOperationRuleCollection()
       .bulkOperationRules(List.of(new BulkOperationRule()
-        .ruleDetails(new BulkOperationRuleRuleDetails()
+        .ruleDetails(new RuleDetails()
           .option(UpdateOptionType.PATRON_GROUP)
           .actions(List.of(new Action()
             .type(UpdateActionType.REPLACE_WITH)
@@ -1456,7 +1456,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(ruleService.getRules(operationId))
       .thenReturn(new BulkOperationRuleCollection()
         .bulkOperationRules(List.of(new BulkOperationRule()
-          .ruleDetails(new BulkOperationRuleRuleDetails()
+          .ruleDetails(new RuleDetails()
             .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
             .actions(List.of(new Action()
               .type(testData.actionType)
@@ -1543,7 +1543,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     var rules = new BulkOperationRule()
       .bulkOperationId(operation.getId())
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
         .actions(List.of(new Action()
           .type(UpdateActionType.SET_TO_TRUE))));

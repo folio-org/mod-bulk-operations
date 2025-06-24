@@ -47,7 +47,7 @@ import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
-import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
+import org.folio.bulkops.domain.dto.RuleDetails;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -300,7 +300,7 @@ public abstract class BaseTest {
 
   public static BulkOperationRule rule(UpdateOptionType option, UpdateActionType action, String initial, String updated) {
     return new BulkOperationRule()
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(option)
         .actions(Collections.singletonList(new Action()
           .type(action)
