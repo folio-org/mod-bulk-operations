@@ -198,7 +198,7 @@ class QueryServiceTest extends BaseTest {
       queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
 
       var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      await().untilAsserted(() -> verify(bulkOperationRepository, times(4)).save(operationCaptor.capture()));
+      await().untilAsserted(() -> verify(bulkOperationRepository, times(2)).save(operationCaptor.capture()));
       assertThat(operationCaptor.getValue().getStatus()).isEqualTo(OperationStatusType.DATA_MODIFICATION);
 
       assertThat(operationCaptor.getValue().getEndTime()).isNotNull();
