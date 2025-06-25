@@ -59,7 +59,7 @@ import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
-import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
+import org.folio.bulkops.domain.dto.RuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.ContributorType;
@@ -218,7 +218,7 @@ class PreviewServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(anyString()))
       .thenReturn(new FileInputStream(path));
 
-    when(ruleService.getRules(any())).thenReturn(new BulkOperationRuleCollection().bulkOperationRules(List.of(new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails().option(UpdateOptionType.STATUS).actions(List.of(new Action().type(UpdateActionType.REPLACE_WITH).updated("New")))))).totalRecords(1));
+    when(ruleService.getRules(any())).thenReturn(new BulkOperationRuleCollection().bulkOperationRules(List.of(new BulkOperationRule().ruleDetails(new RuleDetails().option(UpdateOptionType.STATUS).actions(List.of(new Action().type(UpdateActionType.REPLACE_WITH).updated("New")))))).totalRecords(1));
 
     when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
 
@@ -246,7 +246,7 @@ class PreviewServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(anyString()))
       .thenReturn(new FileInputStream(path));
 
-    when(ruleService.getRules(any())).thenReturn(new BulkOperationRuleCollection().bulkOperationRules(List.of(new BulkOperationRule().ruleDetails(new BulkOperationRuleRuleDetails().option(UpdateOptionType.STATUS).actions(List.of(new Action().type(UpdateActionType.REPLACE_WITH).updated("New")))))).totalRecords(1));
+    when(ruleService.getRules(any())).thenReturn(new BulkOperationRuleCollection().bulkOperationRules(List.of(new BulkOperationRule().ruleDetails(new RuleDetails().option(UpdateOptionType.STATUS).actions(List.of(new Action().type(UpdateActionType.REPLACE_WITH).updated("New")))))).totalRecords(1));
 
     when(locationClient.getLocationById(anyString())).thenReturn(new ItemLocation().withName("Location"));
 
@@ -378,7 +378,7 @@ class PreviewServiceTest extends BaseTest {
       .entityType(INSTANCE)
       .linkToCommittedRecordsCsvFile(pathToCsv).build();
     var rules = rules(new BulkOperationRule().bulkOperationId(operationId)
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(updateOption)
         .actions(Collections.singletonList(new Action()
           .type(actionType)

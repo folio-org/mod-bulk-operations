@@ -17,8 +17,8 @@ import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
-import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
+import org.folio.bulkops.domain.dto.RuleDetails;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -143,7 +143,7 @@ class RuleServiceTest extends BaseTest {
     return new BulkOperationRuleCollection()
       .bulkOperationRules(List.of(new BulkOperationRule()
         .bulkOperationId(BULK_OPERATION_ID)
-        .ruleDetails(new BulkOperationRuleRuleDetails()
+        .ruleDetails(new RuleDetails()
           .option(UpdateOptionType.PERMANENT_LOCATION)
           .actions(List.of(new Action()
             .type(UpdateActionType.REPLACE_WITH)

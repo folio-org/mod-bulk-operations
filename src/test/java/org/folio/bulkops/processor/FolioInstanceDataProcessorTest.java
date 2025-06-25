@@ -35,6 +35,7 @@ import org.folio.bulkops.domain.bean.InstanceNote;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.Parameter;
+import org.folio.bulkops.domain.dto.RuleDetails;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.processor.folio.AdministrativeNotesUpdater;
 import org.folio.bulkops.processor.folio.DataProcessorFactory;
@@ -44,7 +45,6 @@ import org.folio.bulkops.processor.folio.StatisticalCodesUpdater;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
-import org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.junit.jupiter.api.BeforeEach;
@@ -140,7 +140,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
     var rules = rules(new BulkOperationRule()
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(INSTANCE_NOTE)
         .actions(Collections.singletonList(new Action()
           .type(actionType)
@@ -176,7 +176,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
       .build();
 
     var rules = rules(new BulkOperationRule()
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(optionType)
         .actions(Collections.singletonList(new Action()
           .type(REMOVE_ALL)
@@ -208,7 +208,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
       .build();
 
     var rules = rules(new BulkOperationRule()
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(optionType)
         .actions(Collections.singletonList(new Action()
           .type(ADD_TO_EXISTING)
@@ -249,7 +249,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
       .build();
 
     var rules = rules(new BulkOperationRule()
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(optionType)
         .actions(Collections.singletonList(new Action()
           .type(FIND_AND_REMOVE_THESE)
@@ -291,7 +291,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
       .build();
 
     var rules = rules(new BulkOperationRule()
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(optionType)
         .actions(Collections.singletonList(new Action()
           .type(FIND_AND_REPLACE)
@@ -331,7 +331,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
       .build();
 
     var rules = rules(new BulkOperationRule()
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(INSTANCE_NOTE)
         .actions(Collections.singletonList(new Action()
           .type(CHANGE_TYPE)
@@ -369,7 +369,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
       .build();
 
     var rules = rules(new BulkOperationRule()
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(ADMINISTRATIVE_NOTE)
         .actions(Collections.singletonList(new Action()
           .type(CHANGE_TYPE)
@@ -424,9 +424,9 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var validator = ((FolioInstanceDataProcessor) processor).validator();
     var rules = new BulkOperationRuleCollection();
     rules.addBulkOperationRulesItem(new BulkOperationRule().ruleDetails(
-      new BulkOperationRuleRuleDetails().actions(List.of(new Action().type(ADD_TO_EXISTING))).option(UpdateOptionType.STATISTICAL_CODE)));
+      new RuleDetails().actions(List.of(new Action().type(ADD_TO_EXISTING))).option(UpdateOptionType.STATISTICAL_CODE)));
     rules.addBulkOperationRulesItem(new BulkOperationRule().ruleDetails(
-      new BulkOperationRuleRuleDetails().actions(List.of(new Action().type(REMOVE_ALL))).option(UpdateOptionType.STATISTICAL_CODE)));
+      new RuleDetails().actions(List.of(new Action().type(REMOVE_ALL))).option(UpdateOptionType.STATISTICAL_CODE)));
 
     assertThrows(RuleValidationException.class, () -> validator.validate(rules));
   }
@@ -442,7 +442,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
       .build();
 
     var rules = rules(new BulkOperationRule()
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(UpdateOptionType.STATISTICAL_CODE)
         .actions(Collections.singletonList(new Action()
           .type(ADD_TO_EXISTING).updated(statCode1 + "," + statCode2)))));
@@ -466,7 +466,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
       .build();
 
     var rules = rules(new BulkOperationRule()
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(UpdateOptionType.STATISTICAL_CODE)
         .actions(Collections.singletonList(new Action()
           .type(ADD_TO_EXISTING).updated(statCode1 + "," + statCode2)))));
@@ -491,7 +491,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
       .build();
 
     var rules = rules(new BulkOperationRule()
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(UpdateOptionType.STATISTICAL_CODE)
         .actions(Collections.singletonList(new Action()
           .type(ADD_TO_EXISTING).updated(statCode1 + "," + statCode2 + "," + statCode1)))));
@@ -517,7 +517,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
       .build();
 
     var rules = rules(new BulkOperationRule()
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(UpdateOptionType.STATISTICAL_CODE)
         .actions(Collections.singletonList(new Action()
           .type(ADD_TO_EXISTING).updated(statCode1 + "," + statCode2 + "," + statCode1)))));
@@ -544,7 +544,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
       .build();
 
     var rules = rules(new BulkOperationRule()
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(UpdateOptionType.STATISTICAL_CODE)
         .actions(Collections.singletonList(new Action()
           .type(REMOVE_SOME).updated(statCode1 + "," + statCode2)))));
@@ -568,7 +568,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
       .build();
 
     var rules = rules(new BulkOperationRule()
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(UpdateOptionType.STATISTICAL_CODE)
         .actions(Collections.singletonList(new Action()
           .type(REMOVE_SOME).updated(statCode1 + "," + statCode2)))));
@@ -592,7 +592,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
       .build();
 
     var rules = rules(new BulkOperationRule()
-      .ruleDetails(new BulkOperationRuleRuleDetails()
+      .ruleDetails(new RuleDetails()
         .option(UpdateOptionType.STATISTICAL_CODE)
         .actions(Collections.singletonList(new Action()
           .type(REMOVE_ALL)))));

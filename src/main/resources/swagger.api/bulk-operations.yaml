@@ -627,7 +627,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/profileSummaryResultsDto'
+                $ref: '#/components/schemas/profilesDto'
         default:
           description: unexpected error
           content:
@@ -690,7 +690,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/profileUpdateRequest'
+              $ref: '#/components/schemas/profileRequest'
       responses:
         '200':
           description: 'returns if a profile updated successfully'
@@ -726,10 +726,8 @@ components:
       $ref: 'schemas/profile_request.json'
     profileDto:
       $ref: 'schemas/profile_dto.json'
-    profileUpdateRequest:
-      $ref: 'schemas/profile_update_request_dto.json'
-    profileSummaryResultsDto:
-      $ref: 'schemas/profile_summary_results_dto.json'
+    profilesDto:
+      $ref: 'schemas/profiles_dto.json'
     approachType:
       $ref: 'schemas/approach_type.json#/ApproachType'
     bulkOperationStep:
