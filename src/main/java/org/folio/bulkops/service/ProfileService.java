@@ -43,16 +43,9 @@ public class ProfileService {
     );
 
     List<ProfileSummaryDto> items = page.stream()
-      .map(profile -> {
-        ProfileSummaryDto dto = new ProfileSummaryDto();
-        dto.setId(profile.getId());
-        dto.setName(profile.getName());
-        dto.setDescription(profile.getDescription());
-        dto.setLocked(profile.isLocked());
-        dto.setEntityType(profile.getEntityType());
-        return dto;
-      })
+      .map(this::toDto)
       .toList();
+
     return new ProfileSummaryResultsDto()
       .content(items)
       .totalRecords(page.getTotalElements());
@@ -132,7 +125,7 @@ public class ProfileService {
     dto.setMarcRuleDetails(profile.getMarcRuleDetails());
     dto.setCreatedDate(profile.getCreatedDate() == null ? null : Date.from(profile.getCreatedDate().toInstant()));
     dto.setCreatedBy(profile.getCreatedBy());
-    dto.setCreatedDate(profile.getCreatedDate() == null ? null : Date.from(profile.getUpdatedDate().toInstant()));
+    dto.setUpdatedDate(profile.getUpdatedDate() == null ? null : Date.from(profile.getUpdatedDate().toInstant()));
     dto.setUpdatedBy(profile.getUpdatedBy());
     return dto;
   }
