@@ -16,9 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
-import org.folio.bulkops.domain.dto.ProfileUpdateRequest;
-import org.folio.bulkops.domain.dto.ProfileSummaryDto;
+import org.folio.bulkops.domain.dto.ProfilesDto;
 import org.folio.bulkops.domain.dto.ProfileRequest;
 import org.folio.bulkops.domain.dto.ProfileDto;
 import org.folio.bulkops.domain.entity.Profile;
@@ -74,12 +72,13 @@ class ProfileServiceTest extends BaseTest {
     when(profileUUIDJpaCqlRepository.findByCql("cql.allRecords=1", OffsetRequest.of(0, Integer.MAX_VALUE)))
       .thenReturn(profilePage);
 
-    ProfileSummaryResultsDto result = profileService.getProfileSummaries(null, null, null);
+    ProfilesDto result = profileService.getProfiles(null, null, null);
 
     assertThat(result).isNotNull();
     assertThat(result.getContent()).hasSize(1);
 
-    ProfileSummaryDto summary = result.getContent().get(0);
+    ProfileDto summary = result.getContent().get(0);
+
     assertThat(summary.getId()).isEqualTo(profile.getId());
     assertThat(summary.getName()).isEqualTo(profile.getName());
     assertThat(summary.getDescription()).isEqualTo(profile.getDescription());
@@ -108,12 +107,12 @@ class ProfileServiceTest extends BaseTest {
     when(profileUUIDJpaCqlRepository.findByCql(query, OffsetRequest.of(offset, limit)))
       .thenReturn(profilePage);
 
-    ProfileSummaryResultsDto result = profileService.getProfileSummaries(query, offset, limit);
+    ProfilesDto result = profileService.getProfiles(query, offset, limit);
 
     assertThat(result).isNotNull();
     assertThat(result.getContent()).hasSize(1);
 
-    ProfileSummaryDto summary = result.getContent().get(0);
+    ProfileDto summary = result.getContent().get(0);
     assertThat(summary.getId()).isEqualTo(profile.getId());
 
     assertThat(result.getTotalRecords()).isEqualTo(1);
@@ -127,7 +126,7 @@ class ProfileServiceTest extends BaseTest {
 
     when(profileUUIDJpaCqlRepository.findByCql(eq(query), any())).thenReturn(emptyPage);
 
-    ProfileSummaryResultsDto result = profileService.getProfileSummaries(query, 0, 10);
+    ProfilesDto result = profileService.getProfiles(query, 0, 10);
 
     assertThat(result).isNotNull();
     assertThat(result.getContent()).isEmpty();
@@ -149,7 +148,7 @@ class ProfileServiceTest extends BaseTest {
     when(profileUUIDJpaCqlRepository.findByCql("cql.allRecords=1", OffsetRequest.of(20, 10)))
       .thenReturn(profilePage);
 
-    ProfileSummaryResultsDto result = profileService.getProfileSummaries(null, 20, 10);
+    ProfilesDto result = profileService.getProfiles(null, 20, 10);
 
     assertThat(result.getContent()).hasSize(1);
     assertThat(result.getTotalRecords()).isEqualTo(1);
@@ -229,7 +228,7 @@ class ProfileServiceTest extends BaseTest {
   void testUpdateProfile() {
     UUID profileId = UUID.randomUUID();
 
-    ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
+    ProfileRequest updateRequest = new ProfileRequest();
     updateRequest.setName("Updated Profile Name");
     updateRequest.setLocked(true);
     updateRequest.setDescription("Updated description");
@@ -265,7 +264,7 @@ class ProfileServiceTest extends BaseTest {
   void testUpdateProfile_notFound() {
     UUID nonExistentId = UUID.randomUUID();
 
-    ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
+    ProfileRequest updateRequest = new ProfileRequest();
     updateRequest.setName("Doesn't matter");
     updateRequest.setLocked(false);
 
@@ -283,7 +282,7 @@ class ProfileServiceTest extends BaseTest {
   void testUpdateProfile_lockedProfile_throwsProfileLockedException() {
     UUID profileId = UUID.randomUUID();
 
-    ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
+    ProfileRequest updateRequest = new ProfileRequest();
     updateRequest.setLocked(true);
 
     Profile lockedProfile = createProfile(createProfileRequest(), profileId);
@@ -307,7 +306,7 @@ class ProfileServiceTest extends BaseTest {
   void testUpdateProfile_unlockedProfile_allowsEditWithoutPermissionCheck() {
     UUID profileId = UUID.randomUUID();
 
-    ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
+    ProfileRequest updateRequest = new ProfileRequest();
     updateRequest.setLocked(false);
 
     Profile unlockedProfile = createProfile(createProfileRequest(), profileId);
@@ -328,7 +327,7 @@ class ProfileServiceTest extends BaseTest {
   void testUpdateProfile_unlockedProfile_tryLockWithoutPermission_throws() {
     UUID profileId = UUID.randomUUID();
 
-    ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
+    ProfileRequest updateRequest = new ProfileRequest();
     updateRequest.setLocked(true);
 
     Profile unlockedProfile = createProfile(createProfileRequest(), profileId);
@@ -352,7 +351,7 @@ class ProfileServiceTest extends BaseTest {
   void testUpdateProfile_unlockedProfile_tryLockWithPermission_allows() {
     UUID profileId = UUID.randomUUID();
 
-    ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
+    ProfileRequest updateRequest = new ProfileRequest();
     updateRequest.setLocked(true);
     updateRequest.setName("Locked Now");
     updateRequest.setDescription("Updated while locking");
@@ -385,7 +384,7 @@ class ProfileServiceTest extends BaseTest {
   void testUpdateProfile_lockedProfile_withoutPermission_throws() {
     UUID profileId = UUID.randomUUID();
 
-    ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
+    ProfileRequest updateRequest = new ProfileRequest();
     updateRequest.setLocked(true);
 
     Profile lockedProfile = createProfile(createProfileRequest(), profileId);
@@ -410,7 +409,7 @@ class ProfileServiceTest extends BaseTest {
   void testUpdateProfile_lockedProfile_withPermission_allows() {
     UUID profileId = UUID.randomUUID();
 
-    ProfileUpdateRequest updateRequest = new ProfileUpdateRequest();
+    ProfileRequest updateRequest = new ProfileRequest();
     updateRequest.setLocked(true);
     updateRequest.setName("Updated");
     updateRequest.setDescription("Updated description");
