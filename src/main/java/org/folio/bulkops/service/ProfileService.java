@@ -1,17 +1,14 @@
 package org.folio.bulkops.service;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.bulkops.client.UserClient;
-import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.entity.Profile;
 import org.folio.bulkops.exception.NotFoundException;
-import org.folio.bulkops.mapper.ProfileMapper;
-import org.folio.bulkops.mapper.ProfileRequestMapper;
 import org.folio.bulkops.domain.dto.ProfileUpdateRequest;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.repository.ProfileRepository;
 import org.folio.bulkops.domain.dto.ProfileDto;
+import org.folio.bulkops.domain.dto.ProfileSummaryDto;
 import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.cql.JpaCqlRepository;
@@ -19,22 +16,20 @@ import org.folio.spring.data.OffsetRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 @Service
 @Log4j2
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class ProfileService {
-  private final ProfileRequestMapper profileRequestMapper;
   private final FolioExecutionContext folioExecutionContext;
-  private final UserClient userClient;
-  private final ProfileMapper profileMapper;
   private final ProfileRepository profileRepository;
   private final JpaCqlRepository<Profile, UUID> profileCqlRepository;
-
   private final PermissionsValidator validator;
+
 
   public ProfileSummaryResultsDto getProfileSummaries(String query, Integer offset, Integer limit) {
     String effectiveQuery = (query == null || query.isBlank()) ? "cql.allRecords=1" : query;
@@ -47,10 +42,17 @@ public class ProfileService {
       )
     );
 
-    List<org.folio.bulkops.domain.dto.ProfileSummaryDTO> items = page.stream()
-      .map(profileMapper::toSummaryDTO)
+    List<ProfileSummaryDto> items = page.stream()
+      .map(profile -> {
+        ProfileSummaryDto dto = new ProfileSummaryDto();
+        dto.setId(profile.getId());
+        dto.setName(profile.getName());
+        dto.setDescription(profile.getDescription());
+        dto.setLocked(profile.isLocked());
+        dto.setEntityType(profile.getEntityType());
+        return dto;
+      })
       .toList();
-
     return new ProfileSummaryResultsDto()
       .content(items)
       .totalRecords(page.getTotalElements());
@@ -58,15 +60,26 @@ public class ProfileService {
 
   public ProfileDto createProfile(org.folio.bulkops.domain.dto.ProfileRequest profileRequest) {
     UUID userId = folioExecutionContext.getUserId();
-    String username = getUsername(userId);
 
     if (Boolean.TRUE.equals(profileRequest.getLocked())) {
       validator.checkIfLockPermissionExists();
     }
 
-    Profile entity = profileRequestMapper.toEntity(profileRequest, userId, username);
+    Profile entity = Profile.builder()
+      .name(profileRequest.getName())
+      .description(profileRequest.getDescription())
+      .locked(Boolean.TRUE.equals(profileRequest.getLocked()))
+      .entityType(profileRequest.getEntityType())
+      .ruleDetails(profileRequest.getRuleDetails())
+      .marcRuleDetails(profileRequest.getMarcRuleDetails())
+      .createdDate(OffsetDateTime.now())
+      .createdBy(userId)
+      .updatedDate(OffsetDateTime.now())
+      .updatedBy(userId)
+      .build();
+
     Profile saved = profileRepository.save(entity);
-    return profileMapper.toDto(saved);
+    return toDto(saved);
   }
 
   public void deleteById(UUID id) {
@@ -81,7 +94,6 @@ public class ProfileService {
 
   public ProfileDto updateProfile(UUID profileId, ProfileUpdateRequest profileUpdateRequest) {
     UUID userId = folioExecutionContext.getUserId();
-    String username = getUsername(userId);
 
     Profile existing = getProfile(profileId);
 
@@ -91,13 +103,17 @@ public class ProfileService {
     if (isLocked || isLockAttempt) {
       validator.checkIfLockPermissionExists();
     }
-
-    profileRequestMapper.updateEntity(existing, profileUpdateRequest);
+    existing.setName(profileUpdateRequest.getName());
+    existing.setDescription(profileUpdateRequest.getDescription());
+    existing.setEntityType(profileUpdateRequest.getEntityType());
+    existing.setRuleDetails(profileUpdateRequest.getRuleDetails());
+    existing.setMarcRuleDetails(profileUpdateRequest.getMarcRuleDetails());
+    existing.setLocked(profileUpdateRequest.getLocked());
     existing.setUpdatedDate(OffsetDateTime.now());
     existing.setUpdatedBy(userId);
-    existing.setUpdatedByUser(username);
 
-    return profileMapper.toDto(profileRepository.save(existing));
+    Profile updated = profileRepository.save(existing);
+    return toDto(updated);
   }
 
   private Profile getProfile(UUID profileId) {
@@ -105,18 +121,19 @@ public class ProfileService {
       .orElseThrow(() -> new NotFoundException("Profile not found with ID: " + profileId));
   }
 
-  private String getUsername(UUID userId) {
-    try {
-      log.info("Attempting to retrieve username for id {}", userId);
-      User user = userClient.getUserById(userId.toString());
-      var personal = user.getPersonal();
-      if (personal != null && personal.getFirstName() != null && personal.getLastName() != null) {
-        return String.format("%s, %s", personal.getLastName(), personal.getFirstName());
-      }
-      return userId.toString();
-    } catch (Exception exception) {
-      log.error("Unexpected error when fetching user: {}", exception.getMessage(), exception);
-      return userId.toString();
-    }
+  private ProfileDto toDto(Profile profile) {
+    ProfileDto dto = new ProfileDto();
+    dto.setId(profile.getId());
+    dto.setName(profile.getName());
+    dto.setDescription(profile.getDescription());
+    dto.setLocked(profile.isLocked());
+    dto.setEntityType(profile.getEntityType());
+    dto.setRuleDetails(profile.getRuleDetails());
+    dto.setMarcRuleDetails(profile.getMarcRuleDetails());
+    dto.setCreatedDate(profile.getCreatedDate() == null ? null : Date.from(profile.getCreatedDate().toInstant()));
+    dto.setCreatedBy(profile.getCreatedBy());
+    dto.setCreatedDate(profile.getCreatedDate() == null ? null : Date.from(profile.getUpdatedDate().toInstant()));
+    dto.setUpdatedBy(profile.getUpdatedBy());
+    return dto;
   }
 }

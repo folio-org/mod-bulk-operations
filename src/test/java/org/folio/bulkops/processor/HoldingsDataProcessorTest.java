@@ -982,7 +982,7 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withElectronicAccess(List.of(electronicAccessObj))).tenantId("memberB").build();
 
     var rules = rules(new org.folio.bulkops.domain.dto.BulkOperationRule()
-      .ruleDetails(new org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails()
+      .ruleDetails(new org.folio.bulkops.domain.dto.RuleDetails()
         .option(ELECTRONIC_ACCESS_URL_RELATIONSHIP)
         .actions(Collections.singletonList(new Action()
           .type(FIND_AND_REMOVE_THESE)
@@ -1009,7 +1009,7 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withElectronicAccess(List.of(electronicAccessObj))).tenantId("memberA").build();
 
     var rules = rules(new org.folio.bulkops.domain.dto.BulkOperationRule()
-      .ruleDetails(new org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails()
+      .ruleDetails(new org.folio.bulkops.domain.dto.RuleDetails()
         .option(ELECTRONIC_ACCESS_URL_RELATIONSHIP)
         .actions(Collections.singletonList(new Action()
           .type(FIND_AND_REMOVE_THESE)
@@ -1045,7 +1045,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var updatedElAcc = initElectronicAccForRecord;
 
     var rules = rules(new org.folio.bulkops.domain.dto.BulkOperationRule()
-      .ruleDetails(new org.folio.bulkops.domain.dto.BulkOperationRuleRuleDetails()
+      .ruleDetails(new org.folio.bulkops.domain.dto.RuleDetails()
         .option(ELECTRONIC_ACCESS_URL_RELATIONSHIP)
         .actions(Collections.singletonList(new Action()
           .type(FIND_AND_REPLACE)
