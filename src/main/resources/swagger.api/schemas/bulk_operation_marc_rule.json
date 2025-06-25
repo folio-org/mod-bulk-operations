@@ -1,61 +1,25 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "description": "Bulk Operation MARC Rule",
+  "description": "Bulk Operation MARC Rule schema defines the structure for MARC rules used in bulk operations, including details about the operation ID and its associated properties.",
   "BulkOperationMarcRule": {
-    "type": "object",
-    "properties": {
-      "bulkOperationId": {
-        "description": "Bulk operation ID",
-        "type": "string",
-        "format": "uuid"
+    "allOf": [
+      {
+        "$ref": "marc_rule_details.json#/MarcRuleDetails"
       },
-      "tag": {
-        "description": "MARC field tag",
-        "type": "string"
-      },
-      "ind1": {
-        "description": "MARC field indicator 1",
-        "type": "string",
-        "pattern": "[a-z0-9#\\\\]"
-      },
-      "ind2": {
-        "description": "MARC field indicator 2",
-        "type": "string",
-        "pattern": "[a-z0-9#\\\\]"
-      },
-      "subfield": {
-        "description": "MARC subfield code",
-        "type": "string",
-        "pattern": "[a-z0-9]"
-      },
-      "actions": {
-        "type": "array",
-        "items": {
-          "$ref": "marc_action.json#/MarcAction"
+      {
+        "type": "object",
+        "properties": {
+          "bulkOperationId": {
+            "description": "Bulk operation ID",
+            "type": "string",
+            "format": "uuid"
+          }
         },
-        "minItems": 1
-      },
-      "parameters": {
-        "type": "array",
-        "items": {
-          "$ref": "marc_parameter.json#/MarcParameter"
-        }
-      },
-      "subfields": {
-        "type": "array",
-        "items": {
-          "$ref": "marc_subfield_action.json#/MarcSubfieldAction"
-        }
+        "required": [
+          "bulkOperationId"
+        ],
+        "additionalProperties": false
       }
-    },
-    "required": [
-      "bulkOperationId",
-      "tag",
-      "ind1",
-      "ind2",
-      "subfield",
-      "actions"
-    ],
-    "additionalProperties": false
+    ]
   }
 }

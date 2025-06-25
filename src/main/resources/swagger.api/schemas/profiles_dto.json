@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "List summary results for profiles",
+  "type": "object",
+  "properties": {
+    "content": {
+      "description": "Array of profile summary DTOs",
+      "type": "array",
+      "items": {
+        "$ref": "profile_dto.json"
+      }
+    },
+    "totalRecords": {
+      "description": "Total number of profile records",
+      "type": "integer",
+      "format": "int64"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "content",
+    "totalRecords"
+  ]
+}

@@ -49,4 +49,5 @@
   <include file="changes/08-05-2025_update_bulk_operation_add_entity_type_id.xml" relativeToChangelogFile="true"/>
   <include file="changes/create_batch_tables.xml" relativeToChangelogFile="true"/>
   <include file="changes/05-29-2025_add_profile_table.xml" relativeToChangelogFile="true"/>
+  <include file="changes/06-23-2025_update_profile_table.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
