@@ -627,7 +627,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/profileSummaryResultsDto'
+                $ref: '#/components/schemas/profilesDto'
         default:
           description: unexpected error
           content:
@@ -690,7 +690,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/profileUpdateRequest'
+              $ref: '#/components/schemas/profileRequest'
       responses:
         '200':
           description: 'returns if a profile updated successfully'
