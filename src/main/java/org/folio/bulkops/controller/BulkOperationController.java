@@ -40,9 +40,8 @@ import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.Errors;
-import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
+import org.folio.bulkops.domain.dto.ProfilesDto;
 import org.folio.bulkops.domain.dto.ProfileDto;
-import org.folio.bulkops.domain.dto.ProfileUpdateRequest;
 import org.folio.bulkops.domain.dto.ProfileRequest;
 import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.dto.IdentifierType;
@@ -265,8 +264,8 @@ public class BulkOperationController implements BulkOperationsApi {
 
 
   @Override
-  public ResponseEntity<ProfileSummaryResultsDto> getProfiles(String query, Integer offset, Integer limit) {
-    var response = profileService.getProfileSummaries(query, offset, limit);
+  public ResponseEntity<ProfilesDto> getProfiles(String query, Integer offset, Integer limit) {
+    var response = profileService.getProfiles(query, offset, limit);
     return ResponseEntity.ok(response);
   }
 
@@ -284,8 +283,8 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   @Override
-  public ResponseEntity<ProfileDto> updateProfile(UUID id, ProfileUpdateRequest profileUpdateRequest) {
-    ProfileDto response = profileService.updateProfile(id, profileUpdateRequest);
+  public ResponseEntity<ProfileDto> updateProfile(UUID id, ProfileRequest profileRequest) {
+    ProfileDto response = profileService.updateProfile(id, profileRequest);
     return ResponseEntity.ok(response);
   }
 }

@@ -32,16 +32,6 @@
       "items": {
         "$ref": "marc_rule_details.json#/MarcRuleDetails"
       }
-    },
-    "createdDate": {
-      "description": "Date and time when the record was created",
-      "type": "string",
-      "format": "date-time"
-    },
-    "createdBy": {
-      "description": "ID of the user who created the record (when available)",
-      "type": "string",
-      "format": "UUID"
     }
   },
   "additionalProperties": false,
