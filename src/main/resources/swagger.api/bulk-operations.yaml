@@ -726,7 +726,7 @@ components:
       $ref: 'schemas/profile_request.json'
     profileDto:
       $ref: 'schemas/profile_dto.json'
-    profileResultsDto:
+    profilesDto:
       $ref: 'schemas/profiles_dto.json'
     approachType:
       $ref: 'schemas/approach_type.json#/ApproachType'
