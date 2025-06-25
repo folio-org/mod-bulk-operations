@@ -34,6 +34,7 @@ import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.bean.InstanceStatus;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
@@ -194,11 +195,13 @@ class QueryServiceTest extends BaseTest {
       when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
       when(readPermissionsValidator.isBulkEditReadPermissionExists("diku", EntityType.INSTANCE)).thenReturn(true);
       when(remoteFileSystemClient.writer(any(String.class))).thenReturn(writer);
+      var instanceStatus = InstanceStatus.builder().id("2a340d34-6b70-443a-bb1b-1b8d1c65d862").name("Other").build();
+      when(instanceStatusesClient.getById("2a340d34-6b70-443a-bb1b-1b8d1c65d862")).thenReturn(instanceStatus);
 
       queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
 
       var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      await().untilAsserted(() -> verify(bulkOperationRepository, times(2)).save(operationCaptor.capture()));
+      await().untilAsserted(() -> verify(bulkOperationRepository, times(4)).save(operationCaptor.capture()));
       assertThat(operationCaptor.getValue().getStatus()).isEqualTo(OperationStatusType.DATA_MODIFICATION);
 
       assertThat(operationCaptor.getValue().getEndTime()).isNotNull();
