@@ -30,7 +30,6 @@ import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.converter.JsonToMarcConverter;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.exception.BulkEditException;
-import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.service.ErrorService;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;

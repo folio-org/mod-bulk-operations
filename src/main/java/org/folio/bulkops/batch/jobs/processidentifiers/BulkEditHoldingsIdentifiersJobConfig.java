@@ -24,7 +24,6 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.exception.BulkEditException;
-import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.service.ErrorService;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
