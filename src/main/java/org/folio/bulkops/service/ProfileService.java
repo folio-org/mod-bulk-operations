@@ -3,13 +3,12 @@ package org.folio.bulkops.service;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.entity.Profile;
+import org.folio.bulkops.domain.dto.ProfileDto;
+import org.folio.bulkops.domain.dto.ProfilesDto;
+import org.folio.bulkops.domain.dto.ProfileRequest;
 import org.folio.bulkops.exception.NotFoundException;
-import org.folio.bulkops.domain.dto.ProfileUpdateRequest;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.repository.ProfileRepository;
-import org.folio.bulkops.domain.dto.ProfileDto;
-import org.folio.bulkops.domain.dto.ProfileSummaryDto;
-import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
@@ -31,7 +30,7 @@ public class ProfileService {
   private final PermissionsValidator validator;
 
 
-  public ProfileSummaryResultsDto getProfileSummaries(String query, Integer offset, Integer limit) {
+  public ProfilesDto getProfiles(String query, Integer offset, Integer limit) {
     String effectiveQuery = (query == null || query.isBlank()) ? "cql.allRecords=1" : query;
 
     var page = profileCqlRepository.findByCql(
@@ -42,16 +41,16 @@ public class ProfileService {
       )
     );
 
-    List<ProfileSummaryDto> items = page.stream()
+    List<ProfileDto> items = page.stream()
       .map(this::toDto)
       .toList();
 
-    return new ProfileSummaryResultsDto()
+    return new ProfilesDto()
       .content(items)
       .totalRecords(page.getTotalElements());
   }
 
-  public ProfileDto createProfile(org.folio.bulkops.domain.dto.ProfileRequest profileRequest) {
+  public ProfileDto createProfile(ProfileRequest profileRequest) {
     UUID userId = folioExecutionContext.getUserId();
 
     if (Boolean.TRUE.equals(profileRequest.getLocked())) {
@@ -85,23 +84,24 @@ public class ProfileService {
     profileRepository.delete(profile);
   }
 
-  public ProfileDto updateProfile(UUID profileId, ProfileUpdateRequest profileUpdateRequest) {
+  public ProfileDto updateProfile(UUID profileId, ProfileRequest profileRequest) {
     UUID userId = folioExecutionContext.getUserId();
 
     Profile existing = getProfile(profileId);
 
     boolean isLocked = existing.isLocked();
-    boolean isLockAttempt = !isLocked && Boolean.TRUE.equals(profileUpdateRequest.getLocked());
+    boolean isLockAttempt = !isLocked && Boolean.TRUE.equals(profileRequest.getLocked());
 
     if (isLocked || isLockAttempt) {
       validator.checkIfLockPermissionExists();
     }
-    existing.setName(profileUpdateRequest.getName());
-    existing.setDescription(profileUpdateRequest.getDescription());
-    existing.setEntityType(profileUpdateRequest.getEntityType());
-    existing.setRuleDetails(profileUpdateRequest.getRuleDetails());
-    existing.setMarcRuleDetails(profileUpdateRequest.getMarcRuleDetails());
-    existing.setLocked(profileUpdateRequest.getLocked());
+
+    existing.setName(profileRequest.getName());
+    existing.setDescription(profileRequest.getDescription());
+    existing.setEntityType(profileRequest.getEntityType());
+    existing.setRuleDetails(profileRequest.getRuleDetails());
+    existing.setMarcRuleDetails(profileRequest.getMarcRuleDetails());
+    existing.setLocked(profileRequest.getLocked());
     existing.setUpdatedDate(OffsetDateTime.now());
     existing.setUpdatedBy(userId);
 

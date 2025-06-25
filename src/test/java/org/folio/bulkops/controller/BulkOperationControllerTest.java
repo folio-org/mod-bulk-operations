@@ -62,22 +62,20 @@ import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
+import org.folio.bulkops.domain.dto.ProfileDto;
+import org.folio.bulkops.domain.dto.ProfileRequest;
 import org.folio.bulkops.exception.ProfileLockedException;
 import org.folio.bulkops.processor.note.HoldingsNotesProcessor;
 import org.folio.bulkops.processor.note.ItemNoteProcessor;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.folio.bulkops.domain.dto.ProfileSummaryDto;
-import org.folio.bulkops.domain.dto.ProfileUpdateRequest;
 import org.folio.bulkops.service.BulkOperationService;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ListUsersService;
 import org.folio.bulkops.service.LogFilesService;
 import org.folio.bulkops.service.RuleService;
 import org.folio.bulkops.service.ProfileService;
-import org.folio.bulkops.domain.dto.ProfileDto;
-import org.folio.bulkops.domain.dto.ProfileRequest;
 import org.folio.bulkops.exception.NotFoundException;
-import org.folio.bulkops.domain.dto.ProfileSummaryResultsDto;
+import org.folio.bulkops.domain.dto.ProfilesDto;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.json.JSONObject;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -472,10 +470,10 @@ class BulkOperationControllerTest extends BaseTest {
 
   @Test
   void shouldReturnProfileSummaries() throws Exception {
-    ProfileSummaryDto profile1 = buildProfileSummaryDto(UUID.randomUUID(), "Test Profile 1", "Sample description 1",  false);
-    ProfileSummaryDto profile2 = buildProfileSummaryDto(UUID.randomUUID(), "Test Profile 2", "Sample description 2", false);
+    ProfileDto profile1 = buildProfileSummaryDto(UUID.randomUUID(), "Test Profile 1", "Sample description 1",  false);
+    ProfileDto profile2 = buildProfileSummaryDto(UUID.randomUUID(), "Test Profile 2", "Sample description 2", false);
 
-    ProfileSummaryResultsDto summaryDto = new ProfileSummaryResultsDto();
+    ProfilesDto summaryDto = new ProfilesDto();
     summaryDto.setTotalRecords(2L);
     summaryDto.setContent(List.of(profile1, profile2));
 
@@ -483,7 +481,7 @@ class BulkOperationControllerTest extends BaseTest {
     Integer offset = null;
     Integer limit = null;
 
-    when(profileService.getProfileSummaries(query, offset, limit)).thenReturn(summaryDto);
+    when(profileService.getProfiles(query, offset, limit)).thenReturn(summaryDto);
 
     var requestBuilder = get("/bulk-operations/profiles")
       .headers(defaultHeaders())
@@ -526,13 +524,13 @@ class BulkOperationControllerTest extends BaseTest {
 
   @Test
   void shouldReturnProfilesWithQueryAndPagination() throws Exception {
-    ProfileSummaryDto profile = buildProfileSummaryDto(UUID.randomUUID(), "Filtered Profile", "Desc", false);
+    ProfileDto profile = buildProfileSummaryDto(UUID.randomUUID(), "Filtered Profile", "Desc", false);
 
-    ProfileSummaryResultsDto summaryDto = new ProfileSummaryResultsDto();
+    ProfilesDto summaryDto = new ProfilesDto();
     summaryDto.setTotalRecords(1L);
     summaryDto.setContent(List.of(profile));
 
-    when(profileService.getProfileSummaries("name==\"Filtered Profile\"", 5, 10)).thenReturn(summaryDto);
+    when(profileService.getProfiles("name==\"Filtered Profile\"", 5, 10)).thenReturn(summaryDto);
 
     mockMvc.perform(get("/bulk-operations/profiles")
         .param("query", "name==\"Filtered Profile\"")
@@ -547,11 +545,11 @@ class BulkOperationControllerTest extends BaseTest {
 
   @Test
   void shouldReturnEmptyProfileList() throws Exception {
-    ProfileSummaryResultsDto emptyDto = new ProfileSummaryResultsDto();
+    ProfilesDto emptyDto = new ProfilesDto();
     emptyDto.setTotalRecords(0L);
     emptyDto.setContent(List.of());
 
-    when(profileService.getProfileSummaries(any(), any(), any())).thenReturn(emptyDto);
+    when(profileService.getProfiles(any(), any(), any())).thenReturn(emptyDto);
 
     mockMvc.perform(get("/bulk-operations/profiles")
         .headers(defaultHeaders())
@@ -588,10 +586,10 @@ class BulkOperationControllerTest extends BaseTest {
   @Test
   void shouldUpdateProfile() throws Exception {
     UUID profileId = UUID.randomUUID();
-    ProfileUpdateRequest updateRequest = buildProfileUpdateRequest("Updated Name", "Updated description", USER, false);
+    ProfileRequest updateRequest = buildProfileRequest("Updated Name", "Updated description", USER, false);
     ProfileDto updatedProfile = buildProfileDto(profileId, "Updated Name", "Updated description", USER, false);
 
-    when(profileService.updateProfile(eq(profileId), any(ProfileUpdateRequest.class)))
+    when(profileService.updateProfile(eq(profileId), any(ProfileRequest.class)))
       .thenReturn(updatedProfile);
 
     mockMvc.perform(put("/bulk-operations/profiles/{id}", profileId)
@@ -610,9 +608,9 @@ class BulkOperationControllerTest extends BaseTest {
   void shouldReturnNotFoundWhenUpdatingNonExistentProfile() throws Exception {
     UUID profileId = UUID.randomUUID();
 
-    ProfileUpdateRequest updateRequest = buildProfileUpdateRequest("Updated Name", "Updated description", USER, false);
+    ProfileRequest updateRequest = buildProfileRequest("Updated Name", "Updated description", USER, false);
 
-    when(profileService.updateProfile(eq(profileId), any(ProfileUpdateRequest.class)))
+    when(profileService.updateProfile(eq(profileId), any(ProfileRequest.class)))
       .thenThrow(new NotFoundException("Profile not found with ID: " + profileId));
 
     mockMvc.perform(put("/bulk-operations/profiles/{id}", profileId)
@@ -637,12 +635,12 @@ class BulkOperationControllerTest extends BaseTest {
   @Test
   void updateLockedProfile_shouldReturnBadRequest() throws Exception {
     UUID profileId = UUID.randomUUID();
-    ProfileUpdateRequest updateRequest = buildProfileUpdateRequest(
+    ProfileRequest updateRequest = buildProfileRequest(
       "Updated Name", "Updated description", USER, true
     );
 
     doThrow(new ProfileLockedException("Cannot update a locked profile"))
-      .when(profileService).updateProfile(eq(profileId), any(ProfileUpdateRequest.class));
+      .when(profileService).updateProfile(eq(profileId), any(ProfileRequest.class));
 
     mockMvc.perform(put("/bulk-operations/profiles/{id}", profileId)
         .headers(defaultHeaders())
@@ -651,8 +649,8 @@ class BulkOperationControllerTest extends BaseTest {
       .andExpect(status().isForbidden());
   }
 
-  private ProfileUpdateRequest buildProfileUpdateRequest(String name, String description, org.folio.bulkops.domain.dto.EntityType entityType, boolean locked) {
-    ProfileUpdateRequest request = new ProfileUpdateRequest();
+  private ProfileRequest buildProfileRequest(String name, String description, org.folio.bulkops.domain.dto.EntityType entityType, boolean locked) {
+    ProfileRequest request = new ProfileRequest();
     request.setName(name);
     request.setDescription(description);
     request.setEntityType(entityType);
@@ -670,12 +668,14 @@ class BulkOperationControllerTest extends BaseTest {
     return dto;
   }
 
-  private ProfileSummaryDto buildProfileSummaryDto(UUID id, String name, String description, boolean locked) {
-    ProfileSummaryDto dto = new ProfileSummaryDto();
+  private ProfileDto buildProfileSummaryDto(UUID id, String name, String description, boolean locked) {
+    ProfileDto dto = new ProfileDto();
+
     dto.setId(id);
     dto.setName(name);
     dto.setDescription(description);
     dto.setLocked(locked);
+
     return dto;
   }
 }

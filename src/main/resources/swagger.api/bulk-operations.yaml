@@ -726,10 +726,8 @@ components:
       $ref: 'schemas/profile_request.json'
     profileDto:
       $ref: 'schemas/profile_dto.json'
-    profileUpdateRequest:
-      $ref: 'schemas/profile_update_request_dto.json'
-    profileSummaryResultsDto:
-      $ref: 'schemas/profile_summary_results_dto.json'
+    profileResultsDto:
+      $ref: 'schemas/profiles_dto.json'
     approachType:
       $ref: 'schemas/approach_type.json#/ApproachType'
     bulkOperationStep:
