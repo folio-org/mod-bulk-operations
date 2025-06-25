@@ -30,6 +30,7 @@ import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.InstanceFormatsClient;
 import org.folio.bulkops.client.InstanceNoteTypesClient;
 import org.folio.bulkops.client.InstanceStatusesClient;
+import org.folio.bulkops.client.InstanceStorageClient;
 import org.folio.bulkops.client.InstanceTypesClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.ItemNoteTypeClient;
@@ -208,6 +209,8 @@ public abstract class BaseTest {
   public InstanceFormatsClient instanceFormatsClient;
   @MockitoBean
   public InstanceClient instanceClient;
+  @MockitoBean
+  public InstanceStorageClient instanceStorageClient;
   @MockitoBean
   public InstanceNoteTypesClient instanceNoteTypesClient;
   @MockitoBean

@@ -154,6 +154,7 @@
             "inventory-storage.ill-policies.item.get",
             "inventory-storage.ill-policies.collection.get",
             "inventory-storage.instances.item.get",
+            "inventory-storage.instances.item.put",
             "inventory-storage.instances.collection.get",
             "inventory-storage.item-note-types.item.get",
             "inventory-storage.item-note-types.collection.get",

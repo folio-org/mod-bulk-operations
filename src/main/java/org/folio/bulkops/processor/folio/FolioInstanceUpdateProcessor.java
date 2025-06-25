@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.InstanceClient;
+import org.folio.bulkops.client.InstanceStorageClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.SearchConsortium;
 import org.folio.bulkops.client.UserClient;
@@ -57,7 +58,7 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
   private static final String ERROR_NO_AFFILIATION_TO_EDIT_HOLDINGS = "User %s does not have required affiliation to edit the holdings record - %s on the tenant %s";
   private static final String NO_INSTANCE_WRITE_PERMISSIONS_TEMPLATE = "User %s does not have required permission to edit the instance record - %s=%s on the tenant ";
 
-  private final InstanceClient instanceClient;
+  private final InstanceStorageClient instanceStorageClient;
   private final UserClient userClient;
   private final RuleService ruleService;
   private final HoldingsClient holdingsClient;
@@ -75,7 +76,13 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
     permissionsValidator.checkIfBulkEditWritePermissionExists(extendedInstance.getTenantId(), EntityType.INSTANCE,
       NO_INSTANCE_WRITE_PERMISSIONS_TEMPLATE + extendedInstance.getTenantId());
     var instance = extendedInstance.getEntity();
-    instanceClient.updateInstance(instance.withIsbn(null).withIssn(null), instance.getId());
+    instanceStorageClient.updateInstance(instance.withIsbn(null)
+      .withIssn(null)
+      .withIsBoundWith(null)
+      .withPrecedingTitles(null)
+      .withSucceedingTitles(null)
+      .withParentInstances(null)
+      .withChildInstances(null), instance.getId());
   }
 
   @Override
