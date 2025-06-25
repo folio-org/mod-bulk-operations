@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "inventory/instances", configuration = FeignClientConfiguration .class)
+@FeignClient(name = "inventory/instances", configuration = FeignClientConfiguration.class)
 public interface InstanceClient {
   @PutMapping(value = "/{instanceId}")
   void updateInstance(@RequestBody Instance instance, @PathVariable String instanceId);

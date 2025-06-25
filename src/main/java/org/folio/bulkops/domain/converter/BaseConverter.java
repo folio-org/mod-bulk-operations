@@ -11,10 +11,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.batch.CsvRecordContext;
 import org.folio.bulkops.domain.bean.Tags;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.exception.ConverterException;
@@ -22,6 +21,7 @@ import org.folio.bulkops.exception.ConverterException;
 import com.opencsv.bean.AbstractBeanField;
 import com.opencsv.exceptions.CsvConstraintViolationException;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
+import org.folio.bulkops.service.CsvIdentifierContextHelper;
 
 /**
  * Base class for converters that convert between a string representation and an object of type T.
@@ -33,8 +33,6 @@ import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
 
   public static final String FAILED_FIELD_MARKER = "UNKNOWN";
-  private boolean failed = false;
-  private final Lock lock = new ReentrantLock();
 
   @Override
   protected Object convert(String value) throws CsvConstraintViolationException {
@@ -65,21 +63,16 @@ public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
         && ObjectUtils.isEmpty(((Tags) object).getTagList()))) {
       return EMPTY;
     }
-    lock.lock();
-    if (failed) {
-      failed = false;
-      return FAILED_FIELD_MARKER;
-    }
     try {
       return convertToString((T) object);
     } catch (ReferenceDataNotFoundException e) {
-      failed = true;
-      throw new ConverterException(this.getField(), object, e.getMessage(), ErrorType.WARNING);
+      CsvIdentifierContextHelper.service().saveError(CsvRecordContext.getBulkOperationId(), CsvRecordContext.getIdentifier(),
+              new ConverterException(this.getField(), object, e.getMessage(), ErrorType.WARNING));
+      return FAILED_FIELD_MARKER;
     } catch (Exception e) {
-      failed = true;
-      throw new ConverterException(this.getField(), object, e.getMessage(), ErrorType.ERROR);
-    } finally {
-      lock.unlock();
+      CsvIdentifierContextHelper.service().saveError(CsvRecordContext.getBulkOperationId(), CsvRecordContext.getIdentifier(),
+              new ConverterException(this.getField(), object, e.getMessage(), ErrorType.ERROR));
+      return FAILED_FIELD_MARKER;
     }
   }
 
