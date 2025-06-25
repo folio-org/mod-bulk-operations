@@ -34,7 +34,11 @@ import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.bean.InstanceFormat;
 import org.folio.bulkops.domain.bean.InstanceStatus;
+import org.folio.bulkops.domain.bean.InstanceType;
+import org.folio.bulkops.domain.bean.ModeOfIssuance;
+import org.folio.bulkops.domain.bean.NatureOfContentTerm;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
@@ -197,6 +201,14 @@ class QueryServiceTest extends BaseTest {
       when(remoteFileSystemClient.writer(any(String.class))).thenReturn(writer);
       var instanceStatus = InstanceStatus.builder().id("2a340d34-6b70-443a-bb1b-1b8d1c65d862").name("Other").build();
       when(instanceStatusesClient.getById("2a340d34-6b70-443a-bb1b-1b8d1c65d862")).thenReturn(instanceStatus);
+      var natureOfContentTerm = NatureOfContentTerm.builder().id("44cd89f3-2e76-469f-a955-cc57cb9e0395").name("textbook").build();
+      when(natureOfContentTermsClient.getById("44cd89f3-2e76-469f-a955-cc57cb9e0395")).thenReturn(natureOfContentTerm);
+      var instanceFormat = InstanceFormat.builder().id("fe1b9adb-e0cf-4e05-905f-ce9986279404").name("computer -- other").build();
+      when(instanceFormatsClient.getById("fe1b9adb-e0cf-4e05-905f-ce9986279404")).thenReturn(instanceFormat);
+      var instanceType = InstanceType.builder().id("6312d172-f0cf-40f6-b27d-9fa8feaf332f").name("text").build();
+      when(instanceTypesClient.getById("6312d172-f0cf-40f6-b27d-9fa8feaf332f")).thenReturn(instanceType);
+      var modeOfIssuance = ModeOfIssuance.builder().id("068b5344-e2a6-40df-9186-1829e13cd344").name("serial").build();
+      when(modesOfIssuanceClient.getById("068b5344-e2a6-40df-9186-1829e13cd344")).thenReturn(modeOfIssuance);
 
       queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
 
