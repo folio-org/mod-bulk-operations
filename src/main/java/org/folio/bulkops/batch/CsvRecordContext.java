@@ -1,15 +1,12 @@
 package org.folio.bulkops.batch;
 
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
-public class CsvRecordContext {
+public class CsvRecordContext implements AutoCloseable {
 
-    private static AtomicReference<String> identifier = new AtomicReference<>();
+    private static final ThreadLocal<String> identifier = new ThreadLocal<>();
 
-    private static AtomicReference<UUID> bulkOperationId = new AtomicReference<>();
-
-    private CsvRecordContext() {}
+    private static final ThreadLocal<UUID> bulkOperationId = new ThreadLocal<>();
 
     public static String getIdentifier() {
         return identifier.get();
@@ -25,5 +22,11 @@ public class CsvRecordContext {
 
     public static void setBulkOperationId(UUID id) {
         bulkOperationId.set(id);
+    }
+
+    @Override
+    public void close() {
+        identifier.remove();
+        bulkOperationId.remove();
     }
 }

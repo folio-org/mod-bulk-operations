@@ -48,9 +48,11 @@ public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter
   @Override
   public void write(Chunk<? extends T> chunk) throws Exception {
     for (T entity : chunk) {
-      CsvRecordContext.setIdentifier(entity.getIdentifier(identifierType));
-      CsvRecordContext.setBulkOperationId(bulkOperationId);
-      delegate.write(entity.getRecordBulkOperationEntity());
+      try (var ignored = new CsvRecordContext()) {
+        CsvRecordContext.setIdentifier(entity.getIdentifier(identifierType));
+        CsvRecordContext.setBulkOperationId(bulkOperationId);
+        delegate.write(entity.getRecordBulkOperationEntity());
+      }
     }
   }
 
