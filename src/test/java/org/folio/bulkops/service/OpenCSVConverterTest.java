@@ -63,6 +63,8 @@ import org.folio.bulkops.domain.bean.TextField;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.bean.UserGroupCollection;
+import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.util.CustomMappingStrategy;
 import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.exception.NotFoundException;
@@ -77,6 +79,7 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.io.FileInputStream;
@@ -106,6 +109,9 @@ import static org.mockito.Mockito.when;
 @Log4j2
 @ExtendWith(MockitoExtension.class)
 class OpenCSVConverterTest extends BaseTest {
+
+  @MockitoBean
+  private BulkOperationExecutionContentRepository bulkOperationExecutionContentRepository;
 
   private static class BulkOperationEntityClassProvider implements ArgumentsProvider {
     @Override
@@ -234,6 +240,7 @@ class OpenCSVConverterTest extends BaseTest {
   void shouldConvertBadDataEntity(Class<BulkOperationsEntity> clazz) throws IOException {
 
     initMocks();
+    when(bulkOperationExecutionContentRepository.save(any())).thenReturn(eq(BulkOperationExecutionContent.class));
 
     /* JSON -> Bean */
     var bean = objectMapper.readValue(new FileInputStream(getPathToBadData(clazz)), clazz);

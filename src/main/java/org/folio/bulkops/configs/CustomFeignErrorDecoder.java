@@ -1,16 +1,16 @@
 package org.folio.bulkops.configs;
 
 import static feign.FeignException.errorStatus;
+import static org.folio.bulkops.util.Constants.CANNOT_GET_RECORD;
 
 import java.io.IOException;
 
-import org.folio.bulkops.exception.BadRequestException;
-import org.folio.bulkops.exception.NotFoundException;
-import org.folio.bulkops.exception.ServerErrorException;
-import org.springframework.http.HttpStatus;
-
 import feign.Response;
 import feign.codec.ErrorDecoder;
+import org.folio.bulkops.exception.BadRequestException;
+import org.folio.bulkops.exception.BulkEditException;
+import org.folio.bulkops.exception.NotFoundException;
+import org.springframework.http.HttpStatus;
 
 public class CustomFeignErrorDecoder implements ErrorDecoder {
 
@@ -27,7 +27,8 @@ public class CustomFeignErrorDecoder implements ErrorDecoder {
         return new BadRequestException("Bad request: " + requestUrl);
       }
     } else if (HttpStatus.INTERNAL_SERVER_ERROR.value() == response.status()) {
-      return new ServerErrorException(requestUrl);
+      String reason = response.reason() != null ? response.reason() : "Unknown error";
+      return new BulkEditException(CANNOT_GET_RECORD.formatted(requestUrl, reason), org.folio.bulkops.domain.dto.ErrorType.ERROR);
     }
     return errorStatus(methodKey, response);
   }
