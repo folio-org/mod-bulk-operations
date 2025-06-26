@@ -10,19 +10,21 @@ import static org.folio.bulkops.util.Constants.BULK_EDIT_IDENTIFIERS;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.IDENTIFIERS_FILE_NAME;
 
+import java.util.Arrays;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.folio.bulkops.batch.BulkEditSkipListener;
+import org.folio.bulkops.batch.CsvListItemWriter;
 import org.folio.bulkops.batch.JobCompletionNotificationListener;
 import org.folio.bulkops.batch.JsonListFileWriter;
-import org.folio.bulkops.batch.CsvListItemWriter;
 import org.folio.bulkops.batch.jobs.BulkEditItemListProcessor;
 import org.folio.bulkops.batch.jobs.BulkEditItemProcessor;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.exception.BulkEditException;
-import org.folio.bulkops.service.ErrorService;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
@@ -41,8 +43,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
-import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -51,7 +51,6 @@ public class BulkEditItemIdentifiersJobConfig {
   private final BulkEditItemProcessor bulkEditItemProcessor;
   private final BulkEditSkipListener bulkEditSkipListener;
   private final RemoteFileSystemClient remoteFileSystemClient;
-  private final ErrorService errorService;
 
   @Value("${application.batch.chunk-size}")
   private int chunkSize;
@@ -130,7 +129,7 @@ public class BulkEditItemIdentifiersJobConfig {
     @Value("#{jobParameters['" + IDENTIFIER_TYPE + "']}") String identifierType) {
     var writer = new CompositeItemWriter<List<ExtendedItem>>();
     writer.setDelegates(Arrays.asList(
-      new CsvListItemWriter<>(csvPath, ExtendedItem.class, errorService, bulkOperationId, identifierType),
+      new CsvListItemWriter<>(csvPath, ExtendedItem.class, bulkOperationId, identifierType),
       new JsonListFileWriter<>(new FileSystemResource(jsonPath))));
     return writer;
   }

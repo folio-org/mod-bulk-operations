@@ -1517,9 +1517,7 @@ class BulkOperationServiceTest extends BaseTest {
       if (APPLY_CHANGES.equals(operation.getStatus())) {
         assertThat(bulkOperationExecutionContents, hasSize(0));
       } else {
-        assertThat(bulkOperationExecutionContents, hasSize(1));
-        assertThat(bulkOperationExecutionContents.get(0).getBulkOperationId(), equalTo(operation.getId()));
-        assertThat(bulkOperationExecutionContents.get(0).getState(), equalTo(StateType.FAILED));
+        verify(errorService).saveError(any(), any(), eq("not found"), eq(ErrorType.ERROR));
       }
     }
   }
