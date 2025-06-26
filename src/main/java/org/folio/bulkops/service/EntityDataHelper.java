@@ -17,6 +17,9 @@ import static org.folio.bulkops.util.Constants.PERMANENT_LOCATION_ID;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
+import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.Item;
 import org.springframework.stereotype.Component;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -51,5 +54,16 @@ public class EntityDataHelper {
       .collect(Collectors.joining(SPACE));
 
     return String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER, locationName, callNumber);
+  }
+
+  public void setMissingDataIfRequired(BulkOperationsEntity bulkOperationsEntity) {
+    var entity = bulkOperationsEntity.getRecordBulkOperationEntity();
+    var tenantId = bulkOperationsEntity.getTenant();
+    if (entity instanceof Item item) {
+      item.setTitle(getInstanceTitle(item.getHoldingsRecordId(), tenantId));
+      item.setHoldingsData(getHoldingsData(item.getHoldingsRecordId(), tenantId));
+    } else if (entity instanceof HoldingsRecord holdingsRecord) {
+      holdingsRecord.setInstanceTitle(getInstanceTitle(holdingsRecord.getId(), tenantId));
+    }
   }
 }

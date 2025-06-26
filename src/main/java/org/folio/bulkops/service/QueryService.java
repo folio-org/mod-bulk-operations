@@ -154,7 +154,7 @@ public class QueryService {
       while (iterator.hasNext()) {
 
         var extendedRecord = iterator.next();
-        setMissingDataIfRequired(extendedRecord);
+        entityDataHelper.setMissingDataIfRequired(extendedRecord);
 
         usedTenants.add(extendedRecord.getTenant());
 
@@ -186,17 +186,6 @@ public class QueryService {
         updateOperationExecutionStatus(operation, numProcessed, numMatched);
       }
       errorService.saveErrorsAfterQuery(bulkOperationExecutionContents, operation);
-    }
-  }
-
-  private void setMissingDataIfRequired(BulkOperationsEntity bulkOperationsEntity) {
-    var entity = bulkOperationsEntity.getRecordBulkOperationEntity();
-    var tenantId = bulkOperationsEntity.getTenant();
-    if (entity instanceof Item item) {
-      item.setTitle(entityDataHelper.getInstanceTitle(item.getHoldingsRecordId(), tenantId));
-      item.setHoldingsData(entityDataHelper.getHoldingsData(item.getHoldingsRecordId(), tenantId));
-    } else if (entity instanceof HoldingsRecord holdingsRecord) {
-      holdingsRecord.setInstanceTitle(entityDataHelper.getInstanceTitle(holdingsRecord.getId(), tenantId));
     }
   }
 
