@@ -10,6 +10,7 @@ import static org.folio.bulkops.domain.dto.IdentifierType.ITEM_BARCODE;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getMatchPattern;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getResponseAsString;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.resolveIdentifier;
+import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.DUPLICATES_ACROSS_TENANTS;
 import static org.folio.bulkops.util.Constants.MULTIPLE_MATCHES_MESSAGE;
 import static org.folio.bulkops.util.Constants.NO_HOLDING_VIEW_PERMISSIONS;
@@ -126,6 +127,18 @@ public class BulkEditHoldingsProcessor implements ItemProcessor<ItemIdentifier, 
                 .map(holdingsRecord -> holdingsRecord.withInstanceHrid(instanceHrid))
                 .map(holdingsRecord -> holdingsRecord.withItemBarcode(itemBarcode))
                 .map(holdingsRecord -> holdingsRecord.withInstanceTitle(holdingsReferenceService.getInstanceTitleById(holdingsRecord.getInstanceId(), tenantId)))
+                .map(holdingsRecord -> {
+                  holdingsRecord.getElectronicAccess().forEach(el -> el.setTenantId(tenantId));
+                  holdingsRecord.getNotes().forEach(note -> note.setTenantId(tenantId));
+                  holdingsRecord.setStatisticalCodeIds(holdingsRecord.getStatisticalCodeIds().stream().map(stat -> stat + ARRAY_DELIMITER + tenantId).toList());
+                  holdingsRecord.setIllPolicyId(holdingsRecord.getIllPolicyId() + ARRAY_DELIMITER + tenantId);
+                  holdingsRecord.setEffectiveLocationId(holdingsRecord.getEffectiveLocationId() + ARRAY_DELIMITER + tenantId);
+                  holdingsRecord.setPermanentLocationId(holdingsRecord.getPermanentLocationId() + ARRAY_DELIMITER + tenantId);
+                  holdingsRecord.setSourceId(holdingsRecord.getSourceId() + ARRAY_DELIMITER + tenantId);
+                  holdingsRecord.setHoldingsTypeId(holdingsRecord.getHoldingsTypeId() + ARRAY_DELIMITER + tenantId);
+                  holdingsRecord.setTemporaryLocationId(holdingsRecord.getTemporaryLocationId() + ARRAY_DELIMITER + tenantId);
+                  return holdingsRecord.withTenantId(tenantId);
+                })
                 .map(holdingsRecord -> new ExtendedHoldingsRecord().withTenantId(tenantId).withEntity(holdingsRecord)).toList()
             );
             extendedHoldingsRecordCollection.setTotalRecords(extendedHoldingsRecordCollection.getTotalRecords() + holdingsRecordCollection.getTotalRecords());

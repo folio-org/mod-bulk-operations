@@ -128,6 +128,11 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
               extendedItemCollection.getExtendedItems().addAll(itemCollection.getItems().stream()
                 .map(item -> item.withTitle(getInstanceTitle(item, tenantId)))
                 .map(item -> item.withHoldingsData(getHoldingsName(item.getHoldingsRecordId(), tenantId)))
+                .map(item -> {
+                  item.getElectronicAccess().forEach(el -> el.setTenantId(tenantId));
+                  item.getNotes().forEach(note -> note.setTenantId(tenantId));
+                  return item.withTenantId(tenantId);
+                })
                 .map(item -> new ExtendedItem().withTenantId(tenantId).withEntity(item))
                 .toList());
               extendedItemCollection.setTotalRecords(extendedItemCollection.getTotalRecords() + itemCollection.getTotalRecords());
