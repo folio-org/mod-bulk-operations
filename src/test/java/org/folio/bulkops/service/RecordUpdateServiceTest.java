@@ -207,7 +207,7 @@ class RecordUpdateServiceTest extends BaseTest {
       .reason("other reason")
       .request(Request.create(Request.HttpMethod.GET, "", Map.of(), new byte[]{}, Charset.defaultCharset(), null))
       .build());
-    doThrow(feignException).when(instanceStorageClient).updateInstance(any(Instance.class), any(String.class));
+    doThrow(feignException).when(instanceClient).updateInstance(any(Instance.class), any(String.class));
     var original = Instance.builder()
       .id(UUID.randomUUID().toString())
       .build();

@@ -290,7 +290,7 @@ class UpdateProcessorTest extends BaseTest {
 
     folioInstanceUpdateProcessor.updateRecord(extendedInstance);
 
-    verify(instanceStorageClient).updateInstance(instance, instance.getId());
+    verify(instanceClient).updateInstance(instance, instance.getId());
   }
 
   @ParameterizedTest
