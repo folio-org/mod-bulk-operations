@@ -9,6 +9,8 @@ public class CsvRecordContext {
 
     private static AtomicReference<UUID> bulkOperationId = new AtomicReference<>();
 
+    private CsvRecordContext() {}
+
     public static String getIdentifier() {
         return identifier.get();
     }

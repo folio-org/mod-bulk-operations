@@ -25,7 +25,6 @@ import org.springframework.batch.item.ItemWriter;
 public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter<T>, ItemStream {
   private BufferedWriter writer;
   private BulkOperationsEntityCsvWriter delegate;
-  private ErrorService errorService;
   private UUID bulkOperationId;
   private IdentifierType identifierType;
 
@@ -42,7 +41,6 @@ public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter
     } else {
       throw new IllegalArgumentException("Class " + clazz.getName() + " is not supported for writing");
     }
-    this.errorService = errorService;
     this.bulkOperationId = UUID.fromString(bulkOperationId);
     this.identifierType = IdentifierType.fromValue(identifierType);
   }
