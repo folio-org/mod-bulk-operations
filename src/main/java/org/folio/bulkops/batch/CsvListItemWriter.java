@@ -2,7 +2,6 @@ package org.folio.bulkops.batch;
 
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
-import org.folio.bulkops.service.ErrorService;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemStream;
 import org.springframework.batch.item.ItemWriter;
