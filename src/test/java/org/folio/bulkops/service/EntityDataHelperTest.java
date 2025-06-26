@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
+import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.junit.jupiter.api.BeforeEach;
@@ -97,5 +99,44 @@ class EntityDataHelperTest {
   void getHoldingsData_returnsEmpty_whenHoldingsIdIsEmpty() {
     String result = entityDataHelper.getHoldingsData("", "tenant");
     assertEquals(EMPTY, result);
+  }
+
+  @Test
+  void setMissingDataIfRequired_setsDataForItemAndHoldingsRecord() {
+    // Test for Item
+    Item item = new Item().withHoldingsRecordId("holdingsId");
+    var itemEntity = new ExtendedItem().withEntity(item).withTenantId("tenant");
+
+    HoldingsRecord holdingsRecord = new HoldingsRecord().withInstanceId("instanceId");
+    when(holdingsReferenceService.getHoldingsRecordById("holdingsId", "tenant")).thenReturn(holdingsRecord);
+    when(holdingsReferenceService.getInstanceTitleById("instanceId", "tenant")).thenReturn("Instance Title");
+
+    ObjectNode holdingsJson = JsonNodeFactory.instance.objectNode();
+    holdingsJson.put(PERMANENT_LOCATION_ID, "locId");
+    holdingsJson.put(CALL_NUMBER_PREFIX, "PRE");
+    holdingsJson.put(CALL_NUMBER, "123");
+    holdingsJson.put(CALL_NUMBER_SUFFIX, "SUF");
+    when(holdingsReferenceService.getHoldingsJsonById("holdingsId", "tenant")).thenReturn(holdingsJson);
+
+    ObjectNode locationJson = JsonNodeFactory.instance.objectNode();
+    locationJson.put(IS_ACTIVE, true);
+    locationJson.put(NAME, "Main Library");
+    when(holdingsReferenceService.getHoldingsLocationById("locId", "tenant")).thenReturn(locationJson);
+
+    entityDataHelper.setMissingDataIfRequired(itemEntity);
+
+    assertEquals("Instance Title", item.getTitle());
+    assertEquals("Main Library > PRE 123 SUF", item.getHoldingsData());
+
+    // Test for HoldingsRecord
+    holdingsRecord = new HoldingsRecord().withId("holdingsId2").withInstanceId("instanceId2");
+    var holdingsEntity = new ExtendedHoldingsRecord().withEntity(holdingsRecord).withTenantId("tenant");
+
+    when(holdingsReferenceService.getHoldingsRecordById("holdingsId2", "tenant")).thenReturn(holdingsRecord);
+    when(holdingsReferenceService.getInstanceTitleById("instanceId2", "tenant")).thenReturn("Another Title");
+
+    entityDataHelper.setMissingDataIfRequired(holdingsEntity);
+
+    assertEquals("Another Title", holdingsRecord.getInstanceTitle());
   }
 }
