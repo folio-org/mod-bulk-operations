@@ -1,6 +1,7 @@
 package org.folio.bulkops.batch.jobs;
 
 import static java.lang.String.format;
+import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum.INSTANCEHRID;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
@@ -128,15 +129,33 @@ public class BulkEditHoldingsProcessor implements ItemProcessor<ItemIdentifier, 
                 .map(holdingsRecord -> holdingsRecord.withItemBarcode(itemBarcode))
                 .map(holdingsRecord -> holdingsRecord.withInstanceTitle(holdingsReferenceService.getInstanceTitleById(holdingsRecord.getInstanceId(), tenantId)))
                 .map(holdingsRecord -> {
-                  holdingsRecord.getElectronicAccess().forEach(el -> el.setTenantId(tenantId));
-                  holdingsRecord.getNotes().forEach(note -> note.setTenantId(tenantId));
-                  holdingsRecord.setStatisticalCodeIds(holdingsRecord.getStatisticalCodeIds().stream().map(stat -> stat + ARRAY_DELIMITER + tenantId).toList());
-                  holdingsRecord.setIllPolicyId(holdingsRecord.getIllPolicyId() + ARRAY_DELIMITER + tenantId);
-                  holdingsRecord.setEffectiveLocationId(holdingsRecord.getEffectiveLocationId() + ARRAY_DELIMITER + tenantId);
-                  holdingsRecord.setPermanentLocationId(holdingsRecord.getPermanentLocationId() + ARRAY_DELIMITER + tenantId);
-                  holdingsRecord.setSourceId(holdingsRecord.getSourceId() + ARRAY_DELIMITER + tenantId);
-                  holdingsRecord.setHoldingsTypeId(holdingsRecord.getHoldingsTypeId() + ARRAY_DELIMITER + tenantId);
-                  holdingsRecord.setTemporaryLocationId(holdingsRecord.getTemporaryLocationId() + ARRAY_DELIMITER + tenantId);
+                  if (nonNull(holdingsRecord.getElectronicAccess())) {
+                    holdingsRecord.getElectronicAccess().forEach(el -> el.setTenantId(tenantId));
+                  }
+                  if (nonNull(holdingsRecord.getNotes())) {
+                    holdingsRecord.getNotes().forEach(note -> note.setTenantId(tenantId));
+                  }
+                  if (nonNull(holdingsRecord.getStatisticalCodeIds())) {
+                    holdingsRecord.setStatisticalCodeIds(holdingsRecord.getStatisticalCodeIds().stream().map(stat -> stat + ARRAY_DELIMITER + tenantId).toList());
+                  }
+                  if (nonNull(holdingsRecord.getIllPolicyId())) {
+                    holdingsRecord.setIllPolicyId(holdingsRecord.getIllPolicyId() + ARRAY_DELIMITER + tenantId);
+                  }
+                  if (nonNull(holdingsRecord.getEffectiveLocationId())) {
+                    holdingsRecord.setEffectiveLocationId(holdingsRecord.getEffectiveLocationId() + ARRAY_DELIMITER + tenantId);
+                  }
+                  if (nonNull(holdingsRecord.getPermanentLocationId())) {
+                    holdingsRecord.setPermanentLocationId(holdingsRecord.getPermanentLocationId() + ARRAY_DELIMITER + tenantId);
+                  }
+                  if (nonNull(holdingsRecord.getSourceId())) {
+                    holdingsRecord.setSourceId(holdingsRecord.getSourceId() + ARRAY_DELIMITER + tenantId);
+                  }
+                  if (nonNull(holdingsRecord.getHoldingsTypeId())) {
+                    holdingsRecord.setHoldingsTypeId(holdingsRecord.getHoldingsTypeId() + ARRAY_DELIMITER + tenantId);
+                  }
+                  if (nonNull(holdingsRecord.getTemporaryLocationId())) {
+                    holdingsRecord.setTemporaryLocationId(holdingsRecord.getTemporaryLocationId() + ARRAY_DELIMITER + tenantId);
+                  }
                   return holdingsRecord.withTenantId(tenantId);
                 })
                 .map(holdingsRecord -> new ExtendedHoldingsRecord().withTenantId(tenantId).withEntity(holdingsRecord)).toList()
