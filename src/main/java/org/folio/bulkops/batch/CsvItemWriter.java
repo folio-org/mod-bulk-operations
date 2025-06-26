@@ -15,7 +15,6 @@ import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.IdentifierType;
-import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemStream;
@@ -28,7 +27,7 @@ public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter
   private UUID bulkOperationId;
   private IdentifierType identifierType;
 
-  public CsvItemWriter(String path, Class<T> clazz, ErrorService errorService, String bulkOperationId, String identifierType) throws IOException {
+  public CsvItemWriter(String path, Class<T> clazz, String bulkOperationId, String identifierType) throws IOException {
     this.writer = new BufferedWriter(new FileWriter(path));
     if (clazz == ExtendedItem.class) {
       delegate = new BulkOperationsEntityCsvWriter(writer, Item.class);
