@@ -11,11 +11,9 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.domain.bean.ExtendedItemCollection;
-import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
@@ -33,9 +31,9 @@ import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.processor.permissions.check.TenantResolver;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.EntityDataHelper;
-import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -73,8 +71,6 @@ class BulkEditItemProcessorTest {
   private DuplicationCheckerFactory duplicationCheckerFactory;
   @Mock
   private EntityDataHelper entityDataHelper;
-  @Mock
-  private HoldingsReferenceService holdingsReferenceService;
 
   @InjectMocks
   private BulkEditItemProcessor processor;
@@ -230,13 +226,12 @@ class BulkEditItemProcessorTest {
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
             .thenReturn(Set.of(tenantId));
     when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(holdingsReferenceService.getHoldingsRecordById(anyString(), anyString())).thenReturn(new HoldingsRecord().withInstanceId("instanceId"));
-    when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString())).thenReturn("Instance Title");
-    when(holdingsReferenceService.getHoldingsJsonById(anyString(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
-    when(holdingsReferenceService.getHoldingsLocationById(any(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
+    when(entityDataHelper.getInstanceTitle(any(), anyString())).thenReturn("Instance Title");
+    when(entityDataHelper.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
 
+    Assertions.assertNotNull(result);
     var extendedItem = result.getExtendedItems().getFirst().getEntity();
     assertThat(extendedItem.getElectronicAccess()).allSatisfy(ea -> assertThat(ea.getTenantId()).isEqualTo(tenantId));
     assertThat(extendedItem.getNotes()).allSatisfy(note -> assertThat(note.getTenantId()).isEqualTo(tenantId));
@@ -266,13 +261,12 @@ class BulkEditItemProcessorTest {
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
             .thenReturn(Set.of(tenantId));
     when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(holdingsReferenceService.getHoldingsRecordById(anyString(), anyString())).thenReturn(new HoldingsRecord().withInstanceId("instanceId"));
-    when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString())).thenReturn("Instance Title");
-    when(holdingsReferenceService.getHoldingsJsonById(anyString(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
-    when(holdingsReferenceService.getHoldingsLocationById(any(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
+    when(entityDataHelper.getInstanceTitle(any(), anyString())).thenReturn("Instance Title");
+    when(entityDataHelper.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
 
+    Assertions.assertNotNull(result);
     var extendedItem = result.getExtendedItems().getFirst().getEntity();
     assertThat(extendedItem.getElectronicAccess()).isNull();
     assertThat(extendedItem.getNotes()).allSatisfy(note -> assertThat(note.getTenantId()).isEqualTo(tenantId));
@@ -302,13 +296,12 @@ class BulkEditItemProcessorTest {
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
             .thenReturn(Set.of(tenantId));
     when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(holdingsReferenceService.getHoldingsRecordById(anyString(), anyString())).thenReturn(new HoldingsRecord().withInstanceId("instanceId"));
-    when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString())).thenReturn("Instance Title");
-    when(holdingsReferenceService.getHoldingsJsonById(anyString(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
-    when(holdingsReferenceService.getHoldingsLocationById(any(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
+    when(entityDataHelper.getInstanceTitle(any(), anyString())).thenReturn("Instance Title");
+    when(entityDataHelper.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
 
+    Assertions.assertNotNull(result);
     var extendedItem = result.getExtendedItems().getFirst().getEntity();
     assertThat(extendedItem.getNotes()).isNull();
     assertThat(extendedItem.getElectronicAccess()).allSatisfy(ea -> assertThat(ea.getTenantId()).isEqualTo(tenantId));
@@ -337,13 +330,12 @@ class BulkEditItemProcessorTest {
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
             .thenReturn(Set.of(tenantId));
     when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(holdingsReferenceService.getHoldingsRecordById(anyString(), anyString())).thenReturn(new HoldingsRecord().withInstanceId("instanceId"));
-    when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString())).thenReturn("Instance Title");
-    when(holdingsReferenceService.getHoldingsJsonById(anyString(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
-    when(holdingsReferenceService.getHoldingsLocationById(any(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
+    when(entityDataHelper.getInstanceTitle(any(), anyString())).thenReturn("Instance Title");
+    when(entityDataHelper.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
 
+    Assertions.assertNotNull(result);
     var extendedItem = result.getExtendedItems().getFirst().getEntity();
     assertThat(extendedItem.getElectronicAccess()).isNull();
     assertThat(extendedItem.getNotes()).isNull();
