@@ -12,11 +12,13 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
+import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.domain.bean.ExtendedItemCollection;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
+import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.ConsortiumItem;
 import org.folio.bulkops.domain.dto.ConsortiumItemCollection;
@@ -201,5 +203,152 @@ class BulkEditItemProcessorTest {
     assertThat(result.getExtendedItems()).hasSize(1);
     assertThat(result.getExtendedItems().getFirst().getEntity().getId()).isEqualTo("itemId");
     assertThat(result.getExtendedItems().getFirst().getEntity().getHoldingsData()).isNotNull();
+  }
+
+  @Test
+  void setsTenantIdOnElectronicAccessAndNotesWhenPresent() {
+    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
+    String tenantId = "tenant1";
+
+    ElectronicAccess ea1 = new ElectronicAccess().withUri("uri1");
+    ElectronicAccess ea2 = new ElectronicAccess().withUri("uri2");
+    ItemNote note1 = new ItemNote().withNote("note1");
+    ItemNote note2 = new ItemNote().withNote("note2");
+
+    Item item = new Item()
+            .withId("itemId")
+            .withHoldingsRecordId("holdingsId")
+            .withElectronicAccess(List.of(ea1, ea2))
+            .withNotes(List.of(note1, note2));
+    var itemCollection = org.folio.bulkops.domain.bean.ItemCollection.builder()
+            .items(List.of(item)).totalRecords(1).build();
+
+    ConsortiumItem consortiumItem = new ConsortiumItem().id("itemId").tenantId(tenantId);
+    ConsortiumItemCollection consortiumItemCollection = new ConsortiumItemCollection();
+    consortiumItemCollection.setItems(List.of(consortiumItem));
+    consortiumItemCollection.setTotalRecords(1);
+
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
+    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
+            .thenReturn(Set.of(tenantId));
+    when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
+    when(holdingsReferenceService.getHoldingsRecordById(anyString(), anyString())).thenReturn(new HoldingsRecord().withInstanceId("instanceId"));
+    when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getHoldingsJsonById(anyString(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
+    when(holdingsReferenceService.getHoldingsLocationById(any(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
+
+    ExtendedItemCollection result = processor.process(itemIdentifier);
+
+    var extendedItem = result.getExtendedItems().getFirst().getEntity();
+    assertThat(extendedItem.getElectronicAccess()).allSatisfy(ea -> assertThat(ea.getTenantId()).isEqualTo(tenantId));
+    assertThat(extendedItem.getNotes()).allSatisfy(note -> assertThat(note.getTenantId()).isEqualTo(tenantId));
+  }
+
+  @Test
+  void doesNotFailWhenElectronicAccessIsNull() {
+    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
+    String tenantId = "tenant1";
+
+    ItemNote note1 = new ItemNote().withNote("note1");
+    Item item = new Item()
+            .withId("itemId")
+            .withHoldingsRecordId("holdingsId")
+            .withElectronicAccess(null)
+            .withNotes(List.of(note1));
+    var itemCollection = org.folio.bulkops.domain.bean.ItemCollection.builder()
+            .items(List.of(item)).totalRecords(1).build();
+
+    ConsortiumItem consortiumItem = new ConsortiumItem().id("itemId").tenantId(tenantId);
+    ConsortiumItemCollection consortiumItemCollection = new ConsortiumItemCollection();
+    consortiumItemCollection.setItems(List.of(consortiumItem));
+    consortiumItemCollection.setTotalRecords(1);
+
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
+    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
+            .thenReturn(Set.of(tenantId));
+    when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
+    when(holdingsReferenceService.getHoldingsRecordById(anyString(), anyString())).thenReturn(new HoldingsRecord().withInstanceId("instanceId"));
+    when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getHoldingsJsonById(anyString(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
+    when(holdingsReferenceService.getHoldingsLocationById(any(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
+
+    ExtendedItemCollection result = processor.process(itemIdentifier);
+
+    var extendedItem = result.getExtendedItems().getFirst().getEntity();
+    assertThat(extendedItem.getElectronicAccess()).isNull();
+    assertThat(extendedItem.getNotes()).allSatisfy(note -> assertThat(note.getTenantId()).isEqualTo(tenantId));
+  }
+
+  @Test
+  void doesNotFailWhenNotesIsNull() {
+    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
+    String tenantId = "tenant1";
+
+    ElectronicAccess ea1 = new ElectronicAccess().withUri("uri1");
+    Item item = new Item()
+            .withId("itemId")
+            .withHoldingsRecordId("holdingsId")
+            .withElectronicAccess(List.of(ea1))
+            .withNotes(null);
+    var itemCollection = ItemCollection.builder()
+            .items(List.of(item)).totalRecords(1).build();
+
+    ConsortiumItem consortiumItem = new ConsortiumItem().id("itemId").tenantId(tenantId);
+    ConsortiumItemCollection consortiumItemCollection = new ConsortiumItemCollection();
+    consortiumItemCollection.setItems(List.of(consortiumItem));
+    consortiumItemCollection.setTotalRecords(1);
+
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
+    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
+            .thenReturn(Set.of(tenantId));
+    when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
+    when(holdingsReferenceService.getHoldingsRecordById(anyString(), anyString())).thenReturn(new HoldingsRecord().withInstanceId("instanceId"));
+    when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getHoldingsJsonById(anyString(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
+    when(holdingsReferenceService.getHoldingsLocationById(any(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
+
+    ExtendedItemCollection result = processor.process(itemIdentifier);
+
+    var extendedItem = result.getExtendedItems().getFirst().getEntity();
+    assertThat(extendedItem.getNotes()).isNull();
+    assertThat(extendedItem.getElectronicAccess()).allSatisfy(ea -> assertThat(ea.getTenantId()).isEqualTo(tenantId));
+  }
+
+  @Test
+  void doesNotFailWhenBothElectronicAccessAndNotesAreNull() {
+    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
+    String tenantId = "tenant1";
+
+    Item item = new Item()
+            .withId("itemId")
+            .withHoldingsRecordId("holdingsId")
+            .withElectronicAccess(null)
+            .withNotes(null);
+    var itemCollection = ItemCollection.builder()
+            .items(List.of(item)).totalRecords(1).build();
+
+    ConsortiumItem consortiumItem = new ConsortiumItem().id("itemId").tenantId(tenantId);
+    ConsortiumItemCollection consortiumItemCollection = new ConsortiumItemCollection();
+    consortiumItemCollection.setItems(List.of(consortiumItem));
+    consortiumItemCollection.setTotalRecords(1);
+
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
+    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
+            .thenReturn(Set.of(tenantId));
+    when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
+    when(holdingsReferenceService.getHoldingsRecordById(anyString(), anyString())).thenReturn(new HoldingsRecord().withInstanceId("instanceId"));
+    when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getHoldingsJsonById(anyString(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
+    when(holdingsReferenceService.getHoldingsLocationById(any(), anyString())).thenReturn(Mockito.mock(JsonNode.class));
+
+    ExtendedItemCollection result = processor.process(itemIdentifier);
+
+    var extendedItem = result.getExtendedItems().getFirst().getEntity();
+    assertThat(extendedItem.getElectronicAccess()).isNull();
+    assertThat(extendedItem.getNotes()).isNull();
   }
 }

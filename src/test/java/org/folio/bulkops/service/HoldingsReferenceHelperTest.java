@@ -19,7 +19,6 @@ import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.integration.XOkapiHeaders;
-import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,9 +29,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import static org.folio.spring.integration.XOkapiHeaders.TENANT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;

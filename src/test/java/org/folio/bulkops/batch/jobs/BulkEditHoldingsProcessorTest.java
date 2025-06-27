@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.assertj.core.api.AbstractStringAssert;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.SearchClient;

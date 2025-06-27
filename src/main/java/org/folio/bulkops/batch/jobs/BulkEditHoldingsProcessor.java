@@ -33,6 +33,7 @@ import org.folio.bulkops.client.SearchClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecordCollection;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordCollection;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.dto.BatchIdsDto;
@@ -129,33 +130,7 @@ public class BulkEditHoldingsProcessor implements ItemProcessor<ItemIdentifier, 
                 .map(holdingsRecord -> holdingsRecord.withItemBarcode(itemBarcode))
                 .map(holdingsRecord -> holdingsRecord.withInstanceTitle(holdingsReferenceService.getInstanceTitleById(holdingsRecord.getInstanceId(), tenantId)))
                 .map(holdingsRecord -> {
-                  if (nonNull(holdingsRecord.getElectronicAccess())) {
-                    holdingsRecord.getElectronicAccess().forEach(el -> el.setTenantId(tenantId));
-                  }
-                  if (nonNull(holdingsRecord.getNotes())) {
-                    holdingsRecord.getNotes().forEach(note -> note.setTenantId(tenantId));
-                  }
-                  if (nonNull(holdingsRecord.getStatisticalCodeIds())) {
-                    holdingsRecord.setStatisticalCodeIds(holdingsRecord.getStatisticalCodeIds().stream().map(stat -> stat + ARRAY_DELIMITER + tenantId).toList());
-                  }
-                  if (nonNull(holdingsRecord.getIllPolicyId())) {
-                    holdingsRecord.setIllPolicyId(holdingsRecord.getIllPolicyId() + ARRAY_DELIMITER + tenantId);
-                  }
-                  if (nonNull(holdingsRecord.getEffectiveLocationId())) {
-                    holdingsRecord.setEffectiveLocationId(holdingsRecord.getEffectiveLocationId() + ARRAY_DELIMITER + tenantId);
-                  }
-                  if (nonNull(holdingsRecord.getPermanentLocationId())) {
-                    holdingsRecord.setPermanentLocationId(holdingsRecord.getPermanentLocationId() + ARRAY_DELIMITER + tenantId);
-                  }
-                  if (nonNull(holdingsRecord.getSourceId())) {
-                    holdingsRecord.setSourceId(holdingsRecord.getSourceId() + ARRAY_DELIMITER + tenantId);
-                  }
-                  if (nonNull(holdingsRecord.getHoldingsTypeId())) {
-                    holdingsRecord.setHoldingsTypeId(holdingsRecord.getHoldingsTypeId() + ARRAY_DELIMITER + tenantId);
-                  }
-                  if (nonNull(holdingsRecord.getTemporaryLocationId())) {
-                    holdingsRecord.setTemporaryLocationId(holdingsRecord.getTemporaryLocationId() + ARRAY_DELIMITER + tenantId);
-                  }
+                  enrichWithTenant(holdingsRecord, tenantId);
                   return holdingsRecord.withTenantId(tenantId);
                 })
                 .map(holdingsRecord -> new ExtendedHoldingsRecord().withTenantId(tenantId).withEntity(holdingsRecord)).toList()
@@ -213,6 +188,36 @@ public class BulkEditHoldingsProcessor implements ItemProcessor<ItemIdentifier, 
       return holdingClient.getByQuery("id==" + holdingsReferenceService.getHoldingsIdByItemBarcode(itemIdentifier.getItemId()), 1);
     } else {
       throw new BulkEditException(format("Identifier type \"%s\" is not supported", identifierType), ErrorType.ERROR);
+    }
+  }
+
+  private void enrichWithTenant(HoldingsRecord holdingsRecord, String tenantId) {
+    if (nonNull(holdingsRecord.getElectronicAccess())) {
+      holdingsRecord.getElectronicAccess().forEach(el -> el.setTenantId(tenantId));
+    }
+    if (nonNull(holdingsRecord.getNotes())) {
+      holdingsRecord.getNotes().forEach(note -> note.setTenantId(tenantId));
+    }
+    if (nonNull(holdingsRecord.getStatisticalCodeIds())) {
+      holdingsRecord.setStatisticalCodeIds(holdingsRecord.getStatisticalCodeIds().stream().map(stat -> stat + ARRAY_DELIMITER + tenantId).toList());
+    }
+    if (nonNull(holdingsRecord.getIllPolicyId())) {
+      holdingsRecord.setIllPolicyId(holdingsRecord.getIllPolicyId() + ARRAY_DELIMITER + tenantId);
+    }
+    if (nonNull(holdingsRecord.getEffectiveLocationId())) {
+      holdingsRecord.setEffectiveLocationId(holdingsRecord.getEffectiveLocationId() + ARRAY_DELIMITER + tenantId);
+    }
+    if (nonNull(holdingsRecord.getPermanentLocationId())) {
+      holdingsRecord.setPermanentLocationId(holdingsRecord.getPermanentLocationId() + ARRAY_DELIMITER + tenantId);
+    }
+    if (nonNull(holdingsRecord.getSourceId())) {
+      holdingsRecord.setSourceId(holdingsRecord.getSourceId() + ARRAY_DELIMITER + tenantId);
+    }
+    if (nonNull(holdingsRecord.getHoldingsTypeId())) {
+      holdingsRecord.setHoldingsTypeId(holdingsRecord.getHoldingsTypeId() + ARRAY_DELIMITER + tenantId);
+    }
+    if (nonNull(holdingsRecord.getTemporaryLocationId())) {
+      holdingsRecord.setTemporaryLocationId(holdingsRecord.getTemporaryLocationId() + ARRAY_DELIMITER + tenantId);
     }
   }
 }

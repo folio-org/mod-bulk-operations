@@ -129,12 +129,7 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
                 .map(item -> item.withTitle(getInstanceTitle(item, tenantId)))
                 .map(item -> item.withHoldingsData(getHoldingsName(item.getHoldingsRecordId(), tenantId)))
                 .map(item -> {
-                  if (nonNull(item.getElectronicAccess())) {
-                    item.getElectronicAccess().forEach(el -> el.setTenantId(tenantId));
-                  }
-                  if (nonNull(item.getNotes())) {
-                    item.getNotes().forEach(note -> note.setTenantId(tenantId));
-                  }
+                  enrichWithTenant(item, tenantId);
                   return item.withTenantId(tenantId);
                 })
                 .map(item -> new ExtendedItem().withTenantId(tenantId).withEntity(item))
@@ -212,5 +207,14 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
       .collect(Collectors.joining(SPACE));
 
     return String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER, locationName, callNumber);
+  }
+
+  private void enrichWithTenant(Item item, String tenantId) {
+    if (nonNull(item.getElectronicAccess())) {
+      item.getElectronicAccess().forEach(el -> el.setTenantId(tenantId));
+    }
+    if (nonNull(item.getNotes())) {
+      item.getNotes().forEach(note -> note.setTenantId(tenantId));
+    }
   }
 }
