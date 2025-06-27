@@ -27,7 +27,7 @@ public class HoldingsNoteListConverter extends BaseConverter<List<HoldingsNote>>
         if (isNull(noteTypeName)) {
           noteTypeName = "";
           try {
-            noteTypeName = HoldingsReferenceHelper.service().getNoteTypeNameById(note.getHoldingsNoteTypeId());
+            noteTypeName = HoldingsReferenceHelper.service().getNoteTypeNameById(note.getHoldingsNoteTypeId(), note.getTenantId());
           } catch (NotFoundException e) {
             log.error("Holding note type with id = {} not found : {}", note.getHoldingsNoteTypeId(), e.getMessage());
           }

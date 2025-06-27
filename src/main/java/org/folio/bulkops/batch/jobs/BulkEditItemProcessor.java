@@ -1,5 +1,6 @@
 package org.folio.bulkops.batch.jobs;
 
+import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum.HOLDINGSRECORDID;
 import static org.folio.bulkops.domain.dto.IdentifierType.HOLDINGS_RECORD_ID;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getMatchPattern;
@@ -22,6 +23,7 @@ import org.folio.bulkops.client.SearchClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.ExtendedItemCollection;
+import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.dto.BatchIdsDto;
 import org.folio.bulkops.domain.dto.ConsortiumItem;
@@ -109,8 +111,12 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
                 throw new BulkEditException(MULTIPLE_MATCHES_MESSAGE, ErrorType.ERROR);
               }
               extendedItemCollection.getExtendedItems().addAll(itemCollection.getItems().stream()
-                .map(item -> item.withTitle(entityDataHelper.getInstanceTitle(item.getHoldingsRecordId(), tenantId)))
-                .map(item -> item.withHoldingsData(entityDataHelper.getHoldingsData(item.getHoldingsRecordId(), tenantId)))
+                      .map(item -> item.withTitle(entityDataHelper.getInstanceTitle(item.getHoldingsRecordId(), tenantId)))
+                      .map(item -> item.withHoldingsData(entityDataHelper.getHoldingsData(item.getHoldingsRecordId(), tenantId)))
+                .map(item -> {
+                  enrichWithTenant(item, tenantId);
+                  return item.withTenantId(tenantId);
+                })
                 .map(item -> new ExtendedItem().withTenantId(tenantId).withEntity(item))
                 .toList());
               extendedItemCollection.setTotalRecords(extendedItemCollection.getTotalRecords() + itemCollection.getTotalRecords());
@@ -158,5 +164,14 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
 
   private boolean isCurrentTenantCentral(String centralTenantId) {
     return StringUtils.isNotEmpty(centralTenantId) && centralTenantId.equals(folioExecutionContext.getTenantId());
+  }
+
+  private void enrichWithTenant(Item item, String tenantId) {
+    if (nonNull(item.getElectronicAccess())) {
+      item.getElectronicAccess().forEach(el -> el.setTenantId(tenantId));
+    }
+    if (nonNull(item.getNotes())) {
+      item.getNotes().forEach(note -> note.setTenantId(tenantId));
+    }
   }
 }
