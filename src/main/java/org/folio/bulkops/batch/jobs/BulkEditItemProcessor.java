@@ -1,17 +1,31 @@
 package org.folio.bulkops.batch.jobs;
 
+import static com.github.jknack.handlebars.internal.lang3.StringUtils.isEmpty;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum.HOLDINGSRECORDID;
 import static org.folio.bulkops.domain.dto.IdentifierType.HOLDINGS_RECORD_ID;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getMatchPattern;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getResponseAsString;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.resolveIdentifier;
+import static org.folio.bulkops.util.Constants.CALL_NUMBER;
+import static org.folio.bulkops.util.Constants.CALL_NUMBER_PREFIX;
+import static org.folio.bulkops.util.Constants.CALL_NUMBER_SUFFIX;
 import static org.folio.bulkops.util.Constants.DUPLICATES_ACROSS_TENANTS;
+import static org.folio.bulkops.util.Constants.HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER;
+import static org.folio.bulkops.util.Constants.INACTIVE;
+import static org.folio.bulkops.util.Constants.IS_ACTIVE;
 import static org.folio.bulkops.util.Constants.MULTIPLE_MATCHES_MESSAGE;
+import static org.folio.bulkops.util.Constants.NAME;
 import static org.folio.bulkops.util.Constants.NO_ITEM_VIEW_PERMISSIONS;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
+import static org.folio.bulkops.util.Constants.PERMANENT_LOCATION_ID;
 import static org.folio.bulkops.util.SearchIdentifierTypeResolver.getSearchIdentifierType;
 import static org.folio.bulkops.util.Utils.encode;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import feign.codec.DecodeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -22,6 +36,7 @@ import org.folio.bulkops.client.SearchClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.ExtendedItemCollection;
+import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.dto.BatchIdsDto;
 import org.folio.bulkops.domain.dto.ConsortiumItem;
@@ -34,6 +49,7 @@ import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.processor.permissions.check.TenantResolver;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.EntityDataHelper;
+import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.util.ExceptionHelper;
 import org.folio.bulkops.util.FolioExecutionContextUtil;
 import org.folio.spring.FolioExecutionContext;
@@ -47,7 +63,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 @StepScope
@@ -64,6 +82,7 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
   private final TenantResolver tenantResolver;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
   private final EntityDataHelper entityDataHelper;
+  private final HoldingsReferenceService holdingsReferenceService;
 
   @Value("#{stepExecution.jobExecution}")
   private JobExecution jobExecution;

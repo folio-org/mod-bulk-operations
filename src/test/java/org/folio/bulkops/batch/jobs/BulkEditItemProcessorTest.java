@@ -11,9 +11,11 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.domain.bean.ExtendedItemCollection;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
@@ -31,6 +33,7 @@ import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.processor.permissions.check.TenantResolver;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.EntityDataHelper;
+import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,6 +73,8 @@ class BulkEditItemProcessorTest {
   private DuplicationCheckerFactory duplicationCheckerFactory;
   @Mock
   private EntityDataHelper entityDataHelper;
+  @Mock
+  private HoldingsReferenceService holdingsReferenceService;
 
   @InjectMocks
   private BulkEditItemProcessor processor;
