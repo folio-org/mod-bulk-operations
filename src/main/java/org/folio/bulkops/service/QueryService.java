@@ -40,6 +40,8 @@ import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.converter.JsonToMarcConverter;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -68,6 +70,7 @@ public class QueryService {
   private final SrsClient srsClient;
   private final QueryClient queryClient;
   private final FqmContentFetcher fqmContentFetcher;
+  private final EntityDataHelper entityDataHelper;
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -151,6 +154,8 @@ public class QueryService {
       while (iterator.hasNext()) {
 
         var extendedRecord = iterator.next();
+        entityDataHelper.setMissingDataIfRequired(extendedRecord);
+
         usedTenants.add(extendedRecord.getTenant());
 
         try {
