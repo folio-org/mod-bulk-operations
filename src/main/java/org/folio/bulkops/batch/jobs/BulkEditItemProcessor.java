@@ -1,37 +1,17 @@
 package org.folio.bulkops.batch.jobs;
 
-import static java.util.Objects.isNull;
-import static java.util.Objects.nonNull;
-import static org.apache.commons.lang3.ObjectUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum.HOLDINGSRECORDID;
 import static org.folio.bulkops.domain.dto.IdentifierType.HOLDINGS_RECORD_ID;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getMatchPattern;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getResponseAsString;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.resolveIdentifier;
-import static org.folio.bulkops.util.Constants.CALL_NUMBER;
-import static org.folio.bulkops.util.Constants.CALL_NUMBER_PREFIX;
-import static org.folio.bulkops.util.Constants.CALL_NUMBER_SUFFIX;
 import static org.folio.bulkops.util.Constants.DUPLICATES_ACROSS_TENANTS;
-import static org.folio.bulkops.util.Constants.HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER;
-import static org.folio.bulkops.util.Constants.INACTIVE;
-import static org.folio.bulkops.util.Constants.IS_ACTIVE;
 import static org.folio.bulkops.util.Constants.MULTIPLE_MATCHES_MESSAGE;
-import static org.folio.bulkops.util.Constants.NAME;
 import static org.folio.bulkops.util.Constants.NO_ITEM_VIEW_PERMISSIONS;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
-import static org.folio.bulkops.util.Constants.PERMANENT_LOCATION_ID;
 import static org.folio.bulkops.util.SearchIdentifierTypeResolver.getSearchIdentifierType;
 import static org.folio.bulkops.util.Utils.encode;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import com.fasterxml.jackson.databind.JsonNode;
 import feign.codec.DecodeException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -42,7 +22,6 @@ import org.folio.bulkops.client.SearchClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.ExtendedItemCollection;
-import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.dto.BatchIdsDto;
 import org.folio.bulkops.domain.dto.ConsortiumItem;
@@ -54,7 +33,7 @@ import org.folio.bulkops.processor.EntityExtractor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.processor.permissions.check.TenantResolver;
 import org.folio.bulkops.service.ConsortiaService;
-import org.folio.bulkops.service.HoldingsReferenceService;
+import org.folio.bulkops.service.EntityDataHelper;
 import org.folio.bulkops.util.ExceptionHelper;
 import org.folio.bulkops.util.FolioExecutionContextUtil;
 import org.folio.spring.FolioExecutionContext;
@@ -65,6 +44,10 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @StepScope
@@ -80,7 +63,7 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
   private final FolioModuleMetadata folioModuleMetadata;
   private final TenantResolver tenantResolver;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
-  private final HoldingsReferenceService holdingsReferenceService;
+  private final EntityDataHelper entityDataHelper;
 
   @Value("#{stepExecution.jobExecution}")
   private JobExecution jobExecution;
@@ -126,8 +109,8 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
                 throw new BulkEditException(MULTIPLE_MATCHES_MESSAGE, ErrorType.ERROR);
               }
               extendedItemCollection.getExtendedItems().addAll(itemCollection.getItems().stream()
-                .map(item -> item.withTitle(getInstanceTitle(item, tenantId)))
-                .map(item -> item.withHoldingsData(getHoldingsName(item.getHoldingsRecordId(), tenantId)))
+                .map(item -> item.withTitle(entityDataHelper.getInstanceTitle(item.getHoldingsRecordId(), tenantId)))
+                .map(item -> item.withHoldingsData(entityDataHelper.getHoldingsData(item.getHoldingsRecordId(), tenantId)))
                 .map(item -> new ExtendedItem().withTenantId(tenantId).withEntity(item))
                 .toList());
               extendedItemCollection.setTotalRecords(extendedItemCollection.getTotalRecords() + itemCollection.getTotalRecords());
@@ -151,8 +134,8 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
         }
         var tenantId = folioExecutionContext.getTenantId();
         extendedItemCollection.setExtendedItems(itemCollection.getItems().stream()
-          .map(item -> item.withTitle(getInstanceTitle(item, tenantId)))
-          .map(item -> item.withHoldingsData(getHoldingsName(item.getHoldingsRecordId(), tenantId)))
+          .map(item -> item.withTitle(entityDataHelper.getInstanceTitle(item.getHoldingsRecordId(), tenantId)))
+          .map(item -> item.withHoldingsData(entityDataHelper.getHoldingsData(item.getHoldingsRecordId(), tenantId)))
           .map(item -> new ExtendedItem().withTenantId(tenantId).withEntity(item)).toList());
         extendedItemCollection.setTotalRecords(itemCollection.getTotalRecords());
         if (extendedItemCollection.getExtendedItems().isEmpty()) {
@@ -175,33 +158,5 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
 
   private boolean isCurrentTenantCentral(String centralTenantId) {
     return StringUtils.isNotEmpty(centralTenantId) && centralTenantId.equals(folioExecutionContext.getTenantId());
-  }
-
-  private String getInstanceTitle(Item item, String tenantId) {
-    var holding = holdingsReferenceService.getHoldingsRecordById(item.getHoldingsRecordId(), tenantId);
-    if (nonNull(holding)) {
-      return holdingsReferenceService.getInstanceTitleById(holding.getInstanceId(), tenantId);
-    }
-    return EMPTY;
-  }
-
-  private String getHoldingsName(String holdingsId, String tenantId) {
-    if (isEmpty(holdingsId)) {
-      return EMPTY;
-    }
-    var holdingsJson = holdingsReferenceService.getHoldingsJsonById(holdingsId, tenantId);
-    var locationId = isNull(holdingsJson.get(PERMANENT_LOCATION_ID)) ? null : holdingsJson.get(PERMANENT_LOCATION_ID).asText();
-
-    var locationJson = holdingsReferenceService.getHoldingsLocationById(locationId, tenantId);
-    var activePrefix = nonNull(locationJson.get(IS_ACTIVE)) && locationJson.get(IS_ACTIVE).asBoolean() ? EMPTY : INACTIVE;
-    var name = isNull(locationJson.get(NAME)) ? EMPTY : locationJson.get(NAME).asText();
-    var locationName = activePrefix + name;
-
-    var callNumber = Stream.of(holdingsJson.get(CALL_NUMBER_PREFIX), holdingsJson.get(CALL_NUMBER), holdingsJson.get(CALL_NUMBER_SUFFIX))
-      .filter(Objects::nonNull)
-      .map(JsonNode::asText)
-      .collect(Collectors.joining(SPACE));
-
-    return String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER, locationName, callNumber);
   }
 }
