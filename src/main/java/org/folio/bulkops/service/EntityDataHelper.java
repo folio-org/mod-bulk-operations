@@ -20,6 +20,10 @@ import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.util.FolioExecutionContextUtil;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.stereotype.Component;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -29,6 +33,8 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class EntityDataHelper {
   private final HoldingsReferenceService holdingsReferenceService;
+  private final FolioExecutionContext folioExecutionContext;
+  private final FolioModuleMetadata folioModuleMetadata;
 
   public String getInstanceTitle(String holdingsRecordId, String tenantId) {
     return ofNullable(holdingsReferenceService.getHoldingsRecordById(holdingsRecordId, tenantId))
@@ -60,10 +66,14 @@ public class EntityDataHelper {
     var entity = bulkOperationsEntity.getRecordBulkOperationEntity();
     var tenantId = bulkOperationsEntity.getTenant();
     if (entity instanceof Item item) {
-      item.setTitle(getInstanceTitle(item.getHoldingsRecordId(), tenantId));
-      item.setHoldingsData(getHoldingsData(item.getHoldingsRecordId(), tenantId));
+      try (var context = new FolioExecutionContextSetter(FolioExecutionContextUtil.prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
+        item.setTitle(getInstanceTitle(item.getHoldingsRecordId(), tenantId));
+        item.setHoldingsData(getHoldingsData(item.getHoldingsRecordId(), tenantId));
+      }
     } else if (entity instanceof HoldingsRecord holdingsRecord) {
-      holdingsRecord.setInstanceTitle(getInstanceTitle(holdingsRecord.getId(), tenantId));
+      try (var context = new FolioExecutionContextSetter(FolioExecutionContextUtil.prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
+        holdingsRecord.setInstanceTitle(getInstanceTitle(holdingsRecord.getId(), tenantId));
+      }
     }
   }
 }
