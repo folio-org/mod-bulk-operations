@@ -154,7 +154,7 @@ public class QueryService {
       while (iterator.hasNext()) {
 
         var extendedRecord = iterator.next();
-        entityDataHelper.setMissingDataIfRequired(extendedRecord);
+        entityDataHelper.setMissingDataIfRequired(extendedRecord, operation);
 
         usedTenants.add(extendedRecord.getTenant());
 

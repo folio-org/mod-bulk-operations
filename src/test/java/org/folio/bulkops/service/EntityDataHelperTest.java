@@ -7,6 +7,7 @@ import static org.folio.bulkops.util.Constants.CALL_NUMBER_SUFFIX;
 import static org.folio.bulkops.util.Constants.IS_ACTIVE;
 import static org.folio.bulkops.util.Constants.NAME;
 import static org.folio.bulkops.util.Constants.PERMANENT_LOCATION_ID;
+import static org.folio.spring.integration.XOkapiHeaders.TENANT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
@@ -16,16 +17,23 @@ import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.spring.FolioExecutionContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 class EntityDataHelperTest {
 
   @Mock
   private HoldingsReferenceService holdingsReferenceService;
+  @Mock
+  private FolioExecutionContext folioExecutionContext;
 
   @InjectMocks
   private EntityDataHelper entityDataHelper;
@@ -33,6 +41,7 @@ class EntityDataHelperTest {
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(Map.of(TENANT, List.of("diku")));
   }
 
   @Test
@@ -103,6 +112,7 @@ class EntityDataHelperTest {
 
   @Test
   void setMissingDataIfRequired_setsDataForItemAndHoldingsRecord() {
+    var bulkOperation = BulkOperation.builder().id(UUID.randomUUID()).build();
     // Test for Item
     Item item = new Item().withHoldingsRecordId("holdingsId");
     var itemEntity = new ExtendedItem().withEntity(item).withTenantId("tenant");
@@ -123,7 +133,7 @@ class EntityDataHelperTest {
     locationJson.put(NAME, "Main Library");
     when(holdingsReferenceService.getHoldingsLocationById("locId", "tenant")).thenReturn(locationJson);
 
-    entityDataHelper.setMissingDataIfRequired(itemEntity);
+    entityDataHelper.setMissingDataIfRequired(itemEntity, bulkOperation);
 
     assertEquals("Instance Title", item.getTitle());
     assertEquals("Main Library > PRE 123 SUF", item.getHoldingsData());
@@ -135,7 +145,7 @@ class EntityDataHelperTest {
     when(holdingsReferenceService.getHoldingsRecordById("holdingsId2", "tenant")).thenReturn(holdingsRecord);
     when(holdingsReferenceService.getInstanceTitleById("instanceId2", "tenant")).thenReturn("Another Title");
 
-    entityDataHelper.setMissingDataIfRequired(holdingsEntity);
+    entityDataHelper.setMissingDataIfRequired(holdingsEntity, bulkOperation);
 
     assertEquals("Another Title", holdingsRecord.getInstanceTitle());
   }

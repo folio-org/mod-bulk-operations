@@ -20,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.dto.ErrorType;
+import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.util.FolioExecutionContextUtil;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
@@ -35,6 +37,7 @@ public class EntityDataHelper {
   private final HoldingsReferenceService holdingsReferenceService;
   private final FolioExecutionContext folioExecutionContext;
   private final FolioModuleMetadata folioModuleMetadata;
+  private final ErrorService errorService;
 
   public String getInstanceTitle(String holdingsRecordId, String tenantId) {
     return ofNullable(holdingsReferenceService.getHoldingsRecordById(holdingsRecordId, tenantId))
@@ -62,17 +65,21 @@ public class EntityDataHelper {
     return String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER, locationName, callNumber);
   }
 
-  public void setMissingDataIfRequired(BulkOperationsEntity bulkOperationsEntity) {
+  public void setMissingDataIfRequired(BulkOperationsEntity bulkOperationsEntity, BulkOperation bulkOperation) {
     var entity = bulkOperationsEntity.getRecordBulkOperationEntity();
     var tenantId = bulkOperationsEntity.getTenant();
     if (entity instanceof Item item) {
       try (var context = new FolioExecutionContextSetter(FolioExecutionContextUtil.prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
         item.setTitle(getInstanceTitle(item.getHoldingsRecordId(), tenantId));
         item.setHoldingsData(getHoldingsData(item.getHoldingsRecordId(), tenantId));
+      } catch (Exception e) {
+        errorService.saveError(bulkOperation.getId(), bulkOperationsEntity.getId(), e.getMessage(), ErrorType.WARNING);
       }
     } else if (entity instanceof HoldingsRecord holdingsRecord) {
       try (var context = new FolioExecutionContextSetter(FolioExecutionContextUtil.prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
         holdingsRecord.setInstanceTitle(getInstanceTitle(holdingsRecord.getId(), tenantId));
+      } catch (Exception e) {
+        errorService.saveError(bulkOperation.getId(), bulkOperationsEntity.getId(), e.getMessage(), ErrorType.WARNING);
       }
     }
   }
