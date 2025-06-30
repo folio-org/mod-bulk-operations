@@ -34,7 +34,7 @@ class ElectronicAccessServiceTest extends BaseTest {
   private FolioModuleMetadata folioModuleMetadata;
 
   @ParameterizedTest
-  @CsvSource(value = { ",,,,", "id;tenant,uri,text,specification,note" }, delimiter = ',')
+  @CsvSource(value = { ",,,,", "id,uri,text,specification,note" }, delimiter = ',')
   void testElectronicAccessToString(String relationshipId, String uri, String linkText, String materialsSpecification, String publicNote) {
     when(electronicAccessReferenceService.getRelationshipNameById("id", "tenant")).thenReturn("name");
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
@@ -45,6 +45,7 @@ class ElectronicAccessServiceTest extends BaseTest {
       .materialsSpecification(materialsSpecification)
       .publicNote(publicNote)
       .relationshipId(relationshipId)
+      .tenantId("tenant")
       .build());
 
     if (isNull(uri)) {
@@ -55,7 +56,7 @@ class ElectronicAccessServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @CsvSource(value = { ",,,,", "id;tenant,uri,text,specification,note" }, delimiter = ',')
+  @CsvSource(value = { ",,,,", "id,uri,text,specification,note" }, delimiter = ',')
   void testElectronicAccessInstanceToString(String relationshipId, String uri, String linkText, String materialsSpecification, String publicNote) {
     when(electronicAccessReferenceService.getRelationshipNameById("id", "tenant")).thenReturn("name");
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
@@ -66,6 +67,7 @@ class ElectronicAccessServiceTest extends BaseTest {
       .materialsSpecification(materialsSpecification)
       .publicNote(publicNote)
       .relationshipId(relationshipId)
+      .tenantId("tenant")
       .build());
 
     if (isEmpty(uri)) {

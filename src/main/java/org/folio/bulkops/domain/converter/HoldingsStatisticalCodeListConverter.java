@@ -15,7 +15,10 @@ public class HoldingsStatisticalCodeListConverter extends BaseConverter<List<Str
   public String convertToString(List<String> object) {
     return object.stream()
       .filter(Objects::nonNull)
-      .map(id -> HoldingsReferenceHelper.service().getStatisticalCodeById(id).getName())
+      .map(idTenant -> {
+        var idTenantArr = idTenant.split(ARRAY_DELIMITER);
+        return HoldingsReferenceHelper.service().getStatisticalCodeById(idTenantArr[0], idTenantArr.length > 1 ? idTenantArr[1] : null).getName();
+      })
       .map(SpecialCharacterEscaper::escape)
       .collect(Collectors.joining(ARRAY_DELIMITER));
   }

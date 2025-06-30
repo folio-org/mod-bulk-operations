@@ -8,7 +8,7 @@ public class HoldingsLocationConverter extends BaseConverter<String> {
 
   @Override
   public String convertToString(String object) {
-    var objTenant = object.split(ARRAY_DELIMITER);
-    return HoldingsReferenceHelper.service().getLocationById(objTenant[0], objTenant.length > 1 ? objTenant[1] : null).getName();
+    var idTenantArr = object.split(ARRAY_DELIMITER);
+    return HoldingsReferenceHelper.service().getLocationById(idTenantArr[0], idTenantArr.length > 1 ? idTenantArr[1] : null).getName();
   }
 }
