@@ -25,8 +25,8 @@ public class HoldingsReferenceHelper implements InitializingBean {
   private final FolioExecutionContext folioExecutionContext;
   private final FolioModuleMetadata folioModuleMetadata;
 
-  public HoldingsType getHoldingsTypeById(String id) {
-    return holdingsReferenceService.getHoldingsTypeById(id, folioExecutionContext.getTenantId());
+  public HoldingsType getHoldingsTypeById(String id, String tenantId) {
+    return holdingsReferenceService.getHoldingsTypeById(id, tenantId);
   }
 
   public HoldingsType getHoldingsTypeByName(String name) {
@@ -54,32 +54,32 @@ public class HoldingsReferenceHelper implements InitializingBean {
     return holdingsReferenceService.getCallNumberTypeIdByName(name, folioExecutionContext.getTenantId());
   }
 
-  public String getNoteTypeNameById(String id) {
-    return holdingsReferenceService.getNoteTypeNameById(id, folioExecutionContext.getTenantId());
+  public String getNoteTypeNameById(String id, String tenantId) {
+    return holdingsReferenceService.getNoteTypeNameById(id, tenantId);
   }
 
   public String getNoteTypeIdByName(String name) {
     return holdingsReferenceService.getNoteTypeIdByName(name, folioExecutionContext.getTenantId());
   }
 
-  public IllPolicy getIllPolicyNameById(String id) {
-    return holdingsReferenceService.getIllPolicyById(id, folioExecutionContext.getTenantId());
+  public IllPolicy getIllPolicyNameById(String id, String tenantId) {
+    return holdingsReferenceService.getIllPolicyById(id, tenantId);
   }
 
   public IllPolicy getIllPolicyByName(String name) {
     return holdingsReferenceService.getIllPolicyByName(name, folioExecutionContext.getTenantId());
   }
 
-  public HoldingsRecordsSource getSourceById(String id) {
-    return holdingsReferenceService.getSourceById(id, folioExecutionContext.getTenantId());
+  public HoldingsRecordsSource getSourceById(String id, String tenantId) {
+    return holdingsReferenceService.getSourceById(id, tenantId);
   }
 
   public HoldingsRecordsSource getSourceByName(String name) {
     return holdingsReferenceService.getSourceByName(name, folioExecutionContext.getTenantId());
   }
 
-  public StatisticalCode getStatisticalCodeById(String id) {
-    return holdingsReferenceService.getStatisticalCodeById(id, folioExecutionContext.getTenantId());
+  public StatisticalCode getStatisticalCodeById(String id, String tenantId) {
+    return holdingsReferenceService.getStatisticalCodeById(id, tenantId);
   }
 
   public StatisticalCode getStatisticalCodeByName(String name) {
