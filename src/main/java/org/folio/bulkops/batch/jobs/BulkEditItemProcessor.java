@@ -45,10 +45,12 @@ import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Component
@@ -66,6 +68,7 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
   private final TenantResolver tenantResolver;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
   private final EntityDataHelper entityDataHelper;
+  private final CacheManager cacheManager;
 
   @Value("#{stepExecution.jobExecution}")
   private JobExecution jobExecution;
@@ -172,6 +175,12 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
     }
     if (nonNull(item.getNotes())) {
       item.getNotes().forEach(note -> note.setTenantId(tenantId));
+    }
+    if (nonNull(item.getStatisticalCodes())) {
+      item.getStatisticalCodes().forEach(codeId -> Objects.requireNonNull(cacheManager.getCache("statisticalCodeId")).put(codeId, tenantId));
+    }
+    if (nonNull(item.getItemLevelCallNumberType())) {
+      Objects.requireNonNull(cacheManager.getCache("callNumberTypeId")).put(item.getItemLevelCallNumberType(), tenantId);
     }
   }
 }

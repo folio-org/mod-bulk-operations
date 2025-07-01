@@ -21,6 +21,7 @@ import static org.folio.bulkops.util.SearchIdentifierTypeResolver.getSearchIdent
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -52,7 +53,9 @@ import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -70,6 +73,7 @@ public class BulkEditHoldingsProcessor implements ItemProcessor<ItemIdentifier, 
   private final PermissionsValidator permissionsValidator;
   private final TenantResolver tenantResolver;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
+  private final CacheManager cacheManager;
 
   @Value("#{stepExecution.jobExecution}")
   private JobExecution jobExecution;
@@ -199,25 +203,25 @@ public class BulkEditHoldingsProcessor implements ItemProcessor<ItemIdentifier, 
       holdingsRecord.getNotes().forEach(note -> note.setTenantId(tenantId));
     }
     if (nonNull(holdingsRecord.getStatisticalCodeIds())) {
-      holdingsRecord.setStatisticalCodeIds(holdingsRecord.getStatisticalCodeIds().stream().map(stat -> stat + ARRAY_DELIMITER + tenantId).toList());
+      holdingsRecord.getStatisticalCodeIds().forEach(codeId -> Objects.requireNonNull(cacheManager.getCache("statisticalCodeId")).put(codeId, tenantId));
     }
     if (nonNull(holdingsRecord.getIllPolicyId())) {
-      holdingsRecord.setIllPolicyId(holdingsRecord.getIllPolicyId() + ARRAY_DELIMITER + tenantId);
+        Objects.requireNonNull(cacheManager.getCache("illPolicyId")).put(holdingsRecord.getIllPolicyId(), tenantId);
     }
     if (nonNull(holdingsRecord.getEffectiveLocationId())) {
-      holdingsRecord.setEffectiveLocationId(holdingsRecord.getEffectiveLocationId() + ARRAY_DELIMITER + tenantId);
+        Objects.requireNonNull(cacheManager.getCache("locationId")).put(holdingsRecord.getEffectiveLocationId(), tenantId);
     }
     if (nonNull(holdingsRecord.getPermanentLocationId())) {
-      holdingsRecord.setPermanentLocationId(holdingsRecord.getPermanentLocationId() + ARRAY_DELIMITER + tenantId);
+        Objects.requireNonNull(cacheManager.getCache("locationId")).put(holdingsRecord.getPermanentLocationId(), tenantId);
     }
     if (nonNull(holdingsRecord.getSourceId())) {
-      holdingsRecord.setSourceId(holdingsRecord.getSourceId() + ARRAY_DELIMITER + tenantId);
+        Objects.requireNonNull(cacheManager.getCache("holdingsSourceId")).put(holdingsRecord.getSourceId(), tenantId);
     }
     if (nonNull(holdingsRecord.getHoldingsTypeId())) {
-      holdingsRecord.setHoldingsTypeId(holdingsRecord.getHoldingsTypeId() + ARRAY_DELIMITER + tenantId);
+        Objects.requireNonNull(cacheManager.getCache("holdingsTypeId")).put(holdingsRecord.getHoldingsTypeId(), tenantId);
     }
     if (nonNull(holdingsRecord.getTemporaryLocationId())) {
-      holdingsRecord.setTemporaryLocationId(holdingsRecord.getTemporaryLocationId() + ARRAY_DELIMITER + tenantId);
+        Objects.requireNonNull(cacheManager.getCache("locationId")).put(holdingsRecord.getTemporaryLocationId(), tenantId);
     }
   }
 }

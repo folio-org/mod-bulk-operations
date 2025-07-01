@@ -65,6 +65,7 @@ public class ItemReferenceService {
   private final LoanTypeClient loanTypeClient;
   private final FolioExecutionContext folioExecutionContext;
   private final FolioModuleMetadata folioModuleMetadata;
+  private final LocalReferenceDataService localReferenceDataService;
 
   private final ObjectMapper objectMapper;
 
@@ -136,7 +137,7 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "statisticalCodeNames")
   public String getStatisticalCodeById(String statisticalCodeId) {
-    try {
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(localReferenceDataService.getTenantByStatisticalCodeId(statisticalCodeId), folioModuleMetadata, folioExecutionContext))) {
       return statisticalCodeClient.getById(statisticalCodeId).getCode();
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Statistical code was not found by id=%s", statisticalCodeId));

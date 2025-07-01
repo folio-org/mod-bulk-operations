@@ -75,7 +75,7 @@ public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHo
   public Validator<UpdateOptionType, Action, BulkOperationRule> validator(ExtendedHoldingsRecord extendedHoldingsRecord) {
     return (option, action, rule) -> {
       try {
-        if (MARC.equals(holdingsReferenceService.getSourceById(extendedHoldingsRecord.getEntity().getSourceId(), folioExecutionContext.getTenantId()).getName())) {
+        if (MARC.equals(holdingsReferenceService.getSourceById(extendedHoldingsRecord.getEntity().getSourceId()).getName())) {
           throw new RuleValidationException("Holdings records that have source \"MARC\" cannot be changed");
         }
       } catch (NotFoundException e) {
