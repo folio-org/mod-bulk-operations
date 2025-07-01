@@ -9,12 +9,8 @@ import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
-import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
-
-import static java.util.Objects.isNull;
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 @Component
 @RequiredArgsConstructor

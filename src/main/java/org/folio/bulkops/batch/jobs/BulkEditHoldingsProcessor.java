@@ -1,7 +1,6 @@
 package org.folio.bulkops.batch.jobs;
 
 import static java.lang.String.format;
-import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum.INSTANCEHRID;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
@@ -11,7 +10,6 @@ import static org.folio.bulkops.domain.dto.IdentifierType.ITEM_BARCODE;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getMatchPattern;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getResponseAsString;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.resolveIdentifier;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.DUPLICATES_ACROSS_TENANTS;
 import static org.folio.bulkops.util.Constants.MULTIPLE_MATCHES_MESSAGE;
 import static org.folio.bulkops.util.Constants.NO_HOLDING_VIEW_PERMISSIONS;
@@ -21,7 +19,6 @@ import static org.folio.bulkops.util.SearchIdentifierTypeResolver.getSearchIdent
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -34,7 +31,6 @@ import org.folio.bulkops.client.SearchClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecordCollection;
-import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordCollection;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.dto.BatchIdsDto;
@@ -47,15 +43,14 @@ import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.processor.permissions.check.TenantResolver;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.HoldingsReferenceService;
+import org.folio.bulkops.service.LocalReferenceDataService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -73,7 +68,7 @@ public class BulkEditHoldingsProcessor implements ItemProcessor<ItemIdentifier, 
   private final PermissionsValidator permissionsValidator;
   private final TenantResolver tenantResolver;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
-  private final CacheManager cacheManager;
+  private final LocalReferenceDataService localReferenceDataService;
 
   @Value("#{stepExecution.jobExecution}")
   private JobExecution jobExecution;
@@ -134,7 +129,7 @@ public class BulkEditHoldingsProcessor implements ItemProcessor<ItemIdentifier, 
                 .map(holdingsRecord -> holdingsRecord.withItemBarcode(itemBarcode))
                 .map(holdingsRecord -> holdingsRecord.withInstanceTitle(holdingsReferenceService.getInstanceTitleById(holdingsRecord.getInstanceId(), tenantId)))
                 .map(holdingsRecord -> {
-                  enrichWithTenant(holdingsRecord, tenantId);
+                  localReferenceDataService.enrichWithTenant(holdingsRecord, tenantId);
                   return holdingsRecord.withTenantId(tenantId);
                 })
                 .map(holdingsRecord -> new ExtendedHoldingsRecord().withTenantId(tenantId).withEntity(holdingsRecord)).toList()
@@ -192,36 +187,6 @@ public class BulkEditHoldingsProcessor implements ItemProcessor<ItemIdentifier, 
       return holdingClient.getByQuery("id==" + holdingsReferenceService.getHoldingsIdByItemBarcode(itemIdentifier.getItemId()), 1);
     } else {
       throw new BulkEditException(format("Identifier type \"%s\" is not supported", identifierType), ErrorType.ERROR);
-    }
-  }
-
-  private void enrichWithTenant(HoldingsRecord holdingsRecord, String tenantId) {
-    if (nonNull(holdingsRecord.getElectronicAccess())) {
-      holdingsRecord.getElectronicAccess().forEach(el -> el.setTenantId(tenantId));
-    }
-    if (nonNull(holdingsRecord.getNotes())) {
-      holdingsRecord.getNotes().forEach(note -> note.setTenantId(tenantId));
-    }
-    if (nonNull(holdingsRecord.getStatisticalCodeIds())) {
-      holdingsRecord.getStatisticalCodeIds().forEach(codeId -> Objects.requireNonNull(cacheManager.getCache("statisticalCodeId")).put(codeId, tenantId));
-    }
-    if (nonNull(holdingsRecord.getIllPolicyId())) {
-        Objects.requireNonNull(cacheManager.getCache("illPolicyId")).put(holdingsRecord.getIllPolicyId(), tenantId);
-    }
-    if (nonNull(holdingsRecord.getEffectiveLocationId())) {
-        Objects.requireNonNull(cacheManager.getCache("locationId")).put(holdingsRecord.getEffectiveLocationId(), tenantId);
-    }
-    if (nonNull(holdingsRecord.getPermanentLocationId())) {
-        Objects.requireNonNull(cacheManager.getCache("locationId")).put(holdingsRecord.getPermanentLocationId(), tenantId);
-    }
-    if (nonNull(holdingsRecord.getSourceId())) {
-        Objects.requireNonNull(cacheManager.getCache("holdingsSourceId")).put(holdingsRecord.getSourceId(), tenantId);
-    }
-    if (nonNull(holdingsRecord.getHoldingsTypeId())) {
-        Objects.requireNonNull(cacheManager.getCache("holdingsTypeId")).put(holdingsRecord.getHoldingsTypeId(), tenantId);
-    }
-    if (nonNull(holdingsRecord.getTemporaryLocationId())) {
-        Objects.requireNonNull(cacheManager.getCache("locationId")).put(holdingsRecord.getTemporaryLocationId(), tenantId);
     }
   }
 }

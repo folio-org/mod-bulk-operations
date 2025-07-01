@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.SearchClient;
@@ -48,7 +47,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.test.util.ReflectionTestUtils;
 
 class BulkEditHoldingsProcessorTest {

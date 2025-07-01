@@ -71,6 +71,7 @@ public class QueryService {
   private final QueryClient queryClient;
   private final FqmContentFetcher fqmContentFetcher;
   private final EntityDataHelper entityDataHelper;
+  private final LocalReferenceDataService localReferenceDataService;
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -155,6 +156,12 @@ public class QueryService {
 
         var extendedRecord = iterator.next();
         entityDataHelper.setMissingDataIfRequired(extendedRecord, operation);
+        if (extendedRecord.getRecordBulkOperationEntity() instanceof Item item) {
+          localReferenceDataService.enrichWithTenant(item, extendedRecord.getTenant());
+        }
+        if (extendedRecord.getRecordBulkOperationEntity() instanceof HoldingsRecord holdingsRecord) {
+          localReferenceDataService.enrichWithTenant(holdingsRecord, extendedRecord.getTenant());
+        }
 
         usedTenants.add(extendedRecord.getTenant());
 
