@@ -21,6 +21,7 @@ import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
@@ -32,6 +33,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,6 +43,8 @@ class HoldingsReferenceHelperTest extends BaseTest {
   private HoldingsReferenceHelper holdingsReferenceHelper;
   @MockitoSpyBean
   private FolioExecutionContext folioExecutionContext;
+  @Mock
+  private LocalReferenceDataService localReferenceDataService;
 
   @Test
   void testGetHoldingsType() {
@@ -88,6 +92,11 @@ class HoldingsReferenceHelperTest extends BaseTest {
 
   @Test
   void testGetCallNumberType() {
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
     when(callNumberTypeClient.getById("id_1")).thenReturn(new CallNumberType().withName("name_1"));
     var actual = holdingsReferenceHelper.getCallNumberTypeNameById("id_1");
     assertEquals("name_1", actual);

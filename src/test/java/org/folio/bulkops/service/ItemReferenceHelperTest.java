@@ -6,7 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
@@ -29,17 +32,22 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserCollection;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 @ExtendWith(MockitoExtension.class)
 class ItemReferenceHelperTest extends BaseTest {
 
   @Autowired
   private ItemReferenceHelper itemReferenceHelper;
+  @MockitoSpyBean
+  private FolioExecutionContext folioExecutionContext;
 
   @Test
   void testGetCallNumberTypeNameById() {
@@ -109,6 +117,11 @@ class ItemReferenceHelperTest extends BaseTest {
 
   @Test
   void testGetStatisticalCode() {
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
     when(statisticalCodeClient.getById("id_1")).thenReturn(new StatisticalCode().withCode("code_1"));
     var actual = itemReferenceHelper.getStatisticalCodeById("id_1");
     assertEquals("code_1", actual);
