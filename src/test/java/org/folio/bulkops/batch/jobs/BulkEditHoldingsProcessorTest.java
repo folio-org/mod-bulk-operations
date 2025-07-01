@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
@@ -36,6 +37,7 @@ import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.processor.permissions.check.TenantResolver;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.HoldingsReferenceService;
+import org.folio.bulkops.service.LocalReferenceDataService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,6 +77,8 @@ class BulkEditHoldingsProcessorTest {
   private CacheManager cacheManager;
   @Mock
   private Cache cache;
+  @Mock
+  private LocalReferenceDataService localReferenceDataService;
 
   @InjectMocks
   private BulkEditHoldingsProcessor processor;
@@ -87,6 +91,7 @@ class BulkEditHoldingsProcessorTest {
     ReflectionTestUtils.setField(processor, "fileName", "file.csv");
     JobExecution jobExecution = Mockito.mock(JobExecution.class, Mockito.RETURNS_DEEP_STUBS);
     ReflectionTestUtils.setField(processor, "jobExecution", jobExecution);
+    ReflectionTestUtils.setField(localReferenceDataService, "cacheManager", cacheManager);
     when(consortiaService.getCentralTenantId(anyString())).thenReturn("centralTenant");
     when(folioExecutionContext.getTenantId()).thenReturn("centralTenant");
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
@@ -263,6 +268,7 @@ class BulkEditHoldingsProcessorTest {
     when(holdingsClient.getByQuery(anyString())).thenReturn(holdingsRecordCollection);
     when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString())).thenReturn("Instance Title");
     when(cacheManager.getCache(anyString())).thenReturn(cache);
+    doCallRealMethod().when(localReferenceDataService).enrichWithTenant(any(HoldingsRecord.class), anyString());
 
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId(holdingsId);
 
