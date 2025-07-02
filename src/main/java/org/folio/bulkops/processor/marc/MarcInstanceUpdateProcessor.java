@@ -82,13 +82,13 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
       .profile(matchProfile)
       .build());
 
-    var mappingProfileInstance = postMappingProfile(dataImportProfilesBuilder.getMappingProfileToUpdateInstance(), date);
-    var actionProfileInstance = postActionProfile(dataImportProfilesBuilder.getActionProfilePostToUpdateInstance(mappingProfileInstance), date);
+//    var mappingProfileInstance = postMappingProfile(dataImportProfilesBuilder.getMappingProfileToUpdateInstance(), date);
+//    var actionProfileInstance = postActionProfile(dataImportProfilesBuilder.getActionProfilePostToUpdateInstance(mappingProfileInstance), date);
 
     var mappingProfileSrs = postMappingProfile(dataImportProfilesBuilder.getMappingProfileToUpdateSrs(), date);
     var actionProfileSrs = postActionProfile(dataImportProfilesBuilder.getActionProfilePostToUpdateSrs(mappingProfileSrs), date);
 
-    return postJobProfile(dataImportProfilesBuilder.getJobProfilePost(savedMatchProfile, actionProfileInstance, actionProfileSrs), date);
+    return postJobProfile(dataImportProfilesBuilder.getJobProfilePost(savedMatchProfile, actionProfileSrs), date);
   }
 
   private MappingProfile postMappingProfile(MappingProfile mappingProfile, Date date) {

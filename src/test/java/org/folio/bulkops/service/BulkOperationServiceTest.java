@@ -1723,7 +1723,7 @@ class BulkOperationServiceTest extends BaseTest {
       verify(executionRepository, times(2)).save(any(BulkOperationExecution.class));
     }
     if (hasMarcRules) {
-      verify(marcUpdateService).commitForInstanceMarc(any(BulkOperation.class));
+      verify(marcUpdateService).commitForInstanceMarc(any(BulkOperation.class), any(Set.class));
     }
   }
 

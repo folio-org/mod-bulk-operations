@@ -481,12 +481,13 @@ public class BulkOperationService {
       executionRepository.save(execution);
     }
 
+    var failedHrids = recordUpdateService.getFailedHrids(operationId);
     if (!INSTANCE_MARC.equals(operation.getEntityType()) || !hasMarcRules) {
       if (!FAILED.equals(operation.getStatus())) {
         bulkOperationServiceHelper.completeBulkOperation(operation);
       }
     } else {
-      marcUpdateService.commitForInstanceMarc(operation);
+      marcUpdateService.commitForInstanceMarc(operation, failedHrids);
     }
   }
 
