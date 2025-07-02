@@ -101,21 +101,21 @@ class LocalReferenceDataServiceTest {
 
     @Test
     void enrichWithTenant_HoldingsRecord_setsTenantIdAndCaches() {
-        HoldingsRecord record = new HoldingsRecord();
+        HoldingsRecord holdingsRecord = new HoldingsRecord();
         ElectronicAccess ea = new ElectronicAccess();
         ea.setRelationshipId("rel1");
         HoldingsNote note = new HoldingsNote();
-        record.setElectronicAccess(Collections.singletonList(ea));
-        record.setNotes(Collections.singletonList(note));
-        record.setStatisticalCodeIds(Arrays.asList("code1", "code2"));
-        record.setIllPolicyId("ill1");
-        record.setEffectiveLocationId("loc1");
-        record.setPermanentLocationId("loc2");
-        record.setSourceId("src1");
-        record.setHoldingsTypeId("type1");
-        record.setTemporaryLocationId("loc3");
+        holdingsRecord.setElectronicAccess(Collections.singletonList(ea));
+        holdingsRecord.setNotes(Collections.singletonList(note));
+        holdingsRecord.setStatisticalCodeIds(Arrays.asList("code1", "code2"));
+        holdingsRecord.setIllPolicyId("ill1");
+        holdingsRecord.setEffectiveLocationId("loc1");
+        holdingsRecord.setPermanentLocationId("loc2");
+        holdingsRecord.setSourceId("src1");
+        holdingsRecord.setHoldingsTypeId("type1");
+        holdingsRecord.setTemporaryLocationId("loc3");
 
-        service.enrichWithTenant(record, "tenant3");
+        service.enrichWithTenant(holdingsRecord, "tenant3");
 
         assertEquals("tenant3", ea.getTenantId());
         assertEquals("tenant3", note.getTenantId());

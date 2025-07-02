@@ -56,7 +56,12 @@ public class LocalReferenceDataService {
 
     public void enrichWithTenant(Item item, String tenantId) {
         if (nonNull(item.getElectronicAccess())) {
-            item.getElectronicAccess().forEach(el -> el.setTenantId(tenantId));
+            item.getElectronicAccess().forEach(el -> {
+                el.setTenantId(tenantId);
+                if (nonNull(el.getRelationshipId())) {
+                    updateTenantForUrlRelationship(el.getRelationshipId(), tenantId);
+                }
+            });
         }
         if (nonNull(item.getNotes())) {
             item.getNotes().forEach(note -> note.setTenantId(tenantId));
