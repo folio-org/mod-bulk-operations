@@ -22,15 +22,5 @@
     "detailProfileType": "ACTION_PROFILE",
     "order": 0,
     "reactTo": "MATCH"
-  }, {
-    "masterProfileId": null,
-    "detailProfileId": null,
-    "masterWrapperId": null,
-    "masterProfileType": "MATCH_PROFILE",
-    "detailWrapperId": null,
-    "detailProfileType": "ACTION_PROFILE",
-    "order": 1,
-    "reactTo": "MATCH"
-  }
-  ]
+  }]
 }
