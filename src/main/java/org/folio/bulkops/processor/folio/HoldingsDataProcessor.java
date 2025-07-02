@@ -150,7 +150,7 @@ public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHo
       } else if (ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option)) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
           log.info("ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option), tenant: {}, newId: {}", tenant, newId);
-          electronicAccessReferenceService.getRelationshipNameById(newId, tenant);
+          electronicAccessReferenceService.getRelationshipNameById(newId);
         } catch (Exception e) {
           throw new RuleValidationException(format("URL relationship %s doesn't exist in tenant %s", newId, tenant));
         }

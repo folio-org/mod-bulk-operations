@@ -954,7 +954,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var updatedElectronicAccess = UUID.randomUUID().toString();
 
     when(relationshipClient.getById(updatedElectronicAccess)).thenReturn(new ElectronicAccessRelationship().withId(updatedElectronicAccess));
-    when(electronicAccessReferenceService.getRelationshipNameById(updatedElectronicAccess, "diku"))
+    when(electronicAccessReferenceService.getRelationshipNameById(updatedElectronicAccess))
       .thenReturn("el acc name");
 
     var rules = rules(rule(ELECTRONIC_ACCESS_URL_RELATIONSHIP, REPLACE_WITH, "", updatedElectronicAccess));

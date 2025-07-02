@@ -1,7 +1,6 @@
 package org.folio.bulkops.service;
 
 import static java.lang.String.format;
-import static java.util.Objects.isNull;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
@@ -23,13 +22,12 @@ public class ElectronicAccessReferenceService {
   private final ElectronicAccessRelationshipClient relationshipClient;
   private final FolioExecutionContext folioExecutionContext;
   private final FolioModuleMetadata folioModuleMetadata;
+  private final LocalReferenceDataService localReferenceDataService;
 
   @Cacheable(cacheNames = "electronicAccessRelationshipNames")
-  public String getRelationshipNameById(String id, String tenantId) {
+  public String getRelationshipNameById(String id) {
+    var tenantId = localReferenceDataService.getTenantByUrlRelationshipId(id);
     log.info("getRelationshipNameById: {}, {}", id, tenantId);
-    if (isNull(tenantId)) {
-      tenantId = folioExecutionContext.getTenantId();
-    }
     try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return relationshipClient.getById(id).getName();
     } catch (NotFoundException e) {
