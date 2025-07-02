@@ -49,6 +49,11 @@ public class LocalReferenceDataService {
         return folioExecutionContext.getTenantId();
     }
 
+    @Cacheable(cacheNames = "urlRelationshipId")
+    public String getTenantByUrlRelationshipId(String urlRelationshipId) {
+        return folioExecutionContext.getTenantId();
+    }
+
     public void enrichWithTenant(Item item, String tenantId) {
         if (nonNull(item.getElectronicAccess())) {
             item.getElectronicAccess().forEach(el -> el.setTenantId(tenantId));
@@ -78,10 +83,10 @@ public class LocalReferenceDataService {
             Objects.requireNonNull(cacheManager.getCache("illPolicyId")).put(holdingsRecord.getIllPolicyId(), tenantId);
         }
         if (nonNull(holdingsRecord.getEffectiveLocationId())) {
-            Objects.requireNonNull(cacheManager.getCache("locationId")).put(holdingsRecord.getEffectiveLocationId(), tenantId);
+            updateTenantForLocation(holdingsRecord.getEffectiveLocationId(), tenantId);
         }
         if (nonNull(holdingsRecord.getPermanentLocationId())) {
-            Objects.requireNonNull(cacheManager.getCache("locationId")).put(holdingsRecord.getPermanentLocationId(), tenantId);
+            updateTenantForLocation(holdingsRecord.getPermanentLocationId(), tenantId);
         }
         if (nonNull(holdingsRecord.getSourceId())) {
             Objects.requireNonNull(cacheManager.getCache("holdingsSourceId")).put(holdingsRecord.getSourceId(), tenantId);
@@ -90,7 +95,15 @@ public class LocalReferenceDataService {
             Objects.requireNonNull(cacheManager.getCache("holdingsTypeId")).put(holdingsRecord.getHoldingsTypeId(), tenantId);
         }
         if (nonNull(holdingsRecord.getTemporaryLocationId())) {
-            Objects.requireNonNull(cacheManager.getCache("locationId")).put(holdingsRecord.getTemporaryLocationId(), tenantId);
+            updateTenantForLocation(holdingsRecord.getTemporaryLocationId(), tenantId);
         }
+    }
+
+    public void updateTenantForLocation(String id, String tenantId) {
+        Objects.requireNonNull(cacheManager.getCache("locationId")).put(id, tenantId);
+    }
+
+    public void updateTenantForUrlRelationship(String id, String tenantId) {
+        Objects.requireNonNull(cacheManager.getCache("urlRelationshipId")).put(id, tenantId);
     }
 }

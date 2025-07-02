@@ -20,7 +20,6 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOV
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
@@ -48,6 +47,7 @@ import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
 import org.folio.bulkops.service.ElectronicAccessReferenceService;
+import org.folio.bulkops.service.LocalReferenceDataService;
 import org.folio.bulkops.util.RuleUtils;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.stereotype.Component;
@@ -67,6 +67,7 @@ public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHo
   private final ElectronicAccessUpdaterFactory electronicAccessUpdaterFactory;
   private final ElectronicAccessReferenceService electronicAccessReferenceService;
   private final ConsortiaService consortiaService;
+  private final LocalReferenceDataService localReferenceDataService;
 
   private static final Pattern UUID_REGEX =
     Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -97,13 +98,13 @@ public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHo
   public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity,
                                                  boolean forPreview) throws RuleValidationTenantsException {
     if (isElectronicAccessUpdate(option)) {
-      return electronicAccessUpdaterFactory.updater(option, action, forPreview);
+      return electronicAccessUpdaterFactory.updater(option, action);
     } else if (REPLACE_WITH == action.getType()) {
       return extendedHoldingsRecord -> {
         var locationId = action.getUpdated();
         if (forPreview) {
           var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
-          locationId += ARRAY_DELIMITER + tenant;
+          localReferenceDataService.updateTenantForLocation(locationId, tenant);
         }
         if (PERMANENT_LOCATION == option) {
           extendedHoldingsRecord.getEntity().setPermanentLocationId(locationId);
@@ -148,7 +149,7 @@ public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHo
         }
       } else if (ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option)) {
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
-          log.info("ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option), tenant: {}", tenant);
+          log.info("ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option), tenant: {}, newId: {}", tenant, newId);
           electronicAccessReferenceService.getRelationshipNameById(newId, tenant);
         } catch (Exception e) {
           throw new RuleValidationException(format("URL relationship %s doesn't exist in tenant %s", newId, tenant));

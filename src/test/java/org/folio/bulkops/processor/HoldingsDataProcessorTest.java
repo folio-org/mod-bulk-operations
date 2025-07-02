@@ -66,6 +66,7 @@ import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ElectronicAccessReferenceService;
 import org.folio.bulkops.service.ElectronicAccessService;
 import org.folio.bulkops.service.ErrorService;
+import org.folio.bulkops.service.LocalReferenceDataService;
 import org.folio.bulkops.util.FolioExecutionContextUtil;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
@@ -99,6 +100,8 @@ class HoldingsDataProcessorTest extends BaseTest {
   private ElectronicAccessReferenceService electronicAccessReferenceService;
   @MockitoSpyBean
   private FolioExecutionContext folioExecutionContext;
+  @MockitoBean
+  private LocalReferenceDataService localReferenceDataService;
 
   private FolioDataProcessor<ExtendedHoldingsRecord> processor;
 
@@ -314,7 +317,7 @@ class HoldingsDataProcessorTest extends BaseTest {
       .withDiscoverySuppress(false);
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
 
-    var dataProcessor = new HoldingsDataProcessor(null, null, null, null, null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, null, null, null, null, null);
 
     dataProcessor.updater(SUPPRESS_FROM_DISCOVERY, new Action().type(SET_TO_TRUE), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
     assertTrue(holdingsRecord.getDiscoverySuppress());
@@ -337,7 +340,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null, null);
 
     dataProcessor.updater(HOLDINGS_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(List.of(parameter)), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
 
@@ -355,7 +358,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null, null);
 
     dataProcessor.updater(HOLDINGS_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(List.of(parameter)), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
 
@@ -369,7 +372,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var holding =  new HoldingsRecord().withAdministrativeNotes(List.of(administrativeNote));
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
 
-    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null, null);
 
     dataProcessor.updater(ADMINISTRATIVE_NOTE, new Action().type(REMOVE_ALL), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
     assertTrue(holding.getAdministrativeNotes().isEmpty());
@@ -385,7 +388,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
-    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null, null);
 
     dataProcessor.updater(HOLDINGS_NOTE, new Action().type(REMOVE_ALL).parameters(List.of(parameter)), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
     assertEquals(1, holding.getNotes().size());
@@ -399,7 +402,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var administrativeNote2 = "administrative note 2";
     var holding = new HoldingsRecord();
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
-    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null, null);
 
     dataProcessor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING).updated(administrativeNote1), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
     assertEquals(1, holding.getAdministrativeNotes().size());
@@ -420,7 +423,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     parameter.setKey(HOLDINGS_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
-    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null, null);
 
     dataProcessor.updater(HOLDINGS_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter)).updated(note1), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
 
@@ -453,7 +456,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var administrativeNote2 = "Administrative note";
     var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
-    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null, null);
 
     dataProcessor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("administrative"), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
     assertEquals(2, holding.getAdministrativeNotes().size());
@@ -471,7 +474,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     parameter.setValue("typeId1");
     var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
-    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null, null);
 
     dataProcessor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("example")
       .parameters(List.of(parameter)), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
@@ -489,7 +492,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var expectedNote = "new administrative note";
     var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1, administrativeNote2)));
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
-    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null, null);
 
     dataProcessor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REPLACE)
       .initial("administrative").updated("new administrative"), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
@@ -508,7 +511,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     parameter.setValue("typeId1");
     var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
-    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null, null);
 
     dataProcessor.updater(HOLDINGS_NOTE, new Action().type(FIND_AND_REPLACE).parameters(List.of(parameter))
       .initial("example").updated("new example"), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
@@ -523,7 +526,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     var administrativeNote = "note";
     var holding = new HoldingsRecord().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote)));
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
-    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null, null);
 
     dataProcessor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
       .updated("typeId"), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
@@ -542,7 +545,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     parameter.setValue("typeId1");
     var holding = new HoldingsRecord().withNotes(List.of(note1, note2));
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
-    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null, null);
 
     dataProcessor.updater(HOLDINGS_NOTE, new Action().type(CHANGE_TYPE).updated(ADMINISTRATIVE_NOTE.getValue()).parameters(List.of(parameter)), extendedHoldingsRecord, false).apply(extendedHoldingsRecord);
 
@@ -565,7 +568,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   @Test
   @SneakyThrows
   void testClone() {
-    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, new HoldingsNotesUpdater(new AdministrativeNotesUpdater()), null, null, null, null);
     var administrativeNotes = new ArrayList<String>();
     administrativeNotes.add("note1");
     var holding1 = new HoldingsRecord().withId("id")
@@ -606,7 +609,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void shouldClearElectronicAccessFields(UpdateOptionType option) {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
 
-    var dataProcessor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext), null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext, localReferenceDataService), null, null, null);
     dataProcessor.folioExecutionContext = folioExecutionContext;
     var action = new Action().type(CLEAR_FIELD);
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
@@ -635,7 +638,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void shouldFindAndClearExactlyMatchedElectronicAccessFields(UpdateOptionType option, String value) {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
-    var dataProcessor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext), null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext, localReferenceDataService), null, null, null);
     dataProcessor.folioExecutionContext = folioExecutionContext;
     var action = new Action().type(FIND_AND_REMOVE_THESE).initial(value);
 
@@ -680,7 +683,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void shouldFindAndClearPartiallyMatchedElectronicAccessFields(UpdateOptionType option, String value) {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
-    var dataProcessor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext), null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext, localReferenceDataService), null, null, null);
     dataProcessor.folioExecutionContext = folioExecutionContext;
     var action = new Action().type(FIND_AND_REMOVE_THESE).initial(value);
 
@@ -722,7 +725,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void shouldReplaceElectronicAccessFields(UpdateOptionType option, String newValue) {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
-    var dataProcessor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext), null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext, localReferenceDataService), null, null, null);
     dataProcessor.folioExecutionContext = folioExecutionContext;
     var action = new Action().type(REPLACE_WITH).updated(newValue);
 
@@ -750,7 +753,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void shouldFindAndReplaceExactlyMatchedElectronicAccessFields(UpdateOptionType option, String initial, String updated) {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
-    var dataProcessor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext), null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext, localReferenceDataService), null, null, null);
     dataProcessor.folioExecutionContext = folioExecutionContext;
     var action = new Action().type(FIND_AND_REPLACE).initial(initial).updated(updated);
 
@@ -795,7 +798,7 @@ class HoldingsDataProcessorTest extends BaseTest {
   void shouldFindAndReplacePartiallyMatchedElectronicAccessFields(UpdateOptionType option, String initial, String updated, String expected) {
     var holdingsRecord = buildHoldingsWithElectronicAccess();
     var extendedHoldingsRecord = ExtendedHoldingsRecord.builder().entity(holdingsRecord).tenantId("tenant").build();
-    var dataProcessor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext), null, null);
+    var dataProcessor = new HoldingsDataProcessor(null, null, null, new ElectronicAccessUpdaterFactory(folioExecutionContext, localReferenceDataService), null, null, null);
     dataProcessor.folioExecutionContext = folioExecutionContext;
     var action = new Action().type(FIND_AND_REPLACE).initial(initial).updated(updated);
 
