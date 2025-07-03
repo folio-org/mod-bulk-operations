@@ -6,7 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
@@ -29,17 +32,21 @@ import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserCollection;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
-import org.folio.spring.scope.FolioExecutionContextSetter;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.integration.XOkapiHeaders;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 @ExtendWith(MockitoExtension.class)
 class ItemReferenceHelperTest extends BaseTest {
 
   @Autowired
   private ItemReferenceHelper itemReferenceHelper;
+  @MockitoSpyBean
+  private FolioExecutionContext folioExecutionContext;
 
   @Test
   void testGetCallNumberTypeNameById() {
@@ -73,21 +80,24 @@ class ItemReferenceHelperTest extends BaseTest {
 
   @Test
   void testGetNoteType() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      when(itemNoteTypeClient.getNoteTypeById("id_1")).thenReturn(new NoteType().withName("name_1"));
-      var actual = itemReferenceHelper.getNoteTypeNameById("id_1", "tenant");
-      assertEquals("name_1", actual);
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    when(itemNoteTypeClient.getNoteTypeById("id_1")).thenReturn(new NoteType().withName("name_1"));
+    var actual = itemReferenceHelper.getNoteTypeNameById("id_1", "tenant");
+    assertEquals("name_1", actual);
 
-      when(itemNoteTypeClient.getNoteTypesByQuery("name==\"name_2\"", 1)).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.singletonList(new NoteType().withId("id_2"))));
-      actual = itemReferenceHelper.getNoteTypeIdByName("name_2");
-      assertEquals("id_2", actual);
+    when(itemNoteTypeClient.getNoteTypesByQuery("name==\"name_2\"", 1)).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.singletonList(new NoteType().withId("id_2"))));
+    actual = itemReferenceHelper.getNoteTypeIdByName("name_2");
+    assertEquals("id_2", actual);
 
-      when(itemNoteTypeClient.getNoteTypeById("id_3")).thenThrow(new NotFoundException("Not found"));
-      assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getNoteTypeNameById("id_3", "tenant"));
+    when(itemNoteTypeClient.getNoteTypeById("id_3")).thenThrow(new NotFoundException("Not found"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getNoteTypeNameById("id_3", "tenant"));
 
-      when(itemNoteTypeClient.getNoteTypesByQuery("name==\"name_4\"", 1)).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.emptyList()));
-      assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getNoteTypeIdByName("name_4"));
-    }
+    when(itemNoteTypeClient.getNoteTypesByQuery("name==\"name_4\"", 1)).thenReturn(new NoteTypeCollection().withItemNoteTypes(Collections.emptyList()));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getNoteTypeIdByName("name_4"));
   }
 
   @Test
@@ -109,6 +119,11 @@ class ItemReferenceHelperTest extends BaseTest {
 
   @Test
   void testGetStatisticalCode() {
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
     when(statisticalCodeClient.getById("id_1")).thenReturn(new StatisticalCode().withCode("code_1"));
     var actual = itemReferenceHelper.getStatisticalCodeById("id_1");
     assertEquals("code_1", actual);
@@ -174,57 +189,60 @@ class ItemReferenceHelperTest extends BaseTest {
   @Test
   @SneakyThrows
   void getLoanTypeByIdReturnsCorrectLoanType() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      when(loanTypeClient.getLoanTypeById("id_1")).thenReturn(new LoanType().withName("Loan Type 1"));
-      var actual = itemReferenceHelper.getLoanTypeById("id_1", "tenant");
-      assertEquals("Loan Type 1", actual.getName());
-    }
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    when(loanTypeClient.getLoanTypeById("id_1")).thenReturn(new LoanType().withName("Loan Type 1"));
+    var actual = itemReferenceHelper.getLoanTypeById("id_1", "tenant");
+    assertEquals("Loan Type 1", actual.getName());
   }
 
   @Test
   @SneakyThrows
   void getLoanTypeByIdThrowsExceptionForInvalidId() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      when(loanTypeClient.getLoanTypeById("invalid_id")).thenThrow(new NotFoundException("Not found"));
-      assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getLoanTypeById("invalid_id", "tenant"));
-    }
+    when(loanTypeClient.getLoanTypeById("invalid_id")).thenThrow(new NotFoundException("Not found"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getLoanTypeById("invalid_id", "tenant"));
   }
 
   @Test
   @SneakyThrows
   void getMaterialTypeByIdReturnsCorrectMaterialType() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      when(materialTypeClient.getById("id_1")).thenReturn(new MaterialType().withName("Material Type 1"));
-      var actual = itemReferenceHelper.getMaterialTypeById("id_1", "tenant");
-      assertEquals("Material Type 1", actual.getName());
-    }
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    when(materialTypeClient.getById("id_1")).thenReturn(new MaterialType().withName("Material Type 1"));
+    var actual = itemReferenceHelper.getMaterialTypeById("id_1", "tenant");
+    assertEquals("Material Type 1", actual.getName());
   }
 
   @Test
   @SneakyThrows
   void getMaterialTypeByIdThrowsExceptionForInvalidId() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      when(materialTypeClient.getById("invalid_id")).thenThrow(new NotFoundException("Not found"));
-      assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getMaterialTypeById("invalid_id", "tenant"));
-    }
+    when(materialTypeClient.getById("invalid_id")).thenThrow(new NotFoundException("Not found"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getMaterialTypeById("invalid_id", "tenant"));
   }
 
   @Test
   @SneakyThrows
   void getLocationByIdReturnsCorrectLocation() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      when(locationClient.getLocationById("id_1")).thenReturn(new ItemLocation().withName("Location 1"));
-      var actual = itemReferenceHelper.getLocationById("id_1", "tenant");
-      assertEquals("Location 1", actual.getName());
-    }
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    when(locationClient.getLocationById("id_1")).thenReturn(new ItemLocation().withName("Location 1"));
+    var actual = itemReferenceHelper.getLocationById("id_1", "tenant");
+    assertEquals("Location 1", actual.getName());
   }
 
   @Test
   @SneakyThrows
   void getLocationByIdThrowsExceptionForInvalidId() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      when(locationClient.getLocationById("invalid_id")).thenThrow(new NotFoundException("Not found"));
-      assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getLocationById("invalid_id", "tenant"));
-    }
+    when(locationClient.getLocationById("invalid_id")).thenThrow(new NotFoundException("Not found"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getLocationById("invalid_id", "tenant"));
   }
 }

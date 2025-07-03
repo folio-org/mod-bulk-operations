@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
@@ -31,6 +32,7 @@ import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.processor.permissions.check.TenantResolver;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.EntityDataHelper;
+import org.folio.bulkops.service.LocalReferenceDataService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.junit.jupiter.api.Assertions;
@@ -41,6 +43,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.batch.core.JobExecution;
+import org.springframework.cache.CacheManager;
 import org.springframework.test.util.ReflectionTestUtils;
 import java.util.Collections;
 import java.util.HashSet;
@@ -71,6 +74,10 @@ class BulkEditItemProcessorTest {
   private DuplicationCheckerFactory duplicationCheckerFactory;
   @Mock
   private EntityDataHelper entityDataHelper;
+  @Mock
+  private LocalReferenceDataService localReferenceDataService;
+  @Mock
+  private CacheManager cacheManager;
 
   @InjectMocks
   private BulkEditItemProcessor processor;
@@ -81,6 +88,7 @@ class BulkEditItemProcessorTest {
     ReflectionTestUtils.setField(processor, "identifierType", IdentifierType.BARCODE.getValue());
     JobExecution jobExecution = Mockito.mock(JobExecution.class, Mockito.RETURNS_DEEP_STUBS);
     ReflectionTestUtils.setField(processor, "jobExecution", jobExecution);
+    ReflectionTestUtils.setField(localReferenceDataService, "cacheManager", cacheManager);
     when(consortiaService.getCentralTenantId(anyString())).thenReturn("centralTenant");
     when(folioExecutionContext.getTenantId()).thenReturn("centralTenant");
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
@@ -228,6 +236,7 @@ class BulkEditItemProcessorTest {
     when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
     when(entityDataHelper.getInstanceTitle(any(), anyString())).thenReturn("Instance Title");
     when(entityDataHelper.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
+    doCallRealMethod().when(localReferenceDataService).enrichWithTenant(any(Item.class), anyString());
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
 
@@ -263,6 +272,7 @@ class BulkEditItemProcessorTest {
     when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
     when(entityDataHelper.getInstanceTitle(any(), anyString())).thenReturn("Instance Title");
     when(entityDataHelper.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
+    doCallRealMethod().when(localReferenceDataService).enrichWithTenant(any(Item.class), anyString());
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
 
@@ -298,6 +308,7 @@ class BulkEditItemProcessorTest {
     when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
     when(entityDataHelper.getInstanceTitle(any(), anyString())).thenReturn("Instance Title");
     when(entityDataHelper.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
+    doCallRealMethod().when(localReferenceDataService).enrichWithTenant(any(Item.class), anyString());
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
 

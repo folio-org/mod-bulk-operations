@@ -9,12 +9,8 @@ import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
-import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
-
-import static java.util.Objects.isNull;
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 @Component
 @RequiredArgsConstructor
@@ -25,21 +21,16 @@ public class HoldingsReferenceHelper implements InitializingBean {
   private final FolioExecutionContext folioExecutionContext;
   private final FolioModuleMetadata folioModuleMetadata;
 
-  public HoldingsType getHoldingsTypeById(String id, String tenantId) {
-    return holdingsReferenceService.getHoldingsTypeById(id, tenantId);
+  public HoldingsType getHoldingsTypeById(String id) {
+    return holdingsReferenceService.getHoldingsTypeById(id);
   }
 
   public HoldingsType getHoldingsTypeByName(String name) {
     return holdingsReferenceService.getHoldingsTypeByName(name, folioExecutionContext.getTenantId());
   }
 
-  public ItemLocation getLocationById(String id, String tenantId) {
-    if (isNull(tenantId)) {
-      tenantId = folioExecutionContext.getTenantId();
-    }
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
-      return holdingsReferenceService.getLocationById(id, tenantId);
-    }
+  public ItemLocation getLocationById(String id) {
+    return holdingsReferenceService.getLocationById(id);
   }
 
   public ItemLocation getLocationByName(String name) {
@@ -47,7 +38,7 @@ public class HoldingsReferenceHelper implements InitializingBean {
   }
 
   public String getCallNumberTypeNameById(String id) {
-    return holdingsReferenceService.getCallNumberTypeNameById(id, folioExecutionContext.getTenantId());
+    return holdingsReferenceService.getCallNumberTypeNameById(id);
   }
 
   public String getCallNumberTypeIdByName(String name) {
@@ -62,24 +53,24 @@ public class HoldingsReferenceHelper implements InitializingBean {
     return holdingsReferenceService.getNoteTypeIdByName(name, folioExecutionContext.getTenantId());
   }
 
-  public IllPolicy getIllPolicyNameById(String id, String tenantId) {
-    return holdingsReferenceService.getIllPolicyById(id, tenantId);
+  public IllPolicy getIllPolicyNameById(String id) {
+    return holdingsReferenceService.getIllPolicyById(id);
   }
 
   public IllPolicy getIllPolicyByName(String name) {
     return holdingsReferenceService.getIllPolicyByName(name, folioExecutionContext.getTenantId());
   }
 
-  public HoldingsRecordsSource getSourceById(String id, String tenantId) {
-    return holdingsReferenceService.getSourceById(id, tenantId);
+  public HoldingsRecordsSource getSourceById(String id) {
+    return holdingsReferenceService.getSourceById(id);
   }
 
   public HoldingsRecordsSource getSourceByName(String name) {
     return holdingsReferenceService.getSourceByName(name, folioExecutionContext.getTenantId());
   }
 
-  public StatisticalCode getStatisticalCodeById(String id, String tenantId) {
-    return holdingsReferenceService.getStatisticalCodeById(id, tenantId);
+  public StatisticalCode getStatisticalCodeById(String id) {
+    return holdingsReferenceService.getStatisticalCodeById(id);
   }
 
   public StatisticalCode getStatisticalCodeByName(String name) {
