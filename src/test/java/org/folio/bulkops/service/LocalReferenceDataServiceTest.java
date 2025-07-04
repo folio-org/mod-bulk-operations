@@ -139,4 +139,24 @@ class LocalReferenceDataServiceTest {
         service.updateTenantForUrlRelationship("url1", "tenant5");
         verify(cache, times(1)).put("url1", "tenant5");
     }
+
+    @Test
+    void callNumberTypeIdIsCachedWithTenantId() {
+        HoldingsRecord holdingsRecord = new HoldingsRecord();
+        holdingsRecord.setCallNumberTypeId("callType1");
+
+        service.enrichWithTenant(holdingsRecord, "tenantX");
+
+        verify(cache, times(1)).put("callType1", "tenantX");
+    }
+
+    @Test
+    void doesNotCacheWhenCallNumberTypeIdIsNull() {
+        HoldingsRecord holdingsRecord = new HoldingsRecord();
+        holdingsRecord.setCallNumberTypeId(null);
+
+        service.enrichWithTenant(holdingsRecord, "tenantX");
+
+        verify(cache, times(0)).put(anyString(), anyString());
+    }
 }

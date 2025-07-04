@@ -107,6 +107,9 @@ public class LocalReferenceDataService {
         if (nonNull(holdingsRecord.getTemporaryLocationId())) {
             updateTenantForLocation(holdingsRecord.getTemporaryLocationId(), tenantId);
         }
+        if (nonNull(holdingsRecord.getCallNumberTypeId())) {
+            Objects.requireNonNull(cacheManager.getCache("callNumberTypeId")).put(holdingsRecord.getCallNumberTypeId(), tenantId);
+        }
     }
 
     public void updateTenantForLocation(String id, String tenantId) {
