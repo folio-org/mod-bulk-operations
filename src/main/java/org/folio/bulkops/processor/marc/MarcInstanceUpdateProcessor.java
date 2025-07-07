@@ -82,9 +82,6 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
       .profile(matchProfile)
       .build());
 
-//    var mappingProfileInstance = postMappingProfile(dataImportProfilesBuilder.getMappingProfileToUpdateInstance(), date);
-//    var actionProfileInstance = postActionProfile(dataImportProfilesBuilder.getActionProfilePostToUpdateInstance(mappingProfileInstance), date);
-
     var mappingProfileSrs = postMappingProfile(dataImportProfilesBuilder.getMappingProfileToUpdateSrs(), date);
     var actionProfileSrs = postActionProfile(dataImportProfilesBuilder.getActionProfilePostToUpdateSrs(mappingProfileSrs), date);
 
@@ -119,13 +116,13 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
         .build()))
       .build());
     var uploadDefinitionId = uploadDefinition.getId();
-    var fileDefinitionId = uploadDefinition.getFileDefinitions().get(0).getId();
+    var fileDefinitionId = uploadDefinition.getFileDefinitions().getFirst().getId();
 
     var splitStatus = dataImportClient.getSplitStatus();
     log.info("Split status: {}", splitStatus.getSplitStatus());
 
     if (TRUE.equals(splitStatus.getSplitStatus())) {
-      var uploadUrlResponse = dataImportClient.getUploadUrl(uploadDefinition.getFileDefinitions().get(0).getName());
+      var uploadUrlResponse = dataImportClient.getUploadUrl(uploadDefinition.getFileDefinitions().getFirst().getName());
       var etag = dataImportRestS3UploadClient.uploadFile(uploadUrlResponse.getUrl(), content).getHeaders().getETag();
       dataImportClient.assembleStorageFile(uploadDefinitionId, fileDefinitionId,
         new AssembleStorageFileRequestBody(uploadUrlResponse.getUploadId(), uploadUrlResponse.getKey(), List.of(etag)));
