@@ -27,7 +27,6 @@ public class RecordUpdateService {
   private final FolioUpdateProcessorFactory updateProcessorFactory;
   private final BulkOperationExecutionContentRepository executionContentRepository;
   private final EntityPathResolver entityPathResolver;
-  private final FailedHridStorage failedHridStorage;
 
   public BulkOperationsEntity updateEntity(BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation) {
     var entity = modified.getRecordBulkOperationEntity();
@@ -40,9 +39,6 @@ public class RecordUpdateService {
       try {
         updater.updateRecord(modified);
       } catch (FeignException e) {
-        if (entity instanceof Instance instance) {
-          failedHridStorage.addFailedHrid(operation.getId(), instance.getHrid());
-        }
         if (e.status() == 409 && e.getMessage().contains("optimistic locking")) {
           var message = Utils.getMessageFromFeignException(e);
           var link = entityPathResolver.resolve(operation.getEntityType(), original);
@@ -59,9 +55,5 @@ public class RecordUpdateService {
     }
     updater.updateAssociatedRecords(modified, operation, isEqual);
     return isEqual ? original : modified;
-  }
-
-  public Set<String> getFailedHrids(UUID bulkOperationId) {
-    return failedHridStorage.fetchFailedHrids(bulkOperationId);
   }
 }

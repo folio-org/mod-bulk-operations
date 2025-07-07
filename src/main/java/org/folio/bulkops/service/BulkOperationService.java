@@ -44,6 +44,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -67,6 +68,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
+import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -374,6 +376,7 @@ public class BulkOperationService {
 
     boolean hasAdministrativeRules = false;
     boolean hasMarcRules = false;
+    var failedInstanceHrids = new HashSet<String>();
 
     if (INSTANCE_MARC.equals(operation.getEntityType())) {
       marcUpdateService.prepareProgress(operation);
@@ -449,12 +452,15 @@ public class BulkOperationService {
               bulkOperationExecutionContents.forEach(errorService::saveError);
             }
           } catch (OptimisticLockingException e) {
+            saveFailedInstanceHrid(failedInstanceHrids, original);
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getCsvErrorMessage(), e.getUiErrorMessage(), e.getLinkToFailedEntity(), ErrorType.ERROR);
           } catch (WritePermissionDoesNotExist e) {
+            saveFailedInstanceHrid(failedInstanceHrids, original);
             var userName = userClient.getUserById(folioExecutionContext.getUserId().toString()).getUsername();
             var errorMessage = String.format(e.getMessage(), userName, IdentifiersResolver.resolve(operation.getIdentifierType()), original.getIdentifier(operation.getIdentifierType()));
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), errorMessage, ErrorType.ERROR);
           } catch (Exception e) {
+            saveFailedInstanceHrid(failedInstanceHrids, original);
             errorService.saveError(operationId, original.getIdentifier(operation.getIdentifierType()), e.getMessage(), ErrorType.ERROR);
           }
           execution = execution
@@ -481,13 +487,19 @@ public class BulkOperationService {
       executionRepository.save(execution);
     }
 
-    var failedHrids = recordUpdateService.getFailedHrids(operationId);
     if (!INSTANCE_MARC.equals(operation.getEntityType()) || !hasMarcRules) {
       if (!FAILED.equals(operation.getStatus())) {
         bulkOperationServiceHelper.completeBulkOperation(operation);
       }
     } else {
-      marcUpdateService.commitForInstanceMarc(operation, failedHrids);
+      marcUpdateService.commitForInstanceMarc(operation, failedInstanceHrids);
+    }
+  }
+
+  private void saveFailedInstanceHrid(Set<String> failedInstanceHrids, BulkOperationsEntity bulkOperationsEntity) {
+    var entity = bulkOperationsEntity.getRecordBulkOperationEntity();
+    if (entity instanceof Instance instance) {
+      failedInstanceHrids.add(instance.getHrid());
     }
   }
 
