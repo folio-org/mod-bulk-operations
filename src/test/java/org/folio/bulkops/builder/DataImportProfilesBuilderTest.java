@@ -25,15 +25,6 @@ class DataImportProfilesBuilderTest extends BaseTest  {
 
   @Test
   @SneakyThrows
-  void shouldGetActionProfilePostToUpdateInstance() {
-    var mappingProfileUpdateInstance = MappingProfile.builder().id("mapping_profile_update_instance_id").build();
-    var actionProfilePost = dataImportProfilesBuilder.getActionProfilePostToUpdateInstance(mappingProfileUpdateInstance);
-    assertNotNull(actionProfilePost);
-    assertEquals("mapping_profile_update_instance_id", actionProfilePost.getAddedRelations().get(0).getDetailProfileId());
-  }
-
-  @Test
-  @SneakyThrows
   void shouldGetActionProfilePostToUpdateSrs() {
     var mappingProfileUpdateSrs = MappingProfile.builder().id("mapping_profile_update_srs_id").build();
     var actionProfilePost = dataImportProfilesBuilder.getActionProfilePostToUpdateSrs(mappingProfileUpdateSrs);
@@ -45,13 +36,6 @@ class DataImportProfilesBuilderTest extends BaseTest  {
   @SneakyThrows
   void shouldGetMappingProfileToUpdateSrs() {
     var mappingProfile = dataImportProfilesBuilder.getMappingProfileToUpdateSrs();
-    assertNotNull(mappingProfile);
-  }
-
-  @Test
-  @SneakyThrows
-  void shouldGetMappingProfileToUpdateInstance() {
-    var mappingProfile = dataImportProfilesBuilder.getMappingProfileToUpdateInstance();
     assertNotNull(mappingProfile);
   }
 
