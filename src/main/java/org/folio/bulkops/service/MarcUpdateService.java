@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.Set;
 
 @Service
 @Log4j2
@@ -41,7 +42,7 @@ public class MarcUpdateService {
   private final BulkOperationServiceHelper bulkOperationServiceHelper;
 
   @Transactional
-  public void commitForInstanceMarc(BulkOperation bulkOperation) {
+  public void commitForInstanceMarc(BulkOperation bulkOperation, Set<String> failedHrids) {
     if (StringUtils.isNotEmpty(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
       bulkOperation.setStatus(APPLY_MARC_CHANGES);
       bulkOperationRepository.save(bulkOperation);
@@ -54,7 +55,7 @@ public class MarcUpdateService {
         .build());
 
       try {
-        bulkOperation.setLinkToCommittedRecordsMarcFile(prepareCommittedFile(bulkOperation));
+        bulkOperation.setLinkToCommittedRecordsMarcFile(prepareCommittedFile(bulkOperation, failedHrids));
         updateProcessor.updateMarcRecords(bulkOperation);
         execution = execution
           .withStatus(StatusType.COMPLETED)
@@ -73,7 +74,7 @@ public class MarcUpdateService {
     }
   }
 
-  private String prepareCommittedFile(BulkOperation bulkOperation) throws IOException {
+  private String prepareCommittedFile(BulkOperation bulkOperation, Set<String> failedHrids) throws IOException {
     var triggeringFileName = FilenameUtils.getBaseName(bulkOperation.getLinkToTriggeringCsvFile());
     var resultMarcFileName = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(), LocalDate.now(), triggeringFileName);
 
@@ -87,15 +88,16 @@ public class MarcUpdateService {
       while (matchedRecordsReader.hasNext() && modifiedRecordsReader.hasNext()) {
         var originalRecord = matchedRecordsReader.next();
         var modifiedRecord = modifiedRecordsReader.next();
-
-        if (originalRecord.toString().equals(modifiedRecord.toString())) {
-          var identifier = HRID.equals(bulkOperation.getIdentifierType()) ?
-            originalRecord.getControlNumber() :
-            fetchInstanceUuidOrElseHrid(originalRecord);
-          errorService.saveError(bulkOperation.getId(), identifier, MSG_NO_MARC_CHANGE_REQUIRED, ErrorType.WARNING);
-        } else {
-          MarcDateHelper.updateDateTimeControlField(modifiedRecord, currentDate);
-          writerForResultMarcFile.writeRecord(modifiedRecord);
+        if (!failedHrids.contains(originalRecord.getControlNumber())) {
+          if (originalRecord.toString().equals(modifiedRecord.toString())) {
+            var identifier = HRID.equals(bulkOperation.getIdentifierType()) ?
+              originalRecord.getControlNumber() :
+              fetchInstanceUuidOrElseHrid(originalRecord);
+            errorService.saveError(bulkOperation.getId(), identifier, MSG_NO_MARC_CHANGE_REQUIRED, ErrorType.WARNING);
+          } else {
+            MarcDateHelper.updateDateTimeControlField(modifiedRecord, currentDate);
+            writerForResultMarcFile.writeRecord(modifiedRecord);
+          }
         }
       }
       return resultMarcFileName;

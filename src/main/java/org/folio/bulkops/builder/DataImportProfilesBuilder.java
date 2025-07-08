@@ -56,15 +56,13 @@ public class DataImportProfilesBuilder {
     }
   }
 
-  public JobProfilePost getJobProfilePost(MatchProfile matchProfile, ActionProfile actionProfileToUpdateInstance, ActionProfile actionProfileToUpdateSrs) throws IOException {
+  public JobProfilePost getJobProfilePost(MatchProfile matchProfile, ActionProfile actionProfileToUpdateSrs) throws IOException {
     var objectMapper = new ObjectMapper();
     try (var is = DataImportProfilesBuilder.class.getResourceAsStream(DATA_IMPORT_PROFILES_PATH + "job_profile_post.json")) {
       var jobProfilePost = objectMapper.readValue(is, JobProfilePost.class);
       jobProfilePost.getAddedRelations().get(0).setDetailProfileId(matchProfile.getId());
       jobProfilePost.getAddedRelations().get(1).setMasterProfileId(matchProfile.getId());
       jobProfilePost.getAddedRelations().get(1).setDetailProfileId(actionProfileToUpdateSrs.getId());
-      jobProfilePost.getAddedRelations().get(2).setMasterProfileId(matchProfile.getId());
-      jobProfilePost.getAddedRelations().get(2).setDetailProfileId(actionProfileToUpdateInstance.getId());
       return jobProfilePost;
     }
   }

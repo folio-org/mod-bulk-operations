@@ -119,8 +119,8 @@ class MarcInstanceUpdateProcessorTest extends BaseTest {
     marcInstanceUpdateProcessor.updateMarcRecords(bulkOperation);
 
     verify(dataImportProfilesClient).createMatchProfile(any(MatchProfilePost.class));
-    verify(dataImportProfilesClient, times(2)).createMappingProfile(any(MappingProfilePost.class));
-    verify(dataImportProfilesClient, times(2)).createActionProfile(any(ActionProfilePost.class));
+    verify(dataImportProfilesClient, times(1)).createMappingProfile(any(MappingProfilePost.class));
+    verify(dataImportProfilesClient, times(1)).createActionProfile(any(ActionProfilePost.class));
     verify(dataImportProfilesClient).createJobProfile(any(JobProfilePost.class));
 
     if (isSplitStatusEnabled) {

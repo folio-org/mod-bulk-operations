@@ -4,10 +4,13 @@ import static java.lang.String.format;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 
 import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
+import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;

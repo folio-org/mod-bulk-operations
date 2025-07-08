@@ -3,6 +3,7 @@ package org.folio.bulkops.service;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.awaitility.Awaitility.await;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
@@ -43,6 +44,7 @@ import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -76,7 +78,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import lombok.SneakyThrows;
-import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.api.Assertions;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.batch.ExportJobManagerSync;
@@ -119,6 +120,8 @@ import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.IllegalOperationStateException;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.OptimisticLockingException;
+import org.folio.bulkops.exception.WritePermissionDoesNotExist;
 import org.folio.bulkops.processor.marc.MarcInstanceDataProcessor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.repository.BulkOperationDataProcessingRepository;
@@ -1168,8 +1171,8 @@ class BulkOperationServiceTest extends BaseTest {
     assertEquals(expectedPathToResultCsvFile, pathCaptor.getAllValues().get(0));
     assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().get(1));
     assertNull(operation.getLinkToCommittedRecordsCsvFile());
-    assertEquals(StringUtils.EMPTY, jsonWriter.toString());
-    assertEquals(StringUtils.EMPTY, csvWriter.toString());
+    assertEquals(EMPTY, jsonWriter.toString());
+    assertEquals(EMPTY, csvWriter.toString());
   }
 
   @Test
@@ -1723,7 +1726,7 @@ class BulkOperationServiceTest extends BaseTest {
       verify(executionRepository, times(2)).save(any(BulkOperationExecution.class));
     }
     if (hasMarcRules) {
-      verify(marcUpdateService).commitForInstanceMarc(any(BulkOperation.class));
+      verify(marcUpdateService).commitForInstanceMarc(any(BulkOperation.class), any(Set.class));
     }
   }
 
@@ -1808,5 +1811,87 @@ class BulkOperationServiceTest extends BaseTest {
     verify(remoteFileSystemClient).put(streamCaptor.capture(), pathCaptor.capture());
     assertInstanceOf(org.apache.commons.io.input.BOMInputStream.class, streamCaptor.getValue());
     assertThat(pathCaptor.getValue(), containsString("barcodes.csv"));
+  }
+
+  @Test
+  void shouldAddFailedHridOnOptimisticLockingException() {
+    // Arrange
+    var operationId = UUID.randomUUID();
+    var failedHrid = "inst-hrid-1";
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(INSTANCE_MARC)
+      .linkToTriggeringCsvFile("instances.csv")
+      .linkToMatchedRecordsJsonFile("matched.json")
+      .linkToModifiedRecordsJsonFile("modified.json")
+      .linkToModifiedRecordsMarcFile("modified.mrc")
+      .matchedNumOfRecords(1)
+      .build();
+
+    var recordUpdateService = mock(RecordUpdateService.class);
+
+    when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
+    when(executionRepository.save(any(BulkOperationExecution.class))).thenReturn(new BulkOperationExecution());
+    when(ruleService.hasAdministrativeUpdates(operation)).thenReturn(true);
+    when(ruleService.hasMarcUpdates(operation)).thenReturn(false);
+
+    // Simulate reading a single instance with HRID
+    var originalJson = "[{\"hrid\":\"" + failedHrid + "\"}]";
+    var modifiedJson = "[{\"hrid\":\"" + failedHrid + "\"}]";
+    when(remoteFileSystemClient.get("matched.json")).thenReturn(new ByteArrayInputStream(originalJson.getBytes()));
+    when(remoteFileSystemClient.get("modified.json")).thenReturn(new ByteArrayInputStream(modifiedJson.getBytes()));
+
+    // Simulate updateEntity throwing an exception
+    doThrow(new OptimisticLockingException("Update failed", null, EMPTY)).when(recordUpdateService)
+      .updateEntity(any(), any(), any());
+
+    // Act
+    bulkOperationService.commit(operation);
+
+    // Assert
+    // Use ArgumentCaptor to capture the failed HRIDs set passed to marcUpdateService
+    ArgumentCaptor<Set<String>> failedHridsCaptor = ArgumentCaptor.forClass(Set.class);
+    verify(marcUpdateService, never()).commitForInstanceMarc(any(), failedHridsCaptor.capture());
+  }
+
+  @Test
+  void shouldAddFailedHridOnWritePermissionDoesNotExistException() {
+    // Arrange
+    var operationId = UUID.randomUUID();
+    var failedHrid = "inst-hrid-1";
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(INSTANCE_MARC)
+      .linkToTriggeringCsvFile("instances.csv")
+      .linkToMatchedRecordsJsonFile("matched.json")
+      .linkToModifiedRecordsJsonFile("modified.json")
+      .linkToModifiedRecordsMarcFile("modified.mrc")
+      .matchedNumOfRecords(1)
+      .build();
+
+    var recordUpdateService = mock(RecordUpdateService.class);
+
+    when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
+    when(executionRepository.save(any(BulkOperationExecution.class))).thenReturn(new BulkOperationExecution());
+    when(ruleService.hasAdministrativeUpdates(operation)).thenReturn(true);
+    when(ruleService.hasMarcUpdates(operation)).thenReturn(false);
+
+    // Simulate reading a single instance with HRID
+    var originalJson = "[{\"hrid\":\"" + failedHrid + "\"}]";
+    var modifiedJson = "[{\"hrid\":\"" + failedHrid + "\"}]";
+    when(remoteFileSystemClient.get("matched.json")).thenReturn(new ByteArrayInputStream(originalJson.getBytes()));
+    when(remoteFileSystemClient.get("modified.json")).thenReturn(new ByteArrayInputStream(modifiedJson.getBytes()));
+
+    // Simulate updateEntity throwing an exception
+    doThrow(new WritePermissionDoesNotExist("Update failed")).when(recordUpdateService)
+      .updateEntity(any(), any(), any());
+
+    // Act
+    bulkOperationService.commit(operation);
+
+    // Assert
+    // Use ArgumentCaptor to capture the failed HRIDs set passed to marcUpdateService
+    ArgumentCaptor<Set<String>> failedHridsCaptor = ArgumentCaptor.forClass(Set.class);
+    verify(marcUpdateService, never()).commitForInstanceMarc(any(), failedHridsCaptor.capture());
   }
 }

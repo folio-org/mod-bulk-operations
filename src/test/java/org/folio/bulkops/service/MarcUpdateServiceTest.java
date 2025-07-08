@@ -33,6 +33,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.UUID;
 
 class MarcUpdateServiceTest extends BaseTest {
@@ -85,7 +86,7 @@ class MarcUpdateServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile()))
       .thenReturn(new FileInputStream("src/test/resources/files/modified.mrc"));
 
-    marcUpdateService.commitForInstanceMarc(bulkOperation);
+    marcUpdateService.commitForInstanceMarc(bulkOperation, new HashSet<>());
 
     verify(executionRepository, times(2)).save(executionArgumentCaptor.capture());
     assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus()).isEqualTo(StatusType.COMPLETED);
@@ -120,7 +121,7 @@ class MarcUpdateServiceTest extends BaseTest {
       return null;
     }).when(updateProcessor).updateMarcRecords(operation);
 
-    marcUpdateService.commitForInstanceMarc(operation);
+    marcUpdateService.commitForInstanceMarc(operation, new HashSet<>());
 
     verify(updateProcessor).updateMarcRecords(bulkOperationArgumentCaptor.capture());
     assertThat(bulkOperationArgumentCaptor.getValue().getLinkToCommittedRecordsMarcFile()).isNull();
@@ -155,7 +156,7 @@ class MarcUpdateServiceTest extends BaseTest {
     when(remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile()))
       .thenReturn(new FileInputStream("src/test/resources/files/modified.mrc"));
 
-    marcUpdateService.commitForInstanceMarc(bulkOperation);
+    marcUpdateService.commitForInstanceMarc(bulkOperation, new HashSet<>());
 
     verify(executionRepository, times(2)).save(executionArgumentCaptor.capture());
     assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus()).isEqualTo(StatusType.FAILED);
