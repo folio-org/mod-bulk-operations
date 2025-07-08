@@ -43,6 +43,7 @@ import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -1808,5 +1809,46 @@ class BulkOperationServiceTest extends BaseTest {
     verify(remoteFileSystemClient).put(streamCaptor.capture(), pathCaptor.capture());
     assertInstanceOf(org.apache.commons.io.input.BOMInputStream.class, streamCaptor.getValue());
     assertThat(pathCaptor.getValue(), containsString("barcodes.csv"));
+  }
+
+  @Test
+  void shouldAddFailedHridOnUpdateEntityException() {
+    // Arrange
+    var operationId = UUID.randomUUID();
+    var failedHrid = "inst-hrid-1";
+    var operation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(INSTANCE_MARC)
+      .linkToTriggeringCsvFile("instances.csv")
+      .linkToMatchedRecordsJsonFile("matched.json")
+      .linkToModifiedRecordsJsonFile("modified.json")
+      .linkToModifiedRecordsMarcFile("modified.mrc")
+      .matchedNumOfRecords(1)
+      .build();
+
+    var recordUpdateService = mock(RecordUpdateService.class);
+
+    when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
+    when(executionRepository.save(any(BulkOperationExecution.class))).thenReturn(new BulkOperationExecution());
+    when(ruleService.hasAdministrativeUpdates(operation)).thenReturn(true);
+    when(ruleService.hasMarcUpdates(operation)).thenReturn(false);
+
+    // Simulate reading a single instance with HRID
+    var originalJson = "[{\"hrid\":\"" + failedHrid + "\"}]";
+    var modifiedJson = "[{\"hrid\":\"" + failedHrid + "\"}]";
+    when(remoteFileSystemClient.get("matched.json")).thenReturn(new ByteArrayInputStream(originalJson.getBytes()));
+    when(remoteFileSystemClient.get("modified.json")).thenReturn(new ByteArrayInputStream(modifiedJson.getBytes()));
+
+    // Simulate updateEntity throwing an exception
+    doThrow(new RuntimeException("Update failed")).when(recordUpdateService)
+      .updateEntity(any(), any(), any());
+
+    // Act
+    bulkOperationService.commit(operation);
+
+    // Assert
+    // Use ArgumentCaptor to capture the failed HRIDs set passed to marcUpdateService
+    ArgumentCaptor<Set<String>> failedHridsCaptor = ArgumentCaptor.forClass(Set.class);
+    verify(marcUpdateService, never()).commitForInstanceMarc(any(), failedHridsCaptor.capture());
   }
 }
