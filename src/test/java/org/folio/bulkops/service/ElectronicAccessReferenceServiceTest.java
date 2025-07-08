@@ -29,33 +29,37 @@ class ElectronicAccessReferenceServiceTest {
   private ElectronicAccessRelationshipClient electronicAccessRelationshipClient;
   @Mock
   private FolioExecutionContext folioExecutionContext;
+  @Mock
+  private LocalReferenceDataService localReferenceDataService;
   @InjectMocks
   private ElectronicAccessReferenceService electronicAccessReferenceService;
 
   @Test
   void shouldReturnRelationshipNameById() {
-    var id = "id;diku";
+    var id = "id";
     var expectedName = "name";
     HashMap<String, Collection<String>> headers = new HashMap<>();
-    headers.put(XOkapiHeaders.TENANT, List.of("tenant"));
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(localReferenceDataService.getTenantByUrlRelationshipId(id)).thenReturn("diku");
     when(electronicAccessRelationshipClient.getById(id)).thenReturn(new ElectronicAccessRelationship().withName(expectedName));
 
-    var actualName = electronicAccessReferenceService.getRelationshipNameById(id, "diku");
+    var actualName = electronicAccessReferenceService.getRelationshipNameById(id);
 
     assertEquals(expectedName, actualName);
   }
 
   @Test
   void shouldThrowExceptionIfRelationshipNotFound() {
-    var id = "id;tenant";
+    var id = "id";
 
     HashMap<String, Collection<String>> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, List.of("tenant"));
     when(electronicAccessRelationshipClient.getById(id)).thenThrow(new NotFoundException("Not found"));
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(localReferenceDataService.getTenantByUrlRelationshipId(id)).thenReturn("tenant");
 
-    assertThrows(ReferenceDataNotFoundException.class, () -> electronicAccessReferenceService.getRelationshipNameById(id, "tenant"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> electronicAccessReferenceService.getRelationshipNameById(id));
   }
 
   @Test

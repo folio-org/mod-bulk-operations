@@ -36,7 +36,7 @@ class ElectronicAccessServiceTest extends BaseTest {
   @ParameterizedTest
   @CsvSource(value = { ",,,,", "id,uri,text,specification,note" }, delimiter = ',')
   void testElectronicAccessToString(String relationshipId, String uri, String linkText, String materialsSpecification, String publicNote) {
-    when(electronicAccessReferenceService.getRelationshipNameById("id", "tenant")).thenReturn("name");
+    when(electronicAccessReferenceService.getRelationshipNameById("id")).thenReturn("name");
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
     var actual = electronicAccessService.electronicAccessToString(ElectronicAccess.builder()
@@ -58,7 +58,7 @@ class ElectronicAccessServiceTest extends BaseTest {
   @ParameterizedTest
   @CsvSource(value = { ",,,,", "id,uri,text,specification,note" }, delimiter = ',')
   void testElectronicAccessInstanceToString(String relationshipId, String uri, String linkText, String materialsSpecification, String publicNote) {
-    when(electronicAccessReferenceService.getRelationshipNameById("id", "tenant")).thenReturn("name");
+    when(electronicAccessReferenceService.getRelationshipNameById("id")).thenReturn("name");
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
     var actual = electronicAccessService.electronicAccessInstanceToString(ElectronicAccess.builder()
