@@ -183,7 +183,7 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
   private List<HoldingsRecord> getHoldingsSourceFolioByInstanceId(String instanceId) {
     return holdingsClient.getByQuery(format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE)
       .getHoldingsRecords().stream()
-      .filter(holdingsRecord -> !MARC.equals(holdingsReferenceService.getSourceById(holdingsRecord.getSourceId(), folioExecutionContext.getTenantId()).getName()))
+      .filter(holdingsRecord -> !MARC.equals(holdingsReferenceService.getSourceById(holdingsRecord.getSourceId()).getName()))
       .toList();
   }
 

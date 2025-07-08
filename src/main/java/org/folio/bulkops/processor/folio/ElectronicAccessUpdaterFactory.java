@@ -7,7 +7,6 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.replace;
-import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -16,6 +15,7 @@ import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.processor.Updater;
+import org.folio.bulkops.service.LocalReferenceDataService;
 import org.folio.bulkops.util.RuleUtils;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;
@@ -27,10 +27,11 @@ import org.springframework.stereotype.Component;
 public class ElectronicAccessUpdaterFactory {
 
   private final FolioExecutionContext folioExecutionContext;
+  private final LocalReferenceDataService localReferenceDataService;
 
-  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, boolean forPreview) {
+  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action) {
     return switch (option) {
-      case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> updateUrlRelationship(option, action, forPreview);
+      case ELECTRONIC_ACCESS_URL_RELATIONSHIP -> updateUrlRelationship(option, action);
       case ELECTRONIC_ACCESS_URI -> updateUri(option, action);
       case ELECTRONIC_ACCESS_LINK_TEXT -> updateLinkText(option, action);
       case ELECTRONIC_ACCESS_MATERIALS_SPECIFIED -> updateMaterialsSpecified(option, action);
@@ -39,7 +40,7 @@ public class ElectronicAccessUpdaterFactory {
     };
   }
 
-  private Updater<ExtendedHoldingsRecord> updateUrlRelationship(UpdateOptionType option, Action action, boolean forPreview) {
+  private Updater<ExtendedHoldingsRecord> updateUrlRelationship(UpdateOptionType option, Action action) {
     return switch (action.getType()) {
       case CLEAR_FIELD -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setRelationshipId(null)));
@@ -50,18 +51,16 @@ public class ElectronicAccessUpdaterFactory {
       case FIND_AND_REPLACE -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
         .ifPresent(list -> list.stream()
           .filter(electronicAccess -> equalsIgnoreCase(electronicAccess.getRelationshipId(), action.getInitial()))
-          .forEach(electronicAccess -> electronicAccess.setRelationshipId(getRelationshipId(action, forPreview))));
+          .forEach(electronicAccess -> electronicAccess.setRelationshipId(getRelationshipId(action))));
       case REPLACE_WITH -> electronicAccessEntity -> ofNullable(electronicAccessEntity.getElectronicAccess())
-        .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setRelationshipId(getRelationshipId(action, forPreview))));
+        .ifPresent(list -> list.forEach(electronicAccess -> electronicAccess.setRelationshipId(getRelationshipId(action))));
       default -> notSupported(option, action);
     };
   }
 
-  private String getRelationshipId(Action action, boolean forPreview) {
+  private String getRelationshipId(Action action) {
     var id = action.getUpdated();
-    if (forPreview) {
-      id += ARRAY_DELIMITER + RuleUtils.getTenantFromAction(action, folioExecutionContext);
-    }
+    localReferenceDataService.updateTenantForUrlRelationship(id, RuleUtils.getTenantFromAction(action, folioExecutionContext));
     return id;
   }
 

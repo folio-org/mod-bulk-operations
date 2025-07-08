@@ -1,6 +1,5 @@
 package org.folio.bulkops.batch.jobs;
 
-import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum.HOLDINGSRECORDID;
 import static org.folio.bulkops.domain.dto.IdentifierType.HOLDINGS_RECORD_ID;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getMatchPattern;
@@ -23,7 +22,6 @@ import org.folio.bulkops.client.SearchClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.ExtendedItemCollection;
-import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.dto.BatchIdsDto;
 import org.folio.bulkops.domain.dto.ConsortiumItem;
@@ -36,6 +34,7 @@ import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.processor.permissions.check.TenantResolver;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.EntityDataHelper;
+import org.folio.bulkops.service.LocalReferenceDataService;
 import org.folio.bulkops.util.ExceptionHelper;
 import org.folio.bulkops.util.FolioExecutionContextUtil;
 import org.folio.spring.FolioExecutionContext;
@@ -66,6 +65,7 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
   private final TenantResolver tenantResolver;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
   private final EntityDataHelper entityDataHelper;
+  private final LocalReferenceDataService localReferenceDataService;
 
   @Value("#{stepExecution.jobExecution}")
   private JobExecution jobExecution;
@@ -114,7 +114,7 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
                       .map(item -> item.withTitle(entityDataHelper.getInstanceTitle(item.getHoldingsRecordId(), tenantId)))
                       .map(item -> item.withHoldingsData(entityDataHelper.getHoldingsData(item.getHoldingsRecordId(), tenantId)))
                 .map(item -> {
-                  enrichWithTenant(item, tenantId);
+                  localReferenceDataService.enrichWithTenant(item, tenantId);
                   return item.withTenantId(tenantId);
                 })
                 .map(item -> new ExtendedItem().withTenantId(tenantId).withEntity(item))
@@ -164,14 +164,5 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
 
   private boolean isCurrentTenantCentral(String centralTenantId) {
     return StringUtils.isNotEmpty(centralTenantId) && centralTenantId.equals(folioExecutionContext.getTenantId());
-  }
-
-  private void enrichWithTenant(Item item, String tenantId) {
-    if (nonNull(item.getElectronicAccess())) {
-      item.getElectronicAccess().forEach(el -> el.setTenantId(tenantId));
-    }
-    if (nonNull(item.getNotes())) {
-      item.getNotes().forEach(note -> note.setTenantId(tenantId));
-    }
   }
 }

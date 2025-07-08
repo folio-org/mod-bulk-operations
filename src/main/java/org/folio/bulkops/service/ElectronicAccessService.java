@@ -92,6 +92,6 @@ public class ElectronicAccessService {
 
   private String getRelationshipName(ElectronicAccess access) {
     log.debug("getRelationshipName {}, {}, {}", access.getRelationshipId(), access.getTenantId(), folioExecutionContext.getTenantId());
-    return electronicAccessReferenceService.getRelationshipNameById(access.getRelationshipId(), access.getTenantId());
+    return electronicAccessReferenceService.getRelationshipNameById(access.getRelationshipId());
   }
 }
