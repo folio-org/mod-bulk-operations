@@ -17,7 +17,6 @@ import org.folio.bulkops.domain.converter.BoundWithTitlesConverter;
 import org.folio.bulkops.domain.converter.CallNumberTypeConverter;
 import org.folio.bulkops.domain.converter.CirculationNoteListConverter;
 import org.folio.bulkops.domain.converter.DamagedStatusConverter;
-import org.folio.bulkops.domain.converter.DateWithoutTimeConverter;
 import org.folio.bulkops.domain.converter.EffectiveCallNumberComponentsConverter;
 import org.folio.bulkops.domain.converter.ItemElectronicAccessListConverter;
 import org.folio.bulkops.domain.converter.ItemLocationConverter;
@@ -29,11 +28,9 @@ import org.folio.bulkops.domain.converter.MaterialTypeConverter;
 import org.folio.bulkops.domain.converter.StringConverter;
 import org.folio.bulkops.domain.converter.StringListConverter;
 import org.folio.bulkops.domain.converter.TagsConverter;
-import org.folio.bulkops.domain.dto.DataType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
 
-import java.util.Date;
 import java.util.List;
 
 import static java.lang.Boolean.FALSE;
