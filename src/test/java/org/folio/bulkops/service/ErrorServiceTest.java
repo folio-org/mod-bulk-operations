@@ -158,11 +158,6 @@ class ErrorServiceTest extends BaseTest {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).dataExportJobId(UUID.randomUUID()).status(statusType).build()).getId();
 
-      var expected = List.of(
-        new Error().message("No match found").parameters(List.of(new Parameter().key("IDENTIFIER").value("123"))),
-        new Error().message("Invalid format").parameters(List.of(new Parameter().key("IDENTIFIER").value("456")))
-      );
-
       mockErrorsData(statusType, operationId);
 
       var actual = errorService.getErrorsPreviewByBulkOperationId(operationId, 2);
