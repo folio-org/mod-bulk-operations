@@ -56,6 +56,7 @@ import org.folio.bulkops.domain.bean.InventoryItemStatus;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.ItemNote;
+import org.folio.bulkops.domain.bean.LastCheckIn;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.Parameter;
@@ -656,9 +657,9 @@ class ItemDataProcessorTest extends BaseTest {
   @SneakyThrows
   void testFindAndReplaceForCirculationNotes() {
     var checkInNote = new CirculationNote()
-      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note");
+      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note").withDate("2023-10-01");
     var checkOutNote = new CirculationNote()
-      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note");
+      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note").withDate("2023-10-02");
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
     var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
@@ -670,6 +671,8 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
     assertEquals("note", item.getCirculationNotes().get(1).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(1).getNoteType());
+    assertEquals("2023-10-01", item.getCirculationNotes().get(0).getDate());
+    assertEquals("2023-10-02", item.getCirculationNotes().get(1).getDate());
 
     checkInNote.setNote("note");
 
@@ -680,6 +683,80 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
     assertEquals("note 2", item.getCirculationNotes().get(1).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(1).getNoteType());
+  }
+
+  @Test
+  @SneakyThrows
+  void testCheckDisplaySummaryRemainsUnchanged() {
+    var checkInNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note");
+    var checkOutNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note");
+    var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote)).withDisplaySummary("new summary");
+    var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
+
+    processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
+            .initial("note").updated("note 2"), extendedItem, false).apply(extendedItem);
+
+    assertEquals("new summary", item.getDisplaySummary());
+  }
+
+  @Test
+  @SneakyThrows
+  void testInTransitDestinationServicePointIdRemainsUnchanged() {
+    var checkInNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note");
+    var checkOutNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note");
+    var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote))
+            .withInTransitDestinationServicePointId("new intransit");
+    var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
+
+    processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
+            .initial("note").updated("note 2"), extendedItem, false).apply(extendedItem);
+
+    assertEquals("new intransit", item.getInTransitDestinationServicePointId());
+  }
+
+  @Test
+  @SneakyThrows
+  void testLastCheckInRemainsUnchanged() {
+    var checkInNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note");
+    var checkOutNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note");
+    var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote))
+            .withLastCheckIn(new LastCheckIn().withDateTime("datetime").withServicePointId("servicePointId")
+                    .withStaffMemberId("staffMemberId"));
+    var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
+
+    processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
+            .initial("note").updated("note 2"), extendedItem, false).apply(extendedItem);
+
+    assertEquals("datetime", item.getLastCheckIn().getDateTime());
+    assertEquals("servicePointId", item.getLastCheckIn().getServicePointId());
+    assertEquals("staffMemberId", item.getLastCheckIn().getStaffMemberId());
+  }
+
+  @Test
+  @SneakyThrows
+  void testPurchaseOrderLineIdentifierRemainsUnchanged() {
+    var checkInNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note");
+    var checkOutNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note");
+    var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote))
+            .withPurchaseOrderLineIdentifier("purchaseOrderLineId");
+    var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
+    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
+
+    processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
+            .initial("note").updated("note 2"), extendedItem, false).apply(extendedItem);
+
+    assertEquals("purchaseOrderLineId", item.getPurchaseOrderLineIdentifier());
   }
 
   @Test
