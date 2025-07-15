@@ -1,6 +1,11 @@
 package org.folio.bulkops.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_PERMANENT_LOCATION_NAME_KEY;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -294,10 +299,16 @@ class FqmContentFetcherTest {
         case ITEM -> {
           map.put("items.jsonb", "{\"id\":\"item-id-" + i + "\"}");
           map.put("items.tenant_id", "item-tenant");
+          map.put(FQM_INSTANCES_TITLE_KEY, "Instance Title " + i);
+          map.put(FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY, "Call/Number:Prefix " + i);
+          map.put(FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY, "Call Number-Suffix " + i);
+          map.put(FQM_HOLDINGS_CALL_NUMBER_KEY, "CN_" + i);
+          map.put(FQM_PERMANENT_LOCATION_NAME_KEY, "Main");
         }
         case HOLDINGS_RECORD -> {
           map.put("holdings.jsonb", "{\"id\":\"holdings-id-" + i + "\"}");
           map.put("holdings.tenant_id", "holdings-tenant");
+          map.put(FQM_INSTANCES_TITLE_KEY, "Instance Title " + i);
         }
         case INSTANCE, INSTANCE_MARC -> {
           map.put("instance.jsonb", "{\"id\":\"instance-id-" + i + "\"}");

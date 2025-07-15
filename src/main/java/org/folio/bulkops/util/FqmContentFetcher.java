@@ -1,8 +1,18 @@
 package org.folio.bulkops.util;
 
+import static java.lang.String.join;
+import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.folio.bulkops.util.Constants.ENTITY;
+import static org.folio.bulkops.util.Constants.HOLDINGS_DATA;
+import static org.folio.bulkops.util.Constants.HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER;
+import static org.folio.bulkops.util.Constants.ID;
+import static org.folio.bulkops.util.Constants.INSTANCE_TITLE;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
 import static org.folio.bulkops.util.Constants.TENANT_ID;
+import static org.folio.bulkops.util.Constants.TITLE;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -10,6 +20,7 @@ import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
@@ -19,6 +30,7 @@ import java.util.stream.IntStream;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.annotation.PostConstruct;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
@@ -98,17 +110,43 @@ public class FqmContentFetcher {
     return new ByteArrayInputStream(response.stream()
         .map(json -> {
           try {
-            var jsonb = json.get(getContentJsonKey(entityType));
+            var jsonb = json.get(getEntityJsonKey(entityType));
             if (entityType == EntityType.USER) {
               return jsonb.toString();
             }
             var jsonNode = (ObjectNode) objectMapper.readTree(jsonb.toString());
             var tenant = json.get(getContentTenantKey(entityType));
             if (tenant == null) {
-              checkForTenantFieldExistenceInEcs(jsonNode.get("id").asText(), operationId, bulkOperationExecutionContents);
+              checkForTenantFieldExistenceInEcs(jsonNode.get(ID).asText(), operationId, bulkOperationExecutionContents);
               tenant = folioExecutionContext.getTenantId();
             }
             jsonNode.put(TENANT_ID, tenant.toString());
+
+            if (entityType == EntityType.ITEM) {
+
+              var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
+
+              var callNumber = Stream.of(json.get(FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY), json.get(
+                      FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY), json.get(
+                      FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY))
+                  .filter(Objects::nonNull)
+                  .map(Object::toString)
+                  .collect(Collectors.joining(SPACE));
+
+              var permanentLocationName = ofNullable(json.get(
+                  FqmKeys.FQM_PERMANENT_LOCATION_NAME_KEY)).orElse(EMPTY).toString();
+
+              jsonNode.put(TITLE, title);
+              jsonNode.put(HOLDINGS_DATA,
+                  join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER,
+                      permanentLocationName,
+                      callNumber));
+            }
+            if (entityType == EntityType.HOLDINGS_RECORD) {
+              var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
+              jsonNode.put(INSTANCE_TITLE, title);
+            }
+
             ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
             extendedRecordWrapper.set(ENTITY, jsonNode);
             extendedRecordWrapper.put(TENANT_ID, tenant.toString());
@@ -121,10 +159,10 @@ public class FqmContentFetcher {
         .getBytes(StandardCharsets.UTF_8));
   }
 
-  private String getContentJsonKey(EntityType entityType) {
+  private String getEntityJsonKey(EntityType entityType) {
     return switch(entityType) {
-      case USER -> "users.jsonb";
-      case ITEM -> "items.jsonb";
+      case USER -> FqmKeys.FQM_USERS_JSONB_KEY;
+      case ITEM -> FqmKeys.FQM_ITEMS_JSONB_KEY;
       case HOLDINGS_RECORD -> "holdings.jsonb";
       case INSTANCE, INSTANCE_MARC -> "instance.jsonb";
     };

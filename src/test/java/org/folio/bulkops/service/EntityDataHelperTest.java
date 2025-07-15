@@ -111,6 +111,7 @@ class EntityDataHelperTest {
   }
 
   @Test
+  @Deprecated
   void setMissingDataIfRequired_setsDataForItemAndHoldingsRecord() {
     var bulkOperation = BulkOperation.builder().id(UUID.randomUUID()).build();
     // Test for Item
