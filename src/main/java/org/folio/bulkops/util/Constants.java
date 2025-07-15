@@ -66,7 +66,6 @@ public class Constants {
   public static final char NON_PRINTING_DELIMITER = '\u001f';
   public static final String SPECIAL_ARRAY_DELIMITER = NON_PRINTING_DELIMITER + ARRAY_DELIMITER;
   public static final String SPECIAL_ITEM_DELIMITER = NON_PRINTING_DELIMITER + ITEM_DELIMITER;
-  public static final String SPECIAL_ITEM_DELIMITER_REGEX = NON_PRINTING_DELIMITER + ITEM_DELIMITER_PATTERN;
   public static final String ELECTRONIC_ACCESS_HEADINGS = "URL relationship;URI;Link text;Materials specified;URL public note\n";
   public static final String SUBJECT_HEADINGS = "Subject headings;Subject source;Subject type\n";
   public static final String PUBLICATION_HEADINGS = "Publisher;Publisher role;Place of publication;Publication date\n";
@@ -127,8 +126,6 @@ public class Constants {
   public static final String DUPLICATE_ENTRY = "Duplicate entry";
   public static final String FILE_UPLOAD_ERROR = "File uploading failed : Cannot upload a file. Reason: %s.";
 
-  public static final String MARC_SOURCE = "MARC";
-
   public static final int MIN_YEAR_FOR_BIRTH_DATE = 1900;
 
   public static final String TOTAL_CSV_LINES = "totalCsvLines";
@@ -145,4 +142,10 @@ public class Constants {
   public static final String CALL_NUMBER = "callNumber";
   public static final String CALL_NUMBER_SUFFIX = "callNumberSuffix";
   public static final String HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER = " > ";
+
+  /* Entities json keys for mapping from FQM query response */
+  public static final String ID = "id";
+  public static final String TITLE = "title";
+  public static final String HOLDINGS_DATA = "holdingsData";
+  public static final String INSTANCE_TITLE = "instanceTitle";
 }

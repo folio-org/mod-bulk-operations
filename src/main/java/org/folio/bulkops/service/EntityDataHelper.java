@@ -65,6 +65,10 @@ public class EntityDataHelper {
     return String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER, locationName, callNumber);
   }
 
+  /**
+   * Deprecated usage due to performance issue.
+   */
+  @Deprecated
   public void setMissingDataIfRequired(BulkOperationsEntity bulkOperationsEntity, BulkOperation bulkOperation) {
     var entity = bulkOperationsEntity.getRecordBulkOperationEntity();
     var tenantId = bulkOperationsEntity.getTenant();

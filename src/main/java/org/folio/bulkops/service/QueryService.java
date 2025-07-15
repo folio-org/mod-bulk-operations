@@ -70,7 +70,6 @@ public class QueryService {
   private final SrsClient srsClient;
   private final QueryClient queryClient;
   private final FqmContentFetcher fqmContentFetcher;
-  private final EntityDataHelper entityDataHelper;
   private final LocalReferenceDataService localReferenceDataService;
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
@@ -155,7 +154,6 @@ public class QueryService {
       while (iterator.hasNext()) {
 
         var extendedRecord = iterator.next();
-        entityDataHelper.setMissingDataIfRequired(extendedRecord, operation);
         if (extendedRecord.getRecordBulkOperationEntity() instanceof Item item) {
           localReferenceDataService.enrichWithTenant(item, extendedRecord.getTenant());
         }
