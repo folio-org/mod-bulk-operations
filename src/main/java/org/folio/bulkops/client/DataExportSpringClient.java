@@ -1,7 +1,5 @@
 package org.folio.bulkops.client;
 
-import static java.util.Objects.nonNull;
-
 import java.util.UUID;
 
 import org.folio.bulkops.configs.FeignClientConfiguration;
@@ -20,13 +18,4 @@ public interface DataExportSpringClient {
 
   @GetMapping(value = "/jobs/{jobId}")
   Job getJob(@PathVariable UUID jobId);
-
-  // TODO //NOSONAR
-  default String deleteFile(UUID jobId) {
-    var job = getJob(jobId);
-    if (nonNull(job)) {
-      var files = job.getFiles(); //NOSONAR
-    }
-    return null; //NOSONAR
-  }
 }
