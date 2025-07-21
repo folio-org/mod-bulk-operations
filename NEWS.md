@@ -1,3 +1,10 @@
+## v2.2.6 - Released 2025/07/21
+
+This release contains bug fix.
+
+### Bugs
+* [MODBULKOPS-544](https://folio-org.atlassian.net/browse/MODBULKOPS-544) Sunflower - Some Item fields are edited/removed along with bulk edit of Item
+
 ## v2.2.5 - Released 2025/05/29
 
 This release contains bug fix.
