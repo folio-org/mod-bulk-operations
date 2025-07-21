@@ -697,9 +697,9 @@ class ItemDataProcessorTest extends BaseTest {
             .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note");
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote)).withDisplaySummary("new summary");
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
+    var itemDataProcessor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
+    itemDataProcessor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
             .initial("note").updated("note 2"), extendedItem, false).apply(extendedItem);
 
     assertEquals("new summary", item.getDisplaySummary());
@@ -715,9 +715,9 @@ class ItemDataProcessorTest extends BaseTest {
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote))
             .withInTransitDestinationServicePointId("new intransit");
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
+    var itemDataProcessor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
+    itemDataProcessor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
             .initial("note").updated("note 2"), extendedItem, false).apply(extendedItem);
 
     assertEquals("new intransit", item.getInTransitDestinationServicePointId());
@@ -734,9 +734,9 @@ class ItemDataProcessorTest extends BaseTest {
             .withLastCheckIn(new LastCheckIn().withDateTime("datetime").withServicePointId("servicePointId")
                     .withStaffMemberId("staffMemberId"));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
+    var itemDataProcessor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
+    itemDataProcessor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
             .initial("note").updated("note 2"), extendedItem, false).apply(extendedItem);
 
     assertEquals("datetime", item.getLastCheckIn().getDateTime());
@@ -754,9 +754,9 @@ class ItemDataProcessorTest extends BaseTest {
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote))
             .withPurchaseOrderLineIdentifier("purchaseOrderLineId");
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
+    var itemDataProcessor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
+    itemDataProcessor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
             .initial("note").updated("note 2"), extendedItem, false).apply(extendedItem);
 
     assertEquals("purchaseOrderLineId", item.getPurchaseOrderLineIdentifier());
