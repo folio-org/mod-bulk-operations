@@ -8,7 +8,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class FqmKeys {
 
-  public static final String FQM_INSTANCES_TITLE_KEY = "instances.title";
+  public static final String FQM_INSTANCES_TITLE_KEY = "instance.title";
   public static final String FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY = "holdings.call_number_prefix";
   public static final String FQM_HOLDINGS_CALL_NUMBER_KEY = "holdings.call_number";
   public static final String FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY = "holdings.call_number_suffix";
