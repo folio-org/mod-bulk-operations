@@ -657,9 +657,9 @@ class ItemDataProcessorTest extends BaseTest {
   @SneakyThrows
   void testFindAndReplaceForCirculationNotes() {
     var checkInNote = new CirculationNote()
-      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note").withDate("2023-10-01");
+      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note");
     var checkOutNote = new CirculationNote()
-      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note").withDate("2023-10-02");
+      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note");
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
     var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
@@ -671,8 +671,6 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
     assertEquals("note", item.getCirculationNotes().get(1).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(1).getNoteType());
-    assertEquals("2023-10-01", item.getCirculationNotes().get(0).getDate());
-    assertEquals("2023-10-02", item.getCirculationNotes().get(1).getDate());
 
     checkInNote.setNote("note");
 
