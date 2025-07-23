@@ -1,3 +1,7 @@
+## v2.1.15 - Released 2025/07/23
+
+This release contains bug fix (reverted 'date' for CirculationNote).
+
 ## v2.1.14 - Released 2025/07/21
 
 This release contains bug fix.

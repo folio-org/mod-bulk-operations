@@ -1,5 +1,7 @@
 package org.folio.bulkops.domain.bean;
 
+import java.util.Date;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -9,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Data
 @With
@@ -64,7 +67,8 @@ public class CirculationNote {
   private Source source;
 
   @JsonProperty("date")
-  private String date;
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private Date date;
 
 }
 
