@@ -13,6 +13,7 @@ import static org.folio.bulkops.util.Constants.LINE_BREAK;
 import static org.folio.bulkops.util.Constants.TENANT_ID;
 import static org.folio.bulkops.util.Constants.TITLE;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -143,7 +144,7 @@ public class FqmContentFetcher {
                       callNumber));
             }
             if (entityType == EntityType.HOLDINGS_RECORD) {
-              var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
+              var title = ofNullable(json.get(FQM_INSTANCE_TITLE_KEY)).orElse(EMPTY).toString();
               jsonNode.put(INSTANCE_TITLE, title);
             }
 
