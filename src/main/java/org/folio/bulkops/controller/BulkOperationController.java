@@ -191,10 +191,10 @@ public class BulkOperationController implements BulkOperationsApi {
         if (isDownloadPreview(fileContentType) && SPLIT_NOTE_ENTITIES.contains(entityType)) {
           content = noteProcessorFactory.getNoteProcessor(entityType).processCsvContent(content, bulkOperation);
         }
-//        if (INSTANCE_MARC.equals(bulkOperation.getEntityType())
-//          && Set.of(PROPOSED_CHANGES_FILE, COMMITTED_RECORDS_FILE).contains(fileContentType)) {
-//          content = marcCsvHelper.enrichCsvWithMarcChanges(content, bulkOperation);
-//        }
+        if (INSTANCE_MARC.equals(bulkOperation.getEntityType())
+          && Set.of(PROPOSED_CHANGES_FILE, COMMITTED_RECORDS_FILE).contains(fileContentType)) {
+          content = marcCsvHelper.enrichCsvWithMarcChanges(content, bulkOperation);
+        }
         if (CSV_EXTENSION.equalsIgnoreCase(FilenameUtils.getExtension(path))) {
           content = getCsvContentWithUtf8Bom(content);
         }
