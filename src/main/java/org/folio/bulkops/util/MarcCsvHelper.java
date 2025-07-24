@@ -81,7 +81,7 @@ public class MarcCsvHelper {
         String[] line;
         while ((line = reader.readNext()) != null) {
           var hrid = line[instanceHeaderNames.indexOf(INSTANCE_HRID)];
-          if (StringUtils.isNotBlank(hrid) && changedMarcData.containsKey(hrid)) {
+          if (changedMarcData.containsKey(hrid)) {
             for (var entry : changedMarcData.get(hrid).entrySet()) {
               line[instanceHeaderNames.indexOf(entry.getKey())] = entry.getValue();
             }
@@ -116,13 +116,11 @@ public class MarcCsvHelper {
             Map<String, String> changedValues = new HashMap<>();
             for (var option : changedOptionsSet) {
               var index = instanceHeaderNames.indexOf(option);
-              if (index != -1 && StringUtils.isNotBlank(line[index])) {
+              if (index != -1) {
                 changedValues.put(option, line[index]);
               }
             }
-            if (!changedValues.isEmpty()) {
-              result.put(hrid, changedValues);
-            }
+            result.put(hrid, changedValues);
           }
         }
       } catch (Exception e) {
