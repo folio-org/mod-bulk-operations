@@ -11,6 +11,7 @@ import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.service.ConsortiaService;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,8 @@ import java.util.UUID;
 class MarcFlowCommitProcessorTest extends BaseTest {
   @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
+  @MockitoBean
+  private ConsortiaService consortiaService;
   @Autowired
   private MarcFlowCommitProcessor marcFlowCommitProcessor;
 
