@@ -3,6 +3,7 @@ package org.folio.bulkops.processor.marc;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.util.Constants.ENRICHED_PREFIX;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -11,7 +12,11 @@ import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.service.ConsortiaService;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -24,12 +29,15 @@ import java.util.UUID;
 class MarcFlowCommitProcessorTest extends BaseTest {
   @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
+  @MockitoBean
+  private ConsortiaService consortiaService;
   @Autowired
   private MarcFlowCommitProcessor marcFlowCommitProcessor;
 
-  @Test
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
   @SneakyThrows
-  void shouldEnrichCommittedCsvWithUpdatedMarcRecords() {
+  void shouldEnrichCommittedCsvWithUpdatedMarcRecords(boolean isCentralTenant) {
     var pathToCommittedCsv = "somedir/committed.csv";
     var bulkOperation = BulkOperation.builder()
       .id(UUID.randomUUID())
@@ -45,10 +53,14 @@ class MarcFlowCommitProcessorTest extends BaseTest {
       .thenReturn(new FileInputStream("src/test/resources/files/committed_marc_record.mrc"));
     when(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile()))
       .thenReturn(new FileInputStream("src/test/resources/files/matched_marc_instances.json"));
+    when(consortiaService.isTenantCentral(any())).thenReturn(isCentralTenant);
 
     var csvHrids = marcFlowCommitProcessor.getUpdatedInventoryInstanceHrids(bulkOperation);
     var marcHrids = marcFlowCommitProcessor.getUpdatedMarcInstanceHrids(bulkOperation);
-    marcFlowCommitProcessor.enrichCommittedCsvWithUpdatedMarcRecords(bulkOperation, csvHrids, marcHrids);
+
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      marcFlowCommitProcessor.enrichCommittedCsvWithUpdatedMarcRecords(bulkOperation, csvHrids, marcHrids);
+    }
 
     var contentCaptor = ArgumentCaptor.forClass(InputStream.class);
     var pathCaptor = ArgumentCaptor.forClass(String.class);
