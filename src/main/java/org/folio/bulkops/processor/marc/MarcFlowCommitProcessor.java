@@ -9,6 +9,7 @@ import static org.folio.bulkops.util.Constants.CHANGED_CSV_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.CHANGED_MARC_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.ENRICHED_PREFIX;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,15 +21,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.Instance;
+import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.service.ConsortiaService;
+import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.domain.entity.BulkOperation;
-import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.processor.CommitProcessor;
 import org.folio.bulkops.util.CSVHelper;
 import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.marc4j.MarcStreamReader;
 import org.marc4j.MarcStreamWriter;
 import org.springframework.stereotype.Service;
@@ -50,6 +55,10 @@ import java.util.List;
 public class MarcFlowCommitProcessor implements CommitProcessor {
   private final RemoteFileSystemClient remoteFileSystemClient;
   private final ObjectMapper objectMapper;
+  private final ConsortiaService consortiaService;
+  private final FolioExecutionContext folioExecutionContext;
+  private final FolioModuleMetadata folioModuleMetadata;
+  private final ErrorService errorService;
 
   @Override
   public void processCommit(BulkOperation bulkOperation) {
@@ -74,12 +83,24 @@ public class MarcFlowCommitProcessor implements CommitProcessor {
         var matchedFileParser = new JsonFactory().createParser(matchedFileReader);
         var matchedFileIterator = objectMapper.readValues(matchedFileParser, ExtendedInstance.class);
         var csvWriter = new BulkOperationsEntityCsvWriter(writer, Instance.class);
+        List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
         while (matchedFileIterator.hasNext()) {
-          var instance = matchedFileIterator.next().getEntity();
+          var extendedInstance = matchedFileIterator.next();
+          var instance = extendedInstance.getEntity();
           if (hrids.contains(instance.getHrid())) {
-            writeBeanToCsv(csvWriter, instance);
+            if (!consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
+              CSVHelper.writeBeanToCsv(bulkOperation, csvWriter, instance, bulkOperationExecutionContents);
+            } else {
+              var tenantIdOfEntity = extendedInstance.getTenant();
+              try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
+                extendedInstance.getRecordBulkOperationEntity().setTenant(tenantIdOfEntity);
+                extendedInstance.getRecordBulkOperationEntity().setTenantToNotes(bulkOperation.getTenantNotePairs());
+                CSVHelper.writeBeanToCsv(bulkOperation, csvWriter, instance, bulkOperationExecutionContents);
+              }
+            }
           }
         }
+        bulkOperationExecutionContents.forEach(errorService::saveError);
         if (nonNull(bulkOperation.getLinkToCommittedRecordsCsvFile())) {
           var appendedCsvRecords = writer.toString();
           appendedCsvRecords = appendedCsvRecords.substring(appendedCsvRecords.indexOf(LINE_BREAK) + 1);
@@ -93,15 +114,6 @@ public class MarcFlowCommitProcessor implements CommitProcessor {
       } catch (IOException | CsvRequiredFieldEmptyException | CsvDataTypeMismatchException e) {
         log.error("Failed to enrich csv file", e);
       }
-    }
-  }
-
-  private void writeBeanToCsv(BulkOperationsEntityCsvWriter writer, BulkOperationsEntity bean)
-    throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
-    try {
-      writer.write(bean);
-    } catch (ConverterException e) {
-      writeBeanToCsv(writer, bean);
     }
   }
 
