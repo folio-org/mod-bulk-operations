@@ -8,6 +8,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
@@ -66,7 +68,8 @@ class BulkEditUserProcessorTest {
     UserCollection userCollection = UserCollection.builder().users(List.of(user)).totalRecords(1).build();
 
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.USER))).thenReturn(true);
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(
+        ConcurrentHashMap.newKeySet());
     when(userClient.getByQuery(anyString(), anyLong())).thenReturn(userCollection);
 
     User result = processor.process(itemIdentifier);
@@ -89,7 +92,7 @@ class BulkEditUserProcessorTest {
   @Test
   void throwsWhenDuplicateIdentifier() {
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("dupId");
-    Set<ItemIdentifier> set = Mockito.mock(Set.class);
+    var set = Mockito.mock(KeySetView.class);
     when(set.add(any())).thenReturn(false);
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.USER))).thenReturn(true);
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(set);
@@ -106,7 +109,7 @@ class BulkEditUserProcessorTest {
     UserCollection emptyCollection = UserCollection.builder().users(Collections.emptyList()).totalRecords(0).build();
 
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.USER))).thenReturn(true);
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
     when(userClient.getByQuery(anyString(), anyLong())).thenReturn(emptyCollection);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
@@ -122,7 +125,7 @@ class BulkEditUserProcessorTest {
     UserCollection collection = UserCollection.builder().users(List.of(user1, user2)).totalRecords(2).build();
 
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.USER))).thenReturn(true);
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
     when(userClient.getByQuery(anyString(), anyLong())).thenReturn(collection);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
@@ -138,7 +141,7 @@ class BulkEditUserProcessorTest {
     UserCollection userCollection = UserCollection.builder().users(List.of(user)).totalRecords(1).build();
 
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.USER))).thenReturn(true);
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
     when(userClient.getByQuery(anyString(), anyLong())).thenReturn(userCollection);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))

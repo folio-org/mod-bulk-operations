@@ -1,6 +1,7 @@
 package org.folio.bulkops.batch.jobs.processidentifiers;
 
-import org.folio.bulkops.domain.bean.ItemIdentifier;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.stereotype.Component;
@@ -12,7 +13,7 @@ import java.util.Set;
 public class DuplicationCheckerFactory {
 
   @SuppressWarnings("unchecked")
-  public Set<ItemIdentifier> getIdentifiersToCheckDuplication(JobExecution jobExecution) {
+  public KeySetView<Object, Boolean> getIdentifiersToCheckDuplication(JobExecution jobExecution) {
     final String key = "identifiersToCheckDuplication";
     ExecutionContext context = jobExecution.getExecutionContext();
 
@@ -20,7 +21,9 @@ public class DuplicationCheckerFactory {
       if (!context.containsKey(key)) {
         context.put(key, Collections.synchronizedSet(new HashSet<>()));
       }
-      return (Set<ItemIdentifier>) context.get(key);
+      var identifiersToCheckDuplication = ConcurrentHashMap.newKeySet();
+      identifiersToCheckDuplication.add(context.get(key));
+      return identifiersToCheckDuplication;
     }
   }
 

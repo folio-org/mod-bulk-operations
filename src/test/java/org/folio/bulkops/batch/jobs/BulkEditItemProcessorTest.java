@@ -12,6 +12,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.domain.bean.ExtendedItemCollection;
@@ -106,7 +108,8 @@ class BulkEditItemProcessorTest {
     consortiumItemCollection.setItems(List.of(consortiumItem));
     consortiumItemCollection.setTotalRecords(1);
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(
+        ConcurrentHashMap.newKeySet());
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
       .thenReturn(Set.of("tenant1"));
@@ -124,7 +127,7 @@ class BulkEditItemProcessorTest {
   @Test
   void throwsWhenDuplicateIdentifier() {
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("dupId");
-    Set<ItemIdentifier> set = Mockito.mock(Set.class);
+    var set = Mockito.mock(KeySetView.class);
     when(set.add(any())).thenReturn(false);
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(set);
 
@@ -140,7 +143,7 @@ class BulkEditItemProcessorTest {
     emptyConsortium.setItems(Collections.emptyList());
     emptyConsortium.setTotalRecords(0);
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(emptyConsortium);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
@@ -156,7 +159,7 @@ class BulkEditItemProcessorTest {
     Item item2 = new Item().withId("2");
     ItemCollection collection = ItemCollection.builder().items(List.of(item1, item2)).totalRecords(2).build();
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(true);
     when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(collection);
     when(entityDataHelper.getInstanceTitle(any(), anyString())).thenReturn("Instance Title");
@@ -171,7 +174,7 @@ class BulkEditItemProcessorTest {
   void throwsWhenNoPermissionForLocalTenant() {
     when(folioExecutionContext.getTenantId()).thenReturn("localTenant");
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("noPerm");
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(false);
     when(userClient.getUserById(anyString())).thenReturn(new User().withUsername("testuser"));
 
@@ -191,7 +194,7 @@ class BulkEditItemProcessorTest {
     consortiumItemCollection.setItems(List.of(consortiumItem));
     consortiumItemCollection.setTotalRecords(1);
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
       .thenReturn(Set.of("tenant1"));
@@ -229,7 +232,7 @@ class BulkEditItemProcessorTest {
     consortiumItemCollection.setItems(List.of(consortiumItem));
     consortiumItemCollection.setTotalRecords(1);
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
             .thenReturn(Set.of(tenantId));
@@ -265,7 +268,7 @@ class BulkEditItemProcessorTest {
     consortiumItemCollection.setItems(List.of(consortiumItem));
     consortiumItemCollection.setTotalRecords(1);
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
             .thenReturn(Set.of(tenantId));
@@ -301,7 +304,7 @@ class BulkEditItemProcessorTest {
     consortiumItemCollection.setItems(List.of(consortiumItem));
     consortiumItemCollection.setTotalRecords(1);
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
             .thenReturn(Set.of(tenantId));
@@ -336,7 +339,7 @@ class BulkEditItemProcessorTest {
     consortiumItemCollection.setItems(List.of(consortiumItem));
     consortiumItemCollection.setTotalRecords(1);
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
             .thenReturn(Set.of(tenantId));
