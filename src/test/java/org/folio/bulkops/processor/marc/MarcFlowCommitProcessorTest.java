@@ -91,7 +91,9 @@ class MarcFlowCommitProcessorTest extends BaseTest {
     when(remoteFileSystemClient.writer(anyString()))
       .thenReturn(writer);
 
-    marcFlowCommitProcessor.enrichCommittedCsvWithUpdatedMarcRecords(bulkOperation, singletonList("hrid1"), singletonList("hrid3"));
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      marcFlowCommitProcessor.enrichCommittedCsvWithUpdatedMarcRecords(bulkOperation, singletonList("hrid1"), singletonList("hrid3"));
+    }
 
     assertThat(bulkOperation.getLinkToCommittedRecordsCsvFile()).isNotNull();
     var expectedCsvContent = """
