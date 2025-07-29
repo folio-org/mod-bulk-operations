@@ -70,6 +70,8 @@ public class Instance implements BulkOperationsEntity {
   public static final String INSTANCE_CLASSIFICATION = "Classification";
   public static final String INSTANCE_PUBLICATION = "Publication";
 
+  public static final int INSTANCE_HRID_POSITION = 4;
+
   @JsonProperty("id")
   @CsvCustomBindByName(column = INSTANCE_UUID, converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 0, converter = StringConverter.class)
@@ -99,7 +101,7 @@ public class Instance implements BulkOperationsEntity {
 
   @JsonProperty("hrid")
   @CsvCustomBindByName(column = INSTANCE_HRID, converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 4, converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = INSTANCE_HRID_POSITION, converter = StringConverter.class)
   @UnifiedTableCell
   private String hrid;
 

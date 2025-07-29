@@ -47,7 +47,7 @@ spring:
       initialize-schema: never
 folio:
   system-user:
-    enabled: ${SYSTEM_USER_ENABLED:true}
+    enabled: ${SYSTEM_USER_ENABLED:false}
     username: ${SYSTEM_USER_NAME:mod-bulk-operations-system-user}
     password: ${SYSTEM_USER_PASSWORD}
     lastname: System
@@ -89,7 +89,7 @@ application:
     group-id: ${ENV:folio}-mod-bulk-operations-events-group
   file-uploading:
     max-retry-count: ${MAX_UPLOADING_RETRIES:5000}
-  platform: ${PLATFORM:okapi}
+  platform: ${PLATFORM:eureka}
   data-import-integration:
     num_of_concurrent_requests: ${DI_NUMBER_OF_CONCURRENT_REQUESTS:5}
     chunk_size: ${DI_CHUNK_SIZE:1000}
