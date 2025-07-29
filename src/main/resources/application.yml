@@ -47,7 +47,7 @@ spring:
       initialize-schema: never
 folio:
   system-user:
-    enabled: ${SYSTEM_USER_ENABLED:false}
+    enabled: ${SYSTEM_USER_ENABLED:true}
     username: ${SYSTEM_USER_NAME:mod-bulk-operations-system-user}
     password: ${SYSTEM_USER_PASSWORD}
     lastname: System
