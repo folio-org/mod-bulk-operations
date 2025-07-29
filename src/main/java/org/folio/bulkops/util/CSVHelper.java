@@ -34,17 +34,17 @@ public class CSVHelper {
     try {
       csvWriter.write(bean);
     } catch (ConverterException e) {
-//      if (APPLY_CHANGES.equals(operation.getStatus())) {
+      if (APPLY_CHANGES.equals(operation.getStatus())) {
         log.error("Record {}, field: {}, converter exception: {}", bean.getIdentifier(operation.getIdentifierType()), e.getField().getName(), e.getMessage());
-//      } else {
-//        bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
-//                .identifier(bean.getIdentifier(operation.getIdentifierType()))
-//                .bulkOperationId(operation.getId())
-//                .state(StateType.FAILED)
-//                .errorType(e.getErrorType())
-//                .errorMessage(format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()))
-//                .build());
-//      }
+      } else {
+        bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
+                .identifier(bean.getIdentifier(operation.getIdentifierType()))
+                .bulkOperationId(operation.getId())
+                .state(StateType.FAILED)
+                .errorType(e.getErrorType())
+                .errorMessage(format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()))
+                .build());
+      }
       writeBeanToCsv(operation, csvWriter, bean, bulkOperationExecutionContents);
     }
   }
