@@ -89,7 +89,7 @@ public class MarcFlowCommitProcessor implements CommitProcessor {
           var instance = extendedInstance.getEntity();
           if (hrids.contains(instance.getHrid())) {
             if (!consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
-              try (var ignored = new FolioExecutionContextSetter(folioExecutionContext)) {
+              try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(folioExecutionContext.getTenantId(), folioModuleMetadata, folioExecutionContext))) {
                 CSVHelper.writeBeanToCsv(bulkOperation, csvWriter, instance, bulkOperationExecutionContents);
               }
             } else {
