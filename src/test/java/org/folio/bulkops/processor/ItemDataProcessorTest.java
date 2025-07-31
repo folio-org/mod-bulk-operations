@@ -1,6 +1,7 @@
 package org.folio.bulkops.processor;
 
 import static java.util.Objects.isNull;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.folio.bulkops.domain.bean.InventoryItemStatus.NameEnum.AVAILABLE;
 import static org.folio.bulkops.domain.bean.InventoryItemStatus.NameEnum.MISSING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
@@ -40,6 +41,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -47,6 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.CirculationNote;
@@ -56,6 +60,7 @@ import org.folio.bulkops.domain.bean.InventoryItemStatus;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.ItemNote;
+import org.folio.bulkops.domain.bean.LastCheckIn;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.ErrorType;
@@ -659,9 +664,9 @@ class ItemDataProcessorTest extends BaseTest {
   @SneakyThrows
   void testFindAndReplaceForCirculationNotes() {
     var checkInNote = new CirculationNote()
-      .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("check-in note");
+            .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("check-in note");
     var checkOutNote = new CirculationNote()
-      .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("check-out note");
+            .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("check-out note");
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
     var processor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
@@ -683,6 +688,80 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
     assertEquals("new check-out note", item.getCirculationNotes().get(1).getNote());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(1).getNoteType());
+  }
+
+  @Test
+  @SneakyThrows
+  void testCheckDisplaySummaryRemainsUnchanged() {
+    var checkInNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note");
+    var checkOutNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note");
+    var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote)).withDisplaySummary("new summary");
+    var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
+    var itemDataProcessor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
+
+    itemDataProcessor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
+            .initial("note").updated("note 2"), extendedItem, false).apply(extendedItem);
+
+    assertEquals("new summary", item.getDisplaySummary());
+  }
+
+  @Test
+  @SneakyThrows
+  void testInTransitDestinationServicePointIdRemainsUnchanged() {
+    var checkInNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note");
+    var checkOutNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note");
+    var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote))
+            .withInTransitDestinationServicePointId("new intransit");
+    var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
+    var itemDataProcessor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
+
+    itemDataProcessor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
+            .initial("note").updated("note 2"), extendedItem, false).apply(extendedItem);
+
+    assertEquals("new intransit", item.getInTransitDestinationServicePointId());
+  }
+
+  @Test
+  @SneakyThrows
+  void testLastCheckInRemainsUnchanged() {
+    var checkInNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note");
+    var checkOutNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note");
+    var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote))
+            .withLastCheckIn(new LastCheckIn().withDateTime("datetime").withServicePointId("servicePointId")
+                    .withStaffMemberId("staffMemberId"));
+    var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
+    var itemDataProcessor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
+
+    itemDataProcessor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
+            .initial("note").updated("note 2"), extendedItem, false).apply(extendedItem);
+
+    assertEquals("datetime", item.getLastCheckIn().getDateTime());
+    assertEquals("servicePointId", item.getLastCheckIn().getServicePointId());
+    assertEquals("staffMemberId", item.getLastCheckIn().getStaffMemberId());
+  }
+
+  @Test
+  @SneakyThrows
+  void testPurchaseOrderLineIdentifierRemainsUnchanged() {
+    var checkInNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.IN).withNote("note");
+    var checkOutNote = new CirculationNote()
+            .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note");
+    var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote))
+            .withPurchaseOrderLineIdentifier("purchaseOrderLineId");
+    var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
+    var itemDataProcessor = new ItemDataProcessor(null, null, new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
+
+    itemDataProcessor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
+            .initial("note").updated("note 2"), extendedItem, false).apply(extendedItem);
+
+    assertEquals("purchaseOrderLineId", item.getPurchaseOrderLineIdentifier());
   }
 
   @Test
@@ -1036,5 +1115,44 @@ class ItemDataProcessorTest extends BaseTest {
       verify(errorService, times(1)).saveError(operationId, IDENTIFIER, String.format("%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.",
         itemId, "memberA", "permanent loan type").trim(), ErrorType.ERROR);
     }
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+          "2023-10-01T12:00:00.000+0000,2023-10-01T12:00:00.000+0000",
+          "2024-01-01T00:00:00.000+0000,2024-01-01T00:00:00.000+0000"
+  })
+  void shouldSerializeAndDeserializeValidDate(String inputDate, String expectedDate) throws Exception {
+    CirculationNote note = CirculationNote.builder().date(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(inputDate)).build();
+    String serialized = new ObjectMapper().writeValueAsString(note);
+    CirculationNote deserialized = new ObjectMapper().readValue(serialized, CirculationNote.class);
+    assertThat(deserialized.getDate().getTime()).isEqualTo(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(expectedDate).getTime());
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+          "null",
+          "''"
+  })
+  void shouldHandleNullOrEmptyDateGracefully(String inputDate) throws Exception {
+    CirculationNote note = CirculationNote.builder()
+            .date(inputDate != null && !inputDate.isEmpty() && !"null".equals(inputDate)
+                    ? new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(inputDate)
+                    : null)
+            .build();    String serialized = new ObjectMapper().writeValueAsString(note);
+    CirculationNote deserialized = new ObjectMapper().readValue(serialized, CirculationNote.class);
+    assertThat(deserialized.getDate()).isNull();
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+          "invalid-date-format"
+  })
+  void shouldThrowExceptionForInvalidDateFormat(String invalidDate) {
+    Exception exception = org.assertj.core.api.Assertions.catchThrowableOfType(
+            () -> new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(invalidDate),
+            ParseException.class
+    );
+    assertThat(exception).isInstanceOf(ParseException.class);
   }
 }
