@@ -73,7 +73,7 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
   private String identifierType;
 
   @Override
-  public synchronized ExtendedItemCollection process(ItemIdentifier itemIdentifier) throws BulkEditException {
+  public ExtendedItemCollection process(ItemIdentifier itemIdentifier) throws BulkEditException {
     if (!duplicationCheckerFactory.getIdentifiersToCheckDuplication(jobExecution).add(itemIdentifier)) {
       throw new BulkEditException("Duplicate entry", ErrorType.WARNING);
     }
