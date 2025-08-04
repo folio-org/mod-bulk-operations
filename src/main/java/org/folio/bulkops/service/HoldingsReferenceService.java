@@ -78,6 +78,7 @@ public class HoldingsReferenceService {
   private final FolioModuleMetadata folioModuleMetadata;
   private final FolioExecutionContext folioExecutionContext;
   private final LocalReferenceDataService localReferenceDataService;
+//  private final HoldingsReferenceService holdingsReferenceService;
 
   @Cacheable(cacheNames = "holdings")
   public HoldingsRecord getHoldingsRecordById(String id, String tenantId) {
