@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.util.concurrent.ConcurrentHashMap;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.SrsClient;
@@ -35,6 +34,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 class BulkEditInstanceProcessorTest {
@@ -67,8 +67,7 @@ class BulkEditInstanceProcessorTest {
     ReflectionTestUtils.setField(processor, "jobExecution", jobExecution);
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(
-        ConcurrentHashMap.newKeySet());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
     when(duplicationCheckerFactory.getFetchedIds(any())).thenReturn(new HashSet<>());
   }
 
@@ -177,7 +176,7 @@ class BulkEditInstanceProcessorTest {
   @Test
   void shouldThrowOnDuplicateIdentifier() {
     ItemIdentifier identifier = new ItemIdentifier().withItemId("777");
-    var set = ConcurrentHashMap.newKeySet();
+    Set<ItemIdentifier> set = new HashSet<>();
     set.add(identifier);
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(set);
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE))).thenReturn(true);

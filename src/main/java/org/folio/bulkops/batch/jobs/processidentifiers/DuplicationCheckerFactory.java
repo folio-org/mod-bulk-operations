@@ -1,8 +1,6 @@
 package org.folio.bulkops.batch.jobs.processidentifiers;
 
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.item.ExecutionContext;
@@ -15,7 +13,7 @@ import java.util.Set;
 public class DuplicationCheckerFactory {
 
   @SuppressWarnings("unchecked")
-  public KeySetView<Object, Boolean> getIdentifiersToCheckDuplication(JobExecution jobExecution) {
+  public Set<ItemIdentifier> getIdentifiersToCheckDuplication(JobExecution jobExecution) {
     final String key = "identifiersToCheckDuplication";
     ExecutionContext context = jobExecution.getExecutionContext();
 
@@ -23,10 +21,8 @@ public class DuplicationCheckerFactory {
       if (!context.containsKey(key)) {
         context.put(key, Collections.synchronizedSet(new HashSet<>()));
       }
-      var identifiersToCheckDuplication = ConcurrentHashMap.newKeySet();
-      identifiersToCheckDuplication.addAll((Set<ItemIdentifier>)
-          Optional.ofNullable(context.get(key)).orElse(Collections.emptySet()));
-      return identifiersToCheckDuplication;
+      return Collections.synchronizedSet((Set<ItemIdentifier>) Optional.ofNullable(context.get(key))
+          .orElse(Collections.synchronizedSet(new HashSet<>())));
     }
   }
 
@@ -39,7 +35,8 @@ public class DuplicationCheckerFactory {
       if (!context.containsKey(key)) {
         context.put(key, Collections.synchronizedSet(new HashSet<>()));
       }
-      return (Set<String>) context.get(key);
+      return Collections.synchronizedSet((Set<String>) Optional.ofNullable(context.get(key))
+          .orElse(Collections.synchronizedSet(new HashSet<>())));
     }
   }
 }

@@ -17,8 +17,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.client.HoldingsClient;
 import org.folio.bulkops.client.SearchClient;
@@ -111,8 +109,7 @@ class BulkEditHoldingsProcessorTest {
     ConsortiumHoldingCollection consortiumHoldingCollection = new ConsortiumHoldingCollection()
       .holdings(List.of(consortiumHolding)).totalRecords(1);
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(
-        ConcurrentHashMap.newKeySet());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
     when(duplicationCheckerFactory.getFetchedIds(any())).thenReturn(new HashSet<>());
     when(searchClient.getConsortiumHoldingCollection(any())).thenReturn(consortiumHoldingCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.HOLDINGS_RECORD), any(), anyString(), anySet(), eq(itemIdentifier)))
@@ -131,7 +128,7 @@ class BulkEditHoldingsProcessorTest {
   @Test
   void throwsWhenDuplicateIdentifier() {
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("dupId");
-    var set = Mockito.mock(KeySetView.class);
+    Set<ItemIdentifier> set = Mockito.mock(Set.class);
     when(set.add(any())).thenReturn(false);
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(set);
 
@@ -145,7 +142,7 @@ class BulkEditHoldingsProcessorTest {
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("notfound");
     ConsortiumHoldingCollection emptyConsortium = new ConsortiumHoldingCollection().holdings(Collections.emptyList()).totalRecords(0);
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
     when(searchClient.getConsortiumHoldingCollection(any())).thenReturn(emptyConsortium);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
@@ -162,7 +159,7 @@ class BulkEditHoldingsProcessorTest {
     HoldingsRecordCollection collection = HoldingsRecordCollection.builder()
       .holdingsRecords(List.of(record1, record2)).totalRecords(2).build();
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(true);
     when(holdingsClient.getByQuery(anyString())).thenReturn(collection);
 
@@ -175,7 +172,7 @@ class BulkEditHoldingsProcessorTest {
   void throwsWhenNoPermissionForLocalTenant() {
     when(folioExecutionContext.getTenantId()).thenReturn("localTenant");
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("noPerm");
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(false);
     when(userClient.getUserById(anyString())).thenReturn(new User().withUsername("testuser"));
 
@@ -188,7 +185,7 @@ class BulkEditHoldingsProcessorTest {
   void throwsWhenUnsupportedIdentifierType() {
     ReflectionTestUtils.setField(processor, "identifierType", "UNSUPPORTED");
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("id");
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
       .isInstanceOf(IllegalArgumentException.class)
@@ -264,7 +261,7 @@ class BulkEditHoldingsProcessorTest {
 
     when(consortiaService.getCentralTenantId(anyString())).thenReturn(tenantId);
     when(folioExecutionContext.getTenantId()).thenReturn(tenantId);
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(ConcurrentHashMap.newKeySet());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
     when(duplicationCheckerFactory.getFetchedIds(any())).thenReturn(new HashSet<>());
     when(searchClient.getConsortiumHoldingCollection(any())).thenReturn(consortiumHoldingCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(any(), any(), anyString(), anySet(), any())).thenReturn(Set.of(tenantId));
