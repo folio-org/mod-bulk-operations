@@ -2,7 +2,7 @@ package org.folio.bulkops.domain.bean;
 
 import java.util.Date;
 
-import org.springframework.format.annotation.DateTimeFormat;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -68,7 +68,7 @@ public class CirculationNote {
   private Source source;
 
   @JsonProperty("date")
-  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
   private Date date;
 
 }
