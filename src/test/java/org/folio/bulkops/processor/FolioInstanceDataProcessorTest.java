@@ -106,7 +106,7 @@ class FolioInstanceDataProcessorTest extends BaseTest {
 
   @Test
   void testClone() {
-    var instanceDataProcessor = new FolioInstanceDataProcessor(new InstanceNotesUpdaterFactory(new AdministrativeNotesUpdater(),
+    var folioInstanceDataProcessor = new FolioInstanceDataProcessor(new InstanceNotesUpdaterFactory(new AdministrativeNotesUpdater(),
       new StatisticalCodesUpdater()));
     var instance = Instance.builder()
       .id(UUID.randomUUID().toString())
@@ -115,11 +115,11 @@ class FolioInstanceDataProcessorTest extends BaseTest {
       .administrativeNotes(List.of("Note1", "Note2"))
       .build();
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
-    var cloned = instanceDataProcessor.clone(extendedInstance);
-    assertTrue(instanceDataProcessor.compare(extendedInstance, cloned));
+    var cloned = folioInstanceDataProcessor.clone(extendedInstance);
+    assertTrue(folioInstanceDataProcessor.compare(extendedInstance, cloned));
 
     cloned.getEntity().setAdministrativeNotes(Collections.singletonList("Note3"));
-    assertFalse(instanceDataProcessor.compare(extendedInstance, cloned));
+    assertFalse(folioInstanceDataProcessor.compare(extendedInstance, cloned));
   }
 
   @ParameterizedTest

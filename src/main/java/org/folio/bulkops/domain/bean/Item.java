@@ -6,7 +6,6 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
-import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -26,7 +25,6 @@ import org.folio.bulkops.domain.converter.BoundWithTitlesConverter;
 import org.folio.bulkops.domain.converter.CallNumberTypeConverter;
 import org.folio.bulkops.domain.converter.CirculationNoteListConverter;
 import org.folio.bulkops.domain.converter.DamagedStatusConverter;
-import org.folio.bulkops.domain.converter.DateWithoutTimeConverter;
 import org.folio.bulkops.domain.converter.EffectiveCallNumberComponentsConverter;
 import org.folio.bulkops.domain.converter.ItemElectronicAccessListConverter;
 import org.folio.bulkops.domain.converter.ItemLocationConverter;
@@ -38,7 +36,6 @@ import org.folio.bulkops.domain.converter.MaterialTypeConverter;
 import org.folio.bulkops.domain.converter.StringConverter;
 import org.folio.bulkops.domain.converter.StringListConverter;
 import org.folio.bulkops.domain.converter.TagsConverter;
-import org.folio.bulkops.domain.dto.DataType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
 import org.folio.bulkops.service.ItemReferenceHelper;
@@ -263,10 +260,10 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   private String missingPieces;
 
   @JsonProperty("missingPiecesDate")
-  @CsvCustomBindByName(column = "Missing pieces date", converter = DateWithoutTimeConverter.class)
-  @CsvCustomBindByPosition(position = 28, converter = DateWithoutTimeConverter.class)
-  @UnifiedTableCell(dataType = DataType.DATE_TIME, visible = false)
-  private Date missingPiecesDate;
+  @CsvCustomBindByName(column = "Missing pieces date", converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 28, converter = StringConverter.class)
+  @UnifiedTableCell(visible = false)
+  private String missingPiecesDate;
 
   @JsonProperty("itemDamagedStatusId")
   @CsvCustomBindByName(column = "Item damaged status", converter = DamagedStatusConverter.class)
@@ -275,10 +272,10 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   private String itemDamagedStatus;
 
   @JsonProperty("itemDamagedStatusDate")
-  @CsvCustomBindByName(column = "Item damaged status date", converter = DateWithoutTimeConverter.class)
-  @CsvCustomBindByPosition(position = 30, converter = DateWithoutTimeConverter.class)
-  @UnifiedTableCell(dataType = DataType.DATE_TIME, visible = false)
-  private Date itemDamagedStatusDate;
+  @CsvCustomBindByName(column = "Item damaged status date", converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 30, converter = StringConverter.class)
+  @UnifiedTableCell(visible = false)
+  private String itemDamagedStatusDate;
 
   @JsonProperty("notes")
   @Valid
@@ -449,6 +446,18 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @JsonProperty("circulationNotes")
   @Valid
   private List<CirculationNote> circulationNotes;
+
+  @JsonProperty("displaySummary")
+  private String displaySummary;
+
+  @JsonProperty("inTransitDestinationServicePointId")
+  private String inTransitDestinationServicePointId;
+
+  @JsonProperty("lastCheckIn")
+  private LastCheckIn lastCheckIn;
+
+  @JsonProperty("purchaseOrderLineIdentifier")
+  private String purchaseOrderLineIdentifier;
 
   @Override
   public String getIdentifier(IdentifierType identifierType) {
