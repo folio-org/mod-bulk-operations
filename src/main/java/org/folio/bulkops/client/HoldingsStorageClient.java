@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient(name = "holdings-storage/holdings", configuration = { FeignClientConfiguration.class, FeignEncoderConfiguration.class })
-public interface HoldingsClient {
+public interface HoldingsStorageClient {
 
   @GetMapping(value = "/{holdingsRecordId}", produces = MediaType.APPLICATION_JSON_VALUE)
   HoldingsRecord getHoldingById(@PathVariable String holdingsRecordId);

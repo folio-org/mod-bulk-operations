@@ -11,7 +11,7 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 import static org.folio.bulkops.util.RuleUtils.fetchParameters;
 import static org.folio.bulkops.util.RuleUtils.findRuleByOption;
 
-import org.folio.bulkops.client.HoldingsClient;
+import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
@@ -41,7 +41,7 @@ public class HoldingsUpdateProcessor extends FolioAbstractUpdateProcessor<Extend
   private static final String ERROR_MESSAGE_TEMPLATE = "No change in value for holdings record required, associated %s item(s) have been updated.";
   private static final String NO_HOLDING_WRITE_PERMISSIONS_TEMPLATE = "User %s does not have required permission to edit the holdings record - %s=%s on the tenant ";
 
-  private final HoldingsClient holdingsClient;
+  private final HoldingsStorageClient holdingsStorageClient;
   private final ItemClient itemClient;
   private final RuleService ruleService;
   private final ErrorService errorService;
@@ -58,7 +58,7 @@ public class HoldingsUpdateProcessor extends FolioAbstractUpdateProcessor<Extend
       permissionsValidator.checkIfBulkEditWritePermissionExists(tenantId, EntityType.HOLDINGS_RECORD,
         NO_HOLDING_WRITE_PERMISSIONS_TEMPLATE + tenantId);
       try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
-        holdingsClient.updateHoldingsRecord(
+        holdingsStorageClient.updateHoldingsRecord(
           holdingsRecord.withInstanceHrid(null).withItemBarcode(null).withInstanceTitle(null),
           holdingsRecord.getId()
         );
@@ -66,7 +66,7 @@ public class HoldingsUpdateProcessor extends FolioAbstractUpdateProcessor<Extend
     } else {
       permissionsValidator.checkIfBulkEditWritePermissionExists(folioExecutionContext.getTenantId(), EntityType.HOLDINGS_RECORD,
         NO_HOLDING_WRITE_PERMISSIONS_TEMPLATE + folioExecutionContext.getTenantId());
-      holdingsClient.updateHoldingsRecord(
+      holdingsStorageClient.updateHoldingsRecord(
         holdingsRecord.withInstanceHrid(null).withItemBarcode(null).withInstanceTitle(null),
         holdingsRecord.getId()
       );

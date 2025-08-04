@@ -1,23 +1,36 @@
 package org.folio.bulkops.service;
 
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.folio.bulkops.util.Constants.CALL_NUMBER;
+import static org.folio.bulkops.util.Constants.CALL_NUMBER_PREFIX;
+import static org.folio.bulkops.util.Constants.CALL_NUMBER_SUFFIX;
+import static org.folio.bulkops.util.Constants.IS_ACTIVE;
+import static org.folio.bulkops.util.Constants.NAME;
+import static org.folio.bulkops.util.Constants.PERMANENT_LOCATION_ID;
 import static org.folio.spring.integration.XOkapiHeaders.TENANT;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.folio.bulkops.client.HoldingsClient;
+import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.InstanceClient;
+import org.folio.bulkops.client.InstanceStorageClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.domain.bean.BriefInstance;
 import org.folio.bulkops.domain.bean.BriefInstanceCollection;
+import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.dto.ErrorType;
@@ -34,9 +47,11 @@ import org.mockito.MockitoAnnotations;
 class HoldingsReferenceServiceTest {
 
   @Mock
-  private HoldingsClient holdingsClient;
+  private HoldingsStorageClient holdingsStorageClient;
   @Mock
   private InstanceClient instanceClient;
+  @Mock
+  private InstanceStorageClient instanceStorageClient;
   @Mock
   private LocationClient locationClient;
   @Mock
@@ -62,7 +77,7 @@ class HoldingsReferenceServiceTest {
 
   @Test
   void getInstanceTitleById_throwsBulkEditExceptionOnNotFound() {
-    when(instanceClient.getInstanceJsonById("notfound")).thenThrow(new NotFoundException("not found"));
+    when(instanceStorageClient.getInstanceJsonById("notfound")).thenThrow(new NotFoundException("not found"));
     assertThatThrownBy(() -> service.getInstanceTitleById("notfound", "tenant"))
       .isInstanceOf(BulkEditException.class)
       .hasMessageContaining("Instance not found by id=notfound")
@@ -78,7 +93,7 @@ class HoldingsReferenceServiceTest {
         .add(mapper.createObjectNode()
           .put("publisher", "Pub")
           .put("dateOfPublication", "2020")));
-    when(instanceClient.getInstanceJsonById("id1")).thenReturn(instanceJson);
+    when(instanceStorageClient.getInstanceJsonById("id1")).thenReturn(instanceJson);
 
     String result = service.getInstanceTitleById("id1", "tenant");
     assertThat(result).isEqualTo("Test Title. Pub, 2020");
@@ -92,7 +107,7 @@ class HoldingsReferenceServiceTest {
       .set("publication", mapper.createArrayNode()
         .add(mapper.createObjectNode()
           .put("publisher", "Pub")));
-    when(instanceClient.getInstanceJsonById("id2")).thenReturn(instanceJson);
+    when(instanceStorageClient.getInstanceJsonById("id2")).thenReturn(instanceJson);
 
     String result = service.getInstanceTitleById("id2", "tenant");
     assertThat(result).isEqualTo("Test Title. Pub");
@@ -102,7 +117,7 @@ class HoldingsReferenceServiceTest {
   void getInstanceTitleById_returnsTitleWithoutPublication() {
     ObjectMapper mapper = new ObjectMapper();
     JsonNode instanceJson = mapper.createObjectNode().put("title", "Test Title");
-    when(instanceClient.getInstanceJsonById("id3")).thenReturn(instanceJson);
+    when(instanceStorageClient.getInstanceJsonById("id3")).thenReturn(instanceJson);
 
     String result = service.getInstanceTitleById("id3", "tenant");
     assertThat(result).isEqualTo("Test Title");
@@ -112,7 +127,7 @@ class HoldingsReferenceServiceTest {
   void getHoldingsJsonById_returnsJson() {
     ObjectMapper mapper = new ObjectMapper();
     JsonNode holdingsJson = mapper.createObjectNode().put("id", "h1");
-    when(holdingsClient.getHoldingsJsonById("h1")).thenReturn(holdingsJson);
+    when(holdingsStorageClient.getHoldingsJsonById("h1")).thenReturn(holdingsJson);
 
     JsonNode result = service.getHoldingsJsonById("h1", "tenant");
     assertThat(result.get("id").asText()).isEqualTo("h1");
@@ -190,7 +205,7 @@ class HoldingsReferenceServiceTest {
     JsonNode instanceJson = mapper.createObjectNode()
             .put("title", "Title1")
             .set("publication", mapper.createArrayNode().add(publication));
-    when(instanceClient.getInstanceJsonById("id-pub-date")).thenReturn(instanceJson);
+    when(instanceStorageClient.getInstanceJsonById("id-pub-date")).thenReturn(instanceJson);
 
     String result = service.getInstanceTitleById("id-pub-date", "tenant");
     assertThat(result).isEqualTo("Title1. Test Publisher, 2021");
@@ -204,7 +219,7 @@ class HoldingsReferenceServiceTest {
     JsonNode instanceJson = mapper.createObjectNode()
             .put("title", "Title2")
             .set("publication", mapper.createArrayNode().add(publication));
-    when(instanceClient.getInstanceJsonById("id-pub-only")).thenReturn(instanceJson);
+    when(instanceStorageClient.getInstanceJsonById("id-pub-only")).thenReturn(instanceJson);
 
     String result = service.getInstanceTitleById("id-pub-only", "tenant");
     assertThat(result).isEqualTo("Title2. Only Publisher");
@@ -218,7 +233,7 @@ class HoldingsReferenceServiceTest {
     JsonNode instanceJson = mapper.createObjectNode()
             .put("title", "Title3")
             .set("publication", mapper.createArrayNode().add(publication));
-    when(instanceClient.getInstanceJsonById("id-date-only")).thenReturn(instanceJson);
+    when(instanceStorageClient.getInstanceJsonById("id-date-only")).thenReturn(instanceJson);
 
     String result = service.getInstanceTitleById("id-date-only", "tenant");
     assertThat(result).isEqualTo("Title3. , 2022");
@@ -231,7 +246,7 @@ class HoldingsReferenceServiceTest {
     JsonNode instanceJson = mapper.createObjectNode()
             .put("title", "Title4")
             .set("publication", mapper.createArrayNode().add(publication));
-    when(instanceClient.getInstanceJsonById("id-empty-pub")).thenReturn(instanceJson);
+    when(instanceStorageClient.getInstanceJsonById("id-empty-pub")).thenReturn(instanceJson);
 
     String result = service.getInstanceTitleById("id-empty-pub", "tenant");
     assertThat(result).isEqualTo("Title4");
@@ -242,7 +257,7 @@ class HoldingsReferenceServiceTest {
     ObjectMapper mapper = new ObjectMapper();
     JsonNode instanceJson = mapper.createObjectNode()
             .put("title", "Title5");
-    when(instanceClient.getInstanceJsonById("id-no-pub")).thenReturn(instanceJson);
+    when(instanceStorageClient.getInstanceJsonById("id-no-pub")).thenReturn(instanceJson);
 
     String result = service.getInstanceTitleById("id-no-pub", "tenant");
     assertThat(result).isEqualTo("Title5");
@@ -254,9 +269,75 @@ class HoldingsReferenceServiceTest {
     JsonNode instanceJson = mapper.createObjectNode()
             .put("title", "Title6")
             .set("publication", mapper.createArrayNode());
-    when(instanceClient.getInstanceJsonById("id-empty-pub-array")).thenReturn(instanceJson);
+    when(instanceStorageClient.getInstanceJsonById("id-empty-pub-array")).thenReturn(instanceJson);
 
     String result = service.getInstanceTitleById("id-empty-pub-array", "tenant");
     assertThat(result).isEqualTo("Title6");
+  }
+
+  @Test
+  void getInstanceTitle_returnsTitle_whenHoldingsAndInstanceExist() throws JsonProcessingException {
+    Item item = new Item().withHoldingsRecordId("holdingsId");
+    HoldingsRecord holdingsRecord = new HoldingsRecord().withInstanceId("instanceId");
+
+    when(holdingsStorageClient.getHoldingById("holdingsId")).thenReturn(holdingsRecord);
+    when(instanceStorageClient.getInstanceJsonById("instanceId")).thenReturn(new ObjectMapper().readTree("{\"title\":\"Instance Title\"}"));
+
+    String result = service.getInstanceTitleByHoldingsRecordId(item.getHoldingsRecordId(), "tenant");
+    assertEquals("Instance Title", result);
+  }
+
+  @Test
+  void getInstanceTitle_returnsEmpty_whenHoldingsNotFound() {
+    Item item = new Item().withHoldingsRecordId("holdingsId");
+    when(service.getHoldingsRecordById("holdingsId", "tenant")).thenReturn(null);
+
+    String result = service.getInstanceTitleByHoldingsRecordId(item.getHoldingsRecordId(), "tenant");
+    assertEquals(EMPTY, result);
+  }
+
+  @Test
+  void getHoldingsData_returnsFormattedString_whenDataPresent() {
+    String holdingsId = "holdingsId";
+    String tenantId = "tenant";
+    ObjectNode holdingsJson = JsonNodeFactory.instance.objectNode();
+    holdingsJson.put(PERMANENT_LOCATION_ID, "locId");
+    holdingsJson.put(CALL_NUMBER_PREFIX, "PRE");
+    holdingsJson.put(CALL_NUMBER, "123");
+    holdingsJson.put(CALL_NUMBER_SUFFIX, "SUF");
+
+    ObjectNode locationJson = JsonNodeFactory.instance.objectNode();
+    locationJson.put(IS_ACTIVE, true);
+    locationJson.put(NAME, "Main Library");
+
+    when(holdingsStorageClient.getHoldingsJsonById(holdingsId)).thenReturn(holdingsJson);
+    when(locationClient.getLocationJsonById("locId")).thenReturn(locationJson);
+
+    String result = service.getHoldingsData(holdingsId, tenantId);
+    assertEquals("Main Library > PRE 123 SUF", result);
+  }
+
+  @Test
+  void getHoldingsData_returnsInactiveLocation_whenLocationIsInactive() {
+    String holdingsId = "holdingsId";
+    String tenantId = "tenant";
+    ObjectNode holdingsJson = JsonNodeFactory.instance.objectNode();
+    holdingsJson.put(PERMANENT_LOCATION_ID, "locId");
+
+    ObjectNode locationJson = JsonNodeFactory.instance.objectNode();
+    locationJson.put(IS_ACTIVE, false);
+    locationJson.put(NAME, "Branch");
+
+    when(holdingsStorageClient.getHoldingsJsonById(holdingsId)).thenReturn(holdingsJson);
+    when(locationClient.getLocationJsonById("locId")).thenReturn(locationJson);
+
+    String result = service.getHoldingsData(holdingsId, tenantId);
+    assertEquals("Inactive Branch > ", result);
+  }
+
+  @Test
+  void getHoldingsData_returnsEmpty_whenHoldingsIdIsEmpty() {
+    String result = service.getHoldingsData("", "tenant");
+    assertEquals(EMPTY, result);
   }
 }

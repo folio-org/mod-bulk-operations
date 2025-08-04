@@ -165,7 +165,7 @@ class RecordUpdateServiceTest extends BaseTest {
     when(consortiaService.isTenantCentral(any())).thenReturn(false);
     doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(anyString(), any(), anyString());
     doThrow(feignException).when(itemClient).updateItem(any(Item.class), any(String.class));
-    when(holdingsClient.getHoldingById("cb475fa9-aa07-4bbf-8382-b0b1426f9a20")).thenReturn(HoldingsRecord.builder().instanceId("f3e3bd0f-1d95-4f25-9df1-7eb39a2957e3").build());
+    when(holdingsStorageClient.getHoldingById("cb475fa9-aa07-4bbf-8382-b0b1426f9a20")).thenReturn(HoldingsRecord.builder().instanceId("f3e3bd0f-1d95-4f25-9df1-7eb39a2957e3").build());
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
 

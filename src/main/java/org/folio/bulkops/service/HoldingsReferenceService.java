@@ -3,8 +3,18 @@ package org.folio.bulkops.service;
 import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.bulkops.util.Constants.CALL_NUMBER;
+import static org.folio.bulkops.util.Constants.CALL_NUMBER_PREFIX;
+import static org.folio.bulkops.util.Constants.CALL_NUMBER_SUFFIX;
+import static org.folio.bulkops.util.Constants.HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER;
+import static org.folio.bulkops.util.Constants.INACTIVE;
+import static org.folio.bulkops.util.Constants.IS_ACTIVE;
+import static org.folio.bulkops.util.Constants.NAME;
+import static org.folio.bulkops.util.Constants.PERMANENT_LOCATION_ID;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_BARCODE;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_HRID;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
@@ -15,16 +25,20 @@ import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.client.CallNumberTypeClient;
-import org.folio.bulkops.client.HoldingsClient;
+import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.HoldingsNoteTypeClient;
 import org.folio.bulkops.client.HoldingsSourceClient;
 import org.folio.bulkops.client.HoldingsTypeClient;
 import org.folio.bulkops.client.IllPolicyClient;
 import org.folio.bulkops.client.InstanceClient;
+import org.folio.bulkops.client.InstanceStorageClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
@@ -50,7 +64,7 @@ import org.springframework.stereotype.Service;
 @Log4j2
 public class HoldingsReferenceService {
 
-  private final HoldingsClient holdingsClient;
+  private final HoldingsStorageClient holdingsStorageClient;
   private final HoldingsTypeClient holdingsTypeClient;
   private final LocationClient locationClient;
   private final CallNumberTypeClient callNumberTypeClient;
@@ -59,6 +73,7 @@ public class HoldingsReferenceService {
   private final HoldingsSourceClient holdingsSourceClient;
   private final StatisticalCodeClient statisticalCodeClient;
   private final InstanceClient instanceClient;
+  private final InstanceStorageClient instanceStorageClient;
   private final ItemClient itemClient;
   private final FolioModuleMetadata folioModuleMetadata;
   private final FolioExecutionContext folioExecutionContext;
@@ -66,7 +81,7 @@ public class HoldingsReferenceService {
 
   @Cacheable(cacheNames = "holdings")
   public HoldingsRecord getHoldingsRecordById(String id, String tenantId) {
-    return holdingsClient.getHoldingById(id);
+    return holdingsStorageClient.getHoldingById(id);
   }
 
   @Cacheable(cacheNames = "holdingsTypesNames")
@@ -232,7 +247,7 @@ public class HoldingsReferenceService {
       return EMPTY;
     }
     try (var context = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
-      var instanceJson = instanceClient.getInstanceJsonById(instanceId);
+      var instanceJson = instanceStorageClient.getInstanceJsonById(instanceId);
       var title = instanceJson.get("title");
       var publications = instanceJson.get("publication");
       String publicationString = EMPTY;
@@ -245,6 +260,12 @@ public class HoldingsReferenceService {
       log.error(msg);
       throw new BulkEditException(msg, ErrorType.WARNING);
     }
+  }
+
+  public String getInstanceTitleByHoldingsRecordId(String holdingsRecordId, String tenantId) {
+    return ofNullable(getHoldingsRecordById(holdingsRecordId, tenantId))
+        .map(holdingsRecord -> getInstanceTitleById(holdingsRecord.getInstanceId(), tenantId))
+        .orElse(EMPTY);
   }
 
   private String formatPublication(JsonNode publication) {
@@ -262,7 +283,7 @@ public class HoldingsReferenceService {
   @Cacheable(cacheNames = "holdingsJsons")
   public JsonNode getHoldingsJsonById(String holdingsId, String tenantId) {
     try (var context = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
-      return holdingsClient.getHoldingsJsonById(holdingsId);
+      return holdingsStorageClient.getHoldingsJsonById(holdingsId);
     }
   }
 
@@ -275,4 +296,25 @@ public class HoldingsReferenceService {
       return locationClient.getLocationJsonById(locationId);
     }
   }
+
+  public String getHoldingsData(String holdingsId, String tenantId) {
+    if (ObjectUtils.isEmpty(holdingsId)) {
+      return EMPTY;
+    }
+    var holdingsJson = getHoldingsJsonById(holdingsId, tenantId);
+    var locationId = isNull(holdingsJson.get(PERMANENT_LOCATION_ID)) ? null : holdingsJson.get(PERMANENT_LOCATION_ID).asText();
+
+    var locationJson = getHoldingsLocationById(locationId, tenantId);
+    var activePrefix = nonNull(locationJson.get(IS_ACTIVE)) && locationJson.get(IS_ACTIVE).asBoolean() ? EMPTY : INACTIVE;
+    var name = isNull(locationJson.get(NAME)) ? EMPTY : locationJson.get(NAME).asText();
+    var locationName = activePrefix + name;
+
+    var callNumber = Stream.of(holdingsJson.get(CALL_NUMBER_PREFIX), holdingsJson.get(CALL_NUMBER), holdingsJson.get(CALL_NUMBER_SUFFIX))
+        .filter(Objects::nonNull)
+        .map(JsonNode::asText)
+        .collect(Collectors.joining(SPACE));
+
+    return String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER, locationName, callNumber);
+  }
+
 }

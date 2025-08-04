@@ -1,7 +1,7 @@
 package org.folio.bulkops.util;
 
 import lombok.AllArgsConstructor;
-import org.folio.bulkops.client.HoldingsClient;
+import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
@@ -21,7 +21,7 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 @AllArgsConstructor
 public class EntityPathResolver {
 
-  private HoldingsClient holdingsClient;
+  private HoldingsStorageClient holdingsStorageClient;
   private final FolioModuleMetadata folioModuleMetadata;
   private final FolioExecutionContext folioExecutionContext;
 
@@ -46,7 +46,7 @@ public class EntityPathResolver {
         var holdingId = item.getHoldingsRecordId();
         HoldingsRecord holding;
         try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
-          holding = holdingsClient.getHoldingById(holdingId);
+          holding = holdingsStorageClient.getHoldingById(holdingId);
         }
         var instanceId = holding.getInstanceId();
         return format("/inventory/view/%s/%s/%s", instanceId, holdingId, item.getId());

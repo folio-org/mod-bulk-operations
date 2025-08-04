@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
-import org.folio.bulkops.client.HoldingsClient;
+import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.SearchClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
@@ -54,7 +54,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 class BulkEditHoldingsProcessorTest {
 
   @Mock
-  private HoldingsClient holdingsClient;
+  private HoldingsStorageClient holdingsStorageClient;
   @Mock
   private HoldingsReferenceService holdingsReferenceService;
   @Mock
@@ -114,7 +114,7 @@ class BulkEditHoldingsProcessorTest {
     when(searchClient.getConsortiumHoldingCollection(any())).thenReturn(consortiumHoldingCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.HOLDINGS_RECORD), any(), anyString(), anySet(), eq(itemIdentifier)))
       .thenReturn(Set.of("tenant1"));
-    when(holdingsClient.getByQuery(anyString())).thenReturn(holdingsRecordCollection);
+    when(holdingsStorageClient.getByQuery(anyString())).thenReturn(holdingsRecordCollection);
     when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString())).thenReturn("Instance Title");
 
     List<ExtendedHoldingsRecord> result = processor.process(itemIdentifier);
@@ -161,7 +161,7 @@ class BulkEditHoldingsProcessorTest {
 
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(true);
-    when(holdingsClient.getByQuery(anyString())).thenReturn(collection);
+    when(holdingsStorageClient.getByQuery(anyString())).thenReturn(collection);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
       .isInstanceOf(BulkEditException.class)
@@ -265,7 +265,7 @@ class BulkEditHoldingsProcessorTest {
     when(duplicationCheckerFactory.getFetchedIds(any())).thenReturn(new HashSet<>());
     when(searchClient.getConsortiumHoldingCollection(any())).thenReturn(consortiumHoldingCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(any(), any(), anyString(), anySet(), any())).thenReturn(Set.of(tenantId));
-    when(holdingsClient.getByQuery(anyString())).thenReturn(holdingsRecordCollection);
+    when(holdingsStorageClient.getByQuery(anyString())).thenReturn(holdingsRecordCollection);
     when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString())).thenReturn("Instance Title");
     when(cacheManager.getCache(anyString())).thenReturn(cache);
     doCallRealMethod().when(localReferenceDataService).enrichWithTenant(any(HoldingsRecord.class), anyString());

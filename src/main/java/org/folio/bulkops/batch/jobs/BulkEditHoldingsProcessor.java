@@ -26,7 +26,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
-import org.folio.bulkops.client.HoldingsClient;
+import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.SearchClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
@@ -58,7 +58,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Log4j2
 public class BulkEditHoldingsProcessor implements ItemProcessor<ItemIdentifier, List<ExtendedHoldingsRecord>>, EntityExtractor {
-  private final HoldingsClient holdingClient;
+  private final HoldingsStorageClient holdingClient;
   private final HoldingsReferenceService holdingsReferenceService;
   private final SearchClient searchClient;
   private final ConsortiaService consortiaService;

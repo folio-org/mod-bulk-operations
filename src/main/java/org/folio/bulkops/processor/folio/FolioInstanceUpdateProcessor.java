@@ -18,7 +18,7 @@ import static org.folio.bulkops.util.RuleUtils.findRuleByOption;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.folio.bulkops.client.HoldingsClient;
+import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.SearchConsortium;
@@ -60,7 +60,7 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
   private final InstanceClient instanceClient;
   private final UserClient userClient;
   private final RuleService ruleService;
-  private final HoldingsClient holdingsClient;
+  private final HoldingsStorageClient holdingsStorageClient;
   private final ItemClient itemClient;
   private final SearchConsortium searchConsortium;
   private final ErrorService errorService;
@@ -148,7 +148,7 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
     if (holdingsForUpdate.isEmpty()) {
       return false;
     }
-    holdingsForUpdate.forEach(holdingsRecord -> holdingsClient.updateHoldingsRecord(holdingsRecord.withDiscoverySuppress(suppress), holdingsRecord.getId()));
+    holdingsForUpdate.forEach(holdingsRecord -> holdingsStorageClient.updateHoldingsRecord(holdingsRecord.withDiscoverySuppress(suppress), holdingsRecord.getId()));
     return true;
   }
 
@@ -181,7 +181,7 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
   }
 
   private List<HoldingsRecord> getHoldingsSourceFolioByInstanceId(String instanceId) {
-    return holdingsClient.getByQuery(format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE)
+    return holdingsStorageClient.getByQuery(format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE)
       .getHoldingsRecords().stream()
       .filter(holdingsRecord -> !MARC.equals(holdingsReferenceService.getSourceById(holdingsRecord.getSourceId()).getName()))
       .toList();
