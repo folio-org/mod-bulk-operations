@@ -56,7 +56,9 @@ import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -78,7 +80,10 @@ public class HoldingsReferenceService {
   private final FolioModuleMetadata folioModuleMetadata;
   private final FolioExecutionContext folioExecutionContext;
   private final LocalReferenceDataService localReferenceDataService;
-//  private final HoldingsReferenceService holdingsReferenceService;
+
+  @Autowired
+  @Lazy
+  private HoldingsReferenceService self;
 
   @Cacheable(cacheNames = "holdings")
   public HoldingsRecord getHoldingsRecordById(String id, String tenantId) {
@@ -264,7 +269,7 @@ public class HoldingsReferenceService {
   }
 
   public String getInstanceTitleByHoldingsRecordId(String holdingsRecordId, String tenantId) {
-    return ofNullable(getHoldingsRecordById(holdingsRecordId, tenantId))
+    return ofNullable(self.getHoldingsRecordById(holdingsRecordId, tenantId))
         .map(holdingsRecord -> getInstanceTitleById(holdingsRecord.getInstanceId(), tenantId))
         .orElse(EMPTY);
   }
@@ -302,10 +307,10 @@ public class HoldingsReferenceService {
     if (ObjectUtils.isEmpty(holdingsId)) {
       return EMPTY;
     }
-    var holdingsJson = getHoldingsJsonById(holdingsId, tenantId);
+    var holdingsJson = self.getHoldingsJsonById(holdingsId, tenantId);
     var locationId = isNull(holdingsJson.get(PERMANENT_LOCATION_ID)) ? null : holdingsJson.get(PERMANENT_LOCATION_ID).asText();
 
-    var locationJson = getHoldingsLocationById(locationId, tenantId);
+    var locationJson = self.getHoldingsLocationById(locationId, tenantId);
     var activePrefix = nonNull(locationJson.get(IS_ACTIVE)) && locationJson.get(IS_ACTIVE).asBoolean() ? EMPTY : INACTIVE;
     var name = isNull(locationJson.get(NAME)) ? EMPTY : locationJson.get(NAME).asText();
     var locationName = activePrefix + name;

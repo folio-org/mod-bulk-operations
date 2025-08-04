@@ -13,6 +13,8 @@ import static org.folio.spring.integration.XOkapiHeaders.TENANT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -43,6 +45,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class HoldingsReferenceServiceTest {
 
@@ -62,11 +66,14 @@ class HoldingsReferenceServiceTest {
   private ItemClient itemClient;
   @InjectMocks
   private HoldingsReferenceService service;
+  @Spy
+  private HoldingsReferenceService selfSpy = mock(HoldingsReferenceService.class);
 
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(Map.of(TENANT, List.of("diku")));
+    ReflectionTestUtils.setField(service, "self", selfSpy);
   }
 
   @Test
@@ -280,7 +287,9 @@ class HoldingsReferenceServiceTest {
     Item item = new Item().withHoldingsRecordId("holdingsId");
     HoldingsRecord holdingsRecord = new HoldingsRecord().withInstanceId("instanceId");
 
-    when(holdingsStorageClient.getHoldingById("holdingsId")).thenReturn(holdingsRecord);
+    doReturn(HoldingsRecord.builder().instanceId("instanceId").build())
+        .when(selfSpy).getHoldingsRecordById("holdingsId", "tenant");
+
     when(instanceStorageClient.getInstanceJsonById("instanceId")).thenReturn(new ObjectMapper().readTree("{\"title\":\"Instance Title\"}"));
 
     String result = service.getInstanceTitleByHoldingsRecordId(item.getHoldingsRecordId(), "tenant");
@@ -310,8 +319,12 @@ class HoldingsReferenceServiceTest {
     locationJson.put(IS_ACTIVE, true);
     locationJson.put(NAME, "Main Library");
 
-    when(holdingsStorageClient.getHoldingsJsonById(holdingsId)).thenReturn(holdingsJson);
-    when(locationClient.getLocationJsonById("locId")).thenReturn(locationJson);
+    doReturn(holdingsJson)
+        .when(selfSpy).getHoldingsJsonById(holdingsId, "tenant");
+
+    doReturn(locationJson)
+        .when(selfSpy).getHoldingsLocationById("locId", "tenant");
+
 
     String result = service.getHoldingsData(holdingsId, tenantId);
     assertEquals("Main Library > PRE 123 SUF", result);
@@ -328,8 +341,11 @@ class HoldingsReferenceServiceTest {
     locationJson.put(IS_ACTIVE, false);
     locationJson.put(NAME, "Branch");
 
-    when(holdingsStorageClient.getHoldingsJsonById(holdingsId)).thenReturn(holdingsJson);
-    when(locationClient.getLocationJsonById("locId")).thenReturn(locationJson);
+    doReturn(holdingsJson)
+        .when(selfSpy).getHoldingsJsonById(holdingsId, "tenant");
+
+    doReturn(locationJson)
+        .when(selfSpy).getHoldingsLocationById("locId", "tenant");
 
     String result = service.getHoldingsData(holdingsId, tenantId);
     assertEquals("Inactive Branch > ", result);
