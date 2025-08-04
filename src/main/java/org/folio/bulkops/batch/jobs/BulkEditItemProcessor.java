@@ -64,7 +64,6 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
   private final FolioModuleMetadata folioModuleMetadata;
   private final TenantResolver tenantResolver;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
-//  private final EntityDataHelper entityDataHelper;
   private final HoldingsReferenceService holdingsReferenceService;
   private final LocalReferenceDataService localReferenceDataService;
 
