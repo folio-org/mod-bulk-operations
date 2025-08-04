@@ -287,7 +287,7 @@ class HoldingsReferenceServiceTest {
     Item item = new Item().withHoldingsRecordId("holdingsId");
     HoldingsRecord holdingsRecord = new HoldingsRecord().withInstanceId("instanceId");
 
-    doReturn(HoldingsRecord.builder().instanceId("instanceId").build())
+    doReturn(holdingsRecord)
         .when(selfSpy).getHoldingsRecordById("holdingsId", "tenant");
 
     when(instanceStorageClient.getInstanceJsonById("instanceId")).thenReturn(new ObjectMapper().readTree("{\"title\":\"Instance Title\"}"));

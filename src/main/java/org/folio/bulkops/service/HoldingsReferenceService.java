@@ -80,10 +80,7 @@ public class HoldingsReferenceService {
   private final FolioModuleMetadata folioModuleMetadata;
   private final FolioExecutionContext folioExecutionContext;
   private final LocalReferenceDataService localReferenceDataService;
-
-  @Autowired
-  @Lazy
-  private HoldingsReferenceService self;
+  @Lazy private HoldingsReferenceService self;
 
   @Cacheable(cacheNames = "holdings")
   public HoldingsRecord getHoldingsRecordById(String id, String tenantId) {
