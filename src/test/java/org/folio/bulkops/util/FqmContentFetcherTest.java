@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_RECORD_INSTANCE_PUBLICATION;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_INSTANCES_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_PERMANENT_LOCATION_NAME_KEY;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
@@ -179,6 +181,7 @@ class FqmContentFetcherTest {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"item-tenant\"");
+      assertThat(result).contains("\"title\":\"Instance Title 1. Olaf Ladousse, 1992-\"");
     }
   }
 
@@ -195,6 +198,7 @@ class FqmContentFetcherTest {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"holdings-tenant\"");
+      assertThat(result).contains("\"instanceTitle\":\"Instance Title 0. Olaf Ladousse, 1992-\"");
     }
   }
 
@@ -305,11 +309,13 @@ class FqmContentFetcherTest {
           map.put(FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY, "Call Number-Suffix " + i);
           map.put(FQM_HOLDINGS_CALL_NUMBER_KEY, "CN_" + i);
           map.put(FQM_PERMANENT_LOCATION_NAME_KEY, "Main");
+          map.put(FQM_ITEM_INSTANCES_PUBLICATION_KEY, "[{\"place\": \"Madrid\", \"publisher\": \"Olaf Ladousse\", \"dateOfPublication\": \"1992-\"}]");
         }
         case HOLDINGS_RECORD -> {
           map.put("holdings.jsonb", "{\"id\":\"holdings-id-" + i + "\"}");
           map.put("holdings.tenant_id", "holdings-tenant");
           map.put(FQM_INSTANCE_TITLE_KEY, "Instance Title " + i);
+          map.put(FQM_HOLDINGS_RECORD_INSTANCE_PUBLICATION, "[{\"place\": \"Madrid\", \"publisher\": \"Olaf Ladousse\", \"dateOfPublication\": \"1992-\"}]");
         }
         case INSTANCE, INSTANCE_MARC -> {
           map.put("instance.jsonb", "{\"id\":\"instance-id-" + i + "\"}");

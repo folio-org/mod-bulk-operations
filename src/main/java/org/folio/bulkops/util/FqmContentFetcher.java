@@ -1,6 +1,8 @@
 package org.folio.bulkops.util;
 
+import static java.lang.String.format;
 import static java.lang.String.join;
+import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
@@ -12,9 +14,14 @@ import static org.folio.bulkops.util.Constants.INSTANCE_TITLE;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
 import static org.folio.bulkops.util.Constants.TENANT_ID;
 import static org.folio.bulkops.util.Constants.TITLE;
+import static org.folio.bulkops.util.FqmKeys.FQM_DATE_OF_PUBLICATION_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_RECORD_INSTANCE_PUBLICATION;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_INSTANCES_PUBLICATION_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_PUBLISHER_KEY;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
@@ -52,6 +59,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class FqmContentFetcher {
 
+  public static final String TITLE_PATTERN = "%s. %s, %s";
   @Value("${application.fqm-fetcher.max_parallel_chunks}")
   private int maxParallelChunks;
   @Value("${application.fqm-fetcher.max_chunk_size}")
@@ -127,6 +135,21 @@ public class FqmContentFetcher {
 
               var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
 
+              var publisher = EMPTY;
+              var date = EMPTY;
+
+              var publicationJson = json.get(FQM_ITEM_INSTANCES_PUBLICATION_KEY);
+
+              if (nonNull(publicationJson)) {
+                JsonNode publicationJsonArrayNode = objectMapper.readTree(publicationJson.toString());
+                if (publicationJsonArrayNode.isArray() && !publicationJsonArrayNode.isEmpty()) {
+                  publisher = publicationJsonArrayNode.get(0).get(FQM_PUBLISHER_KEY).asText(EMPTY);
+                  date = publicationJsonArrayNode.get(0).get(FQM_DATE_OF_PUBLICATION_KEY).asText(EMPTY);
+                }
+              }
+
+              jsonNode.put(TITLE,  format(TITLE_PATTERN, title, publisher, date));
+
               var callNumber = Stream.of(json.get(FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY), json.get(
                       FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY), json.get(
                       FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY))
@@ -137,15 +160,29 @@ public class FqmContentFetcher {
               var permanentLocationName = ofNullable(json.get(
                   FqmKeys.FQM_PERMANENT_LOCATION_NAME_KEY)).orElse(EMPTY).toString();
 
-              jsonNode.put(TITLE, title);
               jsonNode.put(HOLDINGS_DATA,
                   join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER,
                       permanentLocationName,
                       callNumber));
             }
+
             if (entityType == EntityType.HOLDINGS_RECORD) {
+
               var title = ofNullable(json.get(FQM_INSTANCE_TITLE_KEY)).orElse(EMPTY).toString();
-              jsonNode.put(INSTANCE_TITLE, title);
+
+              var publisher = EMPTY;
+              var date = EMPTY;
+
+              var publicationJson = json.get(FQM_HOLDINGS_RECORD_INSTANCE_PUBLICATION);
+
+              if (nonNull(publicationJson)) {
+                JsonNode publicationJsonArrayNode = objectMapper.readTree(publicationJson.toString());
+                if (publicationJsonArrayNode.isArray() && !publicationJsonArrayNode.isEmpty()) {
+                  publisher = publicationJsonArrayNode.get(0).get(FQM_PUBLISHER_KEY).asText(EMPTY);
+                  date = publicationJsonArrayNode.get(0).get(FQM_DATE_OF_PUBLICATION_KEY).asText(EMPTY);
+                }
+              }
+              jsonNode.put(INSTANCE_TITLE, format(TITLE_PATTERN, title, publisher, date));
             }
 
             ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
