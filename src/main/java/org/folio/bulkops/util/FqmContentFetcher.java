@@ -178,8 +178,11 @@ public class FqmContentFetcher {
               if (nonNull(publicationJson)) {
                 JsonNode publicationJsonArrayNode = objectMapper.readTree(publicationJson.toString());
                 if (publicationJsonArrayNode.isArray() && !publicationJsonArrayNode.isEmpty()) {
-                  publisher = publicationJsonArrayNode.get(0).get(FQM_PUBLISHER_KEY).asText(EMPTY);
-                  date = publicationJsonArrayNode.get(0).get(FQM_DATE_OF_PUBLICATION_KEY).asText(EMPTY);
+                  var firstPublication = publicationJsonArrayNode.get(0);
+                  publisher = firstPublication.get(FQM_PUBLISHER_KEY).asText(EMPTY);
+                  date = firstPublication.get(FQM_DATE_OF_PUBLICATION_KEY).asText(EMPTY);
+                } else {
+                  log.warn("Publication JSON is not an array or is empty for holdings record: {}", jsonNode.get(ID).asText());
                 }
               }
               jsonNode.put(INSTANCE_TITLE, format(TITLE_PATTERN, title, publisher, date));
@@ -190,7 +193,7 @@ public class FqmContentFetcher {
             extendedRecordWrapper.put(TENANT_ID, tenant.toString());
             return objectMapper.writeValueAsString(extendedRecordWrapper);
           } catch (Exception e) {
-            log.error("Error processing JSON content for entity type {}: {}", entityType, e.getMessage());
+            log.error("Error processing JSON content for entity type {}: {}", entityType, e);
             throw new FqmFetcherException("Error processing JSON content", e);
           }
         }).collect(Collectors.joining(LINE_BREAK))
