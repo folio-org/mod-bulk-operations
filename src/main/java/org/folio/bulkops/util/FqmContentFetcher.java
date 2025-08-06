@@ -133,18 +133,17 @@ public class FqmContentFetcher {
 
             if (entityType == EntityType.ITEM) {
 
-              var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
+              var title = ofNullable(json.get(FQM_INSTANCE_TITLE_KEY)).orElse(EMPTY).toString();
+              var publications = objectMapper.readTree(ofNullable(json.get(FQM_HOLDINGS_RECORD_INSTANCE_PUBLICATION)).orElse("[]").toString());
 
               var publisher = EMPTY;
               var date = EMPTY;
 
-              var publicationJson = json.get(FQM_ITEM_INSTANCES_PUBLICATION_KEY);
-
-              if (nonNull(publicationJson)) {
-                JsonNode publicationJsonArrayNode = objectMapper.readTree(publicationJson.toString());
-                if (publicationJsonArrayNode.isArray() && !publicationJsonArrayNode.isEmpty()) {
-                  publisher = publicationJsonArrayNode.get(0).get(FQM_PUBLISHER_KEY).asText(EMPTY);
-                  date = publicationJsonArrayNode.get(0).get(FQM_DATE_OF_PUBLICATION_KEY).asText(EMPTY);
+              if (publications.isArray() && !publications.isEmpty()) {
+                var first = publications.get(0);
+                if (nonNull(first)) {
+                  publisher = first.get(FQM_PUBLISHER_KEY).asText(EMPTY);
+                  date = first.get(FQM_DATE_OF_PUBLICATION_KEY).asText(EMPTY);
                 }
               }
 
@@ -169,22 +168,19 @@ public class FqmContentFetcher {
             if (entityType == EntityType.HOLDINGS_RECORD) {
 
               var title = ofNullable(json.get(FQM_INSTANCE_TITLE_KEY)).orElse(EMPTY).toString();
+              var publications = objectMapper.readTree(ofNullable(json.get(FQM_HOLDINGS_RECORD_INSTANCE_PUBLICATION)).orElse("[]").toString());
 
               var publisher = EMPTY;
               var date = EMPTY;
 
-              var publicationJson = json.get(FQM_HOLDINGS_RECORD_INSTANCE_PUBLICATION);
-
-              if (nonNull(publicationJson)) {
-                JsonNode publicationJsonArrayNode = objectMapper.readTree(publicationJson.toString());
-                if (publicationJsonArrayNode.isArray() && !publicationJsonArrayNode.isEmpty()) {
-                  var firstPublication = publicationJsonArrayNode.get(0);
-                  publisher = firstPublication.get(FQM_PUBLISHER_KEY).asText(EMPTY);
-                  date = firstPublication.get(FQM_DATE_OF_PUBLICATION_KEY).asText(EMPTY);
-                } else {
-                  log.warn("Publication JSON is not an array or is empty for holdings record: {}", jsonNode.get(ID).asText());
+              if (publications.isArray() && !publications.isEmpty()) {
+                var first = publications.get(0);
+                if (nonNull(first)) {
+                  publisher = first.get(FQM_PUBLISHER_KEY).asText(EMPTY);
+                  date = first.get(FQM_DATE_OF_PUBLICATION_KEY).asText(EMPTY);
                 }
               }
+
               jsonNode.put(INSTANCE_TITLE, format(TITLE_PATTERN, title, publisher, date));
             }
 
@@ -193,10 +189,11 @@ public class FqmContentFetcher {
             extendedRecordWrapper.put(TENANT_ID, tenant.toString());
             return objectMapper.writeValueAsString(extendedRecordWrapper);
           } catch (Exception e) {
-            log.error("Error processing JSON content for entity type {}: {}", entityType, e);
-            throw new FqmFetcherException("Error processing JSON content", e);
+            log.error("Error processing JSON content for entity type", e);
+            return EMPTY;
           }
-        }).collect(Collectors.joining(LINE_BREAK))
+        })
+        .collect(Collectors.joining(LINE_BREAK))
         .getBytes(StandardCharsets.UTF_8));
   }
 
