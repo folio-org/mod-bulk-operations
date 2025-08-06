@@ -133,8 +133,8 @@ public class FqmContentFetcher {
 
             if (entityType == EntityType.ITEM) {
 
-              var title = ofNullable(json.get(FQM_INSTANCE_TITLE_KEY)).orElse(EMPTY).toString();
-              var publications = objectMapper.readTree(ofNullable(json.get(FQM_HOLDINGS_RECORD_INSTANCE_PUBLICATION)).orElse("[]").toString());
+              var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
+              var publications = objectMapper.readTree(ofNullable(json.get(FQM_ITEM_INSTANCES_PUBLICATION_KEY)).orElse("[]").toString());
 
               var publisher = EMPTY;
               var date = EMPTY;
