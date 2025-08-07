@@ -142,8 +142,12 @@ public class FqmContentFetcher {
               if (publications.isArray() && !publications.isEmpty()) {
                 var first = publications.get(0);
                 if (nonNull(first)) {
-                  publisher = first.get(FQM_PUBLISHER_KEY).asText(EMPTY);
-                  date = first.get(FQM_DATE_OF_PUBLICATION_KEY).asText(EMPTY);
+                  if (nonNull(first.get(FQM_PUBLISHER_KEY))) {
+                    publisher = first.get(FQM_PUBLISHER_KEY).asText();
+                  }
+                  if (nonNull(first.get(FQM_DATE_OF_PUBLICATION_KEY))) {
+                    date = first.get(FQM_DATE_OF_PUBLICATION_KEY).asText();
+                  }
                 }
               }
 
@@ -176,11 +180,14 @@ public class FqmContentFetcher {
               if (publications.isArray() && !publications.isEmpty()) {
                 var first = publications.get(0);
                 if (nonNull(first)) {
-                  publisher = first.get(FQM_PUBLISHER_KEY).asText(EMPTY);
-                  date = first.get(FQM_DATE_OF_PUBLICATION_KEY).asText(EMPTY);
+                  if (nonNull(first.get(FQM_PUBLISHER_KEY))) {
+                    publisher = first.get(FQM_PUBLISHER_KEY).asText();
+                  }
+                  if (nonNull(first.get(FQM_DATE_OF_PUBLICATION_KEY))) {
+                    date = first.get(FQM_DATE_OF_PUBLICATION_KEY).asText();
+                  }
                 }
               }
-
               jsonNode.put(INSTANCE_TITLE, format(TITLE_PATTERN, title, publisher, date));
             }
 
