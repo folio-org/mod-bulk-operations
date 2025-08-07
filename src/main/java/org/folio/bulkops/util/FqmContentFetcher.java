@@ -1,7 +1,7 @@
 package org.folio.bulkops.util;
 
-import static java.lang.String.format;
 import static java.lang.String.join;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -134,24 +134,17 @@ public class FqmContentFetcher {
             if (entityType == EntityType.ITEM) {
 
               var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
-              var publications = objectMapper.readTree(ofNullable(json.get(FQM_ITEM_INSTANCES_PUBLICATION_KEY)).orElse("[]").toString());
+              var value = json.get(FQM_ITEM_INSTANCES_PUBLICATION_KEY);
 
-              var publisher = EMPTY;
-              var date = EMPTY;
+              var publications = nonNull(value)
+                  ? objectMapper.readTree(value.toString())
+                  : objectMapper.createArrayNode();
 
               if (publications.isArray() && !publications.isEmpty()) {
-                var first = publications.get(0);
-                if (nonNull(first)) {
-                  if (nonNull(first.get(FQM_PUBLISHER_KEY))) {
-                    publisher = first.get(FQM_PUBLISHER_KEY).asText();
-                  }
-                  if (nonNull(first.get(FQM_DATE_OF_PUBLICATION_KEY))) {
-                    date = first.get(FQM_DATE_OF_PUBLICATION_KEY).asText();
-                  }
-                }
+                title = title.concat(getFirstPublicationAsString(publications.get(0)));
               }
 
-              jsonNode.put(TITLE,  format(TITLE_PATTERN, title, publisher, date));
+              jsonNode.put(TITLE,  title);
 
               var callNumber = Stream.of(json.get(FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY), json.get(
                       FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY), json.get(
@@ -172,23 +165,18 @@ public class FqmContentFetcher {
             if (entityType == EntityType.HOLDINGS_RECORD) {
 
               var title = ofNullable(json.get(FQM_INSTANCE_TITLE_KEY)).orElse(EMPTY).toString();
-              var publications = objectMapper.readTree(ofNullable(json.get(FQM_HOLDINGS_RECORD_INSTANCE_PUBLICATION)).orElse("[]").toString());
 
-              var publisher = EMPTY;
-              var date = EMPTY;
+              var value = json.get(FQM_HOLDINGS_RECORD_INSTANCE_PUBLICATION);
+
+              var publications = nonNull(value)
+                  ? objectMapper.readTree(value.toString())
+                  : objectMapper.createArrayNode();
 
               if (publications.isArray() && !publications.isEmpty()) {
-                var first = publications.get(0);
-                if (nonNull(first)) {
-                  if (nonNull(first.get(FQM_PUBLISHER_KEY))) {
-                    publisher = first.get(FQM_PUBLISHER_KEY).asText();
-                  }
-                  if (nonNull(first.get(FQM_DATE_OF_PUBLICATION_KEY))) {
-                    date = first.get(FQM_DATE_OF_PUBLICATION_KEY).asText();
-                  }
-                }
+                title = title.concat(getFirstPublicationAsString(publications.get(0)));
               }
-              jsonNode.put(INSTANCE_TITLE, format(TITLE_PATTERN, title, publisher, date));
+
+              jsonNode.put(INSTANCE_TITLE, title);
             }
 
             ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
@@ -196,10 +184,11 @@ public class FqmContentFetcher {
             extendedRecordWrapper.put(TENANT_ID, tenant.toString());
             return objectMapper.writeValueAsString(extendedRecordWrapper);
           } catch (Exception e) {
-            log.error("Error processing JSON content for entity type", e);
+            log.error("Error processing JSON content: {}", json, e);
             return EMPTY;
           }
         })
+        .filter(StringUtils::isNotEmpty)
         .collect(Collectors.joining(LINE_BREAK))
         .getBytes(StandardCharsets.UTF_8));
   }
@@ -234,5 +223,17 @@ public class FqmContentFetcher {
               .errorMessage(errorMessage)
               .build());
     }
+  }
+
+  private String getFirstPublicationAsString(JsonNode publication) {
+    if (nonNull(publication)) {
+      var publisher = publication.get(FQM_PUBLISHER_KEY);
+      var date = publication.get(FQM_DATE_OF_PUBLICATION_KEY);
+      if (isNull(date) || date.isNull()) {
+        return isNull(publisher) || publisher.isNull() ? EMPTY : String.format(". %s", publisher.asText());
+      }
+      return String.format(". %s, %s", isNull(publisher) || publisher.isNull() ? EMPTY : publisher.asText(), date.asText());
+    }
+    return EMPTY;
   }
 }
