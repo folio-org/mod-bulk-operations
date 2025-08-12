@@ -446,7 +446,7 @@ class QueryServiceTest extends BaseTest {
     verify(remoteFileSystemClient).put(any(ByteArrayInputStream.class), eq(expectedPath));
     verify(bulkOperationRepository).save(bulkOperation);
     assertThat(bulkOperation.getLinkToTriggeringCsvFile()).isEqualTo(expectedPath);
-    assertThat(bulkOperation.getStatus()).isEqualTo(org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_IDENTIFIERS);
+    assertThat(bulkOperation.getStatus()).isEqualTo(OperationStatusType.SAVED_IDENTIFIERS);
     assertThat(bulkOperation.getApproach()).isEqualTo(org.folio.bulkops.domain.dto.ApproachType.QUERY);
   }
 
