@@ -419,4 +419,52 @@ class QueryServiceTest extends BaseTest {
       });
     }
   }
+
+  @Test
+  void shouldSaveIdentifiersSuccessfully() {
+    var operationId = UUID.randomUUID();
+    var fqlQueryId = UUID.randomUUID();
+    var bulkOperation = BulkOperation.builder()
+            .id(operationId)
+            .fqlQueryId(fqlQueryId)
+            .build();
+
+    List<List<String>> ids = List.of(
+            List.of("id1"),
+            List.of("id2"),
+            List.of("id1") // duplicate to test distinct
+    );
+    when(queryClient.getSortedIds(fqlQueryId, 0, Integer.MAX_VALUE)).thenReturn(ids);
+
+    var expectedPath = String.format(QueryService.QUERY_FILENAME_TEMPLATE, operationId);
+
+    when(remoteFileSystemClient.put(any(ByteArrayInputStream.class), eq(expectedPath))).thenReturn("link");
+    when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(bulkOperation);
+
+    queryService.saveIdentifiers(bulkOperation);
+
+    verify(remoteFileSystemClient).put(any(ByteArrayInputStream.class), eq(expectedPath));
+    verify(bulkOperationRepository).save(bulkOperation);
+    assertThat(bulkOperation.getLinkToTriggeringCsvFile()).isEqualTo(expectedPath);
+    assertThat(bulkOperation.getStatus()).isEqualTo(org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_IDENTIFIERS);
+    assertThat(bulkOperation.getApproach()).isEqualTo(org.folio.bulkops.domain.dto.ApproachType.QUERY);
+  }
+
+  @Test
+  void shouldFailBulkOperationOnException() {
+    var operationId = UUID.randomUUID();
+    var fqlQueryId = UUID.randomUUID();
+    var bulkOperation = BulkOperation.builder()
+            .id(operationId)
+            .fqlQueryId(fqlQueryId)
+            .build();
+
+    when(queryClient.getSortedIds(fqlQueryId, 0, Integer.MAX_VALUE)).thenThrow(new RuntimeException("Test exception"));
+
+    queryService.saveIdentifiers(bulkOperation);
+
+    verify(bulkOperationRepository, times(1)).save(bulkOperation);
+    assertThat(bulkOperation.getStatus()).isEqualTo(org.folio.bulkops.domain.dto.OperationStatusType.FAILED);
+    assertThat(bulkOperation.getErrorMessage()).contains("Test exception");
+  }
 }
