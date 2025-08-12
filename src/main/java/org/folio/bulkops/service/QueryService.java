@@ -5,7 +5,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.CANCELLED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
-import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_IDENTIFIERS;
+import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_STARTING_BULK_OPERATION;
@@ -116,7 +116,7 @@ public class QueryService {
       var path = String.format(QUERY_FILENAME_TEMPLATE, bulkOperation.getId());
       remoteFileSystemClient.put(new ByteArrayInputStream(identifiersString.getBytes()), path);
       bulkOperation.setLinkToTriggeringCsvFile(path);
-      bulkOperation.setStatus(RETRIEVING_IDENTIFIERS);
+      bulkOperation.setStatus(SAVED_IDENTIFIERS);
       bulkOperation.setApproach(ApproachType.QUERY);
       bulkOperationRepository.save(bulkOperation);
     } catch (Exception e) {
