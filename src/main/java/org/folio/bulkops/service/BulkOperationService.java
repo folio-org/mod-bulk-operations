@@ -160,7 +160,7 @@ public class BulkOperationService {
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
   @Value("${application.fqm-query-approach}")
-  private Boolean fqmQueryApproach;
+  private boolean fqmQueryApproach;
 
   public BulkOperation uploadCsvFile(EntityType entityType, IdentifierType identifierType, boolean manual, UUID operationId, UUID xOkapiUserId, MultipartFile multipartFile) {
     BulkOperation operation;
