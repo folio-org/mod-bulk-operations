@@ -1917,8 +1917,8 @@ class BulkOperationServiceTest extends BaseTest {
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
       when(entityTypeService.getEntityTypeById(any())).thenReturn(mock(org.folio.bulkops.domain.dto.EntityType.class));
 
-      // Set fqmApproach to false
-      ReflectionTestUtils.setField(bulkOperationService, "fqmApproach", false);
+      // Set fqmQueryApproach to false
+      ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", false);
 
       // Act
       var result = bulkOperationService.triggerByQuery(userId, queryRequest);
@@ -1943,8 +1943,8 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
     when(queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation)).thenReturn(operation);
 
-    // Set fqmApproach to true
-    ReflectionTestUtils.setField(bulkOperationService, "fqmApproach", true);
+    // Set fqmQueryApproach to true
+    ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", true);
 
     // Act
     var result = bulkOperationService.triggerByQuery(userId, queryRequest);

@@ -159,8 +159,8 @@ public class BulkOperationService {
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
-  @Value("${application.fqm-approach}")
-  private Boolean fqmApproach;
+  @Value("${application.fqm-query-approach}")
+  private Boolean fqmQueryApproach;
 
   public BulkOperation uploadCsvFile(EntityType entityType, IdentifierType identifierType, boolean manual, UUID operationId, UUID xOkapiUserId, MultipartFile multipartFile) {
     BulkOperation operation;
@@ -211,11 +211,11 @@ public class BulkOperationService {
 
   public BulkOperation triggerByQuery(UUID userId, QueryRequest queryRequest) {
     var operation = saveQueryBulkOperation(userId, queryRequest);
-    if (Boolean.FALSE.equals(fqmApproach)) {
+    if (fqmQueryApproach) {
+      operation = queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+    } else {
       queryService.saveIdentifiers(operation);
       operation = startBulkOperation(operation.getId(), userId, new BulkOperationStart().step(UPLOAD));
-    } else {
-      operation = queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
     }
     return operation;
   }

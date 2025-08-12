@@ -104,4 +104,4 @@ application:
   fqm-fetcher:
     max_chunk_size: ${FQM_MAX_CHUNK_SIZE:10000}
     max_parallel_chunks: ${FQM_MAX_PARALLEL_CHUNKS:10}
-  fqm-approach: ${FQM_APPROACH:false}
+  fqm-query-approach: ${FQM_QUERY_APPROACH:false}
