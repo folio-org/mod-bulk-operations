@@ -147,6 +147,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class BulkOperationServiceTest extends BaseTest {
   @Autowired
@@ -208,6 +209,9 @@ class BulkOperationServiceTest extends BaseTest {
 
   @MockitoBean
   private ExportJobManagerSync exportJobManagerSync;
+
+  @MockitoBean
+  private EntityTypeService entityTypeService;
 
   @Autowired
   private List<Job> jobs;
@@ -1893,5 +1897,60 @@ class BulkOperationServiceTest extends BaseTest {
     // Use ArgumentCaptor to capture the failed HRIDs set passed to marcUpdateService
     ArgumentCaptor<Set<String>> failedHridsCaptor = ArgumentCaptor.forClass(Set.class);
     verify(marcUpdateService, never()).commitForInstanceMarc(any(), failedHridsCaptor.capture());
+  }
+
+  @Test
+  void triggerByQuery_shouldSaveIdentifiersAndStartBulkOperation_whenFqmApproachIsFalse() {
+
+    try (var ignored =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      // Arrange
+      var userId = UUID.randomUUID();
+      var queryRequest = mock(org.folio.bulkops.domain.dto.QueryRequest.class);
+      var operation = BulkOperation.builder()
+              .id(UUID.randomUUID())
+              .status(OperationStatusType.NEW)
+              .build();
+
+      when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
+      doNothing().when(queryService).saveIdentifiers(operation);
+      when(bulkOperationRepository.findById(operation.getId())).thenReturn(Optional.of(operation));
+      when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
+      when(entityTypeService.getEntityTypeById(any())).thenReturn(mock(org.folio.bulkops.domain.dto.EntityType.class));
+
+      // Set fqmQueryApproach to false
+      ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", false);
+
+      // Act
+      var result = bulkOperationService.triggerByQuery(userId, queryRequest);
+
+      // Assert
+      verify(queryService).saveIdentifiers(operation);
+      verify(bulkOperationRepository, atLeastOnce()).save(any(BulkOperation.class));
+      assertEquals(operation.getId(), result.getId());
+    }
+  }
+
+  @Test
+  void triggerByQuery_shouldNotStartBulkOperation_whenFqmApproachIsTrue() {
+    // Arrange
+    var userId = UUID.randomUUID();
+    var queryRequest = mock(org.folio.bulkops.domain.dto.QueryRequest.class);
+    var operation = BulkOperation.builder()
+            .id(UUID.randomUUID())
+            .status(OperationStatusType.NEW)
+            .build();
+
+    when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
+    when(queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation)).thenReturn(operation);
+
+    // Set fqmQueryApproach to true
+    ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", true);
+
+    // Act
+    var result = bulkOperationService.triggerByQuery(userId, queryRequest);
+
+    // Assert
+    verify(queryService, never()).saveIdentifiers(any());
+    assertEquals(operation.getId(), result.getId());
   }
 }
