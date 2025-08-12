@@ -894,7 +894,7 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   private void mockHoldingsClient() {
-    when(holdingsClient.getHoldingById(any())).thenReturn(
+    when(holdingsStorageClient.getHoldingById(any())).thenReturn(
       HoldingsRecord.builder()
         .effectiveLocationId(UUID.randomUUID().toString())
         .callNumber("TK5105.88815 . A58 2004 FT MEADE")

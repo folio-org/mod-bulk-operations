@@ -21,7 +21,7 @@ import org.folio.bulkops.client.DamagedStatusClient;
 import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.client.ElectronicAccessRelationshipClient;
 import org.folio.bulkops.client.GroupClient;
-import org.folio.bulkops.client.HoldingsClient;
+import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.HoldingsNoteTypeClient;
 import org.folio.bulkops.client.HoldingsSourceClient;
 import org.folio.bulkops.client.HoldingsTypeClient;
@@ -151,7 +151,7 @@ public abstract class BaseTest {
   protected static final String TENANT = "diku";
 
   @MockitoBean
-  public HoldingsClient holdingsClient;
+  public HoldingsStorageClient holdingsStorageClient;
   @MockitoBean
   public ItemClient itemClient;
   @MockitoBean

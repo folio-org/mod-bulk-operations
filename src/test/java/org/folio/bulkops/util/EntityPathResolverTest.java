@@ -68,7 +68,7 @@ class EntityPathResolverTest extends BaseTest {
 
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
-    when(holdingsClient.getHoldingById(entity.getHoldingsRecordId())).thenReturn(HoldingsRecord.builder().instanceId(instanceId).build());
+    when(holdingsStorageClient.getHoldingById(entity.getHoldingsRecordId())).thenReturn(HoldingsRecord.builder().instanceId(instanceId).build());
 
     var actual = entityPathResolver.resolve(EntityType.ITEM, extendedEntity);
     var expected = format("/inventory/view/%s/%s/%s", instanceId, entity.getHoldingsRecordId(), entity.getId());
