@@ -1,15 +1,34 @@
 package org.folio.bulkops.util;
 
+import static java.lang.String.join;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.folio.bulkops.util.Constants.ENTITY;
+import static org.folio.bulkops.util.Constants.HOLDINGS_DATA;
+import static org.folio.bulkops.util.Constants.HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER;
+import static org.folio.bulkops.util.Constants.ID;
+import static org.folio.bulkops.util.Constants.INSTANCE_TITLE;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
 import static org.folio.bulkops.util.Constants.TENANT_ID;
+import static org.folio.bulkops.util.Constants.TITLE;
+import static org.folio.bulkops.util.FqmKeys.FQM_DATE_OF_PUBLICATION_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_RECORD_INSTANCE_PUBLICATION;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_INSTANCES_PUBLICATION_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_PUBLISHER_KEY;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
@@ -19,6 +38,7 @@ import java.util.stream.IntStream;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.annotation.PostConstruct;
+import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +59,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class FqmContentFetcher {
 
+  public static final String TITLE_PATTERN = "%s. %s, %s";
   @Value("${application.fqm-fetcher.max_parallel_chunks}")
   private int maxParallelChunks;
   @Value("${application.fqm-fetcher.max_chunk_size}")
@@ -98,33 +119,84 @@ public class FqmContentFetcher {
     return new ByteArrayInputStream(response.stream()
         .map(json -> {
           try {
-            var jsonb = json.get(getContentJsonKey(entityType));
+            var jsonb = json.get(getEntityJsonKey(entityType));
             if (entityType == EntityType.USER) {
               return jsonb.toString();
             }
             var jsonNode = (ObjectNode) objectMapper.readTree(jsonb.toString());
             var tenant = json.get(getContentTenantKey(entityType));
             if (tenant == null) {
-              checkForTenantFieldExistenceInEcs(jsonNode.get("id").asText(), operationId, bulkOperationExecutionContents);
+              checkForTenantFieldExistenceInEcs(jsonNode.get(ID).asText(), operationId, bulkOperationExecutionContents);
               tenant = folioExecutionContext.getTenantId();
             }
             jsonNode.put(TENANT_ID, tenant.toString());
+
+            if (entityType == EntityType.ITEM) {
+
+              var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
+              var value = json.get(FQM_ITEM_INSTANCES_PUBLICATION_KEY);
+
+              var publications = nonNull(value)
+                  ? objectMapper.readTree(value.toString())
+                  : objectMapper.createArrayNode();
+
+              if (publications.isArray() && !publications.isEmpty()) {
+                title = title.concat(getFirstPublicationAsString(publications.get(0)));
+              }
+
+              jsonNode.put(TITLE,  title);
+
+              var callNumber = Stream.of(json.get(FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY), json.get(
+                      FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY), json.get(
+                      FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY))
+                  .filter(Objects::nonNull)
+                  .map(Object::toString)
+                  .collect(Collectors.joining(SPACE));
+
+              var permanentLocationName = ofNullable(json.get(
+                  FqmKeys.FQM_PERMANENT_LOCATION_NAME_KEY)).orElse(EMPTY).toString();
+
+              jsonNode.put(HOLDINGS_DATA,
+                  join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER,
+                      permanentLocationName,
+                      callNumber));
+            }
+
+            if (entityType == EntityType.HOLDINGS_RECORD) {
+
+              var title = ofNullable(json.get(FQM_INSTANCE_TITLE_KEY)).orElse(EMPTY).toString();
+
+              var value = json.get(FQM_HOLDINGS_RECORD_INSTANCE_PUBLICATION);
+
+              var publications = nonNull(value)
+                  ? objectMapper.readTree(value.toString())
+                  : objectMapper.createArrayNode();
+
+              if (publications.isArray() && !publications.isEmpty()) {
+                title = title.concat(getFirstPublicationAsString(publications.get(0)));
+              }
+
+              jsonNode.put(INSTANCE_TITLE, title);
+            }
+
             ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
             extendedRecordWrapper.set(ENTITY, jsonNode);
             extendedRecordWrapper.put(TENANT_ID, tenant.toString());
             return objectMapper.writeValueAsString(extendedRecordWrapper);
           } catch (Exception e) {
-            log.error("Error processing JSON content for entity type {}: {}", entityType, e.getMessage());
-            throw new FqmFetcherException("Error processing JSON content", e);
+            log.error("Error processing JSON content: {}", json, e);
+            return EMPTY;
           }
-        }).collect(Collectors.joining(LINE_BREAK))
+        })
+        .filter(StringUtils::isNotEmpty)
+        .collect(Collectors.joining(LINE_BREAK))
         .getBytes(StandardCharsets.UTF_8));
   }
 
-  private String getContentJsonKey(EntityType entityType) {
+  private String getEntityJsonKey(EntityType entityType) {
     return switch(entityType) {
-      case USER -> "users.jsonb";
-      case ITEM -> "items.jsonb";
+      case USER -> FqmKeys.FQM_USERS_JSONB_KEY;
+      case ITEM -> FqmKeys.FQM_ITEMS_JSONB_KEY;
       case HOLDINGS_RECORD -> "holdings.jsonb";
       case INSTANCE, INSTANCE_MARC -> "instance.jsonb";
     };
@@ -151,5 +223,17 @@ public class FqmContentFetcher {
               .errorMessage(errorMessage)
               .build());
     }
+  }
+
+  private String getFirstPublicationAsString(JsonNode publication) {
+    if (nonNull(publication)) {
+      var publisher = publication.get(FQM_PUBLISHER_KEY);
+      var date = publication.get(FQM_DATE_OF_PUBLICATION_KEY);
+      if (isNull(date) || date.isNull()) {
+        return isNull(publisher) || publisher.isNull() ? EMPTY : String.format(". %s", publisher.asText());
+      }
+      return String.format(". %s, %s", isNull(publisher) || publisher.isNull() ? EMPTY : publisher.asText(), date.asText());
+    }
+    return EMPTY;
   }
 }

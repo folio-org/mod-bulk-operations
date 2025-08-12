@@ -1,5 +1,6 @@
 package org.folio.bulkops.batch.jobs.processidentifiers;
 
+import java.util.Optional;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.item.ExecutionContext;
@@ -20,7 +21,8 @@ public class DuplicationCheckerFactory {
       if (!context.containsKey(key)) {
         context.put(key, Collections.synchronizedSet(new HashSet<>()));
       }
-      return (Set<ItemIdentifier>) context.get(key);
+      return Collections.synchronizedSet((Set<ItemIdentifier>) Optional.ofNullable(context.get(key))
+          .orElse(Collections.synchronizedSet(new HashSet<>())));
     }
   }
 
@@ -33,7 +35,8 @@ public class DuplicationCheckerFactory {
       if (!context.containsKey(key)) {
         context.put(key, Collections.synchronizedSet(new HashSet<>()));
       }
-      return (Set<String>) context.get(key);
+      return Collections.synchronizedSet((Set<String>) Optional.ofNullable(context.get(key))
+          .orElse(Collections.synchronizedSet(new HashSet<>())));
     }
   }
 }
