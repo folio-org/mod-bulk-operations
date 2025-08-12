@@ -58,7 +58,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Log4j2
 public class BulkEditHoldingsProcessor implements ItemProcessor<ItemIdentifier, List<ExtendedHoldingsRecord>>, EntityExtractor {
-  private final HoldingsStorageClient holdingClient;
+  private final HoldingsStorageClient holdingsStorageClient;
   private final HoldingsReferenceService holdingsReferenceService;
   private final SearchClient searchClient;
   private final ConsortiaService consortiaService;
@@ -175,16 +175,16 @@ public class BulkEditHoldingsProcessor implements ItemProcessor<ItemIdentifier, 
   private HoldingsRecordCollection getHoldingsRecordCollection(IdentifierType type, ItemIdentifier itemIdentifier) {
     if (Set.of(ID, HRID).contains(type)) {
       var url = format(getMatchPattern(identifierType), resolveIdentifier(identifierType), itemIdentifier.getItemId());
-      var holdingsRecordCollection = holdingClient.getByQuery(url);
+      var holdingsRecordCollection = holdingsStorageClient.getByQuery(url);
       if (holdingsRecordCollection.getTotalRecords() > 1) {
         log.error("Response from {} for tenant {}: {}", url, folioExecutionContext.getTenantId(), getResponseAsString(holdingsRecordCollection));
         throw new BulkEditException(MULTIPLE_MATCHES_MESSAGE, ErrorType.ERROR);
       }
       return holdingsRecordCollection;
     } else if (INSTANCE_HRID == type) {
-      return holdingClient.getByQuery("instanceId==" + holdingsReferenceService.getInstanceIdByHrid(itemIdentifier.getItemId()), Integer.MAX_VALUE);
+      return holdingsStorageClient.getByQuery("instanceId==" + holdingsReferenceService.getInstanceIdByHrid(itemIdentifier.getItemId()), Integer.MAX_VALUE);
     } else if (ITEM_BARCODE == type) {
-      return holdingClient.getByQuery("id==" + holdingsReferenceService.getHoldingsIdByItemBarcode(itemIdentifier.getItemId()), 1);
+      return holdingsStorageClient.getByQuery("id==" + holdingsReferenceService.getHoldingsIdByItemBarcode(itemIdentifier.getItemId()), 1);
     } else {
       throw new BulkEditException(format("Identifier type \"%s\" is not supported", identifierType), ErrorType.ERROR);
     }
