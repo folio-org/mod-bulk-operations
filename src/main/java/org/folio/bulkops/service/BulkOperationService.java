@@ -109,6 +109,7 @@ import org.marc4j.MarcStreamReader;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecutionException;
 import org.springframework.batch.integration.launch.JobLaunchRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -157,6 +158,9 @@ public class BulkOperationService {
   public static final String TMP_MATCHED_JSON_PATH_TEMPLATE = "%s/json/tmp-matched.json";
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
+
+  @Value("${application.fqm-approach}")
+  private Boolean fqmApproach;
 
   public BulkOperation uploadCsvFile(EntityType entityType, IdentifierType identifierType, boolean manual, UUID operationId, UUID xOkapiUserId, MultipartFile multipartFile) {
     BulkOperation operation;
@@ -207,7 +211,13 @@ public class BulkOperationService {
 
   public BulkOperation triggerByQuery(UUID userId, QueryRequest queryRequest) {
     var operation = saveQueryBulkOperation(userId, queryRequest);
-    return queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+    if (Boolean.FALSE.equals(fqmApproach)) {
+      queryService.saveIdentifiers(operation);
+      operation = startBulkOperation(operation.getId(), userId, new BulkOperationStart().step(UPLOAD));
+    } else {
+      operation = queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+    }
+    return operation;
   }
 
   private BulkOperation saveQueryBulkOperation(UUID userId, QueryRequest queryRequest) {

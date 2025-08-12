@@ -5,6 +5,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.CANCELLED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
+import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_IDENTIFIERS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_STARTING_BULK_OPERATION;
@@ -17,6 +18,7 @@ import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
@@ -27,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -44,6 +47,7 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.converter.JsonToMarcConverter;
+import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.UploadFromQueryException;
@@ -102,6 +106,25 @@ public class QueryService {
     bulkOperation.setStatus(RETRIEVING_RECORDS);
     bulkOperationRepository.save(bulkOperation);
     return bulkOperation;
+  }
+
+  public void saveIdentifiers(BulkOperation bulkOperation) {
+    try {
+      var identifiersString = queryClient.getSortedIds(bulkOperation.getFqlQueryId(), 0, Integer.MAX_VALUE).stream()
+              .map(List::getFirst)
+              .distinct()
+              .collect(Collectors.joining(NEW_LINE_SEPARATOR));
+      var path = String.format(QUERY_FILENAME_TEMPLATE, bulkOperation.getId());
+      remoteFileSystemClient.put(new ByteArrayInputStream(identifiersString.getBytes()), path);
+      bulkOperation.setLinkToTriggeringCsvFile(path);
+      bulkOperation.setStatus(RETRIEVING_IDENTIFIERS);
+      bulkOperation.setApproach(ApproachType.QUERY);
+      bulkOperationRepository.save(bulkOperation);
+    } catch (Exception e) {
+      var errorMessage = "Failed to save identifiers, reason: " + e.getMessage();
+      log.error(errorMessage);
+      failBulkOperation(bulkOperation, errorMessage);
+    }
   }
 
   private void startQueryOperation(InputStream is, BulkOperation operation, List<BulkOperationExecutionContent> bulkOperationExecutionContents) {
