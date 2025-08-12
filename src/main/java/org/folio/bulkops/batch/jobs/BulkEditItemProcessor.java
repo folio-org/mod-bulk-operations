@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
-import org.folio.bulkops.client.ItemClient;
+import org.folio.bulkops.client.ItemStorageClient;
 import org.folio.bulkops.client.SearchClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
@@ -33,7 +33,7 @@ import org.folio.bulkops.processor.EntityExtractor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.processor.permissions.check.TenantResolver;
 import org.folio.bulkops.service.ConsortiaService;
-import org.folio.bulkops.service.EntityDataHelper;
+import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.LocalReferenceDataService;
 import org.folio.bulkops.util.ExceptionHelper;
 import org.folio.bulkops.util.FolioExecutionContextUtil;
@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Log4j2
 public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, ExtendedItemCollection>, EntityExtractor {
-  private final ItemClient itemClient;
+  private final ItemStorageClient itemStorageClient;
   private final ConsortiaService consortiaService;
   private final SearchClient searchClient;
   private final UserClient userClient;
@@ -64,7 +64,7 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
   private final FolioModuleMetadata folioModuleMetadata;
   private final TenantResolver tenantResolver;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
-  private final EntityDataHelper entityDataHelper;
+  private final HoldingsReferenceService holdingsReferenceService;
   private final LocalReferenceDataService localReferenceDataService;
 
   @Value("#{stepExecution.jobExecution}")
@@ -73,7 +73,7 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
   private String identifierType;
 
   @Override
-  public synchronized ExtendedItemCollection process(ItemIdentifier itemIdentifier) throws BulkEditException {
+  public ExtendedItemCollection process(ItemIdentifier itemIdentifier) throws BulkEditException {
     if (!duplicationCheckerFactory.getIdentifiersToCheckDuplication(jobExecution).add(itemIdentifier)) {
       throw new BulkEditException("Duplicate entry", ErrorType.WARNING);
     }
@@ -105,14 +105,14 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
           affiliatedPermittedTenants.forEach(tenantId -> {
             try (var context = new FolioExecutionContextSetter(FolioExecutionContextUtil.prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
               var url = getMatchPattern(identifierType).formatted(idType, identifier);
-              var itemCollection = itemClient.getByQuery(url, Integer.MAX_VALUE);
+              var itemCollection = itemStorageClient.getByQuery(url, Integer.MAX_VALUE);
               if (itemCollection.getItems().size() > limit) {
                 log.error("Central tenant case: response from {} for tenant {}: {}", url, tenantId, getResponseAsString(itemCollection));
                 throw new BulkEditException(MULTIPLE_MATCHES_MESSAGE, ErrorType.ERROR);
               }
               extendedItemCollection.getExtendedItems().addAll(itemCollection.getItems().stream()
-                      .map(item -> item.withTitle(entityDataHelper.getInstanceTitle(item.getHoldingsRecordId(), tenantId)))
-                      .map(item -> item.withHoldingsData(entityDataHelper.getHoldingsData(item.getHoldingsRecordId(), tenantId)))
+                      .map(item -> item.withTitle(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(item.getHoldingsRecordId(), tenantId)))
+                      .map(item -> item.withHoldingsData(holdingsReferenceService.getHoldingsData(item.getHoldingsRecordId(), tenantId)))
                 .map(item -> {
                   localReferenceDataService.enrichWithTenant(item, tenantId);
                   return item.withTenantId(tenantId);
@@ -133,15 +133,15 @@ public class BulkEditItemProcessor implements ItemProcessor<ItemIdentifier, Exte
         checkReadPermissions(folioExecutionContext.getTenantId(), identifier);
         var query = getMatchPattern(identifierType).formatted(idType, identifier);
         var currentTenantId = folioExecutionContext.getTenantId();
-        var itemCollection =  itemClient.getByQuery(query, Integer.MAX_VALUE);
+        var itemCollection =  itemStorageClient.getByQuery(query, Integer.MAX_VALUE);
         if (itemCollection.getItems().size() > limit) {
           log.error("Member/local tenant case: response from {} for tenant {}: {}", query, currentTenantId, getResponseAsString(itemCollection));
           throw new BulkEditException(MULTIPLE_MATCHES_MESSAGE, ErrorType.ERROR);
         }
         var tenantId = folioExecutionContext.getTenantId();
         extendedItemCollection.setExtendedItems(itemCollection.getItems().stream()
-          .map(item -> item.withTitle(entityDataHelper.getInstanceTitle(item.getHoldingsRecordId(), tenantId)))
-          .map(item -> item.withHoldingsData(entityDataHelper.getHoldingsData(item.getHoldingsRecordId(), tenantId)))
+          .map(item -> item.withTitle(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(item.getHoldingsRecordId(), tenantId)))
+          .map(item -> item.withHoldingsData(holdingsReferenceService.getHoldingsData(item.getHoldingsRecordId(), tenantId)))
           .map(item -> new ExtendedItem().withTenantId(tenantId).withEntity(item)).toList());
         extendedItemCollection.setTotalRecords(itemCollection.getTotalRecords());
         if (extendedItemCollection.getExtendedItems().isEmpty()) {

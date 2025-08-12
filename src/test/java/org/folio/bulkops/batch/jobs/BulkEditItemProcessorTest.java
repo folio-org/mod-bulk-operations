@@ -13,6 +13,7 @@ import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
+import org.folio.bulkops.client.ItemStorageClient;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.domain.bean.ExtendedItemCollection;
 import org.folio.bulkops.domain.bean.Item;
@@ -24,14 +25,13 @@ import org.folio.bulkops.domain.dto.ConsortiumItem;
 import org.folio.bulkops.domain.dto.ConsortiumItemCollection;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
-import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.SearchClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.processor.permissions.check.TenantResolver;
 import org.folio.bulkops.service.ConsortiaService;
-import org.folio.bulkops.service.EntityDataHelper;
+import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.LocalReferenceDataService;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
@@ -55,7 +55,7 @@ import java.util.UUID;
 class BulkEditItemProcessorTest {
 
   @Mock
-  private ItemClient itemClient;
+  private ItemStorageClient itemStorageClient;
   @Mock
   private ConsortiaService consortiaService;
   @Mock
@@ -73,7 +73,7 @@ class BulkEditItemProcessorTest {
   @Mock
   private DuplicationCheckerFactory duplicationCheckerFactory;
   @Mock
-  private EntityDataHelper entityDataHelper;
+  private HoldingsReferenceService holdingsReferenceService;
   @Mock
   private LocalReferenceDataService localReferenceDataService;
   @Mock
@@ -110,9 +110,9 @@ class BulkEditItemProcessorTest {
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
       .thenReturn(Set.of("tenant1"));
-    when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(entityDataHelper.getInstanceTitle(any(), anyString())).thenReturn("Instance Title");
-    when(entityDataHelper.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
+    when(itemStorageClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
 
@@ -158,9 +158,9 @@ class BulkEditItemProcessorTest {
 
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(true);
-    when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(collection);
-    when(entityDataHelper.getInstanceTitle(any(), anyString())).thenReturn("Instance Title");
-    when(entityDataHelper.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
+    when(itemStorageClient.getByQuery(anyString(), anyInt())).thenReturn(collection);
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
       .isInstanceOf(BulkEditException.class)
@@ -195,9 +195,9 @@ class BulkEditItemProcessorTest {
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
       .thenReturn(Set.of("tenant1"));
-    when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(entityDataHelper.getInstanceTitle(any(), anyString())).thenReturn("Instance Title");
-    when(entityDataHelper.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
+    when(itemStorageClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
 
@@ -233,9 +233,9 @@ class BulkEditItemProcessorTest {
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
             .thenReturn(Set.of(tenantId));
-    when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(entityDataHelper.getInstanceTitle(any(), anyString())).thenReturn("Instance Title");
-    when(entityDataHelper.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
+    when(itemStorageClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
     doCallRealMethod().when(localReferenceDataService).enrichWithTenant(any(Item.class), anyString());
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
@@ -269,9 +269,9 @@ class BulkEditItemProcessorTest {
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
             .thenReturn(Set.of(tenantId));
-    when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(entityDataHelper.getInstanceTitle(any(), anyString())).thenReturn("Instance Title");
-    when(entityDataHelper.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
+    when(itemStorageClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
     doCallRealMethod().when(localReferenceDataService).enrichWithTenant(any(Item.class), anyString());
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
@@ -305,9 +305,9 @@ class BulkEditItemProcessorTest {
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
             .thenReturn(Set.of(tenantId));
-    when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(entityDataHelper.getInstanceTitle(any(), anyString())).thenReturn("Instance Title");
-    when(entityDataHelper.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
+    when(itemStorageClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
     doCallRealMethod().when(localReferenceDataService).enrichWithTenant(any(Item.class), anyString());
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
@@ -340,9 +340,9 @@ class BulkEditItemProcessorTest {
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
             .thenReturn(Set.of(tenantId));
-    when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(entityDataHelper.getInstanceTitle(any(), anyString())).thenReturn("Instance Title");
-    when(entityDataHelper.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
+    when(itemStorageClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
 

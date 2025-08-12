@@ -115,7 +115,7 @@ class UpdateProcessorTest extends BaseTest {
 
     holdingsUpdateProcessor.updateRecord(extendedHoldingsRecord);
 
-    verify(holdingsClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
+    verify(holdingsStorageClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
   }
 
   @Test
@@ -135,7 +135,7 @@ class UpdateProcessorTest extends BaseTest {
 
     holdingsUpdateProcessor.updateRecord(extendedHoldingsRecord);
 
-    verify(holdingsClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
+    verify(holdingsStorageClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
   }
 
   @ParameterizedTest
@@ -334,7 +334,8 @@ class UpdateProcessorTest extends BaseTest {
     when(holdingsReferenceService.getSourceById("marc_id")).thenReturn(HoldingsRecordsSource.builder().name("MARC").build());
     when(holdingsReferenceService.getSourceById("folio_id")).thenReturn(HoldingsRecordsSource.builder().name("FOLIO").build());
 
-    when(holdingsClient.getByQuery(String.format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE))
+    when(
+        holdingsStorageClient.getByQuery(String.format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE))
       .thenReturn(HoldingsRecordCollection.builder()
         .holdingsRecords(List.of(HoldingsRecord.builder().id(UUID.randomUUID().toString()).sourceId(sourceId).discoverySuppress(true).build(),
           HoldingsRecord.builder().id(UUID.randomUUID().toString()).sourceId(sourceId).discoverySuppress(false).build()))
@@ -343,7 +344,7 @@ class UpdateProcessorTest extends BaseTest {
 
     folioInstanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
 
-    verify(holdingsClient, times("folio_id".equals(sourceId) && applyToHoldings ? 1 : 0)).updateHoldingsRecord(any(HoldingsRecord.class), anyString());
+    verify(holdingsStorageClient, times("folio_id".equals(sourceId) && applyToHoldings ? 1 : 0)).updateHoldingsRecord(any(HoldingsRecord.class), anyString());
   }
 
   @ParameterizedTest
@@ -387,7 +388,8 @@ class UpdateProcessorTest extends BaseTest {
     when(holdingsReferenceService.getSourceById("folio_id")).thenReturn(HoldingsRecordsSource.builder().name("FOLIO").build());
 
     var holdingsId = UUID.randomUUID().toString();
-    when(holdingsClient.getByQuery(String.format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE))
+    when(
+        holdingsStorageClient.getByQuery(String.format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE))
       .thenReturn(HoldingsRecordCollection.builder()
         .holdingsRecords(Collections.singletonList(HoldingsRecord.builder().id(holdingsId).sourceId(sourceId).discoverySuppress(true).build()))
         .totalRecords(1)
@@ -462,7 +464,8 @@ class UpdateProcessorTest extends BaseTest {
       .bulkOperationRules(Collections.singletonList(rule))
       .totalRecords(1));
     when(holdingsReferenceService.getSourceById("folio_id")).thenReturn(HoldingsRecordsSource.builder().name("FOLIO").build());
-    when(holdingsClient.getByQuery(String.format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE))
+    when(
+        holdingsStorageClient.getByQuery(String.format(GET_HOLDINGS_BY_INSTANCE_ID_QUERY, instanceId), Integer.MAX_VALUE))
       .thenReturn(HoldingsRecordCollection.builder()
         .holdingsRecords(List.of(holdingRecord))
         .totalRecords(1)
@@ -472,7 +475,7 @@ class UpdateProcessorTest extends BaseTest {
 
     folioInstanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
     verify(errorService).saveError(eq(operationId), eq(instanceId), anyString(), eq(ErrorType.ERROR));
-    verify(holdingsClient).updateHoldingsRecord(any(HoldingsRecord.class), eq(holdingRecord.getId()));
+    verify(holdingsStorageClient).updateHoldingsRecord(any(HoldingsRecord.class), eq(holdingRecord.getId()));
     verify(itemClient).updateItem(any(Item.class), eq(item.getId()));
   }
 
