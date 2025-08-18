@@ -17,6 +17,8 @@ import org.folio.bulkops.mapper.MarcRulesMapper;
 import org.folio.bulkops.repository.BulkOperationMarcRuleRepository;
 import org.folio.bulkops.repository.BulkOperationRuleDetailsRepository;
 import org.folio.bulkops.repository.BulkOperationRuleRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,10 @@ public class RuleService {
   private final BulkOperationRuleDetailsRepository ruleDetailsRepository;
   private final BulkOperationMarcRuleRepository marcRuleRepository;
   private final MarcRulesMapper marcRulesMapper;
+
+  @Lazy
+  @Autowired
+  private RuleService self;
 
   @Transactional
   public BulkOperationRuleCollection saveRules(BulkOperation bulkOperation, BulkOperationRuleCollection ruleCollection) {
@@ -68,7 +74,7 @@ public class RuleService {
             .updateOption(UpdateOptionType.SET_RECORDS_FOR_DELETE);
           marcRules.addBulkOperationMarcRulesItem(marcRule);
           marcRules.totalRecords(1);
-          saveMarcRules(bulkOperation, marcRules);
+          self.saveMarcRules(bulkOperation, marcRules);
         });
       }
     });
