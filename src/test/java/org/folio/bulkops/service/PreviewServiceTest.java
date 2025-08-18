@@ -578,12 +578,13 @@ class PreviewServiceTest extends BaseTest {
 
     assertThat(res.getHeader().get(15).getValue(), equalTo("Contributors"));
     assertThat(res.getHeader().get(15).getForceVisible(), equalTo(Boolean.TRUE));
-    assertThat(res.getHeader().get(24).getValue(), equalTo("General note"));
-    assertThat(res.getHeader().get(24).getForceVisible(), equalTo(Boolean.FALSE));
-    assertThat(res.getHeader().get(25).getValue(), equalTo("Summary"));
-    assertThat(res.getHeader().get(25).getForceVisible(), equalTo(Boolean.TRUE));
+    assertThat(res.getHeader().get(25).getValue(), equalTo("General note"));
+    assertThat(res.getHeader().get(25).getForceVisible(), equalTo(Boolean.FALSE));
+    assertThat(res.getHeader().get(26).getValue(), equalTo("Summary"));
+    assertThat(res.getHeader().get(26).getForceVisible(), equalTo(Boolean.TRUE));
 
     assertThat(res.getRows().get(1).getRow().get(0), equalTo("ed32b4a6-3895-42a0-b696-7b8ed667313f"));
+    assertThat(res.getRows().get(1).getRow().get(4), equalTo("false"));
     assertThat(res.getRows().get(1).getRow().get(5), equalTo("inst000000000001"));
     assertThat(res.getRows().get(1).getRow().get(6), equalTo("FOLIO"));
     assertThat(res.getRows().get(1).getRow().get(7), equalTo("2023-12-27"));
@@ -593,6 +594,7 @@ class PreviewServiceTest extends BaseTest {
 
     assertThat(res.getRows().get(2).getRow().get(0), equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
     assertThat(res.getRows().get(2).getRow().get(2), equalTo("true"));
+    assertThat(res.getRows().get(1).getRow().get(4), equalTo("false"));
     assertThat(res.getRows().get(2).getRow().get(5), equalTo("in00000000002"));
     assertThat(res.getRows().get(2).getRow().get(6), equalTo("MARC"));
     assertThat(res.getRows().get(2).getRow().get(9), equalTo("single unit"));
@@ -721,10 +723,10 @@ class PreviewServiceTest extends BaseTest {
 
     var res = previewService.getPreview(bulkOperation, COMMIT, 0, 10);
 
-    assertThat(res.getHeader().get(24).getValue(), equalTo("General note"));
-    assertThat(res.getHeader().get(24).getForceVisible(), equalTo(Boolean.FALSE));
-    assertThat(res.getHeader().get(25).getValue(), equalTo("Summary"));
-    assertThat(res.getHeader().get(25).getForceVisible(), equalTo(Boolean.TRUE));
+    assertThat(res.getHeader().get(25).getValue(), equalTo("General note"));
+    assertThat(res.getHeader().get(25).getForceVisible(), equalTo(Boolean.FALSE));
+    assertThat(res.getHeader().get(26).getValue(), equalTo("Summary"));
+    assertThat(res.getHeader().get(26).getForceVisible(), equalTo(Boolean.TRUE));
 
     assertThat(res.getRows().get(2).getRow().get(0), equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
     assertThat(res.getRows().get(2).getRow().get(2), equalTo("true"));
@@ -763,12 +765,12 @@ class PreviewServiceTest extends BaseTest {
 
     var table = previewService.getPreview(bulkOperation, UPLOAD, offset, limit);
 
-    assertThat(table.getHeader().size(), equalTo(30));
-    assertThat(table.getRows().get(0).getRow().size(), equalTo(30));
-    assertThat(table.getRows().get(0).getRow().get(24), equalTo("Accumulation and Frequency of Use note text"));
-    assertThat(table.getRows().get(0).getRow().get(25), equalTo("Bibliography note text"));
-    assertThat(table.getRows().get(0).getRow().get(26), equalTo("General note text"));
-    assertThat(table.getRows().get(0).getRow().get(9), equalTo("some type: some code - some name"));
+    assertThat(table.getHeader().size(), equalTo(31));
+    assertThat(table.getRows().getFirst().getRow().size(), equalTo(31));
+    assertThat(table.getRows().getFirst().getRow().get(25), equalTo("Accumulation and Frequency of Use note text"));
+    assertThat(table.getRows().getFirst().getRow().get(26), equalTo("Bibliography note text"));
+    assertThat(table.getRows().getFirst().getRow().get(27), equalTo("General note text"));
+    assertThat(table.getRows().getFirst().getRow().get(10), equalTo("some type: some code - some name"));
   }
 
   private String getPathToContentUpdateRequest(org.folio.bulkops.domain.dto.EntityType entityType) {
