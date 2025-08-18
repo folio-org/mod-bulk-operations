@@ -17,7 +17,7 @@ import org.folio.bulkops.mapper.MarcRulesMapper;
 import org.folio.bulkops.repository.BulkOperationMarcRuleRepository;
 import org.folio.bulkops.repository.BulkOperationRuleDetailsRepository;
 import org.folio.bulkops.repository.BulkOperationRuleRepository;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,9 +30,7 @@ public class RuleService {
   private final BulkOperationRuleDetailsRepository ruleDetailsRepository;
   private final BulkOperationMarcRuleRepository marcRuleRepository;
   private final MarcRulesMapper marcRulesMapper;
-
-  @Lazy
-  private final RuleService self;
+  private final ApplicationContext applicationContext;
 
   @Transactional
   public BulkOperationRuleCollection saveRules(BulkOperation bulkOperation, BulkOperationRuleCollection ruleCollection) {
@@ -72,7 +70,8 @@ public class RuleService {
             .updateOption(UpdateOptionType.SET_RECORDS_FOR_DELETE);
           marcRules.addBulkOperationMarcRulesItem(marcRule);
           marcRules.totalRecords(1);
-          self.saveMarcRules(bulkOperation, marcRules);
+          RuleService selfProxy = applicationContext.getBean(RuleService.class);
+          selfProxy.saveMarcRules(bulkOperation, marcRules); // Proxy is used, transactional behavior works
         });
       }
     });
