@@ -141,6 +141,48 @@ class RuleServiceTest extends BaseTest {
     }
   }
 
+  @Test
+  void shouldSaveMarcRuleIfSetToDelete() {
+    try (var ignored = new FolioExecutionContextSetter(folioExecutionContext)) {
+      var operation = BulkOperation.builder().id(BULK_OPERATION_ID).build();
+      var ruleCollection = new BulkOperationRuleCollection()
+              .bulkOperationRules(List.of(new BulkOperationRule()
+                      .bulkOperationId(BULK_OPERATION_ID)
+                      .ruleDetails(new RuleDetails()
+                              .option(UpdateOptionType.SET_RECORDS_FOR_DELETE)
+                              .actions(List.of(new Action()
+                                      .type(UpdateActionType.REPLACE_WITH)))))).totalRecords(1);
+
+      when(ruleRepository.save(any(org.folio.bulkops.domain.entity.BulkOperationRule.class)))
+              .thenReturn(org.folio.bulkops.domain.entity.BulkOperationRule.builder().id(UUID.randomUUID()).build());
+
+      ruleService.saveRules(operation, ruleCollection);
+
+      verify(marcRuleRepository).save(any(org.folio.bulkops.domain.entity.BulkOperationMarcRule.class));
+    }
+  }
+
+  @Test
+  void shouldNotSaveMarcRuleIfNotSetToDelete() {
+    try (var ignored = new FolioExecutionContextSetter(folioExecutionContext)) {
+      var operation = BulkOperation.builder().id(BULK_OPERATION_ID).build();
+      var ruleCollection = new BulkOperationRuleCollection()
+              .bulkOperationRules(List.of(new BulkOperationRule()
+                      .bulkOperationId(BULK_OPERATION_ID)
+                      .ruleDetails(new RuleDetails()
+                              .option(UpdateOptionType.PERMANENT_LOCATION)
+                              .actions(List.of(new Action()
+                                      .type(UpdateActionType.REPLACE_WITH)))))).totalRecords(1);
+
+      when(ruleRepository.save(any(org.folio.bulkops.domain.entity.BulkOperationRule.class)))
+              .thenReturn(org.folio.bulkops.domain.entity.BulkOperationRule.builder().id(UUID.randomUUID()).build());
+
+      ruleService.saveRules(operation, ruleCollection);
+
+      verify(marcRuleRepository, times(0)).save(any(org.folio.bulkops.domain.entity.BulkOperationMarcRule.class));
+    }
+  }
+
   private BulkOperationRuleCollection rules() {
     return new BulkOperationRuleCollection()
       .bulkOperationRules(List.of(new BulkOperationRule()
