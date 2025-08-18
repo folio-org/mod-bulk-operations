@@ -188,10 +188,18 @@ public class FqmContentFetcher {
             }
 
             if (entityType == EntityType.INSTANCE) {
-              jsonNode.put(CHILD_INSTANCES, json.get(FQM_INSTANCE_CHILD_INSTANCES_KEY).toString());
-              jsonNode.put(PARENT_INSTANCES, json.get(FQM_INSTANCE_PARENT_INSTANCES_KEY).toString());
-              jsonNode.put(PRECEDING_TITLES, json.get(FQM_INSTANCE_PRECEDING_TITLES_KEY).toString());
-              jsonNode.put(SUCCEEDING_TITLES, json.get(FQM_INSTANCE_SUCCEEDING_TITLES_KEY).toString());
+              var value = json.get(FQM_INSTANCE_CHILD_INSTANCES_KEY);
+              var childInstances = nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
+              jsonNode.putIfAbsent(CHILD_INSTANCES, childInstances);
+              value = json.get(FQM_INSTANCE_PARENT_INSTANCES_KEY);
+              var parentInstances = nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
+              jsonNode.putIfAbsent(PARENT_INSTANCES, parentInstances);
+              value = json.get(FQM_INSTANCE_PRECEDING_TITLES_KEY);
+              var precedingTitles = nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
+              jsonNode.putIfAbsent(PRECEDING_TITLES, precedingTitles);
+              value = json.get(FQM_INSTANCE_SUCCEEDING_TITLES_KEY);
+              var succeedingTitles = nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
+              jsonNode.putIfAbsent(SUCCEEDING_TITLES, succeedingTitles);
             }
 
             ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
