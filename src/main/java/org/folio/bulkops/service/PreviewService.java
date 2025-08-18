@@ -15,6 +15,7 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_LANGUAGES;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_NATURE_OF_CONTENT;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PREVIOUSLY_HELD;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_RESOURCE_TYPE;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SET_FOR_DELETION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SOURCE;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_STAFF_SUPPRESS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_STATISTICAL_CODES;
@@ -26,6 +27,9 @@ import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.SET_RECORDS_FOR_DELETE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.STAFF_SUPPRESS;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.processor.folio.HoldingsNotesUpdater.HOLDINGS_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.processor.folio.InstanceNotesUpdaterFactory.INSTANCE_NOTE_TYPE_ID_KEY;
 import static org.folio.bulkops.processor.folio.ItemsNotesUpdater.ITEM_NOTE_TYPE_ID_KEY;
@@ -78,6 +82,7 @@ import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import org.folio.bulkops.repository.BulkOperationMarcRuleRepository;
 import org.folio.bulkops.util.CSVHelper;
 import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
 import org.folio.bulkops.util.UpdateOptionTypeToFieldResolver;
@@ -120,16 +125,21 @@ public class PreviewService {
     return switch (step) {
       case UPLOAD -> buildPreviewFromCsvFile(operation.getLinkToMatchedRecordsCsvFile(), clazz, offset, limit, operation);
       case EDIT -> {
-        if (INSTANCE_MARC == operation.getEntityType()) {
-          if (isFolioInstanceEditPreview(operation)) {
-            yield getPreviewFromCsvWithChangedOptions(operation, operation.getLinkToModifiedRecordsCsvFile(), offset, limit);
-          } else if (isMarcInstanceEditPreview(operation)) {
-            yield buildCompositePreview(operation, offset, limit, operation.getLinkToMatchedRecordsCsvFile(), operation.getLinkToModifiedRecordsMarcFile());
+        try {
+          if (INSTANCE_MARC == operation.getEntityType()) {
+            if (isFolioInstanceEditPreview(operation)) {
+              yield getPreviewFromCsvWithChangedOptions(operation, operation.getLinkToModifiedRecordsCsvFile(), offset, limit);
+            } else if (isMarcInstanceEditPreview(operation)) {
+              yield buildCompositePreview(operation, offset, limit, operation.getLinkToMatchedRecordsCsvFile(), operation.getLinkToModifiedRecordsMarcFile());
+            } else {
+              yield buildCompositePreview(operation, offset, limit, operation.getLinkToModifiedRecordsCsvFile(), operation.getLinkToModifiedRecordsMarcFile());
+            }
           } else {
-            yield buildCompositePreview(operation, offset, limit, operation.getLinkToModifiedRecordsCsvFile(), operation.getLinkToModifiedRecordsMarcFile());
+            yield getPreviewFromCsvWithChangedOptions(operation, operation.getLinkToModifiedRecordsCsvFile(), offset, limit);
           }
-        } else {
-          yield getPreviewFromCsvWithChangedOptions(operation, operation.getLinkToModifiedRecordsCsvFile(), offset, limit);
+        } finally {
+          // Remove SET_FOR_DELETION rules after Are you sure? form to avoid updating MARC
+//          ruleService.deleteMarcRulesWithSetForDeletion(operation);
         }
       }
       case COMMIT -> {
@@ -228,6 +238,16 @@ public class PreviewService {
           header.setForceVisible(true);
         }
       });
+    if (isSetForDeletionForceVisible(unifiedTable)) {
+      unifiedTable.getHeader().stream().filter(header -> header.getValue().equals("Staff suppress") ||
+                      header.getValue().equals("Suppress from discovery"))
+              .forEach(header -> header.setForceVisible(true));
+    }
+  }
+
+  private boolean isSetForDeletionForceVisible(UnifiedTable unifiedTable) {
+    return unifiedTable.getHeader().stream()
+            .anyMatch(header -> header.getValue().equals("Set for deletion") && header.getForceVisible());
   }
 
   private void forceVisibleMarcFields(UnifiedTable unifiedTable, Set<String> changedOptionsSet) {
@@ -248,6 +268,7 @@ public class PreviewService {
     marcRow.getRow().set(positions.get(INSTANCE_NATURE_OF_CONTENT), csvRow.getRow().get(positions.get(INSTANCE_NATURE_OF_CONTENT)));
     marcRow.getRow().set(positions.get(INSTANCE_CATALOGED_DATE), csvRow.getRow().get(positions.get(INSTANCE_CATALOGED_DATE)));
     marcRow.getRow().set(positions.get(INSTANCE_STATISTICAL_CODES), csvRow.getRow().get(positions.get(INSTANCE_STATISTICAL_CODES)));
+    marcRow.getRow().set(positions.get(INSTANCE_SET_FOR_DELETION), csvRow.getRow().get(positions.get(INSTANCE_SET_FOR_DELETION)));
   }
 
   private Map<String, Integer> getAdministrativeDataFieldPositions() {
@@ -263,7 +284,8 @@ public class PreviewService {
         INSTANCE_CONTRIBUTORS,
         INSTANCE_RESOURCE_TYPE,
         INSTANCE_LANGUAGES,
-        INSTANCE_STATISTICAL_CODES)
+        INSTANCE_STATISTICAL_CODES,
+        INSTANCE_SET_FOR_DELETION)
       .forEach(name -> positions.put(name, getCellPositionByName(name)));
     return positions;
   }
@@ -299,6 +321,10 @@ public class PreviewService {
     var bulkOperation = bulkOperationService.getOperationById(bulkOperationId);
     rules.getBulkOperationRules().forEach(rule -> {
       var option = rule.getRuleDetails().getOption();
+      if (SET_RECORDS_FOR_DELETE == option && entityType == INSTANCE) {
+        forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(STAFF_SUPPRESS, entityType));
+        forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(SUPPRESS_FROM_DISCOVERY, entityType));
+      }
       rule.getRuleDetails().getActions().forEach(action -> {
 
         if (action.getType() == UpdateActionType.CHANGE_TYPE) {
@@ -381,7 +407,6 @@ public class PreviewService {
         } else if (INSTANCE_NOTE == option) {
           var initial = action.getParameters().stream().filter(p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue).findFirst();
           initial.ifPresent(id -> {
-            log.info("else if (INSTANCE_NOTE == option)");
             var type = resolveAndGetItemTypeById(clazz, id);
             if (StringUtils.isNotEmpty(type)) {
               forceVisibleOptions.add(type);
@@ -393,7 +418,7 @@ public class PreviewService {
         }
       });
     });
-    log.info(format("Bulk Operation ID: %s, forced to visible fields: %s", bulkOperationId.toString(), String.join(",", forceVisibleOptions)));
+    log.info(format("Bulk Operation ID: %s, forced to visible fields: %s", bulkOperationId.toString(), java.lang.String.join(",", forceVisibleOptions)));
     return forceVisibleOptions;
   }
 

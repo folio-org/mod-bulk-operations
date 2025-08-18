@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.dto.ErrorType;
+import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.processor.marc.MarcInstanceUpdateProcessor;
@@ -40,6 +41,7 @@ public class MarcUpdateService {
   private final ErrorService errorService;
   private final BulkOperationRepository bulkOperationRepository;
   private final BulkOperationServiceHelper bulkOperationServiceHelper;
+  private final RuleService ruleService;
 
   @Transactional
   public void commitForInstanceMarc(BulkOperation bulkOperation, Set<String> failedHrids) {
@@ -56,7 +58,11 @@ public class MarcUpdateService {
 
       try {
         bulkOperation.setLinkToCommittedRecordsMarcFile(prepareCommittedFile(bulkOperation, failedHrids));
-        updateProcessor.updateMarcRecords(bulkOperation);
+//        if (ruleService.areThereOtherMarcRulesThanSetForDeletion(bulkOperation)) {
+          updateProcessor.updateMarcRecords(bulkOperation);
+//        } else {
+//
+//        }
         execution = execution
           .withStatus(StatusType.COMPLETED)
           .withEndTime(LocalDateTime.now());

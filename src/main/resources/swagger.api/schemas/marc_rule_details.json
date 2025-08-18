@@ -41,6 +41,10 @@
         "items": {
           "$ref": "marc_subfield_action.json#/MarcSubfieldAction"
         }
+      },
+      "updateOption": {
+        "description": "Option to change",
+        "$ref": "update_option_type.json#/UpdateOptionType"
       }
     },
     "required": [

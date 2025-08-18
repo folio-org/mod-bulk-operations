@@ -27,6 +27,8 @@ public class Constants {
 
   public static final String DATE_TIME_CONTROL_FIELD = "005";
 
+  public static final String LEADER_TAG = "LDR";
+
   public static final char SPACE_CHAR = ' ';
 
   public static final int ITEM_NOTE_POSITION = 31;

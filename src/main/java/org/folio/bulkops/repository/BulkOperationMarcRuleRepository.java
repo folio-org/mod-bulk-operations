@@ -1,5 +1,7 @@
 package org.folio.bulkops.repository;
 
+import org.folio.bulkops.domain.dto.UpdateOptionType;
+
 import org.folio.bulkops.domain.entity.BulkOperationMarcRule;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,4 +16,8 @@ public interface BulkOperationMarcRuleRepository extends JpaRepository<BulkOpera
   Optional<BulkOperationMarcRule> findFirstByBulkOperationId(UUID bulkOperationId);
 
   void deleteAllByBulkOperationId(UUID bulkOperationId);
+
+  void deleteAllByBulkOperationIdAndUpdateOption(UUID bulkOperationId, UpdateOptionType updateOption);
+
+  List<BulkOperationMarcRule> findAllAllByBulkOperationIdAndUpdateOptionNot(UUID bulkOperationId, UpdateOptionType updateOption);
 }

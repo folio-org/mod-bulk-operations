@@ -819,7 +819,9 @@ public class BulkOperationService {
   }
 
   private int getProgressMultiplier(BulkOperation operation, boolean hasAdministrativeRules, boolean hasMarcRules) {
-    if (hasMarcRules && nonNull(operation.getLinkToModifiedRecordsMarcFile())) {
+    if (hasMarcRules && nonNull(operation.getLinkToModifiedRecordsMarcFile())
+//            && ruleService.areThereOtherMarcRulesThanSetForDeletion(operation)
+    ) {
       return (hasAdministrativeRules && nonNull(operation.getLinkToModifiedRecordsJsonFile())) ? 3 : 2;
     }
     return 1;

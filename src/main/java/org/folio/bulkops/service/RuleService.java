@@ -1,17 +1,26 @@
 package org.folio.bulkops.service;
 
+import static org.folio.bulkops.util.Constants.LEADER_TAG;
+
+import java.util.List;
 import java.util.UUID;
 
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
+import org.folio.bulkops.domain.dto.MarcAction;
 import org.folio.bulkops.domain.dto.RuleDetails;
+import org.folio.bulkops.domain.dto.UpdateActionType;
+import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.domain.entity.BulkOperationMarcRule;
 import org.folio.bulkops.mapper.MarcRulesMapper;
 import org.folio.bulkops.repository.BulkOperationMarcRuleRepository;
 import org.folio.bulkops.repository.BulkOperationRuleDetailsRepository;
 import org.folio.bulkops.repository.BulkOperationRuleRepository;
+import org.marc4j.marc.impl.DataFieldImpl;
+import org.marc4j.marc.impl.SubfieldImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,7 +56,36 @@ public class RuleService {
           .updatedTenants(action.getUpdatedTenants())
           .build()));
     });
+    saveMarcRuleIfSetToDelete(bulkOperation, ruleCollection);
     return ruleCollection;
+  }
+
+  @Transactional
+  public void deleteMarcRulesWithSetForDeletion(BulkOperation operation) {
+    marcRuleRepository.deleteAllByBulkOperationIdAndUpdateOption(operation.getId(), UpdateOptionType.SET_RECORDS_FOR_DELETE);
+  }
+
+  @Transactional
+  public boolean areThereOtherMarcRulesThanSetForDeletion(BulkOperation operation) {
+    return !marcRuleRepository.findAllAllByBulkOperationIdAndUpdateOptionNot(operation.getId(), UpdateOptionType.SET_RECORDS_FOR_DELETE).isEmpty();
+  }
+
+  private void saveMarcRuleIfSetToDelete(BulkOperation bulkOperation, BulkOperationRuleCollection ruleCollection) {
+    ruleCollection.getBulkOperationRules().forEach(rule -> {
+      if (rule.getRuleDetails().getOption() == UpdateOptionType.SET_RECORDS_FOR_DELETE) {
+        rule.getRuleDetails().getActions().forEach(action -> {
+          var marcRules = new BulkOperationMarcRuleCollection();
+          var marcRule = new org.folio.bulkops.domain.dto.BulkOperationMarcRule()
+            .bulkOperationId(rule.getBulkOperationId())
+            .actions(List.of(new MarcAction().name(action.getType())))
+            .tag(LEADER_TAG)
+            .updateOption(UpdateOptionType.SET_RECORDS_FOR_DELETE);
+          marcRules.addBulkOperationMarcRulesItem(marcRule);
+          marcRules.totalRecords(1);
+          saveMarcRules(bulkOperation, marcRules);
+        });
+      }
+    });
   }
 
   public BulkOperationRuleCollection getRules(UUID bulkOperationId) {
@@ -76,7 +114,6 @@ public class RuleService {
 
   @Transactional
   public BulkOperationMarcRuleCollection saveMarcRules(BulkOperation bulkOperation, BulkOperationMarcRuleCollection ruleCollection) {
-    marcRuleRepository.deleteAllByBulkOperationId(bulkOperation.getId());
 
     ruleCollection.getBulkOperationMarcRules()
       .forEach(marcRule -> marcRuleRepository.save(marcRulesMapper.mapToEntity(marcRule)));
