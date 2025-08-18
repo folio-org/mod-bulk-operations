@@ -3,6 +3,8 @@ package org.folio.bulkops.domain.entity;
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -15,6 +17,7 @@ import lombok.With;
 import org.folio.bulkops.domain.dto.MarcAction;
 import org.folio.bulkops.domain.dto.MarcParameter;
 import org.folio.bulkops.domain.dto.MarcSubfieldAction;
+import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.hibernate.annotations.Type;
 
 import java.util.List;
@@ -38,6 +41,9 @@ public class BulkOperationMarcRule {
   private String ind1;
   private String ind2;
   private String subfield;
+
+  @Enumerated(EnumType.STRING)
+  private UpdateOptionType updateOption;
 
   @Type(JsonBinaryType.class)
   @Column(columnDefinition = "jsonb")

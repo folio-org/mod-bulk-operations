@@ -27,15 +27,17 @@ public class Constants {
 
   public static final String DATE_TIME_CONTROL_FIELD = "005";
 
+  public static final String LEADER_TAG = "LDR";
+
   public static final char SPACE_CHAR = ' ';
 
   public static final int ITEM_NOTE_POSITION = 31;
   public static final int HOLDINGS_NOTE_POSITION = 24;
-  public static final int INSTANCE_NOTE_POSITION = 24;
-  public static final int INSTANCE_ELECTRONIC_ACCESS_POSITION = 25;
-  public static final int INSTANCE_SUBJECT_POSITION = 26;
-  public static final int INSTANCE_CLASSIFICATION_POSITION = 27;
-  public static final int INSTANCE_PUBLICATION_POSITION = 15;
+  public static final int INSTANCE_NOTE_POSITION = 25;
+  public static final int INSTANCE_ELECTRONIC_ACCESS_POSITION = 26;
+  public static final int INSTANCE_SUBJECT_POSITION = 27;
+  public static final int INSTANCE_CLASSIFICATION_POSITION = 28;
+  public static final int INSTANCE_PUBLICATION_POSITION = 16;
 
   public static final String ITEM_DELIMITER_PATTERN = "\\|";
   public static final String KEY_VALUE_DELIMITER = ":";
