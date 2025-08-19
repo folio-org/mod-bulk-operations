@@ -2,7 +2,7 @@ package org.folio.bulkops.batch.jobs.processidentifiers;
 
 import java.util.Optional;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
-import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.stereotype.Component;
 import java.util.Collections;

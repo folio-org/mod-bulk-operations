@@ -7,12 +7,17 @@ import java.util.UUID;
 
 import org.folio.bulkops.client.EntityTypeClient;
 import org.folio.querytool.domain.dto.EntityType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoSession;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
 class EntityTypeServiceTest {
@@ -20,6 +25,21 @@ class EntityTypeServiceTest {
   private EntityTypeClient entityTypeClient;
   @InjectMocks
   private EntityTypeService entityTypeService;
+
+  private MockitoSession mockito;
+
+  @BeforeEach
+  void setUp() {
+    mockito = Mockito.mockitoSession()
+        .initMocks(this)
+        .strictness(Strictness.STRICT_STUBS)
+        .startMocking();
+  }
+
+  @AfterEach
+  void tearDown() {
+    mockito.finishMocking(); // обязательно
+  }
 
   @ParameterizedTest
   @CsvSource(textBlock = """

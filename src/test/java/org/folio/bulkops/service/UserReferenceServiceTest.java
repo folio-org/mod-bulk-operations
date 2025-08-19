@@ -34,12 +34,17 @@ import org.folio.bulkops.domain.bean.UserGroupCollection;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.folio.spring.FolioExecutionContext;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoSession;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
 class UserReferenceServiceTest {
@@ -59,6 +64,21 @@ class UserReferenceServiceTest {
   @InjectMocks
   @Spy
   private UserReferenceService userReferenceService;
+
+  private MockitoSession mockito;
+
+  @BeforeEach
+  void setUp() {
+    mockito = Mockito.mockitoSession()
+        .initMocks(this)
+        .strictness(Strictness.STRICT_STUBS)
+        .startMocking();
+  }
+
+  @AfterEach
+  void tearDown() {
+    mockito.finishMocking(); // обязательно
+  }
 
   @Test
   void getAddressTypeDescByIdTest() {

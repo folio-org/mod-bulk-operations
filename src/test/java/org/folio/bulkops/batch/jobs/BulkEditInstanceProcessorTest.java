@@ -25,11 +25,12 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.spring.FolioExecutionContext;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.job.JobExecution;
 import org.springframework.test.util.ReflectionTestUtils;
 import java.util.Collections;
 import java.util.HashSet;
@@ -57,9 +58,11 @@ class BulkEditInstanceProcessorTest {
   private BulkEditInstanceProcessor processor;
   private final ObjectMapper objectMapper = new ObjectMapper();
 
+  private AutoCloseable closeable;
+
   @BeforeEach
   void setUp() {
-    MockitoAnnotations.openMocks(this);
+    closeable = MockitoAnnotations.openMocks(this);
     processor = new BulkEditInstanceProcessor(
       instanceClient, folioExecutionContext, permissionsValidator, userClient, srsClient, duplicationCheckerFactory
     );
@@ -69,6 +72,11 @@ class BulkEditInstanceProcessorTest {
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
     when(duplicationCheckerFactory.getFetchedIds(any())).thenReturn(new HashSet<>());
+  }
+
+  @AfterEach
+  void tearDown() throws Exception {
+    closeable.close();
   }
 
   @Test

@@ -4,7 +4,7 @@ import static java.util.Objects.nonNull;
 
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.JobParameterNames;
-import org.springframework.batch.core.partition.support.Partitioner;
+import org.springframework.batch.core.partition.Partitioner;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Value;
 import java.util.HashMap;

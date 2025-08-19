@@ -17,8 +17,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 import org.folio.bulkops.domain.dto.ErrorType;
-import org.hibernate.annotations.JdbcType;
-import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 @Data
 @Builder

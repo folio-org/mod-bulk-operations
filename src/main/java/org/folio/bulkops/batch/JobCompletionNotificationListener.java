@@ -42,9 +42,9 @@ import org.folio.bulkops.exception.ServerErrorException;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.util.Utils;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobExecutionListener;
-import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.listener.JobExecutionListener;
 import org.springframework.stereotype.Component;
 
 @Component

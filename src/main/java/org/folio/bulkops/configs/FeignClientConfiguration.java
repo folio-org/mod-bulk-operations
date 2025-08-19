@@ -7,7 +7,7 @@ import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.form.spring.SpringFormEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
+import org.springframework.boot.http.converter.autoconfigure.HttpMessageConverters;
 import org.springframework.cloud.openfeign.AnnotatedParameterProcessor;
 import org.springframework.cloud.openfeign.support.SpringEncoder;
 import org.springframework.context.annotation.Bean;

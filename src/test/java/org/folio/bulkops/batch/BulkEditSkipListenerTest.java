@@ -14,8 +14,9 @@ import org.folio.bulkops.service.ErrorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobParametersBuilder;
+
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
 import org.springframework.batch.item.ExecutionContext;
 
 import java.util.Optional;

@@ -45,6 +45,7 @@ spring:
       enabled: false
     jdbc:
       initialize-schema: never
+      isolation-level-for-create: READ_COMMITTED
 folio:
   system-user:
     enabled: ${SYSTEM_USER_ENABLED:true}
