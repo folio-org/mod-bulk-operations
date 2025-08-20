@@ -89,6 +89,7 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.Personal;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
@@ -1952,5 +1953,69 @@ class BulkOperationServiceTest extends BaseTest {
     // Assert
     verify(queryService, never()).saveIdentifiers(any());
     assertEquals(operation.getId(), result.getId());
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldNotEditPronounsWhenEditingUser() {
+    // Arrange
+    var userId = UUID.randomUUID().toString();
+    var pronouns = "they/them";
+    var fileContent = "id\n" + userId + "\n";
+    var file = new MockMultipartFile("file", "users.csv", MediaType.TEXT_PLAIN_VALUE, fileContent.getBytes());
+    var bulkOperationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+            .id(bulkOperationId)
+            .entityType(USER)
+            .status(DATA_MODIFICATION)
+            .approach(ApproachType.MANUAL)
+            .linkToTriggeringCsvFile("users.csv")
+            .build();
+
+    var originalUser = User.builder()
+            .id(userId)
+            .personal(Personal.builder().pronouns(pronouns).build())
+            .build();
+
+    // Mock upload
+    when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
+    when(remoteFileSystemClient.put(any(), any())).thenReturn("users.csv");
+    when(remoteFileSystemClient.getNumOfLines(anyString())).thenReturn(2);
+
+    // Mock userClient
+    when(userClient.getUserById(userId)).thenReturn(originalUser);
+
+    // Mock for edit/commit
+    when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(operation));
+    when(ruleService.getRules(bulkOperationId)).thenReturn(
+            new BulkOperationRuleCollection().bulkOperationRules(List.of(
+                    new BulkOperationRule()
+                            .bulkOperationId(bulkOperationId)
+                            .ruleDetails(new RuleDetails()
+                                    .option(UpdateOptionType.PATRON_GROUP)
+                                    .actions(List.of(
+                                            new Action()
+                                                    .type(UpdateActionType.REPLACE_WITH)
+                                                    .updated("new-patron-group-id")
+                                    ))
+                            )
+            )).totalRecords(1)
+    );
+    when(remoteFileSystemClient.get(anyString())).thenReturn(
+            new ByteArrayInputStream(("[{\"id\":\"" + userId + "\",\"personal\":{\"pronouns\":\"" + pronouns + "\"}}]").getBytes())
+    );
+    when(remoteFileSystemClient.writer(anyString())).thenReturn(new StringWriter());
+    when(executionRepository.save(any(BulkOperationExecution.class))).thenReturn(new BulkOperationExecution());
+
+    // Upload step
+    bulkOperationService.uploadCsvFile(USER, IdentifierType.ID, true, bulkOperationId, UUID.randomUUID(), file);
+
+    // Commit step
+    bulkOperationService.commit(operation);
+
+    // Assert
+    verify(userClient, never()).updateUser(any(User.class), anyString());
+    User result = userClient.getUserById(userId);
+    assertEquals(pronouns, result.getPersonal().getPronouns());
   }
 }
