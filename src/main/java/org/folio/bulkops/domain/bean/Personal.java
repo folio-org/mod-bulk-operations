@@ -96,4 +96,7 @@ public class Personal {
   @CsvCustomBindByPosition(position = 19, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String profilePictureLink;
+
+  @JsonProperty("pronouns")
+  private String pronouns;
 }
