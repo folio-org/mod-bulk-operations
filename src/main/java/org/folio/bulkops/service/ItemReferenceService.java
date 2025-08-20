@@ -4,7 +4,6 @@ import static java.lang.String.format;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.util.Constants.BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_CODE;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_USERNAME;
@@ -12,17 +11,13 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 import static org.folio.bulkops.util.Utils.encode;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.folio.bulkops.client.CallNumberTypeClient;
-import org.folio.bulkops.client.ConfigurationClient;
 import org.folio.bulkops.client.DamagedStatusClient;
 import org.folio.bulkops.client.ItemNoteTypeClient;
 import org.folio.bulkops.client.LoanTypeClient;
@@ -37,8 +32,9 @@ import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.MaterialType;
 import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.bean.ServicePoint;
-import org.folio.bulkops.exception.ConfigurationException;
+import org.folio.bulkops.domain.entity.AllowedItemStatuses;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
+import org.folio.bulkops.repository.AllowedItemStatusesRepository;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
@@ -50,11 +46,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ItemReferenceService {
 
-  public static final String MODULE_NAME = "BULKEDIT";
-  public static final String STATUSES_CONFIG_NAME = "statuses";
-
   private final CallNumberTypeClient callNumberTypeClient;
-  private final ConfigurationClient configurationClient;
   private final DamagedStatusClient damagedStatusClient;
   private final ItemNoteTypeClient itemNoteTypeClient;
   private final ServicePointClient servicePointClient;
@@ -66,6 +58,7 @@ public class ItemReferenceService {
   private final FolioExecutionContext folioExecutionContext;
   private final FolioModuleMetadata folioModuleMetadata;
   private final LocalReferenceDataService localReferenceDataService;
+  private final AllowedItemStatusesRepository allowedItemStatusesRepository;
 
   private final ObjectMapper objectMapper;
 
@@ -241,20 +234,9 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "statusMapping")
   public List<String> getAllowedStatuses(String statusName) {
-    var configurations = configurationClient
-      .getByQuery(format(BULK_EDIT_CONFIGURATIONS_QUERY_TEMPLATE, MODULE_NAME, STATUSES_CONFIG_NAME));
-    if (configurations.getConfigs()
-      .isEmpty()) {
-      throw new ReferenceDataNotFoundException("Statuses configuration was not found");
-    }
-    try {
-      var statuses = objectMapper.readValue(configurations.getConfigs()
-        .get(0)
-        .getValue(), new TypeReference<HashMap<String, List<String>>>() {});
-      return statuses.getOrDefault(statusName, Collections.emptyList());
-    } catch (JsonProcessingException e) {
-      throw new ConfigurationException(format("Error reading configuration, reason: %s", e.getMessage()));
-    }
+    return allowedItemStatusesRepository.findByStatus(statusName)
+      .map(AllowedItemStatuses::getAllowedStatuses)
+      .orElse(Collections.emptyList());
   }
 
   @Cacheable(cacheNames = "itemNoteTypes")
