@@ -64,8 +64,8 @@ class MarcCsvHelperTest extends BaseTest {
 
     var res = marcCsvHelper.getModifiedDataForCsv(marcRecord);
 
-    assertThat(res[11]).isEqualTo("Sample title");
-    assertThat(res[24]).isEqualTo("General note;General note;false");
+    assertThat(res[12]).isEqualTo("Sample title");
+    assertThat(res[25]).isEqualTo("General note;General note;false");
   }
 
   @ParameterizedTest

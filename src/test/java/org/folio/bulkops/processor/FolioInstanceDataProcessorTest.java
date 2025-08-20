@@ -603,4 +603,42 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     assertThat(result.getUpdated().getEntity().getStatisticalCodeIds()).isEmpty();
     assertThat(result.getPreview().getEntity().getStatisticalCodeIds()).isEmpty();
   }
+
+  @Test
+  void testSetRecordsForDelete() {
+    var instance = Instance.builder()
+            .id(UUID.randomUUID().toString())
+            .source("FOLIO")
+            .title("Sample title")
+            .staffSuppress(false)
+            .discoverySuppress(false)
+            .deleted(false)
+            .build();
+
+    var rules = rules(new BulkOperationRule()
+            .ruleDetails(new RuleDetails()
+                    .option(UpdateOptionType.SET_RECORDS_FOR_DELETE)
+                    .actions(Collections.singletonList(new Action()
+                            .type(UpdateActionType.SET_TO_TRUE)))));
+
+    var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+
+    var result = processor.process(IDENTIFIER, extendedInstance, rules);
+
+    assertTrue(result.getUpdated().getEntity().getDeleted());
+    assertTrue(result.getUpdated().getEntity().getStaffSuppress());
+    assertTrue(result.getUpdated().getEntity().getDiscoverySuppress());
+
+    // Test SET_TO_FALSE
+    rules = rules(new BulkOperationRule()
+            .ruleDetails(new RuleDetails()
+                    .option(UpdateOptionType.SET_RECORDS_FOR_DELETE)
+                    .actions(Collections.singletonList(new Action()
+                            .type(UpdateActionType.SET_TO_FALSE)))));
+    instance.setDeleted(true);
+    extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
+    result = processor.process(IDENTIFIER, extendedInstance, rules);
+
+    assertFalse(result.getUpdated().getEntity().getDeleted());
+  }
 }

@@ -6,6 +6,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.ADDITIONAL_SUBFIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 
@@ -21,6 +22,7 @@ import org.folio.bulkops.domain.dto.MarcDataType;
 import org.folio.bulkops.domain.dto.MarcSubfieldAction;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.service.ErrorService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,6 +35,7 @@ import org.marc4j.marc.impl.SubfieldImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -699,5 +702,45 @@ class MarcInstanceDataProcessorTest extends BaseTest {
 
     var expectedErrorMessage = "Bulk edit of 001 field is not supported";
     verify(errorService).saveError(bulkOperationId, identifier, expectedErrorMessage, ErrorType.ERROR);
+  }
+
+  @Test
+  void shouldSetRecordStatusToDeletedWhenSetToTrue() throws Exception {
+    var rule = new BulkOperationMarcRule()
+            .updateOption(org.folio.bulkops.domain.dto.UpdateOptionType.SET_RECORDS_FOR_DELETE)
+            .actions(List.of(new MarcAction().name(UpdateActionType.SET_TO_TRUE)));
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+    var method = processor.getClass().getDeclaredMethod("applyRuleToRecord", BulkOperationMarcRule.class, org.marc4j.marc.Record.class);
+    method.setAccessible(true);
+    method.invoke(processor, rule, marcRecord);
+    assertThat(marcRecord.getLeader().getRecordStatus()).isEqualTo('d');
+  }
+
+  @Test
+  void shouldSetRecordStatusToCorrectedWhenSetToFalse() throws Exception {
+    var rule = new BulkOperationMarcRule()
+            .updateOption(org.folio.bulkops.domain.dto.UpdateOptionType.SET_RECORDS_FOR_DELETE)
+            .actions(List.of(new MarcAction().name(UpdateActionType.SET_TO_FALSE)));
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+    var method = processor.getClass().getDeclaredMethod("applyRuleToRecord", BulkOperationMarcRule.class, org.marc4j.marc.Record.class);
+    method.setAccessible(true);
+    method.invoke(processor, rule, marcRecord);
+    assertThat(marcRecord.getLeader().getRecordStatus()).isEqualTo('c');
+  }
+
+  @Test
+  void shouldThrowExceptionForUnsupportedSetRecordsForDeleteAction() throws Exception {
+    var rule = new BulkOperationMarcRule()
+            .updateOption(org.folio.bulkops.domain.dto.UpdateOptionType.SET_RECORDS_FOR_DELETE)
+            .actions(List.of(new MarcAction().name(UpdateActionType.APPEND)));
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+    var method = processor.getClass().getDeclaredMethod("applyRuleToRecord", BulkOperationMarcRule.class, org.marc4j.marc.Record.class);
+    method.setAccessible(true);
+    var exception = assertThrows(InvocationTargetException.class, () -> method.invoke(processor, rule, marcRecord));
+    assertThat(exception.getCause()).isInstanceOf(BulkOperationException.class);
+    assertThat(exception.getCause().getMessage()).contains("is not supported for SET_RECORDS_FOR_DELETE option.");
   }
 }

@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 @Component
 public class MarcRulesValidator {
 
-  private static final Pattern TAG_PATTERN = Pattern.compile("\\d{3}");
+  private static final Pattern TAG_PATTERN = Pattern.compile("(\\d{3}|LDR)");
   private static final Pattern UNSUPPORTED_TAG_PATTERN = Pattern.compile("00\\d");
   private static final String NOT_SUPPORTED_BULK_EDIT_FIELD_MESSAGE = "Bulk edit of %s field is not supported";
 

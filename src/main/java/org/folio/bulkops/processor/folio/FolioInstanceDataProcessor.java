@@ -7,6 +7,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.SET_RECORDS_FOR_DELETE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STAFF_SUPPRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 
@@ -61,6 +62,16 @@ public class FolioInstanceDataProcessor extends FolioAbstractDataProcessor<Exten
         return extendedInstance -> extendedInstance.getEntity().setDiscoverySuppress(true);
       } else if (SET_TO_FALSE.equals(action.getType())) {
         return extendedInstance -> extendedInstance.getEntity().setDiscoverySuppress(false);
+      }
+    } else if (SET_RECORDS_FOR_DELETE.equals(option)) {
+      if (SET_TO_TRUE.equals(action.getType())) {
+        return extendedInstance -> {
+            extendedInstance.getEntity().setDeleted(true);
+            extendedInstance.getEntity().setStaffSuppress(true);
+            extendedInstance.getEntity().setDiscoverySuppress(true);
+        };
+      } else if (SET_TO_FALSE.equals(action.getType())) {
+        return extendedInstance -> extendedInstance.getEntity().setDeleted(false);
       }
     }
     return instanceNotesUpdaterFactory.getUpdater(option, action, forPreview).orElseGet(() -> instance -> {

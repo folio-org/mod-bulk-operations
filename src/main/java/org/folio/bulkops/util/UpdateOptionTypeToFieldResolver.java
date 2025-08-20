@@ -19,6 +19,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PATRON_GROUP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.SET_RECORDS_FOR_DELETE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STAFF_SUPPRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATISTICAL_CODE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
@@ -87,6 +88,8 @@ public class UpdateOptionTypeToFieldResolver {
       return "Instance note";
     } else if (STATISTICAL_CODE == type) {
       return "Statistical code";
+    } else if (SET_RECORDS_FOR_DELETE == type) {
+      return "Set for deletion";
     } else {
       throw new UnsupportedOperationException("There is no matching for Operation Type: " + type);
     }

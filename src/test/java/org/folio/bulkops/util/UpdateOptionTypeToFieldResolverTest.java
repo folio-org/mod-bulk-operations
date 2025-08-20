@@ -27,6 +27,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PATRON_GROUP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.SET_RECORDS_FOR_DELETE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STAFF_SUPPRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATISTICAL_CODE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
@@ -71,7 +72,8 @@ class UpdateOptionTypeToFieldResolverTest {
       Arguments.of("Electronic access", ELECTRONIC_ACCESS_MATERIALS_SPECIFIED, INSTANCE),
       Arguments.of("Electronic access", ELECTRONIC_ACCESS_URL_PUBLIC_NOTE, INSTANCE),
       Arguments.of("Instance note", INSTANCE_NOTE, INSTANCE),
-      Arguments.of("Statistical code", STATISTICAL_CODE, INSTANCE)
+      Arguments.of("Statistical code", STATISTICAL_CODE, INSTANCE),
+      Arguments.of("Set for deletion", SET_RECORDS_FOR_DELETE, INSTANCE)
       );
   }
 
