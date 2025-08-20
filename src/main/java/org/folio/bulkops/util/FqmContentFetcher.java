@@ -6,19 +6,27 @@ import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
+import static org.folio.bulkops.util.Constants.CHILD_INSTANCES;
 import static org.folio.bulkops.util.Constants.ENTITY;
 import static org.folio.bulkops.util.Constants.HOLDINGS_DATA;
 import static org.folio.bulkops.util.Constants.HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER;
 import static org.folio.bulkops.util.Constants.ID;
 import static org.folio.bulkops.util.Constants.INSTANCE_TITLE;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
+import static org.folio.bulkops.util.Constants.PARENT_INSTANCES;
+import static org.folio.bulkops.util.Constants.PRECEDING_TITLES;
+import static org.folio.bulkops.util.Constants.SUCCEEDING_TITLES;
 import static org.folio.bulkops.util.Constants.TENANT_ID;
 import static org.folio.bulkops.util.Constants.TITLE;
 import static org.folio.bulkops.util.FqmKeys.FQM_DATE_OF_PUBLICATION_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_RECORD_INSTANCE_PUBLICATION;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_CHILD_INSTANCES_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PARENT_INSTANCES_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PRECEDING_TITLES_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SUCCEEDING_TITLES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_INSTANCES_PUBLICATION_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_PUBLISHER_KEY;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -134,7 +142,7 @@ public class FqmContentFetcher {
             if (entityType == EntityType.ITEM) {
 
               var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
-              var value = json.get(FQM_ITEM_INSTANCES_PUBLICATION_KEY);
+              var value = json.get(FQM_INSTANCES_PUBLICATION_KEY);
 
               var publications = nonNull(value)
                   ? objectMapper.readTree(value.toString())
@@ -154,7 +162,7 @@ public class FqmContentFetcher {
                   .collect(Collectors.joining(SPACE));
 
               var permanentLocationName = ofNullable(json.get(
-                  FqmKeys.FQM_PERMANENT_LOCATION_NAME_KEY)).orElse(EMPTY).toString();
+                  FqmKeys.FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY)).orElse(EMPTY).toString();
 
               jsonNode.put(HOLDINGS_DATA,
                   join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER,
@@ -166,7 +174,7 @@ public class FqmContentFetcher {
 
               var title = ofNullable(json.get(FQM_INSTANCE_TITLE_KEY)).orElse(EMPTY).toString();
 
-              var value = json.get(FQM_HOLDINGS_RECORD_INSTANCE_PUBLICATION);
+              var value = json.get(FQM_INSTANCE_PUBLICATION_KEY);
 
               var publications = nonNull(value)
                   ? objectMapper.readTree(value.toString())
@@ -177,6 +185,21 @@ public class FqmContentFetcher {
               }
 
               jsonNode.put(INSTANCE_TITLE, title);
+            }
+
+            if (entityType == EntityType.INSTANCE) {
+              var value = json.get(FQM_INSTANCE_CHILD_INSTANCES_KEY);
+              var childInstances = nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
+              jsonNode.putIfAbsent(CHILD_INSTANCES, childInstances);
+              value = json.get(FQM_INSTANCE_PARENT_INSTANCES_KEY);
+              var parentInstances = nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
+              jsonNode.putIfAbsent(PARENT_INSTANCES, parentInstances);
+              value = json.get(FQM_INSTANCE_PRECEDING_TITLES_KEY);
+              var precedingTitles = nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
+              jsonNode.putIfAbsent(PRECEDING_TITLES, precedingTitles);
+              value = json.get(FQM_INSTANCE_SUCCEEDING_TITLES_KEY);
+              var succeedingTitles = nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
+              jsonNode.putIfAbsent(SUCCEEDING_TITLES, succeedingTitles);
             }
 
             ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
