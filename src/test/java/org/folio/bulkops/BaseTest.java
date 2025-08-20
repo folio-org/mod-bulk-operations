@@ -15,7 +15,6 @@ import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.CallNumberTypeClient;
-import org.folio.bulkops.client.ConfigurationClient;
 import org.folio.bulkops.client.CustomFieldsClient;
 import org.folio.bulkops.client.DamagedStatusClient;
 import org.folio.bulkops.client.DepartmentClient;
@@ -158,8 +157,6 @@ public abstract class BaseTest {
   public UserClient userClient;
   @MockitoBean
   public LoanTypeClient loanTypeClient;
-  @MockitoBean
-  public ConfigurationClient configurationClient;
   @MockitoBean
   public GroupClient groupClient;
   @MockitoBean
