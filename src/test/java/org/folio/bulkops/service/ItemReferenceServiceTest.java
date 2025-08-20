@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
@@ -19,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @ExtendWith(MockitoExtension.class)
 class ItemReferenceServiceTest extends BaseTest {
-
     @Autowired
     private ItemReferenceService itemReferenceService;
     @Autowired
@@ -111,5 +111,23 @@ class ItemReferenceServiceTest extends BaseTest {
             assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceService.getLoanTypeById("invalid_id", "tenant"));
         }
     }
+
+  @Test
+  @SneakyThrows
+  void shouldGetAllowedItemStatuses() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var statuses = itemReferenceService.getAllowedStatuses("AVAILABLE");
+      assertThat(statuses).hasSize(9);
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldGetEmptyAllowedItemStatusesForInvalidStatus() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var statuses = itemReferenceService.getAllowedStatuses("INVALID");
+      assertThat(statuses).isEmpty();
+    }
+  }
 
 }
