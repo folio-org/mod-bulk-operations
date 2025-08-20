@@ -150,4 +150,8 @@ public class Constants {
   public static final String TITLE = "title";
   public static final String HOLDINGS_DATA = "holdingsData";
   public static final String INSTANCE_TITLE = "instanceTitle";
+  public static final String CHILD_INSTANCES = "childInstances";
+  public static final String PARENT_INSTANCES = "parentInstances";
+  public static final String PRECEDING_TITLES = "precedingTitles";
+  public static final String SUCCEEDING_TITLES = "succeedingTitles";
 }
