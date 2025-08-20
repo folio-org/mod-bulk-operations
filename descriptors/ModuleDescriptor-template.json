@@ -128,7 +128,6 @@
             "bulk-edit.start.item.post",
             "data-export.job.item.post",
             "data-export.job.item.get",
-            "configuration.entries.collection.get",
             "departments.item.get",
             "departments.collection.get",
             "inventory.items.item.put",
@@ -542,10 +541,6 @@
     {
       "id": "login",
       "version": "5.0 6.0 7.0"
-    },
-    {
-      "id": "configuration",
-      "version": "2.0"
     },
     {
       "id": "holdings-storage",
