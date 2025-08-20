@@ -232,6 +232,7 @@ public class ItemReferenceService {
     return loanTypes.getLoantypes().get(0);
   }
 
+  @Cacheable(cacheNames = "statusMapping")
   public List<String> getAllowedStatuses(String statusName) {
     return allowedItemStatusesRepository.findByStatus(statusName)
       .map(AllowedItemStatuses::getAllowedStatuses)
