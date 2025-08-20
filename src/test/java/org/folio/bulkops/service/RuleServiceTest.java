@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -86,7 +87,7 @@ class RuleServiceTest extends BaseTest {
 
       ruleService.saveMarcRules(operation, marcRules());
 
-      verify(marcRuleRepository).deleteAllByBulkOperationId(BULK_OPERATION_ID);
+      verify(marcRuleRepository, times(0)).deleteAllByBulkOperationId(BULK_OPERATION_ID);
       verify(marcRuleRepository).save(any(org.folio.bulkops.domain.entity.BulkOperationMarcRule.class));
     }
   }
@@ -136,6 +137,48 @@ class RuleServiceTest extends BaseTest {
       assertTrue(ruleService.hasMarcUpdates(operation));
     } else {
       assertFalse(ruleService.hasMarcUpdates(operation));
+    }
+  }
+
+  @Test
+  void shouldSaveMarcRuleIfSetToDelete() {
+    try (var ignored = new FolioExecutionContextSetter(folioExecutionContext)) {
+      var operation = BulkOperation.builder().id(BULK_OPERATION_ID).build();
+      var ruleCollection = new BulkOperationRuleCollection()
+              .bulkOperationRules(List.of(new BulkOperationRule()
+                      .bulkOperationId(BULK_OPERATION_ID)
+                      .ruleDetails(new RuleDetails()
+                              .option(UpdateOptionType.SET_RECORDS_FOR_DELETE)
+                              .actions(List.of(new Action()
+                                      .type(UpdateActionType.REPLACE_WITH)))))).totalRecords(1);
+
+      when(ruleRepository.save(any(org.folio.bulkops.domain.entity.BulkOperationRule.class)))
+              .thenReturn(org.folio.bulkops.domain.entity.BulkOperationRule.builder().id(UUID.randomUUID()).build());
+
+      ruleService.saveRules(operation, ruleCollection);
+
+      verify(marcRuleRepository).save(any(org.folio.bulkops.domain.entity.BulkOperationMarcRule.class));
+    }
+  }
+
+  @Test
+  void shouldNotSaveMarcRuleIfNotSetToDelete() {
+    try (var ignored = new FolioExecutionContextSetter(folioExecutionContext)) {
+      var operation = BulkOperation.builder().id(BULK_OPERATION_ID).build();
+      var ruleCollection = new BulkOperationRuleCollection()
+              .bulkOperationRules(List.of(new BulkOperationRule()
+                      .bulkOperationId(BULK_OPERATION_ID)
+                      .ruleDetails(new RuleDetails()
+                              .option(UpdateOptionType.PERMANENT_LOCATION)
+                              .actions(List.of(new Action()
+                                      .type(UpdateActionType.REPLACE_WITH)))))).totalRecords(1);
+
+      when(ruleRepository.save(any(org.folio.bulkops.domain.entity.BulkOperationRule.class)))
+              .thenReturn(org.folio.bulkops.domain.entity.BulkOperationRule.builder().id(UUID.randomUUID()).build());
+
+      ruleService.saveRules(operation, ruleCollection);
+
+      verify(marcRuleRepository, times(0)).save(any(org.folio.bulkops.domain.entity.BulkOperationMarcRule.class));
     }
   }
 

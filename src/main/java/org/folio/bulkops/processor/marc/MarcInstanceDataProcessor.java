@@ -9,6 +9,8 @@ import static org.folio.bulkops.domain.dto.MarcDataType.VALUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.util.Constants.SPACE_CHAR;
 import static org.folio.bulkops.util.MarcHelper.fetchInstanceUuidOrElseHrid;
 
@@ -21,6 +23,7 @@ import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.MarcActionDataInner;
 import org.folio.bulkops.domain.dto.MarcDataType;
+import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
@@ -87,7 +90,17 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     } else if (ADD_TO_EXISTING.equals(actions.get(0).getName())) {
       processAddToExisting(rule, marcRecord);
     } else {
-      throw new BulkOperationException(String.format("Action %s is not supported yet.", actions.get(0).getName()));
+      if (rule.getUpdateOption() == UpdateOptionType.SET_RECORDS_FOR_DELETE) {
+        if (SET_TO_TRUE.equals(actions.getFirst().getName())) {
+          marcRecord.getLeader().setRecordStatus('d');
+        } else if (SET_TO_FALSE.equals(actions.getFirst().getName())) {
+          marcRecord.getLeader().setRecordStatus('c');
+        } else {
+            throw new BulkOperationException(String.format("Action %s is not supported for SET_RECORDS_FOR_DELETE option.", actions.getFirst().getName()));
+        }
+      } else {
+        throw new BulkOperationException(String.format("Action %s is not supported yet.", actions.getFirst().getName()));
+      }
     }
   }
 

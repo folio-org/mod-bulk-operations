@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "bulk-operations",
-      "version": "1.6",
+      "version": "1.7",
       "handlers": [
         {
           "methods": [ "POST" ],
