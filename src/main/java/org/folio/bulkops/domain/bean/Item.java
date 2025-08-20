@@ -284,12 +284,6 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private List<ItemNote> notes;
 
-  @JsonProperty("order")
-  @CsvCustomBindByName(column = "Order", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 45, converter = StringConverter.class)
-  @UnifiedTableCell(visible = false)
-  private String order;
-
   @JsonProperty("notes")
   public void setNotes(List<ItemNote> notes) {
     if (nonNull(notes)) {
