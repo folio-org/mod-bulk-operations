@@ -116,7 +116,7 @@ class ItemReferenceServiceTest extends BaseTest {
   @SneakyThrows
   void shouldGetAllowedItemStatuses() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var statuses = itemReferenceService.getAllowedStatuses("AVAILABLE");
+      var statuses = itemReferenceService.getAllowedStatuses("Available");
       assertThat(statuses).hasSize(9);
     }
   }
