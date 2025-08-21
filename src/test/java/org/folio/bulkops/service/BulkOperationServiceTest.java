@@ -42,6 +42,7 @@ import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -1955,67 +1956,56 @@ class BulkOperationServiceTest extends BaseTest {
     assertEquals(operation.getId(), result.getId());
   }
 
-  @Test
+  @ParameterizedTest
   @SneakyThrows
-  void shouldNotEditPronounsWhenEditingUser() {
+  @EnumSource(ApproachType.class)
+  void shouldNotEditPronounsWhenEditingUser(ApproachType approachType) {
     // Arrange
     var userId = UUID.randomUUID().toString();
     var pronouns = "they/them";
-    var fileContent = "id\n" + userId + "\n";
-    var file = new MockMultipartFile("file", "users.csv", MediaType.TEXT_PLAIN_VALUE, fileContent.getBytes());
     var bulkOperationId = UUID.randomUUID();
+    var patronGroupOriginal = UUID.randomUUID().toString();
+    var patronGroupModified = UUID.randomUUID().toString();
     var operation = BulkOperation.builder()
             .id(bulkOperationId)
             .entityType(USER)
             .status(DATA_MODIFICATION)
-            .approach(ApproachType.MANUAL)
-            .linkToTriggeringCsvFile("users.csv")
+            .approach(approachType)
+            .identifierType(IdentifierType.ID)
+            .linkToModifiedRecordsJsonFile("modified.json")
+            .linkToMatchedRecordsJsonFile("matched.json")
             .build();
-
     var originalUser = User.builder()
             .id(userId)
             .personal(Personal.builder().pronouns(pronouns).build())
+            .patronGroup(patronGroupOriginal)
             .build();
 
-    // Mock upload
+    // Mock
     when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
-    when(remoteFileSystemClient.put(any(), any())).thenReturn("users.csv");
-    when(remoteFileSystemClient.getNumOfLines(anyString())).thenReturn(2);
-
-    // Mock userClient
     when(userClient.getUserById(userId)).thenReturn(originalUser);
-
-    // Mock for edit/commit
     when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(operation));
-    when(ruleService.getRules(bulkOperationId)).thenReturn(
-            new BulkOperationRuleCollection().bulkOperationRules(List.of(
-                    new BulkOperationRule()
-                            .bulkOperationId(bulkOperationId)
-                            .ruleDetails(new RuleDetails()
-                                    .option(UpdateOptionType.PATRON_GROUP)
-                                    .actions(List.of(
-                                            new Action()
-                                                    .type(UpdateActionType.REPLACE_WITH)
-                                                    .updated("new-patron-group-id")
-                                    ))
-                            )
-            )).totalRecords(1)
+    when(remoteFileSystemClient.get("modified.json")).thenReturn(
+            new ByteArrayInputStream(("{\"id\":\"" + userId + "\",\"personal\":{\"pronouns\":\"" + pronouns + "\"},\"patronGroup\":\"" + patronGroupModified + "\"}").getBytes())
     );
-    when(remoteFileSystemClient.get(anyString())).thenReturn(
-            new ByteArrayInputStream(("[{\"id\":\"" + userId + "\",\"personal\":{\"pronouns\":\"" + pronouns + "\"}}]").getBytes())
+    when(remoteFileSystemClient.get("matched.json")).thenReturn(
+            new ByteArrayInputStream(("{\"id\":\"" + userId + "\",\"personal\":{\"pronouns\":\"" + pronouns + "\"},\"patronGroup\":\"" + patronGroupOriginal + "\"}").getBytes())
     );
-    when(remoteFileSystemClient.writer(anyString())).thenReturn(new StringWriter());
-    when(executionRepository.save(any(BulkOperationExecution.class))).thenReturn(new BulkOperationExecution());
-
-    // Upload step
-    bulkOperationService.uploadCsvFile(USER, IdentifierType.ID, true, bulkOperationId, UUID.randomUUID(), file);
+    when(executionRepository.save(any(BulkOperationExecution.class))).thenReturn(new BulkOperationExecution().withProcessedRecords(1));
+    doAnswer(invocation -> {
+      originalUser.setPatronGroup(patronGroupModified);
+      return null;
+    }).when(userClient).updateUser(any(User.class), anyString());
 
     // Commit step
     bulkOperationService.commit(operation);
 
-    // Assert
-    verify(userClient, never()).updateUser(any(User.class), anyString());
     User result = userClient.getUserById(userId);
+
+    // Assert that pronouns were not modified
     assertEquals(pronouns, result.getPersonal().getPronouns());
+
+    // Assert that patron group was modified
+    assertEquals(patronGroupModified, result.getPatronGroup());
   }
 }

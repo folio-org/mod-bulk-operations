@@ -442,6 +442,9 @@ public class BulkOperationService {
             continue;
           }
           var modified = modifiedFileIterator.next();
+          if (operation.getApproach() == MANUAL && original instanceof User userOriginal) {
+            ((User)modified).getPersonal().setPronouns(userOriginal.getPersonal().getPronouns());
+          }
           List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
 
           processedNumOfRecords++;
