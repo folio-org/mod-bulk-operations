@@ -17,7 +17,7 @@ class AllowedItemStatusesRepositoryTest extends BaseTest {
   @Test
   void shouldGetAllowedStatusesByCurrentStatus() {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var allowedItemStatuses = repository.findByStatus("AVAILABLE");
+      var allowedItemStatuses = repository.findByStatus("Available");
       assertThat(allowedItemStatuses.isPresent(), is(true));
       assertThat(allowedItemStatuses.get().getAllowedStatuses().size(), is(9));
     }
