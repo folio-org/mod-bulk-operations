@@ -284,6 +284,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private List<ItemNote> notes;
 
+  @JsonProperty("order")
+  private Integer order;
+
   @JsonProperty("notes")
   public void setNotes(List<ItemNote> notes) {
     if (nonNull(notes)) {
