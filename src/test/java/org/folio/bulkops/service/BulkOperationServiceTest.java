@@ -77,6 +77,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.folio.bulkops.BaseTest;
@@ -1955,9 +1956,10 @@ class BulkOperationServiceTest extends BaseTest {
     assertEquals(operation.getId(), result.getId());
   }
 
-  @Test
+  @ParameterizedTest
   @SneakyThrows
-  void shouldNotEditPronounsWhenEditingUser() {
+  @EnumSource(ApproachType.class)
+  void shouldNotEditPronounsWhenEditingUser(ApproachType approachType) {
     // Arrange
     var userId = UUID.randomUUID().toString();
     var pronouns = "they/them";
@@ -1968,7 +1970,7 @@ class BulkOperationServiceTest extends BaseTest {
             .id(bulkOperationId)
             .entityType(USER)
             .status(DATA_MODIFICATION)
-            .approach(ApproachType.MANUAL)
+            .approach(approachType)
             .linkToTriggeringCsvFile("users.csv")
             .build();
 
