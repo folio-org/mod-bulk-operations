@@ -442,6 +442,9 @@ public class BulkOperationService {
             continue;
           }
           var modified = modifiedFileIterator.next();
+          if (modified instanceof User userModified && original instanceof User userOriginal) {
+            userModified.getPersonal().setPronouns(userOriginal.getPersonal().getPronouns());
+          }
           List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
 
           processedNumOfRecords++;
