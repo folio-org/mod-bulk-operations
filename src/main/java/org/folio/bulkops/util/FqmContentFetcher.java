@@ -60,7 +60,6 @@ import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.FqmFetcherException;
 import org.folio.bulkops.service.ConsortiaService;
-import org.folio.bulkops.service.ErrorService;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -82,7 +81,6 @@ public class FqmContentFetcher {
   private final ObjectMapper objectMapper;
   private final FolioExecutionContext folioExecutionContext;
   private final ConsortiaService consortiaService;
-  private final ErrorService errorService;
 
   @PostConstruct
   private void logStartup() {
@@ -138,7 +136,13 @@ public class FqmContentFetcher {
             if (isInstance(entityType) && isCentralTenant &&
               !SHARED.equalsIgnoreCase(ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY))) {
               var instanceId = ofNullable(json.get(FQM_INSTANCE_ID_KEY)).map(Object::toString).orElse(EMPTY);
-              errorService.saveError(operationId, instanceId, NO_MATCH_FOUND_MESSAGE, ErrorType.ERROR);
+              bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
+                .identifier(instanceId)
+                .bulkOperationId(operationId)
+                .state(StateType.FAILED)
+                .errorType(ErrorType.ERROR)
+                .errorMessage(NO_MATCH_FOUND_MESSAGE)
+                .build());
               return EMPTY;
             }
 
