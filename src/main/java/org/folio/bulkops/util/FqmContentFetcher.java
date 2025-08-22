@@ -13,6 +13,7 @@ import static org.folio.bulkops.util.Constants.HOLDINGS_LOCATION_CALL_NUMBER_DEL
 import static org.folio.bulkops.util.Constants.ID;
 import static org.folio.bulkops.util.Constants.INSTANCE_TITLE;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
+import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.Constants.PARENT_INSTANCES;
 import static org.folio.bulkops.util.Constants.PRECEDING_TITLES;
 import static org.folio.bulkops.util.Constants.SUCCEEDING_TITLES;
@@ -20,10 +21,12 @@ import static org.folio.bulkops.util.Constants.TENANT_ID;
 import static org.folio.bulkops.util.Constants.TITLE;
 import static org.folio.bulkops.util.FqmKeys.FQM_DATE_OF_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_CHILD_INSTANCES_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PARENT_INSTANCES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PRECEDING_TITLES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SHARED_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SUCCEEDING_TITLES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_PUBLICATION_KEY;
@@ -57,6 +60,7 @@ import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.FqmFetcherException;
 import org.folio.bulkops.service.ConsortiaService;
+import org.folio.bulkops.service.ErrorService;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -67,6 +71,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class FqmContentFetcher {
 
+  public static final String SHARED = "Shared";
   public static final String TITLE_PATTERN = "%s. %s, %s";
   @Value("${application.fqm-fetcher.max_parallel_chunks}")
   private int maxParallelChunks;
@@ -77,6 +82,7 @@ public class FqmContentFetcher {
   private final ObjectMapper objectMapper;
   private final FolioExecutionContext folioExecutionContext;
   private final ConsortiaService consortiaService;
+  private final ErrorService errorService;
 
   @PostConstruct
   private void logStartup() {
@@ -96,9 +102,11 @@ public class FqmContentFetcher {
     try (var executor = Executors.newFixedThreadPool(maxParallelChunks)) {
       int chunks = (total + chunkSize - 1) / chunkSize;
 
+      boolean isCentralTenant = consortiaService.isTenantCentral(folioExecutionContext.getTenantId());
+
       List<CompletableFuture<InputStream>> tasks = IntStream.range(0, chunks)
           .mapToObj(chunk ->
-              CompletableFuture.supplyAsync(() -> task(queryId, entityType, chunk, total, bulkOperationExecutionContents, operationId), executor)
+              CompletableFuture.supplyAsync(() -> task(queryId, entityType, chunk, total, bulkOperationExecutionContents, operationId, isCentralTenant), executor)
           )
           .toList();
 
@@ -120,13 +128,20 @@ public class FqmContentFetcher {
   }
 
   private InputStream task(UUID queryId, EntityType entityType, int chunk, int total, List<BulkOperationExecutionContent> bulkOperationExecutionContents,
-                           UUID operationId) {
+                           UUID operationId, boolean isCentralTenant) {
     int offset = chunk * chunkSize;
     int limit = Math.min(chunkSize, total - offset);
     var response = queryClient.getQuery(queryId, offset, limit).getContent();
     return new ByteArrayInputStream(response.stream()
         .map(json -> {
           try {
+            if (isInstance(entityType) && isCentralTenant &&
+              !SHARED.equalsIgnoreCase(ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY))) {
+              var instanceId = ofNullable(json.get(FQM_INSTANCE_ID_KEY)).map(Object::toString).orElse(EMPTY);
+              errorService.saveError(operationId, instanceId, NO_MATCH_FOUND_MESSAGE, ErrorType.ERROR);
+              return EMPTY;
+            }
+
             var jsonb = json.get(getEntityJsonKey(entityType));
             if (entityType == EntityType.USER) {
               return jsonb.toString();
@@ -187,7 +202,7 @@ public class FqmContentFetcher {
               jsonNode.put(INSTANCE_TITLE, title);
             }
 
-            if (entityType == EntityType.INSTANCE) {
+            if (isInstance(entityType)) {
               var value = json.get(FQM_INSTANCE_CHILD_INSTANCES_KEY);
               var childInstances = nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
               jsonNode.putIfAbsent(CHILD_INSTANCES, childInstances);
@@ -258,5 +273,9 @@ public class FqmContentFetcher {
       return String.format(". %s, %s", isNull(publisher) || publisher.isNull() ? EMPTY : publisher.asText(), date.asText());
     }
     return EMPTY;
+  }
+
+  private boolean isInstance(EntityType entityType) {
+    return entityType == EntityType.INSTANCE || entityType == EntityType.INSTANCE_MARC;
   }
 }
