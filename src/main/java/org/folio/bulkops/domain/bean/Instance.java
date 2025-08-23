@@ -283,8 +283,8 @@ public class Instance implements BulkOperationsEntity {
   private Dates dates;
   @JsonProperty("isBoundWith")
   private Boolean isBoundWith = false;
-
-
+  @JsonProperty("sourceUri")
+  private String sourceUri;
 
   @Override
   public String getIdentifier(IdentifierType identifierType) {
