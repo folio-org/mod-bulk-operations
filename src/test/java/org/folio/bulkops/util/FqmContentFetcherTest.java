@@ -1,6 +1,8 @@
 package org.folio.bulkops.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.bulkops.domain.bean.StateType.FAILED;
+import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY;
@@ -10,6 +12,7 @@ import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
@@ -17,6 +20,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +44,8 @@ import org.folio.bulkops.service.ConsortiaService;
 import org.folio.querytool.domain.dto.QueryDetails;
 import org.folio.spring.FolioExecutionContext;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -218,6 +224,32 @@ class FqmContentFetcherTest {
     }
   }
 
+  @ParameterizedTest
+  @EnumSource(value = EntityType.class, names = {"INSTANCE", "INSTANCE_MARC"}, mode = EnumSource.Mode.INCLUDE)
+  void fetchShouldReturnAnErrorForNonSharedInstancesInEcs(EntityType entityType) throws Exception {
+    var queryId = UUID.randomUUID();
+    int total = 2;
+    var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
+
+    when(folioExecutionContext.getTenantId()).thenReturn("tenant");
+    when(consortiaService.isTenantCentral(anyString())).thenReturn(true);
+
+    var details = new QueryDetails();
+    Map<String, Object> map = new HashMap<>();
+    map.put("instance.shared", "Local");
+    details.setContent(Collections.singletonList(map));
+    when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
+
+    try (var is = fqmContentFetcher.fetch(queryId, entityType, total, contents, operationId)) {
+      var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(contents).hasSize(1);
+      assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
+      assertThat(contents.getFirst().getErrorMessage()).isEqualTo(NO_MATCH_FOUND_MESSAGE);
+      assertThat(result).isEmpty();
+    }
+  }
+
   @Test
   void fetchReturnsCorrectContentForInstanceMarcEntityType() throws Exception {
     var queryId = UUID.randomUUID();
@@ -320,6 +352,7 @@ class FqmContentFetcherTest {
         case INSTANCE, INSTANCE_MARC -> {
           map.put("instance.jsonb", "{\"id\":\"instance-id-" + i + "\"}");
           map.put("instance.tenant_id", "instance-tenant");
+          map.put("instance.shared", "Shared");
         }
       }
       contentList.add(map);
