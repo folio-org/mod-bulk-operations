@@ -16,9 +16,11 @@ public class FqmKeys {
   public static final String FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY = "holdings.call_number_suffix";
 
   public static final String FQM_INSTANCE_CHILD_INSTANCES_KEY = "instance.childInstances";
+  public static final String FQM_INSTANCE_ID_KEY = "instance.id";
   public static final String FQM_INSTANCE_PARENT_INSTANCES_KEY = "instance.parentInstances";
   public static final String FQM_INSTANCE_PRECEDING_TITLES_KEY = "instance.precedingTitles";
   public static final String FQM_INSTANCE_PUBLICATION_KEY = "instance.publication";
+  public static final String FQM_INSTANCE_SHARED_KEY = "instance.shared";
   public static final String FQM_INSTANCE_SUCCEEDING_TITLES_KEY = "instance.succeedingTitles";
   public static final String FQM_INSTANCE_TITLE_KEY = "instance.title";
   public static final String FQM_INSTANCES_PUBLICATION_KEY = "instances.publication";
