@@ -259,6 +259,9 @@ public class HoldingsRecord implements BulkOperationsEntity {
   @JsonProperty("itemBarcode")
   private String itemBarcode;
 
+  @JsonProperty("additionalCallNumbers")
+  private List<AdditionalCallNumber> additionalCallNumbers;
+
   @Override
   public String getIdentifier(IdentifierType identifierType) {
     return switch (identifierType) {

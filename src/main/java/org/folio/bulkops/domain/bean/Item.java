@@ -7,6 +7,7 @@ import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 import java.util.List;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -461,6 +462,12 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("purchaseOrderLineIdentifier")
   private String purchaseOrderLineIdentifier;
+
+  @JsonProperty("additionalCallNumbers")
+  private List<AdditionalCallNumber> additionalCallNumbers;
+
+  @JsonProperty("customFields")
+  private Map<String, Object> customFields;
 
   @Override
   public String getIdentifier(IdentifierType identifierType) {
