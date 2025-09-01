@@ -61,6 +61,12 @@ public class SubjectReferenceService {
       subjectSources.getSubjectSources().get(0).getId();
   }
 
+  @Cacheable(cacheNames = "subjectSourceExists")
+  public boolean subjectSourceExists(String name) {
+    var subjectSources = subjectSourcesClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
+    return !subjectSources.getSubjectSources().isEmpty();
+  }
+
   @Cacheable(cacheNames = "subjectTypeIds")
   public String getSubjectTypeIdByName(String name) {
     var subjectTypes = subjectTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));

@@ -9,6 +9,7 @@ import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
@@ -24,6 +25,8 @@ import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.service.ErrorService;
+import org.folio.bulkops.service.Marc21ReferenceProvider;
+import org.folio.bulkops.service.SubjectReferenceService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -44,8 +47,12 @@ import java.util.List;
 import java.util.UUID;
 
 class MarcInstanceDataProcessorTest extends BaseTest {
-   @MockitoBean
+  @MockitoBean
   private ErrorService errorService;
+  @MockitoBean
+  private Marc21ReferenceProvider marc21ReferenceProvider;
+  @MockitoBean
+  private SubjectReferenceService subjectReferenceService;
   @Autowired
   private MarcInstanceDataProcessor processor;
 
@@ -742,5 +749,136 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     var exception = assertThrows(InvocationTargetException.class, () -> method.invoke(processor, rule, marcRecord));
     assertThat(exception.getCause()).isInstanceOf(BulkOperationException.class);
     assertThat(exception.getCause().getMessage()).contains("is not supported for SET_RECORDS_FOR_DELETE option.");
+  }
+
+  @Test
+  void processAddToExisting_shouldReturnIfSubjectTagAndSubfieldNotLetterOr2() throws Exception {
+    var tag = "650";
+    var ind1 = "1";
+    var ind2 = "0";
+    var subfield = "7"; // not a letter and not '2'
+    var value = "test";
+    var rule = new BulkOperationMarcRule()
+            .tag(tag)
+            .ind1(ind1)
+            .ind2(ind2)
+            .subfield(subfield)
+            .actions(List.of(new MarcAction().name(UpdateActionType.ADD_TO_EXISTING)
+                    .data(List.of(new MarcActionDataInner().key(MarcDataType.VALUE).value(value)))));
+    var marcRecord = new RecordImpl();
+
+    // Set private fields
+    var marc21ReferenceProviderField = processor.getClass().getDeclaredField("marc21ReferenceProvider");
+    marc21ReferenceProviderField.setAccessible(true);
+    marc21ReferenceProviderField.set(processor, marc21ReferenceProvider);
+
+    when(marc21ReferenceProvider.isSubjectTag(tag)).thenReturn(true);
+
+    // Use reflection to call private method
+    var method = processor.getClass().getDeclaredMethod("processAddToExisting", BulkOperationMarcRule.class, org.marc4j.marc.Record.class);
+    method.setAccessible(true);
+    method.invoke(processor, rule, marcRecord);
+
+    // Should not add any field
+    assertThat(marcRecord.getDataFields()).isEmpty();
+  }
+
+  @Test
+  void processAddToExisting_shouldReturnIfSubjectTagInd2is7Subfield2AndSourceNotExists() throws Exception {
+    var tag = "650";
+    var ind1 = "1";
+    var ind2 = "7";
+    var subfield = "2";
+    var value = "not-exist";
+    var rule = new BulkOperationMarcRule()
+            .tag(tag)
+            .ind1(ind1)
+            .ind2(ind2)
+            .subfield(subfield)
+            .actions(List.of(new MarcAction().name(UpdateActionType.ADD_TO_EXISTING)
+                    .data(List.of(new MarcActionDataInner().key(MarcDataType.VALUE).value(value)))));
+    var marcRecord = new RecordImpl();
+
+    // Set private fields
+    var marc21ReferenceProviderField = processor.getClass().getDeclaredField("marc21ReferenceProvider");
+    marc21ReferenceProviderField.setAccessible(true);
+    marc21ReferenceProviderField.set(processor, marc21ReferenceProvider);
+
+    when(marc21ReferenceProvider.isSubjectTag(tag)).thenReturn(true);
+    when(subjectReferenceService.subjectSourceExists(value)).thenReturn(false);
+
+    var method = processor.getClass().getDeclaredMethod("processAddToExisting", BulkOperationMarcRule.class, org.marc4j.marc.Record.class);
+    method.setAccessible(true);
+    method.invoke(processor, rule, marcRecord);
+
+    assertThat(marcRecord.getDataFields()).isEmpty();
+  }
+
+  @Test
+  void processAddToExisting_shouldAddFieldIfSubjectTagAndSubfieldIsLetter() throws Exception {
+    var tag = "650";
+    var ind1 = "1";
+    var ind2 = "0";
+    var subfield = "a";
+    var value = "subject";
+    var rule = new BulkOperationMarcRule()
+            .tag(tag)
+            .ind1(ind1)
+            .ind2(ind2)
+            .subfield(subfield)
+            .actions(List.of(new MarcAction().name(UpdateActionType.ADD_TO_EXISTING)
+                    .data(List.of(new MarcActionDataInner().key(MarcDataType.VALUE).value(value)))));
+    var marcRecord = new RecordImpl();
+
+    // Set private fields
+    var marc21ReferenceProviderField = processor.getClass().getDeclaredField("marc21ReferenceProvider");
+    marc21ReferenceProviderField.setAccessible(true);
+    marc21ReferenceProviderField.set(processor, marc21ReferenceProvider);
+
+    when(marc21ReferenceProvider.isSubjectTag(tag)).thenReturn(true);
+
+    var method = processor.getClass().getDeclaredMethod("processAddToExisting", BulkOperationMarcRule.class, org.marc4j.marc.Record.class);
+    method.setAccessible(true);
+    method.invoke(processor, rule, marcRecord);
+
+    assertThat(marcRecord.getDataFields()).hasSize(1);
+    var df = marcRecord.getDataFields().getFirst();
+    assertThat(df.getTag()).isEqualTo(tag);
+    assertThat(df.getSubfields().getFirst().getCode()).isEqualTo('a');
+    assertThat(df.getSubfields().getFirst().getData()).isEqualTo(value);
+  }
+
+  @Test
+  void processAddToExisting_shouldAddFieldIfNotSubjectTag() throws Exception {
+    var tag = "500";
+    var ind1 = "1";
+    var ind2 = "1";
+    var subfield = "a";
+    var value = "notSubject";
+    var rule = new BulkOperationMarcRule()
+            .tag(tag)
+            .ind1(ind1)
+            .ind2(ind2)
+            .subfield(subfield)
+            .actions(List.of(new MarcAction().name(UpdateActionType.ADD_TO_EXISTING)
+                    .data(List.of(new MarcActionDataInner().key(MarcDataType.VALUE).value(value)))));
+    var marcRecord = new RecordImpl();
+
+    // Set private fields
+    var marc21ReferenceProviderField = processor.getClass().getDeclaredField("marc21ReferenceProvider");
+    marc21ReferenceProviderField.setAccessible(true);
+    marc21ReferenceProviderField.set(processor, marc21ReferenceProvider);
+
+    when(marc21ReferenceProvider.isSubjectTag(tag)).thenReturn(false);
+
+    var method = processor.getClass().getDeclaredMethod("processAddToExisting", BulkOperationMarcRule.class, org.marc4j.marc.Record.class);
+    method.setAccessible(true);
+    method.invoke(processor, rule, marcRecord);
+
+    assertThat(marcRecord.getDataFields()).hasSize(1);
+    var df = marcRecord.getDataFields().getFirst();
+    assertThat(df.getTag()).isEqualTo(tag);
+    assertThat(df.getSubfields().getFirst().getCode()).isEqualTo('a');
+    assertThat(df.getSubfields().getFirst().getData()).isEqualTo(value);
   }
 }

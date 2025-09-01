@@ -695,4 +695,8 @@ public class Marc21ReferenceProvider {
   public String getClassificationTypeByTag(String tag) {
     return classificationTypeNames.getOrDefault(tag, HYPHEN);
   }
+
+  public boolean isSubjectTag(String tag) {
+    return mappedFields.getOrDefault(tag, EMPTY).equals(INSTANCE_SUBJECT);
+  }
 }

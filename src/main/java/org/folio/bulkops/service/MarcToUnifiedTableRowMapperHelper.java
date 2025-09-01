@@ -47,6 +47,7 @@ public class MarcToUnifiedTableRowMapperHelper {
 
   private final InstanceReferenceService instanceReferenceService;
   private final Marc21ReferenceProvider referenceProvider;
+  private final SubjectReferenceService subjectReferenceService;
 
   public String resolveModeOfIssuance(Leader leader) {
     return switch (leader.getImplDefined1()[0]) {
@@ -172,6 +173,9 @@ public class MarcToUnifiedTableRowMapperHelper {
       return List.of(HYPHEN);
     }
     return List.of(subfields.stream()
+      // https://folio-org.atlassian.net/browse/MODBULKOPS-531
+      .filter(subf -> Character.isLetter(subf.getCode()) ||
+              subf.getCode() == '2' && dataField.getIndicator2() == '7' && subjectReferenceService.subjectSourceExists(subf.getData()))
       .map(Subfield::getData)
       .collect(Collectors.joining(WHITE_SPACE)).trim());
   }
