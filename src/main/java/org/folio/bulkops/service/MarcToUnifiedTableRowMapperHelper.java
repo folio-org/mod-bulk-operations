@@ -177,14 +177,10 @@ public class MarcToUnifiedTableRowMapperHelper {
     }
     return List.of(subfields.stream()
       // https://folio-org.atlassian.net/browse/MODBULKOPS-531
-      // FIXME special case subfieldFilter.getCode() == '2' && dataField.getIndicator2() == '7'
       .filter(subfield ->Character.isLetter(subfield.getCode())
               || subfield.getCode() == '2' && dataField.getIndicator2() == '7' &&
-              !subjectReferenceService.getSubjectSourceNameByCode(subfield.getData()).equals(HYPHEN) // Change to boolean?
-      )
-      .map(subfield1 -> {
-          return subfield1.getData();
-      })
+              !subjectReferenceService.getSubjectSourceNameByCode(subfield.getData()).equals(HYPHEN))
+      .map(Subfield::getData)
       .collect(Collectors.joining(WHITE_SPACE)).trim());
   }
 
