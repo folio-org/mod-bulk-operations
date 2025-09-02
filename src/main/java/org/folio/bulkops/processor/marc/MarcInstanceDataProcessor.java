@@ -177,17 +177,18 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
       return; // https://folio-org.atlassian.net/browse/MODBULKOPS-531
     }
     var value = fetchActionDataValue(VALUE, rule.getActions().getFirst().getData());
-    if (marc21ReferenceProvider.isSubjectTag(tag) && ind2 == '7' && '2' == subfieldCode && !subjectReferenceService.subjectSourceExists(value)) {
-      return; // https://folio-org.atlassian.net/browse/MODBULKOPS-531
-    }
-    newField.addSubfield(new SubfieldImpl(subfieldCode, value));
+//    if (!isSpecialCaseForSubjectField(tag, ind2, subfieldCode, value)) {
+      newField.addSubfield(new SubfieldImpl(subfieldCode, value));
+//    }
     if (ObjectUtils.isNotEmpty(rule.getSubfields())) {
       for (var subfieldAction : rule.getSubfields()) {
         var action = subfieldAction.getActions().getFirst();
         if (ADD_TO_EXISTING.equals(action.getName())) {
           subfieldCode = subfieldAction.getSubfield().charAt(0);
           value = fetchActionDataValue(VALUE, action.getData());
-          newField.addSubfield(new SubfieldImpl(subfieldCode, value));
+//          if (!isSpecialCaseForSubjectField(tag, ind2, subfieldCode, value)) {
+            newField.addSubfield(new SubfieldImpl(subfieldCode, value));
+//          }
         }
       }
       newField.getSubfields().sort(subfieldComparator);
@@ -195,6 +196,11 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     marcRecord.addVariableField(newField);
     marcRecord.getDataFields().sort(Comparator.comparing(DataField::toString));
   }
+
+  // https://folio-org.atlassian.net/browse/MODBULKOPS-531
+//  private boolean isSpecialCaseForSubjectField(String tag, char ind2, char subfieldCode, String value) {
+//    return marc21ReferenceProvider.isSubjectTag(tag) && ind2 == '7' && '2' == subfieldCode && !subjectReferenceService.subjectSourceExists(value);
+//  }
 
   private char fetchIndicatorValue(String s) {
     return "\\".equals(s) ? SPACE_CHAR : s.charAt(0);
