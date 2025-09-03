@@ -2046,8 +2046,10 @@ class BulkOperationServiceTest extends BaseTest {
             new ByteArrayInputStream(("{\"tenantId\":\"diku\", \"entity\": {\"id\":\"" + instanceId + "\",\"source\": \"MARC\",\"subjects\":[{\"authorityId\":\"" + authorityId + "\",\"value\":\"" + subjectValueOriginal + "\"}]}}").getBytes())
     );
     when(remoteFileSystemClient.get(argThat(name -> name.contains("Changed-Records-CSV")))).thenReturn(
-            new ByteArrayInputStream(("Instance UUID,Subject\n\"Subject headings;Subject source;Subject type\n" +
-                    "modified value;-;-\"").getBytes())
+            new ByteArrayInputStream(("""
+                    Instance UUID,Subject
+                    "Subject headings;Subject source;Subject type
+                    modified value;-;-\"""").getBytes())
     );
     when(executionRepository.save(any(BulkOperationExecution.class))).thenReturn(new BulkOperationExecution().withProcessedRecords(1));
     doAnswer(invocation -> {
