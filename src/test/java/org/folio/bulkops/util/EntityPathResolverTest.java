@@ -12,6 +12,8 @@ import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
@@ -39,11 +41,12 @@ class EntityPathResolverTest extends BaseTest {
     assertThat(expected).isEqualTo(actual);
   }
 
-  @Test
-  void testInstancePathResolving() {
+  @ParameterizedTest
+  @EnumSource(value = EntityType.class, names = {"INSTANCE", "INSTANCE_MARC"})
+  void testInstancePathResolving(EntityType entityType) {
     var entity = Instance.builder().id(UUID.randomUUID().toString()).build();
     var extendedInstance = ExtendedInstance.builder().entity(entity).tenantId("tenantId").build();
-    var actual = entityPathResolver.resolve(EntityType.INSTANCE, extendedInstance);
+    var actual = entityPathResolver.resolve(entityType, extendedInstance);
     var expected = format("/inventory/view/%s", entity.getId());
     assertThat(expected).isEqualTo(actual);
   }
