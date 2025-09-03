@@ -73,7 +73,7 @@ public class Constants {
   public static final String PUBLICATION_HEADINGS = "Publisher;Publisher role;Place of publication;Publication date\n";
   public static final String CLASSIFICATION_HEADINGS = "Classification identifier type;Classification\n";
   public static final String STAFF_ONLY_NOTE_PARAMETER_KEY = "STAFF_ONLY";
-  public static final String MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING = "The record cannot be saved because it is not the most recent version. Stored version is %s, bulk edit version is %s.";
+  public static final String MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING = "The record cannot be saved because it is not the most recent version. Stored version is %s, bulk edit version is %s. /inventory/view/%s";
   public static final String MSG_ERROR_OPTIMISTIC_LOCKING_DEFAULT = "The record cannot be saved because it is not the most recent version.";
   public static final String NO_MARC_CONTENT = "Cannot get marc content for record with id = %s, reason: %s";
   public static final String LINKED_DATA_SOURCE_IS_NOT_SUPPORTED = "Bulk edit of instances with source set to LINKED_DATA is not supported.";
