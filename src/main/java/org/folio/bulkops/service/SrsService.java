@@ -32,7 +32,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
@@ -119,7 +118,7 @@ public class SrsService {
       var parsedRec = srsRec.get("parsedRecord");
       var marcJsonString = parsedRec.get("content").toString();
       MarcValidator.validate(marcJsonString);
-      return marcJsonString;
+      return jsonToMarcConverter.convertJsonRecordToMarcRecord(marcJsonString);
     }
   }
 

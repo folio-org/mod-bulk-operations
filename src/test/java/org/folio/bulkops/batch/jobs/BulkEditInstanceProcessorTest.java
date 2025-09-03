@@ -21,6 +21,7 @@ import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.InstanceCollection;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
+import org.folio.bulkops.domain.converter.JsonToMarcConverter;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.exception.BulkEditException;
@@ -57,6 +58,8 @@ class BulkEditInstanceProcessorTest {
   private DuplicationCheckerFactory duplicationCheckerFactory;
   @Mock
   private JobExecution jobExecution;
+  @Mock
+  private JsonToMarcConverter jsonToMarcConverter;
   @InjectMocks
   private SrsService srsService;
 
