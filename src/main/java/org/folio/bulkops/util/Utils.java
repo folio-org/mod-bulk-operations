@@ -95,7 +95,7 @@ public class Utils {
     };
   }
 
-  public static String getMessageFromFeignException(FeignException e, String entityId) {
+  public static String getMessageFromFeignException(FeignException e) {
     try {
       String[] matches = PATTERN
         .matcher(e.getMessage())
@@ -104,7 +104,7 @@ public class Utils {
         .map(String::trim)
         .toArray(String[]::new);
       if (matches.length == 2) {
-        return format(MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING, matches[0], matches[1], entityId);
+        return format(MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING, matches[0], matches[1], "");
       } else {
         log.warn("Error extracting entity versions from: {}. Returning default message", e.getMessage());
         return MSG_ERROR_OPTIMISTIC_LOCKING_DEFAULT;

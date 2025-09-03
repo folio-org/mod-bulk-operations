@@ -193,7 +193,7 @@ class RecordUpdateServiceTest extends BaseTest {
     try {
       recordUpdateService.updateEntity(extendedOriginalItem, extendedModifiedItem, operation);
     } catch (OptimisticLockingException e) {
-      var expectedUiErrorMessage = Utils.getMessageFromFeignException(feignException, extendedModifiedItem.getId());
+      var expectedUiErrorMessage = Utils.getMessageFromFeignException(feignException);
       var link = entityPathResolver.resolve(operation.getEntityType(), extendedOriginalItem);
       var expectedCsvErrorMessage = format("%s %s", expectedUiErrorMessage, link);
       assertThat(e.getCsvErrorMessage(), Matchers.equalTo(expectedCsvErrorMessage));

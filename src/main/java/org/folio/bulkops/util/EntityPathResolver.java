@@ -32,7 +32,7 @@ public class EntityPathResolver {
         var user = (User) recordEntity;
         return format("/users/%s", user.getId());
       }
-      case INSTANCE -> {
+      case INSTANCE, INSTANCE_MARC -> {
         var instance = (Instance) recordEntity;
         return format("/inventory/view/%s", instance.getId());
       }
