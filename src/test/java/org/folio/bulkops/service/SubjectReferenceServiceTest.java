@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_CODE;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
@@ -146,6 +147,45 @@ class SubjectReferenceServiceTest {
     var actualId = subjectReferenceService.getSubjectTypeIdByName(name);
 
     assertEquals(name, actualId);
+  }
+
+  @Test
+  void shouldReturnHyphenIfSubjectSourceNotFoundByCode() {
+    var code = "UnknownCode";
+    var subjectSources = new SubjectSourceCollection().withSubjectSources(List.of());
+
+    when(subjectSourcesClient.getByQuery(String.format(QUERY_PATTERN_CODE, code))).thenReturn(subjectSources);
+
+    var actualName = subjectReferenceService.getSubjectSourceNameByCode(code);
+
+    assertEquals("-", actualName);
+  }
+
+  @Test
+  void shouldReturnSubjectSourceNameByCode() {
+    var code = "KnownCode";
+    var expectedName = "SourceName";
+    var subjectSource = new SubjectSource().withName(expectedName);
+    var subjectSources = new SubjectSourceCollection().withSubjectSources(List.of(subjectSource));
+
+    when(subjectSourcesClient.getByQuery(String.format(QUERY_PATTERN_CODE, code))).thenReturn(subjectSources);
+
+    var actualName = subjectReferenceService.getSubjectSourceNameByCode(code);
+
+    assertEquals(expectedName, actualName);
+  }
+
+  @Test
+  void shouldReturnHyphenIfSubjectSourceNameByCodeIsNull() {
+    var code = "NullNameCode";
+    var subjectSource = new SubjectSource().withName(null);
+    var subjectSources = new SubjectSourceCollection().withSubjectSources(List.of(subjectSource));
+
+    when(subjectSourcesClient.getByQuery(String.format(QUERY_PATTERN_CODE, code))).thenReturn(subjectSources);
+
+    var actualName = subjectReferenceService.getSubjectSourceNameByCode(code);
+
+    assertEquals("-", actualName);
   }
 
 }
