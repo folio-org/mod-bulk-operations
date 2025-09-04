@@ -21,4 +21,7 @@ public class Subject {
 
   @JsonProperty("typeId")
   private String typeId;
+
+  @JsonProperty("authorityId")
+  private String authorityId;
 }

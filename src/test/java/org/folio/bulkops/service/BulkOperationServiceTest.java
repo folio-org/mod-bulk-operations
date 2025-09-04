@@ -38,6 +38,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
@@ -87,12 +88,15 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
+import org.folio.bulkops.domain.bean.Instance;
+import org.folio.bulkops.domain.bean.InstanceCollection;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.Personal;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
+import org.folio.bulkops.domain.bean.Subject;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.bean.UserGroupCollection;
@@ -2007,5 +2011,62 @@ class BulkOperationServiceTest extends BaseTest {
 
     // Assert that patron group was modified
     assertEquals(patronGroupModified, result.getPatronGroup());
+  }
+
+  @SneakyThrows
+  @Test
+  void shouldNotEditAuthorityIdInSubjectWhenEditingInstance() {
+    // Arrange
+    var instanceId = UUID.randomUUID().toString();
+    var authorityId = "31dc30c0-0a24-4afb-8bc7-0b70c597248f";
+    var bulkOperationId = UUID.randomUUID();
+    var subjectValueOriginal = "original value";
+    var subjectValueModified = "modified value";
+    var operation = BulkOperation.builder()
+            .id(bulkOperationId)
+            .entityType(INSTANCE_MARC)
+            .status(DATA_MODIFICATION)
+            .identifierType(IdentifierType.ID)
+            .linkToModifiedRecordsJsonFile("modified.json")
+            .linkToMatchedRecordsJsonFile("matched.json")
+            .build();
+    var originalInstance = Instance.builder()
+            .id(instanceId)
+            .subject(List.of(Subject.builder().authorityId(authorityId).value(subjectValueOriginal).build()))
+            .build();
+
+    // Mock
+    when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
+    when(instanceClient.getInstanceByQuery("id==" + instanceId, 1)).thenReturn(new InstanceCollection().withInstances(List.of(originalInstance)).withTotalRecords(1));
+    when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(operation));
+    when(remoteFileSystemClient.get("modified.json")).thenReturn(
+            new ByteArrayInputStream(("{\"tenantId\":\"diku\", \"entity\": {\"id\":\"" + instanceId + "\",\"source\": \"MARC\",\"subjects\":[{\"authorityId\":\"" + authorityId + "\",\"value\":\"" + subjectValueModified + "\"}]}}").getBytes())
+    );
+    when(remoteFileSystemClient.get("matched.json")).thenReturn(
+            new ByteArrayInputStream(("{\"tenantId\":\"diku\", \"entity\": {\"id\":\"" + instanceId + "\",\"source\": \"MARC\",\"subjects\":[{\"authorityId\":\"" + authorityId + "\",\"value\":\"" + subjectValueOriginal + "\"}]}}").getBytes())
+    );
+    when(remoteFileSystemClient.get(argThat(name -> name.contains("Changed-Records-CSV")))).thenReturn(
+            new ByteArrayInputStream(("""
+                    Instance UUID,Subject
+                    "Subject headings;Subject source;Subject type
+                    modified value;-;-\"""").getBytes())
+    );
+    when(executionRepository.save(any(BulkOperationExecution.class))).thenReturn(new BulkOperationExecution().withProcessedRecords(1));
+    doAnswer(invocation -> {
+      originalInstance.getSubject().getFirst().setValue(subjectValueModified);
+      return null;
+    }).when(instanceClient).updateInstance(any(Instance.class), anyString());
+    when(ruleService.hasAdministrativeUpdates(operation)).thenReturn(true);
+
+    // Commit step
+    bulkOperationService.commit(operation);
+
+    Instance result = instanceClient.getInstanceByQuery("id==" + instanceId, 1).getInstances().getFirst();
+
+    // Assert that subject authorityId were not modified
+    assertEquals(authorityId, result.getSubject().getFirst().getAuthorityId());
+
+    // Assert that subject value was modified
+    assertEquals(subjectValueModified, result.getSubject().getFirst().getValue());
   }
 }
