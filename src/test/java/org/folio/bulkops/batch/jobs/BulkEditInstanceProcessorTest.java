@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.SneakyThrows;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.SrsClient;
@@ -20,17 +21,21 @@ import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.InstanceCollection;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
+import org.folio.bulkops.domain.converter.JsonToMarcConverter;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
+import org.folio.bulkops.service.SrsService;
 import org.folio.spring.FolioExecutionContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.test.util.ReflectionTestUtils;
+import java.io.File;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -53,6 +58,10 @@ class BulkEditInstanceProcessorTest {
   private DuplicationCheckerFactory duplicationCheckerFactory;
   @Mock
   private JobExecution jobExecution;
+  @Mock
+  private JsonToMarcConverter jsonToMarcConverter;
+  @InjectMocks
+  private SrsService srsService;
 
   private BulkEditInstanceProcessor processor;
   private final ObjectMapper objectMapper = new ObjectMapper();
@@ -61,8 +70,7 @@ class BulkEditInstanceProcessorTest {
   void setUp() {
     MockitoAnnotations.openMocks(this);
     processor = new BulkEditInstanceProcessor(
-      instanceClient, folioExecutionContext, permissionsValidator, userClient, srsClient, duplicationCheckerFactory
-    );
+      instanceClient, folioExecutionContext, permissionsValidator, userClient, duplicationCheckerFactory, srsService);
     ReflectionTestUtils.setField(processor, "identifierType", IdentifierType.ID.getValue());
     ReflectionTestUtils.setField(processor, "jobExecution", jobExecution);
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
@@ -86,6 +94,7 @@ class BulkEditInstanceProcessorTest {
   }
 
   @Test
+  @SneakyThrows
   void shouldReturnMarcInstanceWithSrs() {
     ReflectionTestUtils.setField(processor, "identifierType", IdentifierType.ID.getValue());
     ItemIdentifier identifier = new ItemIdentifier().withItemId("222");
@@ -95,8 +104,7 @@ class BulkEditInstanceProcessorTest {
       .thenReturn(InstanceCollection.builder().instances(List.of(instance)).totalRecords(1).build());
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE))).thenReturn(true);
 
-    ObjectNode srsJson = objectMapper.createObjectNode();
-    srsJson.set("sourceRecords", objectMapper.createArrayNode().add(objectMapper.createObjectNode().put("recordId", "rec1")));
+    var srsJson = objectMapper.readTree(new File("src/test/resources/files/srs_response_for_validator.json"));
     when(srsClient.getMarc(instanceId, "INSTANCE", true)).thenReturn(srsJson);
 
     when(jobExecution.getExecutionContext()).thenReturn(new org.springframework.batch.item.ExecutionContext());

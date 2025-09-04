@@ -100,6 +100,8 @@ public class Constants {
   public static final String ENTITY = "entity";
   public static final String TENANT_ID = "tenantId";
 
+  public static final String FIXED_FIELD = "008";
+  public static final int FIXED_FIELD_LENGTH = 40;
   public static final String FIELD_999 = "999";
   public static final char INDICATOR_F = 'f';
 

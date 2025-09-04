@@ -9,10 +9,8 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_STARTING_BULK_OPERATION;
-import static org.folio.bulkops.util.Constants.MULTIPLE_SRS;
 import static org.folio.bulkops.util.Constants.NEW_LINE_SEPARATOR;
 import static org.folio.bulkops.util.Constants.NO_MARC_CONTENT;
-import static org.folio.bulkops.util.Constants.SRS_MISSING;
 import static org.folio.bulkops.util.Utils.getMatchedFileName;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
@@ -30,9 +28,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
@@ -41,15 +37,14 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.StateType;
-import org.folio.bulkops.domain.converter.JsonToMarcConverter;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.exception.MarcValidationException;
 import org.folio.bulkops.exception.UploadFromQueryException;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -68,13 +63,12 @@ public class QueryService {
   private final BulkOperationRepository bulkOperationRepository;
   private final ErrorService errorService;
   private final ObjectMapper objectMapper;
-  private final JsonToMarcConverter jsonToMarcConverter;
   private final PermissionsValidator permissionsValidator;
   private final RemoteFileSystemClient remoteFileSystemClient;
-  private final SrsClient srsClient;
   private final QueryClient queryClient;
   private final FqmContentFetcher fqmContentFetcher;
   private final LocalReferenceDataService localReferenceDataService;
+  private final SrsService srsService;
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -240,15 +234,15 @@ public class QueryService {
   private void processQueryResultForMarc(BulkOperationsEntity entityRecord, Writer writerForResultMrcFile,
                                          BulkOperation operation, String matchedMrcFileName) throws UploadFromQueryException {
     try {
-      var listMarcRecords = getMarcContent(entityRecord.getId());
-      writerForResultMrcFile.append(listMarcRecords.getFirst());
+      var marcJsonString = srsService.getMarcJsonString(entityRecord.getId());
+      writerForResultMrcFile.append(marcJsonString);
       if (isNull(operation.getLinkToMatchedRecordsMarcFile())) {
         operation.setLinkToMatchedRecordsMarcFile(matchedMrcFileName);
       }
-    } catch (UploadFromQueryException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new UploadFromQueryException(NO_MARC_CONTENT.formatted(entityRecord.getId(), e.getMessage()), entityRecord.getId());
+    } catch (MarcValidationException mve) {
+      throw new UploadFromQueryException(mve.getMessage());
+    } catch (IOException ioe) {
+      throw new UploadFromQueryException(NO_MARC_CONTENT.formatted(entityRecord.getId(), ioe.getMessage()), entityRecord.getId());
     }
   }
 
@@ -262,28 +256,5 @@ public class QueryService {
       .errorType(org.folio.bulkops.domain.dto.ErrorType.ERROR)
       .errorMessage(e.getMessage())
       .build());
-  }
-
-  private List<String> getMarcContent(String id) throws UploadFromQueryException, IOException {
-    List<String> mrcRecords = new ArrayList<>();
-    var srsRecords = srsClient.getMarc(id, "INSTANCE", true).get("sourceRecords");
-    if (srsRecords.isEmpty()) {
-      throw new UploadFromQueryException(SRS_MISSING);
-    }
-    if (srsRecords.size() > 1) {
-      throw new UploadFromQueryException(MULTIPLE_SRS.formatted(String.join(", ", getAllSrsIds(srsRecords))));
-    }
-    for (var jsonNodeIterator = srsRecords.elements(); jsonNodeIterator.hasNext();) {
-      var srsRec = jsonNodeIterator.next();
-      var parsedRec = srsRec.get("parsedRecord");
-      var content = parsedRec.get("content").toString();
-      mrcRecords.add(jsonToMarcConverter.convertJsonRecordToMarcRecord(content));
-    }
-    return mrcRecords;
-  }
-
-  private String getAllSrsIds(JsonNode srsRecords) {
-    return String.join(", ", StreamSupport.stream(srsRecords.spliterator(), false)
-      .map(n -> StringUtils.strip(n.get("recordId").toString(), "\"")).toList());
   }
 }
