@@ -29,8 +29,6 @@ import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.processor.MarcDataProcessor;
 import org.folio.bulkops.service.ErrorService;
-import org.folio.bulkops.service.Marc21ReferenceProvider;
-import org.folio.bulkops.service.SubjectReferenceService;
 import org.folio.bulkops.util.MarcDateHelper;
 import org.marc4j.marc.DataField;
 import org.marc4j.marc.Record;
@@ -50,8 +48,6 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
 
   private final MarcRulesValidator marcRulesValidator;
   private final ErrorService errorService;
-  private final Marc21ReferenceProvider marc21ReferenceProvider;
-  private final SubjectReferenceService subjectReferenceService;
 
   public void update(BulkOperation operation, Record marcRecord, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection, Date currentDate) {
     var initialRecord = marcRecord.toString();
@@ -173,7 +169,7 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     char ind2 = fetchIndicatorValue(rule.getInd2());
     var newField = new DataFieldImpl(tag, ind1, ind2);
     var subfieldCode = rule.getSubfield().charAt(0);
-    var value = fetchActionDataValue(VALUE, rule.getActions().getFirst().getData());
+    var value = fetchActionDataValue(VALUE, rule.getActions().get(0).getData());
     newField.addSubfield(new SubfieldImpl(subfieldCode, value));
     if (ObjectUtils.isNotEmpty(rule.getSubfields())) {
       for (var subfieldAction : rule.getSubfields()) {
