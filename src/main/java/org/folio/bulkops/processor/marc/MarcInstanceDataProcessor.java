@@ -173,14 +173,11 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     char ind2 = fetchIndicatorValue(rule.getInd2());
     var newField = new DataFieldImpl(tag, ind1, ind2);
     var subfieldCode = rule.getSubfield().charAt(0);
-    if (marc21ReferenceProvider.isSubjectTag(tag) && !Character.isLetter(subfieldCode) && subfieldCode != '2') {
-      return; // https://folio-org.atlassian.net/browse/MODBULKOPS-531
-    }
     var value = fetchActionDataValue(VALUE, rule.getActions().getFirst().getData());
     newField.addSubfield(new SubfieldImpl(subfieldCode, value));
     if (ObjectUtils.isNotEmpty(rule.getSubfields())) {
       for (var subfieldAction : rule.getSubfields()) {
-        var action = subfieldAction.getActions().getFirst();
+        var action = subfieldAction.getActions().get(0);
         if (ADD_TO_EXISTING.equals(action.getName())) {
           subfieldCode = subfieldAction.getSubfield().charAt(0);
           value = fetchActionDataValue(VALUE, action.getData());

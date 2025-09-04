@@ -753,7 +753,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
   }
 
   @Test
-  void processAddToExisting_shouldReturnIfSubjectTagAndSubfieldNotLetterOr2() throws Exception {
+  void processAddToExisting_shouldHaveChangesInMrcIfSubjectTagAndSubfieldNotLetterOr2() throws Exception {
     var tag = "650";
     var ind1 = "1";
     var ind2 = "0";
@@ -780,8 +780,8 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     method.setAccessible(true);
     method.invoke(processor, rule, marcRecord);
 
-    // Should not add any field
-    assertThat(marcRecord.getDataFields()).isEmpty();
+    // Should have changes
+    assertThat(marcRecord.getDataFields().getFirst().toString()).isEqualTo("650 10$7test");
   }
 
   @Test
