@@ -9,18 +9,13 @@ import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.MULTIPLE_MATCHES_MESSAGE;
-import static org.folio.bulkops.util.Constants.MULTIPLE_SRS;
 import static org.folio.bulkops.util.Constants.NO_INSTANCE_VIEW_PERMISSIONS;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
-import static org.folio.bulkops.util.Constants.SRS_MISSING;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.client.InstanceClient;
-import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.dto.EntityType;
@@ -29,16 +24,18 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.exception.BulkEditException;
+import org.folio.bulkops.exception.MarcValidationException;
 import org.folio.bulkops.processor.EntityExtractor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
+import org.folio.bulkops.service.SrsService;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import java.io.IOException;
 import java.util.List;
-import java.util.stream.StreamSupport;
 
 @Component
 @StepScope
@@ -49,8 +46,8 @@ public class BulkEditInstanceProcessor implements ItemProcessor<ItemIdentifier, 
   private final FolioExecutionContext folioExecutionContext;
   private final PermissionsValidator permissionsValidator;
   private final UserClient userClient;
-  private final SrsClient srsClient;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
+  private final SrsService srsService;
 
   @Value("#{jobParameters['identifierType']}")
   private String identifierType;
@@ -80,7 +77,7 @@ public class BulkEditInstanceProcessor implements ItemProcessor<ItemIdentifier, 
       }
 
       if (duplicationCheckerFactory.getFetchedIds(jobExecution).add(instance.getId())) {
-        checkMissingSrsAndDuplication(instance);
+        checkSrsInstance(instance);
         return List.of(new ExtendedInstance().withEntity(instance).withTenantId(folioExecutionContext.getTenantId()));
       }
       return emptyList();
@@ -116,26 +113,16 @@ public class BulkEditInstanceProcessor implements ItemProcessor<ItemIdentifier, 
     };
   }
 
-  private void checkMissingSrsAndDuplication(Instance instance) {
+  private void checkSrsInstance(Instance instance) throws BulkEditException, IOException {
     if (MARC.equals(instance.getSource())) {
       if (!jobExecution.getExecutionContext().containsKey(AT_LEAST_ONE_MARC_EXISTS)) {
         jobExecution.getExecutionContext().put(AT_LEAST_ONE_MARC_EXISTS, true);
       }
-      var srsRecords = srsClient.getMarc(instance.getId(), "INSTANCE", true).get("sourceRecords");
-      if (srsRecords.isEmpty()) {
-        log.error(SRS_MISSING);
-        throw new BulkEditException(SRS_MISSING);
-      }
-      if (srsRecords.size() > 1) {
-        var errorMsg = MULTIPLE_SRS.formatted(getAllSrsIds(srsRecords));
-        log.error(errorMsg);
-        throw new BulkEditException(errorMsg);
+      try {
+        srsService.getMarcJsonString(instance.getId());
+      } catch (MarcValidationException mve) {
+        throw new BulkEditException(mve.getMessage());
       }
     }
-  }
-
-  private String getAllSrsIds(JsonNode srsRecords) {
-    return String.join(", ", StreamSupport.stream(srsRecords.spliterator(), false)
-      .map(n -> StringUtils.strip(n.get("recordId").toString(), "\"")).toList());
   }
 }
