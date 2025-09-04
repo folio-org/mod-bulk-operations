@@ -26,7 +26,6 @@ import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.service.ErrorService;
-import org.folio.bulkops.service.Marc21ReferenceProvider;
 import org.folio.bulkops.service.SubjectReferenceService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -50,8 +49,6 @@ import java.util.UUID;
 class MarcInstanceDataProcessorTest extends BaseTest {
   @MockitoBean
   private ErrorService errorService;
-  @MockitoBean
-  private Marc21ReferenceProvider marc21ReferenceProvider;
   @MockitoBean
   private SubjectReferenceService subjectReferenceService;
   @Autowired
