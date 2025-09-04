@@ -768,13 +768,6 @@ class MarcInstanceDataProcessorTest extends BaseTest {
                     .data(List.of(new MarcActionDataInner().key(MarcDataType.VALUE).value(value)))));
     var marcRecord = new RecordImpl();
 
-    // Set private fields
-    var marc21ReferenceProviderField = processor.getClass().getDeclaredField("marc21ReferenceProvider");
-    marc21ReferenceProviderField.setAccessible(true);
-    marc21ReferenceProviderField.set(processor, marc21ReferenceProvider);
-
-    when(marc21ReferenceProvider.isSubjectTag(tag)).thenReturn(true);
-
     // Use reflection to call private method
     var method = processor.getClass().getDeclaredMethod("processAddToExisting", BulkOperationMarcRule.class, org.marc4j.marc.Record.class);
     method.setAccessible(true);
@@ -800,12 +793,6 @@ class MarcInstanceDataProcessorTest extends BaseTest {
                     .data(List.of(new MarcActionDataInner().key(MarcDataType.VALUE).value(value)))));
     var marcRecord = new RecordImpl();
 
-    // Set private fields
-    var marc21ReferenceProviderField = processor.getClass().getDeclaredField("marc21ReferenceProvider");
-    marc21ReferenceProviderField.setAccessible(true);
-    marc21ReferenceProviderField.set(processor, marc21ReferenceProvider);
-
-    when(marc21ReferenceProvider.isSubjectTag(tag)).thenReturn(true);
     when(subjectReferenceService.getSubjectSourceNameByCode(value)).thenReturn(HYPHEN);
 
     var method = processor.getClass().getDeclaredMethod("processAddToExisting", BulkOperationMarcRule.class, org.marc4j.marc.Record.class);
@@ -830,13 +817,6 @@ class MarcInstanceDataProcessorTest extends BaseTest {
             .actions(List.of(new MarcAction().name(UpdateActionType.ADD_TO_EXISTING)
                     .data(List.of(new MarcActionDataInner().key(MarcDataType.VALUE).value(value)))));
     var marcRecord = new RecordImpl();
-
-    // Set private fields
-    var marc21ReferenceProviderField = processor.getClass().getDeclaredField("marc21ReferenceProvider");
-    marc21ReferenceProviderField.setAccessible(true);
-    marc21ReferenceProviderField.set(processor, marc21ReferenceProvider);
-
-    when(marc21ReferenceProvider.isSubjectTag(tag)).thenReturn(true);
 
     var method = processor.getClass().getDeclaredMethod("processAddToExisting", BulkOperationMarcRule.class, org.marc4j.marc.Record.class);
     method.setAccessible(true);
@@ -864,13 +844,6 @@ class MarcInstanceDataProcessorTest extends BaseTest {
             .actions(List.of(new MarcAction().name(UpdateActionType.ADD_TO_EXISTING)
                     .data(List.of(new MarcActionDataInner().key(MarcDataType.VALUE).value(value)))));
     var marcRecord = new RecordImpl();
-
-    // Set private fields
-    var marc21ReferenceProviderField = processor.getClass().getDeclaredField("marc21ReferenceProvider");
-    marc21ReferenceProviderField.setAccessible(true);
-    marc21ReferenceProviderField.set(processor, marc21ReferenceProvider);
-
-    when(marc21ReferenceProvider.isSubjectTag(tag)).thenReturn(false);
 
     var method = processor.getClass().getDeclaredMethod("processAddToExisting", BulkOperationMarcRule.class, org.marc4j.marc.Record.class);
     method.setAccessible(true);
