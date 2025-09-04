@@ -9,6 +9,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORD
 import static org.folio.bulkops.service.QueryService.QUERY_FILENAME_TEMPLATE;
 import static org.folio.bulkops.util.Constants.MULTIPLE_SRS;
 import static org.folio.bulkops.util.Constants.SRS_MISSING;
+import static org.folio.bulkops.util.MarcValidator.INVALID_MARC_MESSAGE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -19,6 +20,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -361,6 +363,52 @@ class QueryServiceTest extends BaseTest {
         var executionContentsCaptor = ArgumentCaptor.forClass(List.class);
         verify(errorService).saveErrorsAfterQuery(executionContentsCaptor.capture(), operationCaptor.capture());
         assertThat(((BulkOperationExecutionContent) executionContentsCaptor.getValue().getFirst()).getErrorMessage()).isEqualTo(MULTIPLE_SRS.formatted("22240328-788e-43fc-9c3c-af39e243f3b7, 33340328-788e-43fc-9c3c-af39e243f3b7"));
+        assertThat(operationCaptor.getValue().getStatus()).isEqualTo(COMPLETED_WITH_ERRORS);
+        assertThat(operationCaptor.getValue().getTotalNumOfRecords()).isEqualTo(1);
+        assertThat(operationCaptor.getValue().getProcessedNumOfRecords()).isEqualTo(1);
+        assertThat(operationCaptor.getValue().getMatchedNumOfErrors()).isEqualTo(1);
+        assertThat(operationCaptor.getValue().getMatchedNumOfRecords()).isZero();
+      });
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldThrowExceptionIfMacContentIsInvalid() {
+    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+      var queryId = UUID.randomUUID();
+      var operation = BulkOperation.builder().id(UUID.randomUUID())
+        .status(OperationStatusType.EXECUTING_QUERY).approach(org.folio.bulkops.domain.dto.ApproachType.QUERY)
+        .entityType(EntityType.INSTANCE_MARC)
+        .fqlQueryId(queryId)
+        .build();
+      var instanceJsonb = Files.readString(Path.of(INSTANCE_MARC_JSON_PATH));
+      var queryDetails = new QueryDetails().content(List.of(Map.of("instance.jsonb", instanceJsonb,
+          "instance.id", "69640328-788e-43fc-9c3c-af39e243f3b7"))).totalRecords(1)
+        .status(QueryDetails.StatusEnum.SUCCESS).totalRecords(1);
+      var srsJson = objectMapper.readTree(new File("src/test/resources/files/srs_response_corrupted_marc.json"));
+
+      var record1 = objectMapper.createObjectNode();
+      record1.set("entity", objectMapper.readTree(instanceJsonb));
+      record1.put("tenantId", "diku");
+      List<BulkOperationExecutionContent> contents = new ArrayList<>();
+
+      when(queryClient.executeQuery(any(SubmitQuery.class))).thenReturn(new QueryIdentifier().queryId(queryId));
+      when(queryClient.getQuery(queryId, true)).thenReturn(queryDetails);
+      when(fqmContentFetcher.fetch(queryId, operation.getEntityType(), queryDetails.getTotalRecords(), contents, operation.getId()))
+        .thenReturn(new ByteArrayInputStream(record1.toString().getBytes()));
+      when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
+      when(userClient.getUserById(any(String.class))).thenReturn(User.builder().username("username").build());
+      when(srsClient.getMarc(anyString(), anyString(), anyBoolean())).thenReturn(srsJson);
+      when(remoteFileSystemClient.writer(any(String.class))).thenReturn(writer);
+
+      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+
+      await().untilAsserted(() -> {
+        var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
+        var executionContentsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(errorService).saveErrorsAfterQuery(executionContentsCaptor.capture(), operationCaptor.capture());
+        assertThat(((BulkOperationExecutionContent) executionContentsCaptor.getValue().getFirst()).getErrorMessage()).isEqualTo(INVALID_MARC_MESSAGE);
         assertThat(operationCaptor.getValue().getStatus()).isEqualTo(COMPLETED_WITH_ERRORS);
         assertThat(operationCaptor.getValue().getTotalNumOfRecords()).isEqualTo(1);
         assertThat(operationCaptor.getValue().getProcessedNumOfRecords()).isEqualTo(1);
