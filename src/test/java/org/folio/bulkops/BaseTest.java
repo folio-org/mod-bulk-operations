@@ -42,6 +42,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.client.ServicePointClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.client.StatisticalCodeTypeClient;
+import org.folio.bulkops.client.SubjectSourcesClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
@@ -209,6 +210,8 @@ public abstract class BaseTest {
   public InstanceNoteTypesClient instanceNoteTypesClient;
   @MockitoBean
   public PrepareSystemUserService prepareSystemUserService;
+  @MockitoBean
+  public SubjectSourcesClient subjectSourcesClient;
 
   @Autowired
   protected MockMvc mockMvc;

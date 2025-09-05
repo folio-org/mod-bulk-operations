@@ -47,6 +47,7 @@ public class MarcToUnifiedTableRowMapperHelper {
 
   private final InstanceReferenceService instanceReferenceService;
   private final Marc21ReferenceProvider referenceProvider;
+  private final SubjectReferenceService subjectReferenceService;
 
   public String resolveModeOfIssuance(Leader leader) {
     return switch (leader.getImplDefined1()[0]) {
@@ -151,8 +152,11 @@ public class MarcToUnifiedTableRowMapperHelper {
 
   public List<String> fetchSubjectCodes(DataField dataField) {
     List<String> allCodes = new ArrayList<>(fetchAllSubjectCodes(dataField));
-    allCodes.add(fetchSubjectSourceName(dataField));
-    allCodes.add(fetchSubjectTypeName(dataField));
+    allCodes.removeIf(String::isBlank);
+    if (!allCodes.isEmpty()) {
+      allCodes.add(fetchSubjectSourceName(dataField));
+      allCodes.add(fetchSubjectTypeName(dataField));
+    }
     return allCodes;
   }
 
@@ -172,6 +176,10 @@ public class MarcToUnifiedTableRowMapperHelper {
       return List.of(HYPHEN);
     }
     return List.of(subfields.stream()
+      // https://folio-org.atlassian.net/browse/MODBULKOPS-531
+      .filter(subfield ->Character.isLetter(subfield.getCode())
+              || subfield.getCode() == '2' && dataField.getIndicator2() == '7' &&
+              !subjectReferenceService.getSubjectSourceNameByCode(subfield.getData()).equals(HYPHEN))
       .map(Subfield::getData)
       .collect(Collectors.joining(WHITE_SPACE)).trim());
   }
@@ -199,9 +207,15 @@ public class MarcToUnifiedTableRowMapperHelper {
       case '4' -> "Source not specified";
       case '5' -> "Canadian Subject Headings";
       case '6' -> "Répertoire de vedettes-matière";
-      case '7' -> ofNullable(dataField.getSubfield('2')).map(Subfield::getData).orElse(HYPHEN);
+      case '7' -> fetchSubjectSourceForInd7(dataField);
       default -> HYPHEN;
     };
+  }
+
+  private String fetchSubjectSourceForInd7(DataField dataField) {
+    return ofNullable(dataField.getSubfield('2'))
+            .map(subfield -> subjectReferenceService.getSubjectSourceNameByCode(subfield.getData()))
+            .orElse(HYPHEN);
   }
 
   private String fetchSubjectTypeName(DataField dataField) {

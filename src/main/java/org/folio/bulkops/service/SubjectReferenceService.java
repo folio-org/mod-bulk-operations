@@ -12,6 +12,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import static java.util.Objects.isNull;
+import static java.util.Optional.ofNullable;
+import static org.folio.bulkops.util.Constants.HYPHEN;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_CODE;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
@@ -59,6 +62,14 @@ public class SubjectReferenceService {
     return subjectSources.getSubjectSources().isEmpty() ?
       name :
       subjectSources.getSubjectSources().get(0).getId();
+  }
+
+  @Cacheable(cacheNames = "subjectSourceNameByCode")
+  public String getSubjectSourceNameByCode(String code) {
+    var subjectSources = subjectSourcesClient.getByQuery(String.format(QUERY_PATTERN_CODE, code));
+    return subjectSources.getSubjectSources().isEmpty()
+            ? HYPHEN
+            : ofNullable(subjectSources.getSubjectSources().getFirst().getName()).orElse(HYPHEN);
   }
 
   @Cacheable(cacheNames = "subjectTypeIds")

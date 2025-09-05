@@ -7,10 +7,13 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUBJECT;
 import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
 import static org.folio.bulkops.util.Constants.NON_PRINTING_DELIMITER;
+import static org.mockito.ArgumentMatchers.startsWith;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.bean.SubjectSourceCollection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -200,6 +203,8 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     dataField.addSubfield(new SubfieldImpl('d', "subject d"));
     marcRecord.addVariableField(dataField);
 
+    when(subjectSourcesClient.getByQuery(startsWith("code"))).thenReturn(new SubjectSourceCollection().withSubjectSources(List.of()));
+
     var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_SUBJECT), true);
 
     var expectedRowData = "Subject headings;Subject source;Subject type\n" +
@@ -208,7 +213,7 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
       "611 a text subject c subject d;Medical Subject Headings;Meeting name | " +
       "text subject c subject d;Canadian Subject Headings;Uniform title | " +
       "text subject c subject d;Medical Subject Headings;Named event | " +
-      "text subject c subject d;text;Chronological term | " +
+      "subject c subject d;-;Chronological term | " +
       "text subject c subject d;-;Topical term | " +
       "text subject c subject d;Medical Subject Headings;Geographic name | " +
       "a text subject c subject d;Library of Congress Children’s and Young Adults' Subject Headings;Geographic name | " +
