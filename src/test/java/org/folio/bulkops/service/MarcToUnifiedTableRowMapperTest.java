@@ -7,12 +7,13 @@ import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUBJECT;
 import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
 import static org.folio.bulkops.util.Constants.NON_PRINTING_DELIMITER;
-import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.bean.SubjectSource;
 import org.folio.bulkops.domain.bean.SubjectSourceCollection;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -203,7 +204,16 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     dataField.addSubfield(new SubfieldImpl('d', "subject d"));
     marcRecord.addVariableField(dataField);
 
-    when(subjectSourcesClient.getByQuery(startsWith("code"))).thenReturn(new SubjectSourceCollection().withSubjectSources(List.of()));
+    dataField = new DataFieldImpl("648", '3', '7');
+    dataField.addSubfield(new SubfieldImpl('a', ""));
+    dataField.addSubfield(new SubfieldImpl('2', "codeFound"));
+    dataField.addSubfield(new SubfieldImpl('c', "subject c"));
+    dataField.addSubfield(new SubfieldImpl('d', "subject d"));
+    marcRecord.addVariableField(dataField);
+
+    when(subjectSourcesClient.getByQuery("code==codeFound")).thenReturn(new SubjectSourceCollection()
+            .withSubjectSources(List.of(new SubjectSource().withId(UUID.randomUUID().toString()).withName("source1"))));
+    when(subjectSourcesClient.getByQuery("code==text")).thenReturn(new SubjectSourceCollection().withSubjectSources(List.of()));
 
     var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_SUBJECT), true);
 
@@ -217,7 +227,8 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
       "text subject c subject d;-;Topical term | " +
       "text subject c subject d;Medical Subject Headings;Geographic name | " +
       "a text subject c subject d;Library of Congress Children’s and Young Adults' Subject Headings;Geographic name | " +
-      "text subject c subject d;-;Genre/Form";
+      "text subject c subject d;-;Genre/Form |" +
+      " - subject c subject d;source1;Chronological term";
 
     assertThat(rowData.getFirst()).isEqualTo(expectedRowData);
   }
