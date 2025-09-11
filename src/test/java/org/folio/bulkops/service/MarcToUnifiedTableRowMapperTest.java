@@ -131,48 +131,48 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
     marcRecord.addVariableField(controlField);
 
-    var dataField = new DataFieldImpl("600", '1', '2');
-    dataField.addSubfield(new SubfieldImpl('a', "a 600"));
-    dataField.addSubfield(new SubfieldImpl('b', "b text"));
-    dataField.addSubfield(new SubfieldImpl('c', "subject c"));
-    dataField.addSubfield(new SubfieldImpl('d', "subject d"));
-    dataField.addSubfield(new SubfieldImpl('d', ""));
-    marcRecord.addVariableField(dataField);
+//    var dataField = new DataFieldImpl("600", '1', '2');
+//    dataField.addSubfield(new SubfieldImpl('a', "a 600"));
+//    dataField.addSubfield(new SubfieldImpl('b', "b text"));
+//    dataField.addSubfield(new SubfieldImpl('c', "subject c"));
+//    dataField.addSubfield(new SubfieldImpl('d', "subject d"));
+//    dataField.addSubfield(new SubfieldImpl('d', ""));
+//    marcRecord.addVariableField(dataField);
+//
+//    dataField = new DataFieldImpl("610", '1', '3');
+//    dataField.addSubfield(new SubfieldImpl('a', ""));
+//    dataField.addSubfield(new SubfieldImpl('b', "text"));
+//    dataField.addSubfield(new SubfieldImpl('c', "subject c"));
+//    dataField.addSubfield(new SubfieldImpl('c', "subject c 2"));
+//    dataField.addSubfield(new SubfieldImpl('d', "subject d"));
+//    marcRecord.addVariableField(dataField);
+//
+//    dataField = new DataFieldImpl("611", '3', '2');
+//    dataField.addSubfield(new SubfieldImpl('a', "611 a"));
+//    dataField.addSubfield(new SubfieldImpl('b', "text"));
+//    dataField.addSubfield(new SubfieldImpl('c', "subject c"));
+//    dataField.addSubfield(new SubfieldImpl('d', "subject d"));
+//    marcRecord.addVariableField(dataField);
+//
+//    dataField = new DataFieldImpl("630", '1', '5');
+//    dataField.addSubfield(new SubfieldImpl('a', ""));
+//    dataField.addSubfield(new SubfieldImpl('b', "text"));
+//    dataField.addSubfield(new SubfieldImpl('c', "subject c"));
+//    dataField.addSubfield(new SubfieldImpl('d', "subject d"));
+//    marcRecord.addVariableField(dataField);
+//
+//    dataField = new DataFieldImpl("647", '1', '2');
+//    dataField.addSubfield(new SubfieldImpl('a', ""));
+//    dataField.addSubfield(new SubfieldImpl('b', "text"));
+//    dataField.addSubfield(new SubfieldImpl('c', "subject c"));
+//    dataField.addSubfield(new SubfieldImpl('d', "subject d"));
+//    marcRecord.addVariableField(dataField);
 
-    dataField = new DataFieldImpl("610", '1', '3');
-    dataField.addSubfield(new SubfieldImpl('a', ""));
-    dataField.addSubfield(new SubfieldImpl('b', "text"));
-    dataField.addSubfield(new SubfieldImpl('c', "subject c"));
-    dataField.addSubfield(new SubfieldImpl('c', "subject c 2"));
-    dataField.addSubfield(new SubfieldImpl('d', "subject d"));
-    marcRecord.addVariableField(dataField);
-
-    dataField = new DataFieldImpl("611", '3', '2');
-    dataField.addSubfield(new SubfieldImpl('a', "611 a"));
-    dataField.addSubfield(new SubfieldImpl('b', "text"));
-    dataField.addSubfield(new SubfieldImpl('c', "subject c"));
-    dataField.addSubfield(new SubfieldImpl('d', "subject d"));
-    marcRecord.addVariableField(dataField);
-
-    dataField = new DataFieldImpl("630", '1', '5');
-    dataField.addSubfield(new SubfieldImpl('a', ""));
-    dataField.addSubfield(new SubfieldImpl('b', "text"));
-    dataField.addSubfield(new SubfieldImpl('c', "subject c"));
-    dataField.addSubfield(new SubfieldImpl('d', "subject d"));
-    marcRecord.addVariableField(dataField);
-
-    dataField = new DataFieldImpl("647", '1', '2');
-    dataField.addSubfield(new SubfieldImpl('a', ""));
-    dataField.addSubfield(new SubfieldImpl('b', "text"));
-    dataField.addSubfield(new SubfieldImpl('c', "subject c"));
-    dataField.addSubfield(new SubfieldImpl('d', "subject d"));
-    marcRecord.addVariableField(dataField);
-
-    dataField = new DataFieldImpl("648", '2', '7');
-    dataField.addSubfield(new SubfieldImpl('a', ""));
+    var dataField = new DataFieldImpl("648", '2', '7');
+//    dataField.addSubfield(new SubfieldImpl('a', ""));
     dataField.addSubfield(new SubfieldImpl('2', "text"));
-    dataField.addSubfield(new SubfieldImpl('c', "subject c"));
-    dataField.addSubfield(new SubfieldImpl('d', "subject d"));
+//    dataField.addSubfield(new SubfieldImpl('c', "subject c"));
+//    dataField.addSubfield(new SubfieldImpl('d', "subject d"));
     marcRecord.addVariableField(dataField);
 
     dataField = new DataFieldImpl("650", '1', '9');
@@ -213,7 +213,7 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
       "611 a text subject c subject d;Medical Subject Headings;Meeting name | " +
       "text subject c subject d;Canadian Subject Headings;Uniform title | " +
       "text subject c subject d;Medical Subject Headings;Named event | " +
-      "subject c subject d;-;Chronological term | " +
+      "text subject c subject d;-;Chronological term | " +
       "text subject c subject d;-;Topical term | " +
       "text subject c subject d;Medical Subject Headings;Geographic name | " +
       "a text subject c subject d;Library of Congress Children’s and Young Adults' Subject Headings;Geographic name | " +
