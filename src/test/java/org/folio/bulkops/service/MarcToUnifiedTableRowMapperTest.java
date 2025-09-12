@@ -211,9 +211,30 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     dataField.addSubfield(new SubfieldImpl('d', "subject d"));
     marcRecord.addVariableField(dataField);
 
+    dataField = new DataFieldImpl("648", '3', '7');
+    dataField.addSubfield(new SubfieldImpl('1', "subject 1"));
+    dataField.addSubfield(new SubfieldImpl('2', "subject 2"));
+    dataField.addSubfield(new SubfieldImpl('c', "subject c"));
+    dataField.addSubfield(new SubfieldImpl('d', "subject d"));
+    marcRecord.addVariableField(dataField);
+
+    dataField = new DataFieldImpl("650", '/', '7');
+    dataField.addSubfield(new SubfieldImpl('a', "text1"));
+    dataField.addSubfield(new SubfieldImpl('2', "not found"));
+    marcRecord.addVariableField(dataField);
+
+    dataField = new DataFieldImpl("650", '/', '7');
+    dataField.addSubfield(new SubfieldImpl('a', "text2"));
+    dataField.addSubfield(new SubfieldImpl('2', "found"));
+    marcRecord.addVariableField(dataField);
+
     when(subjectSourcesClient.getByQuery("code==codeFound")).thenReturn(new SubjectSourceCollection()
             .withSubjectSources(List.of(new SubjectSource().withId(UUID.randomUUID().toString()).withName("source1"))));
+    when(subjectSourcesClient.getByQuery("code==found")).thenReturn(new SubjectSourceCollection()
+            .withSubjectSources(List.of(new SubjectSource().withId(UUID.randomUUID().toString()).withName("found"))));
+    when(subjectSourcesClient.getByQuery("code==not found")).thenReturn(new SubjectSourceCollection().withSubjectSources(List.of()));
     when(subjectSourcesClient.getByQuery("code==text")).thenReturn(new SubjectSourceCollection().withSubjectSources(List.of()));
+    when(subjectSourcesClient.getByQuery("code==subject 2")).thenReturn(new SubjectSourceCollection().withSubjectSources(List.of()));
 
     var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_SUBJECT), true);
 
@@ -223,12 +244,15 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
       "611 a text subject c subject d;Medical Subject Headings;Meeting name | " +
       "text subject c subject d;Canadian Subject Headings;Uniform title | " +
       "text subject c subject d;Medical Subject Headings;Named event | " +
-      "text subject c subject d;-;Chronological term | " +
+      "subject c subject d;-;Chronological term | " +
       "text subject c subject d;-;Topical term | " +
       "text subject c subject d;Medical Subject Headings;Geographic name | " +
       "a text subject c subject d;Library of Congress Children’s and Young Adults' Subject Headings;Geographic name | " +
       "text subject c subject d;-;Genre/Form |" +
-      " - subject c subject d;source1;Chronological term";
+      " subject c subject d;source1;Chronological term |" +
+      " subject c subject d;-;Chronological term |" +
+      " text1;-;Topical term |" +
+      " text2;found;Topical term";
 
     assertThat(rowData.getFirst()).isEqualTo(expectedRowData);
   }
