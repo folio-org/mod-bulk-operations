@@ -697,6 +697,22 @@
     {
       "id": "classification-types",
       "version": "1.2"
+    },
+    {
+      "id": "okapi",
+      "version": "1.9"
+    },
+    {
+      "id": "statistical-code-types",
+      "version": "1.0"
+    },
+    {
+      "id": "material-types",
+      "version": "2.2"
+    },
+    {
+      "id": "source-storage-source-records",
+      "version": "3.3"
     }
   ],
   "optional": [
