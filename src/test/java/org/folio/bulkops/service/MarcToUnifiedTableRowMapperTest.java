@@ -244,15 +244,15 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
       "611 a text subject c subject d;Medical Subject Headings;Meeting name | " +
       "text subject c subject d;Canadian Subject Headings;Uniform title | " +
       "text subject c subject d;Medical Subject Headings;Named event | " +
-      "subject c subject d;-;Chronological term | " +
+      "- subject c subject d;-;Chronological term | " +
       "text subject c subject d;-;Topical term | " +
       "text subject c subject d;Medical Subject Headings;Geographic name | " +
       "a text subject c subject d;Library of Congress Children’s and Young Adults' Subject Headings;Geographic name | " +
       "text subject c subject d;-;Genre/Form |" +
-      " subject c subject d;source1;Chronological term |" +
-      " subject c subject d;-;Chronological term |" +
-      " text1;-;Topical term |" +
-      " text2;found;Topical term";
+      " - subject c subject d;source1;Chronological term |" +
+      " - - subject c subject d;-;Chronological term |" +
+      " text1 -;-;Topical term |" +
+      " text2 -;found;Topical term";
 
     assertThat(rowData.getFirst()).isEqualTo(expectedRowData);
   }

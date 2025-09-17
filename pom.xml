@@ -53,9 +53,9 @@
     <jsonPath.version>2.9.0</jsonPath.version>
 
     <!-- Test dependencies versions -->
-    <testcontainer.version>1.17.6</testcontainer.version>
-    <wiremock.version>2.35.0</wiremock.version>
-    <awaitility.version>4.2.0</awaitility.version>
+    <testcontainer.version>1.21.3</testcontainer.version>
+    <wiremock.version>2.35.2</wiremock.version>
+    <awaitility.version>4.3.0</awaitility.version>
 
     <!-- Plugins versions -->
     <maven-openapi-generator-plugin.version>7.15.0</maven-openapi-generator-plugin.version>
