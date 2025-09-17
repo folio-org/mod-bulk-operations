@@ -179,7 +179,7 @@ public class MarcToUnifiedTableRowMapperHelper {
       // https://folio-org.atlassian.net/browse/MODBULKOPS-531
       .map(subfield -> {
         if (Character.isDigit(subfield.getCode())) {
-          return HYPHEN;
+          return EMPTY;
         }
         return subfield.getData();
       })
