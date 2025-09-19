@@ -19,12 +19,12 @@
         "enum": [
           "id",
           "hrid",
-          "accessionNumber",
-          "formerIds",
+          "accessionnumber",
+          "formerids",
           "barcode",
-          "holdingsRecordId",
-          "instanceHrid",
-          "itemBarcode"
+          "holdingsrecordid",
+          "instancehrid",
+          "itembarcode"
         ]
       }
     }
