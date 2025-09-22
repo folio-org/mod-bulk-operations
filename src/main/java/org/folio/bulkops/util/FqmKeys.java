@@ -29,4 +29,6 @@ public class FqmKeys {
   public static final String FQM_ITEMS_JSONB_KEY = "items.jsonb";
 
   public static final String FQM_USERS_JSONB_KEY = "users.jsonb";
+  public static final String FQM_USERS_ID_KEY = "users.id";
+  public static final String FQM_USERS_TYPE_KEY = "users.type";
 }

@@ -2,6 +2,7 @@ package org.folio.bulkops.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.bean.StateType.FAILED;
+import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY;
@@ -246,6 +247,31 @@ class FqmContentFetcherTest {
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
       assertThat(contents.getFirst().getErrorMessage()).isEqualTo(NO_MATCH_FOUND_MESSAGE);
+      assertThat(result).isEmpty();
+    }
+  }
+
+  @Test
+  void fetchShouldReturnAnErrorForShadowUsersInEcs() throws Exception {
+    var queryId = UUID.randomUUID();
+    int total = 2;
+    var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
+
+    when(folioExecutionContext.getTenantId()).thenReturn("tenant");
+    when(consortiaService.isTenantCentral(anyString())).thenReturn(true);
+
+    var details = new QueryDetails();
+    Map<String, Object> map = new HashMap<>();
+    map.put("users.type", "shadow");
+    details.setContent(Collections.singletonList(map));
+    when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
+
+    try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total, contents, operationId)) {
+      var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(contents).hasSize(1);
+      assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
+      assertThat(contents.getFirst().getErrorMessage()).isEqualTo(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
       assertThat(result).isEmpty();
     }
   }

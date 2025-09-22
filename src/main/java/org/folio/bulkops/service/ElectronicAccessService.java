@@ -55,11 +55,11 @@ public class ElectronicAccessService {
   private String electronicAccessToString(ElectronicAccess access, String delimiter) {
     log.debug("electronicAccessToString: {}, {}", access.getRelationshipId(), folioExecutionContext.getTenantId());
     return String.join(delimiter,
-      isEmpty(access.getRelationshipId()) ? EMPTY : getRelationshipName(access),
-      isNull(access.getUri()) ? EMPTY : access.getUri(),
-      isEmpty(access.getLinkText()) ? EMPTY : access.getLinkText(),
-      isEmpty(access.getMaterialsSpecification()) ? EMPTY : access.getMaterialsSpecification(),
-      isEmpty(access.getPublicNote()) ? EMPTY : access.getPublicNote());
+      isEmpty(access.getRelationshipId()) ? HYPHEN : getRelationshipName(access),
+      isNull(access.getUri()) ? HYPHEN : access.getUri(),
+      isEmpty(access.getLinkText()) ? HYPHEN : access.getLinkText(),
+      isEmpty(access.getMaterialsSpecification()) ? HYPHEN : access.getMaterialsSpecification(),
+      isEmpty(access.getPublicNote()) ? HYPHEN : access.getPublicNote());
   }
 
   private String electronicAccessInstanceToString(ElectronicAccess access, String delimiter) {
