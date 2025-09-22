@@ -13,6 +13,7 @@ import static org.folio.bulkops.util.Constants.HOLDINGS_LOCATION_CALL_NUMBER_DEL
 import static org.folio.bulkops.util.Constants.ID;
 import static org.folio.bulkops.util.Constants.INSTANCE_TITLE;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
+import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.Constants.PARENT_INSTANCES;
 import static org.folio.bulkops.util.Constants.PRECEDING_TITLES;
@@ -31,6 +32,8 @@ import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SUCCEEDING_TITLES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_PUBLISHER_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_USERS_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_USERS_TYPE_KEY;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.ByteArrayInputStream;
@@ -71,6 +74,7 @@ import org.springframework.stereotype.Service;
 public class FqmContentFetcher {
 
   public static final String SHARED = "Shared";
+  public static final String SHADOW = "shadow";
   public static final String TITLE_PATTERN = "%s. %s, %s";
   @Value("${application.fqm-fetcher.max_parallel_chunks}")
   private int maxParallelChunks;
@@ -133,17 +137,32 @@ public class FqmContentFetcher {
     return new ByteArrayInputStream(response.stream()
         .map(json -> {
           try {
-            if (isInstance(entityType) && isCentralTenant &&
-              !SHARED.equalsIgnoreCase(ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY))) {
-              var instanceId = ofNullable(json.get(FQM_INSTANCE_ID_KEY)).map(Object::toString).orElse(EMPTY);
-              bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
-                .identifier(instanceId)
-                .bulkOperationId(operationId)
-                .state(StateType.FAILED)
-                .errorType(ErrorType.ERROR)
-                .errorMessage(NO_MATCH_FOUND_MESSAGE)
-                .build());
-              return EMPTY;
+            if (isCentralTenant) {
+              if (isInstance(entityType) &&
+                !SHARED.equalsIgnoreCase(ofNullable(json.get(FQM_INSTANCE_SHARED_KEY))
+                  .map(Object::toString).orElse(EMPTY))) {
+                var instanceId = ofNullable(json.get(FQM_INSTANCE_ID_KEY)).map(Object::toString).orElse(EMPTY);
+                bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
+                  .identifier(instanceId)
+                  .bulkOperationId(operationId)
+                  .state(StateType.FAILED)
+                  .errorType(ErrorType.ERROR)
+                  .errorMessage(NO_MATCH_FOUND_MESSAGE)
+                  .build());
+                return EMPTY;
+              } else if (EntityType.USER.equals(entityType) &&
+                SHADOW.equalsIgnoreCase(ofNullable(json.get(FQM_USERS_TYPE_KEY))
+                  .map(Object::toString).orElse(EMPTY))) {
+                var userId = ofNullable(json.get(FQM_USERS_ID_KEY)).map(Object::toString).orElse(EMPTY);
+                bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
+                  .identifier(userId)
+                  .bulkOperationId(operationId)
+                  .state(StateType.FAILED)
+                  .errorType(ErrorType.ERROR)
+                  .errorMessage(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED)
+                  .build());
+                return EMPTY;
+              }
             }
 
             var jsonb = json.get(getEntityJsonKey(entityType));
