@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
-import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
+import static org.folio.bulkops.util.Constants.SPECIAL_ITEM_DELIMITER;
 
 public class ItemElectronicAccessListConverter extends BaseConverter<List<ElectronicAccess>> {
 
@@ -22,6 +22,6 @@ public class ItemElectronicAccessListConverter extends BaseConverter<List<Electr
         object.stream()
           .filter(Objects::nonNull)
           .map(ElectronicAccessHelper.service()::itemElectronicAccessToString)
-          .collect(Collectors.joining(ITEM_DELIMITER));
+          .collect(Collectors.joining(SPECIAL_ITEM_DELIMITER));
   }
 }

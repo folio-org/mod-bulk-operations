@@ -41,7 +41,7 @@ public class ElectronicAccessService {
   }
 
   public String itemElectronicAccessToString(ElectronicAccess access) {
-    return electronicAccessToString(access, ARRAY_DELIMITER);
+    return electronicAccessToString(access, SPECIAL_ARRAY_DELIMITER);
   }
 
   public ElectronicAccess restoreElectronicAccessItem(String access) {
