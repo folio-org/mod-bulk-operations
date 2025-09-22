@@ -188,7 +188,11 @@ class RuleServiceTest extends BaseTest {
         .bulkOperationId(BULK_OPERATION_ID)
         .ruleDetails(new RuleDetails()
           .option(UpdateOptionType.PERMANENT_LOCATION)
+          .tenants(null)
           .actions(List.of(new Action()
+            .parameters(null)
+            .tenants(null)
+            .updatedTenants(null)
             .type(UpdateActionType.REPLACE_WITH)
             .updated(LOCATION_ID))))))
       .totalRecords(1);
