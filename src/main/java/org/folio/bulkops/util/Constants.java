@@ -89,6 +89,7 @@ public class Constants {
   public static final String NO_INSTANCE_VIEW_PERMISSIONS = "User %s does not have required permission to view the instance record - %s=%s on the tenant %s";
   public static final String ERROR_STARTING_BULK_OPERATION = "Error starting Bulk Operation: ";
   public static final String CANNOT_GET_RECORD = "Cannot get data from %s due to %s";
+  public static final String MSG_SHADOW_RECORDS_CANNOT_BE_EDITED = "Shadow records cannot be bulk edited.";
 
   public static final String CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING = "The record cannot be saved because it is not the most recent version. Stored version is %s, bulk edit version is %s.";
   public static final String RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE = "%s cannot be updated because the record is associated with %s and %s is not associated with this tenant.";
