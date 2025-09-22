@@ -49,7 +49,7 @@ class ElectronicAccessServiceTest extends BaseTest {
       .build());
 
     if (isNull(uri)) {
-      assertEquals("\u001f;\u001f;\u001f;\u001f;", actual);
+      assertEquals("-\u001f;-\u001f;-\u001f;-\u001f;-", actual);
     } else {
       assertEquals("name\u001f;uri\u001f;text\u001f;specification\u001f;note", actual);
     }
