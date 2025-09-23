@@ -168,6 +168,7 @@ class QueryServiceTest extends BaseTest {
       var result = queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
 
       assertThat(result.getStatus()).isEqualTo(RETRIEVING_RECORDS);
+      assertThat(result.getLinkToTriggeringCsvFile()).isNull();
     }
   }
 
@@ -219,6 +220,7 @@ class QueryServiceTest extends BaseTest {
       assertThat(operationCaptor.getValue().getStatus()).isEqualTo(OperationStatusType.DATA_MODIFICATION);
 
       assertThat(operationCaptor.getValue().getEndTime()).isNotNull();
+      assertThat(operationCaptor.getValue().getLinkToTriggeringCsvFile()).isNotNull();
       assertThat(operationCaptor.getValue().getLinkToMatchedRecordsJsonFile()).isNotNull();
       assertThat(operationCaptor.getValue().getLinkToMatchedRecordsCsvFile()).isNotNull();
     }
