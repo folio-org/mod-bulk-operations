@@ -1,3 +1,10 @@
+## v2.1.16 - Released 2025/09/24
+
+This release contains bug fix.
+
+### Bugs
+* [MODBULKOPS-569](https://folio-org.atlassian.net/browse/MODBULKOPS-569) commons-fileupload multipart headers DoS CVE-2025-48976
+
 ## v2.1.15 - Released 2025/07/23
 
 This release contains bug fix (reverted 'date' for CirculationNote).
