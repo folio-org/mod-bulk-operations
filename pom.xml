@@ -48,7 +48,7 @@
     <feign-jackson.version>13.6</feign-jackson.version>
     <aws-sdk-java.version>2.33.9</aws-sdk-java.version>
     <hypersistence-utils-hibernate-63.version>3.11.0</hypersistence-utils-hibernate-63.version>
-    <lib-fqm-query-processor.version>4.0.2</lib-fqm-query-processor.version>
+    <lib-fqm-query-processor.version>4.1.0-SNAPSHOT</lib-fqm-query-processor.version>
     <marc4j.version>2.9.2</marc4j.version>
     <jsonPath.version>2.9.0</jsonPath.version>
 
