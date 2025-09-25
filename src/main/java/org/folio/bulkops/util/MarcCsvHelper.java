@@ -135,7 +135,10 @@ public class MarcCsvHelper {
   private String getCsvFileName(BulkOperation bulkOperation) {
     return switch (bulkOperation.getStatus()) {
       case REVIEW_CHANGES -> bulkOperation.getLinkToModifiedRecordsMarcCsvFile();
-      case COMPLETED, COMPLETED_WITH_ERRORS -> bulkOperation.getLinkToCommittedRecordsMarcCsvFile();
+      case COMPLETED, COMPLETED_WITH_ERRORS -> {
+        var linkToCommitted = bulkOperation.getLinkToCommittedRecordsMarcCsvFile();
+        yield  nonNull(linkToCommitted) ? linkToCommitted : bulkOperation.getLinkToModifiedRecordsMarcCsvFile();
+      }
       default -> null;
     };
   }
