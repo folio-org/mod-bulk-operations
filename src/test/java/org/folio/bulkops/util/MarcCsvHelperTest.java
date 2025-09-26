@@ -165,4 +165,33 @@ class MarcCsvHelperTest extends BaseTest {
 
     assertThat(new String(res)).contains(expectedInstanceNotes);
   }
+
+  @Test
+  @SneakyThrows
+  void shouldEnrichCsvWithMarcChangesWhenLinkToCommittedIsNull() {
+    var fileName = "file.csv";
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+            .id(operationId)
+            .status(OperationStatusType.COMPLETED)
+            .entityType(EntityType.INSTANCE_MARC)
+            .linkToModifiedRecordsMarcCsvFile(fileName)
+            .linkToCommittedRecordsMarcCsvFile(null)
+            .build();
+
+    var content = new FileInputStream("src/test/resources/files/instance.csv").readAllBytes();
+
+    when(mappingRulesClient.getMarcBibMappingRules())
+            .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+    when(remoteFileSystemClient.get(fileName))
+            .thenReturn(new FileInputStream("src/test/resources/files/sample_marc_csv.csv"));
+    when(ruleService.getMarcRules(operationId))
+            .thenReturn(new BulkOperationMarcRuleCollection()
+                    .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag("500"))));
+
+    var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
+
+    var expectedInstanceNotes = "General note;General note text;false";
+    assertThat(new String(res)).contains(expectedInstanceNotes);
+  }
 }
