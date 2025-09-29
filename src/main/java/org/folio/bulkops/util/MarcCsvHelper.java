@@ -116,7 +116,7 @@ public class MarcCsvHelper {
             Map<String, String> changedValues = new HashMap<>();
             for (var option : changedOptionsSet) {
               var index = instanceHeaderNames.indexOf(option);
-              if (index != -1 && StringUtils.isNotBlank(line[index])) {
+              if (index != -1 && nonNull(line[index])) {
                 changedValues.put(option, line[index]);
               }
             }
