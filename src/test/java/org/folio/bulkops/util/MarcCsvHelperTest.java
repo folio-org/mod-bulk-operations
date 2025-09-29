@@ -42,7 +42,6 @@ import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -61,12 +60,6 @@ class MarcCsvHelperTest extends BaseTest {
   private RemoteFileSystemClient remoteFileSystemClient;
   @MockitoBean
   private RuleService ruleService;
-  @MockitoBean
-  private NoteTableUpdater noteTableUpdater;
-  @MockitoBean
-  private MarcToUnifiedTableRowMapper marcToUnifiedTableRowMapper;
-  @MockitoBean
-  private Marc21ReferenceProvider marc21ReferenceProvider;
 
   @Test
   void shouldGetModifiedDataForCsv() {
@@ -219,9 +212,10 @@ class MarcCsvHelperTest extends BaseTest {
 
   @Test
   void getChangedMarcData_shouldPutEmptyStringValue() throws Exception {
+    Marc21ReferenceProvider marc21ReferenceProvider = mock(Marc21ReferenceProvider.class);
     var marcCsvHelper = new MarcCsvHelper(
-            noteTableUpdater,
-            marcToUnifiedTableRowMapper,
+            mock(NoteTableUpdater.class),
+            mock(MarcToUnifiedTableRowMapper.class),
             remoteFileSystemClient,
             ruleService,
             marc21ReferenceProvider,
