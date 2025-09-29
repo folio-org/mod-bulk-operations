@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.DamagedStatus;
 import org.folio.bulkops.domain.bean.ItemLocation;
+import org.folio.bulkops.domain.bean.StatisticalCode;
+import org.folio.bulkops.domain.bean.StatisticalCodeType;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.MaterialType;
 import org.folio.bulkops.domain.bean.ServicePoint;
@@ -44,8 +46,12 @@ public class ItemReferenceHelper implements InitializingBean {
     return itemReferenceService.getServicePointByName(name);
   }
 
-  public String getStatisticalCodeById(String statisticalCodeId) {
+  public StatisticalCode getStatisticalCodeById(String statisticalCodeId) {
     return itemReferenceService.getStatisticalCodeById(statisticalCodeId);
+  }
+
+  public StatisticalCodeType getStatisticalCodeTypeById(String id) {
+    return itemReferenceService.getStatisticalCodeTypeById(id);
   }
 
   public String getStatisticalCodeIdByCode(String code) {
