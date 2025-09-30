@@ -37,13 +37,13 @@ class MarcCsvHelperTest extends BaseTest {
   @Autowired
   private MarcCsvHelper marcCsvHelper;
 
-   @MockitoBean
+  @MockitoBean
   private InstanceReferenceService instanceReferenceService;
-   @MockitoBean
+  @MockitoBean
   private MappingRulesClient mappingRulesClient;
-   @MockitoBean
+  @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
-   @MockitoBean
+  @MockitoBean
   private RuleService ruleService;
 
   @Test
@@ -192,6 +192,34 @@ class MarcCsvHelperTest extends BaseTest {
     var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
 
     var expectedInstanceNotes = "General note;General note text;false";
+    assertThat(new String(res)).contains(expectedInstanceNotes);
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldEnrichCsvWithEmptyValueForNotes() {
+    var fileName = "file.csv";
+    var operationId = UUID.randomUUID();
+    var operation = BulkOperation.builder()
+            .id(operationId)
+            .status(REVIEW_CHANGES)
+            .entityType(EntityType.INSTANCE_MARC)
+            .linkToModifiedRecordsMarcCsvFile(fileName)
+            .build();
+
+    var content = new FileInputStream("src/test/resources/files/instance.csv").readAllBytes();
+
+    when(mappingRulesClient.getMarcBibMappingRules())
+            .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+    when(remoteFileSystemClient.get(fileName))
+            .thenReturn(new FileInputStream("src/test/resources/files/marc_csv_empty_notes.csv"));
+    when(ruleService.getMarcRules(operationId))
+            .thenReturn(new BulkOperationMarcRuleCollection()
+                    .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag("500"))));
+
+    var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
+
+    var expectedInstanceNotes = "";
     assertThat(new String(res)).contains(expectedInstanceNotes);
   }
 }
