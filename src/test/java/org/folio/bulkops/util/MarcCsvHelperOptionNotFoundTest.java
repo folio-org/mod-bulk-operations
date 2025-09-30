@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-public class MarcCsvHelperOptionNotFoundTest extends BaseTest {
+class MarcCsvHelperOptionNotFoundTest extends BaseTest {
 
     @Autowired
     private MarcCsvHelper marcCsvHelper;
