@@ -33,6 +33,8 @@ import org.folio.bulkops.domain.bean.BriefInstanceCollection;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemCollection;
+import org.folio.bulkops.domain.bean.StatisticalCode;
+import org.folio.bulkops.domain.bean.StatisticalCodeType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.exception.NotFoundException;
@@ -329,5 +331,51 @@ class HoldingsReferenceServiceTest {
   void getHoldingsData_returnsEmpty_whenHoldingsIdIsEmpty() {
     String result = holdingsReferenceService.getHoldingsData("", "tenant");
     assertEquals(EMPTY, result);
+  }
+
+
+  @Test
+  void getStatisticalCodeById_returnsStatisticalCode() {
+    StatisticalCode statisticalCode = new StatisticalCode()
+        .withId("stat-id-1")
+        .withName("Agriculture")
+        .withCode("ABC")
+        .withStatisticalCodeTypeId("stat-type-1");
+    when(holdingsReferenceCacheService.getStatisticalCodeById("stat-id-1")).thenReturn(statisticalCode);
+
+    StatisticalCode result = holdingsReferenceService.getStatisticalCodeById("stat-id-1");
+    assertEquals("Agriculture", result.getName());
+    assertEquals("ABC", result.getCode());
+    assertEquals("stat-id-1", result.getId());
+    assertEquals("stat-type-1", result.getStatisticalCodeTypeId());
+  }
+
+  @Test
+  void getStatisticalCodeByName_returnsStatisticalCode() {
+    StatisticalCode statisticalCode = new StatisticalCode()
+        .withId("stat-id-2")
+        .withName("Science")
+        .withCode("SCI")
+        .withStatisticalCodeTypeId("stat-type-2");
+    when(holdingsReferenceCacheService.getStatisticalCodeByName("Science", "tenant")).thenReturn(statisticalCode);
+
+    StatisticalCode result = holdingsReferenceService.getStatisticalCodeByName("Science", "tenant");
+    assertEquals("Science", result.getName());
+    assertEquals("SCI", result.getCode());
+    assertEquals("stat-id-2", result.getId());
+  }
+
+  @Test
+  void getStatisticalCodeTypeById_returnsStatisticalCodeType() {
+    StatisticalCodeType statisticalCodeType = new StatisticalCodeType()
+        .withId("stat-type-id-1")
+        .withName("Subject")
+        .withSource("local");
+    when(holdingsReferenceCacheService.getStatisticalCodeTypeById("stat-type-id-1")).thenReturn(statisticalCodeType);
+
+    StatisticalCodeType result = holdingsReferenceService.getStatisticalCodeTypeById("stat-type-id-1");
+    assertEquals("Subject", result.getName());
+    assertEquals("stat-type-id-1", result.getId());
+    assertEquals("local", result.getSource());
   }
 }

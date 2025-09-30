@@ -24,6 +24,11 @@ public class LocalReferenceDataService {
         return folioExecutionContext.getTenantId();
     }
 
+    @Cacheable(cacheNames = "statisticalCodeTypeId")
+    public String getTenantByStatisticalCodeTypeId(String statisticalCodeTypeId) {
+        return folioExecutionContext.getTenantId();
+    }
+
     @Cacheable(cacheNames = "illPolicyId")
     public String getTenantByIllPolicyId(String illPolicyId) {
         return folioExecutionContext.getTenantId();

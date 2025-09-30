@@ -7,6 +7,7 @@ import org.folio.bulkops.domain.bean.HoldingsType;
 import org.folio.bulkops.domain.bean.IllPolicy;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.StatisticalCode;
+import org.folio.bulkops.domain.bean.StatisticalCodeType;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.springframework.beans.factory.InitializingBean;
@@ -75,6 +76,10 @@ public class HoldingsReferenceHelper implements InitializingBean {
 
   public StatisticalCode getStatisticalCodeByName(String name) {
     return holdingsReferenceService.getStatisticalCodeByName(name, folioExecutionContext.getTenantId());
+  }
+
+  public StatisticalCodeType getStatisticalCodeTypeById(String id) {
+    return holdingsReferenceService.getStatisticalCodeTypeById(id);
   }
 
   private static HoldingsReferenceHelper service;

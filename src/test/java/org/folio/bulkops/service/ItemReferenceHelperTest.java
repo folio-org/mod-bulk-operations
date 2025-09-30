@@ -28,6 +28,7 @@ import org.folio.bulkops.domain.bean.ServicePoint;
 import org.folio.bulkops.domain.bean.ServicePoints;
 import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.bulkops.domain.bean.StatisticalCodeCollection;
+import org.folio.bulkops.domain.bean.StatisticalCodeType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.bean.UserCollection;
 import org.folio.bulkops.exception.NotFoundException;
@@ -124,19 +125,49 @@ class ItemReferenceHelperTest extends BaseTest {
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(folioExecutionContext.getTenantId()).thenReturn("diku");
     when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
-    when(statisticalCodeClient.getById("id_1")).thenReturn(new StatisticalCode().withCode("code_1"));
-    var actual = itemReferenceHelper.getStatisticalCodeById("id_1");
-    assertEquals("code_1", actual);
 
-    when(statisticalCodeClient.getByQuery("code==\"code_2\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.singletonList(new StatisticalCode().withId("id_2"))));
-    actual = itemReferenceHelper.getStatisticalCodeIdByCode("code_2");
-    assertEquals("id_2", actual);
+    when(statisticalCodeClient.getById("id_1"))
+      .thenReturn(new StatisticalCode().withId("id_1").withCode("code_1"));
+    var actualCode = itemReferenceHelper.getStatisticalCodeById("id_1");
+    assertEquals("code_1", actualCode.getCode());
+
+    when(statisticalCodeClient.getByQuery("code==\"code_2\""))
+      .thenReturn(new StatisticalCodeCollection()
+        .withStatisticalCodes(Collections.singletonList(new StatisticalCode().withId("id_2"))));
+    var actualId = itemReferenceHelper.getStatisticalCodeIdByCode("code_2");
+    assertEquals("id_2", actualId);
 
     when(statisticalCodeClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
-    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getStatisticalCodeById("id_3"));
+    assertThrows(ReferenceDataNotFoundException.class,
+      () -> itemReferenceHelper.getStatisticalCodeById("id_3"));
 
-    when(statisticalCodeClient.getByQuery("code==\"code_4\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.emptyList()));
-    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getStatisticalCodeIdByCode("code_4"));
+    when(statisticalCodeClient.getByQuery("code==\"code_4\""))
+      .thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.emptyList()));
+    assertThrows(ReferenceDataNotFoundException.class,
+      () -> itemReferenceHelper.getStatisticalCodeIdByCode("code_4"));
+  }
+
+  @Test
+  void testGetStatisticalCodeType() {
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+
+    when(statisticalCodeTypeClient.getById("type_id_1")).thenReturn(
+        new StatisticalCodeType()
+            .withId("type_id_1")
+            .withName("Subject")
+            .withSource("local")
+    );
+    var actual = itemReferenceHelper.getStatisticalCodeTypeById("type_id_1");
+    assertEquals("Subject", actual.getName());
+    assertEquals("type_id_1", actual.getId());
+    assertEquals("local", actual.getSource());
+
+    when(statisticalCodeTypeClient.getById("type_id_3")).thenThrow(new NotFoundException("Not found"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> itemReferenceHelper.getStatisticalCodeTypeById("type_id_3"));
   }
 
   @Test
