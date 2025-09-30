@@ -15,6 +15,7 @@ import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.ItemLocationCollection;
 import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.bulkops.domain.bean.StatisticalCodeCollection;
+import org.folio.bulkops.domain.bean.StatisticalCodeType;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.folio.spring.FolioExecutionContext;
@@ -204,5 +205,28 @@ class HoldingsReferenceHelperTest extends BaseTest {
     when(statisticalCodeClient.getByQuery("name==\"name_4\"")).thenReturn(new StatisticalCodeCollection().withStatisticalCodes(Collections.emptyList()));
     assertThrows(ReferenceDataNotFoundException.class, () -> holdingsReferenceHelper.getStatisticalCodeByName("name_4"));
 
+  }
+
+  @Test
+  void testStatisticalCodeType() {
+    HashMap<String, Collection<String>> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
+    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getTenantId()).thenReturn("diku");
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+
+    when(statisticalCodeTypeClient.getById("type_id_1")).thenReturn(
+        new StatisticalCodeType()
+            .withId("type_id_1")
+            .withName("Subject")
+            .withSource("local")
+    );
+    var actual = holdingsReferenceHelper.getStatisticalCodeTypeById("type_id_1");
+    assertEquals("Subject", actual.getName());
+    assertEquals("type_id_1", actual.getId());
+    assertEquals("local", actual.getSource());
+
+    when(statisticalCodeTypeClient.getById("type_id_3")).thenThrow(new NotFoundException("Not found"));
+    assertThrows(ReferenceDataNotFoundException.class, () -> holdingsReferenceHelper.getStatisticalCodeTypeById("type_id_3"));
   }
 }

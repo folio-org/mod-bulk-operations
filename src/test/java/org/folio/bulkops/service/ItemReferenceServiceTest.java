@@ -10,6 +10,7 @@ import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.MaterialType;
+import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
@@ -130,4 +131,27 @@ class ItemReferenceServiceTest extends BaseTest {
     }
   }
 
+  @Test
+  @SneakyThrows
+  void getStatisticalCodeByIdReturnsCorrectCode() {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      when(statisticalCodeClient.getById("valid_id"))
+        .thenReturn(new StatisticalCode().withId("valid_id").withCode("Code 1"));
+
+      var actual = itemReferenceService.getStatisticalCodeById("valid_id");
+      assertEquals("Code 1", actual.getCode());
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void getStatisticalCodeByIdThrowsExceptionForInvalidId() {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      when(statisticalCodeClient.getById("invalid_id"))
+        .thenThrow(new ReferenceDataNotFoundException("Not found"));
+
+      assertThrows(ReferenceDataNotFoundException.class,
+        () -> itemReferenceService.getStatisticalCodeById("invalid_id"));
+    }
+  }
 }
