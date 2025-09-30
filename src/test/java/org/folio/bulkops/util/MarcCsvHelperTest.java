@@ -263,4 +263,58 @@ class MarcCsvHelperTest extends BaseTest {
     assertThat(resultMap).containsKey("hridValue");
     assertThat(resultMap.get("hridValue")).containsEntry(option, "");
   }
+
+  @Test
+  void getChangedMarcData_shouldSkipWhenValueIsNull() throws Exception {
+    Marc21ReferenceProvider marc21ReferenceProvider = mock(Marc21ReferenceProvider.class);
+    var marcCsvHelper = new MarcCsvHelper(
+            mock(NoteTableUpdater.class),
+            mock(MarcToUnifiedTableRowMapper.class),
+            remoteFileSystemClient,
+            ruleService,
+            marc21ReferenceProvider,
+            objectMapper
+    );
+
+    var instanceHeaderNames = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class)
+            .getHeader().stream().map(org.folio.bulkops.domain.dto.Cell::getValue).toList();
+    var hridIndex = instanceHeaderNames.indexOf(INSTANCE_HRID);
+    var option = instanceHeaderNames.get(hridIndex + 1); // pick a column after hrid
+
+    var fileName = "test_null_value.csv";
+    var bulkOperation = BulkOperation.builder()
+            .id(UUID.randomUUID())
+            .status(OperationStatusType.REVIEW_CHANGES)
+            .entityType(EntityType.INSTANCE_MARC)
+            .linkToModifiedRecordsMarcCsvFile(fileName)
+            .build();
+
+    // Prepare CSV: hrid, option, ...; row: hridValue, null, ...
+    String[] header = instanceHeaderNames.toArray(new String[0]);
+    String[] row = new String[header.length];
+    row[hridIndex] = "hridValue";
+    // Explicitly set the option column to null
+    row[instanceHeaderNames.indexOf(option)] = null;
+
+    var csvContent = String.join(",", header) + "\n" + String.join(",", row) + "\n";
+
+    ObjectReader objectReader = mock(ObjectReader.class);
+    when(objectReader.forType(any(Class.class))).thenReturn(objectReader);
+    when(remoteFileSystemClient.get(fileName)).thenReturn(new ByteArrayInputStream(csvContent.getBytes()));
+    when(ruleService.getMarcRules(bulkOperation.getId()))
+            .thenReturn(new BulkOperationMarcRuleCollection()
+                    .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag(option))));
+    when(marc21ReferenceProvider.getChangedOptionsSetForCsv(any())).thenReturn(Set.of(option));
+    doNothing().when(marc21ReferenceProvider).updateMappingRules();
+
+    var method = MarcCsvHelper.class.getDeclaredMethod("getChangedMarcData", BulkOperation.class);
+    method.setAccessible(true);
+    var result = method.invoke(marcCsvHelper, bulkOperation);
+
+    assertThat(result).isInstanceOf(Map.class);
+    var resultMap = (Map<String, Map<String, String>>) result;
+    assertThat(resultMap).containsKey("hridValue");
+    // Should not contain the option key since line[index] == null
+    assertThat(resultMap.get("hridValue").get("Source")).isEqualTo("null");
+  }
 }
