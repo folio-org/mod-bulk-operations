@@ -41,6 +41,7 @@ import org.folio.bulkops.domain.bean.HoldingsType;
 import org.folio.bulkops.domain.bean.IllPolicy;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.StatisticalCode;
+import org.folio.bulkops.domain.bean.StatisticalCodeType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.exception.NotFoundException;
@@ -125,6 +126,10 @@ public class HoldingsReferenceService {
 
   public StatisticalCode getStatisticalCodeByName(String name, String tenantId) {
     return holdingsReferenceCacheService.getStatisticalCodeByName(name, tenantId);
+  }
+
+  public StatisticalCodeType getStatisticalCodeTypeById(String id) {
+    return holdingsReferenceCacheService.getStatisticalCodeTypeById(id);
   }
 
   public List<HoldingsNoteType> getAllHoldingsNoteTypes(String tenantId) {

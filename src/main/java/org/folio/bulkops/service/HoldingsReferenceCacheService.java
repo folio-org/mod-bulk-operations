@@ -22,6 +22,7 @@ import org.folio.bulkops.client.HoldingsTypeClient;
 import org.folio.bulkops.client.IllPolicyClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
+import org.folio.bulkops.client.StatisticalCodeTypeClient;
 import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.HoldingsRecordsSource;
@@ -30,6 +31,7 @@ import org.folio.bulkops.domain.bean.IllPolicy;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.StatisticalCode;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.domain.bean.StatisticalCodeType;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
@@ -52,6 +54,7 @@ public class HoldingsReferenceCacheService {
   private final HoldingsSourceClient holdingsSourceClient;
   private final StatisticalCodeClient statisticalCodeClient;
   private final FolioModuleMetadata folioModuleMetadata;
+  private final StatisticalCodeTypeClient statisticalCodeTypeClient;
   private final FolioExecutionContext folioExecutionContext;
   private final LocalReferenceDataService localReferenceDataService;
   @Lazy private HoldingsReferenceCacheService self;
@@ -185,6 +188,14 @@ public class HoldingsReferenceCacheService {
       throw new ReferenceDataNotFoundException(format("Statistical code not found by name=%s", name));
     }
     return statisticalCodes.getStatisticalCodes().getFirst();
+  }
+  @Cacheable(cacheNames = "holdingsStatisticalCodeTypes")
+  public StatisticalCodeType getStatisticalCodeTypeById(String id) {
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(localReferenceDataService.getTenantByStatisticalCodeTypeId(id), folioModuleMetadata, folioExecutionContext))) {
+      return statisticalCodeTypeClient.getById(id);
+    } catch (Exception e) {
+      throw new ReferenceDataNotFoundException(format("Statistical code type not found by id=%s", id));
+    }
   }
 
   @Cacheable(cacheNames = "holdingsNoteTypes")

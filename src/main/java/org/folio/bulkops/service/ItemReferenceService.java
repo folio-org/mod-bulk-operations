@@ -25,6 +25,7 @@ import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.MaterialTypeClient;
 import org.folio.bulkops.client.ServicePointClient;
 import org.folio.bulkops.client.StatisticalCodeClient;
+import org.folio.bulkops.client.StatisticalCodeTypeClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.DamagedStatus;
 import org.folio.bulkops.domain.bean.ItemLocation;
@@ -32,6 +33,8 @@ import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.MaterialType;
 import org.folio.bulkops.domain.bean.NoteType;
 import org.folio.bulkops.domain.bean.ServicePoint;
+import org.folio.bulkops.domain.bean.StatisticalCode;
+import org.folio.bulkops.domain.bean.StatisticalCodeType;
 import org.folio.bulkops.domain.entity.AllowedItemStatuses;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.folio.bulkops.repository.AllowedItemStatusesRepository;
@@ -57,6 +60,7 @@ public class ItemReferenceService {
   private final LoanTypeClient loanTypeClient;
   private final FolioExecutionContext folioExecutionContext;
   private final FolioModuleMetadata folioModuleMetadata;
+  private final StatisticalCodeTypeClient statisticalCodeTypeClient;
   private final LocalReferenceDataService localReferenceDataService;
   private final AllowedItemStatusesRepository allowedItemStatusesRepository;
 
@@ -129,9 +133,9 @@ public class ItemReferenceService {
   }
 
   @Cacheable(cacheNames = "statisticalCodeNames")
-  public String getStatisticalCodeById(String statisticalCodeId) {
+  public StatisticalCode getStatisticalCodeById(String statisticalCodeId) {
     try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(localReferenceDataService.getTenantByStatisticalCodeId(statisticalCodeId), folioModuleMetadata, folioExecutionContext))) {
-      return statisticalCodeClient.getById(statisticalCodeId).getCode();
+      return statisticalCodeClient.getById(statisticalCodeId);
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Statistical code was not found by id=%s", statisticalCodeId));
     }
@@ -144,6 +148,14 @@ public class ItemReferenceService {
       throw new ReferenceDataNotFoundException(format("Statistical code was not found by code=%s", code));
     }
     return response.getStatisticalCodes().get(0).getId();
+  }
+  @Cacheable(cacheNames = "statisticalCodeTypes")
+  public StatisticalCodeType getStatisticalCodeTypeById(String id) {
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(localReferenceDataService.getTenantByStatisticalCodeTypeId(id), folioModuleMetadata, folioExecutionContext))) {
+      return statisticalCodeTypeClient.getById(id);
+    } catch (Exception e) {
+      throw new ReferenceDataNotFoundException(format("Statistical code type not found by id=%s", id));
+    }
   }
 
   @Cacheable(cacheNames = "userNames")
