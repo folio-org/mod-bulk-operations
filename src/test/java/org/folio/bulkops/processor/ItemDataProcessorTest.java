@@ -41,8 +41,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -1123,10 +1121,10 @@ class ItemDataProcessorTest extends BaseTest {
           "2024-01-01T00:00:00.000+0000,2024-01-01T00:00:00.000+0000"
   })
   void shouldSerializeAndDeserializeValidDate(String inputDate, String expectedDate) throws Exception {
-    CirculationNote note = CirculationNote.builder().date(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(inputDate)).build();
+    CirculationNote note = CirculationNote.builder().date(inputDate).build();
     String serialized = new ObjectMapper().writeValueAsString(note);
     CirculationNote deserialized = new ObjectMapper().readValue(serialized, CirculationNote.class);
-    assertThat(deserialized.getDate().getTime()).isEqualTo(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(expectedDate).getTime());
+    assertThat(deserialized.getDate()).isEqualTo(expectedDate);
   }
 
   @ParameterizedTest
@@ -1135,24 +1133,25 @@ class ItemDataProcessorTest extends BaseTest {
           "''"
   })
   void shouldHandleNullOrEmptyDateGracefully(String inputDate) throws Exception {
-    CirculationNote note = CirculationNote.builder()
-            .date(inputDate != null && !inputDate.isEmpty() && !"null".equals(inputDate)
-                    ? new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(inputDate)
-                    : null)
-            .build();    String serialized = new ObjectMapper().writeValueAsString(note);
+    String dateValue = "null".equals(inputDate) ? null : inputDate;
+    CirculationNote note = CirculationNote.builder().date(dateValue).build();
+    String serialized = new ObjectMapper().writeValueAsString(note);
     CirculationNote deserialized = new ObjectMapper().readValue(serialized, CirculationNote.class);
-    assertThat(deserialized.getDate()).isNull();
+    if ("null".equals(inputDate)) {
+      assertThat(deserialized.getDate()).isNull();
+    } else {
+      assertThat(deserialized.getDate()).isEmpty();
+    }
   }
 
   @ParameterizedTest
   @CsvSource({
           "invalid-date-format"
   })
-  void shouldThrowExceptionForInvalidDateFormat(String invalidDate) {
-    Exception exception = org.assertj.core.api.Assertions.catchThrowableOfType(
-            () -> new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").parse(invalidDate),
-            ParseException.class
-    );
-    assertThat(exception).isInstanceOf(ParseException.class);
+  void shouldHandleInvalidDateFormat(String invalidDate) throws Exception {
+    CirculationNote note = CirculationNote.builder().date(invalidDate).build();
+    String serialized = new ObjectMapper().writeValueAsString(note);
+    CirculationNote deserialized = new ObjectMapper().readValue(serialized, CirculationNote.class);
+    assertThat(deserialized.getDate()).isEqualTo(invalidDate);
   }
 }
