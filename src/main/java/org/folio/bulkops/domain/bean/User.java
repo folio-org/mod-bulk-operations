@@ -26,6 +26,7 @@ import lombok.With;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.CustomFieldsConverter;
 import org.folio.bulkops.domain.converter.DateWithTimeConverter;
+import org.folio.bulkops.domain.converter.DateWithoutTimeConverter;
 import org.folio.bulkops.domain.converter.DepartmentsConverter;
 import org.folio.bulkops.domain.converter.PatronGroupConverter;
 import org.folio.bulkops.domain.converter.PreferredEmailCommunicationConverter;
@@ -109,8 +110,8 @@ public class User implements BulkOperationsEntity {
   private Personal personal;
 
   @JsonProperty("enrollmentDate")
-  @CsvCustomBindByName(column = "Enrollment date", converter = DateWithTimeConverter.class)
-  @CsvCustomBindByPosition(position = 20, converter = DateWithTimeConverter.class)
+  @CsvCustomBindByName(column = "Enrollment date", converter = DateWithoutTimeConverter.class)
+  @CsvCustomBindByPosition(position = 20, converter = DateWithoutTimeConverter.class)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date enrollmentDate;
 

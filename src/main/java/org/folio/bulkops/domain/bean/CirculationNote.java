@@ -65,8 +65,6 @@ public class CirculationNote {
   private Source source;
 
   @JsonProperty("date")
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
-  private Date date;
-
+  private String date;
 }
 
