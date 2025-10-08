@@ -4,6 +4,9 @@ import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
@@ -11,10 +14,6 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,10 +27,12 @@ public class LogFilesService {
   private final BulkOperationRepository bulkOperationRepository;
 
   public void clearLogFiles() {
-    final var back30days = LocalDateTime.now(ZoneId.of("UTC")).minusDays(MIN_DAYS_TO_CLEAR_LOG_FILES);
+    final var back30days = LocalDateTime.now(ZoneId.of("UTC"))
+            .minusDays(MIN_DAYS_TO_CLEAR_LOG_FILES);
     var bulkOperations = bulkOperationRepository.findAll();
     var oldOperations = bulkOperations.stream().filter(bulkOperation -> {
-      var time = nonNull(bulkOperation.getEndTime()) ? bulkOperation.getEndTime() : bulkOperation.getStartTime();
+      var time = nonNull(bulkOperation.getEndTime()) ? bulkOperation.getEndTime()
+              : bulkOperation.getStartTime();
       return !bulkOperation.isExpired() && nonNull(time) && time.isBefore(back30days);
     }).toList();
     log.info("Found {} old bulk operations to clear files.", oldOperations.size());
@@ -40,7 +41,7 @@ public class LogFilesService {
       removeCommittedFiles(bulkOperation);
       bulkOperationRepository.save(bulkOperation);
       log.info("Bulk operation with id {} is older than {} days. All files were removed.",
-        bulkOperation.getId(), MIN_DAYS_TO_CLEAR_LOG_FILES);
+              bulkOperation.getId(), MIN_DAYS_TO_CLEAR_LOG_FILES);
     });
   }
 

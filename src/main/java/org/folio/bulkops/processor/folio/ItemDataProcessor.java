@@ -17,15 +17,16 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
-
+import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.InventoryItemStatus;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.dto.Action;
-import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
+import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.exception.RuleValidationTenantsException;
@@ -39,9 +40,6 @@ import org.folio.bulkops.util.RuleUtils;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.stereotype.Component;
 
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
-
 @Log4j2
 @Component
 @AllArgsConstructor
@@ -52,7 +50,8 @@ public class ItemDataProcessor extends FolioAbstractDataProcessor<ExtendedItem> 
   private final ConsortiaService consortiaService;
 
   @Override
-  public Validator<UpdateOptionType, Action, BulkOperationRule> validator(ExtendedItem extendedItem) {
+  public Validator<UpdateOptionType, Action, BulkOperationRule> validator(
+          ExtendedItem extendedItem) {
     return (option, action, rule) -> {
       if (CLEAR_FIELD == action.getType() && STATUS == option) {
         throw new RuleValidationException("Status field can not be cleared");
@@ -61,63 +60,76 @@ public class ItemDataProcessor extends FolioAbstractDataProcessor<ExtendedItem> 
       } else if (CLEAR_FIELD == action.getType() && SUPPRESS_FROM_DISCOVERY == option) {
         throw new RuleValidationException("Suppress from discovery flag cannot be cleared");
       } else if (REPLACE_WITH == action.getType() && isEmpty(action.getUpdated())) {
-        throw new RuleValidationException("Loan type value cannot be empty for REPLACE_WITH option");
-      } else if (REPLACE_WITH == action.getType() && option == STATUS && !extendedItem.getEntity().getStatus()
-        .getName()
-        .getValue()
-        .equals(action.getUpdated())
-          && !itemReferenceService.getAllowedStatuses(extendedItem.getEntity().getStatus()
-            .getName()
-            .getValue()).contains(action.getUpdated())) {
         throw new RuleValidationException(
-            format("New status value \"%s\" is not allowed", action.getUpdated()));
+                "Loan type value cannot be empty for REPLACE_WITH option");
+      } else if (REPLACE_WITH == action.getType() && option == STATUS
+              && !extendedItem.getEntity().getStatus()
+              .getName()
+              .getValue()
+              .equals(action.getUpdated())
+              && !itemReferenceService.getAllowedStatuses(extendedItem.getEntity().getStatus()
+              .getName()
+              .getValue()).contains(action.getUpdated())) {
+        throw new RuleValidationException(
+                format("New status value \"%s\" is not allowed", action.getUpdated()));
       }
       if (nonNull(rule) && ruleTenantsAreNotValid(rule, action, extendedItem)) {
-        throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE,
-          extendedItem.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedItem.getTenant(), getRecordPropertyName(option)));
+        throw new RuleValidationTenantsException(
+                String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE,
+                extendedItem.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID),
+                        extendedItem.getTenant(), getRecordPropertyName(option)));
       }
     };
   }
 
   @Override
-  public Updater<ExtendedItem> updater(UpdateOptionType option, Action action, ExtendedItem entity, boolean forPreview) throws RuleValidationTenantsException {
+  public Updater<ExtendedItem> updater(UpdateOptionType option, Action action, ExtendedItem entity,
+                                       boolean forPreview) throws RuleValidationTenantsException {
     if (REPLACE_WITH == action.getType()) {
       return switch (option) {
-        case PERMANENT_LOAN_TYPE ->
-          extendedItem -> replacePermanentLoanType(action, extendedItem);
-        case TEMPORARY_LOAN_TYPE ->
-          extendedItem -> replaceTemporaryLoanType(action, extendedItem);
-        case PERMANENT_LOCATION ->
-          extendedItem -> replacePermanentLocation(action, extendedItem);
+        case PERMANENT_LOAN_TYPE -> extendedItem -> replacePermanentLoanType(action, extendedItem);
+        case TEMPORARY_LOAN_TYPE -> extendedItem -> replaceTemporaryLoanType(action, extendedItem);
+        case PERMANENT_LOCATION -> extendedItem -> replacePermanentLocation(action, extendedItem);
         case TEMPORARY_LOCATION -> extendedItem -> replaceTemporaryLocation(action, extendedItem);
         case STATUS -> extendedItem -> extendedItem.getEntity().setStatus(new InventoryItemStatus()
-          .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated()))
-          .withDate(new Date()));
+                .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated()))
+                .withDate(new Date()));
         default -> item -> {
-          throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
+          throw new BulkOperationException(format("Combination %s and %s isn't supported yet",
+                  option, action.getType()));
         };
       };
     } else if (SET_TO_TRUE == action.getType()) {
-      if (option == SUPPRESS_FROM_DISCOVERY) return extendedItem -> extendedItem.getEntity().setDiscoverySuppress(true);
+      if (option == SUPPRESS_FROM_DISCOVERY) {
+        return extendedItem -> extendedItem.getEntity().setDiscoverySuppress(true);
+      }
     } else if (SET_TO_FALSE == action.getType()) {
-      if (option == SUPPRESS_FROM_DISCOVERY) return extendedItem -> extendedItem.getEntity().setDiscoverySuppress(false);
+      if (option == SUPPRESS_FROM_DISCOVERY) {
+        return extendedItem -> extendedItem.getEntity().setDiscoverySuppress(false);
+      }
     } else if (CLEAR_FIELD == action.getType()) {
       return switch (option) {
         case PERMANENT_LOCATION -> extendedItem -> {
           extendedItem.getEntity().setPermanentLocation(null);
-          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), RuleUtils.getTenantFromAction(action, folioExecutionContext)));
+          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(
+                  extendedItem.getEntity(), RuleUtils.getTenantFromAction(action,
+                          folioExecutionContext)));
         };
         case TEMPORARY_LOCATION -> extendedItem -> {
           extendedItem.getEntity().setTemporaryLocation(null);
-          extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), RuleUtils.getTenantFromAction(action, folioExecutionContext)));
+          extendedItem.getEntity().setEffectiveLocation(
+                  getEffectiveLocation(extendedItem.getEntity(),
+                          RuleUtils.getTenantFromAction(action, folioExecutionContext)));
         };
-        case TEMPORARY_LOAN_TYPE -> extendedItem -> extendedItem.getEntity().setTemporaryLoanType(null);
+        case TEMPORARY_LOAN_TYPE -> extendedItem -> extendedItem.getEntity()
+                .setTemporaryLoanType(null);
         default -> item -> {
         };
       };
     }
     return itemsNotesUpdater.updateNotes(action, option).orElseGet(() -> item -> {
-      throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
+      throw new BulkOperationException(format("Combination %s and %s isn't supported yet",
+              option, action.getType()));
     });
   }
 
@@ -125,17 +137,19 @@ public class ItemDataProcessor extends FolioAbstractDataProcessor<ExtendedItem> 
   public ExtendedItem clone(ExtendedItem extendedItem) {
     var entity = extendedItem.getEntity();
     var clone = entity.toBuilder()
-      .build();
+            .build();
     if (entity.getAdministrativeNotes() != null) {
       var administrativeNotes = new ArrayList<>(entity.getAdministrativeNotes());
       clone.setAdministrativeNotes(administrativeNotes);
     }
     if (entity.getCirculationNotes() != null) {
-      var circNotes = entity.getCirculationNotes().stream().map(circulationNote -> circulationNote.toBuilder().build()).toList();
+      var circNotes = entity.getCirculationNotes().stream().map(
+              circulationNote -> circulationNote.toBuilder().build()).toList();
       clone.setCirculationNotes(new ArrayList<>(circNotes));
     }
     if (entity.getNotes() != null) {
-      var itemNotes = entity.getNotes().stream().map(itemNote -> itemNote.toBuilder().build()).toList();
+      var itemNotes = entity.getNotes().stream().map(
+              itemNote -> itemNote.toBuilder().build()).toList();
       clone.setNotes(new ArrayList<>(itemNotes));
     }
     return ExtendedItem.builder().tenantId(extendedItem.getTenantId()).entity(clone).build();
@@ -156,52 +170,69 @@ public class ItemDataProcessor extends FolioAbstractDataProcessor<ExtendedItem> 
 
   private ItemLocation getEffectiveLocation(Item item, String tenantId) {
     if (isNull(item.getTemporaryLocation()) && isNull(item.getPermanentLocation())) {
-      var holdingsRecord = holdingsReferenceService.getHoldingsRecordById(item.getHoldingsRecordId(), folioExecutionContext.getTenantId());
-      var holdingsEffectiveLocationId = isNull(holdingsRecord.getTemporaryLocationId()) ? holdingsRecord.getPermanentLocationId() : holdingsRecord.getTemporaryLocationId();
+      var holdingsRecord = holdingsReferenceService.getHoldingsRecordById(
+              item.getHoldingsRecordId(), folioExecutionContext.getTenantId());
+      var holdingsEffectiveLocationId = isNull(holdingsRecord.getTemporaryLocationId())
+              ? holdingsRecord.getPermanentLocationId() : holdingsRecord.getTemporaryLocationId();
       return itemReferenceService.getLocationById(holdingsEffectiveLocationId, tenantId);
     } else {
-      return isNull(item.getTemporaryLocation()) ? item.getPermanentLocation() : item.getTemporaryLocation();
+      return isNull(item.getTemporaryLocation()) ? item.getPermanentLocation()
+              : item.getTemporaryLocation();
     }
   }
 
-  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, ExtendedItem extendedItem) {
+  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action,
+                                         ExtendedItem extendedItem) {
     var ruleTenants = rule.getRuleDetails().getTenants();
     var actionTenants = action.getTenants();
-    if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
+    if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants)
+            && !actionTenants.isEmpty()) {
       ruleTenants.retainAll(actionTenants);
       return !ruleTenants.contains(extendedItem.getTenant());
     }
-    return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedItem.getTenant()) ||
-      nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedItem.getTenant());
+    return nonNull(ruleTenants) && !ruleTenants.isEmpty()
+            && !ruleTenants.contains(extendedItem.getTenant())
+            || nonNull(actionTenants) && !actionTenants.isEmpty()
+            && !actionTenants.contains(extendedItem.getTenant());
   }
 
   private void replacePermanentLoanType(Action action, ExtendedItem extendedItem) {
     var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
-      extendedItem.getEntity().setPermanentLoanType(itemReferenceService.getLoanTypeById(action.getUpdated(), tenant));
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant,
+            folioModuleMetadata, folioExecutionContext))) {
+      extendedItem.getEntity().setPermanentLoanType(
+              itemReferenceService.getLoanTypeById(action.getUpdated(), tenant));
     }
   }
 
   private void replaceTemporaryLoanType(Action action, ExtendedItem extendedItem) {
     var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
-      extendedItem.getEntity().setTemporaryLoanType(itemReferenceService.getLoanTypeById(action.getUpdated(), tenant));
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant,
+            folioModuleMetadata, folioExecutionContext))) {
+      extendedItem.getEntity().setTemporaryLoanType(
+              itemReferenceService.getLoanTypeById(action.getUpdated(), tenant));
     }
   }
 
   private void replacePermanentLocation(Action action, ExtendedItem extendedItem) {
     var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
-      extendedItem.getEntity().setPermanentLocation(itemReferenceService.getLocationById(action.getUpdated(), tenant));
-      extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), tenant));
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant,
+            folioModuleMetadata, folioExecutionContext))) {
+      extendedItem.getEntity().setPermanentLocation(
+              itemReferenceService.getLocationById(action.getUpdated(), tenant));
+      extendedItem.getEntity().setEffectiveLocation(
+              getEffectiveLocation(extendedItem.getEntity(), tenant));
     }
   }
 
   private void replaceTemporaryLocation(Action action, ExtendedItem extendedItem) {
     var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
-      extendedItem.getEntity().setTemporaryLocation(itemReferenceService.getLocationById(action.getUpdated(), tenant));
-      extendedItem.getEntity().setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), tenant));
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant,
+            folioModuleMetadata, folioExecutionContext))) {
+      extendedItem.getEntity().setTemporaryLocation(
+              itemReferenceService.getLocationById(action.getUpdated(), tenant));
+      extendedItem.getEntity().setEffectiveLocation(
+              getEffectiveLocation(extendedItem.getEntity(), tenant));
     }
   }
 }

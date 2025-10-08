@@ -10,8 +10,8 @@ public class CustomMappingStrategy<T> extends ColumnPositionMappingStrategy<T> {
   public String[] generateHeader(T bean) {
 
     var headers = getFieldMap().values().stream().map(BeanField::getField)
-      .map(field -> field.getDeclaredAnnotation(CsvCustomBindByName.class))
-      .map(CsvCustomBindByName::column).toArray(String[]::new);
+            .map(field -> field.getDeclaredAnnotation(CsvCustomBindByName.class))
+            .map(CsvCustomBindByName::column).toArray(String[]::new);
 
     super.setColumnMapping(headers);
 

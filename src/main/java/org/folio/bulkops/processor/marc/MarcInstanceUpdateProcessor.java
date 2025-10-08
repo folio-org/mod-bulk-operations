@@ -5,6 +5,10 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.folio.bulkops.util.Constants.MARC;
 
+import java.io.IOException;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
@@ -33,11 +37,6 @@ import org.folio.bulkops.service.BulkOperationServiceHelper;
 import org.folio.bulkops.util.MarcDateHelper;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
-
 @Component
 @RequiredArgsConstructor
 @Log4j2
@@ -59,11 +58,13 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
       if (content.length != 0) {
         var jobProfile = createJobProfile();
         var uploadDefinition = uploadMarcFile(bulkOperation, content);
-        dataImportClient.uploadFileDefinitionsProcessFiles(UploadFileDefinitionProcessFiles.builder()
-            .uploadFileDefinition(uploadDefinition)
-            .jobProfileInfo(JobProfileInfo.builder().id(jobProfile.getId()).dataType(MARC).build())
-            .build(),
-          uploadDefinition.getId());
+        dataImportClient.uploadFileDefinitionsProcessFiles(
+                UploadFileDefinitionProcessFiles.builder()
+                        .uploadFileDefinition(uploadDefinition)
+                        .jobProfileInfo(JobProfileInfo.builder().id(jobProfile.getId())
+                                .dataType(MARC).build())
+                        .build(),
+                uploadDefinition.getId());
         bulkOperation.setDataImportJobProfileId(UUID.fromString(jobProfile.getId()));
         bulkOperationRepository.save(bulkOperation);
       } else {
@@ -79,13 +80,16 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
     var matchProfile = dataImportProfilesBuilder.getMatchProfile();
     matchProfile.setName(addPostfixToName(matchProfile.getName(), date));
     var savedMatchProfile = dataImportProfilesClient.createMatchProfile(MatchProfilePost.builder()
-      .profile(matchProfile)
-      .build());
+            .profile(matchProfile)
+            .build());
 
-    var mappingProfileSrs = postMappingProfile(dataImportProfilesBuilder.getMappingProfileToUpdateSrs(), date);
-    var actionProfileSrs = postActionProfile(dataImportProfilesBuilder.getActionProfilePostToUpdateSrs(mappingProfileSrs), date);
+    var mappingProfileSrs = postMappingProfile(
+            dataImportProfilesBuilder.getMappingProfileToUpdateSrs(), date);
+    var actionProfileSrs = postActionProfile(
+            dataImportProfilesBuilder.getActionProfilePostToUpdateSrs(mappingProfileSrs), date);
 
-    return postJobProfile(dataImportProfilesBuilder.getJobProfilePost(savedMatchProfile, actionProfileSrs), date);
+    return postJobProfile(dataImportProfilesBuilder.getJobProfilePost(savedMatchProfile,
+            actionProfileSrs), date);
   }
 
   private MappingProfile postMappingProfile(MappingProfile mappingProfile, Date date) {
@@ -96,25 +100,28 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
   }
 
   private ActionProfile postActionProfile(ActionProfilePost actionProfilePost, Date date) {
-    actionProfilePost.getProfile().setName(addPostfixToName(actionProfilePost.getProfile().getName(), date));
+    actionProfilePost.getProfile().setName(addPostfixToName(
+            actionProfilePost.getProfile().getName(), date));
     return dataImportProfilesClient.createActionProfile(actionProfilePost);
   }
 
   private JobProfile postJobProfile(JobProfilePost jobProfilePost, Date date) {
-    jobProfilePost.getProfile().setName(addPostfixToName(jobProfilePost.getProfile().getName(), date));
+    jobProfilePost.getProfile().setName(addPostfixToName(
+            jobProfilePost.getProfile().getName(), date));
     return dataImportProfilesClient.createJobProfile(jobProfilePost);
   }
 
   private String addPostfixToName(String name, Date date) {
-    return String.format(POSTFIX_PATTERN, isEmpty(name) ? EMPTY : name, MarcDateHelper.getDateTimeForMarc(date));
+    return String.format(POSTFIX_PATTERN, isEmpty(name) ? EMPTY : name,
+            MarcDateHelper.getDateTimeForMarc(date));
   }
 
   private UploadFileDefinition uploadMarcFile(BulkOperation bulkOperation, byte[] content) {
     var uploadDefinition = dataImportClient.postUploadDefinition(UploadFileDefinition.builder()
-      .fileDefinitions(List.of(FileDefinition.builder()
-        .name(FilenameUtils.getName(bulkOperation.getLinkToCommittedRecordsMarcFile()))
-        .build()))
-      .build());
+            .fileDefinitions(List.of(FileDefinition.builder()
+                    .name(FilenameUtils.getName(bulkOperation.getLinkToCommittedRecordsMarcFile()))
+                    .build()))
+            .build());
     var uploadDefinitionId = uploadDefinition.getId();
     var fileDefinitionId = uploadDefinition.getFileDefinitions().getFirst().getId();
 
@@ -122,13 +129,17 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
     log.info("Split status: {}", splitStatus.getSplitStatus());
 
     if (TRUE.equals(splitStatus.getSplitStatus())) {
-      var uploadUrlResponse = dataImportClient.getUploadUrl(uploadDefinition.getFileDefinitions().getFirst().getName());
-      var etag = dataImportRestS3UploadClient.uploadFile(uploadUrlResponse.getUrl(), content).getHeaders().getETag();
+      var uploadUrlResponse = dataImportClient.getUploadUrl(uploadDefinition.getFileDefinitions()
+              .getFirst().getName());
+      var etag = dataImportRestS3UploadClient.uploadFile(uploadUrlResponse.getUrl(), content)
+              .getHeaders().getETag();
       dataImportClient.assembleStorageFile(uploadDefinitionId, fileDefinitionId,
-        new AssembleStorageFileRequestBody(uploadUrlResponse.getUploadId(), uploadUrlResponse.getKey(), List.of(etag)));
+              new AssembleStorageFileRequestBody(uploadUrlResponse.getUploadId(),
+                      uploadUrlResponse.getKey(), List.of(etag)));
       uploadDefinition = dataImportClient.getUploadDefinitionById(uploadDefinitionId);
     } else {
-      uploadDefinition = dataImportUploadClient.uploadFileDefinitionsFiles(uploadDefinitionId, fileDefinitionId, content);
+      uploadDefinition = dataImportUploadClient.uploadFileDefinitionsFiles(uploadDefinitionId,
+              fileDefinitionId, content);
     }
     return uploadDefinition;
   }

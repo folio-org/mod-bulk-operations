@@ -9,7 +9,6 @@ import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
 import org.folio.bulkops.domain.bean.Title;
 
 public class BoundWithTitlesConverter extends BaseConverter<List<Title>> {
@@ -24,7 +23,8 @@ public class BoundWithTitlesConverter extends BaseConverter<List<Title>> {
 
   private String titleToString(Title title) {
     return String.join(ARRAY_DELIMITER,
-      escape(isEmpty(title.getBriefHoldingsRecord()) ? EMPTY : title.getBriefHoldingsRecord().getHrid()),
+      escape(isEmpty(title.getBriefHoldingsRecord()) ? EMPTY
+              : title.getBriefHoldingsRecord().getHrid()),
       escape(isEmpty(title.getBriefInstance()) ? EMPTY : title.getBriefInstance().getHrid()),
       escape(isEmpty(title.getBriefInstance()) ? EMPTY : title.getBriefInstance().getTitle()));
   }

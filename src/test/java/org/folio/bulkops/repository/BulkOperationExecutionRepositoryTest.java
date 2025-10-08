@@ -63,18 +63,18 @@ class BulkOperationExecutionRepositoryTest extends BaseTest {
 
   private BulkOperationExecution createEntity() {
     var bulkOperation = bulkOperationRepository.save(BulkOperation.builder()
-      .id(UUID.randomUUID())
-      .userId(UUID.randomUUID())
-      .operationType(UPDATE)
-      .entityType(USER)
-      .identifierType(BARCODE)
-      .status(NEW)
-      .dataExportJobId(UUID.randomUUID())
-      .totalNumOfRecords(10)
-      .processedNumOfRecords(0)
-      .executionChunkSize(5)
-      .startTime(LocalDateTime.now())
-      .build());
+            .id(UUID.randomUUID())
+            .userId(UUID.randomUUID())
+            .operationType(UPDATE)
+            .entityType(USER)
+            .identifierType(BARCODE)
+            .status(NEW)
+            .dataExportJobId(UUID.randomUUID())
+            .totalNumOfRecords(10)
+            .processedNumOfRecords(0)
+            .executionChunkSize(5)
+            .startTime(LocalDateTime.now())
+            .build());
 
     return BulkOperationExecution.builder()
       .bulkOperationId(bulkOperation.getId())

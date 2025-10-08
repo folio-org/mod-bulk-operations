@@ -10,7 +10,8 @@ public class FqmKeys {
   public static final String FQM_DATE_OF_PUBLICATION_KEY = "dateOfPublication";
   public static final String FQM_PUBLISHER_KEY = "publisher";
 
-  public static final String FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY = "holding_permanent_location.name";
+  public static final String FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY
+          = "holding_permanent_location.name";
   public static final String FQM_HOLDINGS_CALL_NUMBER_KEY = "holdings.call_number";
   public static final String FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY = "holdings.call_number_prefix";
   public static final String FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY = "holdings.call_number_suffix";

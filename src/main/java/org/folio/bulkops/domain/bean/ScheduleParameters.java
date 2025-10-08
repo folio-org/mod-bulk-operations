@@ -2,15 +2,13 @@ package org.folio.bulkops.domain.bean;
 
 import static org.folio.bulkops.util.Constants.UTC;
 
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.UUID;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-
 import jakarta.validation.Valid;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,7 +28,7 @@ public class ScheduleParameters {
   private Integer scheduleFrequency;
 
   /**
-   * Time period for repeating job
+   * Time period for repeating job.
    */
   public enum SchedulePeriodEnum {
     MONTH("MONTH"),
@@ -45,7 +43,7 @@ public class ScheduleParameters {
 
     NONE("NONE");
 
-    private String value;
+    private final String value;
 
     SchedulePeriodEnum(String value) {
       this.value = value;
@@ -76,14 +74,15 @@ public class ScheduleParameters {
   private SchedulePeriodEnum schedulePeriod;
 
   @JsonProperty("schedulingDate")
-  @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
+  @org.springframework.format.annotation.DateTimeFormat(
+          iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
   private OffsetDateTime schedulingDate;
 
   @JsonProperty("scheduleTime")
   private String scheduleTime;
 
   /**
-   * Day of week
+   * Day of week.
    */
   public enum WeekDaysEnum {
     MONDAY("MONDAY"),
@@ -100,7 +99,7 @@ public class ScheduleParameters {
 
     SUNDAY("SUNDAY");
 
-    private String value;
+    private final String value;
 
     WeekDaysEnum(String value) {
       this.value = value;

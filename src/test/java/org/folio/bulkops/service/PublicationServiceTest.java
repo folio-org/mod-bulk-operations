@@ -3,11 +3,10 @@ package org.folio.bulkops.service;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.Publication;
 import org.folio.bulkops.exception.EntityFormatException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.junit.jupiter.api.Assertions;
-
 
 class PublicationServiceTest extends BaseTest {
 
@@ -19,29 +18,29 @@ class PublicationServiceTest extends BaseTest {
   @Test
   void publicationToStringTest() {
     var publication = Publication.builder()
-      .publisher("Springer")
-      .role("Editor")
-      .place("Berlin")
-      .dateOfPublication("2020")
-      .build();
+            .publisher("Springer")
+            .role("Editor")
+            .place("Berlin")
+            .dateOfPublication("2020")
+            .build();
 
     var res = publicationService.publicationToString(publication);
 
-    Assertions.assertEquals("Springer\u001f;Editor\u001f;Berlin\u001f;2020",res);
+    Assertions.assertEquals("Springer\u001f;Editor\u001f;Berlin\u001f;2020", res);
   }
 
   @Test
   void publicationToString_shouldUseHyphenForMissingFields() {
     Publication publication = Publication.builder()
-      .publisher(null)
-      .role("")
-      .place("Paris")
-      .dateOfPublication(null)
-      .build();
+            .publisher(null)
+            .role("")
+            .place("Paris")
+            .dateOfPublication(null)
+            .build();
 
     var res = publicationService.publicationToString(publication);
 
-    Assertions.assertEquals("-\u001f;-\u001f;Paris\u001f;-",res);
+    Assertions.assertEquals("-\u001f;-\u001f;Paris\u001f;-", res);
 
   }
 
@@ -61,7 +60,8 @@ class PublicationServiceTest extends BaseTest {
   void restorePublicationItem_shouldThrowExceptionIfInvalidComponentCount() {
     String input = String.join("\u001f;", "Only", "Three", "Fields");
 
-    Assertions.assertThrows(EntityFormatException.class, () -> publicationService.restorePublicationItem(input));
+    Assertions.assertThrows(EntityFormatException.class,
+            () -> publicationService.restorePublicationItem(input));
   }
 
   @Test

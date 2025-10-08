@@ -1,15 +1,15 @@
 package org.folio.bulkops.service;
 
+import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.folio.bulkops.util.Constants.HYPHEN;
+import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.Publication;
 import org.folio.bulkops.exception.EntityFormatException;
 import org.springframework.stereotype.Service;
-
-import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.folio.bulkops.util.Constants.HYPHEN;
-import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +21,7 @@ public class PublicationService {
   private static final int PLACE_INDEX = 2;
   private static final int DATE_INDEX = 3;
   private static final String DELIMITER = SPECIAL_ARRAY_DELIMITER;
+
   public String publicationToString(Publication publication) {
     return String.join(DELIMITER,
       isEmpty(publication.getPublisher()) ? HYPHEN : publication.getPublisher(),
@@ -42,8 +43,11 @@ public class PublicationService {
           .dateOfPublication(tokens[DATE_INDEX])
           .build();
       }
-      throw new EntityFormatException(String.format("Illegal number of publication elements: %d, expected: %d", tokens.length, NUMBER_OF_PUBLICATION_COMPONENTS));
+      throw new EntityFormatException(
+              String.format("Illegal number of publication elements: %d, expected: %d",
+              tokens.length, NUMBER_OF_PUBLICATION_COMPONENTS));
     }
     return null;
-  }}
+  }
+}
 

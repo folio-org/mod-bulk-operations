@@ -1,5 +1,8 @@
 package org.folio.bulkops.service;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.junit.jupiter.api.Test;
@@ -7,9 +10,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 class SubjectHelperTest extends BaseTest {
 

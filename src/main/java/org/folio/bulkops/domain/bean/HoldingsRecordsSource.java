@@ -3,7 +3,6 @@ package org.folio.bulkops.domain.bean;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +22,7 @@ public class HoldingsRecordsSource   {
   private String name;
 
   /**
-   * The holdings records source
+   * The holdings records source.
    */
   public enum SourceEnum {
     FOLIO("folio"),
@@ -32,7 +31,7 @@ public class HoldingsRecordsSource   {
 
     CONSORTIUM("consortium");
 
-    private String value;
+    private final String value;
 
     SourceEnum(String value) {
       this.value = value;

@@ -1,12 +1,10 @@
 package org.folio.bulkops.domain.bean;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,7 +22,7 @@ public class SelectFieldOptions   {
   private List<SelectFieldOption> values = null;
 
   /**
-   * Defines sorting order for the custom field
+   * Defines sorting order for the custom field.
    */
   public enum SortingOrderEnum {
     ASC("ASC"),

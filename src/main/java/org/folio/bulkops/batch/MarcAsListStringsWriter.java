@@ -4,6 +4,10 @@ import static java.util.Objects.nonNull;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.NO_MARC_CONTENT;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
@@ -15,21 +19,22 @@ import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.file.FlatFileItemWriter;
+import org.springframework.lang.NonNull;
 import org.springframework.util.Assert;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
 
 @Log4j2
 @StepScope
-public class MarcAsListStringsWriter<T extends BulkOperationsEntity> extends FlatFileItemWriter<List<T>> {
+public class MarcAsListStringsWriter<T extends BulkOperationsEntity>
+    extends FlatFileItemWriter<List<T>> {
 
-  private SrsClient srsClient;
-  private MarcAsStringWriter<String> delegateToStringWriter;
-  private JsonToMarcConverter jsonToMarcConverter;
+  private final SrsClient srsClient;
+  private final MarcAsStringWriter<String> delegateToStringWriter;
+  private final JsonToMarcConverter jsonToMarcConverter;
 
-  public MarcAsListStringsWriter(String outputFileName, SrsClient srsClient, JsonToMarcConverter jsonToMarcConverter) {
+  public MarcAsListStringsWriter(
+      String outputFileName,
+      SrsClient srsClient,
+      JsonToMarcConverter jsonToMarcConverter) {
     super();
     this.srsClient = srsClient;
     this.jsonToMarcConverter = jsonToMarcConverter;
@@ -37,28 +42,32 @@ public class MarcAsListStringsWriter<T extends BulkOperationsEntity> extends Fla
   }
 
   @Override
-  public void write(Chunk<? extends List<T>> entities) throws Exception {
-    delegateToStringWriter.write(new Chunk<>(entities.getItems().stream().flatMap(List::stream)
-      .map(this::getIdIfExtendedInstanceMarc)
-      .filter(Optional::isPresent)
-      .map(Optional::get)
-      .map(id -> {
-        try {
-          return getMarcContent(id);
-        } catch (Exception e) {
-          log.error(e);
-          throw new BulkEditException(NO_MARC_CONTENT.formatted(id, e.getMessage()), ErrorType.ERROR);
-        }
-      })
-      .flatMap(List::stream)
-      .filter(Objects::nonNull)
-      .toList()));
+  public void write(@NonNull Chunk<? extends List<T>> entities) throws Exception {
+    var items = entities.getItems().stream()
+        .flatMap(List::stream)
+        .map(this::getIdIfExtendedInstanceMarc)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .map(id -> {
+          try {
+            return getMarcContent(id);
+          } catch (Exception e) {
+            log.error(e);
+            throw new BulkEditException(NO_MARC_CONTENT.formatted(id, e.getMessage()),
+                    ErrorType.ERROR);
+          }
+        })
+        .flatMap(List::stream)
+        .filter(Objects::nonNull)
+        .toList();
+
+    delegateToStringWriter.write(new Chunk<>(items));
   }
 
   private Optional<String> getIdIfExtendedInstanceMarc(T entity) {
-    return entity instanceof ExtendedInstance ei && MARC.equals(ei.getEntity().getSource()) ?
-      Optional.of(ei.getEntity().getId()) :
-      Optional.empty();
+    return entity instanceof ExtendedInstance ei && MARC.equals(ei.getEntity().getSource())
+        ? Optional.of(ei.getEntity().getId())
+        : Optional.empty();
   }
 
   @Override
@@ -67,23 +76,23 @@ public class MarcAsListStringsWriter<T extends BulkOperationsEntity> extends Fla
   }
 
   @Override
-  public void open(ExecutionContext executionContext) {
+  public void open(@NonNull ExecutionContext executionContext) {
     if (nonNull(delegateToStringWriter)) {
-      (delegateToStringWriter).open(executionContext);
+      delegateToStringWriter.open(executionContext);
     }
   }
 
   @Override
-  public void update(ExecutionContext executionContext) {
+  public void update(@NonNull ExecutionContext executionContext) {
     if (nonNull(delegateToStringWriter)) {
-      (delegateToStringWriter).update(executionContext);
+      delegateToStringWriter.update(executionContext);
     }
   }
 
   @Override
   public void close() {
     if (nonNull(delegateToStringWriter)) {
-      (delegateToStringWriter).close();
+      delegateToStringWriter.close();
     }
   }
 

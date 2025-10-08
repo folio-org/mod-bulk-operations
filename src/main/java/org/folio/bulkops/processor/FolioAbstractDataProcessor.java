@@ -1,10 +1,13 @@
 package org.folio.bulkops.processor;
 
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.STATISTICAL_CODE;
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
+
 import java.io.Closeable;
 import java.util.function.Consumer;
-
+import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
-import org.folio.bulkops.domain.bean.Error;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
@@ -20,14 +23,9 @@ import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import lombok.extern.log4j.Log4j2;
-
-import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
-import static org.folio.bulkops.domain.dto.UpdateOptionType.STATISTICAL_CODE;
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
-
 @Log4j2
-public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity> implements FolioDataProcessor<T> {
+public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
+        implements FolioDataProcessor<T> {
   private ErrorService errorService;
   protected FolioModuleMetadata folioModuleMetadata;
   private ConsortiaService consortiaService;
@@ -54,7 +52,8 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
   }
 
   @Override
-  public UpdatedEntityHolder process(String identifier, T entity, BulkOperationRuleCollection rules) {
+  public UpdatedEntityHolder process(String identifier, T entity,
+                                     BulkOperationRuleCollection rules) {
     var holder = UpdatedEntityHolder.builder().build();
     var updated = clone(entity);
     var preview = clone(entity);
@@ -62,7 +61,8 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
       validator().validate(rules);
     } catch (RuleValidationException e) {
       log.warn(String.format("Rule validation exception: %s", e.getMessage()));
-      errorService.saveError(rules.getBulkOperationRules().get(0).getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
+      errorService.saveError(rules.getBulkOperationRules().getFirst().getBulkOperationId(),
+              identifier, e.getMessage(), ErrorType.ERROR);
     } catch (Exception e) {
       log.error(e.getMessage());
     }
@@ -73,23 +73,29 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
         for (Action action : details.getActions()) {
           try {
             var tenantIdOfEntity = entity.getTenant();
-            try (var ignored = isTenantApplicableForProcessingAsMember(entity) ?
-              new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))
-              :  (Closeable) () -> {}) {
+            try (var ignored = isTenantApplicableForProcessingAsMember(entity)
+                    ? new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity,
+                    folioModuleMetadata, folioExecutionContext))
+                    : (Closeable) () -> {}) {
               updater(option, action, entity, true).apply(preview);
               validator(entity).validate(option, action, rule);
               updater(option, action, entity, false).apply(updated);
             }
           } catch (RuleValidationException e) {
             log.warn(String.format("Rule validation exception: %s", e.getMessage()));
-            errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
+            errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(),
+                    ErrorType.ERROR);
           } catch (RuleValidationTenantsException e) {
             log.info("current tenant: {}", folioExecutionContext.getTenantId());
-            errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
+            errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(),
+                    ErrorType.ERROR);
             log.error(e.getMessage());
           } catch (Exception e) {
-            log.error(String.format("%s id=%s, error: %s", updated.getRecordBulkOperationEntity().getClass().getSimpleName(), "id", e.getMessage()));
-            errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
+            log.error(String.format("%s id=%s, error: %s",
+                    updated.getRecordBulkOperationEntity().getClass().getSimpleName(), "id",
+                    e.getMessage()));
+            errorService.saveError(rule.getBulkOperationId(), identifier, e.getMessage(),
+                    ErrorType.ERROR);
           }
         }
       }
@@ -99,35 +105,33 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
     return holder;
   }
 
-  /**
-   * Returns validator
-   *
-   * @param entity entity of type {@link T} to validate
-   * @return true if {@link UpdateOptionType} and {@link Action}, and {@link BulkOperationRule} can be applied to entity
-   */
   public abstract Validator<UpdateOptionType, Action, BulkOperationRule> validator(T entity);
 
   public StatisticalCodeValidator<BulkOperationRuleCollection> validator() {
     return rules -> {
-      if (getNumberOfRulesWithStatisticalCode(rules) > 1 && existsRuleWithStatisticalCodeAndRemoveAll(rules)) {
-        throw new RuleValidationException("Combination REMOVE_ALL with other actions is not supported for Statistical code");
+      if (getNumberOfRulesWithStatisticalCode(rules) > 1
+              && existsRuleWithStatisticalCodeAndRemoveAll(rules)) {
+        throw new RuleValidationException("Combination REMOVE_ALL with other actions is "
+                + "not supported for Statistical code");
       }
     };
   }
 
   /**
-   * Returns {@link Consumer<T>} for applying changes for entity of type {@link T}
+   * Returns a Consumer for applying changes to an entity of type T.
    *
-   * @param option {@link UpdateOptionType} for update
-   * @param action {@link Action} for update
-   * @param entity {@link T} for update
-   * @param forPreview {@link Boolean} true if for preview, otherwise false
+   * @param option UpdateOptionType for update
+   * @param action Action for update
+   * @param entity entity of type T for update
+   * @param forPreview true if for preview, otherwise false
    * @return updater
+   * @throws RuleValidationTenantsException if validation fails
    */
-  public abstract Updater<T> updater(UpdateOptionType option, Action action, T entity, boolean forPreview) throws RuleValidationTenantsException;
+  public abstract Updater<T> updater(UpdateOptionType option, Action action, T entity,
+                                     boolean forPreview) throws RuleValidationTenantsException;
 
   /**
-   * Clones object of type {@link T}
+   * Clones object of type {@link T}.
    *
    * @param entity object to clone
    * @return cloned object
@@ -135,7 +139,7 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
   public abstract T clone(T entity);
 
   /**
-   * Compares objects of type {@link T}
+   * Compares objects of type {@link T}.
    *
    * @param first  first object
    * @param second second object
@@ -145,7 +149,8 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
 
   public String getRecordPropertyName(UpdateOptionType optionType) {
     return switch (optionType) {
-      case HOLDINGS_NOTE, ITEM_NOTE, ADMINISTRATIVE_NOTE, CHECK_IN_NOTE, CHECK_OUT_NOTE -> "note type";
+      case HOLDINGS_NOTE, ITEM_NOTE, ADMINISTRATIVE_NOTE, CHECK_IN_NOTE, CHECK_OUT_NOTE
+              -> "note type";
       case PERMANENT_LOAN_TYPE -> "permanent loan type";
       case TEMPORARY_LOAN_TYPE -> "temporary loan type";
       case PERMANENT_LOCATION -> "permanent location";
@@ -156,15 +161,19 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
   }
 
   private boolean isTenantApplicableForProcessingAsMember(T entity) {
-    return entity.getRecordBulkOperationEntity().getClass() != User.class && consortiaService.isTenantMember(entity.getTenant());
+    return entity.getRecordBulkOperationEntity().getClass() != User.class
+            && consortiaService.isTenantMember(entity.getTenant());
   }
 
   private long getNumberOfRulesWithStatisticalCode(BulkOperationRuleCollection rules) {
-    return rules.getBulkOperationRules().stream().filter(rule -> rule.getRuleDetails().getOption() == STATISTICAL_CODE).count();
+    return rules.getBulkOperationRules().stream().filter(
+            rule -> rule.getRuleDetails().getOption() == STATISTICAL_CODE).count();
   }
 
   private boolean existsRuleWithStatisticalCodeAndRemoveAll(BulkOperationRuleCollection rules) {
-    return rules.getBulkOperationRules().stream().anyMatch(rule -> rule.getRuleDetails().getOption() == STATISTICAL_CODE &&
-      rule.getRuleDetails().getActions().stream().anyMatch(act -> act.getType() == REMOVE_ALL));
+    return rules.getBulkOperationRules().stream().anyMatch(
+            rule -> rule.getRuleDetails().getOption() == STATISTICAL_CODE
+                    && rule.getRuleDetails().getActions().stream().anyMatch(
+                            act -> act.getType() == REMOVE_ALL));
   }
 }

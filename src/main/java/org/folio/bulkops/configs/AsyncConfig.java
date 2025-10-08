@@ -41,7 +41,7 @@ public class AsyncConfig {
     threadPoolTaskExecutor.setCorePoolSize(TASK_EXECUTOR_CORE_POOL_SIZE);
     threadPoolTaskExecutor.setMaxPoolSize(TASK_EXECUTOR_MAX_POOL_SIZE);
     threadPoolTaskExecutor.setTaskDecorator(
-      FolioExecutionScopeExecutionContextManager::getRunnableWithCurrentFolioContext);
+        FolioExecutionScopeExecutionContextManager::getRunnableWithCurrentFolioContext);
     return threadPoolTaskExecutor;
   }
 
@@ -52,7 +52,7 @@ public class AsyncConfig {
     threadPoolTaskExecutor.setCorePoolSize(corePoolSize);
     threadPoolTaskExecutor.setMaxPoolSize(maxPoolSize);
     threadPoolTaskExecutor.setTaskDecorator(
-      FolioExecutionScopeExecutionContextManager::getRunnableWithCurrentFolioContext);
+        FolioExecutionScopeExecutionContextManager::getRunnableWithCurrentFolioContext);
     return threadPoolTaskExecutor;
   }
 

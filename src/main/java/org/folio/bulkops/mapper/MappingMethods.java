@@ -1,10 +1,9 @@
 package org.folio.bulkops.mapper;
 
-import org.springframework.stereotype.Component;
-
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
+import org.springframework.stereotype.Component;
 
 @Component
 public class MappingMethods {

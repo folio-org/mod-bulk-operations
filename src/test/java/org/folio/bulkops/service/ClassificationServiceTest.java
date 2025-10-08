@@ -3,12 +3,12 @@ package org.folio.bulkops.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import java.util.UUID;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.Classification;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import java.util.UUID;
 
 class ClassificationServiceTest extends BaseTest {
 
@@ -22,12 +22,12 @@ class ClassificationServiceTest extends BaseTest {
   void classificationToStringTest() {
     var classificationTypeId = UUID.randomUUID().toString();
     var classification = Classification.builder()
-      .classificationTypeId(classificationTypeId)
-      .classificationNumber("abc")
-      .build();
+            .classificationTypeId(classificationTypeId)
+            .classificationNumber("abc")
+            .build();
 
     when(classificationReferenceService.getClassificationTypeNameById(classificationTypeId, null))
-      .thenReturn("LC");
+            .thenReturn("LC");
 
     var res = classificationService.classificationToString(classification);
 
@@ -40,7 +40,7 @@ class ClassificationServiceTest extends BaseTest {
     var classificationString = "LC\u001F;abc";
 
     when(classificationReferenceService.getClassificationTypeIdByName("LC"))
-      .thenReturn(classificationTypeId);
+        .thenReturn(classificationTypeId);
 
     var res = classificationService.restoreClassificationItem(classificationString);
 

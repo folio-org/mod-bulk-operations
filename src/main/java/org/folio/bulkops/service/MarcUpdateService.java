@@ -3,10 +3,14 @@ package org.folio.bulkops.service;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
 import static org.folio.bulkops.util.Constants.CHANGED_MARC_PATH_TEMPLATE;
-import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.MSG_NO_MARC_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.MarcHelper.fetchInstanceUuidOrElseHrid;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
@@ -23,12 +27,6 @@ import org.folio.bulkops.util.MarcDateHelper;
 import org.marc4j.MarcStreamReader;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.Set;
 
 @Service
 @Log4j2
@@ -48,14 +46,15 @@ public class MarcUpdateService {
       bulkOperationRepository.save(bulkOperation);
 
       var execution = executionRepository.save(BulkOperationExecution.builder()
-        .bulkOperationId(bulkOperation.getId())
-        .startTime(LocalDateTime.now())
-        .processedRecords(0)
-        .status(StatusType.ACTIVE)
-        .build());
+              .bulkOperationId(bulkOperation.getId())
+              .startTime(LocalDateTime.now())
+              .processedRecords(0)
+              .status(StatusType.ACTIVE)
+              .build());
 
       try {
-        bulkOperation.setLinkToCommittedRecordsMarcFile(prepareCommittedFile(bulkOperation, failedHrids));
+        bulkOperation.setLinkToCommittedRecordsMarcFile(prepareCommittedFile(bulkOperation,
+                failedHrids));
         updateProcessor.updateMarcRecords(bulkOperation);
         execution = execution
           .withStatus(StatusType.COMPLETED)
@@ -69,18 +68,24 @@ public class MarcUpdateService {
       }
       executionRepository.save(execution);
     } else {
-      bulkOperation.setCommittedNumOfErrors(errorService.getCommittedNumOfErrors(bulkOperation.getId()));
-      bulkOperation.setCommittedNumOfWarnings(errorService.getCommittedNumOfWarnings(bulkOperation.getId()));
+      bulkOperation.setCommittedNumOfErrors(
+              errorService.getCommittedNumOfErrors(bulkOperation.getId()));
+      bulkOperation.setCommittedNumOfWarnings(
+              errorService.getCommittedNumOfWarnings(bulkOperation.getId()));
     }
   }
 
-  private String prepareCommittedFile(BulkOperation bulkOperation, Set<String> failedHrids) throws IOException {
+  private String prepareCommittedFile(BulkOperation bulkOperation, Set<String> failedHrids)
+          throws IOException {
     var triggeringFileName = FilenameUtils.getBaseName(bulkOperation.getLinkToTriggeringCsvFile());
-    var resultMarcFileName = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(), LocalDate.now(), triggeringFileName);
+    var resultMarcFileName = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(),
+            LocalDate.now(), triggeringFileName);
 
     try (var writerForResultMarcFile = remoteFileSystemClient.marcWriter(resultMarcFileName);
-         var matchedRecordsMarcFileStream = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile());
-         var modifiedRecordsMarcFileStream = remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
+         var matchedRecordsMarcFileStream = remoteFileSystemClient.get(
+                 bulkOperation.getLinkToMatchedRecordsMarcFile());
+         var modifiedRecordsMarcFileStream = remoteFileSystemClient.get(
+                 bulkOperation.getLinkToModifiedRecordsMarcFile())) {
       var matchedRecordsReader = new MarcStreamReader(matchedRecordsMarcFileStream);
       var modifiedRecordsReader = new MarcStreamReader(modifiedRecordsMarcFileStream);
 
@@ -90,10 +95,11 @@ public class MarcUpdateService {
         var modifiedRecord = modifiedRecordsReader.next();
         if (!failedHrids.contains(originalRecord.getControlNumber())) {
           if (originalRecord.toString().equals(modifiedRecord.toString())) {
-            var identifier = HRID.equals(bulkOperation.getIdentifierType()) ?
-              originalRecord.getControlNumber() :
-              fetchInstanceUuidOrElseHrid(originalRecord);
-            errorService.saveError(bulkOperation.getId(), identifier, MSG_NO_MARC_CHANGE_REQUIRED, ErrorType.WARNING);
+            var identifier = HRID.equals(bulkOperation.getIdentifierType())
+                    ? originalRecord.getControlNumber()
+                    : fetchInstanceUuidOrElseHrid(originalRecord);
+            errorService.saveError(bulkOperation.getId(), identifier, MSG_NO_MARC_CHANGE_REQUIRED,
+                    ErrorType.WARNING);
           } else {
             MarcDateHelper.updateDateTimeControlField(modifiedRecord, currentDate);
             writerForResultMarcFile.writeRecord(modifiedRecord);

@@ -9,6 +9,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.util.List;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,9 +21,6 @@ import org.folio.bulkops.domain.dto.MarcParameter;
 import org.folio.bulkops.domain.dto.MarcSubfieldAction;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.hibernate.annotations.Type;
-
-import java.util.List;
-import java.util.UUID;
 
 @Data
 @Builder

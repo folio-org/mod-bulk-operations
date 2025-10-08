@@ -2,11 +2,15 @@ package org.folio.bulkops.service;
 
 import static org.folio.bulkops.service.LogFilesService.CSV_PATH_TEMPLATE;
 import static org.folio.bulkops.service.LogFilesService.JSON_PATH_TEMPLATE;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -17,10 +21,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
-
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 class LogFilesServiceTest extends BaseTest {
 
@@ -89,18 +89,18 @@ class LogFilesServiceTest extends BaseTest {
 
   @Test
   void shouldClearFilesAndMakeOperationExpiredOnlyOfOldBulkOperations() {
-    try (var ignored =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var ignored = new FolioExecutionContextSetter(folioExecutionContext)) {
       var oldOperation = bulkOperationRepository.findById(oldBulkOperationId).get();
       var nonOldOperation = bulkOperationRepository.findById(nonOldBulkOperationId).get();
-      assertEquals(false, oldOperation.isExpired());
-      assertEquals(false, nonOldOperation.isExpired());
+      assertFalse(oldOperation.isExpired());
+      assertFalse(nonOldOperation.isExpired());
       verifyAllFilesPresent(oldOperation);
       verifyAllFilesPresent(nonOldOperation);
       logFilesService.clearLogFiles();
       oldOperation = bulkOperationRepository.findById(oldBulkOperationId).get();
       nonOldOperation = bulkOperationRepository.findById(nonOldBulkOperationId).get();
-      assertEquals(true, oldOperation.isExpired());
-      assertEquals(false, nonOldOperation.isExpired());
+      assertTrue(oldOperation.isExpired());
+      assertFalse(nonOldOperation.isExpired());
       verifyAllFilesRemoved(oldOperation);
       verifyAllFilesPresent(nonOldOperation);
     }

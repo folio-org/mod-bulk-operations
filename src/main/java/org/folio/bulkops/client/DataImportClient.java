@@ -20,17 +20,30 @@ public interface DataImportClient {
   SplitStatus getSplitStatus();
 
   @GetMapping(value = "/uploadUrl", produces = MediaType.APPLICATION_JSON_VALUE)
-  UploadUrlResponse getUploadUrl(@RequestParam("filename") String filename);
+  UploadUrlResponse getUploadUrl(
+      @RequestParam("filename") String filename);
 
   @PostMapping(value = "/uploadDefinitions", produces = MediaType.APPLICATION_JSON_VALUE)
-  UploadFileDefinition postUploadDefinition(@RequestBody UploadFileDefinition uploadFileDefinition);
+  UploadFileDefinition postUploadDefinition(
+      @RequestBody UploadFileDefinition uploadFileDefinition);
 
-  @GetMapping(value = "/uploadDefinitions/{uploadDefinitionId}", produces = MediaType.APPLICATION_JSON_VALUE)
-  UploadFileDefinition getUploadDefinitionById(@PathVariable String uploadDefinitionId);
+  @GetMapping(
+      value = "/uploadDefinitions/{uploadDefinitionId}",
+      produces = MediaType.APPLICATION_JSON_VALUE
+  )
+  UploadFileDefinition getUploadDefinitionById(
+      @PathVariable String uploadDefinitionId);
 
   @PostMapping(value = "/uploadDefinitions/{uploadDefinitionId}/processFiles")
-  void uploadFileDefinitionsProcessFiles(@RequestBody UploadFileDefinitionProcessFiles uploadFileDefinitionProcessFiles, @PathVariable String uploadDefinitionId);
+  void uploadFileDefinitionsProcessFiles(
+      @RequestBody UploadFileDefinitionProcessFiles uploadFileDefinitionProcessFiles,
+      @PathVariable String uploadDefinitionId);
 
-  @PostMapping(value = "/uploadDefinitions/{uploadDefinitionId}/files/{fileId}/assembleStorageFile")
-  void assembleStorageFile(@PathVariable String uploadDefinitionId, @PathVariable String fileId, @RequestBody AssembleStorageFileRequestBody body);
+  @PostMapping(
+      value = "/uploadDefinitions/{uploadDefinitionId}/files/{fileId}/assembleStorageFile"
+  )
+  void assembleStorageFile(
+      @PathVariable String uploadDefinitionId,
+      @PathVariable String fileId,
+      @RequestBody AssembleStorageFileRequestBody body);
 }

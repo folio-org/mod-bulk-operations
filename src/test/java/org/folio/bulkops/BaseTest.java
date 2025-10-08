@@ -11,6 +11,17 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.AddressTypeClient;
@@ -20,9 +31,9 @@ import org.folio.bulkops.client.DamagedStatusClient;
 import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.client.ElectronicAccessRelationshipClient;
 import org.folio.bulkops.client.GroupClient;
-import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.HoldingsNoteTypeClient;
 import org.folio.bulkops.client.HoldingsSourceClient;
+import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.HoldingsTypeClient;
 import org.folio.bulkops.client.IllPolicyClient;
 import org.folio.bulkops.client.InstanceClient;
@@ -81,25 +92,14 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ContextConfiguration(initializers = BaseTest.Initializer.class)
 @Testcontainers
 @AutoConfigureMockMvc
 @Log4j2
-@DirtiesContext(classMode= DirtiesContext.ClassMode.AFTER_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @EmbeddedKafka(topics = { "folio.Default.diku.DI_JOB_COMPLETED" })
 @EnableKafka
 public abstract class BaseTest {
@@ -115,6 +115,7 @@ public abstract class BaseTest {
   public static final PostgreSQLContainer<?> postgresDBContainer;
   private static final GenericContainer<?> s3;
   public static final RemoteFileSystemClient client;
+
   static {
     postgresDBContainer = new PostgreSQLContainer<>("postgres:12");
     postgresDBContainer.start();
@@ -140,14 +141,20 @@ public abstract class BaseTest {
             .build()));
   }
 
-  public static LocalDateTimeDeserializer localDateTimeDeserializer = new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
+  public static LocalDateTimeDeserializer localDateTimeDeserializer = new LocalDateTimeDeserializer(
+          DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
 
-  public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
-    .registerModule(new JavaTimeModule().addDeserializer(LocalDateTime.class, localDateTimeDeserializer))
-    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+  public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+          .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+          .registerModule(new JavaTimeModule().addDeserializer(LocalDateTime.class,
+                  localDateTimeDeserializer))
+          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+          .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 
-  protected static final String TOKEN = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkaWt1X2FkbWluIiwidXNlcl9pZCI6IjFkM2I1OGNiLTA3YjUtNWZjZC04YTJhLTNjZTA2YTBlYjkwZiIsImlhdCI6MTYxNjQyMDM5MywidGVuYW50IjoiZGlrdSJ9.2nvEYQBbJP1PewEgxixBWLHSX_eELiBEBpjufWiJZRs";
+  protected static final String TOKEN
+          = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkaWt1X2FkbWluIiwidXNlcl9pZCI6IjFkM2I1OGNiLTA3YjUt"
+          + "NWZjZC04YTJhLTNjZTA2YTBlYjkwZiIsImlhdCI6MTYxNjQyMDM5MywidGVuYW50IjoiZGlrdSJ9.2nvEY"
+          + "QBbJP1PewEgxixBWLHSX_eELiBEBpjufWiJZRs";
   protected static final String TENANT = "diku";
 
   @MockitoBean
@@ -224,19 +231,20 @@ public abstract class BaseTest {
 
   public FolioExecutionContext folioExecutionContext;
 
-  public static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+  public static class Initializer
+          implements ApplicationContextInitializer<ConfigurableApplicationContext> {
     @Override
     public void initialize(ConfigurableApplicationContext context) {
       TestPropertySourceUtils.addInlinedPropertiesToEnvironment(context,
-        "spring.datasource.url=" + postgresDBContainer.getJdbcUrl(),
-        "spring.datasource.username=" + postgresDBContainer.getUsername(),
-        "spring.datasource.password=" + postgresDBContainer.getPassword(),
-        "application.remote-files-storage.endpoint=" + MINIO_ENDPOINT,
-        "application.remote-files-storage.region=" + REGION,
-        "application.remote-files-storage.bucket=" + BUCKET,
-        "application.remote-files-storage.accessKey=" + S3_ACCESS_KEY,
-        "application.remote-files-storage.secretKey=" + S3_SECRET_KEY,
-        "application.remote-files-storage.awsSdk=false");
+              "spring.datasource.url=" + postgresDBContainer.getJdbcUrl(),
+              "spring.datasource.username=" + postgresDBContainer.getUsername(),
+              "spring.datasource.password=" + postgresDBContainer.getPassword(),
+              "application.remote-files-storage.endpoint=" + MINIO_ENDPOINT,
+              "application.remote-files-storage.region=" + REGION,
+              "application.remote-files-storage.bucket=" + BUCKET,
+              "application.remote-files-storage.accessKey=" + S3_ACCESS_KEY,
+              "application.remote-files-storage.secretKey=" + S3_SECRET_KEY,
+              "application.remote-files-storage.awsSdk=false");
     }
   }
 
@@ -253,10 +261,11 @@ public abstract class BaseTest {
     okapiHeaders.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     var localHeaders =
-      okapiHeaders.entrySet()
-        .stream()
-        .filter(e -> e.getKey().startsWith(XOkapiHeaders.OKAPI_HEADERS_PREFIX))
-        .collect(Collectors.toMap(Map.Entry::getKey, e -> (Collection<String>)List.of(String.valueOf(e.getValue()))));
+            okapiHeaders.entrySet()
+                    .stream()
+                    .filter(e -> e.getKey().startsWith(XOkapiHeaders.OKAPI_HEADERS_PREFIX))
+                    .collect(Collectors.toMap(Map.Entry::getKey,
+                            e -> (Collection<String>) List.of(String.valueOf(e.getValue()))));
 
     folioExecutionContext = new DefaultFolioExecutionContext(folioModuleMetadata, localHeaders);
   }
@@ -298,7 +307,8 @@ public abstract class BaseTest {
       .totalRecords(rules.length);
   }
 
-  public static BulkOperationRule rule(UpdateOptionType option, UpdateActionType action, String initial, String updated) {
+  public static BulkOperationRule rule(UpdateOptionType option, UpdateActionType action,
+                                       String initial, String updated) {
     return new BulkOperationRule()
       .ruleDetails(new RuleDetails()
         .option(option)
@@ -308,19 +318,23 @@ public abstract class BaseTest {
           .updated(updated))));
   }
 
-  public static BulkOperationRule rule(UpdateOptionType option, UpdateActionType action, String updated) {
+  public static BulkOperationRule rule(UpdateOptionType option, UpdateActionType action,
+                                       String updated) {
     return rule(option, action, null, updated);
   }
 
-  public static BulkOperationRule rule(UpdateOptionType option, UpdateActionType action, String updated,
-                                       List<String> actionsTenants, List<String> ruleTenants) {
+  public static BulkOperationRule rule(UpdateOptionType option, UpdateActionType action,
+                                       String updated, List<String> actionsTenants,
+                                       List<String> ruleTenants) {
     var rule = rule(option, action, null, updated);
     rule.getRuleDetails().setTenants(ruleTenants);
     rule.getRuleDetails().getActions().forEach(act -> act.setTenants(actionsTenants));
     return rule;
   }
 
-  public BulkOperation buildBulkOperation(String fileName, org.folio.bulkops.domain.dto.EntityType entityType, org.folio.bulkops.domain.dto.BulkOperationStep step) {
+  public BulkOperation buildBulkOperation(String fileName,
+                                          org.folio.bulkops.domain.dto.EntityType entityType,
+                                          org.folio.bulkops.domain.dto.BulkOperationStep step) {
     return switch (step) {
       case UPLOAD -> BulkOperation.builder()
         .entityType(entityType)

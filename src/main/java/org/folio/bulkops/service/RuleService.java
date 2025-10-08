@@ -4,11 +4,11 @@ import static org.folio.bulkops.util.Constants.LEADER_TAG;
 
 import java.util.List;
 import java.util.UUID;
-
+import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
-import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.MarcAction;
 import org.folio.bulkops.domain.dto.RuleDetails;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
@@ -21,8 +21,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import lombok.RequiredArgsConstructor;
-
 @Service
 @RequiredArgsConstructor
 public class RuleService {
@@ -33,45 +31,49 @@ public class RuleService {
   private final ApplicationContext applicationContext;
 
   @Transactional
-  public BulkOperationRuleCollection saveRules(BulkOperation bulkOperation, BulkOperationRuleCollection ruleCollection) {
+  public BulkOperationRuleCollection saveRules(BulkOperation bulkOperation,
+                                               BulkOperationRuleCollection ruleCollection) {
     ruleRepository.deleteAllByBulkOperationId(bulkOperation.getId());
     marcRuleRepository.deleteAllByBulkOperationId(bulkOperation.getId());
 
     ruleCollection.getBulkOperationRules().forEach(bulkOperationRule -> {
       var rule = ruleRepository.save(org.folio.bulkops.domain.entity.BulkOperationRule.builder()
-        .bulkOperationId(bulkOperationRule.getBulkOperationId())
-        .updateOption(bulkOperationRule.getRuleDetails().getOption())
-        .build());
+              .bulkOperationId(bulkOperationRule.getBulkOperationId())
+              .updateOption(bulkOperationRule.getRuleDetails().getOption())
+              .build());
       bulkOperationRule.getRuleDetails().getActions()
-        .forEach(action -> ruleDetailsRepository.save(org.folio.bulkops.domain.entity.BulkOperationRuleDetails.builder()
-          .ruleId(rule.getId())
-          .updateAction(action.getType())
-          .initialValue(action.getInitial())
-          .updatedValue(action.getUpdated())
-          .parameters(action.getParameters())
-          .ruleTenants(bulkOperationRule.getRuleDetails().getTenants())
-          .actionTenants(action.getTenants())
-          .updatedTenants(action.getUpdatedTenants())
-          .build()));
+              .forEach(action -> ruleDetailsRepository.save(org.folio.bulkops.domain.entity
+                      .BulkOperationRuleDetails.builder()
+                      .ruleId(rule.getId())
+                      .updateAction(action.getType())
+                      .initialValue(action.getInitial())
+                      .updatedValue(action.getUpdated())
+                      .parameters(action.getParameters())
+                      .ruleTenants(bulkOperationRule.getRuleDetails().getTenants())
+                      .actionTenants(action.getTenants())
+                      .updatedTenants(action.getUpdatedTenants())
+                      .build()));
     });
     saveMarcRuleIfSetToDelete(bulkOperation, ruleCollection);
     return ruleCollection;
   }
 
-  private void saveMarcRuleIfSetToDelete(BulkOperation bulkOperation, BulkOperationRuleCollection ruleCollection) {
+  private void saveMarcRuleIfSetToDelete(BulkOperation bulkOperation,
+                                         BulkOperationRuleCollection ruleCollection) {
     ruleCollection.getBulkOperationRules().forEach(rule -> {
       if (rule.getRuleDetails().getOption() == UpdateOptionType.SET_RECORDS_FOR_DELETE) {
         rule.getRuleDetails().getActions().forEach(action -> {
           var marcRules = new BulkOperationMarcRuleCollection();
           var marcRule = new org.folio.bulkops.domain.dto.BulkOperationMarcRule()
-            .bulkOperationId(rule.getBulkOperationId())
-            .actions(List.of(new MarcAction().name(action.getType())))
-            .tag(LEADER_TAG)
-            .updateOption(UpdateOptionType.SET_RECORDS_FOR_DELETE);
+                  .bulkOperationId(rule.getBulkOperationId())
+                  .actions(List.of(new MarcAction().name(action.getType())))
+                  .tag(LEADER_TAG)
+                  .updateOption(UpdateOptionType.SET_RECORDS_FOR_DELETE);
           marcRules.addBulkOperationMarcRulesItem(marcRule);
           marcRules.totalRecords(1);
           RuleService selfProxy = applicationContext.getBean(RuleService.class);
-          selfProxy.saveMarcRules(bulkOperation, marcRules); // Proxy is used, transactional behavior works
+          // Proxy is used, transactional behavior works.
+          selfProxy.saveMarcRules(bulkOperation, marcRules);
         });
       }
     });
@@ -79,12 +81,13 @@ public class RuleService {
 
   public BulkOperationRuleCollection getRules(UUID bulkOperationId) {
     var rules = ruleRepository.findAllByBulkOperationId(bulkOperationId).stream()
-      .map(this::mapBulkOperationRuleToDto)
-      .toList();
+            .map(this::mapBulkOperationRuleToDto)
+            .toList();
     return new BulkOperationRuleCollection().bulkOperationRules(rules).totalRecords(rules.size());
   }
 
-  private BulkOperationRule mapBulkOperationRuleToDto(org.folio.bulkops.domain.entity.BulkOperationRule entity) {
+  private BulkOperationRule mapBulkOperationRuleToDto(
+          org.folio.bulkops.domain.entity.BulkOperationRule entity) {
     return new BulkOperationRule()
       .bulkOperationId(entity.getBulkOperationId())
       .ruleDetails(new RuleDetails()
@@ -98,23 +101,25 @@ public class RuleService {
             .tenants(details.getActionTenants())
             .updatedTenants(details.getUpdatedTenants()))
           .toList())
-        .tenants(entity.getRuleDetails().get(0).getRuleTenants()));
+        .tenants(entity.getRuleDetails().getFirst().getRuleTenants()));
   }
 
   @Transactional
-  public BulkOperationMarcRuleCollection saveMarcRules(BulkOperation bulkOperation, BulkOperationMarcRuleCollection ruleCollection) {
+  public BulkOperationMarcRuleCollection saveMarcRules(
+          BulkOperation bulkOperation, BulkOperationMarcRuleCollection ruleCollection) {
 
     ruleCollection.getBulkOperationMarcRules()
-      .forEach(marcRule -> marcRuleRepository.save(marcRulesMapper.mapToEntity(marcRule)));
+            .forEach(marcRule -> marcRuleRepository.save(marcRulesMapper.mapToEntity(marcRule)));
 
     return ruleCollection;
   }
 
   public BulkOperationMarcRuleCollection getMarcRules(UUID bulkOperationId) {
     var rules = marcRuleRepository.findAllByBulkOperationId(bulkOperationId).stream()
-      .map(marcRulesMapper::mapToDto)
-      .toList();
-    return new BulkOperationMarcRuleCollection().bulkOperationMarcRules(rules).totalRecords(rules.size());
+            .map(marcRulesMapper::mapToDto)
+            .toList();
+    return new BulkOperationMarcRuleCollection().bulkOperationMarcRules(rules)
+            .totalRecords(rules.size());
   }
 
   public boolean hasAdministrativeUpdates(BulkOperation bulkOperation) {

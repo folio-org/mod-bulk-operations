@@ -1,7 +1,6 @@
 package org.folio.bulkops.domain.bean;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,7 +29,7 @@ public class ModelConfiguration {
   private String description;
 
   @JsonProperty("default")
-  private Boolean _default;
+  private Boolean configDefault;
 
   @JsonProperty("enabled")
   private Boolean enabled;

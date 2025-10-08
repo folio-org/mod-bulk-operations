@@ -10,6 +10,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+import java.io.StringWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.RemoteFileSystemClient;
@@ -29,29 +37,20 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.io.ByteArrayInputStream;
-import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 class SrsServiceTest extends BaseTest {
-   @MockitoBean
+  @MockitoBean
   private SrsClient srsClient;
-   @MockitoBean
+  @MockitoBean
   private BulkOperationRepository bulkOperationRepository;
-   @MockitoBean
+  @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
-   @MockitoBean
+  @MockitoBean
   private ErrorService errorService;
-   @MockitoBean
+  @MockitoBean
   private BulkOperationExecutionRepository executionRepository;
-   @MockitoBean
+  @MockitoBean
   private InstanceReferenceService instanceReferenceService;
-   @MockitoBean
+  @MockitoBean
   private MarcToUnifiedTableRowMapperHelper marcToUnifiedTableRowMapperHelper;
   @Captor
   private ArgumentCaptor<BulkOperation> bulkOperationCaptor;
@@ -66,37 +65,38 @@ class SrsServiceTest extends BaseTest {
     var operationId = UUID.randomUUID();
     var linkToCommittedRecordsMarcFile = "marcFile.mrc";
     var operation = BulkOperation.builder()
-      .id(operationId)
-      .linkToCommittedRecordsMarcFile(linkToCommittedRecordsMarcFile)
-      .build();
+            .id(operationId)
+            .linkToCommittedRecordsMarcFile(linkToCommittedRecordsMarcFile)
+            .build();
 
     var marcWriter = Mockito.mock(MarcRemoteStorageWriter.class);
     when(remoteFileSystemClient.marcWriter(anyString()))
-      .thenReturn(marcWriter);
+            .thenReturn(marcWriter);
     when(srsClient.getParsedRecordsInBatch(any(GetParsedRecordsBatchRequestBody.class)))
-      .thenReturn(objectMapper.readTree(Files.readString(Path.of("src/test/resources/files/srs_batch_response.json"))));
+            .thenReturn(objectMapper.readTree(Files.readString(
+                    Path.of("src/test/resources/files/srs_batch_response.json"))));
     when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(operation));
+            .thenReturn(Optional.of(operation));
     when(errorService.uploadErrorsToStorage(operationId, ERROR_COMMITTING_FILE_NAME_PREFIX, null))
-      .thenReturn("errors.csv");
+            .thenReturn("errors.csv");
     when(errorService.getCommittedNumOfErrors(operationId))
-      .thenReturn(numOfErrors);
+            .thenReturn(numOfErrors);
     when(executionRepository.findByBulkOperationId(any(UUID.class))).thenReturn(Optional.empty());
     when(instanceReferenceService.getAllInstanceNoteTypes()).thenReturn(Collections.emptyList());
     when(marcToUnifiedTableRowMapperHelper.fetchContributorType(any(DataField.class)))
-      .thenReturn(EMPTY);
+            .thenReturn(EMPTY);
     when(remoteFileSystemClient.writer(anyString()))
-      .thenReturn(new StringWriter());
+            .thenReturn(new StringWriter());
     when(remoteFileSystemClient.get(anyString()))
-      .thenReturn(new ByteArrayInputStream(EMPTY.getBytes()));
+            .thenReturn(new ByteArrayInputStream(EMPTY.getBytes()));
 
     srsService.retrieveMarcInstancesFromSrs(List.of(UUID.randomUUID().toString()), operation);
 
     verify(marcWriter).writeRecord(any(Record.class));
     verify(bulkOperationRepository, times(2))
-      .save(bulkOperationCaptor.capture());
+            .save(bulkOperationCaptor.capture());
     assertThat(bulkOperationCaptor.getAllValues().get(1).getStatus())
-      .isEqualTo(COMPLETED_WITH_ERRORS);
+            .isEqualTo(COMPLETED_WITH_ERRORS);
   }
 
   @SneakyThrows
@@ -105,11 +105,11 @@ class SrsServiceTest extends BaseTest {
     var operationId = UUID.randomUUID();
     var linkToCommittedRecordsMarcFile = "marcFile.mrc";
     var operation = BulkOperation.builder()
-      .id(operationId)
-      .linkToCommittedRecordsMarcFile(linkToCommittedRecordsMarcFile)
-      .build();
+            .id(operationId)
+            .linkToCommittedRecordsMarcFile(linkToCommittedRecordsMarcFile)
+            .build();
     when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(operation));
+            .thenReturn(Optional.of(operation));
     when(executionRepository.findByBulkOperationId(any(UUID.class))).thenReturn(Optional.empty());
 
     srsService.retrieveMarcInstancesFromSrs(List.of(), operation);

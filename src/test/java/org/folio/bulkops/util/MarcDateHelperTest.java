@@ -1,13 +1,12 @@
 package org.folio.bulkops.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.text.SimpleDateFormat;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.marc4j.marc.impl.ControlFieldImpl;
 import org.marc4j.marc.impl.RecordImpl;
-
-import java.text.SimpleDateFormat;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MarcDateHelperTest {
 
@@ -35,6 +34,6 @@ class MarcDateHelperTest {
 
     MarcDateHelper.updateDateTimeControlField(marcRecord, date);
 
-    assertEquals("20240101100202.4", marcRecord.getControlFields().get(0).getData());
+    assertEquals("20240101100202.4", marcRecord.getControlFields().getFirst().getData());
   }
 }

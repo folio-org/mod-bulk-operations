@@ -80,7 +80,7 @@ class ErrorServiceTest extends BaseTest {
   @Autowired
   private JpaCqlRepository<BulkOperationExecutionContent, UUID> executionContentCqlRepository;
 
-   @MockitoBean
+  @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
 
   private UUID bulkOperationId;
@@ -110,7 +110,8 @@ class ErrorServiceTest extends BaseTest {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       errorService.saveError(bulkOperationId, "123", "Error message", ErrorType.ERROR);
 
-      var result = executionContentCqlRepository.findByCql("bulkOperationId==" + bulkOperationId, OffsetRequest.of(0, 10));
+      var result = executionContentCqlRepository.findByCql("bulkOperationId==" + bulkOperationId,
+              OffsetRequest.of(0, 10));
 
       assertThat(result.toList(), hasSize(1));
       var content = result.iterator().next();
@@ -126,10 +127,12 @@ class ErrorServiceTest extends BaseTest {
       errorService.saveError(bulkOperationId, "123", "Error message 123", ErrorType.ERROR);
       errorService.saveError(bulkOperationId, "456", "Error message 456", ErrorType.WARNING);
 
-      var expectedFileName = bulkOperationId + "/" + LocalDate.now() + "-Committing-changes-Errors-records.csv";
+      var expectedFileName = bulkOperationId + "/" + LocalDate.now()
+              + "-Committing-changes-Errors-records.csv";
       when(remoteFileSystemClient.put(any(), eq(expectedFileName))).thenReturn(expectedFileName);
 
-      var result = errorService.uploadErrorsToStorage(bulkOperationId, ERROR_COMMITTING_FILE_NAME_PREFIX, null);
+      var result = errorService.uploadErrorsToStorage(bulkOperationId,
+              ERROR_COMMITTING_FILE_NAME_PREFIX, null);
       assertThat(result, equalTo(expectedFileName));
 
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
@@ -137,24 +140,27 @@ class ErrorServiceTest extends BaseTest {
       var actual = new String(streamCaptor.getValue().readAllBytes());
       var actualArr = actual.split("\n");
       Arrays.sort(actualArr);
-      var expectedArr = new String[] {"ERROR,123,Error message 123", "WARNING,456,Error message 456"};
+      var expectedArr
+              = new String[] {"ERROR,123,Error message 123", "WARNING,456,Error message 456"};
       assertArrayEquals(expectedArr, actualArr);
     }
   }
 
   @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "COMPLETED" }, mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "COMPLETED" },
+          mode = EnumSource.Mode.INCLUDE)
   void shouldGetErrorsPreviewByBulkOperationId(OperationStatusType statusType) throws IOException {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = bulkOperationRepository.save(BulkOperation.builder()
-        .id(UUID.randomUUID())
-        .dataExportJobId(UUID.randomUUID())
-          .linkToMatchedRecordsErrorsCsvFile("link-to-errors-csv")
-        .status(statusType).build()).getId();
+              .id(UUID.randomUUID())
+              .dataExportJobId(UUID.randomUUID())
+              .linkToMatchedRecordsErrorsCsvFile("link-to-errors-csv")
+              .status(statusType).build()).getId();
 
       mockErrorsData(statusType, operationId);
 
-      var actualWithOffset = errorService.getErrorsPreviewByBulkOperationId(operationId, 2, 1, null);
+      var actualWithOffset = errorService.getErrorsPreviewByBulkOperationId(operationId, 2, 1,
+              null);
       assertThat(actualWithOffset.getErrors(), hasSize(1));
       assertThat(actualWithOffset.getTotalRecords(), equalTo(2));
 
@@ -163,25 +169,33 @@ class ErrorServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED_WITH_ERRORS", "COMPLETED", "REVIEWED_NO_MARC_RECORDS" }, mode = EnumSource.Mode.EXCLUDE)
+  @EnumSource(value = OperationStatusType.class,
+          names = {
+            "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED_WITH_ERRORS",
+            "COMPLETED", "REVIEWED_NO_MARC_RECORDS" },
+          mode = EnumSource.Mode.EXCLUDE)
   void shouldRejectErrorsPreviewOnWrongOperationStatus(OperationStatusType statusType) {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).status(statusType).build()).getId();
+      var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID())
+              .status(statusType).build()).getId();
 
-      assertThrows(NotFoundException.class, () -> errorService.getErrorsPreviewByBulkOperationId(operationId, 10, 0, ErrorType.ERROR));
+      assertThrows(NotFoundException.class,
+              () -> errorService.getErrorsPreviewByBulkOperationId(operationId, 10, 0,
+                      ErrorType.ERROR));
 
       bulkOperationRepository.deleteById(operationId);
     }
   }
 
   @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "COMPLETED" }, mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "COMPLETED" },
+          mode = EnumSource.Mode.INCLUDE)
   void shouldGetErrorsCsvByBulkOperationId(OperationStatusType statusType) throws IOException {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID())
-        .linkToMatchedRecordsErrorsCsvFile("link-to-errors-csv")
-        .dataExportJobId(UUID.randomUUID())
-        .status(statusType).build()).getId();
+              .linkToMatchedRecordsErrorsCsvFile("link-to-errors-csv")
+              .dataExportJobId(UUID.randomUUID())
+              .status(statusType).build()).getId();
 
       var expected = "ERROR,123,No match found\nERROR,456,Invalid format".split(LF);
 
@@ -199,12 +213,17 @@ class ErrorServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class, names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED", "COMPLETED_WITH_ERRORS", "REVIEWED_NO_MARC_RECORDS" }, mode = EnumSource.Mode.EXCLUDE)
+  @EnumSource(value = OperationStatusType.class,
+          names = { "DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED",
+                    "COMPLETED_WITH_ERRORS", "REVIEWED_NO_MARC_RECORDS" },
+          mode = EnumSource.Mode.EXCLUDE)
   void shouldRejectErrorsCsvOnWrongOperationStatus(OperationStatusType statusType) {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID()).status(statusType).build()).getId();
+      var operationId = bulkOperationRepository.save(BulkOperation.builder().id(UUID.randomUUID())
+              .status(statusType).build()).getId();
 
-      assertThrows(NotFoundException.class, () -> errorService.getErrorsCsvByBulkOperationId(operationId, 0, ErrorType.ERROR));
+      assertThrows(NotFoundException.class,
+              () -> errorService.getErrorsCsvByBulkOperationId(operationId, 0, ErrorType.ERROR));
 
       bulkOperationRepository.deleteById(operationId);
     }
@@ -217,27 +236,27 @@ class ErrorServiceTest extends BaseTest {
       var jobId = UUID.randomUUID();
 
       var operationId = bulkOperationRepository.save(BulkOperation.builder()
-          .id(UUID.randomUUID())
-          .status(COMPLETED_WITH_ERRORS)
-          .committedNumOfErrors(committedErrors)
-          .linkToMatchedRecordsErrorsCsvFile("link-to-errors-csv")
-          .dataExportJobId(jobId)
-          .build())
-        .getId();
+                      .id(UUID.randomUUID())
+                      .status(COMPLETED_WITH_ERRORS)
+                      .committedNumOfErrors(committedErrors)
+                      .linkToMatchedRecordsErrorsCsvFile("link-to-errors-csv")
+                      .dataExportJobId(jobId)
+                      .build())
+              .getId();
 
       mockErrorsData(COMPLETED_WITH_ERRORS, operationId);
 
       if (committedErrors == 1) {
         executionContentRepository.save(BulkOperationExecutionContent.builder()
-          .bulkOperationId(operationId)
-          .identifier("123")
-          .errorMessage("No match found")
-          .build());
+                .bulkOperationId(operationId)
+                .identifier("123")
+                .errorMessage("No match found")
+                .build());
         executionContentRepository.save(BulkOperationExecutionContent.builder()
-          .bulkOperationId(operationId)
-          .identifier("456")
-          .errorMessage("Invalid format")
-          .build());
+                .bulkOperationId(operationId)
+                .identifier("456")
+                .errorMessage("Invalid format")
+                .build());
       }
 
       var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 10, 0, null);
@@ -249,34 +268,35 @@ class ErrorServiceTest extends BaseTest {
 
   @ParameterizedTest
   @ValueSource(ints = {0, 1})
-  void shouldReturnOnlyErrorsTotalNumberPreviewOnCompletedWithErrors(int committedErrors) throws IOException {
+  void shouldReturnOnlyErrorsTotalNumberPreviewOnCompletedWithErrors(int committedErrors)
+          throws IOException {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var jobId = UUID.randomUUID();
 
       var operationId = bulkOperationRepository.save(BulkOperation.builder()
-          .id(UUID.randomUUID())
-          .status(COMPLETED_WITH_ERRORS)
-          .committedNumOfErrors(committedErrors)
-          .linkToMatchedRecordsErrorsCsvFile("link-to-errors-csv")
-          .dataExportJobId(jobId)
-          .build())
-        .getId();
+                      .id(UUID.randomUUID())
+                      .status(COMPLETED_WITH_ERRORS)
+                      .committedNumOfErrors(committedErrors)
+                      .linkToMatchedRecordsErrorsCsvFile("link-to-errors-csv")
+                      .dataExportJobId(jobId)
+                      .build())
+              .getId();
 
       mockErrorsData(COMPLETED_WITH_ERRORS, operationId);
 
       if (committedErrors == 1) {
         executionContentRepository.save(BulkOperationExecutionContent.builder()
-          .bulkOperationId(operationId)
-          .identifier("123")
-            .errorType(ErrorType.ERROR)
-          .errorMessage("No match found")
-          .build());
+                .bulkOperationId(operationId)
+                .identifier("123")
+                .errorType(ErrorType.ERROR)
+                .errorMessage("No match found")
+                .build());
         executionContentRepository.save(BulkOperationExecutionContent.builder()
-          .bulkOperationId(operationId)
-          .identifier("456")
-            .errorType(ErrorType.ERROR)
-          .errorMessage("Invalid format")
-          .build());
+                .bulkOperationId(operationId)
+                .identifier("456")
+                .errorType(ErrorType.ERROR)
+                .errorMessage("Invalid format")
+                .build());
       }
 
       var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 0, 0, null);
@@ -289,28 +309,30 @@ class ErrorServiceTest extends BaseTest {
   @Test
   void testOptimisticLockErrorProcessing() {
 
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var operationId = bulkOperationRepository.save(BulkOperation.builder()
-          .id(UUID.randomUUID())
-          .status(COMPLETED_WITH_ERRORS)
-          .committedNumOfErrors(1)
-          .dataExportJobId(UUID.randomUUID())
-          .build())
-        .getId();
+                      .id(UUID.randomUUID())
+                      .status(COMPLETED_WITH_ERRORS)
+                      .committedNumOfErrors(1)
+                      .dataExportJobId(UUID.randomUUID())
+                      .build())
+              .getId();
 
-      var link = "/inventory/view/ff12f28b-1982-4a8d-982c-c797bf92d479/1028b1eb-0b9d-4fe9-a458-2f0a8570cf9c";
+      var link = "/inventory/view/ff12f28b-1982-4a8d-982c-c797bf92d479/"
+              + "1028b1eb-0b9d-4fe9-a458-2f0a8570cf9c";
       var message = format(CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING, 2, 1);
 
       executionContentRepository.save(BulkOperationExecutionContent.builder()
-        .bulkOperationId(operationId)
-        .identifier("789")
-        .errorMessage(format("%s %s", message, link))
-        .uiErrorMessage(message)
-        .linkToFailedEntity(link)
-        .errorType(ErrorType.ERROR)
-        .build());
+              .bulkOperationId(operationId)
+              .identifier("789")
+              .errorMessage(format("%s %s", message, link))
+              .uiErrorMessage(message)
+              .linkToFailedEntity(link)
+              .errorType(ErrorType.ERROR)
+              .build());
 
-      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1, 0, ErrorType.ERROR);
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operationId, 1, 0,
+              ErrorType.ERROR);
 
       assertThat(errors.getErrors(), hasSize(1));
       assertThat(errors.getErrors().get(0).getParameters(), hasSize(2));
@@ -325,63 +347,70 @@ class ErrorServiceTest extends BaseTest {
 
   @ParameterizedTest
   @CsvSource(textBlock = """
-      ID            | true
-      INSTANCE_HRID | true
-      ID            | false
-      INSTANCE_HRID | false
-    """, delimiter = '|')
+            ID            | true
+            INSTANCE_HRID | true
+            ID            | false
+            INSTANCE_HRID | false
+          """, delimiter = '|')
   void testSaveErrorsFromDataImport(IdentifierType identifierType, boolean relatedInstanceInfo) {
     final var sourceRecordId = UUID.randomUUID().toString();
     final var dataExportJobId = UUID.randomUUID();
     final var instanceId = UUID.randomUUID().toString();
     final var instanceInfo = new RelatedInstanceInfo()
-      .withIdList(List.of(instanceId))
-      .withHridList(List.of("instance HRID"));
+            .withIdList(List.of(instanceId))
+            .withHridList(List.of("instance HRID"));
     var logEntries = List.of(new JobLogEntry()
-      .withError("some MARC error #1").withSourceRecordId(sourceRecordId).withRelatedInstanceInfo(
-        relatedInstanceInfo ? instanceInfo : new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
-      ), new JobLogEntry()
-      .withError("some MARC error #2").withSourceRecordId(sourceRecordId).withRelatedInstanceInfo(
-        relatedInstanceInfo ? instanceInfo : new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
-      ));
+            .withError("some MARC error #1").withSourceRecordId(sourceRecordId)
+            .withRelatedInstanceInfo(
+                    relatedInstanceInfo ? instanceInfo : new RelatedInstanceInfo()
+                            .withIdList(List.of()).withHridList(List.of())
+            ), new JobLogEntry()
+            .withError("some MARC error #2").withSourceRecordId(sourceRecordId)
+            .withRelatedInstanceInfo(
+                    relatedInstanceInfo ? instanceInfo : new RelatedInstanceInfo()
+                            .withIdList(List.of()).withHridList(List.of())
+            ));
 
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var operation = bulkOperationRepository.save(BulkOperation.builder()
-        .id(UUID.randomUUID())
-        .status(COMPLETED_WITH_ERRORS)
-        .identifierType(identifierType)
-        .committedNumOfErrors(2)
-        .dataExportJobId(dataExportJobId)
-        .build());
+              .id(UUID.randomUUID())
+              .status(COMPLETED_WITH_ERRORS)
+              .identifierType(identifierType)
+              .committedNumOfErrors(2)
+              .dataExportJobId(dataExportJobId)
+              .build());
 
       errorService.saveErrorsFromDataImport(logEntries, operation);
 
-      var errors = errorService.getErrorsPreviewByBulkOperationId(operation.getId(), 2, 1, ErrorType.ERROR);
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operation.getId(), 2, 1,
+              ErrorType.ERROR);
       assertThat(errors.getErrors(), hasSize(1));
       assertThat(errors.getTotalRecords(), equalTo(2));
-      assertThat(errors.getErrors().stream().map(Error::getMessage).toList(), anyOf(contains("some MARC error #1"), contains("some MARC error #2")));
+      assertThat(errors.getErrors().stream().map(Error::getMessage).toList(),
+              anyOf(contains("some MARC error #1"), contains("some MARC error #2")));
     }
   }
 
   @Test
-  void shouldNotSaveError_IfErrorFromDataImportIsEmpty() {
+  void shouldNotSaveErrorIfErrorFromDataImportIsEmpty() {
     final var dataExportJobId = UUID.randomUUID();
     var logEntries = List.of(new JobLogEntry()
-      .withError("").withRelatedInstanceInfo(
-        new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
-      ));
+            .withError("").withRelatedInstanceInfo(
+                    new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())
+            ));
 
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var operation = bulkOperationRepository.save(BulkOperation.builder()
-        .id(UUID.randomUUID())
-        .status(COMPLETED)
-        .identifierType(IdentifierType.ID)
-        .dataExportJobId(dataExportJobId)
-        .build());
+              .id(UUID.randomUUID())
+              .status(COMPLETED)
+              .identifierType(IdentifierType.ID)
+              .dataExportJobId(dataExportJobId)
+              .build());
 
       errorService.saveErrorsFromDataImport(logEntries, operation);
 
-      var errors = errorService.getErrorsPreviewByBulkOperationId(operation.getId(), 1, 1, ErrorType.ERROR);
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operation.getId(), 1, 1,
+              ErrorType.ERROR);
       assertThat(errors.getErrors(), hasSize(0));
     }
   }
@@ -390,21 +419,23 @@ class ErrorServiceTest extends BaseTest {
   void testSaveErrorsFromDataImport_whenDiscardedAndNoMessage() {
     final var dataExportJobId = UUID.randomUUID();
     var logEntries = Collections.singletonList(new JobLogEntry()
-      .withSourceRecordActionStatus(JobLogEntry.ActionStatus.DISCARDED).withError("")
-      .withRelatedInstanceInfo(new RelatedInstanceInfo().withIdList(List.of()).withHridList(List.of())));
+            .withSourceRecordActionStatus(JobLogEntry.ActionStatus.DISCARDED).withError("")
+            .withRelatedInstanceInfo(new RelatedInstanceInfo()
+                    .withIdList(List.of()).withHridList(List.of())));
 
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var operation = bulkOperationRepository.save(BulkOperation.builder()
-        .id(UUID.randomUUID())
-        .status(COMPLETED_WITH_ERRORS)
-        .identifierType(IdentifierType.ID)
-        .committedNumOfErrors(1)
-        .dataExportJobId(dataExportJobId)
-        .build());
+              .id(UUID.randomUUID())
+              .status(COMPLETED_WITH_ERRORS)
+              .identifierType(IdentifierType.ID)
+              .committedNumOfErrors(1)
+              .dataExportJobId(dataExportJobId)
+              .build());
 
       errorService.saveErrorsFromDataImport(logEntries, operation);
 
-      var errors = errorService.getErrorsPreviewByBulkOperationId(operation.getId(), 1, 0, ErrorType.ERROR);
+      var errors = errorService.getErrorsPreviewByBulkOperationId(operation.getId(), 1, 0,
+              ErrorType.ERROR);
       assertThat(errors.getErrors(), hasSize(1));
       assertEquals(DATA_IMPORT_ERROR_DISCARDED, errors.getErrors().get(0).getMessage());
     }
@@ -412,33 +443,33 @@ class ErrorServiceTest extends BaseTest {
 
   @Test
   void getCommittedNumOfErrorsAndWarningsTest() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       bulkOperationRepository.save(BulkOperation.builder()
-        .id(bulkOperationId)
-        .status(COMPLETED_WITH_ERRORS)
-        .committedNumOfErrors(2)
-        .committedNumOfWarnings(1)
-        .linkToCommittedRecordsErrorsCsvFile("link")
-        .dataExportJobId(UUID.randomUUID())
-        .build());
+              .id(bulkOperationId)
+              .status(COMPLETED_WITH_ERRORS)
+              .committedNumOfErrors(2)
+              .committedNumOfWarnings(1)
+              .linkToCommittedRecordsErrorsCsvFile("link")
+              .dataExportJobId(UUID.randomUUID())
+              .build());
       executionContentRepository.save(BulkOperationExecutionContent.builder()
-        .bulkOperationId(bulkOperationId)
-        .identifier("123")
-        .errorMessage(format("%s %s", "message", "link"))
-        .errorType(ErrorType.ERROR)
-        .build());
+              .bulkOperationId(bulkOperationId)
+              .identifier("123")
+              .errorMessage(format("%s %s", "message", "link"))
+              .errorType(ErrorType.ERROR)
+              .build());
       executionContentRepository.save(BulkOperationExecutionContent.builder()
-        .bulkOperationId(bulkOperationId)
-        .identifier("456")
-        .errorMessage(format("%s %s", "message", "link"))
-        .errorType(ErrorType.ERROR)
-        .build());
+              .bulkOperationId(bulkOperationId)
+              .identifier("456")
+              .errorMessage(format("%s %s", "message", "link"))
+              .errorType(ErrorType.ERROR)
+              .build());
       executionContentRepository.save(BulkOperationExecutionContent.builder()
-        .bulkOperationId(bulkOperationId)
-        .identifier("789")
-        .errorMessage(format("%s %s", "message", "link"))
-        .errorType(ErrorType.WARNING)
-        .build());
+              .bulkOperationId(bulkOperationId)
+              .identifier("789")
+              .errorMessage(format("%s %s", "message", "link"))
+              .errorType(ErrorType.WARNING)
+              .build());
 
       assertEquals(2, errorService.getCommittedNumOfErrors(bulkOperationId));
       assertEquals(1, errorService.getCommittedNumOfWarnings(bulkOperationId));
@@ -447,107 +478,115 @@ class ErrorServiceTest extends BaseTest {
 
   @Test
   void uploadErrorsToStorageShouldReturnNullWhenContentsIsEmpty() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      assertNull(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_COMMITTING_FILE_NAME_PREFIX, null));
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      assertNull(errorService.uploadErrorsToStorage(bulkOperationId,
+              ERROR_COMMITTING_FILE_NAME_PREFIX, null));
     }
   }
 
   @Test
   void saveErrorShouldSaveNothingWhenSpecificErrorMsg() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       bulkOperationRepository.save(BulkOperation.builder()
-        .id(bulkOperationId)
-        .status(COMPLETED_WITH_ERRORS)
-        .linkToCommittedRecordsErrorsCsvFile("link")
-        .dataExportJobId(UUID.randomUUID())
-        .build());
+              .id(bulkOperationId)
+              .status(COMPLETED_WITH_ERRORS)
+              .linkToCommittedRecordsErrorsCsvFile("link")
+              .dataExportJobId(UUID.randomUUID())
+              .build());
       executionContentRepository.save(BulkOperationExecutionContent.builder()
-        .bulkOperationId(bulkOperationId)
-        .identifier("123")
-        .errorMessage(format("%s %s", "message", "link"))
-        .errorType(ErrorType.ERROR)
-        .build());
-      errorService.saveError(bulkOperationId, "123", MSG_NO_CHANGE_REQUIRED, "ui msg", "link", ErrorType.ERROR);
-      assertEquals(1, executionContentRepository.countByBulkOperationIdAndErrorType(bulkOperationId, ErrorType.ERROR));
+              .bulkOperationId(bulkOperationId)
+              .identifier("123")
+              .errorMessage(format("%s %s", "message", "link"))
+              .errorType(ErrorType.ERROR)
+              .build());
+      errorService.saveError(bulkOperationId, "123", MSG_NO_CHANGE_REQUIRED, "ui msg",
+              "link", ErrorType.ERROR);
+      assertEquals(1, executionContentRepository.countByBulkOperationIdAndErrorType(
+              bulkOperationId, ErrorType.ERROR));
     }
   }
 
   @Test
   void saveErrorShouldSaveBulkOperationExecutionContent() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationExecContent = BulkOperationExecutionContent.builder()
-        .bulkOperationId(bulkOperationId)
-        .identifier("123")
-        .errorMessage(format("%s %s", "message", "link"))
-        .errorType(ErrorType.ERROR)
-        .build();
+              .bulkOperationId(bulkOperationId)
+              .identifier("123")
+              .errorMessage(format("%s %s", "message", "link"))
+              .errorType(ErrorType.ERROR)
+              .build();
       bulkOperationRepository.save(BulkOperation.builder()
-        .id(bulkOperationId)
-        .status(COMPLETED_WITH_ERRORS)
-        .linkToCommittedRecordsErrorsCsvFile("link")
-        .dataExportJobId(UUID.randomUUID())
-        .build());
+              .id(bulkOperationId)
+              .status(COMPLETED_WITH_ERRORS)
+              .linkToCommittedRecordsErrorsCsvFile("link")
+              .dataExportJobId(UUID.randomUUID())
+              .build());
       errorService.saveError(bulkOperationExecContent);
-      assertEquals(1, executionContentRepository.countByBulkOperationIdAndErrorType(bulkOperationId, ErrorType.ERROR));
+      assertEquals(1, executionContentRepository.countByBulkOperationIdAndErrorType(
+              bulkOperationId, ErrorType.ERROR));
     }
   }
 
   @Test
   void shouldDeleteErrorByOperationId() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationExecContent = BulkOperationExecutionContent.builder()
-        .bulkOperationId(bulkOperationId)
-        .identifier("123")
-        .errorMessage(format("%s %s", "message", "link"))
-        .errorType(ErrorType.ERROR)
-        .build();
+              .bulkOperationId(bulkOperationId)
+              .identifier("123")
+              .errorMessage(format("%s %s", "message", "link"))
+              .errorType(ErrorType.ERROR)
+              .build();
       bulkOperationRepository.save(BulkOperation.builder()
-        .id(bulkOperationId)
-        .status(COMPLETED_WITH_ERRORS)
-        .linkToCommittedRecordsErrorsCsvFile("link")
-        .dataExportJobId(UUID.randomUUID())
-        .build());
+              .id(bulkOperationId)
+              .status(COMPLETED_WITH_ERRORS)
+              .linkToCommittedRecordsErrorsCsvFile("link")
+              .dataExportJobId(UUID.randomUUID())
+              .build());
       executionContentRepository.save(bulkOperationExecContent);
-      assertEquals(1, executionContentRepository.countByBulkOperationIdAndErrorType(bulkOperationId, ErrorType.ERROR));
+      assertEquals(1, executionContentRepository.countByBulkOperationIdAndErrorType(
+              bulkOperationId, ErrorType.ERROR));
       errorService.deleteErrorsByBulkOperationId(bulkOperationId);
-      assertEquals(0, executionContentRepository.countByBulkOperationIdAndErrorType(bulkOperationId, ErrorType.ERROR));
+      assertEquals(0, executionContentRepository.countByBulkOperationIdAndErrorType(
+              bulkOperationId, ErrorType.ERROR));
     }
   }
 
   @Test
   void shouldReturnNothingForErrorsPreviewIfLinkToMatchedErrorsCsvIsNull() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       bulkOperationRepository.save(BulkOperation.builder()
-        .id(bulkOperationId)
-        .status(COMPLETED_WITH_ERRORS)
-        .linkToCommittedRecordsErrorsCsvFile("link")
-        .dataExportJobId(UUID.randomUUID())
-        .build());
+              .id(bulkOperationId)
+              .status(COMPLETED_WITH_ERRORS)
+              .linkToCommittedRecordsErrorsCsvFile("link")
+              .dataExportJobId(UUID.randomUUID())
+              .build());
 
-      var actualNumErrors = errorService.getErrorsPreviewByBulkOperationId(bulkOperationId, 10, 0, ErrorType.ERROR).getTotalRecords();
+      var actualNumErrors = errorService.getErrorsPreviewByBulkOperationId(bulkOperationId, 10, 0,
+              ErrorType.ERROR).getTotalRecords();
       assertEquals(0, actualNumErrors);
     }
   }
 
   @Test
   void shouldReturnNothingForErrorsPreviewForTypeErrorIfOnlyWarningsArePresent() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationExecContent = BulkOperationExecutionContent.builder()
-        .bulkOperationId(bulkOperationId)
-        .identifier("123")
-        .errorMessage(format("%s %s", "message", "link"))
-        .errorType(ErrorType.WARNING)
-        .build();
+              .bulkOperationId(bulkOperationId)
+              .identifier("123")
+              .errorMessage(format("%s %s", "message", "link"))
+              .errorType(ErrorType.WARNING)
+              .build();
       bulkOperationRepository.save(BulkOperation.builder()
-        .id(bulkOperationId)
-        .status(COMPLETED_WITH_ERRORS)
-        .linkToCommittedRecordsErrorsCsvFile("link")
-        .committedNumOfWarnings(1)
-        .dataExportJobId(UUID.randomUUID())
-        .build());
+              .id(bulkOperationId)
+              .status(COMPLETED_WITH_ERRORS)
+              .linkToCommittedRecordsErrorsCsvFile("link")
+              .committedNumOfWarnings(1)
+              .dataExportJobId(UUID.randomUUID())
+              .build());
       executionContentRepository.save(bulkOperationExecContent);
 
-      var actualNumErrors = errorService.getErrorsPreviewByBulkOperationId(bulkOperationId, 10, 0, ErrorType.ERROR).getTotalRecords();
+      var actualNumErrors = errorService.getErrorsPreviewByBulkOperationId(bulkOperationId, 10, 0,
+              ErrorType.ERROR).getTotalRecords();
       assertEquals(0, actualNumErrors);
     }
   }
@@ -555,32 +594,32 @@ class ErrorServiceTest extends BaseTest {
   private void mockErrorsData(OperationStatusType statusType, UUID operationId) throws IOException {
     if (DATA_MODIFICATION == statusType || COMPLETED_WITH_ERRORS == statusType) {
       when(remoteFileSystemClient.get(any()))
-        .thenReturn(Files.newInputStream(Paths.get("src/test/resources/files/errors.csv")));
+              .thenReturn(Files.newInputStream(Paths.get("src/test/resources/files/errors.csv")));
       when(remoteFileSystemClient.getNumOfLines(any()))
-        .thenReturn(2);
+              .thenReturn(2);
     } else {
       executionContentRepository.save(BulkOperationExecutionContent.builder()
-        .bulkOperationId(operationId)
-        .identifier("123")
-        .errorMessage("No match found")
-        .errorType(ErrorType.ERROR)
-        .build());
+              .bulkOperationId(operationId)
+              .identifier("123")
+              .errorMessage("No match found")
+              .errorType(ErrorType.ERROR)
+              .build());
       executionContentRepository.save(BulkOperationExecutionContent.builder()
-        .bulkOperationId(operationId)
-        .identifier("456")
-        .errorMessage("Invalid format")
-        .errorType(ErrorType.ERROR)
-        .build());
+              .bulkOperationId(operationId)
+              .identifier("456")
+              .errorMessage("Invalid format")
+              .errorType(ErrorType.ERROR)
+              .build());
       processingContentRepository.save(BulkOperationProcessingContent.builder()
-        .bulkOperationId(operationId)
-        .identifier("123")
-        .errorMessage("No match found")
-        .build());
+              .bulkOperationId(operationId)
+              .identifier("123")
+              .errorMessage("No match found")
+              .build());
       processingContentRepository.save(BulkOperationProcessingContent.builder()
-        .bulkOperationId(operationId)
-        .identifier("456")
-        .errorMessage("Invalid format")
-        .build());
+              .bulkOperationId(operationId)
+              .identifier("456")
+              .errorMessage("Invalid format")
+              .build());
     }
   }
 }

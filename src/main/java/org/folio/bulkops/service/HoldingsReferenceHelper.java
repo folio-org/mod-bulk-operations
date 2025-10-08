@@ -27,7 +27,8 @@ public class HoldingsReferenceHelper implements InitializingBean {
   }
 
   public HoldingsType getHoldingsTypeByName(String name) {
-    return holdingsReferenceService.getHoldingsTypeByName(name, folioExecutionContext.getTenantId());
+    return holdingsReferenceService.getHoldingsTypeByName(name,
+            folioExecutionContext.getTenantId());
   }
 
   public ItemLocation getLocationById(String id) {
@@ -43,7 +44,8 @@ public class HoldingsReferenceHelper implements InitializingBean {
   }
 
   public String getCallNumberTypeIdByName(String name) {
-    return holdingsReferenceService.getCallNumberTypeIdByName(name, folioExecutionContext.getTenantId());
+    return holdingsReferenceService.getCallNumberTypeIdByName(name,
+            folioExecutionContext.getTenantId());
   }
 
   public String getNoteTypeNameById(String id, String tenantId) {
@@ -75,7 +77,8 @@ public class HoldingsReferenceHelper implements InitializingBean {
   }
 
   public StatisticalCode getStatisticalCodeByName(String name) {
-    return holdingsReferenceService.getStatisticalCodeByName(name, folioExecutionContext.getTenantId());
+    return holdingsReferenceService.getStatisticalCodeByName(name,
+            folioExecutionContext.getTenantId());
   }
 
   public StatisticalCodeType getStatisticalCodeTypeById(String id) {

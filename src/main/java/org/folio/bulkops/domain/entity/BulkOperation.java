@@ -1,29 +1,27 @@
 package org.folio.bulkops.domain.entity;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
-
 import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.Column;
-import lombok.Singular;
-import org.folio.bulkops.domain.converter.PostgresUUIDConverter;
-import org.folio.bulkops.domain.dto.ApproachType;
-import org.folio.bulkops.domain.dto.EntityType;
-import org.folio.bulkops.domain.dto.IdentifierType;
-import org.folio.bulkops.domain.dto.OperationStatusType;
-import org.folio.bulkops.domain.dto.OperationType;
-
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Singular;
+import org.folio.bulkops.domain.converter.PostgresUuidConverter;
+import org.folio.bulkops.domain.dto.ApproachType;
+import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.dto.OperationStatusType;
+import org.folio.bulkops.domain.dto.OperationType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
 import org.hibernate.annotations.Type;
 
@@ -35,7 +33,7 @@ import org.hibernate.annotations.Type;
 @Table(name = "bulk_operation")
 public class BulkOperation {
   @Id
-  @Convert(converter = PostgresUUIDConverter.class)
+  @Convert(converter = PostgresUuidConverter.class)
   private UUID id;
 
   @Column(insertable = false, updatable = false)

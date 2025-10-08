@@ -1,12 +1,11 @@
 package org.folio.bulkops.domain.bean;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.HashMap;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.With;
-
-import java.util.HashMap;
 
 @With
 @Builder(toBuilder = true)

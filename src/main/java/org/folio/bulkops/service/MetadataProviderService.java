@@ -9,6 +9,13 @@ import static org.folio.bulkops.domain.dto.DataImportStatus.CANCELLED;
 import static org.folio.bulkops.domain.dto.DataImportStatus.COMMITTED;
 import static org.folio.bulkops.domain.dto.DataImportStatus.ERROR;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.DataImportClient;
@@ -23,19 +30,12 @@ import org.folio.bulkops.domain.entity.BulkOperation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ForkJoinPool;
-
 @Service
 @RequiredArgsConstructor
 @Log4j2
 public class MetadataProviderService {
-  public static final String MSG_FAILED_TO_GET_LOG_ENTRIES_CHUNK = "Failed to get %d log entries, reason: %s";
+  public static final String MSG_FAILED_TO_GET_LOG_ENTRIES_CHUNK =
+          "Failed to get %d log entries, reason: %s";
   private static final int GET_JOB_LOG_ENTRIES_MAX_RETRIES = 10;
   private static final int GET_JOB_LOG_ENTRIES_RETRY_TIMEOUT = 5000;
 
@@ -51,10 +51,11 @@ public class MetadataProviderService {
 
   public List<DataImportJobExecution> getJobExecutions(UUID jobProfileId) {
     var splitStatus = dataImportClient.getSplitStatus();
-    var subordinationType = TRUE.equals(splitStatus.getSplitStatus()) ?
-      DataImportJobExecution.SubordinationTypeEnum.COMPOSITE_CHILD :
-      DataImportJobExecution.SubordinationTypeEnum.PARENT_SINGLE;
-    return metadataProviderClient.getJobExecutionsByJobProfileId(jobProfileId, Integer.MAX_VALUE).getJobExecutions().stream()
+    var subordinationType = TRUE.equals(splitStatus.getSplitStatus())
+            ? DataImportJobExecution.SubordinationTypeEnum.COMPOSITE_CHILD
+            : DataImportJobExecution.SubordinationTypeEnum.PARENT_SINGLE;
+    return metadataProviderClient.getJobExecutionsByJobProfileId(jobProfileId,
+                    Integer.MAX_VALUE).getJobExecutions().stream()
       .filter(jobExecution -> nonNull(jobExecution.getJobProfileInfo()))
       .filter(jobExecution -> jobExecution.getJobProfileInfo().getId().equals(jobProfileId))
       .filter(jobExecution -> subordinationType.equals(jobExecution.getSubordinationType()))
@@ -62,18 +63,19 @@ public class MetadataProviderService {
   }
 
   public boolean isDataImportJobCompleted(List<DataImportJobExecution> jobExecutions) {
-    return !jobExecutions.isEmpty() && jobExecutions.size() == jobExecutions.get(0).getTotalJobParts() && jobExecutions.stream()
+    return !jobExecutions.isEmpty() && jobExecutions.size()
+            == jobExecutions.getFirst().getTotalJobParts() && jobExecutions.stream()
       .allMatch(jobExecution -> completedStatuses.contains(jobExecution.getStatus()));
   }
 
   public DataImportProgress calculateProgress(List<DataImportJobExecution> jobExecutions) {
     var progress = new DataImportProgress().current(0).total(0);
     jobExecutions.stream()
-      .map(DataImportJobExecution::getProgress)
-      .forEach(dataImportProgress -> {
-        progress.setCurrent(progress.getCurrent() + dataImportProgress.getCurrent());
-        progress.setTotal(progress.getTotal() + dataImportProgress.getTotal());
-      });
+            .map(DataImportJobExecution::getProgress)
+            .forEach(dataImportProgress -> {
+              progress.setCurrent(progress.getCurrent() + dataImportProgress.getCurrent());
+              progress.setTotal(progress.getTotal() + dataImportProgress.getTotal());
+            });
     return progress;
   }
 
@@ -86,27 +88,33 @@ public class MetadataProviderService {
       .toList();
   }
 
-  public List<JobLogEntry> getJobLogEntries(BulkOperation bulkOperation, List<DataImportJobExecution> jobExecutions) {
+  public List<JobLogEntry> getJobLogEntries(BulkOperation bulkOperation,
+                                            List<DataImportJobExecution> jobExecutions) {
     return jobExecutions.stream()
       .map(execution -> getExecutionLogEntries(bulkOperation, execution))
       .flatMap(List::stream)
       .toList();
   }
 
-  private List<JobLogEntry> getExecutionLogEntries(BulkOperation bulkOperation, DataImportJobExecution jobExecution) {
+  private List<JobLogEntry> getExecutionLogEntries(BulkOperation bulkOperation,
+                                                   DataImportJobExecution jobExecution) {
     try (var fjPool = new ForkJoinPool(numOfConcurrentRequests)) {
       var jobExecutionId = jobExecution.getId().toString();
       var retryCounter = 0;
       var totalJobLogEntries = 0;
       var expectedJobLogEntriesNumber = jobExecution.getProgress().getTotal();
       while (retryCounter < GET_JOB_LOG_ENTRIES_MAX_RETRIES) {
-        totalJobLogEntries = metadataProviderClient.getJobLogEntries(jobExecutionId, 1).getTotalRecords();
-        log.info("Get log entries number attempt #{}, total job log entries: {}, expected value: {}", retryCounter, totalJobLogEntries, expectedJobLogEntriesNumber);
+        totalJobLogEntries = metadataProviderClient.getJobLogEntries(jobExecutionId, 1)
+                .getTotalRecords();
+        log.info("Get log entries number attempt #{}, total job log entries: {}, "
+                + "expected value: {}", retryCounter, totalJobLogEntries,
+                expectedJobLogEntriesNumber);
         if (totalJobLogEntries == expectedJobLogEntriesNumber) {
           break;
         } else {
           if (++retryCounter == GET_JOB_LOG_ENTRIES_MAX_RETRIES) {
-            log.error("Expected number of job log entries ({}) was not reached after {} retries", expectedJobLogEntriesNumber, retryCounter);
+            log.error("Expected number of job log entries ({}) was not reached after {} retries",
+                    expectedJobLogEntriesNumber, retryCounter);
           } else {
             Thread.sleep(GET_JOB_LOG_ENTRIES_RETRY_TIMEOUT);
           }
@@ -132,14 +140,18 @@ public class MetadataProviderService {
     return offsets;
   }
 
-  private List<JobLogEntry> getEntries(BulkOperation bulkOperation, String jobExecutionId, int offset, int limit) {
+  private List<JobLogEntry> getEntries(BulkOperation bulkOperation, String jobExecutionId,
+                                       int offset, int limit) {
     List<JobLogEntry> entries = new ArrayList<>();
     try {
       var retryCounter = 0;
       while (retryCounter < GET_JOB_LOG_ENTRIES_MAX_RETRIES) {
-        entries = metadataProviderClient.getJobLogEntries(jobExecutionId, offset, limit).getEntries();
-        var hasNullStatuses = entries.stream().anyMatch(entry -> isNull(entry.getSourceRecordActionStatus()));
-        log.info("Get log entries attempt #{}, has null statuses: {}", retryCounter, hasNullStatuses);
+        entries = metadataProviderClient.getJobLogEntries(
+                jobExecutionId, offset, limit).getEntries();
+        var hasNullStatuses = entries.stream().anyMatch(entry -> isNull(
+                entry.getSourceRecordActionStatus()));
+        log.info("Get log entries attempt #{}, has null statuses: {}",
+                retryCounter, hasNullStatuses);
         if (hasNullStatuses) {
           if (++retryCounter == GET_JOB_LOG_ENTRIES_MAX_RETRIES) {
             log.info("Null statuses are present after {} retries", retryCounter);
@@ -153,8 +165,11 @@ public class MetadataProviderService {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     } catch (Exception e) {
-      log.error("Failed to get chunk offset={}, limit={}, reason: {}", offset, limit, e.getMessage());
-      errorService.saveError(bulkOperation.getId(), EMPTY, MSG_FAILED_TO_GET_LOG_ENTRIES_CHUNK.formatted(limit, e.getMessage()), ErrorType.ERROR);
+      log.error("Failed to get chunk offset={}, limit={}, reason: {}", offset,
+              limit, e.getMessage());
+      errorService.saveError(bulkOperation.getId(),
+              EMPTY, MSG_FAILED_TO_GET_LOG_ENTRIES_CHUNK.formatted(limit, e.getMessage()),
+              ErrorType.ERROR);
     }
     return entries;
   }

@@ -1,8 +1,7 @@
 package org.folio.bulkops.domain.bean;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,8 +28,8 @@ public class ExtendedItem implements BulkOperationsEntity {
   }
 
   @Override
-  public Integer _version() {
-    return entity._version();
+  public Integer entityVersion() {
+    return entity.entityVersion();
   }
 
   @Override
@@ -48,8 +47,8 @@ public class ExtendedItem implements BulkOperationsEntity {
   public void setTenantToNotes(List<TenantNotePair> tenantNotePairs) {
     entity.getNotes().forEach(note -> {
       var tenantNotePair = tenantNotePairs.stream()
-        .filter(pair -> pair.getNoteTypeId().equals(note.getItemNoteTypeId()))
-        .findFirst();
+              .filter(pair -> pair.getNoteTypeId().equals(note.getItemNoteTypeId()))
+              .findFirst();
       if (tenantNotePair.isPresent()) {
         note.setTenantId(tenantNotePair.get().getTenantId());
         note.setItemNoteTypeName(tenantNotePair.get().getNoteTypeName());

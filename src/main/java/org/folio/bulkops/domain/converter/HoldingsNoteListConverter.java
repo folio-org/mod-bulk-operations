@@ -9,7 +9,6 @@ import static org.folio.bulkops.util.Utils.booleanToStringNullSafe;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.exception.NotFoundException;
@@ -27,9 +26,11 @@ public class HoldingsNoteListConverter extends BaseConverter<List<HoldingsNote>>
         if (isNull(noteTypeName)) {
           noteTypeName = "";
           try {
-            noteTypeName = HoldingsReferenceHelper.service().getNoteTypeNameById(note.getHoldingsNoteTypeId(), note.getTenantId());
+            noteTypeName = HoldingsReferenceHelper.service()
+                    .getNoteTypeNameById(note.getHoldingsNoteTypeId(), note.getTenantId());
           } catch (NotFoundException e) {
-            log.error("Holding note type with id = {} not found : {}", note.getHoldingsNoteTypeId(), e.getMessage());
+            log.error("Holding note type with id = {} not found : {}",
+                    note.getHoldingsNoteTypeId(), e.getMessage());
           }
         }
         return String.join(ARRAY_DELIMITER,

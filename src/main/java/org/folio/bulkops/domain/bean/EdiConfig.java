@@ -1,13 +1,11 @@
 package org.folio.bulkops.domain.bean;
 
-import java.util.List;
-import java.util.UUID;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,7 +33,7 @@ public class EdiConfig   {
   private String libEdiCode;
 
   /**
-   * The library type for this EDI
+   * The library type for this EDI.
    */
   public enum LibEdiTypeEnum {
     _014_EAN("014/EAN"),
@@ -46,7 +44,7 @@ public class EdiConfig   {
 
     _092_CUSTOMER_ASSIGNED("092/Customer-assigned");
 
-    private String value;
+    private final String value;
 
     LibEdiTypeEnum(String value) {
       this.value = value;
@@ -80,7 +78,7 @@ public class EdiConfig   {
   private String vendorEdiCode;
 
   /**
-   * The library type for this EDI
+   * The library type for this EDI.
    */
   public enum VendorEdiTypeEnum {
     _014_EAN("014/EAN"),
@@ -91,7 +89,7 @@ public class EdiConfig   {
 
     _092_CUSTOMER_ASSIGNED("092/Customer-assigned");
 
-    private String value;
+    private final String value;
 
     VendorEdiTypeEnum(String value) {
       this.value = value;

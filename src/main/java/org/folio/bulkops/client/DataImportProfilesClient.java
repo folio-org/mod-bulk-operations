@@ -11,7 +11,6 @@ import org.folio.bulkops.domain.bean.MappingProfilePost;
 import org.folio.bulkops.domain.bean.MatchProfile;
 import org.folio.bulkops.domain.bean.MatchProfilePost;
 import org.springframework.cloud.openfeign.FeignClient;
-
 import org.springframework.web.bind.annotation.PostMapping;
 
 @FeignClient(name = "data-import-profiles", configuration = FeignClientConfiguration.class)
