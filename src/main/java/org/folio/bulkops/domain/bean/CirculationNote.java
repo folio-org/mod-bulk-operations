@@ -1,9 +1,5 @@
 package org.folio.bulkops.domain.bean;
 
-import java.util.Date;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
@@ -68,8 +64,6 @@ public class CirculationNote {
   private Source source;
 
   @JsonProperty("date")
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
-  private Date date;
-
+  private String date;
 }
 
