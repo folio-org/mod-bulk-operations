@@ -46,8 +46,8 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
             List.of(INSTANCE_ELECTRONIC_ACCESS), true);
 
     assertThat(rowData.getFirst()).isEqualTo(
-      "URL relationship;URI;Link text;Material specified;URL public note\n" +
-      "Related resource;url;text;material;public note");
+            "URL relationship;URI;Link text;Material specified;URL public note\n"
+                    + "Related resource;url;text;material;public note");
   }
 
   @Test
@@ -70,16 +70,16 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
             List.of(INSTANCE_ELECTRONIC_ACCESS), true);
 
     assertThat(rowData.getFirst()).isEqualTo(
-      "URL relationship;URI;Link text;Material specified;URL public note\n" +
-      "Related resource;url;text text2;material;public note public note2");
+            "URL relationship;URI;Link text;Material specified;URL public note\n"
+                    + "Related resource;url;text text2;material;public note public note2");
 
     rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord,
             List.of(INSTANCE_ELECTRONIC_ACCESS), false);
 
     assertThat(rowData.getFirst()).isEqualTo(
-      "Related resource%s;url%s;text text2%s;material%s;public note public note2"
-      .formatted(NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, 
-                 NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER));
+            "Related resource%s;url%s;text text2%s;material%s;public note public note2"
+                    .formatted(NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER,
+                            NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER));
   }
 
   @Test
@@ -100,14 +100,14 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
             List.of(INSTANCE_ELECTRONIC_ACCESS), true);
 
     assertThat(rowData.getFirst()).isEqualTo((
-      "URL relationship;URI;Link text;Material specified;URL public note\n" +
-      "Related resource;-;text;material;public note"));
+            "URL relationship;URI;Link text;Material specified;URL public note\n"
+                    + "Related resource;-;text;material;public note"));
 
     rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord,
             List.of(INSTANCE_ELECTRONIC_ACCESS), false);
 
     assertThat(rowData.getFirst()).isEqualTo((
-      "Related resource\u001f;-\u001f;text\u001f;material\u001f;public note"));
+            "Related resource\u001f;-\u001f;text\u001f;material\u001f;public note"));
   }
 
   @Test
