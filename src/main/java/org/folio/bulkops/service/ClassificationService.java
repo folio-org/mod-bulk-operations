@@ -23,10 +23,10 @@ public class ClassificationService {
 
   private final ClassificationReferenceService classificationReferenceService;
 
-  private static final String delimiter = SPECIAL_ARRAY_DELIMITER;
+  private static final String DELIMITER = SPECIAL_ARRAY_DELIMITER;
 
   public String classificationToString(Classification classification) {
-    return String.join(delimiter,
+    return String.join(DELIMITER,
       isEmpty(classification.getClassificationTypeId()) ? HYPHEN
               : classificationReferenceService.getClassificationTypeNameById(
                       classification.getClassificationTypeId(), null),
@@ -36,7 +36,7 @@ public class ClassificationService {
 
   public Classification restoreClassificationItem(@NotNull String classificationString) {
     if (isNotEmpty(classificationString)) {
-      var tokens = classificationString.split(delimiter, -1);
+      var tokens = classificationString.split(DELIMITER, -1);
       if (NUMBER_OF_CLASSIFICATION_COMPONENTS == tokens.length) {
         return Classification.builder()
           .classificationTypeId(classificationReferenceService.getClassificationTypeIdByName(

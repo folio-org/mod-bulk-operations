@@ -361,17 +361,7 @@ public class PreviewService {
           Optional<String> initial = getInitialNoteTypeId(entityType, action);
 
           if (initial.isPresent()) {
-            var noteTypeName = getNoteTypeNameById(bulkOperation, initial.get());
-            if (noteTypeName.isPresent()) {
-              forceVisibleOptions.add(noteTypeName.get());
-            } else {
-              var type = resolveAndGetItemTypeById(clazz, initial.get());
-              if (StringUtils.isNotEmpty(type)) {
-                forceVisibleOptions.add(type);
-              }
-            }
-            log.info("initial.isPresent() {},{}", folioExecutionContext.getTenantId(),
-                    initial.get());
+            processInitialNoteType(bulkOperation, forceVisibleOptions, initial.get(), clazz);
           } else {
             forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
                     option, entityType));
@@ -379,17 +369,7 @@ public class PreviewService {
 
           var updated = action.getUpdated();
           if (UUID_REGEX.matcher(updated).matches()) {
-            var noteTypeName = getNoteTypeNameById(bulkOperation, updated);
-            if (noteTypeName.isPresent()) {
-              forceVisibleOptions.add(noteTypeName.get());
-            } else {
-              var type = resolveAndGetItemTypeById(clazz, updated);
-              if (StringUtils.isNotEmpty(type)) {
-                forceVisibleOptions.add(type);
-              }
-            }
-            log.info("UUID_REGEX.matcher(updated) {}, {}, {}", noteTypeName, updated,
-                    folioExecutionContext.getTenantId());
+            processUpdatedNoteType(bulkOperation, forceVisibleOptions, updated, clazz);
           } else {
             forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
                     UpdateOptionType.fromValue(updated), entityType));
@@ -415,30 +395,9 @@ public class PreviewService {
             }
           });
         } else if (HOLDINGS_NOTE == option) {
-          var initial = action.getParameters().stream().filter(
-                  p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue)
-                  .findFirst();
-          initial.ifPresent(id -> {
-            var noteTypeName = getNoteTypeNameById(bulkOperation, id);
-            if (noteTypeName.isPresent()) {
-              forceVisibleOptions.add(noteTypeName.get());
-            } else {
-              var type = resolveAndGetItemTypeById(clazz, id);
-              if (StringUtils.isNotEmpty(type)) {
-                forceVisibleOptions.add(type);
-              }
-            }
-          });
+          processInitialHoldingsNote(bulkOperation, forceVisibleOptions, action, clazz);
         } else if (INSTANCE_NOTE == option) {
-          var initial = action.getParameters().stream().filter(
-                  p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue)
-                  .findFirst();
-          initial.ifPresent(id -> {
-            var type = resolveAndGetItemTypeById(clazz, id);
-            if (StringUtils.isNotEmpty(type)) {
-              forceVisibleOptions.add(type);
-            }
-          });
+          processInitialInstanceNote(forceVisibleOptions, action, clazz);
         } else {
           // Default common case - the only this case should be processed in right approach
           forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
@@ -563,5 +522,71 @@ public class PreviewService {
               .map(Parameter::getValue).findFirst() : Optional.empty();
     }
     return initial;
+  }
+
+  private void processInitialNoteType(BulkOperation bulkOperation, Set<String> forceVisibleOptions,
+                                      String initial,
+                                      Class<? extends BulkOperationsEntity> clazz) {
+    var noteTypeName = getNoteTypeNameById(bulkOperation, initial);
+    if (noteTypeName.isPresent()) {
+      forceVisibleOptions.add(noteTypeName.get());
+    } else {
+      var type = resolveAndGetItemTypeById(clazz, initial);
+      if (StringUtils.isNotEmpty(type)) {
+        forceVisibleOptions.add(type);
+      }
+    }
+    log.info("initial.isPresent() {},{}", folioExecutionContext.getTenantId(),
+            initial);
+  }
+
+  private void processUpdatedNoteType(BulkOperation bulkOperation, Set<String> forceVisibleOptions,
+                                     String updated,
+                                     Class<? extends BulkOperationsEntity> clazz) {
+    var noteTypeName = getNoteTypeNameById(bulkOperation, updated);
+    if (noteTypeName.isPresent()) {
+      forceVisibleOptions.add(noteTypeName.get());
+    } else {
+      var type = resolveAndGetItemTypeById(clazz, updated);
+      if (StringUtils.isNotEmpty(type)) {
+        forceVisibleOptions.add(type);
+      }
+    }
+    log.info("UUID_REGEX.matcher(updated) {}, {}, {}", noteTypeName, updated,
+            folioExecutionContext.getTenantId());
+  }
+
+  private void processInitialHoldingsNote(BulkOperation bulkOperation,
+                                          Set<String> forceVisibleOptions,
+                                          org.folio.bulkops.domain.dto.Action action,
+                                          Class<? extends BulkOperationsEntity> clazz) {
+    var initial = action.getParameters().stream().filter(
+                    p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue)
+            .findFirst();
+    initial.ifPresent(id -> {
+      var noteTypeName = getNoteTypeNameById(bulkOperation, id);
+      if (noteTypeName.isPresent()) {
+        forceVisibleOptions.add(noteTypeName.get());
+      } else {
+        var type = resolveAndGetItemTypeById(clazz, id);
+        if (StringUtils.isNotEmpty(type)) {
+          forceVisibleOptions.add(type);
+        }
+      }
+    });
+  }
+
+  private void processInitialInstanceNote(Set<String> forceVisibleOptions,
+                                          org.folio.bulkops.domain.dto.Action action,
+                                          Class<? extends BulkOperationsEntity> clazz) {
+    var initial = action.getParameters().stream().filter(
+                    p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue)
+            .findFirst();
+    initial.ifPresent(id -> {
+      var type = resolveAndGetItemTypeById(clazz, id);
+      if (StringUtils.isNotEmpty(type)) {
+        forceVisibleOptions.add(type);
+      }
+    });
   }
 }

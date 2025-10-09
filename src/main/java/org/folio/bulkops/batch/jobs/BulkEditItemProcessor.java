@@ -117,39 +117,11 @@ public class BulkEditItemProcessor
             }
 
             var affiliatedPermittedTenants = tenantResolver.getAffiliatedPermittedTenantIds(
-                EntityType.ITEM,
-                jobExecution,
-                identifierType,
-                tenantIds,
-                itemIdentifier);
+                EntityType.ITEM, jobExecution, identifierType, tenantIds, itemIdentifier);
 
             affiliatedPermittedTenants.forEach(tenantId -> {
-              try (@SuppressWarnings("unused") var context =
-                       new FolioExecutionContextSetter(
-                           FolioExecutionContextUtil.prepareContextForTenant(
-                               tenantId, folioModuleMetadata, folioExecutionContext))) {
-                var url = getMatchPattern(identifierType).formatted(idType, identifier);
-                var itemCollection = itemClient.getByQuery(url, Integer.MAX_VALUE);
-
-                if (itemCollection.getItems().size() > limit) {
-                  log.error(
-                      "Central tenant case: response from {} for tenant {}: {}",
-                      url,
-                      tenantId,
-                      getResponseAsString(itemCollection)
-                  );
-                  throw new BulkEditException(MULTIPLE_MATCHES_MESSAGE, ErrorType.ERROR);
-                }
-
-                var toAdd = enrichItemsWithHoldingsData(itemCollection, tenantId);
-
-                extendedItemCollection.getExtendedItems().addAll(toAdd);
-                extendedItemCollection.setTotalRecords(
-                    extendedItemCollection.getTotalRecords() + itemCollection.getTotalRecords());
-              } catch (Exception e) {
-                log.error(e.getMessage());
-                throw e;
-              }
+              processWithAffiliatedPermittedTenants(idType, identifier, identifierType, limit,
+                  extendedItemCollection, tenantId);
             });
             return extendedItemCollection;
           }
@@ -195,6 +167,35 @@ public class BulkEditItemProcessor
       return extendedItemCollection;
     } catch (DecodeException e) {
       throw new BulkEditException(ExceptionHelper.fetchMessage(e), ErrorType.ERROR);
+    }
+  }
+
+  private void processWithAffiliatedPermittedTenants(String idType, String identifier,
+                                                      String identifierType, int limit,
+                                                      ExtendedItemCollection extendedItemCollection,
+                                                      String tenantId) {
+    try (@SuppressWarnings("unused") var context =
+                 new FolioExecutionContextSetter(
+                         FolioExecutionContextUtil.prepareContextForTenant(
+                                 tenantId, folioModuleMetadata, folioExecutionContext))) {
+      var url = getMatchPattern(identifierType).formatted(idType, identifier);
+      var itemCollection = itemClient.getByQuery(url, Integer.MAX_VALUE);
+
+      if (itemCollection.getItems().size() > limit) {
+        log.error("Central tenant case: response from {} for tenant {}: {}",
+                url, tenantId, getResponseAsString(itemCollection)
+        );
+        throw new BulkEditException(MULTIPLE_MATCHES_MESSAGE, ErrorType.ERROR);
+      }
+
+      var toAdd = enrichItemsWithHoldingsData(itemCollection, tenantId);
+
+      extendedItemCollection.getExtendedItems().addAll(toAdd);
+      extendedItemCollection.setTotalRecords(
+              extendedItemCollection.getTotalRecords() + itemCollection.getTotalRecords());
+    } catch (Exception e) {
+      log.error(e.getMessage());
+      throw e;
     }
   }
 

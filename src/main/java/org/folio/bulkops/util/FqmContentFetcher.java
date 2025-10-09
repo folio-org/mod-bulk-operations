@@ -169,34 +169,7 @@ public class FqmContentFetcher {
             jsonNode.put(TENANT_ID, tenant.toString());
 
             if (entityType == EntityType.ITEM) {
-
-              var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
-              var value = json.get(FQM_INSTANCES_PUBLICATION_KEY);
-
-              var publications = nonNull(value)
-                  ? objectMapper.readTree(value.toString())
-                  : objectMapper.createArrayNode();
-
-              if (publications.isArray() && !publications.isEmpty()) {
-                title = title.concat(getFirstPublicationAsString(publications.get(0)));
-              }
-
-              jsonNode.put(TITLE,  title);
-
-              var callNumber = Stream.of(json.get(FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY),
-                              json.get(FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY), json.get(
-                      FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY))
-                  .filter(Objects::nonNull)
-                  .map(Object::toString)
-                  .collect(Collectors.joining(SPACE));
-
-              var permanentLocationName = ofNullable(json.get(
-                  FqmKeys.FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY)).orElse(EMPTY).toString();
-
-              jsonNode.put(HOLDINGS_DATA,
-                  join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER,
-                      permanentLocationName,
-                      callNumber));
+              processForItem(json, jsonNode);
             }
 
             if (entityType == EntityType.HOLDINGS_RECORD) {
@@ -328,5 +301,35 @@ public class FqmContentFetcher {
             .errorType(ErrorType.ERROR)
             .errorMessage(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED)
             .build());
+  }
+
+  private void processForItem(Map<String, Object> json, ObjectNode jsonNode) throws Exception {
+    var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
+    var value = json.get(FQM_INSTANCES_PUBLICATION_KEY);
+
+    var publications = nonNull(value)
+            ? objectMapper.readTree(value.toString())
+            : objectMapper.createArrayNode();
+
+    if (publications.isArray() && !publications.isEmpty()) {
+      title = title.concat(getFirstPublicationAsString(publications.get(0)));
+    }
+
+    jsonNode.put(TITLE,  title);
+
+    var callNumber = Stream.of(json.get(FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY),
+                    json.get(FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY), json.get(
+                            FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY))
+            .filter(Objects::nonNull)
+            .map(Object::toString)
+            .collect(Collectors.joining(SPACE));
+
+    var permanentLocationName = ofNullable(json.get(
+            FqmKeys.FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY)).orElse(EMPTY).toString();
+
+    jsonNode.put(HOLDINGS_DATA,
+            join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER,
+                    permanentLocationName,
+                    callNumber));
   }
 }

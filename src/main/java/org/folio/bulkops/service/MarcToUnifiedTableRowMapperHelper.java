@@ -39,8 +39,8 @@ public class MarcToUnifiedTableRowMapperHelper {
   private static final String COMMA = ",";
   private static final String HYPHEN = "-";
   private static final String WHITE_SPACE = " ";
-  private static final String REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD_FOLLOWED_BY_COMMA
-          = "^(.*?)\\s.,[.]$";
+  private static final Pattern REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD_FOLLOWED_BY_COMMA
+          = Pattern.compile("^(.*?)\\s.,[.]$");
   private static final String PUNCTUATION_TO_REMOVE = ";:,/+= ";
   private static final String PERSONAL_NAME = "Personal name";
   private static final String CORPORATE_NAME = "Corporate name";
@@ -382,8 +382,8 @@ public class MarcToUnifiedTableRowMapperHelper {
     if (PATTERN_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD.matcher(input).matches()
             || input.endsWith(HYPHEN)) {
       return input;
-    } else if (input.matches(
-            REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD_FOLLOWED_BY_COMMA)) {
+    } else if (REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD_FOLLOWED_BY_COMMA.matcher(
+            input).matches()) {
       return input.substring(INTEGER_ZERO, input.length() - 2).concat(PERIOD);
     } else if (input.endsWith(PERIOD) || input.endsWith(COMMA)) {
       return input.substring(INTEGER_ZERO, input.length() - 1);
