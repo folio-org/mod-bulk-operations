@@ -68,7 +68,7 @@ public class Constants {
   public static final char NON_PRINTING_DELIMITER = '\u001f';
   public static final String SPECIAL_ARRAY_DELIMITER = NON_PRINTING_DELIMITER + ARRAY_DELIMITER;
   public static final String SPECIAL_ITEM_DELIMITER = NON_PRINTING_DELIMITER + ITEM_DELIMITER;
-  public static final String ELECTRONIC_ACCESS_HEADINGS = "URL relationship;URI;Link text;Materials specified;URL public note\n";
+  public static final String ELECTRONIC_ACCESS_HEADINGS = "URL relationship;URI;Link text;Material specified;URL public note\n";
   public static final String SUBJECT_HEADINGS = "Subject headings;Subject source;Subject type\n";
   public static final String PUBLICATION_HEADINGS = "Publisher;Publisher role;Place of publication;Publication date\n";
   public static final String CLASSIFICATION_HEADINGS = "Classification identifier type;Classification\n";
