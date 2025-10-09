@@ -23,7 +23,9 @@ import org.folio.bulkops.domain.bean.PreferredContactType;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.folio.spring.FolioExecutionContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -39,6 +41,10 @@ public class UserReferenceService {
   private final CustomFieldsClient customFieldsClient;
   private final FolioExecutionContext folioExecutionContext;
   private final OkapiClient okapiClient;
+
+  @Lazy
+  @Autowired
+  private UserReferenceService self;
 
   @Cacheable(cacheNames = "addressTypeIds")
   public AddressType getAddressTypeByAddressTypeValue(String addressTypeValue) {
@@ -99,7 +105,7 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByName(String name)  {
-    return customFieldsClient.getByQuery(getModuleId(MOD_USERS),
+    return customFieldsClient.getByQuery(self.getModuleId(MOD_USERS),
                     format(QUERY_PATTERN_NAME, encode(name)))
       .getCustomFields().stream().filter(customField -> customField.getName().equals(name))
       .findFirst()
@@ -109,7 +115,7 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByRefId(String refId) {
-    return customFieldsClient.getByQuery(getModuleId(MOD_USERS),
+    return customFieldsClient.getByQuery(self.getModuleId(MOD_USERS),
                     format(QUERY_PATTERN_REF_ID, encode(refId)))
       .getCustomFields().stream().filter(
               customField -> customField.getRefId().equals(refId)).findFirst()

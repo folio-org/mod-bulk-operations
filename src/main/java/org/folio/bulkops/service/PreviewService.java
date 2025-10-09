@@ -357,108 +357,22 @@ public class PreviewService {
       rule.getRuleDetails().getActions().forEach(action -> {
 
         if (action.getType() == UpdateActionType.CHANGE_TYPE) {
-
-          Optional<String> initial = Optional.empty();
-          if (EntityType.ITEM == entityType) {
-            initial = CollectionUtils.isNotEmpty(action.getParameters())
-                    ? action.getParameters().stream()
-              .filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey()))
-                    .map(Parameter::getValue).findFirst() : Optional.empty();
-          }
-
-          if (EntityType.HOLDINGS_RECORD == entityType) {
-            initial = CollectionUtils.isNotEmpty(action.getParameters())
-                    ? action.getParameters().stream()
-              .filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey()))
-                    .map(Parameter::getValue).findFirst() : Optional.empty();
-          }
-
-          if (EntityType.INSTANCE == entityType) {
-            initial = CollectionUtils.isNotEmpty(action.getParameters())
-                    ? action.getParameters().stream()
-              .filter(p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey()))
-                    .map(Parameter::getValue).findFirst() : Optional.empty();
-          }
-
-          if (initial.isPresent()) {
-            var noteTypeName = getNoteTypeNameById(bulkOperation, initial.get());
-            if (noteTypeName.isPresent()) {
-              forceVisibleOptions.add(noteTypeName.get());
-            } else {
-              var type = resolveAndGetItemTypeById(clazz, initial.get());
-              if (StringUtils.isNotEmpty(type)) {
-                forceVisibleOptions.add(type);
-              }
-            }
-            log.info("initial.isPresent() {},{}", folioExecutionContext.getTenantId(),
-                    initial.get());
-          } else {
-            forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                    option, entityType));
-          }
-
-          var updated = action.getUpdated();
-          if (UUID_REGEX.matcher(updated).matches()) {
-            var noteTypeName = getNoteTypeNameById(bulkOperation, updated);
-            if (noteTypeName.isPresent()) {
-              forceVisibleOptions.add(noteTypeName.get());
-            } else {
-              var type = resolveAndGetItemTypeById(clazz, updated);
-              if (StringUtils.isNotEmpty(type)) {
-                forceVisibleOptions.add(type);
-              }
-            }
-            log.info("UUID_REGEX.matcher(updated) {}, {}, {}", noteTypeName, updated,
-                    folioExecutionContext.getTenantId());
-          } else {
-            forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                    UpdateOptionType.fromValue(updated), entityType));
-          }
+          var initial = getInitialNoteTypeId(entityType, action.getParameters());
+          addForceVisibleOptionsForInitial(initial, bulkOperation, clazz, option, entityType,
+                  forceVisibleOptions);
         } else if (action.getType() == UpdateActionType.DUPLICATE) {
           forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
                   option, entityType));
           forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
                   UpdateOptionType.fromValue(action.getUpdated()), entityType));
         } else if (ITEM_NOTE == option) {
-          var initial = action.getParameters().stream().filter(
-                  p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue)
-                  .findFirst();
-          initial.ifPresent(id -> {
-            var noteTypeName = getNoteTypeNameById(bulkOperation, id);
-            if (noteTypeName.isPresent()) {
-              forceVisibleOptions.add(noteTypeName.get());
-            } else {
-              var type = resolveAndGetItemTypeById(clazz, id);
-              if (StringUtils.isNotEmpty(type)) {
-                forceVisibleOptions.add(type);
-              }
-            }
-          });
+          addForceVisibleOptionsForItemNote(bulkOperation, clazz, forceVisibleOptions,
+                  action.getParameters());
         } else if (HOLDINGS_NOTE == option) {
-          var initial = action.getParameters().stream().filter(
-                  p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue)
-                  .findFirst();
-          initial.ifPresent(id -> {
-            var noteTypeName = getNoteTypeNameById(bulkOperation, id);
-            if (noteTypeName.isPresent()) {
-              forceVisibleOptions.add(noteTypeName.get());
-            } else {
-              var type = resolveAndGetItemTypeById(clazz, id);
-              if (StringUtils.isNotEmpty(type)) {
-                forceVisibleOptions.add(type);
-              }
-            }
-          });
+          addForceVisibleOptionsForHoldingsNote(bulkOperation, clazz, forceVisibleOptions,
+                  action.getParameters());
         } else if (INSTANCE_NOTE == option) {
-          var initial = action.getParameters().stream().filter(
-                  p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue)
-                  .findFirst();
-          initial.ifPresent(id -> {
-            var type = resolveAndGetItemTypeById(clazz, id);
-            if (StringUtils.isNotEmpty(type)) {
-              forceVisibleOptions.add(type);
-            }
-          });
+          addForceVisibleOptionsForInstanceNote(clazz, forceVisibleOptions, action.getParameters());
         } else {
           // Default common case - the only this case should be processed in right approach
           forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
@@ -469,6 +383,87 @@ public class PreviewService {
     log.info("Bulk Operation ID: {}, forced to visible fields: {}", bulkOperationId.toString(),
             String.join(",", forceVisibleOptions));
     return forceVisibleOptions;
+  }
+
+  private void addForceVisibleOptionsForInitial(
+          Optional<String> initial, BulkOperation bulkOperation,
+          Class<? extends BulkOperationsEntity> clazz,
+          UpdateOptionType option, EntityType entityType,
+          Set<String> forceVisibleOptions) {
+    if (initial.isPresent()) {
+      var noteTypeName = getNoteTypeNameById(bulkOperation, initial.get());
+      if (noteTypeName.isPresent()) {
+        forceVisibleOptions.add(noteTypeName.get());
+      } else {
+        var type = resolveAndGetItemTypeById(clazz, initial.get());
+        if (StringUtils.isNotEmpty(type)) {
+          forceVisibleOptions.add(type);
+        }
+      }
+      log.info("initial.isPresent() {},{}", folioExecutionContext.getTenantId(),
+              initial.get());
+    } else {
+      forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
+              option, entityType));
+    }
+  }
+
+  private void addForceVisibleOptionsForItemNote(
+          BulkOperation bulkOperation, Class<? extends BulkOperationsEntity> clazz,
+          Set<String> forceVisibleOptions, List<Parameter> parameters) {
+    var initial = parameters.stream()
+            .filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey()))
+            .map(Parameter::getValue)
+            .findFirst();
+    initial.ifPresent(id -> {
+      var noteTypeName = getNoteTypeNameById(bulkOperation, id);
+      if (noteTypeName.isPresent()) {
+        forceVisibleOptions.add(noteTypeName.get());
+      } else {
+        var type = resolveAndGetItemTypeById(clazz, id);
+        if (StringUtils.isNotEmpty(type)) {
+          forceVisibleOptions.add(type);
+        }
+      }
+    });
+  }
+
+  private void addForceVisibleOptionsForHoldingsNote(
+          BulkOperation bulkOperation,
+          Class<? extends BulkOperationsEntity> clazz,
+          Set<String> forceVisibleOptions,
+          List<Parameter> parameters
+  ) {
+    var initial = parameters.stream()
+            .filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey()))
+            .map(Parameter::getValue)
+            .findFirst();
+    initial.ifPresent(id -> {
+      var noteTypeName = getNoteTypeNameById(bulkOperation, id);
+      if (noteTypeName.isPresent()) {
+        forceVisibleOptions.add(noteTypeName.get());
+      } else {
+        var type = resolveAndGetItemTypeById(clazz, id);
+        if (StringUtils.isNotEmpty(type)) {
+          forceVisibleOptions.add(type);
+        }
+      }
+    });
+  }
+
+  private void addForceVisibleOptionsForInstanceNote(
+          Class<? extends BulkOperationsEntity> clazz, Set<String> forceVisibleOptions,
+          List<Parameter> parameters) {
+    var initial = parameters.stream()
+            .filter(p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey()))
+            .map(Parameter::getValue)
+            .findFirst();
+    initial.ifPresent(id -> {
+      var type = resolveAndGetItemTypeById(clazz, id);
+      if (StringUtils.isNotEmpty(type)) {
+        forceVisibleOptions.add(type);
+      }
+    });
   }
 
   private String resolveAndGetItemTypeById(Class<? extends BulkOperationsEntity> clazz,
@@ -557,5 +552,33 @@ public class PreviewService {
             pairs -> pairs.stream().filter(
                     pair -> pair.getNoteTypeId().equals(noteTypeId))
       .map(TenantNotePair::getNoteTypeName).findFirst());
+  }
+
+  private Optional<String> getInitialNoteTypeId(EntityType entityType, List<Parameter> parameters) {
+    if (EntityType.ITEM == entityType) {
+      return CollectionUtils.isNotEmpty(parameters)
+              ? parameters.stream()
+              .filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey()))
+              .map(Parameter::getValue)
+              .findFirst()
+              : Optional.empty();
+    }
+    if (EntityType.HOLDINGS_RECORD == entityType) {
+      return CollectionUtils.isNotEmpty(parameters)
+              ? parameters.stream()
+              .filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey()))
+              .map(Parameter::getValue)
+              .findFirst()
+              : Optional.empty();
+    }
+    if (EntityType.INSTANCE == entityType) {
+      return CollectionUtils.isNotEmpty(parameters)
+              ? parameters.stream()
+              .filter(p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey()))
+              .map(Parameter::getValue)
+              .findFirst()
+              : Optional.empty();
+    }
+    return Optional.empty();
   }
 }

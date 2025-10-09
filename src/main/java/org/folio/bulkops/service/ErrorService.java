@@ -162,7 +162,8 @@ public class ErrorService {
     } else if (IdentifierType.INSTANCE_HRID.equals(bulkOperation.getIdentifierType())) {
       identifierList = relatedInstanceInfo.getHridList();
     }
-    var identifier = CollectionUtils.isEmpty(identifierList) ? null : identifierList.getFirst();
+    var identifier = (identifierList == null || identifierList.isEmpty()) ? null
+            : identifierList.getFirst();
     if (errorEntry.getSourceRecordActionStatus() == JobLogEntry.ActionStatus.DISCARDED
             && errorEntry.getError().isEmpty()) {
       errorEntry.setError(DATA_IMPORT_ERROR_DISCARDED);

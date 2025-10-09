@@ -42,8 +42,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -390,10 +388,10 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(ITEM_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(
+    dataProcessor.updater(ITEM_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(
             List.of(parameter)), extendedItem, false).apply(extendedItem);
 
     assertTrue(item.getNotes().getFirst().getStaffOnly());
@@ -408,10 +406,10 @@ class ItemDataProcessorTest extends BaseTest {
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(ITEM_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(
+    dataProcessor.updater(ITEM_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY).parameters(
             List.of(parameter)), extendedItem, false).apply(extendedItem);
 
     assertFalse(item.getNotes().getFirst().getStaffOnly());
@@ -427,17 +425,17 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(
+    dataProcessor.updater(CHECK_IN_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(
             List.of(parameter)), extendedItem, false).apply(extendedItem);
     assertTrue(item.getCirculationNotes().getFirst().getStaffOnly());
 
     circulationNote.setStaffOnly(false);
     circulationNote.setNoteType(CirculationNote.NoteTypeEnum.OUT);
 
-    processor.updater(CHECK_OUT_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(
+    dataProcessor.updater(CHECK_OUT_NOTE, new Action().type(MARK_AS_STAFF_ONLY).parameters(
             List.of(parameter)), extendedItem, false).apply(extendedItem);
     assertTrue(item.getCirculationNotes().getFirst().getStaffOnly());
   }
@@ -452,17 +450,17 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId");
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY)
+    dataProcessor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY)
             .parameters(List.of(parameter)), extendedItem, false).apply(extendedItem);
     assertFalse(item.getCirculationNotes().getFirst().getStaffOnly());
 
     circulationNote.setStaffOnly(true);
     circulationNote.setNoteType(CirculationNote.NoteTypeEnum.OUT);
 
-    processor.updater(CHECK_OUT_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY)
+    dataProcessor.updater(CHECK_OUT_NOTE, new Action().type(REMOVE_MARK_AS_STAFF_ONLY)
             .parameters(List.of(parameter)), extendedItem, false).apply(extendedItem);
     assertFalse(item.getCirculationNotes().getFirst().getStaffOnly());
   }
@@ -473,10 +471,10 @@ class ItemDataProcessorTest extends BaseTest {
     var administrativeNote = "administrative note";
     var item = new Item().withAdministrativeNotes(List.of(administrativeNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(REMOVE_ALL), extendedItem, false)
+    dataProcessor.updater(ADMINISTRATIVE_NOTE, new Action().type(REMOVE_ALL), extendedItem, false)
             .apply(extendedItem);
     assertTrue(item.getAdministrativeNotes().isEmpty());
   }
@@ -488,17 +486,17 @@ class ItemDataProcessorTest extends BaseTest {
     var checkOutNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.OUT);
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_ALL), extendedItem, false)
+    dataProcessor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_ALL), extendedItem, false)
             .apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().getFirst()
             .getNoteType());
 
     item.setCirculationNotes(List.of(checkInNote, checkOutNote));
-    processor.updater(CHECK_OUT_NOTE, new Action().type(REMOVE_ALL), extendedItem, false)
+    dataProcessor.updater(CHECK_OUT_NOTE, new Action().type(REMOVE_ALL), extendedItem, false)
             .apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().getFirst()
@@ -511,12 +509,12 @@ class ItemDataProcessorTest extends BaseTest {
     var checkInNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN);
     var item = new Item().withCirculationNotes(List.of(checkInNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_ALL), extendedItem, false)
+    dataProcessor.updater(CHECK_IN_NOTE, new Action().type(REMOVE_ALL), extendedItem, false)
             .apply(extendedItem);
-    processor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING), extendedItem, false)
+    dataProcessor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING), extendedItem, false)
             .apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().getFirst()
@@ -532,12 +530,12 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).parameters(
+    dataProcessor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).parameters(
             List.of(parameter)).initial("Action"), extendedItem, false).apply(extendedItem);
-    processor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(
+    dataProcessor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(
             List.of(parameter)), extendedItem, false).apply(extendedItem);
     assertEquals(2, item.getNotes().size());
     assertEquals("typeId1", item.getNotes().getFirst().getItemNoteTypeId());
@@ -553,10 +551,10 @@ class ItemDataProcessorTest extends BaseTest {
     var parameter = new Parameter();
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(ITEM_NOTE, new Action().type(REMOVE_ALL).parameters(List.of(parameter)),
+    dataProcessor.updater(ITEM_NOTE, new Action().type(REMOVE_ALL).parameters(List.of(parameter)),
             extendedItem, false).apply(extendedItem);
     assertEquals(1, item.getNotes().size());
     assertEquals("typeId2", item.getNotes().getFirst().getItemNoteTypeId());
@@ -568,15 +566,15 @@ class ItemDataProcessorTest extends BaseTest {
     var administrativeNote1 = "administrative note";
     var item = new Item();
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING)
+    dataProcessor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING)
             .updated(administrativeNote1), extendedItem, false).apply(extendedItem);
     assertEquals(1, item.getAdministrativeNotes().size());
     assertEquals(administrativeNote1, item.getAdministrativeNotes().getFirst());
     var administrativeNote2 = "administrative note 2";
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING)
+    dataProcessor.updater(ADMINISTRATIVE_NOTE, new Action().type(ADD_TO_EXISTING)
             .updated(administrativeNote2), extendedItem, false).apply(extendedItem);
     assertEquals(2, item.getAdministrativeNotes().size());
   }
@@ -587,10 +585,10 @@ class ItemDataProcessorTest extends BaseTest {
     var checkInNote = "checkInNote";
     var item = new Item();
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(ADD_TO_EXISTING).updated(checkInNote),
+    dataProcessor.updater(CHECK_IN_NOTE, new Action().type(ADD_TO_EXISTING).updated(checkInNote),
             extendedItem, false).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals(checkInNote, item.getCirculationNotes().getFirst().getNote());
@@ -598,7 +596,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().getFirst()
             .getNoteType());
     var checkOutNote = "checkOutNote";
-    processor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING).updated(checkOutNote),
+    dataProcessor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING).updated(checkOutNote),
             extendedItem, false).apply(extendedItem);
     assertEquals(2, item.getCirculationNotes().size());
     assertEquals(checkOutNote, item.getCirculationNotes().get(1).getNote());
@@ -607,7 +605,7 @@ class ItemDataProcessorTest extends BaseTest {
 
     List<Parameter> params = Collections.singletonList(
             new Parameter().key(STAFF_ONLY_NOTE_PARAMETER_KEY).value("true"));
-    processor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING).parameters(params)
+    dataProcessor.updater(CHECK_OUT_NOTE, new Action().type(ADD_TO_EXISTING).parameters(params)
             .updated(checkOutNote), extendedItem, false).apply(extendedItem);
     assertEquals(3, item.getCirculationNotes().size());
     assertEquals(checkOutNote, item.getCirculationNotes().get(2).getNote());
@@ -625,10 +623,11 @@ class ItemDataProcessorTest extends BaseTest {
     parameter.setKey(ITEM_NOTE_TYPE_ID_KEY);
     parameter.setValue("typeId1");
 
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(List.of(parameter))
+    dataProcessor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING)
+            .parameters(List.of(parameter))
             .updated(itemNote1), extendedItem, false).apply(extendedItem);
 
     assertEquals(1, item.getNotes().size());
@@ -637,7 +636,7 @@ class ItemDataProcessorTest extends BaseTest {
 
     parameter.setValue("typeId2");
     var itemNote2 = "itemNote2";
-    processor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(
+    dataProcessor.updater(ITEM_NOTE, new Action().type(ADD_TO_EXISTING).parameters(
             List.of(parameter)).updated(itemNote2), extendedItem, false).apply(extendedItem);
 
     assertEquals(2, item.getNotes().size());
@@ -653,10 +652,10 @@ class ItemDataProcessorTest extends BaseTest {
     var item = new Item().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1,
             administrativeNote2)));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE)
+    dataProcessor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REMOVE_THESE)
             .initial("administrative"), extendedItem, false).apply(extendedItem);
     assertEquals(2, item.getAdministrativeNotes().size());
     assertEquals(" note", item.getAdministrativeNotes().get(0));
@@ -672,10 +671,10 @@ class ItemDataProcessorTest extends BaseTest {
             .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("circ note");
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note"),
+    dataProcessor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note"),
             extendedItem, false).apply(extendedItem);
     assertEquals(2, item.getCirculationNotes().size());
     assertEquals("circ note", item.getCirculationNotes().get(0).getNote());
@@ -684,7 +683,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(1).getNoteType());
 
     item.setCirculationNotes(List.of(checkInNote, checkOutNote));
-    processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note"),
+    dataProcessor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note"),
             extendedItem, false).apply(extendedItem);
     assertEquals(2, item.getCirculationNotes().size());
     assertEquals("circ ", item.getCirculationNotes().get(0).getNote());
@@ -703,10 +702,10 @@ class ItemDataProcessorTest extends BaseTest {
     parameter.setValue("typeId1");
     var item = new Item().withNotes(List.of(itemNote1, itemNote2, itemNote3));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("Note2")
+    dataProcessor.updater(ITEM_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("Note2")
             .parameters(List.of(parameter)), extendedItem, false).apply(extendedItem);
     assertEquals(3, item.getNotes().size());
     assertEquals("itemNote1", item.getNotes().get(0).getNote());
@@ -725,10 +724,10 @@ class ItemDataProcessorTest extends BaseTest {
     var item = new Item().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote1,
             administrativeNote2)));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REPLACE)
+    dataProcessor.updater(ADMINISTRATIVE_NOTE, new Action().type(FIND_AND_REPLACE)
             .initial("administrative").updated("new administrative"), extendedItem, false)
             .apply(extendedItem);
     assertEquals(2, item.getAdministrativeNotes().size());
@@ -745,10 +744,10 @@ class ItemDataProcessorTest extends BaseTest {
             .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("check-out note");
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
+    dataProcessor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REPLACE)
             .initial("check-in").updated("new check-in"), extendedItem, false).apply(extendedItem);
     assertEquals(2, item.getCirculationNotes().size());
     assertEquals("new check-in note", item.getCirculationNotes().get(0).getNote());
@@ -758,7 +757,7 @@ class ItemDataProcessorTest extends BaseTest {
 
     checkInNote.setNote("check-in note");
 
-    processor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REPLACE)
+    dataProcessor.updater(CHECK_OUT_NOTE, new Action().type(FIND_AND_REPLACE)
             .initial("check-out").updated("new check-out"), extendedItem, false)
             .apply(extendedItem);
     assertEquals(2, item.getCirculationNotes().size());
@@ -858,10 +857,11 @@ class ItemDataProcessorTest extends BaseTest {
     parameter.setValue("typeId1");
     var item = new Item().withNotes(List.of(itemNote1, itemNote2));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(ITEM_NOTE, new Action().type(FIND_AND_REPLACE).parameters(List.of(parameter))
+    dataProcessor.updater(ITEM_NOTE, new Action().type(FIND_AND_REPLACE)
+            .parameters(List.of(parameter))
             .initial("itemNote1").updated("itemNote3"), extendedItem, false).apply(extendedItem);
 
     assertEquals("itemNote3", item.getNotes().get(0).getNote());
@@ -874,10 +874,10 @@ class ItemDataProcessorTest extends BaseTest {
     var administrativeNote = "note";
     var item = new Item().withAdministrativeNotes(new ArrayList<>(List.of(administrativeNote)));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
+    dataProcessor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
             .updated(CHECK_IN_NOTE_TYPE), extendedItem, false).apply(extendedItem);
     assertEquals(0, item.getAdministrativeNotes().size());
     assertEquals(1, item.getCirculationNotes().size());
@@ -888,7 +888,7 @@ class ItemDataProcessorTest extends BaseTest {
     item.setCirculationNotes(null);
     item.setAdministrativeNotes(List.of(administrativeNote));
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
+    dataProcessor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
             .updated(CHECK_OUT_NOTE_TYPE), extendedItem, false).apply(extendedItem);
     assertEquals(0, item.getAdministrativeNotes().size());
     assertEquals(1, item.getCirculationNotes().size());
@@ -899,7 +899,7 @@ class ItemDataProcessorTest extends BaseTest {
     item.setCirculationNotes(null);
     item.setAdministrativeNotes(List.of(administrativeNote));
 
-    processor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
+    dataProcessor.updater(ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE)
             .updated("typeId"), extendedItem, false).apply(extendedItem);
 
     assertEquals(0, item.getAdministrativeNotes().size());
@@ -917,10 +917,10 @@ class ItemDataProcessorTest extends BaseTest {
             .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note 2").withStaffOnly(true);
     var item = new Item().withCirculationNotes(List.of(checkInNote, checkOutNote));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(CHANGE_TYPE)
+    dataProcessor.updater(CHECK_IN_NOTE, new Action().type(CHANGE_TYPE)
             .updated(CHECK_OUT_NOTE_TYPE), extendedItem, false).apply(extendedItem);
     assertEquals(2, item.getCirculationNotes().size());
     assertEquals("note", item.getCirculationNotes().getFirst().getNote());
@@ -930,7 +930,7 @@ class ItemDataProcessorTest extends BaseTest {
 
     checkInNote.setNoteType(CirculationNote.NoteTypeEnum.IN);
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(CHANGE_TYPE)
+    dataProcessor.updater(CHECK_IN_NOTE, new Action().type(CHANGE_TYPE)
             .updated(ADMINISTRATIVE_NOTE_TYPE), extendedItem, false).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().getFirst()
@@ -941,7 +941,7 @@ class ItemDataProcessorTest extends BaseTest {
     item.setAdministrativeNotes(null);
     item.setCirculationNotes(List.of(checkInNote, checkOutNote));
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(CHANGE_TYPE)
+    dataProcessor.updater(CHECK_IN_NOTE, new Action().type(CHANGE_TYPE)
             .updated("typeId"), extendedItem, false).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().getFirst()
@@ -963,10 +963,11 @@ class ItemDataProcessorTest extends BaseTest {
     parameter.setValue("typeId1");
     var item = new Item().withNotes(List.of(itemNote1, itemNote2));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(ADMINISTRATIVE_NOTE_TYPE)
+    dataProcessor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE)
+            .updated(ADMINISTRATIVE_NOTE_TYPE)
             .parameters(List.of(parameter)), extendedItem, false).apply(extendedItem);
 
     assertEquals(1, item.getAdministrativeNotes().size());
@@ -977,7 +978,7 @@ class ItemDataProcessorTest extends BaseTest {
     item.setAdministrativeNotes(null);
     item.setNotes(List.of(itemNote1, itemNote2));
 
-    processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(CHECK_IN_NOTE_TYPE)
+    dataProcessor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(CHECK_IN_NOTE_TYPE)
             .parameters(List.of(parameter)), extendedItem, false).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals("itemNote1", item.getCirculationNotes().getFirst().getNote());
@@ -990,7 +991,7 @@ class ItemDataProcessorTest extends BaseTest {
     item.setCirculationNotes(null);
     item.setNotes(List.of(itemNote1, itemNote2));
 
-    processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(CHECK_OUT_NOTE_TYPE)
+    dataProcessor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(CHECK_OUT_NOTE_TYPE)
             .parameters(List.of(parameter)), extendedItem, false).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals("itemNote1", item.getCirculationNotes().getFirst().getNote());
@@ -1003,7 +1004,7 @@ class ItemDataProcessorTest extends BaseTest {
     item.setCirculationNotes(null);
     item.setNotes(List.of(itemNote1, itemNote2));
 
-    processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated("typeId3")
+    dataProcessor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated("typeId3")
             .parameters(List.of(parameter)), extendedItem, false).apply(extendedItem);
     assertEquals(2, item.getNotes().size());
     assertEquals("itemNote1", item.getNotes().get(0).getNote());
@@ -1021,10 +1022,10 @@ class ItemDataProcessorTest extends BaseTest {
             .withNoteType(CirculationNote.NoteTypeEnum.OUT).withNote("note 2").withStaffOnly(true);
     var item = new Item().withCirculationNotes(new ArrayList<>(List.of(checkInNote, checkOutNote)));
     var extendedItem = ExtendedItem.builder().entity(item).tenantId("tenant").build();
-    var processor = new ItemDataProcessor(null, null,
+    var dataProcessor = new ItemDataProcessor(null, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
 
-    processor.updater(CHECK_IN_NOTE, new Action().type(DUPLICATE).updated(CHECK_OUT_NOTE_TYPE),
+    dataProcessor.updater(CHECK_IN_NOTE, new Action().type(DUPLICATE).updated(CHECK_OUT_NOTE_TYPE),
             extendedItem, false).apply(extendedItem);
     assertEquals(3, item.getCirculationNotes().size());
     assertEquals(2, item.getCirculationNotes().stream().filter(
@@ -1035,7 +1036,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertTrue(duplicated.isPresent());
     assertTrue(duplicated.get().getStaffOnly());
 
-    processor.updater(CHECK_OUT_NOTE, new Action().type(DUPLICATE).updated(CHECK_IN_NOTE_TYPE),
+    dataProcessor.updater(CHECK_OUT_NOTE, new Action().type(DUPLICATE).updated(CHECK_IN_NOTE_TYPE),
             extendedItem, false).apply(extendedItem);
     assertEquals(5, item.getCirculationNotes().size());
     assertEquals(3, item.getCirculationNotes().stream().filter(
@@ -1055,7 +1056,7 @@ class ItemDataProcessorTest extends BaseTest {
 
   @Test
   void testClone() {
-    var processor = new ItemDataProcessor(holdingsReferenceService, null,
+    var dataProcessor = new ItemDataProcessor(holdingsReferenceService, null,
             new ItemsNotesUpdater(new AdministrativeNotesUpdater()), null);
     var administrativeNotes = new ArrayList<String>();
     administrativeNotes.add("note1");
@@ -1065,40 +1066,40 @@ class ItemDataProcessorTest extends BaseTest {
             .withNotes(new ArrayList<>());
     var extendedItem1 = ExtendedItem.builder().entity(item1).tenantId("tenant").build();
 
-    var extendedItem2 = processor.clone(extendedItem1);
-    assertTrue(processor.compare(extendedItem1, extendedItem2));
+    var extendedItem2 = dataProcessor.clone(extendedItem1);
+    assertTrue(dataProcessor.compare(extendedItem1, extendedItem2));
 
     extendedItem2.getEntity().getAdministrativeNotes().add("note2");
-    assertFalse(processor.compare(extendedItem1, extendedItem2));
+    assertFalse(dataProcessor.compare(extendedItem1, extendedItem2));
     item1.setAdministrativeNotes(null);
 
     var checkInNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.IN);
     item1.getCirculationNotes().add(checkInNote);
 
-    extendedItem2 = processor.clone(extendedItem1);
-    assertTrue(processor.compare(extendedItem1, extendedItem2));
+    extendedItem2 = dataProcessor.clone(extendedItem1);
+    assertTrue(dataProcessor.compare(extendedItem1, extendedItem2));
 
     extendedItem2.getEntity().getCirculationNotes().getFirst()
             .setNoteType(CirculationNote.NoteTypeEnum.OUT);
-    assertFalse(processor.compare(extendedItem1, extendedItem2));
+    assertFalse(dataProcessor.compare(extendedItem1, extendedItem2));
     var checkOutNote = new CirculationNote().withNoteType(CirculationNote.NoteTypeEnum.OUT);
     extendedItem2.getEntity().getCirculationNotes().add(checkOutNote);
-    assertFalse(processor.compare(extendedItem1, extendedItem2));
+    assertFalse(dataProcessor.compare(extendedItem1, extendedItem2));
 
     item1.setCirculationNotes(null);
 
     var itemNote1 = new ItemNote().withItemNoteTypeId("typeId").withStaffOnly(true);
     item1.getNotes().add(itemNote1);
 
-    extendedItem2 = processor.clone(extendedItem1);
-    assertTrue(processor.compare(extendedItem1, extendedItem2));
+    extendedItem2 = dataProcessor.clone(extendedItem1);
+    assertTrue(dataProcessor.compare(extendedItem1, extendedItem2));
 
     extendedItem2.getEntity().getNotes().getFirst().setStaffOnly(false);
-    assertFalse(processor.compare(extendedItem1, extendedItem2));
+    assertFalse(dataProcessor.compare(extendedItem1, extendedItem2));
     var itemNote2 = new ItemNote().withItemNoteTypeId("typeId").withStaffOnly(false);
     extendedItem2.getEntity().getNotes().add(itemNote2);
 
-    assertFalse(processor.compare(extendedItem1, extendedItem2));
+    assertFalse(dataProcessor.compare(extendedItem1, extendedItem2));
   }
 
   @Test

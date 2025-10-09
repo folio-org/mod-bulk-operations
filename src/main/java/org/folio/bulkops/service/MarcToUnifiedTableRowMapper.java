@@ -161,10 +161,13 @@ public class MarcToUnifiedTableRowMapper {
       var newElAccCodes = new ArrayList<>(helper.fetchElectronicAccessCodes(dataField));
       if (!newElAccCodes.isEmpty()) {
         var existingElAcc = rowData.get(index);
-        List<String> existingElAccCodes = isNull(existingElAcc)
-                ? new ArrayList<>() :
-          new ArrayList<>(Arrays.asList(existingElAcc.split(forCsv
-                  ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER)));
+        List<String> existingElAccCodes;
+        if (isNull(existingElAcc)) {
+          existingElAccCodes = new ArrayList<>();
+        } else {
+          String delimiter = forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER;
+          existingElAccCodes = new ArrayList<>(Arrays.asList(existingElAcc.split(delimiter)));
+        }
         var existingElAccStr = EMPTY;
         if (!existingElAccCodes.isEmpty()) {
           if (forCsv) {
@@ -218,10 +221,13 @@ public class MarcToUnifiedTableRowMapper {
       var newSubjCodes = new ArrayList<>(helper.fetchSubjectCodes(dataField));
       if (!newSubjCodes.isEmpty()) {
         var existingSubj = rowData.get(index);
-        List<String> existingSubjCodes = isNull(existingSubj)
-                ? new ArrayList<>() :
-          new ArrayList<>(Arrays.asList(existingSubj.split(forCsv ? ARRAY_DELIMITER
-                  : SPECIAL_ARRAY_DELIMITER)));
+        List<String> existingSubjCodes;
+        if (isNull(existingSubj)) {
+          existingSubjCodes = new ArrayList<>();
+        } else {
+          String delimiter = forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER;
+          existingSubjCodes = new ArrayList<>(Arrays.asList(existingSubj.split(delimiter)));
+        }
         var existingSubjStr = EMPTY;
         if (!existingSubjCodes.isEmpty()) {
           if (forCsv) {

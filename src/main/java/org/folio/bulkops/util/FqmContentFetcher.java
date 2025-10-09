@@ -45,6 +45,7 @@ import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -144,28 +145,12 @@ public class FqmContentFetcher {
               if (isInstance(entityType)
                       && !SHARED.equalsIgnoreCase(ofNullable(json.get(FQM_INSTANCE_SHARED_KEY))
                   .map(Object::toString).orElse(EMPTY))) {
-                var instanceId = ofNullable(json.get(FQM_INSTANCE_ID_KEY))
-                        .map(Object::toString).orElse(EMPTY);
-                bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
-                        .identifier(instanceId)
-                        .bulkOperationId(operationId)
-                        .state(StateType.FAILED)
-                        .errorType(ErrorType.ERROR)
-                        .errorMessage(NO_MATCH_FOUND_MESSAGE)
-                        .build());
+                addInstanceNoMatchFound(json, bulkOperationExecutionContents, operationId);
                 return EMPTY;
               } else if (EntityType.USER.equals(entityType)
                       && SHADOW.equalsIgnoreCase(ofNullable(json.get(FQM_USERS_TYPE_KEY))
                   .map(Object::toString).orElse(EMPTY))) {
-                var userId = ofNullable(json.get(FQM_USERS_ID_KEY))
-                        .map(Object::toString).orElse(EMPTY);
-                bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
-                        .identifier(userId)
-                        .bulkOperationId(operationId)
-                        .state(StateType.FAILED)
-                        .errorType(ErrorType.ERROR)
-                        .errorMessage(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED)
-                        .build());
+                addShadowUserErrorContent(json, bulkOperationExecutionContents, operationId);
                 return EMPTY;
               }
             }
@@ -315,5 +300,33 @@ public class FqmContentFetcher {
 
   private boolean isInstance(EntityType entityType) {
     return entityType == EntityType.INSTANCE || entityType == EntityType.INSTANCE_MARC;
+  }
+
+  private void addInstanceNoMatchFound(
+          Map<String, Object> json,
+          List<BulkOperationExecutionContent> bulkOperationExecutionContents, UUID operationId) {
+    var instanceId = ofNullable(json.get(FQM_INSTANCE_ID_KEY))
+            .map(Object::toString).orElse(EMPTY);
+    bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
+            .identifier(instanceId)
+            .bulkOperationId(operationId)
+            .state(StateType.FAILED)
+            .errorType(ErrorType.ERROR)
+            .errorMessage(NO_MATCH_FOUND_MESSAGE)
+            .build());
+  }
+
+  private void addShadowUserErrorContent(
+          Map<String, Object> json,
+          List<BulkOperationExecutionContent> bulkOperationExecutionContents, UUID operationId) {
+    var userId = ofNullable(json.get(FQM_USERS_ID_KEY))
+            .map(Object::toString).orElse(EMPTY);
+    bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
+            .identifier(userId)
+            .bulkOperationId(operationId)
+            .state(StateType.FAILED)
+            .errorType(ErrorType.ERROR)
+            .errorMessage(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED)
+            .build());
   }
 }

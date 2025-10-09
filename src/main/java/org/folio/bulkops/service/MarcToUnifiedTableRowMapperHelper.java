@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -38,12 +39,13 @@ public class MarcToUnifiedTableRowMapperHelper {
   private static final String COMMA = ",";
   private static final String HYPHEN = "-";
   private static final String WHITE_SPACE = " ";
-  private static final String REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD = "^(.*?)\\s.[.]$";
   private static final String REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD_FOLLOWED_BY_COMMA
           = "^(.*?)\\s.,[.]$";
   private static final String PUNCTUATION_TO_REMOVE = ";:,/+= ";
   private static final String PERSONAL_NAME = "Personal name";
   private static final String CORPORATE_NAME = "Corporate name";
+  private static final Pattern PATTERN_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD
+          = Pattern.compile("^(.*?)\\s.[.]$");
 
   private final InstanceReferenceService instanceReferenceService;
   private final Marc21ReferenceProvider referenceProvider;
@@ -377,7 +379,7 @@ public class MarcToUnifiedTableRowMapperHelper {
   }
 
   private String trimPunctuation(String input) {
-    if (input.matches(REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD)
+    if (PATTERN_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD.matcher(input).matches()
             || input.endsWith(HYPHEN)) {
       return input;
     } else if (input.matches(

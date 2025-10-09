@@ -25,6 +25,7 @@ import org.folio.bulkops.client.SearchClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.ExtendedItemCollection;
+import org.folio.bulkops.domain.bean.ItemCollection;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.dto.BatchIdsDto;
 import org.folio.bulkops.domain.dto.ConsortiumItem;
@@ -81,19 +82,16 @@ public class BulkEditItemProcessor
         .add(itemIdentifier)) {
       throw new BulkEditException("Duplicate entry", ErrorType.WARNING);
     }
-
     var type = IdentifierType.fromValue(identifierType);
     var limit = HOLDINGS_RECORD_ID.equals(type) ? Integer.MAX_VALUE : 1;
     var idType = resolveIdentifier(identifierType);
     var identifier = "barcode".equals(idType)
         ? encode(itemIdentifier.getItemId())
         : itemIdentifier.getItemId();
-
     try {
       final ExtendedItemCollection extendedItemCollection = new ExtendedItemCollection()
           .withExtendedItems(new ArrayList<>())
           .withTotalRecords(0);
-
       var centralTenantId = consortiaService.getCentralTenantId(
           folioExecutionContext.getTenantId());
 
@@ -143,20 +141,7 @@ public class BulkEditItemProcessor
                   throw new BulkEditException(MULTIPLE_MATCHES_MESSAGE, ErrorType.ERROR);
                 }
 
-                var toAdd = itemCollection.getItems()
-                    .stream()
-                    .map(item -> item.withTitle(
-                        holdingsReferenceService.getInstanceTitleByHoldingsRecordId(
-                            item.getHoldingsRecordId(), tenantId)))
-                    .map(item -> item.withHoldingsData(
-                        holdingsReferenceService.getHoldingsData(
-                            item.getHoldingsRecordId(), tenantId)))
-                    .map(item -> {
-                      localReferenceDataService.enrichWithTenant(item, tenantId);
-                      return item.withTenantId(tenantId);
-                    })
-                    .map(item -> new ExtendedItem().withTenantId(tenantId).withEntity(item))
-                    .toList();
+                var toAdd = enrichItemsWithHoldingsData(itemCollection, tenantId);
 
                 extendedItemCollection.getExtendedItems().addAll(toAdd);
                 extendedItemCollection.setTotalRecords(
@@ -188,7 +173,6 @@ public class BulkEditItemProcessor
           );
           throw new BulkEditException(MULTIPLE_MATCHES_MESSAGE, ErrorType.ERROR);
         }
-
         var tenantId = folioExecutionContext.getTenantId();
         var extendedItems = itemCollection.getItems()
             .stream()
@@ -212,6 +196,24 @@ public class BulkEditItemProcessor
     } catch (DecodeException e) {
       throw new BulkEditException(ExceptionHelper.fetchMessage(e), ErrorType.ERROR);
     }
+  }
+
+  private List<ExtendedItem> enrichItemsWithHoldingsData(
+          ItemCollection itemCollection, String tenantId) {
+    return itemCollection.getItems()
+            .stream()
+            .map(item -> item.withTitle(
+                    holdingsReferenceService.getInstanceTitleByHoldingsRecordId(
+                            item.getHoldingsRecordId(), tenantId)))
+            .map(item -> item.withHoldingsData(
+                    holdingsReferenceService.getHoldingsData(
+                            item.getHoldingsRecordId(), tenantId)))
+            .map(item -> {
+              localReferenceDataService.enrichWithTenant(item, tenantId);
+              return item.withTenantId(tenantId);
+            })
+            .map(item -> new ExtendedItem().withTenantId(tenantId).withEntity(item))
+            .toList();
   }
 
   private void checkReadPermissions(String tenantId, String identifier) {

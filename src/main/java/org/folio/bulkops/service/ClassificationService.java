@@ -23,7 +23,7 @@ public class ClassificationService {
 
   private final ClassificationReferenceService classificationReferenceService;
 
-  private final String delimiter = SPECIAL_ARRAY_DELIMITER;
+  private static final String delimiter = SPECIAL_ARRAY_DELIMITER;
 
   public String classificationToString(Classification classification) {
     return String.join(delimiter,
