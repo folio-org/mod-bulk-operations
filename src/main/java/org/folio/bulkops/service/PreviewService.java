@@ -380,20 +380,7 @@ public class PreviewService {
           forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
                   UpdateOptionType.fromValue(action.getUpdated()), entityType));
         } else if (ITEM_NOTE == option) {
-          var initial = action.getParameters().stream().filter(
-                  p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue)
-                  .findFirst();
-          initial.ifPresent(id -> {
-            var noteTypeName = getNoteTypeNameById(bulkOperation, id);
-            if (noteTypeName.isPresent()) {
-              forceVisibleOptions.add(noteTypeName.get());
-            } else {
-              var type = resolveAndGetItemTypeById(clazz, id);
-              if (StringUtils.isNotEmpty(type)) {
-                forceVisibleOptions.add(type);
-              }
-            }
-          });
+          pricessInitialForItemNote(bulkOperation, forceVisibleOptions, action, clazz);
         } else if (HOLDINGS_NOTE == option) {
           processInitialHoldingsNote(bulkOperation, forceVisibleOptions, action, clazz);
         } else if (INSTANCE_NOTE == option) {
@@ -586,6 +573,26 @@ public class PreviewService {
       var type = resolveAndGetItemTypeById(clazz, id);
       if (StringUtils.isNotEmpty(type)) {
         forceVisibleOptions.add(type);
+      }
+    });
+  }
+
+  private void pricessInitialForItemNote(BulkOperation bulkOperation,
+                                      Set<String> forceVisibleOptions,
+                                      org.folio.bulkops.domain.dto.Action action,
+                                      Class<? extends BulkOperationsEntity> clazz) {
+    var initial = action.getParameters().stream().filter(
+                    p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue)
+            .findFirst();
+    initial.ifPresent(id -> {
+      var noteTypeName = getNoteTypeNameById(bulkOperation, id);
+      if (noteTypeName.isPresent()) {
+        forceVisibleOptions.add(noteTypeName.get());
+      } else {
+        var type = resolveAndGetItemTypeById(clazz, id);
+        if (StringUtils.isNotEmpty(type)) {
+          forceVisibleOptions.add(type);
+        }
       }
     });
   }

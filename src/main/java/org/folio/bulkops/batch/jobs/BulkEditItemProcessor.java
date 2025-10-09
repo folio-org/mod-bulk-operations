@@ -119,10 +119,10 @@ public class BulkEditItemProcessor
             var affiliatedPermittedTenants = tenantResolver.getAffiliatedPermittedTenantIds(
                 EntityType.ITEM, jobExecution, identifierType, tenantIds, itemIdentifier);
 
-            affiliatedPermittedTenants.forEach(tenantId -> {
-              processWithAffiliatedPermittedTenants(idType, identifier, identifierType, limit,
-                  extendedItemCollection, tenantId);
-            });
+            affiliatedPermittedTenants.forEach(
+                    tenantId -> processWithAffiliatedPermittedTenants(
+                            idType, identifier, identifierType, limit,
+                extendedItemCollection, tenantId));
             return extendedItemCollection;
           }
         }

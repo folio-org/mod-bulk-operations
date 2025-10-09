@@ -35,6 +35,7 @@ import static org.folio.bulkops.util.FqmKeys.FQM_PUBLISHER_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_USERS_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_USERS_TYPE_KEY;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -173,20 +174,7 @@ public class FqmContentFetcher {
             }
 
             if (entityType == EntityType.HOLDINGS_RECORD) {
-
-              var title = ofNullable(json.get(FQM_INSTANCE_TITLE_KEY)).orElse(EMPTY).toString();
-
-              var value = json.get(FQM_INSTANCE_PUBLICATION_KEY);
-
-              var publications = nonNull(value)
-                  ? objectMapper.readTree(value.toString())
-                  : objectMapper.createArrayNode();
-
-              if (publications.isArray() && !publications.isEmpty()) {
-                title = title.concat(getFirstPublicationAsString(publications.get(0)));
-              }
-
-              jsonNode.put(INSTANCE_TITLE, title);
+              processForHoldingsRecord(json, jsonNode);
             }
 
             if (isInstance(entityType)) {
@@ -303,7 +291,8 @@ public class FqmContentFetcher {
             .build());
   }
 
-  private void processForItem(Map<String, Object> json, ObjectNode jsonNode) throws Exception {
+  private void processForItem(Map<String, Object> json, ObjectNode jsonNode)
+          throws JsonProcessingException {
     var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
     var value = json.get(FQM_INSTANCES_PUBLICATION_KEY);
 
@@ -331,5 +320,22 @@ public class FqmContentFetcher {
             join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER,
                     permanentLocationName,
                     callNumber));
+  }
+
+  private void processForHoldingsRecord(Map<String, Object> json, ObjectNode jsonNode)
+          throws JsonProcessingException {
+    var title = ofNullable(json.get(FQM_INSTANCE_TITLE_KEY)).orElse(EMPTY).toString();
+
+    var value = json.get(FQM_INSTANCE_PUBLICATION_KEY);
+
+    var publications = nonNull(value)
+            ? objectMapper.readTree(value.toString())
+            : objectMapper.createArrayNode();
+
+    if (publications.isArray() && !publications.isEmpty()) {
+      title = title.concat(getFirstPublicationAsString(publications.get(0)));
+    }
+
+    jsonNode.put(INSTANCE_TITLE, title);
   }
 }

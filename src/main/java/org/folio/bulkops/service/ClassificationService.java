@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
 
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.Classification;
@@ -23,10 +24,10 @@ public class ClassificationService {
 
   private final ClassificationReferenceService classificationReferenceService;
 
-  private static final String DELIMITER = SPECIAL_ARRAY_DELIMITER;
+  private static final Pattern DELIMITER = Pattern.compile(SPECIAL_ARRAY_DELIMITER);
 
   public String classificationToString(Classification classification) {
-    return String.join(DELIMITER,
+    return String.join(DELIMITER.pattern(),
       isEmpty(classification.getClassificationTypeId()) ? HYPHEN
               : classificationReferenceService.getClassificationTypeNameById(
                       classification.getClassificationTypeId(), null),
@@ -36,7 +37,7 @@ public class ClassificationService {
 
   public Classification restoreClassificationItem(@NotNull String classificationString) {
     if (isNotEmpty(classificationString)) {
-      var tokens = classificationString.split(DELIMITER, -1);
+      var tokens = DELIMITER.split(classificationString, -1);
       if (NUMBER_OF_CLASSIFICATION_COMPONENTS == tokens.length) {
         return Classification.builder()
           .classificationTypeId(classificationReferenceService.getClassificationTypeIdByName(
