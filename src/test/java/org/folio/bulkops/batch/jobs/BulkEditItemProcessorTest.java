@@ -12,8 +12,16 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.client.ItemClient;
+import org.folio.bulkops.client.SearchClient;
+import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.domain.bean.ExtendedItemCollection;
 import org.folio.bulkops.domain.bean.Item;
@@ -25,8 +33,6 @@ import org.folio.bulkops.domain.dto.ConsortiumItem;
 import org.folio.bulkops.domain.dto.ConsortiumItemCollection;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
-import org.folio.bulkops.client.SearchClient;
-import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.processor.permissions.check.TenantResolver;
@@ -45,12 +51,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.cache.CacheManager;
 import org.springframework.test.util.ReflectionTestUtils;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 class BulkEditItemProcessorTest {
 
@@ -97,25 +97,30 @@ class BulkEditItemProcessorTest {
 
   @Test
   void returnsExtendedItemCollectionForCentralTenantAndPermittedAffiliation() {
-    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
-    Item item = new Item().withId("itemId").withHoldingsRecordId("holdingsId");
-    ItemCollection itemCollection = ItemCollection.builder().items(List.of(item)).totalRecords(1).build();
 
     ConsortiumItem consortiumItem = new ConsortiumItem().id("itemId").tenantId("tenant1");
     ConsortiumItemCollection consortiumItemCollection = new ConsortiumItemCollection();
     consortiumItemCollection.setItems(List.of(consortiumItem));
     consortiumItemCollection.setTotalRecords(1);
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
-    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
-      .thenReturn(Set.of("tenant1"));
+    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
+    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(),
+            anySet(), eq(itemIdentifier)))
+            .thenReturn(Set.of("tenant1"));
+    Item item = new Item().withId("itemId").withHoldingsRecordId("holdingsId");
+    ItemCollection itemCollection = ItemCollection.builder().items(List.of(item)).totalRecords(1)
+            .build();
     when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString()))
+            .thenReturn("Instance Title");
     when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
 
+    Assertions.assertNotNull(result);
     assertThat(result.getExtendedItems()).hasSize(1);
     assertThat(result.getExtendedItems().getFirst().getEntity().getId()).isEqualTo("itemId");
     assertThat(result.getExtendedItems().getFirst().getTenantId()).isEqualTo("tenant1");
@@ -129,23 +134,21 @@ class BulkEditItemProcessorTest {
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(set);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
-      .isInstanceOf(BulkEditException.class)
-      .hasMessageContaining("Duplicate entry");
+      .isInstanceOf(BulkEditException.class).hasMessageContaining("Duplicate entry");
   }
 
   @Test
   void throwsWhenNoMatchFoundForCentralTenant() {
-    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("notfound");
     ConsortiumItemCollection emptyConsortium = new ConsortiumItemCollection();
     emptyConsortium.setItems(Collections.emptyList());
     emptyConsortium.setTotalRecords(0);
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(emptyConsortium);
-
+    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("notfound");
     assertThatThrownBy(() -> processor.process(itemIdentifier))
-      .isInstanceOf(BulkEditException.class)
-      .hasMessageContaining("No match found");
+      .isInstanceOf(BulkEditException.class).hasMessageContaining("No match found");
   }
 
   @Test
@@ -154,53 +157,61 @@ class BulkEditItemProcessorTest {
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("multi");
     Item item1 = new Item().withId("1");
     Item item2 = new Item().withId("2");
-    ItemCollection collection = ItemCollection.builder().items(List.of(item1, item2)).totalRecords(2).build();
+    ItemCollection collection = ItemCollection.builder().items(List.of(item1, item2))
+            .totalRecords(2).build();
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(true);
     when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(collection);
-    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(),
+            anyString())).thenReturn("Instance Title");
     when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
-      .isInstanceOf(BulkEditException.class)
-      .hasMessageContaining("Multiple matches");
+      .isInstanceOf(BulkEditException.class).hasMessageContaining("Multiple matches");
   }
 
   @Test
   void throwsWhenNoPermissionForLocalTenant() {
     when(folioExecutionContext.getTenantId()).thenReturn("localTenant");
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("noPerm");
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(false);
     when(userClient.getUserById(anyString())).thenReturn(new User().withUsername("testuser"));
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
-      .isInstanceOf(BulkEditException.class)
-      .hasMessageContaining("does not have required permission");
+            .isInstanceOf(BulkEditException.class).hasMessageContaining(
+              "does not have required permission");
   }
 
   @Test
   void returnsHoldingsDataInExtendedItem() {
-    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
-    Item item = new Item().withId("itemId").withHoldingsRecordId("holdingsId");
-    ItemCollection itemCollection = ItemCollection.builder().items(List.of(item)).totalRecords(1).build();
 
     ConsortiumItem consortiumItem = new ConsortiumItem().id("itemId").tenantId("tenant1");
     ConsortiumItemCollection consortiumItemCollection = new ConsortiumItemCollection();
     consortiumItemCollection.setItems(List.of(consortiumItem));
     consortiumItemCollection.setTotalRecords(1);
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
-    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
-      .thenReturn(Set.of("tenant1"));
+    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
+    Item item = new Item().withId("itemId").withHoldingsRecordId("holdingsId");
+    ItemCollection itemCollection = ItemCollection.builder().items(List.of(item))
+            .totalRecords(1).build();
+    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(),
+            anySet(), eq(itemIdentifier)))
+            .thenReturn(Set.of("tenant1"));
     when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString()))
+            .thenReturn("Instance Title");
     when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
 
+    Assertions.assertNotNull(result);
     assertThat(result.getExtendedItems()).hasSize(1);
     assertThat(result.getExtendedItems().getFirst().getEntity().getId()).isEqualTo("itemId");
     assertThat(result.getExtendedItems().getFirst().getEntity().getHoldingsData()).isNotNull();
@@ -208,14 +219,24 @@ class BulkEditItemProcessorTest {
 
   @Test
   void setsTenantIdOnElectronicAccessAndNotesWhenPresent() {
-    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
     String tenantId = "tenant1";
 
+    ConsortiumItem consortiumItem = new ConsortiumItem().id("itemId").tenantId(tenantId);
+    ConsortiumItemCollection consortiumItemCollection = new ConsortiumItemCollection();
+    consortiumItemCollection.setItems(List.of(consortiumItem));
+    consortiumItemCollection.setTotalRecords(1);
+    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
+
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
+    when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
+    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(),
+            anyString(), anySet(), eq(itemIdentifier)))
+            .thenReturn(Set.of(tenantId));
     ElectronicAccess ea1 = new ElectronicAccess().withUri("uri1");
     ElectronicAccess ea2 = new ElectronicAccess().withUri("uri2");
     ItemNote note1 = new ItemNote().withNote("note1");
     ItemNote note2 = new ItemNote().withNote("note2");
-
     Item item = new Item()
             .withId("itemId")
             .withHoldingsRecordId("holdingsId")
@@ -223,34 +244,36 @@ class BulkEditItemProcessorTest {
             .withNotes(List.of(note1, note2));
     var itemCollection = org.folio.bulkops.domain.bean.ItemCollection.builder()
             .items(List.of(item)).totalRecords(1).build();
+    when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString()))
+            .thenReturn("Instance Title");
+    when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
+    doCallRealMethod().when(localReferenceDataService).enrichWithTenant(any(Item.class),
+            anyString());
+
+    ExtendedItemCollection result = processor.process(itemIdentifier);
+
+    Assertions.assertNotNull(result);
+    var extendedItem = result.getExtendedItems().getFirst().getEntity();
+    assertThat(extendedItem.getElectronicAccess()).allSatisfy(
+            ea -> assertThat(ea.getTenantId()).isEqualTo(tenantId));
+    assertThat(extendedItem.getNotes()).allSatisfy(
+            note -> assertThat(note.getTenantId()).isEqualTo(tenantId));
+  }
+
+  @Test
+  void doesNotFailWhenElectronicAccessIsNull() {
+    String tenantId = "tenant1";
 
     ConsortiumItem consortiumItem = new ConsortiumItem().id("itemId").tenantId(tenantId);
     ConsortiumItemCollection consortiumItemCollection = new ConsortiumItemCollection();
     consortiumItemCollection.setItems(List.of(consortiumItem));
     consortiumItemCollection.setTotalRecords(1);
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
     when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
-    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
-            .thenReturn(Set.of(tenantId));
-    when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString())).thenReturn("Instance Title");
-    when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
-    doCallRealMethod().when(localReferenceDataService).enrichWithTenant(any(Item.class), anyString());
-
-    ExtendedItemCollection result = processor.process(itemIdentifier);
-
-    Assertions.assertNotNull(result);
-    var extendedItem = result.getExtendedItems().getFirst().getEntity();
-    assertThat(extendedItem.getElectronicAccess()).allSatisfy(ea -> assertThat(ea.getTenantId()).isEqualTo(tenantId));
-    assertThat(extendedItem.getNotes()).allSatisfy(note -> assertThat(note.getTenantId()).isEqualTo(tenantId));
-  }
-
-  @Test
-  void doesNotFailWhenElectronicAccessIsNull() {
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
-    String tenantId = "tenant1";
-
     ItemNote note1 = new ItemNote().withNote("note1");
     Item item = new Item()
             .withId("itemId")
@@ -259,34 +282,41 @@ class BulkEditItemProcessorTest {
             .withNotes(List.of(note1));
     var itemCollection = org.folio.bulkops.domain.bean.ItemCollection.builder()
             .items(List.of(item)).totalRecords(1).build();
-
-    ConsortiumItem consortiumItem = new ConsortiumItem().id("itemId").tenantId(tenantId);
-    ConsortiumItemCollection consortiumItemCollection = new ConsortiumItemCollection();
-    consortiumItemCollection.setItems(List.of(consortiumItem));
-    consortiumItemCollection.setTotalRecords(1);
-
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
-    when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
-    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
+    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(),
+            anySet(), eq(itemIdentifier)))
             .thenReturn(Set.of(tenantId));
     when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString()))
+            .thenReturn("Instance Title");
     when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
-    doCallRealMethod().when(localReferenceDataService).enrichWithTenant(any(Item.class), anyString());
+    doCallRealMethod().when(localReferenceDataService).enrichWithTenant(any(Item.class),
+            anyString());
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
 
     Assertions.assertNotNull(result);
     var extendedItem = result.getExtendedItems().getFirst().getEntity();
     assertThat(extendedItem.getElectronicAccess()).isNull();
-    assertThat(extendedItem.getNotes()).allSatisfy(note -> assertThat(note.getTenantId()).isEqualTo(tenantId));
+    assertThat(extendedItem.getNotes()).allSatisfy(
+            note -> assertThat(note.getTenantId()).isEqualTo(tenantId));
   }
 
   @Test
   void doesNotFailWhenNotesIsNull() {
-    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
     String tenantId = "tenant1";
 
+    ConsortiumItem consortiumItem = new ConsortiumItem().id("itemId").tenantId(tenantId);
+    ConsortiumItemCollection consortiumItemCollection = new ConsortiumItemCollection();
+    consortiumItemCollection.setItems(List.of(consortiumItem));
+    consortiumItemCollection.setTotalRecords(1);
+
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
+    when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
+    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
+    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(),
+            anySet(), eq(itemIdentifier)))
+            .thenReturn(Set.of(tenantId));
     ElectronicAccess ea1 = new ElectronicAccess().withUri("uri1");
     Item item = new Item()
             .withId("itemId")
@@ -295,34 +325,38 @@ class BulkEditItemProcessorTest {
             .withNotes(null);
     var itemCollection = ItemCollection.builder()
             .items(List.of(item)).totalRecords(1).build();
-
-    ConsortiumItem consortiumItem = new ConsortiumItem().id("itemId").tenantId(tenantId);
-    ConsortiumItemCollection consortiumItemCollection = new ConsortiumItemCollection();
-    consortiumItemCollection.setItems(List.of(consortiumItem));
-    consortiumItemCollection.setTotalRecords(1);
-
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
-    when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
-    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
-            .thenReturn(Set.of(tenantId));
     when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString()))
+            .thenReturn("Instance Title");
     when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
-    doCallRealMethod().when(localReferenceDataService).enrichWithTenant(any(Item.class), anyString());
+    doCallRealMethod().when(localReferenceDataService).enrichWithTenant(any(Item.class),
+            anyString());
 
     ExtendedItemCollection result = processor.process(itemIdentifier);
 
     Assertions.assertNotNull(result);
     var extendedItem = result.getExtendedItems().getFirst().getEntity();
     assertThat(extendedItem.getNotes()).isNull();
-    assertThat(extendedItem.getElectronicAccess()).allSatisfy(ea -> assertThat(ea.getTenantId()).isEqualTo(tenantId));
+    assertThat(extendedItem.getElectronicAccess()).allSatisfy(
+            ea -> assertThat(ea.getTenantId()).isEqualTo(tenantId));
   }
 
   @Test
   void doesNotFailWhenBothElectronicAccessAndNotesAreNull() {
-    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
     String tenantId = "tenant1";
 
+    ConsortiumItem consortiumItem = new ConsortiumItem().id("itemId").tenantId(tenantId);
+    ConsortiumItemCollection consortiumItemCollection = new ConsortiumItemCollection();
+    consortiumItemCollection.setItems(List.of(consortiumItem));
+    consortiumItemCollection.setTotalRecords(1);
+
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
+    when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
+    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
+    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(),
+            anySet(), eq(itemIdentifier)))
+            .thenReturn(Set.of(tenantId));
     Item item = new Item()
             .withId("itemId")
             .withHoldingsRecordId("holdingsId")
@@ -330,18 +364,9 @@ class BulkEditItemProcessorTest {
             .withNotes(null);
     var itemCollection = ItemCollection.builder()
             .items(List.of(item)).totalRecords(1).build();
-
-    ConsortiumItem consortiumItem = new ConsortiumItem().id("itemId").tenantId(tenantId);
-    ConsortiumItemCollection consortiumItemCollection = new ConsortiumItemCollection();
-    consortiumItemCollection.setItems(List.of(consortiumItem));
-    consortiumItemCollection.setTotalRecords(1);
-
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
-    when(searchClient.getConsortiumItemCollection(any())).thenReturn(consortiumItemCollection);
-    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
-            .thenReturn(Set.of(tenantId));
     when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
-    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString()))
+            .thenReturn("Instance Title");
     when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
 
     ExtendedItemCollection result = processor.process(itemIdentifier);

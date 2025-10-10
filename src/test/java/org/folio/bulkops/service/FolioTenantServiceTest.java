@@ -1,5 +1,10 @@
 package org.folio.bulkops.service;
 
+import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+
 import org.folio.spring.service.PrepareSystemUserService;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.junit.jupiter.api.Test;
@@ -7,11 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class FolioTenantServiceTest {
@@ -41,7 +41,8 @@ class FolioTenantServiceTest {
     doThrow(NullPointerException.class).when(prepareSystemUserService)
       .setupSystemUser();
 
-    assertThrows(NullPointerException.class, () -> folioTenantService.afterTenantUpdate(tenantAttributes));
+    assertThrows(NullPointerException.class,
+            () -> folioTenantService.afterTenantUpdate(tenantAttributes));
   }
 
   private TenantAttributes createTenantAttributes() {

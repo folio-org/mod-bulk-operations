@@ -1,12 +1,10 @@
 package org.folio.bulkops.domain.bean;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,19 +16,19 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class EHoldingsExportConfig {
+public class EholdingsExportConfig {
   @JsonProperty("recordId")
   private String recordId;
 
   /**
-   * The record type
+   * The record type.
    */
   public enum RecordTypeEnum {
     PACKAGE("PACKAGE"),
 
     RESOURCE("RESOURCE");
 
-    private String value;
+    private final String value;
 
     RecordTypeEnum(String value) {
       this.value = value;

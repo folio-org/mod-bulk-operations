@@ -12,15 +12,15 @@ import org.springframework.stereotype.Service;
 @Log4j2
 public class PublicationHelperService implements InitializingBean {
 
-    private final PublicationService publicationService;
+  private final PublicationService publicationService;
 
-    public Publication restorePublicationItem(String str) {
-      return publicationService.restorePublicationItem(str);
-    }
+  public Publication restorePublicationItem(String str) {
+    return publicationService.restorePublicationItem(str);
+  }
 
-    public String publicationToString(Publication publication) {
-      return publicationService.publicationToString(publication);
-    }
+  public String publicationToString(Publication publication) {
+    return publicationService.publicationToString(publication);
+  }
 
   public static PublicationHelperService service;
 
@@ -34,4 +34,3 @@ public class PublicationHelperService implements InitializingBean {
   }
 
 }
-

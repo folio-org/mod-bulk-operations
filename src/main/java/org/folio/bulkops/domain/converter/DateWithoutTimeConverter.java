@@ -15,7 +15,8 @@ public class DateWithoutTimeConverter extends BaseConverter<Date> {
 
   @Override
   public Date convertToObject(String value)  {
-    return Date.from(LocalDate.parse(value, DATE_WITHOUT_TIME_FORMATTER).atStartOfDay(UTC_ZONE).toInstant());
+    return Date.from(LocalDate.parse(value, DATE_WITHOUT_TIME_FORMATTER)
+            .atStartOfDay(UTC_ZONE).toInstant());
   }
 
   @Override

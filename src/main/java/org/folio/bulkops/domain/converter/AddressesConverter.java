@@ -13,7 +13,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.Address;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
@@ -34,23 +33,24 @@ public  class AddressesConverter extends BaseConverter<List<Address>> {
   @Override
   public List<Address> convertToObject(String value) {
     String[] addresses = value.split(ITEM_DELIMITER_PATTERN);
-        return Arrays.stream(addresses)
-          .filter(StringUtils::isNotEmpty)
-          .map(this::getAddressFromString)
-          .toList();
+    return Arrays.stream(addresses)
+            .filter(StringUtils::isNotEmpty)
+            .map(this::getAddressFromString)
+            .toList();
   }
 
   @Override
   public String convertToString(List<Address> object) {
-      return object.stream()
-        .filter(Objects::nonNull)
-        .map(this::toCsvString)
-        .filter(StringUtils::isNotEmpty)
-        .collect(Collectors.joining(ITEM_DELIMITER));
+    return object.stream()
+            .filter(Objects::nonNull)
+            .map(this::toCsvString)
+            .filter(StringUtils::isNotEmpty)
+            .collect(Collectors.joining(ITEM_DELIMITER));
   }
 
   private Address getAddressFromString(String stringAddress) {
-    List<String> fields = SpecialCharacterEscaper.restore(Arrays.asList(stringAddress.split(ARRAY_DELIMITER, -1)));
+    List<String> fields = SpecialCharacterEscaper.restore(Arrays.asList(stringAddress
+            .split(ARRAY_DELIMITER, -1)));
     return Address.builder()
         .id(convertToNullableString(fields.get(ADDRESS_ID)))
           .countryId(convertToNullableString(fields.get(ADDRESS_COUNTRY_ID)))
@@ -60,7 +60,9 @@ public  class AddressesConverter extends BaseConverter<List<Address>> {
                   .region(convertToNullableString(fields.get(ADDRESS_REGION)))
                     .postalCode(convertToNullableString(fields.get(ADDRESS_POSTAL_CODE)))
                       .primaryAddress(convertToNullableBoolean(fields.get(ADDRESS_PRIMARY_ADDRESS)))
-                        .addressTypeId(convertToNullableString(UserReferenceHelper.service().getAddressTypeByAddressTypeValue(fields.get(ADDRESS_TYPE)).getId()))
+                        .addressTypeId(convertToNullableString(UserReferenceHelper.service()
+                                .getAddressTypeByAddressTypeValue(fields.get(ADDRESS_TYPE))
+                                .getId()))
                           .build();
   }
 
@@ -74,7 +76,8 @@ public  class AddressesConverter extends BaseConverter<List<Address>> {
     data.add(isEmpty(address.getRegion()) ? EMPTY : address.getRegion());
     data.add(isEmpty(address.getPostalCode()) ? EMPTY : address.getPostalCode());
     data.add(isNull(address.getPrimaryAddress()) ? EMPTY : address.getPrimaryAddress().toString());
-    data.add(UserReferenceHelper.service().getAddressTypeById(address.getAddressTypeId()).getAddressType());
+    data.add(UserReferenceHelper.service().getAddressTypeById(address.getAddressTypeId())
+            .getAddressType());
     return String.join(ARRAY_DELIMITER, escape(data));
   }
 

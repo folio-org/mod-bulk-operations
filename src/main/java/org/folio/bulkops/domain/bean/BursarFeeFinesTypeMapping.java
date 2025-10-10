@@ -1,11 +1,9 @@
 package org.folio.bulkops.domain.bean;
 
-import java.util.UUID;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,14 +26,14 @@ public class BursarFeeFinesTypeMapping {
   private String itemDescription;
 
   /**
-   * Gets or Sets itemCode
+   * Gets or Sets itemCode.
    */
   public enum ItemCodeEnum {
     CHARGE("CHARGE"),
 
     PAYMENT("PAYMENT");
 
-    private String value;
+    private final String value;
 
     ItemCodeEnum(String value) {
       this.value = value;

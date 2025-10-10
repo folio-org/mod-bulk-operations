@@ -12,36 +12,39 @@ import static org.folio.bulkops.util.Constants.MULTIPLE_MATCHES_MESSAGE;
 import static org.folio.bulkops.util.Constants.NO_INSTANCE_VIEW_PERMISSIONS;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 
+import java.io.IOException;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
+import org.folio.bulkops.domain.bean.Instance;
+import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
-import org.folio.bulkops.domain.bean.Instance;
-import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.exception.MarcValidationException;
 import org.folio.bulkops.processor.EntityExtractor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.service.SrsService;
 import org.folio.spring.FolioExecutionContext;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import java.io.IOException;
-import java.util.List;
 
 @Component
 @StepScope
 @RequiredArgsConstructor
 @Log4j2
-public class BulkEditInstanceProcessor implements ItemProcessor<ItemIdentifier, List<ExtendedInstance>>, EntityExtractor {
+@SuppressWarnings("unused")
+public class BulkEditInstanceProcessor
+        implements ItemProcessor<ItemIdentifier, List<ExtendedInstance>>, EntityExtractor {
   private final InstanceClient instanceClient;
   private final FolioExecutionContext folioExecutionContext;
   private final PermissionsValidator permissionsValidator;
@@ -49,24 +52,42 @@ public class BulkEditInstanceProcessor implements ItemProcessor<ItemIdentifier, 
   private final DuplicationCheckerFactory duplicationCheckerFactory;
   private final SrsService srsService;
 
+  @SuppressWarnings("unused")
   @Value("#{jobParameters['identifierType']}")
-  private String identifierType;
+  private String identifierType = null;
+
+  @SuppressWarnings("unused")
   @Value("#{jobParameters['jobId']}")
-  private String jobId;
+  private String jobId = null;
+
+  @SuppressWarnings("unused")
   @Value("#{jobParameters['fileName']}")
-  private String fileName;
+  private String fileName = null;
+
+  @SuppressWarnings("unused")
   @Value("#{stepExecution.jobExecution}")
-  private JobExecution jobExecution;
+  private JobExecution jobExecution = null;
 
   @Override
-  public List<ExtendedInstance> process(ItemIdentifier itemIdentifier) throws BulkEditException {
+  public List<ExtendedInstance> process(@NotNull ItemIdentifier itemIdentifier)
+      throws BulkEditException {
     log.debug("Instance processor current thread: {}", Thread.currentThread().getName());
     try {
-      if (!permissionsValidator.isBulkEditReadPermissionExists(folioExecutionContext.getTenantId(), EntityType.INSTANCE)) {
+      boolean hasPermission = permissionsValidator.isBulkEditReadPermissionExists(
+          folioExecutionContext.getTenantId(), EntityType.INSTANCE);
+      if (!hasPermission) {
         var user = userClient.getUserById(folioExecutionContext.getUserId().toString());
-        throw new BulkEditException(NO_INSTANCE_VIEW_PERMISSIONS.formatted(user.getUsername(), resolveIdentifier(identifierType), itemIdentifier.getItemId(), folioExecutionContext.getTenantId()), ErrorType.ERROR);
+        var message = NO_INSTANCE_VIEW_PERMISSIONS.formatted(
+            user.getUsername(),
+            resolveIdentifier(identifierType),
+            itemIdentifier.getItemId(),
+            folioExecutionContext.getTenantId()
+        );
+        throw new BulkEditException(message, ErrorType.ERROR);
       }
-      if (!duplicationCheckerFactory.getIdentifiersToCheckDuplication(jobExecution).add(itemIdentifier)) {
+
+      if (!duplicationCheckerFactory.getIdentifiersToCheckDuplication(jobExecution)
+          .add(itemIdentifier)) {
         throw new BulkEditException(DUPLICATE_ENTRY, ErrorType.WARNING);
       }
 
@@ -78,7 +99,9 @@ public class BulkEditInstanceProcessor implements ItemProcessor<ItemIdentifier, 
 
       if (duplicationCheckerFactory.getFetchedIds(jobExecution).add(instance.getId())) {
         checkSrsInstance(instance);
-        return List.of(new ExtendedInstance().withEntity(instance).withTenantId(folioExecutionContext.getTenantId()));
+        return List.of(new ExtendedInstance()
+            .withEntity(instance)
+            .withTenantId(folioExecutionContext.getTenantId()));
       }
       return emptyList();
     } catch (BulkEditException e) {
@@ -89,8 +112,9 @@ public class BulkEditInstanceProcessor implements ItemProcessor<ItemIdentifier, 
   }
 
   /**
-   * Retrieves instance based on the instance identifier value. Currently, only ID and HRID are supported for instances.
-   * ISBN and ISSN are not supported because they are not unique identifiers for instances.
+   * Retrieves instance based on the instance identifier value. Currently, only ID and HRID are
+   * supported for instances. ISBN and ISSN are not supported because they are not unique
+   * identifiers for instances.
    *
    * @param itemIdentifier the item identifier to use for retrieving instances
    * @return the instance
@@ -99,7 +123,13 @@ public class BulkEditInstanceProcessor implements ItemProcessor<ItemIdentifier, 
   private Instance getInstance(ItemIdentifier itemIdentifier) {
     return switch (IdentifierType.fromValue(identifierType)) {
       case ID, HRID -> {
-        var instances = instanceClient.getInstanceByQuery(String.format(getMatchPattern(identifierType), resolveIdentifier(identifierType), itemIdentifier.getItemId()), 1);
+        var query = String.format(
+            getMatchPattern(identifierType),
+            resolveIdentifier(identifierType),
+            itemIdentifier.getItemId()
+        );
+        var instances = instanceClient.getInstanceByQuery(query, 1);
+
         if (instances.getTotalRecords() > 1) {
           log.error(MULTIPLE_MATCHES_MESSAGE);
           throw new BulkEditException(MULTIPLE_MATCHES_MESSAGE, ErrorType.ERROR);
@@ -109,7 +139,9 @@ public class BulkEditInstanceProcessor implements ItemProcessor<ItemIdentifier, 
         }
         yield instances.getInstances().getFirst();
       }
-      default -> throw new BulkEditException(String.format("Identifier type \"%s\" is not supported", identifierType), ErrorType.ERROR);
+      default -> throw new BulkEditException(
+          String.format("Identifier type \"%s\" is not supported", identifierType),
+          ErrorType.ERROR);
     };
   }
 

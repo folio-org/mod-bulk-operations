@@ -1,10 +1,8 @@
 package org.folio.bulkops.domain.bean;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,6 +21,5 @@ public class UserGroupCollection   {
 
   @JsonProperty("totalRecords")
   private Integer totalRecords;
-
 }
 

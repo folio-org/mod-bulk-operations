@@ -1,5 +1,17 @@
 package org.folio.bulkops.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Stream;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
@@ -18,19 +30,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 class TenantTableUpdaterTest {
 
@@ -44,7 +43,9 @@ class TenantTableUpdaterTest {
 
   @ParameterizedTest
   @MethodSource("getEntityClassesWithTenant")
-  void updateTenantInHeadersAndRowsForNotConsortiaTest(Class<? extends BulkOperationsEntity> entityClass) {
+  void updateTenantInHeadersAndRowsForNotConsortiaTest(
+      Class<? extends BulkOperationsEntity> entityClass
+  ) {
     var table = new UnifiedTable();
     var cell = new Cell();
     cell.setValue("Tenant");
@@ -60,12 +61,15 @@ class TenantTableUpdaterTest {
     tableUpdater.updateTenantInHeadersAndRows(table, entityClass);
 
     assertEquals(0, table.getHeader().size());
-    assertEquals(0, table.getRows().get(0).getRow().size());
+    var firstRow = table.getRows().get(0);
+    assertEquals(0, firstRow.getRow().size());
   }
 
   @ParameterizedTest
   @MethodSource("getEntityClassesWithTenant")
-  void updateTenantInHeadersAndRowsForConsortiaTest(Class<? extends BulkOperationsEntity> entityClass) {
+  void updateTenantInHeadersAndRowsForConsortiaTest(
+      Class<? extends BulkOperationsEntity> entityClass
+  ) {
     Map<String, UserTenant> userTenants = new HashMap<>();
     var userTenant = new UserTenant();
     userTenant.setTenantId("tenantId");
@@ -84,13 +88,19 @@ class TenantTableUpdaterTest {
     when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
     when(consortiaService.isTenantInConsortia(anyString())).thenReturn(true);
-    when(consortiaService.getUserTenantsPerId(anyString(), anyString())).thenReturn(userTenants);
+    when(consortiaService.getUserTenantsPerId(
+        anyString(),
+        anyString()
+    )).thenReturn(userTenants);
 
     tableUpdater.updateTenantInHeadersAndRows(table, entityClass);
 
-    var actualTenantHeaderValue = table.getHeader().get(0).getValue();
+    var headerCell = table.getHeader().get(0);
+    var actualTenantHeaderValue = headerCell.getValue();
     assertEquals("Member", actualTenantHeaderValue);
-    var actualTenantRowValue = table.getRows().get(0).getRow().get(0);
+    var row0 = table.getRows().get(0);
+    var rowList = row0.getRow();
+    var actualTenantRowValue = rowList.get(0);
     assertEquals("tenantName", actualTenantRowValue);
   }
 

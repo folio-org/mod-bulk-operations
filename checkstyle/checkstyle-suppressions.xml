@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+        "-//Checkstyle//DTD SuppressionFilter Configuration 1.0//EN"
+        "https://checkstyle.org/dtds/suppressions_1_0.dtd">
+<suppressions>
+    <!-- Suppress MissingJavadoc for all files in the project -->
+    <suppress checks="MissingJavadocType" files=".*"/>
+    <suppress checks="MissingJavadocMethod" files=".*"/>
+
+    <!-- line length -->
+
+    <!-- illegal token text -->
+    <suppress checks="IllegalTokenText"
+              files="Constants.java"
+              lines="73"/>
+    <suppress checks="IllegalTokenText"
+              files="ElectronicAccessServiceTest.java"/>
+    <suppress checks="IllegalTokenText"
+              files="SubjectServiceTest.java"/>
+    <suppress checks="IllegalTokenText"
+              files="MarcFlowCommitProcessorTest.java"/>
+    <suppress checks="IllegalTokenText"
+              files="SubjectHelperTest.java"/>
+    <suppress checks="IllegalTokenText"
+              files="MarcToUnifiedTableRowMapperTest.java"/>
+    <suppress checks="IllegalTokenText"
+              files="ClassificationServiceTest.java"/>
+    <suppress checks="IllegalTokenText"
+              files="PublicationServiceTest.java"/>
+    <suppress checks="IllegalTokenText"
+              files="PreviewServiceTest.java"/>
+    <suppress checks="IllegalTokenText"
+              files="HoldingsDataProcessorTest.java"/>
+
+    <!-- variable declaration usage distance -->
+    <suppress checks="VariableDeclarationUsageDistance"
+              files="ItemsNotesUpdater.java"
+              lines="366"/>
+</suppressions>

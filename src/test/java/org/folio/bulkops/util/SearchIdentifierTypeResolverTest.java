@@ -11,20 +11,22 @@ class SearchIdentifierTypeResolverTest {
   @Test
   void returnsCorrectEnumForEachIdentifierType() {
     assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.ID))
-      .isEqualTo(BatchIdsDto.IdentifierTypeEnum.ID);
+        .isEqualTo(BatchIdsDto.IdentifierTypeEnum.ID);
     assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.HRID))
-      .isEqualTo(BatchIdsDto.IdentifierTypeEnum.HRID);
+        .isEqualTo(BatchIdsDto.IdentifierTypeEnum.HRID);
     assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.BARCODE))
-      .isEqualTo(BatchIdsDto.IdentifierTypeEnum.BARCODE);
-    assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.HOLDINGS_RECORD_ID))
-      .isEqualTo(BatchIdsDto.IdentifierTypeEnum.HOLDINGSRECORDID);
-    assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.ACCESSION_NUMBER))
-      .isEqualTo(BatchIdsDto.IdentifierTypeEnum.ACCESSIONNUMBER);
+        .isEqualTo(BatchIdsDto.IdentifierTypeEnum.BARCODE);
+    assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(
+            IdentifierType.HOLDINGS_RECORD_ID))
+        .isEqualTo(BatchIdsDto.IdentifierTypeEnum.HOLDINGSRECORDID);
+    assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(
+            IdentifierType.ACCESSION_NUMBER))
+        .isEqualTo(BatchIdsDto.IdentifierTypeEnum.ACCESSIONNUMBER);
     assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.FORMER_IDS))
-      .isEqualTo(BatchIdsDto.IdentifierTypeEnum.FORMERIDS);
+        .isEqualTo(BatchIdsDto.IdentifierTypeEnum.FORMERIDS);
     assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.INSTANCE_HRID))
-      .isEqualTo(BatchIdsDto.IdentifierTypeEnum.INSTANCEHRID);
+        .isEqualTo(BatchIdsDto.IdentifierTypeEnum.INSTANCEHRID);
     assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.ITEM_BARCODE))
-      .isEqualTo(BatchIdsDto.IdentifierTypeEnum.ITEMBARCODE);
+        .isEqualTo(BatchIdsDto.IdentifierTypeEnum.ITEMBARCODE);
   }
 }

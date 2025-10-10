@@ -1,7 +1,6 @@
 package org.folio.bulkops.domain.bean;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +14,6 @@ import lombok.With;
 @AllArgsConstructor
 public class CheckBoxField {
   @JsonProperty("default")
-  private Boolean _default;
+  private Boolean fieldDefault;
 }
 

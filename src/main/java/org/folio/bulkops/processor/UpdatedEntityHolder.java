@@ -1,9 +1,8 @@
 package org.folio.bulkops.processor;
 
-import org.folio.bulkops.domain.bean.BulkOperationsEntity;
-
 import lombok.Builder;
 import lombok.Data;
+import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 
 @Data
 @Builder

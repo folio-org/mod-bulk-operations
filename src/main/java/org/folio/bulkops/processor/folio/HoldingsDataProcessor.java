@@ -5,6 +5,8 @@ import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CLEAR_FIELD;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
+import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE_INCLUDING_ITEMS;
@@ -17,8 +19,6 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_UR
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ELECTRONIC_ACCESS_URL_RELATIONSHIP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
-import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
-import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REMOVE_THESE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE;
@@ -29,7 +29,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
-
+import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
@@ -44,16 +45,13 @@ import org.folio.bulkops.processor.FolioAbstractDataProcessor;
 import org.folio.bulkops.processor.Updater;
 import org.folio.bulkops.processor.Validator;
 import org.folio.bulkops.service.ConsortiaService;
+import org.folio.bulkops.service.ElectronicAccessReferenceService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
-import org.folio.bulkops.service.ElectronicAccessReferenceService;
 import org.folio.bulkops.service.LocalReferenceDataService;
 import org.folio.bulkops.util.RuleUtils;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.stereotype.Component;
-
-import lombok.AllArgsConstructor;
-import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 @Component
@@ -70,17 +68,22 @@ public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHo
   private final LocalReferenceDataService localReferenceDataService;
 
   private static final Pattern UUID_REGEX =
-    Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+          Pattern.compile(
+                  "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
   @Override
-  public Validator<UpdateOptionType, Action, BulkOperationRule> validator(ExtendedHoldingsRecord extendedHoldingsRecord) {
+  public Validator<UpdateOptionType, Action, BulkOperationRule> validator(
+          ExtendedHoldingsRecord extendedHoldingsRecord) {
     return (option, action, rule) -> {
       try {
-        if (MARC.equals(holdingsReferenceService.getSourceById(extendedHoldingsRecord.getEntity().getSourceId()).getName())) {
-          throw new RuleValidationException("Holdings records that have source \"MARC\" cannot be changed");
+        if (MARC.equals(holdingsReferenceService.getSourceById(extendedHoldingsRecord.getEntity()
+                .getSourceId()).getName())) {
+          throw new RuleValidationException(
+                  "Holdings records that have source \"MARC\" cannot be changed");
         }
       } catch (NotFoundException e) {
-        log.error("Holdings source was not found by id={}", extendedHoldingsRecord.getEntity().getSourceId());
+        log.error("Holdings source was not found by id={}",
+                extendedHoldingsRecord.getEntity().getSourceId());
       }
       if (REPLACE_WITH == action.getType()) {
         validateReplacement(option, action);
@@ -89,14 +92,19 @@ public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHo
         throw new RuleValidationException("Permanent location cannot be cleared");
       }
       if (nonNull(rule) && ruleTenantsAreNotValid(rule, action, option, extendedHoldingsRecord)) {
-        throw new RuleValidationTenantsException(String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE,
-          extendedHoldingsRecord.getIdentifier(org.folio.bulkops.domain.dto.IdentifierType.ID), extendedHoldingsRecord.getTenant(), getRecordPropertyName(option)));
+        throw new RuleValidationTenantsException(
+                String.format(RECORD_CANNOT_BE_UPDATED_ERROR_TEMPLATE,
+                extendedHoldingsRecord.getIdentifier(
+                        org.folio.bulkops.domain.dto.IdentifierType.ID),
+                        extendedHoldingsRecord.getTenant(), getRecordPropertyName(option)));
       }
     };
   }
 
-  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action, ExtendedHoldingsRecord entity,
-                                                 boolean forPreview) throws RuleValidationTenantsException {
+  public Updater<ExtendedHoldingsRecord> updater(UpdateOptionType option, Action action,
+                                                 ExtendedHoldingsRecord entity,
+                                                 boolean forPreview)
+          throws RuleValidationTenantsException {
     if (isElectronicAccessUpdate(option)) {
       return electronicAccessUpdaterFactory.updater(option, action);
     } else if (REPLACE_WITH == action.getType()) {
@@ -108,7 +116,9 @@ public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHo
         }
         if (PERMANENT_LOCATION == option) {
           extendedHoldingsRecord.getEntity().setPermanentLocationId(locationId);
-          extendedHoldingsRecord.getEntity().setEffectiveLocationId(isEmpty(extendedHoldingsRecord.getEntity().getTemporaryLocationId()) ? locationId : extendedHoldingsRecord.getEntity().getTemporaryLocationId());
+          extendedHoldingsRecord.getEntity().setEffectiveLocationId(
+                  isEmpty(extendedHoldingsRecord.getEntity().getTemporaryLocationId()) ? locationId
+                          : extendedHoldingsRecord.getEntity().getTemporaryLocationId());
         } else {
           extendedHoldingsRecord.getEntity().setTemporaryLocationId(locationId);
           extendedHoldingsRecord.getEntity().setEffectiveLocationId(locationId);
@@ -117,20 +127,25 @@ public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHo
     } else if (CLEAR_FIELD == action.getType()) {
       return extendedHoldingsRecord -> {
         extendedHoldingsRecord.getEntity().setTemporaryLocationId(null);
-        extendedHoldingsRecord.getEntity().setEffectiveLocationId(extendedHoldingsRecord.getEntity().getPermanentLocationId());
+        extendedHoldingsRecord.getEntity().setEffectiveLocationId(
+                extendedHoldingsRecord.getEntity().getPermanentLocationId());
       };
     } else if (isSetDiscoverySuppressTrue(action.getType(), option)) {
-      return extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().setDiscoverySuppress(true);
+      return extendedHoldingsRecord -> extendedHoldingsRecord.getEntity()
+              .setDiscoverySuppress(true);
     } else if (isSetDiscoverySuppressFalse(action.getType(), option)) {
-      return extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().setDiscoverySuppress(false);
+      return extendedHoldingsRecord -> extendedHoldingsRecord.getEntity()
+              .setDiscoverySuppress(false);
     }
     var notesUpdaterOptional = holdingsNotesUpdater.updateNotes(action, option);
     return notesUpdaterOptional.orElseGet(() -> holding -> {
-      throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
+      throw new BulkOperationException(format("Combination %s and %s isn't supported yet",
+              option, action.getType()));
     });
   }
 
-  private void validateReplacement(UpdateOptionType option, Action action) throws RuleValidationException {
+  private void validateReplacement(UpdateOptionType option, Action action)
+          throws RuleValidationException {
     if (isIdValue(option)) {
       var newId = action.getUpdated();
       if (isEmpty(newId)) {
@@ -142,17 +157,21 @@ public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHo
 
       var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
       if (Set.of(PERMANENT_LOCATION, TEMPORARY_LOCATION).contains(option)) {
-        try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+        try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant,
+                folioModuleMetadata, folioExecutionContext))) {
           itemReferenceService.getLocationById(newId, tenant);
         } catch (Exception e) {
           throw new RuleValidationException(format("Location %s doesn't exist", newId));
         }
       } else if (ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option)) {
-        try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
-          log.info("ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option), tenant: {}, newId: {}", tenant, newId);
+        try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenant,
+                folioModuleMetadata, folioExecutionContext))) {
+          log.info("ELECTRONIC_ACCESS_URL_RELATIONSHIP.equals(option), tenant: {}, newId: {}",
+                  tenant, newId);
           electronicAccessReferenceService.getRelationshipNameById(newId);
         } catch (Exception e) {
-          throw new RuleValidationException(format("URL relationship %s doesn't exist in tenant %s", newId, tenant));
+          throw new RuleValidationException(
+                  format("URL relationship %s doesn't exist in tenant %s", newId, tenant));
         }
       }
     }
@@ -172,12 +191,16 @@ public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHo
       ELECTRONIC_ACCESS_URL_PUBLIC_NOTE).contains(option);
   }
 
-  private boolean isSetDiscoverySuppressTrue(UpdateActionType actionType, UpdateOptionType optionType) {
-    return (actionType == SET_TO_TRUE || actionType == SET_TO_TRUE_INCLUDING_ITEMS) && optionType == SUPPRESS_FROM_DISCOVERY;
+  private boolean isSetDiscoverySuppressTrue(UpdateActionType actionType,
+                                             UpdateOptionType optionType) {
+    return (actionType == SET_TO_TRUE || actionType == SET_TO_TRUE_INCLUDING_ITEMS)
+            && optionType == SUPPRESS_FROM_DISCOVERY;
   }
 
-  private boolean isSetDiscoverySuppressFalse(UpdateActionType actionType, UpdateOptionType optionType) {
-    return (actionType == SET_TO_FALSE || actionType == SET_TO_FALSE_INCLUDING_ITEMS) && optionType == SUPPRESS_FROM_DISCOVERY;
+  private boolean isSetDiscoverySuppressFalse(UpdateActionType actionType,
+                                              UpdateOptionType optionType) {
+    return (actionType == SET_TO_FALSE || actionType == SET_TO_FALSE_INCLUDING_ITEMS)
+            && optionType == SUPPRESS_FROM_DISCOVERY;
   }
 
   @Override
@@ -189,15 +212,18 @@ public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHo
       clone.setAdministrativeNotes(administrativeNotes);
     }
     if (entity.getNotes() != null) {
-      var holdingsNotes = entity.getNotes().stream().map(note -> note.toBuilder().build()).toList();
+      var holdingsNotes = entity.getNotes().stream().map(
+              note -> note.toBuilder().build()).toList();
       clone.setNotes(new ArrayList<>(holdingsNotes));
     }
     if (entity.getElectronicAccess() != null) {
-      var elAcc = entity.getElectronicAccess().stream().map(el -> el.toBuilder().build()).toList();
+      var elAcc = entity.getElectronicAccess().stream().map(
+              el -> el.toBuilder().build()).toList();
       clone.setElectronicAccess(new ArrayList<>(elAcc));
     }
 
-    return ExtendedHoldingsRecord.builder().tenantId(extendedEntity.getTenantId()).entity(clone).build();
+    return ExtendedHoldingsRecord.builder().tenantId(
+            extendedEntity.getTenantId()).entity(clone).build();
   }
 
   @Override
@@ -213,7 +239,9 @@ public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHo
     return ExtendedHoldingsRecord.class;
   }
 
-  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action, UpdateOptionType option, ExtendedHoldingsRecord extendedHolding) {
+  private boolean ruleTenantsAreNotValid(BulkOperationRule rule, Action action,
+                                         UpdateOptionType option,
+                                         ExtendedHoldingsRecord extendedHolding) {
     var ruleTenants = rule.getRuleDetails().getTenants();
     var actionTenants = action.getTenants();
     if (isThereIntersectionBetween(ruleTenants, actionTenants)) {
@@ -221,24 +249,30 @@ public class HoldingsDataProcessor extends FolioAbstractDataProcessor<ExtendedHo
     }
     if (areTenantsNotOverlapping(action, option, ruleTenants, actionTenants)) {
       log.info("extendedHolding: {}, action: {}", extendedHolding, action);
-      return isNull(extendedHolding.getElectronicAccess()) ||
-        extendedHolding.getElectronicAccess().stream().noneMatch(el -> Objects.equals(el.getRelationshipId(), action.getUpdated()));
+      return isNull(extendedHolding.getElectronicAccess())
+              || extendedHolding.getElectronicAccess().stream().noneMatch(
+                      el -> Objects.equals(el.getRelationshipId(), action.getUpdated()));
     }
-    return nonNull(ruleTenants) && !ruleTenants.isEmpty() && !ruleTenants.contains(extendedHolding.getTenant()) ||
-      nonNull(actionTenants) && !actionTenants.isEmpty() && !actionTenants.contains(extendedHolding.getTenant());
+    return nonNull(ruleTenants) && !ruleTenants.isEmpty()
+            && !ruleTenants.contains(extendedHolding.getTenant())
+            || nonNull(actionTenants) && !actionTenants.isEmpty()
+            && !actionTenants.contains(extendedHolding.getTenant());
   }
 
   private boolean isThereIntersectionBetween(List<String> ruleTenants, List<String> actionTenants) {
-    if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants) && !actionTenants.isEmpty()) {
+    if (nonNull(ruleTenants) && !ruleTenants.isEmpty() && nonNull(actionTenants)
+            && !actionTenants.isEmpty()) {
       ruleTenants.retainAll(actionTenants);
       return true;
     }
     return false;
   }
 
-  private boolean areTenantsNotOverlapping(Action action, UpdateOptionType option, List<String> ruleTenants, List<String> actionTenants) {
-    return consortiaService.isTenantCentral(folioExecutionContext.getTenantId()) &&
-      nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty() && actionTenants.isEmpty() &&
-      option == ELECTRONIC_ACCESS_URL_RELATIONSHIP && (action.getType() == FIND_AND_REPLACE || action.getType() == FIND_AND_REMOVE_THESE);
+  private boolean areTenantsNotOverlapping(Action action, UpdateOptionType option,
+                                           List<String> ruleTenants, List<String> actionTenants) {
+    return consortiaService.isTenantCentral(folioExecutionContext.getTenantId())
+            && nonNull(ruleTenants) && nonNull(actionTenants) && ruleTenants.isEmpty()
+            && actionTenants.isEmpty() && option == ELECTRONIC_ACCESS_URL_RELATIONSHIP
+            && (action.getType() == FIND_AND_REPLACE || action.getType() == FIND_AND_REMOVE_THESE);
   }
 }

@@ -18,7 +18,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ItemUpdateProcessor extends FolioAbstractUpdateProcessor<ExtendedItem> {
 
-  private static final String NO_ITEM_WRITE_PERMISSIONS_TEMPLATE = "User %s does not have required permission to edit the item record - %s=%s on the tenant ";
+  private static final String NO_ITEM_WRITE_PERMISSIONS_TEMPLATE =
+          "User %s does not have required permission to edit the item record - %s=%s "
+                  + "on the tenant ";
 
   private final ItemClient itemClient;
   private final FolioModuleMetadata folioModuleMetadata;
@@ -32,14 +34,16 @@ public class ItemUpdateProcessor extends FolioAbstractUpdateProcessor<ExtendedIt
     if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
       var tenantId = extendedItem.getTenantId();
       permissionsValidator.checkIfBulkEditWritePermissionExists(tenantId, EntityType.ITEM,
-        NO_ITEM_WRITE_PERMISSIONS_TEMPLATE + tenantId);
-      try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
+              NO_ITEM_WRITE_PERMISSIONS_TEMPLATE + tenantId);
+      try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
+              folioModuleMetadata, folioExecutionContext))) {
         itemClient.updateItem(item.withHoldingsData(null), item.getId());
       }
     } else {
-      permissionsValidator.checkIfBulkEditWritePermissionExists(folioExecutionContext.getTenantId(), EntityType.ITEM,
-        NO_ITEM_WRITE_PERMISSIONS_TEMPLATE + folioExecutionContext.getTenantId());
-        itemClient.updateItem(item.withHoldingsData(null), item.getId());
+      permissionsValidator.checkIfBulkEditWritePermissionExists(
+              folioExecutionContext.getTenantId(), EntityType.ITEM,
+              NO_ITEM_WRITE_PERMISSIONS_TEMPLATE + folioExecutionContext.getTenantId());
+      itemClient.updateItem(item.withHoldingsData(null), item.getId());
     }
   }
 

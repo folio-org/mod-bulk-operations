@@ -7,6 +7,7 @@ import static org.folio.bulkops.util.Constants.MSG_ERROR_OPTIMISTIC_LOCKING_DEFA
 import static org.folio.bulkops.util.Constants.MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING;
 import static org.folio.bulkops.util.Constants.NEW_LINE_SEPARATOR;
 
+import feign.FeignException;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -21,8 +22,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
-
-import feign.FeignException;
 import lombok.experimental.UtilityClass;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
@@ -43,6 +42,7 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 public class Utils {
 
   private static final Pattern PATTERN = Pattern.compile("\\s\\d+\\b");
+
   public static Optional<String> ofEmptyString(String string) {
     return StringUtils.isNotEmpty(string) ? Optional.of(string) : Optional.empty();
   }
@@ -86,7 +86,8 @@ public class Utils {
     return Objects.isNull(value) ? EMPTY : value.toString();
   }
 
-  public static String getIdentifierForManualApproach(String[] line, IdentifierType identifierType) {
+  public static String getIdentifierForManualApproach(String[] line,
+                                                      IdentifierType identifierType) {
     return  switch (identifierType) {
       case BARCODE -> line[3];
       case EXTERNAL_SYSTEM_ID -> line[2];
@@ -98,19 +99,21 @@ public class Utils {
   public static String getMessageFromFeignException(FeignException e) {
     try {
       String[] matches = PATTERN
-        .matcher(e.getMessage())
-        .results()
-        .map(MatchResult::group)
-        .map(String::trim)
-        .toArray(String[]::new);
+              .matcher(e.getMessage())
+              .results()
+              .map(MatchResult::group)
+              .map(String::trim)
+              .toArray(String[]::new);
       if (matches.length == 2) {
         return format(MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING, matches[0], matches[1]);
       } else {
-        log.warn("Error extracting entity versions from: {}. Returning default message", e.getMessage());
+        log.warn("Error extracting entity versions from: {}. Returning default message",
+                e.getMessage());
         return MSG_ERROR_OPTIMISTIC_LOCKING_DEFAULT;
       }
     } catch (Exception ex) {
-      log.warn("Error parsing message with entity versions: {}. Returning default message", e.getMessage(), ex);
+      log.warn("Error parsing message with entity versions: {}. Returning default message",
+              e.getMessage(), ex);
       return MSG_ERROR_OPTIMISTIC_LOCKING_DEFAULT;
     }
   }
@@ -127,8 +130,10 @@ public class Utils {
     return new ByteArrayInputStream(content.getBytes());
   }
 
-  public static String getMatchedFileName(UUID operationId, String folder, String matched, String linkToTriggering, String fileExtension) {
-    return MATCHED_RECORDS_FILE_TEMPLATE.formatted(operationId, folder, LocalDate.now(), matched, FilenameUtils.getBaseName(linkToTriggering), fileExtension);
+  public static String getMatchedFileName(UUID operationId, String folder, String matched,
+                                          String linkToTriggering, String fileExtension) {
+    return MATCHED_RECORDS_FILE_TEMPLATE.formatted(operationId, folder, LocalDate.now(),
+            matched, FilenameUtils.getBaseName(linkToTriggering), fileExtension);
   }
 
 }

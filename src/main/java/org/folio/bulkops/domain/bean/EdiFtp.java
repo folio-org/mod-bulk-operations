@@ -3,7 +3,6 @@ package org.folio.bulkops.domain.bean;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,7 +20,7 @@ public class EdiFtp   {
 
     PASSIVE("Passive");
 
-    private String value;
+    private final String value;
 
     FtpConnModeEnum(String value) {
       this.value = value;
@@ -52,14 +51,14 @@ public class EdiFtp   {
   private FtpConnModeEnum ftpConnMode;
 
   /**
-   * The FTP format for this EDI
+   * The FTP format for this EDI.
    */
   public enum FtpFormatEnum {
     SFTP("SFTP"),
 
     FTP("FTP");
 
-    private String value;
+    private final String value;
 
     FtpFormatEnum(String value) {
       this.value = value;
@@ -90,14 +89,14 @@ public class EdiFtp   {
   private FtpFormatEnum ftpFormat;
 
   /**
-   * The FTP mode for this EDI
+   * The FTP mode for this EDI.
    */
   public enum FtpModeEnum {
     ASCII("ASCII"),
 
     BINARY("Binary");
 
-    private String value;
+    private final String value;
 
     FtpModeEnum(String value) {
       this.value = value;

@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
@@ -36,7 +35,7 @@ public class ConsortiaService {
     var userTenants = userTenantCollection.getUserTenants();
     if (!userTenants.isEmpty()) {
       log.info("userTenants: {}", userTenants);
-      return userTenants.get(0).getCentralTenantId();
+      return userTenants.getFirst().getCentralTenantId();
     }
     log.info("No central tenant found for {}", currentTenantId);
     return StringUtils.EMPTY;
@@ -47,7 +46,8 @@ public class ConsortiaService {
     var consortia = consortiumClient.getConsortia();
     var consortiaList = consortia.getConsortia();
     if (!consortiaList.isEmpty()) {
-      var userTenants = consortiumClient.getConsortiaUserTenants(consortiaList.get(0).getId(), userId, Integer.MAX_VALUE);
+      var userTenants = consortiumClient.getConsortiaUserTenants(consortiaList.getFirst().getId(),
+              userId, Integer.MAX_VALUE);
       return userTenants.getUserTenants().stream().map(UserTenant::getTenantId).toList();
     }
     return new ArrayList<>();
@@ -57,12 +57,15 @@ public class ConsortiaService {
   public Map<String, UserTenant> getUserTenantsPerId(String currentTenantId, String userId) {
     var centralTenantId = getCentralTenantId(currentTenantId);
     if (StringUtils.isNotEmpty(centralTenantId)) {
-      try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(centralTenantId, folioModuleMetadata, context))) {
+      try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(centralTenantId,
+              folioModuleMetadata, context))) {
         var consortia = consortiumClient.getConsortia();
         var consortiaList = consortia.getConsortia();
         if (!consortiaList.isEmpty()) {
-          var userTenants = consortiumClient.getConsortiaUserTenants(consortiaList.get(0).getId(), userId, Integer.MAX_VALUE);
-          return userTenants.getUserTenants().stream().collect(Collectors.toMap(UserTenant::getTenantId, userTenant -> userTenant));
+          var userTenants = consortiumClient.getConsortiaUserTenants(
+                  consortiaList.getFirst().getId(), userId, Integer.MAX_VALUE);
+          return userTenants.getUserTenants().stream().collect(
+                  Collectors.toMap(UserTenant::getTenantId, userTenant -> userTenant));
         }
       }
     }

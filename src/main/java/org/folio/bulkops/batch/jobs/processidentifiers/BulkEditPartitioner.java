@@ -2,13 +2,14 @@ package org.folio.bulkops.batch.jobs.processidentifiers;
 
 import static java.util.Objects.nonNull;
 
+import java.util.HashMap;
+import java.util.Map;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.JobParameterNames;
 import org.springframework.batch.core.partition.support.Partitioner;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Value;
-import java.util.HashMap;
-import java.util.Map;
+import org.springframework.lang.NonNull;
 
 @Log4j2
 public class BulkEditPartitioner implements Partitioner {
@@ -22,8 +23,12 @@ public class BulkEditPartitioner implements Partitioner {
   @Value("${application.batch.partition-size}")
   private int partitionSize;
 
-  protected BulkEditPartitioner(String tempOutputCsvPath, String tempOutputJsonPath, String tempOutputMarcPath, long numOfLines) {
-    offset = 0l;
+  protected BulkEditPartitioner(
+      String tempOutputCsvPath,
+      String tempOutputJsonPath,
+      String tempOutputMarcPath,
+      long numOfLines) {
+    offset = 0L;
     limit = numOfLines;
     outputCsvPathTemplate = tempOutputCsvPath + "_%d.csv";
     outputJsonPathTemplate = tempOutputJsonPath + "_%d.json";
@@ -31,7 +36,7 @@ public class BulkEditPartitioner implements Partitioner {
   }
 
   @Override
-  public Map<String, ExecutionContext> partition(int gridSize) {
+  public @NonNull Map<String, ExecutionContext> partition(int gridSize) {
 
     Map<String, ExecutionContext> result = new HashMap<>();
 
@@ -42,9 +47,11 @@ public class BulkEditPartitioner implements Partitioner {
 
     long currentLimit;
     for (var i = 0; i < numberOfPartitions; i++) {
-      String tempOutputCsvPath = outputCsvPathTemplate.formatted(i);
-      String tempOutputJsonPath = outputJsonPathTemplate.formatted(i);
-      String tempOutputMarcPath = outputMarcPathTemplate == null ? null : outputMarcPathTemplate.formatted(i);
+      final String tempOutputCsvPath = outputCsvPathTemplate.formatted(i);
+      final String tempOutputJsonPath = outputJsonPathTemplate.formatted(i);
+      final String tempOutputMarcPath = outputMarcPathTemplate == null
+          ? null
+          : outputMarcPathTemplate.formatted(i);
       currentLimit = limit - partitionSize >= partitionSize ? partitionSize : limit;
 
       var executionContext = new ExecutionContext();
@@ -58,8 +65,15 @@ public class BulkEditPartitioner implements Partitioner {
       executionContext.putString(JobParameterNames.TEMP_OUTPUT_JSON_PATH, tempOutputJsonPath);
       result.put("Partition_" + i, executionContext);
 
-      log.info("Partition {}: offset {}, limit {}, tempOutputPath {}, {}, {}.",
-        i, offset, currentLimit, tempOutputCsvPath, tempOutputJsonPath, tempOutputMarcPath);
+      log.info(
+          "Partition {}: offset {}, limit {}, tempOutputPath {}, {}, {}.",
+          i,
+          offset,
+          currentLimit,
+          tempOutputCsvPath,
+          tempOutputJsonPath,
+          tempOutputMarcPath
+      );
 
       offset += currentLimit;
       limit -= partitionSize;

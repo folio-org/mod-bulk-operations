@@ -8,7 +8,6 @@ import static org.mockito.Mockito.when;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-
 import org.folio.bulkops.client.ConsortiaClient;
 import org.folio.bulkops.client.ConsortiumClient;
 import org.folio.bulkops.domain.bean.Consortia;
@@ -76,7 +75,8 @@ class ConsortiaServiceTest {
     userTenantCollection.setUserTenants(List.of(userTenant));
 
     when(consortiumClient.getConsortia()).thenReturn(consortiaCollection);
-    when(consortiumClient.getConsortiaUserTenants("consortiaId", "userId", Integer.MAX_VALUE)).thenReturn(userTenantCollection);
+    when(consortiumClient.getConsortiaUserTenants("consortiaId", "userId",
+            Integer.MAX_VALUE)).thenReturn(userTenantCollection);
 
     var expected = List.of("memberTenantId");
     var actual = consortiaService.getAffiliatedTenants("currentTenantId", "userId");
@@ -110,7 +110,8 @@ class ConsortiaServiceTest {
 
     when(consortiaClient.getUserTenantCollection()).thenReturn(userTenantCollectionToGetCentral);
     when(consortiumClient.getConsortia()).thenReturn(consortiaCollection);
-    when(consortiumClient.getConsortiaUserTenants("consortiaId", "userId", Integer.MAX_VALUE)).thenReturn(userTenantCollection);
+    when(consortiumClient.getConsortiaUserTenants("consortiaId", "userId", Integer.MAX_VALUE))
+            .thenReturn(userTenantCollection);
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
 
     var actual = consortiaService.getUserTenantsPerId("currentTenantId", "userId");

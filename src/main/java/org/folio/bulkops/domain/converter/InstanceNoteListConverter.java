@@ -5,12 +5,11 @@ import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import static org.folio.bulkops.util.Utils.booleanToStringNullSafe;
 
-import org.folio.bulkops.domain.bean.InstanceNote;
-import org.folio.bulkops.service.InstanceReferenceHelper;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.folio.bulkops.domain.bean.InstanceNote;
+import org.folio.bulkops.service.InstanceReferenceHelper;
 
 public class InstanceNoteListConverter extends BaseConverter<List<InstanceNote>> {
 

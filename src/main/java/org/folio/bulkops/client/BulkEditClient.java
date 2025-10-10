@@ -1,7 +1,6 @@
 package org.folio.bulkops.client;
 
 import java.util.UUID;
-
 import org.folio.bulkops.configs.FeignClientConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;

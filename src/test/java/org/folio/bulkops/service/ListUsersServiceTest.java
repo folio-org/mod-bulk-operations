@@ -1,5 +1,11 @@
 package org.folio.bulkops.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.UUID;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.Personal;
 import org.folio.bulkops.domain.bean.User;
@@ -16,16 +22,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.util.List;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.mockito.Mockito.when;
-
 class ListUsersServiceTest extends BaseTest {
 
-   @MockitoBean
+  @MockitoBean
   private JpaCqlRepository<BulkOperation, UUID> bulkOperationCqlRepository;
 
   @Autowired
@@ -39,45 +38,52 @@ class ListUsersServiceTest extends BaseTest {
     var firstUserId = UUID.randomUUID();
     var secondUserId = UUID.randomUUID();
 
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
 
       when(userClient.getByQuery("id==(" + firstUserId + " or " + secondUserId + ")", 2))
-        .thenReturn(new UserCollection().withUsers(List.of(new User().withId(firstUserId.toString()).withPersonal(new Personal().withFirstName("Test unique")
-          .withLastName("Test last name unique").withPreferredFirstName("Test preferred first name unique")
-          .withMiddleName("Test middle name unique")),
-          new User().withId(secondUserId.toString()).withPersonal(new Personal().withFirstName("Test repeated")
-            .withLastName("Test last name repeated").withPreferredFirstName("Test preferred first name repeated")
-            .withMiddleName("Test middle name repeated")))));
+              .thenReturn(new UserCollection().withUsers(List.of(
+                      new User().withId(firstUserId.toString())
+                              .withPersonal(new Personal().withFirstName("Test unique")
+                                      .withLastName("Test last name unique")
+                                      .withPreferredFirstName("Test preferred first name unique")
+                                      .withMiddleName("Test middle name unique")),
+                      new User().withId(secondUserId.toString())
+                              .withPersonal(new Personal().withFirstName("Test repeated")
+                              .withLastName("Test last name repeated")
+                                      .withPreferredFirstName("Test preferred first name repeated")
+                              .withMiddleName("Test middle name repeated")))));
 
       final Page<BulkOperation> page = new PageImpl<>(List.of(BulkOperation.builder()
-          .id(firstUserOperationId)
-          .status(OperationStatusType.COMPLETED)
-          .totalNumOfRecords(10)
-          .processedNumOfRecords(10)
-          .entityType(EntityType.USER)
-          .userId(firstUserId)
-          .build(),
-        BulkOperation.builder()
-          .id(secondUserFirstOperationId)
-          .status(OperationStatusType.COMPLETED)
-          .totalNumOfRecords(10)
-          .processedNumOfRecords(10)
-          .entityType(EntityType.USER)
-          .userId(secondUserId)
-          .build(),
-        BulkOperation.builder()
-          .id(secondUserSecondOperationId)
-          .status(OperationStatusType.COMPLETED)
-          .totalNumOfRecords(10)
-          .processedNumOfRecords(10)
-          .entityType(EntityType.USER)
-          .userId(secondUserId)
-          .build()));
+                      .id(firstUserOperationId)
+                      .status(OperationStatusType.COMPLETED)
+                      .totalNumOfRecords(10)
+                      .processedNumOfRecords(10)
+                      .entityType(EntityType.USER)
+                      .userId(firstUserId)
+                      .build(),
+              BulkOperation.builder()
+                      .id(secondUserFirstOperationId)
+                      .status(OperationStatusType.COMPLETED)
+                      .totalNumOfRecords(10)
+                      .processedNumOfRecords(10)
+                      .entityType(EntityType.USER)
+                      .userId(secondUserId)
+                      .build(),
+              BulkOperation.builder()
+                      .id(secondUserSecondOperationId)
+                      .status(OperationStatusType.COMPLETED)
+                      .totalNumOfRecords(10)
+                      .processedNumOfRecords(10)
+                      .entityType(EntityType.USER)
+                      .userId(secondUserId)
+                      .build()));
 
-      when(bulkOperationCqlRepository.findByCql("(entityType==\"USER\")", OffsetRequest.of(0, 100)))
-        .thenReturn(page);
-      when(bulkOperationCqlRepository.findByCql("(entityType==\"USER\")", OffsetRequest.of(0, Integer.MAX_VALUE)))
-        .thenReturn(page);
+      when(bulkOperationCqlRepository.findByCql("(entityType==\"USER\")",
+              OffsetRequest.of(0, 100)))
+              .thenReturn(page);
+      when(bulkOperationCqlRepository.findByCql("(entityType==\"USER\")",
+              OffsetRequest.of(0, Integer.MAX_VALUE)))
+              .thenReturn(page);
 
       var query = "(entityType==\"USER\")";
       Integer limit = 100;

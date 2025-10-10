@@ -9,6 +9,12 @@ import static org.folio.bulkops.util.Constants.SRS_MISSING;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.opencsv.CSVWriterBuilder;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.StreamSupport;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
@@ -28,13 +34,6 @@ import org.marc4j.MarcJsonReader;
 import org.marc4j.marc.Record;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.stream.StreamSupport;
-
 @Service
 @RequiredArgsConstructor
 @Log4j2
@@ -53,8 +52,10 @@ public class SrsService {
     var fetchedNumOfRecords = 0;
     var noLinkToCommitted = false;
     var triggeringFileName = FilenameUtils.getBaseName(bulkOperation.getLinkToTriggeringCsvFile());
-    var committedRecordsMarcFile = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(), LocalDate.now(), triggeringFileName);
-    var committedRecordsMarcCsvFile = String.format(CHANGED_MARC_CSV_PATH_TEMPLATE, bulkOperation.getId(), LocalDate.now(), triggeringFileName);
+    var committedRecordsMarcFile = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(),
+            LocalDate.now(), triggeringFileName);
+    var committedRecordsMarcCsvFile = String.format(CHANGED_MARC_CSV_PATH_TEMPLATE,
+            bulkOperation.getId(), LocalDate.now(), triggeringFileName);
     if (!instanceIds.isEmpty()) {
       var path = bulkOperation.getLinkToCommittedRecordsMarcFile();
       if (nonNull(path)) {
@@ -62,17 +63,19 @@ public class SrsService {
         bulkOperation.setLinkToCommittedRecordsMarcFile(null);
       }
       try (var writer = remoteFileSystemClient.marcWriter(committedRecordsMarcFile);
-           var csvWriter = new CSVWriterBuilder(remoteFileSystemClient.writer(committedRecordsMarcCsvFile))
-             .withSeparator(DEFAULT_SEPARATOR).build();) {
+           var csvWriter = new CSVWriterBuilder(remoteFileSystemClient.writer(
+                   committedRecordsMarcCsvFile))
+                   .withSeparator(DEFAULT_SEPARATOR).build();) {
         while (fetchedNumOfRecords < instanceIds.size()) {
           var ids = instanceIds.stream()
-            .skip(fetchedNumOfRecords)
-            .limit(SRS_CHUNK_SIZE)
-            .toList();
+                  .skip(fetchedNumOfRecords)
+                  .limit(SRS_CHUNK_SIZE)
+                  .toList();
           var marcJsons = srsClient.getParsedRecordsInBatch(new GetParsedRecordsBatchRequestBody(
-            new GetParsedRecordsBatchConditions(ids, "INSTANCE"), "MARC_BIB", true))
-            .get("records");
-          for (var jsonNodeIterator = marcJsons.elements(); jsonNodeIterator.hasNext();) {
+                          new GetParsedRecordsBatchConditions(ids, "INSTANCE"),
+                          "MARC_BIB", true))
+                  .get("records");
+          for (var jsonNodeIterator = marcJsons.elements(); jsonNodeIterator.hasNext(); ) {
             var recordJson = jsonNodeIterator.next().get("parsedRecord").get("content").toString();
             var marcRecord = jsonToMarcRecord(recordJson);
             writer.writeRecord(marcRecord);
@@ -102,8 +105,10 @@ public class SrsService {
 
   private void updateBulkOperationProgress(BulkOperation bulkOperation, int processedNumOfRecords) {
     var operation = bulkOperationRepository.findById(bulkOperation.getId())
-      .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id=" + bulkOperation.getId()));
-    operation.setProcessedNumOfRecords(operation.getProcessedNumOfRecords() + processedNumOfRecords);
+            .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id="
+                    + bulkOperation.getId()));
+    operation.setProcessedNumOfRecords(operation.getProcessedNumOfRecords()
+            + processedNumOfRecords);
     bulkOperationRepository.save(operation);
   }
 
@@ -112,7 +117,8 @@ public class SrsService {
     if (srsRecords.isEmpty()) {
       throw new MarcValidationException(SRS_MISSING);
     } else if (srsRecords.size() > 1) {
-      throw new MarcValidationException(MULTIPLE_SRS.formatted(String.join(", ", getAllSrsIds(srsRecords))));
+      throw new MarcValidationException(MULTIPLE_SRS.formatted(String.join(", ",
+              getAllSrsIds(srsRecords))));
     } else {
       var srsRec = srsRecords.elements().next();
       var parsedRec = srsRec.get("parsedRecord");

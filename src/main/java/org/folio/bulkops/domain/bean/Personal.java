@@ -2,26 +2,22 @@ package org.folio.bulkops.domain.bean;
 
 import static org.folio.bulkops.domain.dto.DataType.DATE_TIME;
 
-import java.util.Date;
-import java.util.List;
-
-import org.folio.bulkops.domain.converter.AddressesConverter;
-import org.folio.bulkops.domain.converter.DateWithoutTimeConverter;
-import org.folio.bulkops.domain.converter.PreferredContactTypeIdConverter;
-import org.folio.bulkops.domain.converter.StringConverter;
-import org.springframework.format.annotation.DateTimeFormat;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.CsvCustomBindByPosition;
-
 import jakarta.validation.Valid;
+import java.util.Date;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
-
+import org.folio.bulkops.domain.converter.AddressesConverter;
+import org.folio.bulkops.domain.converter.DateWithoutTimeConverter;
+import org.folio.bulkops.domain.converter.PreferredContactTypeIdConverter;
+import org.folio.bulkops.domain.converter.StringConverter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Data
 @With
@@ -86,7 +82,8 @@ public class Personal {
   private List<Address> addresses;
 
   @JsonProperty("preferredContactTypeId")
-  @CsvCustomBindByName(column = "Preferred contact type id", converter = PreferredContactTypeIdConverter.class)
+  @CsvCustomBindByName(column = "Preferred contact type id",
+          converter = PreferredContactTypeIdConverter.class)
   @CsvCustomBindByPosition(position = 18, converter = PreferredContactTypeIdConverter.class)
   @UnifiedTableCell(visible = false)
   private String preferredContactTypeId;

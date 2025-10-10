@@ -13,19 +13,23 @@ import org.springframework.stereotype.Component;
 @Log4j2
 public class ReadPermissionsValidator {
 
-    private final PermissionsProvider permissionsProvider;
-    private final RequiredPermissionResolver requiredPermissionResolver;
-    private final FolioExecutionContext folioExecutionContext;
+  private final PermissionsProvider permissionsProvider;
+  private final RequiredPermissionResolver requiredPermissionResolver;
+  private final FolioExecutionContext folioExecutionContext;
 
-    public boolean isBulkEditReadPermissionExists(String tenantId, org.folio.bulkops.domain.dto.EntityType entityType) {
-        var readPermissionForEntity = requiredPermissionResolver.getReadPermission(entityType);
-        var userPermissions = permissionsProvider.getUserPermissions(tenantId, folioExecutionContext.getUserId());
-        var isReadPermissionsExist = false;
-        if (entityType == org.folio.bulkops.domain.dto.EntityType.USER) {
-            isReadPermissionsExist = userPermissions.contains(readPermissionForEntity.getValue()) && userPermissions.contains(BULK_EDIT_USERS_VIEW_PERMISSION.getValue());
-        } else {
-            isReadPermissionsExist = userPermissions.contains(readPermissionForEntity.getValue()) && userPermissions.contains(BULK_EDIT_INVENTORY_VIEW_PERMISSION.getValue());
-        }
-        return isReadPermissionsExist;
+  public boolean isBulkEditReadPermissionExists(
+          String tenantId, org.folio.bulkops.domain.dto.EntityType entityType) {
+    var readPermissionForEntity = requiredPermissionResolver.getReadPermission(entityType);
+    var userPermissions = permissionsProvider.getUserPermissions(tenantId,
+            folioExecutionContext.getUserId());
+    var isReadPermissionsExist = false;
+    if (entityType == org.folio.bulkops.domain.dto.EntityType.USER) {
+      isReadPermissionsExist = userPermissions.contains(readPermissionForEntity.getValue())
+              && userPermissions.contains(BULK_EDIT_USERS_VIEW_PERMISSION.getValue());
+    } else {
+      isReadPermissionsExist = userPermissions.contains(readPermissionForEntity.getValue())
+              && userPermissions.contains(BULK_EDIT_INVENTORY_VIEW_PERMISSION.getValue());
     }
+    return isReadPermissionsExist;
+  }
 }

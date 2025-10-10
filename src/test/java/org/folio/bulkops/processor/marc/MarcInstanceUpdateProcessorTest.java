@@ -9,6 +9,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.util.Collections;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.DataImportClient;
@@ -42,25 +46,20 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.util.Collections;
-import java.util.UUID;
-
 class MarcInstanceUpdateProcessorTest extends BaseTest {
-   @MockitoBean
+  @MockitoBean
   private DataImportClient dataImportClient;
-   @MockitoBean
+  @MockitoBean
   private DataImportUploadClient dataImportUploadClient;
-   @MockitoBean
+  @MockitoBean
   private DataImportProfilesClient dataImportProfilesClient;
-   @MockitoBean
+  @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
-   @MockitoBean
+  @MockitoBean
   private BulkOperationRepository bulkOperationRepository;
-   @MockitoBean
+  @MockitoBean
   private DataImportRestS3UploadClient dataImportRestS3UploadClient;
-   @MockitoBean
+  @MockitoBean
   private ErrorService errorService;
 
   @Captor
@@ -73,48 +72,51 @@ class MarcInstanceUpdateProcessorTest extends BaseTest {
   @ValueSource(booleans = {true, false})
   @SneakyThrows
   void shouldUpdateMarcInstances(boolean isSplitStatusEnabled) {
-    var bulkOperation = BulkOperation.builder().linkToCommittedRecordsMarcFile("committed.mrc").build();
+    var bulkOperation = BulkOperation.builder().linkToCommittedRecordsMarcFile("committed.mrc")
+            .build();
 
     when(remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsMarcFile()))
-      .thenReturn(new FileInputStream("src/test/resources/files/matched.mrc"));
+            .thenReturn(new FileInputStream("src/test/resources/files/matched.mrc"));
     when(dataImportProfilesClient.createMatchProfile(any(MatchProfilePost.class)))
-      .thenReturn(MatchProfile.builder().id(UUID.randomUUID().toString()).build());
+            .thenReturn(MatchProfile.builder().id(UUID.randomUUID().toString()).build());
     when(dataImportProfilesClient.createMappingProfile(any(MappingProfilePost.class)))
-      .thenReturn(MappingProfile.builder().id(UUID.randomUUID().toString()).build());
+            .thenReturn(MappingProfile.builder().id(UUID.randomUUID().toString()).build());
     when(dataImportProfilesClient.createActionProfile(any(ActionProfilePost.class)))
-      .thenReturn(ActionProfile.builder().id(UUID.randomUUID().toString()).build());
+            .thenReturn(ActionProfile.builder().id(UUID.randomUUID().toString()).build());
     var jobProfileId = UUID.randomUUID();
     when(dataImportProfilesClient.createJobProfile(any(JobProfilePost.class)))
-      .thenReturn(JobProfile.builder().id(jobProfileId.toString()).build());
+            .thenReturn(JobProfile.builder().id(jobProfileId.toString()).build());
     when(dataImportClient.postUploadDefinition(any(UploadFileDefinition.class)))
-      .thenReturn(UploadFileDefinition.builder()
-        .id(UUID.randomUUID().toString())
-        .fileDefinitions(Collections.singletonList(FileDefinition.builder()
-          .id(UUID.randomUUID().toString())
-          .name("name")
-          .build()))
-        .build());
+            .thenReturn(UploadFileDefinition.builder()
+                    .id(UUID.randomUUID().toString())
+                    .fileDefinitions(Collections.singletonList(FileDefinition.builder()
+                            .id(UUID.randomUUID().toString())
+                            .name("name")
+                            .build()))
+                    .build());
     when(dataImportClient.getSplitStatus())
-      .thenReturn(SplitStatus.builder().splitStatus(isSplitStatusEnabled).build());
+            .thenReturn(SplitStatus.builder().splitStatus(isSplitStatusEnabled).build());
     when(dataImportClient.getUploadUrl(anyString()))
-      .thenReturn(UploadUrlResponse.builder().url("url").build());
+            .thenReturn(UploadUrlResponse.builder().url("url").build());
     var headers = new HttpHeaders();
     headers.add(HttpHeaders.ETAG, "etag");
     when(dataImportRestS3UploadClient.uploadFile(anyString(), any(byte[].class)))
-      .thenReturn(new ResponseEntity<>(headers, HttpStatus.OK));
+            .thenReturn(new ResponseEntity<>(headers, HttpStatus.OK));
     when(dataImportClient.getUploadDefinitionById(anyString()))
-      .thenReturn(UploadFileDefinition.builder()
-        .id(UUID.randomUUID().toString())
-        .fileDefinitions(Collections.singletonList(FileDefinition.builder().id(UUID.randomUUID().toString()).build()))
-        .build());
-    when(dataImportUploadClient.uploadFileDefinitionsFiles(anyString(), anyString(), any(byte[].class)))
-      .thenReturn(UploadFileDefinition.builder()
-        .id(UUID.randomUUID().toString())
-        .fileDefinitions(Collections.singletonList(FileDefinition.builder()
-          .id(UUID.randomUUID().toString())
-          .name("name")
-          .build()))
-        .build());
+            .thenReturn(UploadFileDefinition.builder()
+                    .id(UUID.randomUUID().toString())
+                    .fileDefinitions(Collections.singletonList(
+                            FileDefinition.builder().id(UUID.randomUUID().toString()).build()))
+                    .build());
+    when(dataImportUploadClient.uploadFileDefinitionsFiles(anyString(), anyString(),
+            any(byte[].class)))
+            .thenReturn(UploadFileDefinition.builder()
+                    .id(UUID.randomUUID().toString())
+                    .fileDefinitions(Collections.singletonList(FileDefinition.builder()
+                            .id(UUID.randomUUID().toString())
+                            .name("name")
+                            .build()))
+                    .build());
 
     marcInstanceUpdateProcessor.updateMarcRecords(bulkOperation);
 
@@ -126,9 +128,11 @@ class MarcInstanceUpdateProcessorTest extends BaseTest {
     if (isSplitStatusEnabled) {
       verify(dataImportClient).getUploadUrl(anyString());
       verify(dataImportRestS3UploadClient).uploadFile(anyString(), any(byte[].class));
-      verify(dataImportClient).assembleStorageFile(anyString(), anyString(), any(AssembleStorageFileRequestBody.class));
+      verify(dataImportClient).assembleStorageFile(anyString(), anyString(),
+              any(AssembleStorageFileRequestBody.class));
     } else {
-      verify(dataImportUploadClient).uploadFileDefinitionsFiles(anyString(), anyString(), any(byte[].class));
+      verify(dataImportUploadClient).uploadFileDefinitionsFiles(anyString(), anyString(),
+              any(byte[].class));
     }
 
     verify(bulkOperationRepository).save(bulkOperationCaptor.capture());
@@ -141,16 +145,17 @@ class MarcInstanceUpdateProcessorTest extends BaseTest {
   void shouldNotUploadEmptyFile(int numOfErrors) {
     var operationId = UUID.randomUUID();
     var bulkOperation = BulkOperation.builder()
-      .id(operationId)
-      .linkToCommittedRecordsMarcFile("committed.mrc").build();
+            .id(operationId)
+            .linkToCommittedRecordsMarcFile("committed.mrc").build();
 
     when(remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsMarcFile()))
-      .thenReturn(new ByteArrayInputStream(EMPTY.getBytes()));
+            .thenReturn(new ByteArrayInputStream(EMPTY.getBytes()));
     when(errorService.getCommittedNumOfErrors(operationId)).thenReturn(numOfErrors);
 
     marcInstanceUpdateProcessor.updateMarcRecords(bulkOperation);
 
-    verify(errorService).uploadErrorsToStorage(operationId, ERROR_COMMITTING_FILE_NAME_PREFIX, null);
+    verify(errorService).uploadErrorsToStorage(operationId, ERROR_COMMITTING_FILE_NAME_PREFIX,
+            null);
 
     verify(bulkOperationRepository).save(bulkOperationCaptor.capture());
     assertThat(bulkOperationCaptor.getValue().getLinkToCommittedRecordsMarcFile()).isNull();

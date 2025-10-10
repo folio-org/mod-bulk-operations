@@ -9,7 +9,6 @@ import static org.folio.bulkops.util.Constants.STAFF_ONLY;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
 import org.folio.bulkops.domain.bean.CirculationNote;
 
 public class CirculationNoteListConverter extends BaseConverter<List<CirculationNote>> {
@@ -23,6 +22,7 @@ public class CirculationNoteListConverter extends BaseConverter<List<Circulation
   }
 
   private String circulationNotesToString(CirculationNote note) {
-    return escape(note.getNote() + (Boolean.TRUE.equals(note.getStaffOnly()) ? SPACE + STAFF_ONLY : EMPTY));
+    return escape(note.getNote() + (Boolean.TRUE.equals(note.getStaffOnly())
+            ? SPACE + STAFF_ONLY : EMPTY));
   }
 }

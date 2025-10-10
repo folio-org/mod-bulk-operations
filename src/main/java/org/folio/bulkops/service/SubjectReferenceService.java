@@ -1,5 +1,12 @@
 package org.folio.bulkops.service;
 
+import static java.util.Objects.isNull;
+import static java.util.Optional.ofNullable;
+import static org.folio.bulkops.util.Constants.HYPHEN;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_CODE;
+import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.SubjectSourcesClient;
@@ -10,13 +17,6 @@ import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
-
-import static java.util.Objects.isNull;
-import static java.util.Optional.ofNullable;
-import static org.folio.bulkops.util.Constants.HYPHEN;
-import static org.folio.bulkops.util.Constants.QUERY_PATTERN_CODE;
-import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +34,8 @@ public class SubjectReferenceService {
     if (isNull(tenantId)) {
       tenantId = folioExecutionContext.getTenantId();
     }
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
+            folioModuleMetadata, folioExecutionContext))) {
       return subjectSourcesClient.getById(id).getName();
     } catch (NotFoundException e) {
       log.error("Subject source was not found by id={}", id);
@@ -48,7 +49,8 @@ public class SubjectReferenceService {
     if (isNull(tenantId)) {
       tenantId = folioExecutionContext.getTenantId();
     }
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
+            folioModuleMetadata, folioExecutionContext))) {
       return subjectTypesClient.getById(id).getName();
     } catch (NotFoundException e) {
       log.error("Subject type was not found by id={}", id);
@@ -59,9 +61,8 @@ public class SubjectReferenceService {
   @Cacheable(cacheNames = "subjectSourceIds")
   public String getSubjectSourceIdByName(String name) {
     var subjectSources = subjectSourcesClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
-    return subjectSources.getSubjectSources().isEmpty() ?
-      name :
-      subjectSources.getSubjectSources().get(0).getId();
+    return subjectSources.getSubjectSources().isEmpty()
+            ? name : subjectSources.getSubjectSources().getFirst().getId();
   }
 
   @Cacheable(cacheNames = "subjectSourceNameByCode")
@@ -75,8 +76,7 @@ public class SubjectReferenceService {
   @Cacheable(cacheNames = "subjectTypeIds")
   public String getSubjectTypeIdByName(String name) {
     var subjectTypes = subjectTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
-    return subjectTypes.getSubjectTypes().isEmpty() ?
-      name :
-      subjectTypes.getSubjectTypes().get(0).getId();
+    return subjectTypes.getSubjectTypes().isEmpty()
+            ? name : subjectTypes.getSubjectTypes().getFirst().getId();
   }
 }

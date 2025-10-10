@@ -1,19 +1,16 @@
 package org.folio.bulkops.domain.bean;
 
-import java.util.Date;
-import java.util.Objects;
-
-import org.springframework.format.annotation.DateTimeFormat;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-
+import java.util.Date;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.With;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @With
 @Getter
@@ -45,7 +42,7 @@ public class InventoryItemStatus {
     UNKNOWN("Unknown"),
     WITHDRAWN("Withdrawn");
 
-    private String value;
+    private final String value;
 
     NameEnum(String value) {
       this.value = value;
@@ -81,8 +78,12 @@ public class InventoryItemStatus {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     InventoryItemStatus that = (InventoryItemStatus) o;
     return name == that.name;
   }

@@ -1,12 +1,11 @@
 package org.folio.bulkops.exception;
 
 import com.opencsv.exceptions.CsvRuntimeException;
+import java.lang.reflect.Field;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.folio.bulkops.domain.dto.ErrorType;
-
-import java.lang.reflect.Field;
 
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor

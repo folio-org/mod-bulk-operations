@@ -4,12 +4,10 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Writer;
-
+import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.service.MarcRemoteStorageWriter;
 import org.folio.s3.client.FolioS3Client;
 import org.springframework.stereotype.Component;
-
-import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor

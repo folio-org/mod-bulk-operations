@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.FileCopyUtils;
@@ -17,8 +16,8 @@ public class FolioMultiPartFile implements MultipartFile {
   private final String contentType;
   private final byte[] content;
 
-  public FolioMultiPartFile(
-    String name, String contentType, InputStream contentStream) throws IOException {
+  public FolioMultiPartFile(String name, String contentType, InputStream contentStream)
+          throws IOException {
 
     this.name = name;
     this.originalFilename = name;

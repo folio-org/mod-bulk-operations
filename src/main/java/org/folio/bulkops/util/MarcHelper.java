@@ -11,7 +11,8 @@ import org.marc4j.marc.Subfield;
 public class MarcHelper {
   public static String fetchInstanceUuidOrElseHrid(Record marcRecord) {
     return marcRecord.getDataFields().stream()
-      .filter(f -> FIELD_999.equals(f.getTag()) && INDICATOR_F == f.getIndicator1() && INDICATOR_F == f.getIndicator2())
+      .filter(f -> FIELD_999.equals(f.getTag()) && INDICATOR_F == f.getIndicator1()
+              && INDICATOR_F == f.getIndicator2())
       .findFirst()
       .map(f -> f.getSubfield('i'))
       .map(Subfield::getData)

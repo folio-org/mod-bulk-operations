@@ -1,10 +1,10 @@
 package org.folio.bulkops.processor.note;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-
 import static org.folio.bulkops.util.Constants.HOLDING_TYPE;
 import static org.folio.bulkops.util.Constants.ITEM_TYPE;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
