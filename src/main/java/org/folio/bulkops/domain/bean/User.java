@@ -116,8 +116,8 @@ public class User implements BulkOperationsEntity {
   private Date enrollmentDate;
 
   @JsonProperty("expirationDate")
-  @CsvCustomBindByName(column = "Expiration date", converter = DateWithTimeConverter.class)
-  @CsvCustomBindByPosition(position = 21, converter = DateWithTimeConverter.class)
+  @CsvCustomBindByName(column = "Expiration date", converter = DateWithoutTimeConverter.class)
+  @CsvCustomBindByPosition(position = 21, converter = DateWithoutTimeConverter.class)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date expirationDate;
