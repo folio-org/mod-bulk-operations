@@ -4,11 +4,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.DamagedStatus;
 import org.folio.bulkops.domain.bean.ItemLocation;
-import org.folio.bulkops.domain.bean.StatisticalCode;
-import org.folio.bulkops.domain.bean.StatisticalCodeType;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.MaterialType;
 import org.folio.bulkops.domain.bean.ServicePoint;
+import org.folio.bulkops.domain.bean.StatisticalCode;
+import org.folio.bulkops.domain.bean.StatisticalCodeType;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 

@@ -7,7 +7,6 @@ import static org.folio.bulkops.util.Constants.ITEM_DELIMITER;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
 import org.folio.bulkops.domain.bean.HoldingsStatement;
 
 public class HoldingsStatementListConverter extends BaseConverter<List<HoldingsStatement>> {

@@ -2,10 +2,10 @@ package org.folio.bulkops.domain.bean;
 
 import static org.folio.bulkops.util.Constants.UTF8_BOM;
 
+import java.io.Serializable;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
-import java.io.Serializable;
 
 @Data
 @With

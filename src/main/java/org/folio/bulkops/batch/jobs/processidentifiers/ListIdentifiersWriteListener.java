@@ -1,10 +1,10 @@
 package org.folio.bulkops.batch.jobs.processidentifiers;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.ItemWriteListener;
 import org.springframework.batch.item.Chunk;
 import org.springframework.stereotype.Component;
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor

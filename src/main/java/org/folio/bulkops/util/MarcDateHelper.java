@@ -2,11 +2,10 @@ package org.folio.bulkops.util;
 
 import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
 
-import lombok.experimental.UtilityClass;
-import org.marc4j.marc.Record;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import lombok.experimental.UtilityClass;
+import org.marc4j.marc.Record;
 
 @UtilityClass
 public class MarcDateHelper {
@@ -21,7 +20,8 @@ public class MarcDateHelper {
 
   public static void updateDateTimeControlField(Record marcRecord, Date date) {
     marcRecord.getControlFields().stream()
-      .filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst()
-      .ifPresent(dateTimeControlField -> dateTimeControlField.setData(MarcDateHelper.getDateTimeForMarc(date)));
+            .filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst()
+            .ifPresent(dateTimeControlField -> dateTimeControlField.setData(
+                    MarcDateHelper.getDateTimeForMarc(date)));
   }
 }

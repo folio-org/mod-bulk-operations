@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@FeignClient(name = "electronic-access-relationships", configuration = FeignClientConfiguration.class)
+@FeignClient(name = "electronic-access-relationships",
+        configuration = FeignClientConfiguration.class)
 public interface ElectronicAccessRelationshipClient {
   @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
   ElectronicAccessRelationship getById(@PathVariable String id);

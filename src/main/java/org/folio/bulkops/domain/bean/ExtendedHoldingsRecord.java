@@ -1,9 +1,8 @@
 package org.folio.bulkops.domain.bean;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,8 +29,8 @@ public class ExtendedHoldingsRecord implements BulkOperationsEntity, ElectronicA
   }
 
   @Override
-  public Integer _version() {
-    return entity._version();
+  public Integer entityVersion() {
+    return entity.entityVersion();
   }
 
   @Override
@@ -54,8 +53,8 @@ public class ExtendedHoldingsRecord implements BulkOperationsEntity, ElectronicA
   public void setTenantToNotes(List<TenantNotePair> tenantNotePairs) {
     entity.getNotes().forEach(note -> {
       var tenantNotePair = tenantNotePairs.stream()
-        .filter(pair -> pair.getNoteTypeId().equals(note.getHoldingsNoteTypeId()))
-        .findFirst();
+              .filter(pair -> pair.getNoteTypeId().equals(note.getHoldingsNoteTypeId()))
+              .findFirst();
       if (tenantNotePair.isPresent()) {
         note.setTenantId(tenantNotePair.get().getTenantId());
         note.setHoldingsNoteTypeName(tenantNotePair.get().getNoteTypeName());

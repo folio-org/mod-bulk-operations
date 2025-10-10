@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
+import com.github.jknack.handlebars.internal.lang3.StringUtils;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.exception.EntityFormatException;
@@ -17,13 +18,11 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import com.github.jknack.handlebars.internal.lang3.StringUtils;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 class ElectronicAccessServiceTest extends BaseTest {
-   @MockitoBean
+  @MockitoBean
   private ElectronicAccessReferenceService electronicAccessReferenceService;
   @MockitoSpyBean
   private FolioExecutionContext folioExecutionContext;
@@ -34,19 +33,20 @@ class ElectronicAccessServiceTest extends BaseTest {
   private FolioModuleMetadata folioModuleMetadata;
 
   @ParameterizedTest
-  @CsvSource(value = { ",,,,", "id,uri,text,specification,note" }, delimiter = ',')
-  void testElectronicAccessToString(String relationshipId, String uri, String linkText, String materialsSpecification, String publicNote) {
+  @CsvSource(value = {",,,,", "id,uri,text,specification,note"}, delimiter = ',')
+  void testElectronicAccessToString(String relationshipId, String uri, String linkText,
+                                    String materialsSpecification, String publicNote) {
     when(electronicAccessReferenceService.getRelationshipNameById("id")).thenReturn("name");
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
     var actual = electronicAccessService.electronicAccessToString(ElectronicAccess.builder()
-      .uri(uri)
-      .linkText(linkText)
-      .materialsSpecification(materialsSpecification)
-      .publicNote(publicNote)
-      .relationshipId(relationshipId)
-      .tenantId("tenant")
-      .build());
+            .uri(uri)
+            .linkText(linkText)
+            .materialsSpecification(materialsSpecification)
+            .publicNote(publicNote)
+            .relationshipId(relationshipId)
+            .tenantId("tenant")
+            .build());
 
     if (isNull(uri)) {
       assertEquals("-\u001f;-\u001f;-\u001f;-\u001f;-", actual);
@@ -56,19 +56,20 @@ class ElectronicAccessServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @CsvSource(value = { ",,,,", "id,uri,text,specification,note" }, delimiter = ',')
-  void testElectronicAccessInstanceToString(String relationshipId, String uri, String linkText, String materialsSpecification, String publicNote) {
+  @CsvSource(value = {",,,,", "id,uri,text,specification,note"}, delimiter = ',')
+  void testElectronicAccessInstanceToString(String relationshipId, String uri, String linkText,
+                                            String materialsSpecification, String publicNote) {
     when(electronicAccessReferenceService.getRelationshipNameById("id")).thenReturn("name");
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
     var actual = electronicAccessService.electronicAccessInstanceToString(ElectronicAccess.builder()
-      .uri(uri)
-      .linkText(linkText)
-      .materialsSpecification(materialsSpecification)
-      .publicNote(publicNote)
-      .relationshipId(relationshipId)
-      .tenantId("tenant")
-      .build());
+            .uri(uri)
+            .linkText(linkText)
+            .materialsSpecification(materialsSpecification)
+            .publicNote(publicNote)
+            .relationshipId(relationshipId)
+            .tenantId("tenant")
+            .build());
 
     if (isEmpty(uri)) {
       assertEquals("-\u001f;-\u001f;-\u001f;-\u001f;-", actual);
@@ -88,17 +89,18 @@ class ElectronicAccessServiceTest extends BaseTest {
       assertNull(item);
     } else {
       assertEquals(ElectronicAccess.builder()
-        .uri("uri")
-        .linkText("text")
-        .materialsSpecification("specification")
-        .publicNote("note")
-        .relationshipId("id")
-        .build(), item);
+              .uri("uri")
+              .linkText("text")
+              .materialsSpecification("specification")
+              .publicNote("note")
+              .relationshipId("id")
+              .build(), item);
     }
   }
 
   @Test
   void testRestoreInvalidElectronicAccessItem() {
-    assertThrows(EntityFormatException.class, () -> electronicAccessService.restoreElectronicAccessItem(";;;"));
+    assertThrows(EntityFormatException.class,
+            () -> electronicAccessService.restoreElectronicAccessItem(";;;"));
   }
 }

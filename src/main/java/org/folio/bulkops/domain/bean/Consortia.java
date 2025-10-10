@@ -1,7 +1,6 @@
 package org.folio.bulkops.domain.bean;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import lombok.Data;
 
 @Data

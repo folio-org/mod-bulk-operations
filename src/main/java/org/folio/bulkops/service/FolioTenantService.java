@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 @Primary
 public class FolioTenantService extends TenantService {
 
-  public FolioTenantService(JdbcTemplate jdbcTemplate, FolioExecutionContext context, FolioSpringLiquibase folioSpringLiquibase, PrepareSystemUserService prepareSystemUserService) {
+  public FolioTenantService(JdbcTemplate jdbcTemplate, FolioExecutionContext context,
+                            FolioSpringLiquibase folioSpringLiquibase,
+                            PrepareSystemUserService prepareSystemUserService) {
     super(jdbcTemplate, context, folioSpringLiquibase);
     this.prepareSystemUserService = prepareSystemUserService;
   }

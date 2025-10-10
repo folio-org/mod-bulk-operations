@@ -23,12 +23,12 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.JobParameterNames;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.exception.FileOperationException;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.batch.core.BatchStatus;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.partition.support.StepExecutionAggregator;
@@ -40,13 +40,14 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class BulkEditFileAssembler implements StepExecutionAggregator {
   @Value("${application.batch.merge-csv-json-mrc-pool-size}")
-  private int mergeCsvJsonMrcPoolSize;
+  private int mergeCsvJsonMrcPoolSize = 0;
 
   @Value("${application.batch.minutes-for-merge}")
-  private int numMinutesForMerge;
+  private int numMinutesForMerge = 0;
 
   @Override
-  public void aggregate(StepExecution stepExecution, Collection<StepExecution> executions) {
+  public void aggregate(@NotNull StepExecution stepExecution,
+                        @NotNull Collection<StepExecution> executions) {
     if (atLeastOnePartitionFailed(executions)) {
       stepExecution.setStatus(BatchStatus.FAILED);
     } else {
@@ -58,7 +59,9 @@ public class BulkEditFileAssembler implements StepExecutionAggregator {
     return executions.stream().anyMatch(step -> BatchStatus.FAILED.equals(step.getStatus()));
   }
 
-  private void mergeCsvJsonMarcInParallel(StepExecution stepExecution, Collection<StepExecution> executions) {
+  private void mergeCsvJsonMarcInParallel(
+      StepExecution stepExecution,
+      Collection<StepExecution> executions) {
     ExecutorService exec = Executors.newFixedThreadPool(mergeCsvJsonMrcPoolSize);
     List<String> filesToDelete = new ArrayList<>();
     if (atLeastOneMarcExists(stepExecution)) {
@@ -68,11 +71,13 @@ public class BulkEditFileAssembler implements StepExecutionAggregator {
     mergeJson(stepExecution, executions, exec, filesToDelete);
     exec.shutdown();
     try {
-      if (exec.awaitTermination(numMinutesForMerge, TimeUnit.MINUTES)) {
+      boolean finished = exec.awaitTermination(numMinutesForMerge, TimeUnit.MINUTES);
+      if (finished) {
         log.info("Merge csv, json and mrc files has been completed successfully.");
         removePartFiles(filesToDelete);
       } else {
-        var errorMsg = "Merge csv, json and mrc files exceeded allowed %d minutes".formatted(numMinutesForMerge);
+        var errorMsg = "Merge csv, json and mrc files exceeded allowed %d minutes".formatted(
+            numMinutesForMerge);
         log.error(errorMsg);
         throw new BulkEditException(errorMsg);
       }
@@ -83,58 +88,100 @@ public class BulkEditFileAssembler implements StepExecutionAggregator {
     }
   }
 
-  private void mergeCsv(StepExecution stepExecution, Collection<StepExecution> executions, ExecutorService exec, List<String> filesToDelete) {
+  private void mergeCsv(
+      StepExecution stepExecution,
+      Collection<StepExecution> executions,
+      ExecutorService exec,
+      List<String> filesToDelete) {
     exec.execute(() -> {
       var csvFileParts = executions.stream()
-        .map(e -> e.getExecutionContext().getString(JobParameterNames.TEMP_OUTPUT_CSV_PATH)).toList();
+          .map(e -> e.getExecutionContext()
+              .getString(JobParameterNames.TEMP_OUTPUT_CSV_PATH))
+          .toList();
       filesToDelete.addAll(csvFileParts);
-      ofNullable(stepExecution.getJobExecution().getJobParameters().getString(JobParameterNames.TEMP_LOCAL_FILE_PATH))
-        .ifPresent(path -> {
-          try (var writer = new BufferedWriter(new FileWriter(path))) {
-            for (int i = 0; i < csvFileParts.size(); i++) {
-              var reader = new BufferedReader(new FileReader(csvFileParts.get(i)));
-              String line = reader.readLine();
-              if (i == 0 && nonNull(line)) {
-                writer.write(UTF8_BOM + line + LINE_BREAK);
-              }
-              while ((line = reader.readLine()) != null) {
-                writer.write(line + LINE_BREAK);
-              }
-              reader.close();
+
+      var tmpLocalFilePath = stepExecution.getJobExecution().getJobParameters()
+          .getString(JobParameterNames.TEMP_LOCAL_FILE_PATH);
+      ofNullable(tmpLocalFilePath).ifPresent(path -> {
+        try (var writer = new BufferedWriter(new FileWriter(path))) {
+          for (int i = 0; i < csvFileParts.size(); i++) {
+            var reader = new BufferedReader(new FileReader(csvFileParts.get(i)));
+            String line = reader.readLine();
+            if (i == 0 && nonNull(line)) {
+              writer.write(UTF8_BOM + line + LINE_BREAK);
             }
-          } catch (Exception e) {
-            log.error("Error occurred while merging CSV part files", e);
-            throw new FileOperationException(e);
+            while ((line = reader.readLine()) != null) {
+              writer.write(line + LINE_BREAK);
+            }
+            reader.close();
           }
+        } catch (Exception e) {
+          log.error("Error occurred while merging CSV part files", e);
+          throw new FileOperationException(e);
+        }
       });
     });
   }
 
-  private void mergeMarc(StepExecution stepExecution, Collection<StepExecution> executions, ExecutorService exec, List<String> filesToDelete) {
+  private void mergeMarc(
+      StepExecution stepExecution,
+      Collection<StepExecution> executions,
+      ExecutorService exec,
+      List<String> filesToDelete) {
     if (isInstanceJob(stepExecution)) {
       exec.execute(() -> {
         var marcFileParts = executions.stream()
-          .map(e -> e.getExecutionContext().getString(JobParameterNames.TEMP_OUTPUT_MARC_PATH)).toList();
-        mergePartFiles(stepExecution, JobParameterNames.TEMP_LOCAL_MARC_PATH, ".mrc", marcFileParts);
+            .map(e -> e.getExecutionContext()
+                .getString(JobParameterNames.TEMP_OUTPUT_MARC_PATH))
+            .toList();
+        mergePartFiles(
+            stepExecution,
+            JobParameterNames.TEMP_LOCAL_MARC_PATH,
+            ".mrc",
+            marcFileParts
+        );
         filesToDelete.addAll(marcFileParts);
       });
     }
   }
 
-  private void mergeJson(StepExecution stepExecution, Collection<StepExecution> executions, ExecutorService exec, List<String> filesToDelete) {
+  private void mergeJson(
+      StepExecution stepExecution,
+      Collection<StepExecution> executions,
+      ExecutorService exec,
+      List<String> filesToDelete) {
     exec.execute(() -> {
       var jsonFileParts = executions.stream()
-        .map(e -> e.getExecutionContext().getString(JobParameterNames.TEMP_OUTPUT_JSON_PATH)).toList();
-      mergePartFiles(stepExecution, JobParameterNames.TEMP_LOCAL_FILE_PATH, ".json", jsonFileParts);
+          .map(e -> e.getExecutionContext()
+              .getString(JobParameterNames.TEMP_OUTPUT_JSON_PATH))
+          .toList();
+      mergePartFiles(
+          stepExecution,
+          JobParameterNames.TEMP_LOCAL_FILE_PATH,
+          ".json",
+          jsonFileParts
+      );
       filesToDelete.addAll(jsonFileParts);
     });
   }
 
-  private void mergePartFiles(StepExecution stepExecution, String jobParamOfOutputFileName, String outputFileExtension, List<String> fileParts) {
-    try (OutputStream out = Files.newOutputStream(Paths.get(stepExecution.getJobExecution().getJobParameters().getString(jobParamOfOutputFileName) + outputFileExtension),
-      StandardOpenOption.CREATE, StandardOpenOption.APPEND)) {
-      for (String part: fileParts) {
-        Files.copy(Path.of(part), out);
+  private void mergePartFiles(
+      StepExecution stepExecution,
+      String jobParamOfOutputFileName,
+      String outputFileExtension,
+      List<String> fileParts) {
+    try {
+      var baseOutput = stepExecution.getJobExecution().getJobParameters()
+          .getString(jobParamOfOutputFileName);
+      var outputPath = baseOutput + outputFileExtension;
+      var options = new java.nio.file.OpenOption[] {
+          StandardOpenOption.CREATE,
+          StandardOpenOption.APPEND
+      };
+      try (OutputStream out = Files.newOutputStream(Paths.get(outputPath), options)) {
+        for (String part : fileParts) {
+          Files.copy(Path.of(part), out);
+        }
       }
     } catch (Exception e) {
       log.error("Error occurred while merging part files", e);
@@ -158,12 +205,14 @@ public class BulkEditFileAssembler implements StepExecutionAggregator {
             throw new FileOperationException(e);
           }
         });
-        log.info("All {} part files have been deleted successfully.", partFiles.size());
+        var deletedCount = partFiles.size();
+        log.info("All {} part files have been deleted successfully.", deletedCount);
       });
     }
   }
 
   private boolean atLeastOneMarcExists(StepExecution stepExecution) {
-    return stepExecution.getJobExecution().getExecutionContext().containsKey(AT_LEAST_ONE_MARC_EXISTS);
+    var ctx = stepExecution.getJobExecution().getExecutionContext();
+    return ctx.containsKey(AT_LEAST_ONE_MARC_EXISTS);
   }
 }

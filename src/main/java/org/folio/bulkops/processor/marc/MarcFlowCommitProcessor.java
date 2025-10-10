@@ -17,26 +17,6 @@ import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import com.opencsv.exceptions.CsvValidationException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
-import org.apache.commons.collections4.CollectionUtils;
-import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.domain.bean.ExtendedInstance;
-import org.folio.bulkops.domain.bean.Instance;
-import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
-import org.folio.bulkops.service.ConsortiaService;
-import org.folio.bulkops.service.ErrorService;
-import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
-import org.folio.bulkops.domain.entity.BulkOperation;
-import org.folio.bulkops.processor.CommitProcessor;
-import org.folio.bulkops.util.CSVHelper;
-import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
-import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.FolioModuleMetadata;
-import org.folio.spring.scope.FolioExecutionContextSetter;
-import org.marc4j.MarcStreamReader;
-import org.marc4j.MarcStreamWriter;
-import org.springframework.stereotype.Service;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -48,6 +28,26 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.apache.commons.collections4.CollectionUtils;
+import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.bean.ExtendedInstance;
+import org.folio.bulkops.domain.bean.Instance;
+import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.processor.CommitProcessor;
+import org.folio.bulkops.service.ConsortiaService;
+import org.folio.bulkops.service.ErrorService;
+import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
+import org.folio.bulkops.util.CsvHelper;
+import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
+import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.scope.FolioExecutionContextSetter;
+import org.marc4j.MarcStreamReader;
+import org.marc4j.MarcStreamWriter;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -73,15 +73,22 @@ public class MarcFlowCommitProcessor implements CommitProcessor {
     enrichCommittedMarcWithUpdatedInventoryRecords(bulkOperation, csvHrids, marcHrids);
   }
 
-  public void enrichCommittedCsvWithUpdatedMarcRecords(BulkOperation bulkOperation, List<String> csvHrids, List<String> marcHrids) {
+  public void enrichCommittedCsvWithUpdatedMarcRecords(BulkOperation bulkOperation,
+                                                       List<String> csvHrids,
+                                                       List<String> marcHrids) {
     var hrids = CollectionUtils.subtract(marcHrids, csvHrids);
     if (!hrids.isEmpty() && nonNull(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
-      var dirName = isNull(bulkOperation.getLinkToCommittedRecordsCsvFile()) ? bulkOperation.getId().toString() : ENRICHED_PREFIX + bulkOperation.getId();
-      var committedCsvFileName = CHANGED_CSV_PATH_TEMPLATE.formatted(dirName, LocalDate.now(), getBaseName(bulkOperation.getLinkToTriggeringCsvFile()));
-      try (var matchedFileReader = new InputStreamReader(new BufferedInputStream(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())));
-           var writer = isNull(bulkOperation.getLinkToCommittedRecordsCsvFile()) ? remoteFileSystemClient.writer(committedCsvFileName) : new StringWriter()) {
+      var dirName = isNull(bulkOperation.getLinkToCommittedRecordsCsvFile())
+              ? bulkOperation.getId().toString() : ENRICHED_PREFIX + bulkOperation.getId();
+      var committedCsvFileName = CHANGED_CSV_PATH_TEMPLATE.formatted(dirName, LocalDate.now(),
+              getBaseName(bulkOperation.getLinkToTriggeringCsvFile()));
+      try (var matchedFileReader = new InputStreamReader(new BufferedInputStream(
+              remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsJsonFile())));
+           var writer = isNull(bulkOperation.getLinkToCommittedRecordsCsvFile())
+                   ? remoteFileSystemClient.writer(committedCsvFileName) : new StringWriter()) {
         var matchedFileParser = new JsonFactory().createParser(matchedFileReader);
-        var matchedFileIterator = objectMapper.readValues(matchedFileParser, ExtendedInstance.class);
+        var matchedFileIterator = objectMapper.readValues(matchedFileParser,
+                ExtendedInstance.class);
         var csvWriter = new BulkOperationsEntityCsvWriter(writer, Instance.class);
         List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
         while (matchedFileIterator.hasNext()) {
@@ -89,15 +96,22 @@ public class MarcFlowCommitProcessor implements CommitProcessor {
           var instance = extendedInstance.getEntity();
           if (hrids.contains(instance.getHrid())) {
             if (!consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
-              try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(folioExecutionContext.getTenantId(), folioModuleMetadata, folioExecutionContext))) {
-                CSVHelper.writeBeanToCsv(bulkOperation, csvWriter, instance, bulkOperationExecutionContents);
+              try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(
+                      folioExecutionContext.getTenantId(), folioModuleMetadata,
+                      folioExecutionContext))) {
+                CsvHelper.writeBeanToCsv(bulkOperation, csvWriter, instance,
+                        bulkOperationExecutionContents);
               }
             } else {
               var tenantIdOfEntity = extendedInstance.getTenant();
-              try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
+              try (var ignored = new FolioExecutionContextSetter(
+                      prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata,
+                              folioExecutionContext))) {
                 extendedInstance.getRecordBulkOperationEntity().setTenant(tenantIdOfEntity);
-                extendedInstance.getRecordBulkOperationEntity().setTenantToNotes(bulkOperation.getTenantNotePairs());
-                CSVHelper.writeBeanToCsv(bulkOperation, csvWriter, instance, bulkOperationExecutionContents);
+                extendedInstance.getRecordBulkOperationEntity().setTenantToNotes(
+                        bulkOperation.getTenantNotePairs());
+                CsvHelper.writeBeanToCsv(bulkOperation, csvWriter, instance,
+                        bulkOperationExecutionContents);
               }
             }
           }
@@ -105,10 +119,11 @@ public class MarcFlowCommitProcessor implements CommitProcessor {
         bulkOperationExecutionContents.forEach(errorService::saveError);
         if (nonNull(bulkOperation.getLinkToCommittedRecordsCsvFile())) {
           var appendedCsvRecords = writer.toString();
-          appendedCsvRecords = appendedCsvRecords.substring(appendedCsvRecords.indexOf(LINE_BREAK) + 1);
+          appendedCsvRecords = appendedCsvRecords.substring(
+                  appendedCsvRecords.indexOf(LINE_BREAK) + 1);
           var appendedCsvStream = new SequenceInputStream(
-            remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsCsvFile()),
-            new ByteArrayInputStream(appendedCsvRecords.getBytes()));
+                  remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsCsvFile()),
+                  new ByteArrayInputStream(appendedCsvRecords.getBytes()));
           remoteFileSystemClient.put(appendedCsvStream, committedCsvFileName);
           remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsCsvFile());
         }
@@ -119,14 +134,20 @@ public class MarcFlowCommitProcessor implements CommitProcessor {
     }
   }
 
-  public void enrichCommittedMarcWithUpdatedInventoryRecords(BulkOperation bulkOperation, List<String> csvHrids, List<String> marcHrids) {
+  public void enrichCommittedMarcWithUpdatedInventoryRecords(BulkOperation bulkOperation,
+                                                             List<String> csvHrids,
+                                                             List<String> marcHrids) {
     var hrids = CollectionUtils.subtract(csvHrids, marcHrids);
     if (!hrids.isEmpty() && nonNull(bulkOperation.getLinkToMatchedRecordsMarcFile())) {
       var linkToCommitted = bulkOperation.getLinkToCommittedRecordsMarcFile();
-      var dirName = isNull(linkToCommitted) ? bulkOperation.getId().toString() : ENRICHED_PREFIX + bulkOperation.getId();
-      var committedMarcFileName = CHANGED_MARC_PATH_TEMPLATE.formatted(dirName, LocalDate.now(), getBaseName(bulkOperation.getLinkToTriggeringCsvFile()));
-      try (var matchedMarcInputStream = remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile());
-           var committedMarcInputStream = isNull(linkToCommitted) ? null : remoteFileSystemClient.get(linkToCommitted);
+      var dirName = isNull(linkToCommitted) ? bulkOperation.getId().toString() : ENRICHED_PREFIX
+              + bulkOperation.getId();
+      var committedMarcFileName = CHANGED_MARC_PATH_TEMPLATE.formatted(dirName, LocalDate.now(),
+              getBaseName(bulkOperation.getLinkToTriggeringCsvFile()));
+      try (var matchedMarcInputStream = remoteFileSystemClient.get(
+              bulkOperation.getLinkToMatchedRecordsMarcFile());
+           var committedMarcInputStream = isNull(linkToCommitted) ? null
+                   : remoteFileSystemClient.get(linkToCommitted);
            var marcOutputStream = new ByteArrayOutputStream()) {
         var marcReader = new MarcStreamReader(matchedMarcInputStream);
         var streamWriter = new MarcStreamWriter(marcOutputStream, "UTF-8");
@@ -136,10 +157,11 @@ public class MarcFlowCommitProcessor implements CommitProcessor {
             streamWriter.write(marcRecord);
           }
         }
-        var appendedMarcStream = new ByteArrayInputStream(marcOutputStream.toString(UTF_8).getBytes());
-        var committedMarcStream = isNull(linkToCommitted) ?
-          appendedMarcStream :
-          new SequenceInputStream(committedMarcInputStream, appendedMarcStream);
+        var appendedMarcStream = new ByteArrayInputStream(marcOutputStream.toString(UTF_8)
+                .getBytes());
+        var committedMarcStream = isNull(linkToCommitted)
+                ? appendedMarcStream : new SequenceInputStream(committedMarcInputStream,
+                appendedMarcStream);
         remoteFileSystemClient.put(committedMarcStream, committedMarcFileName);
         if (nonNull(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
           remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsMarcFile());
@@ -154,11 +176,13 @@ public class MarcFlowCommitProcessor implements CommitProcessor {
   public List<String> getUpdatedInventoryInstanceHrids(BulkOperation bulkOperation) {
     List<String> updatedHrids = new ArrayList<>();
     if (nonNull(bulkOperation.getLinkToCommittedRecordsCsvFile())) {
-      var instanceHeaderNames = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class).getHeader().stream()
-        .map(org.folio.bulkops.domain.dto.Cell::getValue)
-        .toList();
-      try (var reader = new CSVReaderBuilder(new InputStreamReader(remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsCsvFile())))
-        .withCSVParser(CSVHelper.getCsvParser()).withSkipLines(1).build()) {
+      var instanceHeaderNames = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class)
+              .getHeader().stream()
+              .map(org.folio.bulkops.domain.dto.Cell::getValue)
+              .toList();
+      try (var reader = new CSVReaderBuilder(new InputStreamReader(remoteFileSystemClient.get(
+              bulkOperation.getLinkToCommittedRecordsCsvFile())))
+              .withCSVParser(CsvHelper.getCsvParser()).withSkipLines(1).build()) {
         String[] line;
         while ((line = reader.readNext()) != null) {
           if (line.length == instanceHeaderNames.size()) {
@@ -175,7 +199,8 @@ public class MarcFlowCommitProcessor implements CommitProcessor {
   public List<String> getUpdatedMarcInstanceHrids(BulkOperation bulkOperation) {
     List<String> updatedHrids = new ArrayList<>();
     if (nonNull(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
-      try (var marcInputStream = remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
+      try (var marcInputStream = remoteFileSystemClient.get(
+              bulkOperation.getLinkToCommittedRecordsMarcFile())) {
         var marcReader = new MarcStreamReader(marcInputStream);
         while (marcReader.hasNext()) {
           var marcRecord = marcReader.next();

@@ -7,26 +7,25 @@ import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.Constants.FIELD_ERROR_MESSAGE_PATTERN;
 
+import com.opencsv.bean.AbstractBeanField;
+import com.opencsv.exceptions.CsvConstraintViolationException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.batch.CsvRecordContext;
 import org.folio.bulkops.domain.bean.Tags;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.exception.ConverterException;
-
-import com.opencsv.bean.AbstractBeanField;
-import com.opencsv.exceptions.CsvConstraintViolationException;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
 import org.folio.bulkops.service.CsvIdentifierContextHelper;
 
 /**
  * Base class for converters that convert between a string representation and an object of type T.
  * Subclasses should implement the {@link #convertToString(Object)} method to provide
- * the specific conversion logic. Subclasses should also override the {@link #convertToObject(String)} method if they need.
+ * the specific conversion logic. Subclasses should also override the
+ * {@link #convertToObject(String)} method if they need.
  *
  * @param <T> the type of the object to be converted
  */
@@ -52,25 +51,28 @@ public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
     try {
       return convertToObject(value);
     } catch (Exception e) {
-      throw new CsvConstraintViolationException(format(FIELD_ERROR_MESSAGE_PATTERN, this.getField().getName(), e.getMessage()));
+      throw new CsvConstraintViolationException(format(FIELD_ERROR_MESSAGE_PATTERN,
+              this.getField().getName(), e.getMessage()));
     }
   }
 
   @Override
   protected String convertToWrite(Object object) {
     if (ObjectUtils.isEmpty(object)
-      || (object.getClass() == Tags.class
-        && ObjectUtils.isEmpty(((Tags) object).getTagList()))) {
+            || (object.getClass() == Tags.class
+            && ObjectUtils.isEmpty(((Tags) object).getTagList()))) {
       return EMPTY;
     }
     try {
       return convertToString((T) object);
     } catch (ReferenceDataNotFoundException e) {
-      CsvIdentifierContextHelper.service().saveError(CsvRecordContext.getBulkOperationId(), CsvRecordContext.getIdentifier(),
+      CsvIdentifierContextHelper.service().saveError(CsvRecordContext.getBulkOperationId(),
+              CsvRecordContext.getIdentifier(),
               new ConverterException(this.getField(), object, e.getMessage(), ErrorType.WARNING));
       return FAILED_FIELD_MARKER;
     } catch (Exception e) {
-      CsvIdentifierContextHelper.service().saveError(CsvRecordContext.getBulkOperationId(), CsvRecordContext.getIdentifier(),
+      CsvIdentifierContextHelper.service().saveError(CsvRecordContext.getBulkOperationId(),
+              CsvRecordContext.getIdentifier(),
               new ConverterException(this.getField(), object, e.getMessage(), ErrorType.ERROR));
       return FAILED_FIELD_MARKER;
     }

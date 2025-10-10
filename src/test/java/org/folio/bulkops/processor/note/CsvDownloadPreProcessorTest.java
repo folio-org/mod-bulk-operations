@@ -1,15 +1,14 @@
 package org.folio.bulkops.processor.note;
 
-import org.folio.bulkops.domain.bean.UserTenant;
-import org.folio.bulkops.domain.entity.BulkOperation;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.folio.bulkops.domain.bean.UserTenant;
+import org.folio.bulkops.domain.entity.BulkOperation;
+import org.junit.jupiter.api.Test;
 
 class CsvDownloadPreProcessorTest {
 
@@ -39,19 +38,18 @@ class CsvDownloadPreProcessorTest {
 
   @Test
   void processTenantInRowsTest() {
-    var downloadPreProcessor = new TestCsvDownloadPreProcessor();
     Map<String, UserTenant> userTenants = new HashMap<>();
     var userTenant = new UserTenant();
     userTenant.setTenantId("tenantId");
     userTenant.setTenantName("tenantName");
     userTenants.put("tenantId", userTenant);
     var row = new String[] {"value", "tenantId"};
-
+    var downloadPreProcessor = new TestCsvDownloadPreProcessor();
     var expected = Arrays.stream(new String[] {"value", "tenantName"}).toList();
     var actual = downloadPreProcessor.processTenantInRows(row, true, true, userTenants);
     assertEquals(expected, Arrays.stream(actual).toList());
 
-    expected = Arrays.stream( new String[] {"value"}).toList();
+    expected = Arrays.stream(new String[] {"value"}).toList();
     actual = downloadPreProcessor.processTenantInRows(row, false, true, userTenants);
     assertEquals(expected, Arrays.stream(actual).toList());
 
@@ -66,7 +64,7 @@ class CsvDownloadPreProcessorTest {
     assertEquals(expected, Arrays.stream(actual).toList());
   }
 
-  private class TestCsvDownloadPreProcessor extends CsvDownloadPreProcessor {
+  private static class TestCsvDownloadPreProcessor extends CsvDownloadPreProcessor {
 
     @Override
     protected List<String> getNoteTypeNames(BulkOperation bulkOperation) {

@@ -11,23 +11,27 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.SET_RECORDS_FOR_DELE
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STAFF_SUPPRESS;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
+import org.folio.bulkops.domain.bean.InstanceNote;
+import org.folio.bulkops.domain.bean.Publication;
+import org.folio.bulkops.domain.bean.Subject;
 import org.folio.bulkops.domain.dto.Action;
-import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
+import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.exception.BulkOperationException;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.folio.bulkops.processor.FolioAbstractDataProcessor;
 import org.folio.bulkops.processor.Updater;
 import org.folio.bulkops.processor.Validator;
 import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.Set;
 
 @Log4j2
 @Component
@@ -37,45 +41,67 @@ public class FolioInstanceDataProcessor extends FolioAbstractDataProcessor<Exten
   private final InstanceNotesUpdaterFactory instanceNotesUpdaterFactory;
 
   @Override
-  public Validator<UpdateOptionType, Action, BulkOperationRule> validator(ExtendedInstance extendedInstance) {
+  public Validator<UpdateOptionType, Action, BulkOperationRule> validator(
+          ExtendedInstance extendedInstance) {
     return (option, action, rule) -> {
-      if (CLEAR_FIELD.equals(action.getType()) && Set.of(STAFF_SUPPRESS, SUPPRESS_FROM_DISCOVERY).contains(option)) {
+      boolean suppressClear = CLEAR_FIELD.equals(action.getType())
+              && Set.of(STAFF_SUPPRESS, SUPPRESS_FROM_DISCOVERY).contains(option);
+      if (suppressClear) {
         throw new RuleValidationException("Suppress flag cannot be cleared.");
-      } else if (INSTANCE_NOTE.equals(option) && !"FOLIO".equals(extendedInstance.getEntity().getSource())) {
-        throw new RuleValidationException("Bulk edit of instance notes is not supported for MARC Instances.");
-      } else if (ADMINISTRATIVE_NOTE.equals(option) && CHANGE_TYPE.equals(action.getType()) && !"FOLIO".equals(extendedInstance.getEntity().getSource())) {
-        throw new RuleValidationException("Change note type for administrative notes is not supported for MARC Instances.");
+      }
+
+      boolean instanceNoteUnsupported = INSTANCE_NOTE.equals(option)
+              && !"FOLIO".equals(extendedInstance.getEntity().getSource());
+      if (instanceNoteUnsupported) {
+        throw new RuleValidationException(
+                "Bulk edit of instance notes is not supported for MARC Instances.");
+      }
+
+      boolean adminNoteChangeUnsupported = ADMINISTRATIVE_NOTE.equals(option)
+              && CHANGE_TYPE.equals(action.getType())
+              && !"FOLIO".equals(extendedInstance.getEntity().getSource());
+      if (adminNoteChangeUnsupported) {
+        String msg
+                = "Change note type for administrative notes is not supported for MARC Instances.";
+        throw new RuleValidationException(msg);
       }
     };
   }
 
   @Override
-  public Updater<ExtendedInstance> updater(UpdateOptionType option, Action action, ExtendedInstance entity, boolean forPreview) {
+  public Updater<ExtendedInstance> updater(UpdateOptionType option, Action action,
+                                           ExtendedInstance entity, boolean forPreview) {
     if (STAFF_SUPPRESS.equals(option)) {
       if (SET_TO_TRUE.equals(action.getType())) {
         return extendedInstance -> extendedInstance.getEntity().setStaffSuppress(true);
       } else if (SET_TO_FALSE.equals(action.getType())) {
         return extendedInstance -> extendedInstance.getEntity().setStaffSuppress(false);
       }
+
     } else if (SUPPRESS_FROM_DISCOVERY.equals(option)) {
       if (SET_TO_TRUE.equals(action.getType())) {
         return extendedInstance -> extendedInstance.getEntity().setDiscoverySuppress(true);
       } else if (SET_TO_FALSE.equals(action.getType())) {
         return extendedInstance -> extendedInstance.getEntity().setDiscoverySuppress(false);
       }
+
     } else if (SET_RECORDS_FOR_DELETE.equals(option)) {
       if (SET_TO_TRUE.equals(action.getType())) {
         return extendedInstance -> {
-            extendedInstance.getEntity().setDeleted(true);
-            extendedInstance.getEntity().setStaffSuppress(true);
-            extendedInstance.getEntity().setDiscoverySuppress(true);
+          extendedInstance.getEntity().setDeleted(true);
+          extendedInstance.getEntity().setStaffSuppress(true);
+          extendedInstance.getEntity().setDiscoverySuppress(true);
         };
       } else if (SET_TO_FALSE.equals(action.getType())) {
         return extendedInstance -> extendedInstance.getEntity().setDeleted(false);
       }
     }
-    return instanceNotesUpdaterFactory.getUpdater(option, action, forPreview).orElseGet(() -> instance -> {
-      throw new BulkOperationException(format("Combination %s and %s isn't supported yet", option, action.getType()));
+
+    var updaterOpt = instanceNotesUpdaterFactory.getUpdater(option, action, forPreview);
+    return updaterOpt.orElseGet(() -> instance -> {
+      throw new BulkOperationException(
+        format("Combination %s and %s isn't supported yet", option, action.getType())
+      );
     });
   }
 
@@ -83,31 +109,52 @@ public class FolioInstanceDataProcessor extends FolioAbstractDataProcessor<Exten
   public ExtendedInstance clone(ExtendedInstance extendedInstance) {
     var instance = extendedInstance.getEntity();
     var clone = extendedInstance.getEntity().toBuilder().build();
+
     if (instance.getAdministrativeNotes() != null) {
-      clone.setAdministrativeNotes(new ArrayList<>(instance.getAdministrativeNotes()));
+      List<String> adminNotes = new ArrayList<>(instance.getAdministrativeNotes());
+      clone.setAdministrativeNotes(adminNotes);
     }
+
     if (instance.getInstanceNotes() != null) {
-      clone.setInstanceNotes(new ArrayList<>(
-        instance.getInstanceNotes().stream()
-        .map(instanceNote -> instanceNote.toBuilder().build())
-        .toList()));
+      List<InstanceNote> clonedNotes = new ArrayList<>(instance.getInstanceNotes().size());
+      for (InstanceNote inote : instance.getInstanceNotes()) {
+        clonedNotes.add(inote.toBuilder().build());
+      }
+      clone.setInstanceNotes(clonedNotes);
     }
+
     if (instance.getStatisticalCodeIds() != null) {
-      clone.setStatisticalCodeIds(new ArrayList<>(clone.getStatisticalCodeIds()));
+      clone.setStatisticalCodeIds(new ArrayList<>(instance.getStatisticalCodeIds()));
     }
+
     if (instance.getElectronicAccess() != null) {
-      var elAcc = instance.getElectronicAccess().stream().map(el -> el.toBuilder().build()).toList();
-      clone.setElectronicAccess(new ArrayList<>(elAcc));
+      List<ElectronicAccess> elAccList = new ArrayList<>(instance.getElectronicAccess().size());
+      for (ElectronicAccess el : instance.getElectronicAccess()) {
+        elAccList.add(el.toBuilder().build());
+      }
+      clone.setElectronicAccess(elAccList);
     }
+
     if (instance.getSubject() != null) {
-      var subj = instance.getSubject().stream().map(sub -> sub.toBuilder().build()).toList();
-      clone.setSubject(new ArrayList<>(subj));
+      List<Subject> subjList = new ArrayList<>(instance.getSubject().size());
+      for (Subject s : instance.getSubject()) {
+        subjList.add(s.toBuilder().build());
+      }
+      clone.setSubject(subjList);
     }
+
     if (instance.getPublication() != null) {
-      var publications = instance.getPublication().stream().map(sub -> sub.toBuilder().build()).toList();
-      clone.setPublication(new ArrayList<>(publications));
+      List<Publication> pubs = new ArrayList<>(instance.getPublication().size());
+      for (Publication p : instance.getPublication()) {
+        pubs.add(p.toBuilder().build());
+      }
+      clone.setPublication(pubs);
     }
-    return ExtendedInstance.builder().tenantId(extendedInstance.getTenantId()).entity(clone).build();
+
+    return ExtendedInstance.builder()
+      .tenantId(extendedInstance.getTenantId())
+      .entity(clone)
+      .build();
   }
 
   @Override
@@ -123,4 +170,3 @@ public class FolioInstanceDataProcessor extends FolioAbstractDataProcessor<Exten
     return ExtendedInstance.class;
   }
 }
-

@@ -16,9 +16,9 @@ import java.util.UUID;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
+import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
-import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.RuleDetails;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
@@ -35,23 +35,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class RuleServiceTest extends BaseTest {
-  private final static UUID BULK_OPERATION_ID = UUID.randomUUID();
-  private final static String LOCATION_ID = UUID.randomUUID().toString();
+  private static final UUID BULK_OPERATION_ID = UUID.randomUUID();
+  private static final String LOCATION_ID = java.util.UUID.randomUUID().toString();
   @Autowired
   private RuleService ruleService;
-   @MockitoBean
+  @MockitoBean
   private BulkOperationRuleRepository ruleRepository;
-   @MockitoBean
+  @MockitoBean
   private BulkOperationMarcRuleRepository marcRuleRepository;
-   @MockitoBean
+  @MockitoBean
   private BulkOperationRuleDetailsRepository ruleDetailsRepository;
 
   @Test
   void shouldSaveRules() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var operation = BulkOperation.builder().id(BULK_OPERATION_ID).build();
       when(ruleRepository.save(any(org.folio.bulkops.domain.entity.BulkOperationRule.class)))
-        .thenReturn(org.folio.bulkops.domain.entity.BulkOperationRule.builder().id(UUID.randomUUID()).build());
+              .thenReturn(
+                      org.folio.bulkops.domain.entity.BulkOperationRule.builder()
+                              .id(UUID.randomUUID()).build());
 
       ruleService.saveRules(operation, rules());
 
@@ -64,14 +66,14 @@ class RuleServiceTest extends BaseTest {
   @Test
   void shouldGetRules() {
     when(ruleRepository.findAllByBulkOperationId(BULK_OPERATION_ID))
-      .thenReturn(List.of(org.folio.bulkops.domain.entity.BulkOperationRule.builder()
-        .bulkOperationId(BULK_OPERATION_ID)
-        .updateOption(UpdateOptionType.PERMANENT_LOCATION)
-        .ruleDetails(List.of(BulkOperationRuleDetails.builder()
-          .updateAction(UpdateActionType.REPLACE_WITH)
-          .updatedValue(LOCATION_ID)
-          .build()))
-        .build()));
+            .thenReturn(List.of(org.folio.bulkops.domain.entity.BulkOperationRule.builder()
+                    .bulkOperationId(BULK_OPERATION_ID)
+                    .updateOption(UpdateOptionType.PERMANENT_LOCATION)
+                    .ruleDetails(List.of(BulkOperationRuleDetails.builder()
+                            .updateAction(UpdateActionType.REPLACE_WITH)
+                            .updatedValue(LOCATION_ID)
+                            .build()))
+                    .build()));
 
     var fetchedRules = ruleService.getRules(BULK_OPERATION_ID);
 
@@ -80,32 +82,38 @@ class RuleServiceTest extends BaseTest {
 
   @Test
   void shouldSaveMarcRules() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var operation = BulkOperation.builder().id(BULK_OPERATION_ID).build();
-      when(marcRuleRepository.save(any(org.folio.bulkops.domain.entity.BulkOperationMarcRule.class)))
-        .thenReturn(org.folio.bulkops.domain.entity.BulkOperationMarcRule.builder().id(UUID.randomUUID()).build());
+      when(marcRuleRepository.save(
+              any(org.folio.bulkops.domain.entity.BulkOperationMarcRule.class)))
+              .thenReturn(
+                      org.folio.bulkops.domain.entity.BulkOperationMarcRule.builder()
+                              .id(UUID.randomUUID()).build());
 
       ruleService.saveMarcRules(operation, marcRules());
 
       verify(marcRuleRepository, times(0)).deleteAllByBulkOperationId(BULK_OPERATION_ID);
-      verify(marcRuleRepository).save(any(org.folio.bulkops.domain.entity.BulkOperationMarcRule.class));
+      verify(marcRuleRepository).save(any(
+              org.folio.bulkops.domain.entity.BulkOperationMarcRule.class));
     }
   }
 
   @Test
   void shouldGetMarcRules() {
     when(marcRuleRepository.findAllByBulkOperationId(BULK_OPERATION_ID))
-      .thenReturn(List.of(org.folio.bulkops.domain.entity.BulkOperationMarcRule.builder()
-        .bulkOperationId(BULK_OPERATION_ID)
-        .tag("100")
-        .ind1(EMPTY)
-        .ind2(EMPTY)
-        .actions(Collections.singletonList(new org.folio.bulkops.domain.dto.MarcAction()
-          .name(UpdateActionType.FIND)
-          .data(Collections.singletonList(new org.folio.bulkops.domain.dto.MarcActionDataInner()
-            .key(org.folio.bulkops.domain.dto.MarcDataType.VALUE)
-            .value("text")))))
-        .build()));
+            .thenReturn(List.of(org.folio.bulkops.domain.entity.BulkOperationMarcRule.builder()
+                    .bulkOperationId(BULK_OPERATION_ID)
+                    .tag("100")
+                    .ind1(EMPTY)
+                    .ind2(EMPTY)
+                    .actions(Collections.singletonList(
+                            new org.folio.bulkops.domain.dto.MarcAction()
+                            .name(UpdateActionType.FIND)
+                            .data(Collections.singletonList(
+                                    new org.folio.bulkops.domain.dto.MarcActionDataInner()
+                                    .key(org.folio.bulkops.domain.dto.MarcDataType.VALUE)
+                                    .value("text")))))
+                    .build()));
 
     var fetchedRules = ruleService.getMarcRules(BULK_OPERATION_ID);
 
@@ -117,7 +125,8 @@ class RuleServiceTest extends BaseTest {
   void shouldCheckIfAdministrativeDataRulesArePresent(boolean isPresent) {
     var operation = BulkOperation.builder().id(UUID.randomUUID()).build();
     when(ruleRepository.findFirstByBulkOperationId(operation.getId()))
-      .thenReturn(isPresent? Optional.of(new org.folio.bulkops.domain.entity.BulkOperationRule()) : Optional.empty());
+            .thenReturn(isPresent ? Optional.of(
+                    new org.folio.bulkops.domain.entity.BulkOperationRule()) : Optional.empty());
 
     if (isPresent) {
       assertTrue(ruleService.hasAdministrativeUpdates(operation));
@@ -131,7 +140,9 @@ class RuleServiceTest extends BaseTest {
   void shouldCheckIfMarcRulesArePresent(boolean isPresent) {
     var operation = BulkOperation.builder().id(UUID.randomUUID()).build();
     when(marcRuleRepository.findFirstByBulkOperationId(operation.getId()))
-      .thenReturn(isPresent? Optional.of(new org.folio.bulkops.domain.entity.BulkOperationMarcRule()) : Optional.empty());
+            .thenReturn(isPresent ? Optional.of(
+                    new org.folio.bulkops.domain.entity.BulkOperationMarcRule())
+                    : Optional.empty());
 
     if (isPresent) {
       assertTrue(ruleService.hasMarcUpdates(operation));
@@ -153,11 +164,14 @@ class RuleServiceTest extends BaseTest {
                                       .type(UpdateActionType.REPLACE_WITH)))))).totalRecords(1);
 
       when(ruleRepository.save(any(org.folio.bulkops.domain.entity.BulkOperationRule.class)))
-              .thenReturn(org.folio.bulkops.domain.entity.BulkOperationRule.builder().id(UUID.randomUUID()).build());
+              .thenReturn(
+                      org.folio.bulkops.domain.entity.BulkOperationRule.builder()
+                              .id(UUID.randomUUID()).build());
 
       ruleService.saveRules(operation, ruleCollection);
 
-      verify(marcRuleRepository).save(any(org.folio.bulkops.domain.entity.BulkOperationMarcRule.class));
+      verify(marcRuleRepository).save(any(
+              org.folio.bulkops.domain.entity.BulkOperationMarcRule.class));
     }
   }
 
@@ -174,42 +188,47 @@ class RuleServiceTest extends BaseTest {
                                       .type(UpdateActionType.REPLACE_WITH)))))).totalRecords(1);
 
       when(ruleRepository.save(any(org.folio.bulkops.domain.entity.BulkOperationRule.class)))
-              .thenReturn(org.folio.bulkops.domain.entity.BulkOperationRule.builder().id(UUID.randomUUID()).build());
+              .thenReturn(
+                      org.folio.bulkops.domain.entity.BulkOperationRule.builder()
+                              .id(UUID.randomUUID()).build());
 
       ruleService.saveRules(operation, ruleCollection);
 
-      verify(marcRuleRepository, times(0)).save(any(org.folio.bulkops.domain.entity.BulkOperationMarcRule.class));
+      verify(marcRuleRepository, times(0)).save(
+              any(org.folio.bulkops.domain.entity.BulkOperationMarcRule.class));
     }
   }
 
   private BulkOperationRuleCollection rules() {
     return new BulkOperationRuleCollection()
-      .bulkOperationRules(List.of(new BulkOperationRule()
-        .bulkOperationId(BULK_OPERATION_ID)
-        .ruleDetails(new RuleDetails()
-          .option(UpdateOptionType.PERMANENT_LOCATION)
-          .tenants(null)
-          .actions(List.of(new Action()
-            .parameters(null)
-            .tenants(null)
-            .updatedTenants(null)
-            .type(UpdateActionType.REPLACE_WITH)
-            .updated(LOCATION_ID))))))
-      .totalRecords(1);
+            .bulkOperationRules(List.of(new BulkOperationRule()
+                    .bulkOperationId(BULK_OPERATION_ID)
+                    .ruleDetails(new RuleDetails()
+                            .option(UpdateOptionType.PERMANENT_LOCATION)
+                            .tenants(null)
+                            .actions(List.of(new Action()
+                                    .parameters(null)
+                                    .tenants(null)
+                                    .updatedTenants(null)
+                                    .type(UpdateActionType.REPLACE_WITH)
+                                    .updated(LOCATION_ID))))))
+            .totalRecords(1);
   }
 
   private BulkOperationMarcRuleCollection marcRules() {
     return new BulkOperationMarcRuleCollection()
-      .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule()
-        .bulkOperationId(BULK_OPERATION_ID)
-        .tag("100")
-        .ind1(EMPTY)
-        .ind2(EMPTY)
-        .actions(Collections.singletonList(new org.folio.bulkops.domain.dto.MarcAction()
-          .name(UpdateActionType.FIND)
-          .data(Collections.singletonList(new org.folio.bulkops.domain.dto.MarcActionDataInner()
-            .key(org.folio.bulkops.domain.dto.MarcDataType.VALUE)
-            .value("text")))))))
-      .totalRecords(1);
+            .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule()
+                    .bulkOperationId(BULK_OPERATION_ID)
+                    .tag("100")
+                    .ind1(EMPTY)
+                    .ind2(EMPTY)
+                    .actions(Collections.singletonList(
+                            new org.folio.bulkops.domain.dto.MarcAction()
+                            .name(UpdateActionType.FIND)
+                            .data(Collections.singletonList(
+                                    new org.folio.bulkops.domain.dto.MarcActionDataInner()
+                                    .key(org.folio.bulkops.domain.dto.MarcDataType.VALUE)
+                                    .value("text")))))))
+            .totalRecords(1);
   }
 }

@@ -18,15 +18,15 @@ import static org.folio.bulkops.util.Constants.DATE_TIME_PATTERN;
 import static org.folio.bulkops.util.Constants.DATE_WITHOUT_TIME_PATTERN;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.experimental.UtilityClass;
-import org.apache.commons.lang3.StringUtils;
-import org.folio.bulkops.domain.dto.IdentifierType;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.Optional;
 import java.util.TimeZone;
+import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.domain.dto.IdentifierType;
 
 @UtilityClass
 public class BulkEditProcessorHelper {
@@ -34,7 +34,8 @@ public class BulkEditProcessorHelper {
   private static final String EXACT_MATCH_PATTERN = "%s==%s";
   private static final DateFormat dateFormat;
   private static final DateFormat dateWithoutTimeFormat;
-  private static final EnumMap<IdentifierType, String> identifiersMap = new EnumMap<>(IdentifierType.class);
+  private static final EnumMap<IdentifierType, String> identifiersMap
+          = new EnumMap<>(IdentifierType.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   static {
@@ -66,7 +67,8 @@ public class BulkEditProcessorHelper {
   }
 
   public static String getMatchPattern(String identifierType) {
-    return FORMER_IDS == IdentifierType.fromValue(identifierType) ? MATCH_PATTERN : EXACT_MATCH_PATTERN;
+    return FORMER_IDS == IdentifierType.fromValue(identifierType) ? MATCH_PATTERN
+            : EXACT_MATCH_PATTERN;
   }
 
   public static Optional<String> ofEmptyString(String string) {

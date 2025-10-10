@@ -4,7 +4,6 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.UUID;
-
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
@@ -22,12 +21,13 @@ import org.springframework.batch.item.ItemWriter;
 
 @Log4j2
 public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter<T>, ItemStream {
-  private BufferedWriter writer;
-  private BulkOperationsEntityCsvWriter delegate;
-  private UUID bulkOperationId;
-  private IdentifierType identifierType;
+  private final BufferedWriter writer;
+  private final BulkOperationsEntityCsvWriter delegate;
+  private final UUID bulkOperationId;
+  private final IdentifierType identifierType;
 
-  public CsvItemWriter(String path, Class<T> clazz, String bulkOperationId, String identifierType) throws IOException {
+  public CsvItemWriter(String path, Class<T> clazz, String bulkOperationId, String identifierType)
+          throws IOException {
     this.writer = new BufferedWriter(new FileWriter(path));
     if (clazz == ExtendedItem.class) {
       delegate = new BulkOperationsEntityCsvWriter(writer, Item.class);
@@ -35,10 +35,11 @@ public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter
       delegate = new BulkOperationsEntityCsvWriter(writer, HoldingsRecord.class);
     } else if (clazz == ExtendedInstance.class) {
       delegate = new BulkOperationsEntityCsvWriter(writer, Instance.class);
-    } else if (clazz == User.class){
+    } else if (clazz == User.class) {
       delegate = new BulkOperationsEntityCsvWriter(writer, clazz);
     } else {
-      throw new IllegalArgumentException("Class " + clazz.getName() + " is not supported for writing");
+      throw new IllegalArgumentException("Class " + clazz.getName()
+              + " is not supported for writing");
     }
     this.bulkOperationId = UUID.fromString(bulkOperationId);
     this.identifierType = IdentifierType.fromValue(identifierType);

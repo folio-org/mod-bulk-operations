@@ -38,7 +38,8 @@ class BulkOperationDataProcessingRepositoryTest extends BaseTest {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       var retrieved = repository.findById(created.getId());
-      assertTrue(retrieved.isPresent() && created.getBulkOperationId().equals(retrieved.get().getBulkOperationId()));
+      assertTrue(retrieved.isPresent() && created.getBulkOperationId()
+              .equals(retrieved.get().getBulkOperationId()));
     }
   }
 
@@ -48,7 +49,8 @@ class BulkOperationDataProcessingRepositoryTest extends BaseTest {
       var created = repository.save(createEntity());
       var endTime = LocalDateTime.now();
       var updated = repository.save(created.withEndTime(endTime));
-      assertTrue(created.getBulkOperationId().equals(updated.getBulkOperationId()) && endTime.isEqual(updated.getEndTime()));
+      assertTrue(created.getBulkOperationId().equals(updated.getBulkOperationId())
+              && endTime.isEqual(updated.getEndTime()));
     }
   }
 
@@ -63,18 +65,18 @@ class BulkOperationDataProcessingRepositoryTest extends BaseTest {
 
   private BulkOperationDataProcessing createEntity() {
     var bulkOperation = bulkOperationRepository.save(BulkOperation.builder()
-      .id(UUID.randomUUID())
-      .userId(UUID.randomUUID())
-      .operationType(UPDATE)
-      .entityType(USER)
-      .identifierType(BARCODE)
-      .status(NEW)
-      .dataExportJobId(UUID.randomUUID())
-      .totalNumOfRecords(10)
-      .processedNumOfRecords(0)
-      .executionChunkSize(5)
-      .startTime(LocalDateTime.now())
-      .build());
+            .id(UUID.randomUUID())
+            .userId(UUID.randomUUID())
+            .operationType(UPDATE)
+            .entityType(USER)
+            .identifierType(BARCODE)
+            .status(NEW)
+            .dataExportJobId(UUID.randomUUID())
+            .totalNumOfRecords(10)
+            .processedNumOfRecords(0)
+            .executionChunkSize(5)
+            .startTime(LocalDateTime.now())
+            .build());
 
     return BulkOperationDataProcessing.builder()
       .bulkOperationId(bulkOperation.getId())

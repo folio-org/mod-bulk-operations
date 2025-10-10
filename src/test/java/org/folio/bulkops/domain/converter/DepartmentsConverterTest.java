@@ -1,17 +1,16 @@
 package org.folio.bulkops.domain.converter;
 
-import org.folio.bulkops.BaseTest;
-import org.folio.bulkops.domain.bean.Department;
-import org.folio.bulkops.domain.bean.DepartmentCollection;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.UUID;
-
 import static java.util.Collections.singletonList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.UUID;
+import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.domain.bean.Department;
+import org.folio.bulkops.domain.bean.DepartmentCollection;
+import org.junit.jupiter.api.Test;
 
 class DepartmentsConverterTest extends BaseTest {
 

@@ -6,6 +6,10 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.mockito.Mockito.when;
 
+import java.io.FileInputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.MappingRulesClient;
@@ -27,11 +31,6 @@ import org.marc4j.marc.impl.RecordImpl;
 import org.marc4j.marc.impl.SubfieldImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.io.FileInputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.UUID;
 
 class MarcCsvHelperTest extends BaseTest {
   @Autowired
@@ -60,7 +59,7 @@ class MarcCsvHelperTest extends BaseTest {
     marcRecord.addVariableField(field);
 
     when(instanceReferenceService.getAllInstanceNoteTypes())
-      .thenReturn(singletonList(new InstanceNoteType().name("General note")));
+        .thenReturn(singletonList(new InstanceNoteType().name("General note")));
 
     var res = marcCsvHelper.getModifiedDataForCsv(marcRecord);
 
@@ -69,34 +68,38 @@ class MarcCsvHelperTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class, names = {"REVIEW_CHANGES", "COMPLETED", "COMPLETED_WITH_ERRORS", "APPLY_CHANGES"}, mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(value = OperationStatusType.class, names = {"REVIEW_CHANGES", "COMPLETED",
+      "COMPLETED_WITH_ERRORS", "APPLY_CHANGES"}, mode = EnumSource.Mode.INCLUDE)
   @SneakyThrows
   void shouldEnrichCsvWithMarcChanges(OperationStatusType statusType) {
     var fileName = "file.csv";
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
-      .id(operationId)
-      .status(statusType)
-      .entityType(EntityType.INSTANCE_MARC)
-      .linkToModifiedRecordsMarcCsvFile(fileName)
-      .linkToCommittedRecordsMarcCsvFile(fileName)
-      .build();
+            .id(operationId)
+            .status(statusType)
+            .entityType(EntityType.INSTANCE_MARC)
+            .linkToModifiedRecordsMarcCsvFile(fileName)
+            .linkToCommittedRecordsMarcCsvFile(fileName)
+            .build();
 
-    var content = new FileInputStream("src/test/resources/files/instance_with_special_characters.csv").readAllBytes();
+    var content = new FileInputStream(
+            "src/test/resources/files/instance_with_special_characters.csv").readAllBytes();
 
     when(mappingRulesClient.getMarcBibMappingRules())
-      .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            .thenReturn(Files.readString(Path.of(
+                    "src/test/resources/files/mappingRulesResponse.json")));
     when(remoteFileSystemClient.get(fileName))
-      .thenReturn(new FileInputStream("src/test/resources/files/sample_marc_csv.csv"));
+            .thenReturn(new FileInputStream("src/test/resources/files/sample_marc_csv.csv"));
     when(ruleService.getMarcRules(operationId))
-      .thenReturn(new BulkOperationMarcRuleCollection()
-        .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag("500"))));
+            .thenReturn(new BulkOperationMarcRuleCollection()
+                    .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule()
+                            .tag("500"))));
 
     var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
 
-    var expectedInstanceNotes = APPLY_CHANGES.equals(statusType) ?
-      "General note;General note text;false" :
-      "General note;Changed general note;false";
+    var expectedInstanceNotes = APPLY_CHANGES.equals(statusType)
+            ? "General note;General note text;false"
+            : "General note;Changed general note;false";
 
     assertThat(new String(res)).contains(expectedInstanceNotes);
 
@@ -113,21 +116,22 @@ class MarcCsvHelperTest extends BaseTest {
     var fileName = "file.csv";
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
-      .id(operationId)
-      .status(REVIEW_CHANGES)
-      .entityType(EntityType.INSTANCE_MARC)
-      .linkToModifiedRecordsMarcCsvFile(fileName)
-      .linkToCommittedRecordsMarcCsvFile(fileName)
-      .build();
+            .id(operationId)
+            .status(REVIEW_CHANGES)
+            .entityType(EntityType.INSTANCE_MARC)
+            .linkToModifiedRecordsMarcCsvFile(fileName)
+            .linkToCommittedRecordsMarcCsvFile(fileName)
+            .build();
 
     var content = new FileInputStream("src/test/resources/files/instance.csv").readAllBytes();
 
     when(mappingRulesClient.getMarcBibMappingRules())
-      .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            .thenReturn(Files.readString(Path.of(
+                    "src/test/resources/files/mappingRulesResponse.json")));
     when(remoteFileSystemClient.get(fileName)).thenThrow(new RuntimeException());
     when(ruleService.getMarcRules(operationId))
-      .thenReturn(new BulkOperationMarcRuleCollection()
-        .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag("500"))));
+            .thenReturn(new BulkOperationMarcRuleCollection()
+                    .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag("500"))));
 
     var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
 
@@ -142,22 +146,24 @@ class MarcCsvHelperTest extends BaseTest {
     var fileName = "file.csv";
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
-      .id(operationId)
-      .status(REVIEW_CHANGES)
-      .entityType(EntityType.INSTANCE_MARC)
-      .linkToModifiedRecordsMarcCsvFile(fileName)
-      .linkToCommittedRecordsMarcCsvFile(fileName)
-      .build();
+            .id(operationId)
+            .status(REVIEW_CHANGES)
+            .entityType(EntityType.INSTANCE_MARC)
+            .linkToModifiedRecordsMarcCsvFile(fileName)
+            .linkToCommittedRecordsMarcCsvFile(fileName)
+            .build();
 
     var content = new FileInputStream("src/test/resources/files/instance.csv").readAllBytes();
 
     when(mappingRulesClient.getMarcBibMappingRules())
-      .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            .thenReturn(Files.readString(Path.of(
+                    "src/test/resources/files/mappingRulesResponse.json")));
     when(remoteFileSystemClient.get(fileName))
-      .thenReturn(new FileInputStream("src/test/resources/files/invalid_sample_marc_csv.csv"));
+            .thenReturn(new FileInputStream(
+                    "src/test/resources/files/invalid_sample_marc_csv.csv"));
     when(ruleService.getMarcRules(operationId))
-      .thenReturn(new BulkOperationMarcRuleCollection()
-        .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag("500"))));
+            .thenReturn(new BulkOperationMarcRuleCollection()
+                    .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag("500"))));
 
     var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
 
@@ -182,7 +188,8 @@ class MarcCsvHelperTest extends BaseTest {
     var content = new FileInputStream("src/test/resources/files/instance.csv").readAllBytes();
 
     when(mappingRulesClient.getMarcBibMappingRules())
-            .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            .thenReturn(Files.readString(Path.of(
+                    "src/test/resources/files/mappingRulesResponse.json")));
     when(remoteFileSystemClient.get(fileName))
             .thenReturn(new FileInputStream("src/test/resources/files/sample_marc_csv.csv"));
     when(ruleService.getMarcRules(operationId))
@@ -210,7 +217,8 @@ class MarcCsvHelperTest extends BaseTest {
     var content = new FileInputStream("src/test/resources/files/instance.csv").readAllBytes();
 
     when(mappingRulesClient.getMarcBibMappingRules())
-            .thenReturn(Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            .thenReturn(Files.readString(Path.of(
+                    "src/test/resources/files/mappingRulesResponse.json")));
     when(remoteFileSystemClient.get(fileName))
             .thenReturn(new FileInputStream("src/test/resources/files/marc_csv_empty_notes.csv"));
     when(ruleService.getMarcRules(operationId))

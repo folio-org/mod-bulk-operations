@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
@@ -8,8 +9,6 @@ import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.stereotype.Component;
-
-import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -21,13 +20,15 @@ public class TenantTableUpdater {
   private final FolioExecutionContext folioExecutionContext;
   private final ConsortiaService consortiaService;
 
-  public void updateTenantInHeadersAndRows(UnifiedTable unifiedTable, Class<? extends BulkOperationsEntity> clazz) {
+  public void updateTenantInHeadersAndRows(UnifiedTable unifiedTable,
+                                           Class<? extends BulkOperationsEntity> clazz) {
     if (!(clazz == Item.class || clazz == HoldingsRecord.class)) {
       return;
     }
     int tenantPosition = unifiedTable.getHeader().size() - 1;
     if (isNeedUpdateTablePreview()) {
-      var userTenants = consortiaService.getUserTenantsPerId(folioExecutionContext.getTenantId(), folioExecutionContext.getUserId().toString());
+      var userTenants = consortiaService.getUserTenantsPerId(folioExecutionContext.getTenantId(),
+              folioExecutionContext.getUserId().toString());
       var header = unifiedTable.getHeader().get(tenantPosition);
       header.setValue(TENANT_VALUE_IN_CONSORTIA_FOR_MEMBER);
       var rows = unifiedTable.getRows();

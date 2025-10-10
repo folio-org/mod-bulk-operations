@@ -1,9 +1,7 @@
 package org.folio.bulkops.domain.bean;
 
-import java.util.UUID;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -3,17 +3,30 @@ package org.folio.bulkops.domain.bean;
 import static java.util.Objects.isNull;
 import static org.folio.bulkops.domain.dto.DataType.DATE_TIME;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.opencsv.bean.CsvCustomBindByName;
+import com.opencsv.bean.CsvCustomBindByPosition;
+import com.opencsv.bean.CsvRecurse;
+import jakarta.validation.Valid;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.With;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.CustomFieldsConverter;
 import org.folio.bulkops.domain.converter.DateWithTimeConverter;
+import org.folio.bulkops.domain.converter.DateWithoutTimeConverter;
 import org.folio.bulkops.domain.converter.DepartmentsConverter;
 import org.folio.bulkops.domain.converter.PatronGroupConverter;
 import org.folio.bulkops.domain.converter.PreferredEmailCommunicationConverter;
@@ -22,22 +35,6 @@ import org.folio.bulkops.domain.converter.StringConverter;
 import org.folio.bulkops.domain.converter.TagsConverter;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.springframework.format.annotation.DateTimeFormat;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.opencsv.bean.CsvCustomBindByName;
-import com.opencsv.bean.CsvCustomBindByPosition;
-import com.opencsv.bean.CsvRecurse;
-
-import jakarta.validation.Valid;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.With;
-
 
 @Getter
 @Setter
@@ -113,14 +110,14 @@ public class User implements BulkOperationsEntity {
   private Personal personal;
 
   @JsonProperty("enrollmentDate")
-  @CsvCustomBindByName(column = "Enrollment date", converter = DateWithTimeConverter.class)
-  @CsvCustomBindByPosition(position = 20, converter = DateWithTimeConverter.class)
+  @CsvCustomBindByName(column = "Enrollment date", converter = DateWithoutTimeConverter.class)
+  @CsvCustomBindByPosition(position = 20, converter = DateWithoutTimeConverter.class)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date enrollmentDate;
 
   @JsonProperty("expirationDate")
-  @CsvCustomBindByName(column = "Expiration date", converter = DateWithTimeConverter.class)
-  @CsvCustomBindByPosition(position = 21, converter = DateWithTimeConverter.class)
+  @CsvCustomBindByName(column = "Expiration date", converter = DateWithoutTimeConverter.class)
+  @CsvCustomBindByPosition(position = 21, converter = DateWithoutTimeConverter.class)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date expirationDate;
@@ -143,7 +140,8 @@ public class User implements BulkOperationsEntity {
 
   @JsonProperty("preferredEmailCommunication")
   @Valid
-  @CsvCustomBindByName(column = "Preferred email communications", converter = PreferredEmailCommunicationConverter.class)
+  @CsvCustomBindByName(column = "Preferred email communications",
+          converter = PreferredEmailCommunicationConverter.class)
   @CsvCustomBindByPosition(position = 24, converter = PreferredEmailCommunicationConverter.class)
   @UnifiedTableCell(visible = false)
   private Set<PreferredEmailCommunication> preferredEmailCommunication;
@@ -167,7 +165,7 @@ public class User implements BulkOperationsEntity {
   }
 
   @Override
-  public Integer _version() {
+  public Integer entityVersion() {
     return null;
   }
 

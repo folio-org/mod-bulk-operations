@@ -1,11 +1,10 @@
 package org.folio.bulkops.configs;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import feign.codec.Encoder;
 import feign.codec.ErrorDecoder;
 import feign.form.spring.SpringFormEncoder;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.cloud.openfeign.AnnotatedParameterProcessor;
@@ -20,7 +19,9 @@ public class FeignClientConfiguration {
 
   @Bean
   public Encoder multipartFormEncoder() {
-    return new SpringFormEncoder(new SpringEncoder(() -> new HttpMessageConverters(new RestTemplate().getMessageConverters())));
+    return new SpringFormEncoder(
+            new SpringEncoder(() -> new HttpMessageConverters(
+                    new RestTemplate().getMessageConverters())));
   }
 
   @Bean

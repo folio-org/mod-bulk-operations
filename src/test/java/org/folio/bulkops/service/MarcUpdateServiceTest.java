@@ -13,6 +13,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.RemoteFileSystemClient;
@@ -30,22 +35,16 @@ import org.mockito.Captor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.UUID;
-
 class MarcUpdateServiceTest extends BaseTest {
-   @MockitoBean
+  @MockitoBean
   private BulkOperationExecutionRepository executionRepository;
-   @MockitoBean
+  @MockitoBean
   private RemoteFileSystemClient remoteFileSystemClient;
-   @MockitoBean
+  @MockitoBean
   private MarcInstanceUpdateProcessor updateProcessor;
-   @MockitoBean
+  @MockitoBean
   private ErrorService errorService;
-   @MockitoBean
+  @MockitoBean
   private BulkOperationRepository bulkOperationRepository;
 
   @Captor
@@ -66,35 +65,40 @@ class MarcUpdateServiceTest extends BaseTest {
   @SneakyThrows
   void shouldCommitInstanceMarc() {
     var bulkOperation = BulkOperation.builder()
-      .id(UUID.randomUUID())
-      .linkToTriggeringCsvFile("triggering.csv")
-      .linkToMatchedRecordsMarcFile("matched.mrc")
-      .linkToModifiedRecordsMarcFile("modified.mrc")
-      .totalNumOfRecords(1)
-      .processedNumOfRecords(1)
-      .build();
-    var execution = BulkOperationExecution.builder().bulkOperationId(bulkOperation.getId()).build();
-    var pathToCommittedMarcFile = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(), LocalDate.now(), "triggering");
+            .id(UUID.randomUUID())
+            .linkToTriggeringCsvFile("triggering.csv")
+            .linkToMatchedRecordsMarcFile("matched.mrc")
+            .linkToModifiedRecordsMarcFile("modified.mrc")
+            .totalNumOfRecords(1)
+            .processedNumOfRecords(1)
+            .build();
+    var execution = BulkOperationExecution.builder().bulkOperationId(bulkOperation.getId())
+            .build();
+    var pathToCommittedMarcFile = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(),
+            LocalDate.now(), "triggering");
 
     var mockMarcWriter = mock(MarcRemoteStorageWriter.class);
     when(executionRepository.save(any(BulkOperationExecution.class)))
-      .thenReturn(execution);
+            .thenReturn(execution);
     when(remoteFileSystemClient.marcWriter(pathToCommittedMarcFile))
-      .thenReturn(mockMarcWriter);
+            .thenReturn(mockMarcWriter);
     when(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile()))
-      .thenReturn(new FileInputStream("src/test/resources/files/matched.mrc"));
+            .thenReturn(new FileInputStream("src/test/resources/files/matched.mrc"));
     when(remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile()))
-      .thenReturn(new FileInputStream("src/test/resources/files/modified.mrc"));
+            .thenReturn(new FileInputStream("src/test/resources/files/modified.mrc"));
 
     marcUpdateService.commitForInstanceMarc(bulkOperation, new HashSet<>());
 
     verify(executionRepository, times(2)).save(executionArgumentCaptor.capture());
-    assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus()).isEqualTo(StatusType.COMPLETED);
+    assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus())
+            .isEqualTo(StatusType.COMPLETED);
 
     verify(mockMarcWriter).writeRecord(recordArgumentCaptor.capture());
-    assertThat(recordArgumentCaptor.getValue().getControlNumberField().getData()).isEqualTo("hrid1");
+    assertThat(recordArgumentCaptor.getValue().getControlNumberField().getData())
+            .isEqualTo("hrid1");
 
-    verify(errorService).saveError(eq(bulkOperation.getId()), identifierArgumentCaptor.capture(), errorMessageArgumentCaptor.capture(), eq(ErrorType.WARNING));
+    verify(errorService).saveError(eq(bulkOperation.getId()), identifierArgumentCaptor.capture(),
+            errorMessageArgumentCaptor.capture(), eq(ErrorType.WARNING));
     assertThat(identifierArgumentCaptor.getValue()).isEqualTo("hrid2");
     assertThat(errorMessageArgumentCaptor.getValue()).isEqualTo(MSG_NO_MARC_CHANGE_REQUIRED);
   }
@@ -109,13 +113,13 @@ class MarcUpdateServiceTest extends BaseTest {
     var execution = BulkOperationExecution.builder().bulkOperationId(operation.getId()).build();
 
     when(remoteFileSystemClient.marcWriter(any()))
-      .thenReturn(mock(MarcRemoteStorageWriter.class));
+            .thenReturn(mock(MarcRemoteStorageWriter.class));
     when(remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile()))
-      .thenReturn(new FileInputStream("src/test/resources/files/matched.mrc"));
+            .thenReturn(new FileInputStream("src/test/resources/files/matched.mrc"));
     when(remoteFileSystemClient.get(operation.getLinkToModifiedRecordsMarcFile()))
-      .thenReturn(new FileInputStream("src/test/resources/files/modified.mrc"));
+            .thenReturn(new FileInputStream("src/test/resources/files/modified.mrc"));
     when(executionRepository.save(any(BulkOperationExecution.class)))
-      .thenReturn(execution);
+            .thenReturn(execution);
     doAnswer(invocationOnMock -> {
       operation.setLinkToCommittedRecordsMarcFile(null);
       return null;
@@ -127,41 +131,46 @@ class MarcUpdateServiceTest extends BaseTest {
     assertThat(bulkOperationArgumentCaptor.getValue().getLinkToCommittedRecordsMarcFile()).isNull();
 
     verify(executionRepository, times(2)).save(executionArgumentCaptor.capture());
-    assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus()).isEqualTo(StatusType.COMPLETED);
+    assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus())
+            .isEqualTo(StatusType.COMPLETED);
   }
 
   @Test
   @SneakyThrows
-  void shouldFailOperationInCaseOfIOException() {
+  void shouldFailOperationInCaseOfIoException() {
     var bulkOperation = BulkOperation.builder()
-      .id(UUID.randomUUID())
-      .linkToTriggeringCsvFile("triggering.csv")
-      .linkToMatchedRecordsMarcFile("matched.mrc")
-      .linkToModifiedRecordsMarcFile("modified.mrc")
-      .totalNumOfRecords(1)
-      .processedNumOfRecords(1)
-      .build();
-    var execution = BulkOperationExecution.builder().bulkOperationId(bulkOperation.getId()).build();
-    var pathToCommittedMarcFile = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(), LocalDate.now(), "triggering");
+            .id(UUID.randomUUID())
+            .linkToTriggeringCsvFile("triggering.csv")
+            .linkToMatchedRecordsMarcFile("matched.mrc")
+            .linkToModifiedRecordsMarcFile("modified.mrc")
+            .totalNumOfRecords(1)
+            .processedNumOfRecords(1)
+            .build();
+    var execution = BulkOperationExecution.builder().bulkOperationId(bulkOperation.getId())
+            .build();
+    var pathToCommittedMarcFile = String.format(CHANGED_MARC_PATH_TEMPLATE,
+            bulkOperation.getId(), LocalDate.now(), "triggering");
 
     var mockMarcWriter = mock(MarcRemoteStorageWriter.class);
     doThrow(new IOException())
-      .when(mockMarcWriter).writeRecord(any(Record.class));
+            .when(mockMarcWriter).writeRecord(any(Record.class));
     when(executionRepository.save(any(BulkOperationExecution.class)))
-      .thenReturn(execution);
+            .thenReturn(execution);
     when(remoteFileSystemClient.marcWriter(pathToCommittedMarcFile))
-      .thenReturn(mockMarcWriter);
+            .thenReturn(mockMarcWriter);
     when(remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile()))
-      .thenReturn(new FileInputStream("src/test/resources/files/matched.mrc"));
+            .thenReturn(new FileInputStream("src/test/resources/files/matched.mrc"));
     when(remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile()))
-      .thenReturn(new FileInputStream("src/test/resources/files/modified.mrc"));
+            .thenReturn(new FileInputStream("src/test/resources/files/modified.mrc"));
 
     marcUpdateService.commitForInstanceMarc(bulkOperation, new HashSet<>());
 
     verify(executionRepository, times(2)).save(executionArgumentCaptor.capture());
-    assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus()).isEqualTo(StatusType.FAILED);
+    assertThat(executionArgumentCaptor.getAllValues().get(1).getStatus())
+            .isEqualTo(StatusType.FAILED);
 
-    verify(bulkOperationRepository, times(3)).save(bulkOperationArgumentCaptor.capture());
+    verify(bulkOperationRepository, times(3))
+            .save(bulkOperationArgumentCaptor.capture());
     assertThat(bulkOperationArgumentCaptor.getValue().getStatus()).isEqualTo(FAILED);
   }
 }

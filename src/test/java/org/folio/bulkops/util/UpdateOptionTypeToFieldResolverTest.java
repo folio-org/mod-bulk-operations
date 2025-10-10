@@ -1,12 +1,5 @@
 package org.folio.bulkops.util;
 
-import org.folio.bulkops.domain.dto.EntityType;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.stream.Stream;
-
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
@@ -36,13 +29,21 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class UpdateOptionTypeToFieldResolverTest {
+import java.util.stream.Stream;
+import org.folio.bulkops.domain.dto.EntityType;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
+class UpdateOptionTypeToFieldResolverTest {
 
   @ParameterizedTest()
   @MethodSource("fieldToOptionToEntity")
-  void getFieldByUpdateOptionTypeTest(String expected, org.folio.bulkops.domain.dto.UpdateOptionType type, EntityType entityType) {
-    assertEquals(expected, UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(type, entityType));
+  void getFieldByUpdateOptionTypeTest(String expected,
+                                      org.folio.bulkops.domain.dto.UpdateOptionType type,
+                                      EntityType entityType) {
+    assertEquals(expected,
+            UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(type, entityType));
   }
 
   private static Stream<Arguments> fieldToOptionToEntity() {

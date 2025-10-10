@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.SearchClient;
@@ -101,21 +100,30 @@ class BulkEditHoldingsProcessorTest {
   @Test
   void returnsExtendedHoldingsRecordsForCentralTenantAndPermittedAffiliation() {
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("holdingsId");
-    HoldingsRecord holdingsRecord = new HoldingsRecord().withId("holdingsId").withInstanceId("instanceId");
+    HoldingsRecord holdingsRecord = new HoldingsRecord().withId("holdingsId")
+            .withInstanceId("instanceId");
     HoldingsRecordCollection holdingsRecordCollection = HoldingsRecordCollection.builder()
-      .holdingsRecords(List.of(holdingsRecord)).totalRecords(1).build();
+        .holdingsRecords(List.of(holdingsRecord))
+        .totalRecords(1)
+        .build();
 
-    ConsortiumHolding consortiumHolding = new ConsortiumHolding().id("holdingsId").tenantId("tenant1");
+    ConsortiumHolding consortiumHolding = new ConsortiumHolding().id("holdingsId")
+            .tenantId("tenant1");
     ConsortiumHoldingCollection consortiumHoldingCollection = new ConsortiumHoldingCollection()
-      .holdings(List.of(consortiumHolding)).totalRecords(1);
+        .holdings(List.of(consortiumHolding))
+        .totalRecords(1);
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
     when(duplicationCheckerFactory.getFetchedIds(any())).thenReturn(new HashSet<>());
-    when(searchClient.getConsortiumHoldingCollection(any())).thenReturn(consortiumHoldingCollection);
-    when(tenantResolver.getAffiliatedPermittedTenantIds(eq(EntityType.HOLDINGS_RECORD), any(), anyString(), anySet(), eq(itemIdentifier)))
-      .thenReturn(Set.of("tenant1"));
+    when(searchClient.getConsortiumHoldingCollection(any()))
+            .thenReturn(consortiumHoldingCollection);
+    when(tenantResolver.getAffiliatedPermittedTenantIds(
+            eq(EntityType.HOLDINGS_RECORD), any(), anyString(), anySet(), eq(itemIdentifier))
+        ).thenReturn(Set.of("tenant1"));
     when(holdingsStorageClient.getByQuery(anyString())).thenReturn(holdingsRecordCollection);
-    when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString()))
+            .thenReturn("Instance Title");
 
     List<ExtendedHoldingsRecord> result = processor.process(itemIdentifier);
 
@@ -133,21 +141,23 @@ class BulkEditHoldingsProcessorTest {
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(set);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
-      .isInstanceOf(BulkEditException.class)
-      .hasMessageContaining("Duplicate entry");
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("Duplicate entry");
   }
 
   @Test
   void throwsWhenNoMatchFoundForCentralTenant() {
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("notfound");
-    ConsortiumHoldingCollection emptyConsortium = new ConsortiumHoldingCollection().holdings(Collections.emptyList()).totalRecords(0);
+    ConsortiumHoldingCollection emptyConsortium = new ConsortiumHoldingCollection()
+            .holdings(Collections.emptyList()).totalRecords(0);
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
     when(searchClient.getConsortiumHoldingCollection(any())).thenReturn(emptyConsortium);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
-      .isInstanceOf(BulkEditException.class)
-      .hasMessageContaining("No match found");
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("No match found");
   }
 
   @Test
@@ -157,53 +167,64 @@ class BulkEditHoldingsProcessorTest {
     HoldingsRecord record1 = new HoldingsRecord().withId("1");
     HoldingsRecord record2 = new HoldingsRecord().withId("2");
     HoldingsRecordCollection collection = HoldingsRecordCollection.builder()
-      .holdingsRecords(List.of(record1, record2)).totalRecords(2).build();
+        .holdingsRecords(List.of(record1, record2))
+        .totalRecords(2)
+        .build();
 
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(true);
     when(holdingsStorageClient.getByQuery(anyString())).thenReturn(collection);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
-      .isInstanceOf(BulkEditException.class)
-      .hasMessageContaining("Multiple matches");
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("Multiple matches");
   }
 
   @Test
   void throwsWhenNoPermissionForLocalTenant() {
     when(folioExecutionContext.getTenantId()).thenReturn("localTenant");
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("noPerm");
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(false);
     when(userClient.getUserById(anyString())).thenReturn(new User().withUsername("testuser"));
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
-      .isInstanceOf(BulkEditException.class)
-      .hasMessageContaining("does not have required permission");
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("does not have required permission");
   }
 
   @Test
   void throwsWhenUnsupportedIdentifierType() {
     ReflectionTestUtils.setField(processor, "identifierType", "UNSUPPORTED");
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("id");
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
-      .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Unexpected value 'UNSUPPORTED'");
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Unexpected value 'UNSUPPORTED'");
   }
 
   @Test
   void returnsExtendedHoldingsRecordsWithInstanceTitleAndTenantId() {
-    HoldingsRecord holdingsRecord = new HoldingsRecord().withId("holdingsId").withInstanceId("instanceId");
+    HoldingsRecord holdingsRecord = new HoldingsRecord().withId("holdingsId")
+            .withInstanceId("instanceId");
     HoldingsRecordCollection holdingsRecordCollection = HoldingsRecordCollection.builder()
-            .holdingsRecords(List.of(holdingsRecord)).totalRecords(1).build();
+        .holdingsRecords(List.of(holdingsRecord))
+        .totalRecords(1)
+        .build();
 
-    when(holdingsReferenceService.getInstanceTitleById("instanceId", "tenantId")).thenReturn("Instance Title");
+    when(holdingsReferenceService.getInstanceTitleById("instanceId", "tenantId"))
+        .thenReturn("Instance Title");
 
     List<ExtendedHoldingsRecord> result = holdingsRecordCollection.getHoldingsRecords().stream()
-            .map(holdRec -> holdRec.withInstanceTitle(holdingsReferenceService.getInstanceTitleById(holdRec.getInstanceId(), "tenantId")))
-            .map(holdRec -> new ExtendedHoldingsRecord().withTenantId("tenantId").withEntity(holdRec))
-            .toList();
+        .map(holdRec -> holdRec.withInstanceTitle(
+                holdingsReferenceService.getInstanceTitleById(holdRec.getInstanceId(), "tenantId")))
+        .map(holdRec -> new ExtendedHoldingsRecord().withTenantId("tenantId")
+                .withEntity(holdRec))
+        .toList();
 
     assertThat(result).hasSize(1);
     assertThat(result.getFirst().getEntity().getInstanceTitle()).isEqualTo("Instance Title");
@@ -213,12 +234,15 @@ class BulkEditHoldingsProcessorTest {
   @Test
   void returnsEmptyListWhenNoHoldingsRecordsExist() {
     HoldingsRecordCollection holdingsRecordCollection = HoldingsRecordCollection.builder()
-            .holdingsRecords(Collections.emptyList()).totalRecords(0).build();
+        .holdingsRecords(Collections.emptyList())
+        .totalRecords(0)
+        .build();
 
     List<ExtendedHoldingsRecord> result = holdingsRecordCollection.getHoldingsRecords().stream()
-            .map(holdRec -> holdRec.withInstanceTitle(holdingsReferenceService.getInstanceTitleById(holdRec.getInstanceId(), "tenantId")))
-            .map(holdRec -> new ExtendedHoldingsRecord().withTenantId("tenantId").withEntity(holdRec))
-            .toList();
+        .map(holdRec -> holdRec.withInstanceTitle(
+                holdingsReferenceService.getInstanceTitleById(holdRec.getInstanceId(), "tenantId")))
+        .map(holdRec -> new ExtendedHoldingsRecord().withTenantId("tenantId").withEntity(holdRec))
+        .toList();
 
     assertThat(result).isEmpty();
   }
@@ -240,35 +264,43 @@ class BulkEditHoldingsProcessorTest {
     String temporaryLocationId = "tmpLoc";
 
     HoldingsRecord holdingsRecord = new HoldingsRecord()
-            .withId(holdingsId)
-            .withInstanceId(instanceId)
-            .withElectronicAccess(List.of(electronicAccess))
-            .withNotes(List.of(note))
-            .withStatisticalCodeIds(statisticalCodeIds)
-            .withIllPolicyId(illPolicyId)
-            .withEffectiveLocationId(effectiveLocationId)
-            .withPermanentLocationId(permanentLocationId)
-            .withSourceId(sourceId)
-            .withHoldingsTypeId(holdingsTypeId)
-            .withTemporaryLocationId(temporaryLocationId);
+        .withId(holdingsId)
+        .withInstanceId(instanceId)
+        .withElectronicAccess(List.of(electronicAccess))
+        .withNotes(List.of(note))
+        .withStatisticalCodeIds(statisticalCodeIds)
+        .withIllPolicyId(illPolicyId)
+        .withEffectiveLocationId(effectiveLocationId)
+        .withPermanentLocationId(permanentLocationId)
+        .withSourceId(sourceId)
+        .withHoldingsTypeId(holdingsTypeId)
+        .withTemporaryLocationId(temporaryLocationId);
 
     HoldingsRecordCollection holdingsRecordCollection = HoldingsRecordCollection.builder()
-            .holdingsRecords(List.of(holdingsRecord)).totalRecords(1).build();
+        .holdingsRecords(List.of(holdingsRecord))
+        .totalRecords(1)
+        .build();
 
     ConsortiumHolding consortiumHolding = new ConsortiumHolding().id(holdingsId).tenantId(tenantId);
     ConsortiumHoldingCollection consortiumHoldingCollection = new ConsortiumHoldingCollection()
-            .holdings(List.of(consortiumHolding)).totalRecords(1);
+        .holdings(List.of(consortiumHolding))
+        .totalRecords(1);
 
     when(consortiaService.getCentralTenantId(anyString())).thenReturn(tenantId);
     when(folioExecutionContext.getTenantId()).thenReturn(tenantId);
-    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
     when(duplicationCheckerFactory.getFetchedIds(any())).thenReturn(new HashSet<>());
-    when(searchClient.getConsortiumHoldingCollection(any())).thenReturn(consortiumHoldingCollection);
-    when(tenantResolver.getAffiliatedPermittedTenantIds(any(), any(), anyString(), anySet(), any())).thenReturn(Set.of(tenantId));
+    when(searchClient.getConsortiumHoldingCollection(any()))
+            .thenReturn(consortiumHoldingCollection);
+    when(tenantResolver.getAffiliatedPermittedTenantIds(any(), any(), anyString(), anySet(), any()))
+        .thenReturn(Set.of(tenantId));
     when(holdingsStorageClient.getByQuery(anyString())).thenReturn(holdingsRecordCollection);
-    when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString())).thenReturn("Instance Title");
+    when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString()))
+        .thenReturn("Instance Title");
     when(cacheManager.getCache(anyString())).thenReturn(cache);
-    doCallRealMethod().when(localReferenceDataService).enrichWithTenant(any(HoldingsRecord.class), anyString());
+    doCallRealMethod().when(localReferenceDataService)
+            .enrichWithTenant(any(HoldingsRecord.class), anyString());
 
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId(holdingsId);
 
@@ -278,8 +310,10 @@ class BulkEditHoldingsProcessorTest {
     // Assert
     assertThat(result).hasSize(1);
     HoldingsRecord enriched = result.getFirst().getEntity();
-    assertThat(enriched.getElectronicAccess()).allSatisfy(ea -> assertThat(ea.getTenantId()).isEqualTo(tenantId));
-    assertThat(enriched.getNotes()).allSatisfy(n -> assertThat(n.getTenantId()).isEqualTo(tenantId));
+    assertThat(enriched.getElectronicAccess())
+        .allSatisfy(ea -> assertThat(ea.getTenantId()).isEqualTo(tenantId));
+    assertThat(enriched.getNotes())
+        .allSatisfy(n -> assertThat(n.getTenantId()).isEqualTo(tenantId));
     assertThat(enriched.getStatisticalCodeIds()).containsExactly("code1", "code2");
     assertThat(enriched.getIllPolicyId()).isEqualTo(illPolicyId);
     assertThat(enriched.getEffectiveLocationId()).isEqualTo(effectiveLocationId);

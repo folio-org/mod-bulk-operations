@@ -4,14 +4,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
-
+import lombok.extern.log4j.Log4j2;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.folio.spring.FolioExecutionContext;
-
-import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 public class KafkaProducerInterceptor implements ProducerInterceptor<Object, Object> {

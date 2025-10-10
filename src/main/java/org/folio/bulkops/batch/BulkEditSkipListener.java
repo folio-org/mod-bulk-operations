@@ -5,7 +5,6 @@ import static org.folio.bulkops.domain.bean.JobParameterNames.BULK_OPERATION_ID;
 import static org.folio.bulkops.util.Constants.NUMBER_OF_PROCESSED_IDENTIFIERS;
 
 import java.util.UUID;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
@@ -32,11 +31,12 @@ public class BulkEditSkipListener {
   @OnSkipInProcess
   public void onSkipInProcess(ItemIdentifier itemIdentifier, BulkEditException exception) {
     ofNullable(jobExecution.getJobParameters().getString(BULK_OPERATION_ID))
-      .map(UUID::fromString)
-      .map(bulkOperationRepository::findById)
-      .flatMap(opt -> opt)
-      .ifPresent(bulkOperation ->
-        errorService.saveError(bulkOperation.getId(), itemIdentifier.getItemId(), exception.getMessage(), exception.getErrorType()));
+            .map(UUID::fromString)
+            .map(bulkOperationRepository::findById)
+            .flatMap(opt -> opt)
+            .ifPresent(bulkOperation ->
+                    errorService.saveError(bulkOperation.getId(), itemIdentifier.getItemId(),
+                            exception.getMessage(), exception.getErrorType()));
     var context = jobExecution.getExecutionContext();
     int processed = 1;
     if (context.containsKey(NUMBER_OF_PROCESSED_IDENTIFIERS)) {

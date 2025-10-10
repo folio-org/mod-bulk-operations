@@ -21,9 +21,8 @@ import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.encode;
 
-import java.util.List;
-
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -89,11 +88,11 @@ public class HoldingsReferenceService {
   }
 
   public String getCallNumberTypeNameById(String id) {
-   return holdingsReferenceCacheService.getCallNumberTypeNameById(id);
+    return holdingsReferenceCacheService.getCallNumberTypeNameById(id);
   }
 
   public String getCallNumberTypeIdByName(String name, String tenantId) {
-   return holdingsReferenceCacheService.getCallNumberTypeIdByName(name, tenantId);
+    return holdingsReferenceCacheService.getCallNumberTypeIdByName(name, tenantId);
   }
 
   public String getNoteTypeNameById(String id, String tenantId) {
@@ -157,7 +156,8 @@ public class HoldingsReferenceService {
     if (isEmpty(instanceId)) {
       return EMPTY;
     }
-    try (var context = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
+    try (var context = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
+            folioModuleMetadata, folioExecutionContext))) {
       var instanceJson = instanceStorageClient.getInstanceJsonById(instanceId);
       var title = instanceJson.get("title");
       var publications = instanceJson.get("publication");
@@ -174,7 +174,8 @@ public class HoldingsReferenceService {
   }
 
   public String getInstanceTitleByHoldingsRecordId(String holdingsRecordId, String tenantId) {
-    return ofNullable(holdingsReferenceCacheService.getHoldingsRecordById(holdingsRecordId, tenantId))
+    return ofNullable(holdingsReferenceCacheService.getHoldingsRecordById(
+            holdingsRecordId, tenantId))
         .map(holdingsRecord -> getInstanceTitleById(holdingsRecord.getInstanceId(), tenantId))
         .orElse(EMPTY);
   }
@@ -184,9 +185,11 @@ public class HoldingsReferenceService {
       var publisher = publication.get("publisher");
       var dateOfPublication = publication.get("dateOfPublication");
       if (isNull(dateOfPublication) || dateOfPublication.isNull()) {
-        return isNull(publisher) || publisher.isNull() ? EMPTY : String.format(". %s", publisher.asText());
+        return isNull(publisher) || publisher.isNull() ? EMPTY : String.format(". %s",
+                publisher.asText());
       }
-      return String.format(". %s, %s", isNull(publisher) || publisher.isNull() ? EMPTY : publisher.asText(), dateOfPublication.asText());
+      return String.format(". %s, %s", isNull(publisher)
+              || publisher.isNull() ? EMPTY : publisher.asText(), dateOfPublication.asText());
     }
     return EMPTY;
   }
@@ -204,14 +207,17 @@ public class HoldingsReferenceService {
       return EMPTY;
     }
     var holdingsJson = holdingsReferenceCacheService.getHoldingsJsonById(holdingsId, tenantId);
-    var locationId = isNull(holdingsJson.get(PERMANENT_LOCATION_ID)) ? null : holdingsJson.get(PERMANENT_LOCATION_ID).asText();
+    var locationId = isNull(holdingsJson.get(PERMANENT_LOCATION_ID))
+            ? null : holdingsJson.get(PERMANENT_LOCATION_ID).asText();
 
     var locationJson = holdingsReferenceCacheService.getHoldingsLocationById(locationId, tenantId);
-    var activePrefix = nonNull(locationJson.get(IS_ACTIVE)) && locationJson.get(IS_ACTIVE).asBoolean() ? EMPTY : INACTIVE;
+    var activePrefix = nonNull(locationJson.get(IS_ACTIVE))
+            && locationJson.get(IS_ACTIVE).asBoolean() ? EMPTY : INACTIVE;
     var name = isNull(locationJson.get(NAME)) ? EMPTY : locationJson.get(NAME).asText();
     var locationName = activePrefix + name;
 
-    var callNumber = Stream.of(holdingsJson.get(CALL_NUMBER_PREFIX), holdingsJson.get(CALL_NUMBER), holdingsJson.get(CALL_NUMBER_SUFFIX))
+    var callNumber = Stream.of(holdingsJson.get(CALL_NUMBER_PREFIX),
+                    holdingsJson.get(CALL_NUMBER), holdingsJson.get(CALL_NUMBER_SUFFIX))
         .filter(Objects::nonNull)
         .map(JsonNode::asText)
         .collect(Collectors.joining(SPACE));

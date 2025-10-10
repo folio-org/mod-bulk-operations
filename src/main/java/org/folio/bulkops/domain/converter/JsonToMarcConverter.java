@@ -4,7 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-
 import lombok.extern.log4j.Log4j2;
 import org.marc4j.MarcException;
 import org.marc4j.MarcJsonReader;
@@ -16,11 +15,13 @@ import org.springframework.stereotype.Component;
 public class JsonToMarcConverter {
 
   public String convertJsonRecordToMarcRecord(String jsonRecord) throws IOException {
-    var byteArrayInputStream = new ByteArrayInputStream(jsonRecord.getBytes(StandardCharsets.UTF_8));
+    var byteArrayInputStream = new ByteArrayInputStream(
+            jsonRecord.getBytes(StandardCharsets.UTF_8));
     var byteArrayOutputStream = new ByteArrayOutputStream();
     try (byteArrayInputStream; byteArrayOutputStream) {
       var marcJsonReader = new MarcJsonReader(byteArrayInputStream);
-      var marcStreamWriter = new MarcStreamWriter(byteArrayOutputStream, StandardCharsets.UTF_8.name());
+      var marcStreamWriter = new MarcStreamWriter(byteArrayOutputStream,
+              StandardCharsets.UTF_8.name());
       writeMarc(marcJsonReader, marcStreamWriter);
       return byteArrayOutputStream.toString();
     } catch (IOException e) {

@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.io.FilenameUtils;
@@ -40,11 +39,11 @@ import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.Errors;
-import org.folio.bulkops.domain.dto.ProfilesDto;
-import org.folio.bulkops.domain.dto.ProfileDto;
-import org.folio.bulkops.domain.dto.ProfileRequest;
 import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.dto.ProfileDto;
+import org.folio.bulkops.domain.dto.ProfileRequest;
+import org.folio.bulkops.domain.dto.ProfilesDto;
 import org.folio.bulkops.domain.dto.QueryRequest;
 import org.folio.bulkops.domain.dto.UnifiedTable;
 import org.folio.bulkops.domain.dto.Users;
@@ -58,9 +57,8 @@ import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.ListUsersService;
 import org.folio.bulkops.service.LogFilesService;
 import org.folio.bulkops.service.PreviewService;
-import org.folio.bulkops.service.RuleService;
-import org.folio.bulkops.service.UserPermissionsService;
 import org.folio.bulkops.service.ProfileService;
+import org.folio.bulkops.service.RuleService;
 import org.folio.bulkops.util.MarcCsvHelper;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
@@ -90,30 +88,50 @@ public class BulkOperationController implements BulkOperationsApi {
   private final NoteProcessorFactory noteProcessorFactory;
   private final BulkOperationRepository bulkOperationRepository;
   private final ProfileService profileService;
-  private final UserPermissionsService userPermissionsService;
   private final MarcCsvHelper marcCsvHelper;
 
   @Override
-  public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(String query, Integer offset, Integer limit) {
-    var page = bulkOperationCqlRepository.findByCql(query, OffsetRequest.of(Objects.isNull(offset) ? 0 : offset, Objects.isNull(limit) ? Integer.MAX_VALUE : limit));
-    return new ResponseEntity<>(new BulkOperationCollection().bulkOperations(bulkOperationMapper.mapToDtoList(page.toList())).totalRecords((int) page.getTotalElements()), HttpStatus.OK);
+  public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(
+      String query, Integer offset, Integer limit) {
+    var page = bulkOperationCqlRepository.findByCql(
+        query,
+        OffsetRequest.of(
+            Objects.isNull(offset) ? 0 : offset,
+            Objects.isNull(limit) ? Integer.MAX_VALUE : limit
+        )
+    );
+    var dtoList = bulkOperationMapper.mapToDtoList(page.toList());
+    var response = new BulkOperationCollection()
+        .bulkOperations(dtoList)
+        .totalRecords((int) page.getTotalElements());
+    return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<Errors> getErrorsPreviewByOperationId(UUID operationId, Integer limit, Integer offset, ErrorType errorType) {
-    return new ResponseEntity<>(errorService.getErrorsPreviewByBulkOperationId(operationId, limit, offset, errorType), HttpStatus.OK);
+  public ResponseEntity<Errors> getErrorsPreviewByOperationId(UUID operationId, Integer limit,
+                                                              Integer offset, ErrorType errorType) {
+    return new ResponseEntity<>(
+        errorService.getErrorsPreviewByBulkOperationId(operationId, limit, offset, errorType),
+        HttpStatus.OK
+    );
   }
 
   @Override
-  public ResponseEntity<UnifiedTable> getPreviewByOperationId(UUID operationId, BulkOperationStep step, Integer limit, Integer offset) {
+  public ResponseEntity<UnifiedTable> getPreviewByOperationId(UUID operationId,
+                                                              BulkOperationStep step,
+                                                              Integer limit, Integer offset) {
     var bulkOperation = bulkOperationService.getBulkOperationOrThrow(operationId);
-    return new ResponseEntity<>(previewService.getPreview(bulkOperation, step, Objects.isNull(offset) ? 0 : offset, limit), HttpStatus.OK);
+    return new ResponseEntity<>(
+        previewService.getPreview(bulkOperation, step, Objects.isNull(offset) ? 0 : offset, limit),
+        HttpStatus.OK
+    );
   }
 
   @Override
-  public ResponseEntity<BulkOperationRuleCollection> postContentUpdates(UUID operationId, BulkOperationRuleCollection bulkOperationRuleCollection) {
+  public ResponseEntity<BulkOperationRuleCollection> postContentUpdates(
+          UUID operationId, BulkOperationRuleCollection bulkOperationRuleCollection) {
     var operation = bulkOperationService.getBulkOperationOrThrow(operationId);
-    var rules = ruleService.saveRules(operation, bulkOperationRuleCollection);
+    final var rules = ruleService.saveRules(operation, bulkOperationRuleCollection);
 
     if (INSTANCE_MARC.equals(operation.getEntityType())) {
       operation.setEntityType(INSTANCE);
@@ -126,9 +144,10 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   @Override
-  public ResponseEntity<BulkOperationMarcRuleCollection> postMarcContentUpdates(UUID operationId, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection) {
+  public ResponseEntity<BulkOperationMarcRuleCollection> postMarcContentUpdates(
+          UUID operationId, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection) {
     var operation = bulkOperationService.getBulkOperationOrThrow(operationId);
-    var rules = ruleService.saveMarcRules(operation, bulkOperationMarcRuleCollection);
+    final var rules = ruleService.saveMarcRules(operation, bulkOperationMarcRuleCollection);
 
     operation.setEntityType(INSTANCE_MARC);
     bulkOperationRepository.save(operation);
@@ -139,23 +158,43 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   @Override
-  public ResponseEntity<BulkOperationDto> startBulkOperation(UUID operationId, BulkOperationStart bulkOperationStart, UUID xOkapiUserId) {
-      return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.startBulkOperation(operationId, xOkapiUserId, bulkOperationStart)), HttpStatus.OK);
+  public ResponseEntity<BulkOperationDto> startBulkOperation(
+      UUID operationId,
+      BulkOperationStart bulkOperationStart,
+      UUID xokapiUserId) {
+    var dto = bulkOperationMapper.mapToDto(
+        bulkOperationService.startBulkOperation(operationId, xokapiUserId, bulkOperationStart)
+    );
+    return new ResponseEntity<>(dto, HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<BulkOperationDto> uploadCsvFile(EntityType entityType, IdentifierType identifierType, Boolean manual, UUID operationId, UUID xOkapiUserId, MultipartFile file) {
-    return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.uploadCsvFile(entityType, identifierType, manual, operationId, xOkapiUserId, file)), HttpStatus.OK);
+  public ResponseEntity<BulkOperationDto> uploadCsvFile(
+      EntityType entityType,
+      IdentifierType identifierType,
+      Boolean manual,
+      UUID operationId,
+      UUID xokapiUserId,
+      MultipartFile file) {
+    var dto = bulkOperationMapper.mapToDto(
+        bulkOperationService.uploadCsvFile(entityType, identifierType, manual, operationId,
+                xokapiUserId, file)
+    );
+    return new ResponseEntity<>(dto, HttpStatus.OK);
   }
 
   @Override
   public ResponseEntity<BulkOperationDto> getBulkOperationById(UUID operationId) {
-    return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.getOperationById(operationId)), HttpStatus.OK);
+    return new ResponseEntity<>(
+        bulkOperationMapper.mapToDto(bulkOperationService.getOperationById(operationId)),
+        HttpStatus.OK
+    );
   }
 
   @Override
   public ResponseEntity<Resource> downloadFileByOperationId(
-    UUID operationId, FileContentType fileContentType) {
+      UUID operationId,
+      FileContentType fileContentType) {
     var bulkOperation = bulkOperationService.getOperationById(operationId);
 
     String path;
@@ -184,23 +223,35 @@ public class BulkOperationController implements BulkOperationsApi {
       return ResponseEntity.ok().build();
     } else {
       try (var is = remoteFileSystemClient.get(path)) {
-        var content = CSV_EXTENSION.equalsIgnoreCase(FilenameUtils.getExtension(path)) ?
-          ArrayUtils.removeAllOccurrences(is.readAllBytes(), (byte) NON_PRINTING_DELIMITER) :
-          is.readAllBytes();
+        byte[] content;
+        if (CSV_EXTENSION.equalsIgnoreCase(FilenameUtils.getExtension(path))) {
+          content = ArrayUtils.removeAllOccurrences(is.readAllBytes(),
+                  (byte) NON_PRINTING_DELIMITER);
+        } else {
+          content = is.readAllBytes();
+        }
+
         var entityType = bulkOperation.getEntityType().getValue();
         if (isDownloadPreview(fileContentType) && SPLIT_NOTE_ENTITIES.contains(entityType)) {
-          content = noteProcessorFactory.getNoteProcessor(entityType).processCsvContent(content, bulkOperation);
+          content = noteProcessorFactory.getNoteProcessor(entityType)
+              .processCsvContent(content, bulkOperation);
         }
+
         if (INSTANCE_MARC.equals(bulkOperation.getEntityType())
-          && Set.of(PROPOSED_CHANGES_FILE, COMMITTED_RECORDS_FILE).contains(fileContentType)) {
+            && Set.of(PROPOSED_CHANGES_FILE, COMMITTED_RECORDS_FILE).contains(fileContentType)) {
           content = marcCsvHelper.enrichCsvWithMarcChanges(content, bulkOperation);
         }
+
         if (CSV_EXTENSION.equalsIgnoreCase(FilenameUtils.getExtension(path))) {
           content = getCsvContentWithUtf8Bom(content);
         }
+
         var decodedPath = URLDecoder.decode(path, StandardCharsets.UTF_8);
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentDispositionFormData(FileUtils.filename(decodedPath), FileUtils.filename(decodedPath));
+        headers.setContentDispositionFormData(
+            FileUtils.filename(decodedPath),
+            FileUtils.filename(decodedPath)
+        );
         return ResponseEntity.ok()
           .headers(headers)
           .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -222,7 +273,8 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   private boolean isDownloadPreview(FileContentType fileContentType) {
-    return Set.of(MATCHED_RECORDS_FILE, PROPOSED_CHANGES_FILE, COMMITTED_RECORDS_FILE).contains(fileContentType);
+    return Set.of(MATCHED_RECORDS_FILE, PROPOSED_CHANGES_FILE, COMMITTED_RECORDS_FILE)
+        .contains(fileContentType);
   }
 
   @Override
@@ -258,17 +310,20 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   @Override
-  public ResponseEntity<BulkOperationDto> triggerBulkEditByQuery(UUID xOkapiUserId, QueryRequest queryRequest) {
-    return new ResponseEntity<>(bulkOperationMapper.mapToDto(bulkOperationService.triggerByQuery(xOkapiUserId, queryRequest)), HttpStatus.OK);
+  public ResponseEntity<BulkOperationDto> triggerBulkEditByQuery(UUID xokapiUserId,
+                                                                 QueryRequest queryRequest) {
+    return new ResponseEntity<>(
+        bulkOperationMapper.mapToDto(bulkOperationService.triggerByQuery(xokapiUserId,
+                queryRequest)),
+        HttpStatus.OK
+    );
   }
-
 
   @Override
   public ResponseEntity<ProfilesDto> getProfiles(String query, Integer offset, Integer limit) {
     var response = profileService.getProfiles(query, offset, limit);
     return ResponseEntity.ok(response);
   }
-
 
   @Override
   public ResponseEntity<ProfileDto> createProfile(ProfileRequest profileRequest) {

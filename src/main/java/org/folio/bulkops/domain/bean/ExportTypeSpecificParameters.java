@@ -1,7 +1,6 @@
 package org.folio.bulkops.domain.bean;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,6 +23,6 @@ public class ExportTypeSpecificParameters {
   private String query;
 
   @JsonProperty("eHoldingsExportConfig")
-  private EHoldingsExportConfig eHoldingsExportConfig;
+  private EholdingsExportConfig eholdingsExportConfig;
 }
 

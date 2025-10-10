@@ -1,11 +1,9 @@
 package org.folio.bulkops.domain.bean;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.util.List;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

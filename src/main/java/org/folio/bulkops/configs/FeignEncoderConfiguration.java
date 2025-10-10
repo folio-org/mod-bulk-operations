@@ -15,7 +15,7 @@ public class FeignEncoderConfiguration {
     return new JacksonEncoder(customFeignObjectMapper());
   }
 
-  public ObjectMapper customFeignObjectMapper(){
+  public ObjectMapper customFeignObjectMapper() {
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     return objectMapper;

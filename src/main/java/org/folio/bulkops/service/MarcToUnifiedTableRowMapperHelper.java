@@ -14,6 +14,12 @@ import static org.folio.bulkops.util.Constants.ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.SLASH;
 import static org.folio.bulkops.util.Constants.STAFF_ONLY;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
@@ -25,12 +31,6 @@ import org.marc4j.marc.Leader;
 import org.marc4j.marc.Subfield;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 @Component
 @RequiredArgsConstructor
 @Log4j2
@@ -39,11 +39,13 @@ public class MarcToUnifiedTableRowMapperHelper {
   private static final String COMMA = ",";
   private static final String HYPHEN = "-";
   private static final String WHITE_SPACE = " ";
-  private static final String REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD = "^(.*?)\\s.[.]$";
-  private static final String REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD_FOLLOWED_BY_COMMA = "^(.*?)\\s.,[.]$";
+  private static final Pattern REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD_FOLLOWED_BY_COMMA
+          = Pattern.compile("^(.*?)\\s.,[.]$");
   private static final String PUNCTUATION_TO_REMOVE = ";:,/+= ";
   private static final String PERSONAL_NAME = "Personal name";
   private static final String CORPORATE_NAME = "Corporate name";
+  private static final Pattern PATTERN_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD
+          = Pattern.compile("^(.*?)\\s.[.]$");
 
   private final InstanceReferenceService instanceReferenceService;
   private final Marc21ReferenceProvider referenceProvider;
@@ -82,20 +84,23 @@ public class MarcToUnifiedTableRowMapperHelper {
         classifications.addAll(fetchSubfieldsDataByCode(dataField, 'z'));
       }
       case "050", "060", "080", "090" -> {
-        var value = String.join(SPACE, fetchSingleSubfieldDataByCode(dataField, 'a'), fetchSingleSubfieldDataByCode(dataField, 'b')).trim();
+        var value = String.join(SPACE, fetchSingleSubfieldDataByCode(dataField, 'a'),
+                fetchSingleSubfieldDataByCode(dataField, 'b')).trim();
         classifications.add(value.isEmpty() ? HYPHEN : value);
       }
       case "082" -> {
         classifications.addAll(dataField.getSubfields('a').stream()
-          .map(Subfield::getData)
-          .map(s -> s.replace(SLASH, EMPTY))
-          .toList());
+                .map(Subfield::getData)
+                .map(s -> s.replace(SLASH, EMPTY))
+                .toList());
         var itemNumber = dataField.getSubfield('b');
         if (nonNull(itemNumber) && !classifications.isEmpty()) {
-          classifications.set(classifications.size() - 1, String.join(SPACE, classifications.getLast(), itemNumber.getData()));
+          classifications.set(classifications.size() - 1, String.join(
+                  SPACE, classifications.getLast(), itemNumber.getData()));
         }
       }
-      default -> log.error("Tag {} is not classification or not supported yet.", dataField.getTag());
+      default -> log.error("Tag {} is not classification or not supported yet.",
+              dataField.getTag());
     }
     return classifications;
   }
@@ -216,7 +221,8 @@ public class MarcToUnifiedTableRowMapperHelper {
 
   private String fetchSubjectSourceForInd7(DataField dataField) {
     return ofNullable(dataField.getSubfield('2'))
-            .map(subfield -> subjectReferenceService.getSubjectSourceNameByCode(subfield.getData()))
+            .map(subfield -> subjectReferenceService.getSubjectSourceNameByCode(
+                    subfield.getData()))
             .orElse(HYPHEN);
   }
 
@@ -254,8 +260,9 @@ public class MarcToUnifiedTableRowMapperHelper {
   public String fetchNameType(DataField dataField) {
     return switch (dataField.getTag()) {
       case "100", "700" -> PERSONAL_NAME;
-      case "720" -> isDigit(dataField.getIndicator1()) && 2 == getNumericValue(dataField.getIndicator1()) ?
-        CORPORATE_NAME : PERSONAL_NAME;
+      case "720" -> isDigit(dataField.getIndicator1())
+              && 2 == getNumericValue(dataField.getIndicator1())
+              ? CORPORATE_NAME : PERSONAL_NAME;
       case "110", "710" -> CORPORATE_NAME;
       case "111", "711" -> "Meeting name";
       default -> EMPTY;
@@ -266,13 +273,14 @@ public class MarcToUnifiedTableRowMapperHelper {
     var code = nonNull(dataField.getSubfield('4')) ? dataField.getSubfield('4').getData() : null;
     var types = instanceReferenceService.getContributorTypesByCode(code).getContributorTypes();
     if (!types.isEmpty()) {
-      return types.get(0).getName();
+      return types.getFirst().getName();
     }
     var subfield = Set.of("111", "711").contains(dataField.getTag()) ? 'j' : 'e';
-    var name = nonNull(dataField.getSubfield(subfield)) ? dataField.getSubfield(subfield).getData() : null;
+    var name = nonNull(dataField.getSubfield(subfield)) ? dataField.getSubfield(subfield).getData()
+            : null;
     types = instanceReferenceService.getContributorTypesByName(name).getContributorTypes();
     if (!types.isEmpty()) {
-      return types.get(0).getName();
+      return types.getFirst().getName();
     }
     return isNull(name) ? EMPTY : name;
   }
@@ -295,10 +303,10 @@ public class MarcToUnifiedTableRowMapperHelper {
     var type = InstanceType.builder().code("zzz").name("unspecified").source("rdacontent").build();
     if (nonNull(name)) {
       var types = instanceReferenceService.getInstanceTypesByName(name).getTypes();
-      type = types.isEmpty() ? type : types.get(0);
+      type = types.isEmpty() ? type : types.getFirst();
     } else if (nonNull(code)) {
       var types = instanceReferenceService.getInstanceTypesByCode(code).getTypes();
-      type = types.isEmpty() ? type : types.get(0);
+      type = types.isEmpty() ? type : types.getFirst();
     }
     return type.getName();
   }
@@ -306,7 +314,7 @@ public class MarcToUnifiedTableRowMapperHelper {
   public String fetchInstanceFormats(DataField dataField) {
     var code = nonNull(dataField.getSubfield('b')) ? dataField.getSubfield('b').getData() : null;
     var formats = instanceReferenceService.getInstanceFormatsByCode(code).getFormats();
-    return formats.isEmpty() ? null : formats.get(0).getName();
+    return formats.isEmpty() ? null : formats.getFirst().getName();
   }
 
   public String fetchPublicationRange(DataField dataField) {
@@ -318,7 +326,7 @@ public class MarcToUnifiedTableRowMapperHelper {
   }
 
   public String fetchIndexTitle(DataField dataField) {
-    return getSubfieldsByOrderedCodes(dataField,"anpb").stream()
+    return getSubfieldsByOrderedCodes(dataField, "anpb").stream()
       .map(subfield -> trimAndCapitalizeIfRequired(subfield, dataField.getIndicator2()))
       .collect(Collectors.joining(SPACE));
   }
@@ -329,7 +337,8 @@ public class MarcToUnifiedTableRowMapperHelper {
       case "810" -> "abcdefghklmnoprstuvwx35";
       case "811" -> "acdefghjklnpqstuvwx35";
       case "830" -> "adfghklmnoprstvwx35";
-      default -> throw new IllegalArgumentException("Series statement cannot be processed for field: " + dataField.getTag());
+      default -> throw new IllegalArgumentException(
+              "Series statement cannot be processed for field: " + dataField.getTag());
     };
     return subfieldsToStringRemoveEndingPunctuation(dataField.getSubfields(subfields));
   }
@@ -337,8 +346,10 @@ public class MarcToUnifiedTableRowMapperHelper {
   public String fetchNotes(DataField dataField, boolean forCsv) {
     var staffOnlyTruePostfix = forCsv ? ARRAY_DELIMITER + Boolean.TRUE : SPACE + STAFF_ONLY;
     var staffOnlyFalsePostfix = forCsv ? ARRAY_DELIMITER + Boolean.FALSE : EMPTY;
-    return subfieldsToString(dataField.getSubfields(referenceProvider.getSubfieldsByTag(dataField.getTag()))) +
-      (referenceProvider.isStaffOnlyNote(dataField) ? staffOnlyTruePostfix : staffOnlyFalsePostfix);
+    return subfieldsToString(dataField.getSubfields(referenceProvider
+            .getSubfieldsByTag(dataField.getTag())))
+            + (referenceProvider.isStaffOnlyNote(dataField) ? staffOnlyTruePostfix
+            : staffOnlyFalsePostfix);
   }
 
   public List<Subfield> getSubfieldsByOrderedCodes(DataField dataField, String subfields) {
@@ -368,9 +379,11 @@ public class MarcToUnifiedTableRowMapperHelper {
   }
 
   private String trimPunctuation(String input) {
-    if (input.matches(REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD) || input.endsWith(HYPHEN)) {
+    if (PATTERN_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD.matcher(input).matches()
+            || input.endsWith(HYPHEN)) {
       return input;
-    } else if (input.matches(REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD_FOLLOWED_BY_COMMA)) {
+    } else if (REGEXP_FOR_TEXT_ENDS_WITH_SINGLE_LETTER_AND_PERIOD_FOLLOWED_BY_COMMA.matcher(
+            input).matches()) {
       return input.substring(INTEGER_ZERO, input.length() - 2).concat(PERIOD);
     } else if (input.endsWith(PERIOD) || input.endsWith(COMMA)) {
       return input.substring(INTEGER_ZERO, input.length() - 1);
@@ -398,9 +411,9 @@ public class MarcToUnifiedTableRowMapperHelper {
 
   private String trimAndCapitalizeIfRequired(Subfield subfield, char indicator) {
     if ('a' == subfield.getCode() && isDigit(indicator)) {
-      return subfield.getData().length() > getNumericValue(indicator) ?
-        StringUtils.capitalize(subfield.getData().substring(getNumericValue(indicator))) :
-        EMPTY;
+      return subfield.getData().length() > getNumericValue(indicator)
+              ? StringUtils.capitalize(subfield.getData().substring(getNumericValue(indicator)))
+              : EMPTY;
     }
     return subfield.getData();
   }

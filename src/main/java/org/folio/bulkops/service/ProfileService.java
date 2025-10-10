@@ -1,11 +1,16 @@
 package org.folio.bulkops.service;
 
+import java.time.OffsetDateTime;
+import java.util.Date;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.folio.bulkops.domain.entity.Profile;
 import org.folio.bulkops.domain.dto.ProfileDto;
-import org.folio.bulkops.domain.dto.ProfilesDto;
 import org.folio.bulkops.domain.dto.ProfileRequest;
+import org.folio.bulkops.domain.dto.ProfilesDto;
+import org.folio.bulkops.domain.entity.Profile;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.repository.ProfileRepository;
@@ -13,12 +18,6 @@ import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.cql.JpaCqlRepository;
 import org.folio.spring.data.OffsetRequest;
 import org.springframework.stereotype.Service;
-
-import java.time.OffsetDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
 
 @Service
 @Log4j2
@@ -34,20 +33,20 @@ public class ProfileService {
     String effectiveQuery = (query == null || query.isBlank()) ? "cql.allRecords=1" : query;
 
     var page = profileCqlRepository.findByCql(
-      effectiveQuery,
-      OffsetRequest.of(
-        Objects.requireNonNullElse(offset, 0),
-        Objects.requireNonNullElse(limit, Integer.MAX_VALUE)
-      )
+            effectiveQuery,
+            OffsetRequest.of(
+                    Objects.requireNonNullElse(offset, 0),
+                    Objects.requireNonNullElse(limit, Integer.MAX_VALUE)
+            )
     );
 
     List<ProfileDto> items = page.stream()
-      .map(this::toDto)
-      .toList();
+            .map(this::toDto)
+            .toList();
 
     return new ProfilesDto()
-      .content(items)
-      .totalRecords(page.getTotalElements());
+            .content(items)
+            .totalRecords(page.getTotalElements());
   }
 
   public ProfileDto createProfile(ProfileRequest profileRequest) {
@@ -58,17 +57,17 @@ public class ProfileService {
     }
 
     Profile entity = Profile.builder()
-      .name(profileRequest.getName())
-      .description(profileRequest.getDescription())
-      .locked(Boolean.TRUE.equals(profileRequest.getLocked()))
-      .entityType(profileRequest.getEntityType())
-      .ruleDetails(profileRequest.getRuleDetails())
-      .marcRuleDetails(profileRequest.getMarcRuleDetails())
-      .createdDate(OffsetDateTime.now())
-      .createdBy(userId)
-      .updatedDate(OffsetDateTime.now())
-      .updatedBy(userId)
-      .build();
+            .name(profileRequest.getName())
+            .description(profileRequest.getDescription())
+            .locked(Boolean.TRUE.equals(profileRequest.getLocked()))
+            .entityType(profileRequest.getEntityType())
+            .ruleDetails(profileRequest.getRuleDetails())
+            .marcRuleDetails(profileRequest.getMarcRuleDetails())
+            .createdDate(OffsetDateTime.now())
+            .createdBy(userId)
+            .updatedDate(OffsetDateTime.now())
+            .updatedBy(userId)
+            .build();
 
     Profile saved = profileRepository.save(entity);
     return toDto(saved);
@@ -85,7 +84,6 @@ public class ProfileService {
   }
 
   public ProfileDto updateProfile(UUID profileId, ProfileRequest profileRequest) {
-    UUID userId = folioExecutionContext.getUserId();
 
     Profile existing = getProfile(profileId);
 
@@ -103,6 +101,7 @@ public class ProfileService {
     existing.setMarcRuleDetails(profileRequest.getMarcRuleDetails());
     existing.setLocked(profileRequest.getLocked());
     existing.setUpdatedDate(OffsetDateTime.now());
+    UUID userId = folioExecutionContext.getUserId();
     existing.setUpdatedBy(userId);
 
     Profile updated = profileRepository.save(existing);
@@ -111,7 +110,7 @@ public class ProfileService {
 
   private Profile getProfile(UUID profileId) {
     return profileRepository.findById(profileId)
-      .orElseThrow(() -> new NotFoundException("Profile not found with ID: " + profileId));
+            .orElseThrow(() -> new NotFoundException("Profile not found with ID: " + profileId));
   }
 
   private ProfileDto toDto(Profile profile) {
@@ -123,9 +122,11 @@ public class ProfileService {
     dto.setEntityType(profile.getEntityType());
     dto.setRuleDetails(profile.getRuleDetails());
     dto.setMarcRuleDetails(profile.getMarcRuleDetails());
-    dto.setCreatedDate(profile.getCreatedDate() == null ? null : Date.from(profile.getCreatedDate().toInstant()));
+    dto.setCreatedDate(profile.getCreatedDate() == null ? null : Date.from(profile.getCreatedDate()
+            .toInstant()));
     dto.setCreatedBy(profile.getCreatedBy());
-    dto.setUpdatedDate(profile.getUpdatedDate() == null ? null : Date.from(profile.getUpdatedDate().toInstant()));
+    dto.setUpdatedDate(profile.getUpdatedDate() == null ? null : Date.from(profile.getUpdatedDate()
+            .toInstant()));
     dto.setUpdatedBy(profile.getUpdatedBy());
     return dto;
   }

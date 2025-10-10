@@ -7,6 +7,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.UUID;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.BaseTest;
@@ -23,10 +26,6 @@ import org.folio.bulkops.domain.entity.BulkOperationMarcRule;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.UUID;
 
 class BulkOperationMarcRuleRepositoryTest extends BaseTest {
   @Autowired
@@ -59,7 +58,8 @@ class BulkOperationMarcRuleRepositoryTest extends BaseTest {
     try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       var updated = repository.save(created.withParameters(Collections.singletonList(parameter)));
-      assertTrue(created.getId().equals(updated.getId()) && parameter.equals(updated.getParameters().get(0)));
+      assertTrue(created.getId().equals(updated.getId()) && parameter.equals(updated.getParameters()
+              .get(0)));
     }
   }
 
@@ -74,18 +74,18 @@ class BulkOperationMarcRuleRepositoryTest extends BaseTest {
 
   private BulkOperationMarcRule createEntity() {
     var bulkOperation = bulkOperationRepository.save(BulkOperation.builder()
-      .id(UUID.randomUUID())
-      .userId(UUID.randomUUID())
-      .operationType(UPDATE)
-      .entityType(EntityType.INSTANCE)
-      .identifierType(ID)
-      .status(NEW)
-      .dataExportJobId(UUID.randomUUID())
-      .totalNumOfRecords(10)
-      .processedNumOfRecords(0)
-      .executionChunkSize(5)
-      .startTime(LocalDateTime.now())
-      .build());
+            .id(UUID.randomUUID())
+            .userId(UUID.randomUUID())
+            .operationType(UPDATE)
+            .entityType(EntityType.INSTANCE)
+            .identifierType(ID)
+            .status(NEW)
+            .dataExportJobId(UUID.randomUUID())
+            .totalNumOfRecords(10)
+            .processedNumOfRecords(0)
+            .executionChunkSize(5)
+            .startTime(LocalDateTime.now())
+            .build());
 
     return BulkOperationMarcRule.builder()
       .bulkOperationId(bulkOperation.getId())

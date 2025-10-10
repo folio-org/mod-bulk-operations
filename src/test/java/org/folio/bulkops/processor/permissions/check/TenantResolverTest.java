@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
-
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.bean.User;
@@ -59,41 +58,48 @@ class TenantResolverTest {
 
   @ParameterizedTest
   @MethodSource("supportedEntityTypesAndIdentifierTypes")
-  void shouldNotThrowAffiliationExceptionForSupportedEntityTypesIfTenantIsAffiliated(EntityType entityType, IdentifierType identifierType) {
-    var identifier = UUID.randomUUID().toString();
+  void shouldNotThrowAffiliationExceptionForSupportedEntityTypesIfTenantIsAffiliated(
+          EntityType entityType, IdentifierType identifierType) {
     var userId = UUID.randomUUID();
     var currentTenant = "tenant1";
     var affiliatedTenants = List.of("tenant3", currentTenant);
 
     when(folioExecutionContext.getUserId()).thenReturn(userId);
     when(folioExecutionContext.getTenantId()).thenReturn(currentTenant);
-    when(consortiaService.getAffiliatedTenants(currentTenant, userId.toString())).thenReturn(affiliatedTenants);
-    when(readPermissionsValidator.isBulkEditReadPermissionExists(currentTenant, entityType)).thenReturn(true);
-
-    assertDoesNotThrow(() -> tenantResolver.checkAffiliatedPermittedTenantIds(entityType, identifierType.getValue(),
+    when(consortiaService.getAffiliatedTenants(currentTenant, userId.toString()))
+            .thenReturn(affiliatedTenants);
+    when(readPermissionsValidator.isBulkEditReadPermissionExists(
+            currentTenant, entityType)).thenReturn(true);
+    var identifier = UUID.randomUUID().toString();
+    assertDoesNotThrow(() -> tenantResolver.checkAffiliatedPermittedTenantIds(
+            entityType, identifierType.getValue(),
             Set.of(currentTenant), identifier));
   }
 
   @ParameterizedTest
   @MethodSource("supportedEntityTypesAndIdentifierTypes")
-  void shouldThrowAffiliationExceptionForSupportedEntityTypesIfTenantIsNotAffiliated(EntityType entityType, IdentifierType identifierType) {
-    var identifier = UUID.randomUUID().toString();
+  void shouldThrowAffiliationExceptionForSupportedEntityTypesIfTenantIsNotAffiliated(
+          EntityType entityType, IdentifierType identifierType) {
     var userId = UUID.randomUUID();
     var currentTenant = "tenant1";
     var affiliatedTenants = List.of("tenant3", "tenant2");
 
     when(folioExecutionContext.getUserId()).thenReturn(userId);
     when(folioExecutionContext.getTenantId()).thenReturn(currentTenant);
-    when(userClient.getUserById(userId.toString())).thenReturn(User.builder().id(userId.toString()).build());
-    when(consortiaService.getAffiliatedTenants(currentTenant, userId.toString())).thenReturn(affiliatedTenants);
-
-    assertThrows(AffiliationException.class, () -> tenantResolver.checkAffiliatedPermittedTenantIds(entityType, identifierType.getValue(),
-            Set.of(currentTenant), identifier));
+    when(userClient.getUserById(userId.toString()))
+            .thenReturn(User.builder().id(userId.toString()).build());
+    when(consortiaService.getAffiliatedTenants(currentTenant, userId.toString()))
+            .thenReturn(affiliatedTenants);
+    var identifier = UUID.randomUUID().toString();
+    assertThrows(AffiliationException.class,
+            () -> tenantResolver.checkAffiliatedPermittedTenantIds(
+                    entityType, identifierType.getValue(), Set.of(currentTenant), identifier));
   }
 
   @ParameterizedTest
   @MethodSource("unsupportedEntityTypesAndIdentifierTypes")
-  void shouldThrowUnsupportedExceptionIfEntityTypeIsNotSupported(EntityType entityType, IdentifierType identifierType) {
+  void shouldThrowUnsupportedExceptionIfEntityTypeIsNotSupported(
+          EntityType entityType, IdentifierType identifierType) {
     var identifier = UUID.randomUUID().toString();
     var userId = UUID.randomUUID();
     var currentTenant = "tenant1";
@@ -101,8 +107,10 @@ class TenantResolverTest {
 
     when(folioExecutionContext.getUserId()).thenReturn(userId);
     when(folioExecutionContext.getTenantId()).thenReturn(currentTenant);
-    when(userClient.getUserById(userId.toString())).thenReturn(User.builder().id(userId.toString()).build());
-    when(consortiaService.getAffiliatedTenants(currentTenant, userId.toString())).thenReturn(affiliatedTenants);
+    when(userClient.getUserById(userId.toString())).thenReturn(User.builder().id(userId.toString())
+            .build());
+    when(consortiaService.getAffiliatedTenants(currentTenant, userId.toString()))
+            .thenReturn(affiliatedTenants);
 
     Executable action = () -> tenantResolver.checkAffiliatedPermittedTenantIds(
             entityType,
@@ -116,52 +124,69 @@ class TenantResolverTest {
 
   @ParameterizedTest
   @MethodSource("validTenantScenarios")
-  void returnsAffiliatedAndPermittedTenantsWhenValid(EntityType entityType, String identifierType, Set<String> tenantIds, Set<String> expectedTenants) {
+  void returnsAffiliatedAndPermittedTenantsWhenValid(
+          EntityType entityType, String identifierType, Set<String> tenantIds,
+          Set<String> expectedTenants) {
     var itemIdentifier = new ItemIdentifier().withItemId("item123");
     var jobExecution = mock(JobExecution.class, RETURNS_DEEP_STUBS);
     var userId = UUID.randomUUID();
     var currentTenant = "tenant1";
     when(folioExecutionContext.getUserId()).thenReturn(userId);
     when(folioExecutionContext.getTenantId()).thenReturn(currentTenant);
-    when(jobExecution.getJobParameters().getString(BULK_OPERATION_ID)).thenReturn(UUID.randomUUID().toString());
-    when(consortiaService.getAffiliatedTenants(anyString(), anyString())).thenReturn(List.of("tenant1", "tenant2"));
-    when(readPermissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(entityType))).thenReturn(true);
+    when(jobExecution.getJobParameters().getString(BULK_OPERATION_ID))
+            .thenReturn(UUID.randomUUID().toString());
+    when(consortiaService.getAffiliatedTenants(anyString(), anyString()))
+            .thenReturn(List.of("tenant1", "tenant2"));
+    when(readPermissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(entityType)))
+            .thenReturn(true);
 
-    var result = tenantResolver.getAffiliatedPermittedTenantIds(entityType, jobExecution, identifierType, tenantIds, itemIdentifier);
+    var result = tenantResolver.getAffiliatedPermittedTenantIds(
+            entityType, jobExecution, identifierType, tenantIds, itemIdentifier);
 
     assertThat(result).isEqualTo(expectedTenants);
   }
 
   @ParameterizedTest
   @MethodSource("invalidTenantScenarios")
-  void savesErrorWhenTenantNotAffiliatedOrPermissionMissing(EntityType entityType, String identifierType, Set<String> tenantIds, String expectedErrorMessage) {
+  void savesErrorWhenTenantNotAffiliatedOrPermissionMissing(
+          EntityType entityType, String identifierType, Set<String> tenantIds,
+          String expectedErrorMessage) {
     var itemIdentifier = new ItemIdentifier().withItemId("item123");
     var jobExecution = mock(JobExecution.class, RETURNS_DEEP_STUBS);
     var userId = UUID.randomUUID();
     var currentTenant = "tenant1";
     when(folioExecutionContext.getUserId()).thenReturn(userId);
     when(folioExecutionContext.getTenantId()).thenReturn(currentTenant);
-    when(jobExecution.getJobParameters().getString(BULK_OPERATION_ID)).thenReturn(UUID.randomUUID().toString());
-    when(consortiaService.getAffiliatedTenants(anyString(), anyString())).thenReturn(List.of("tenant1"));
+    when(jobExecution.getJobParameters().getString(BULK_OPERATION_ID)).thenReturn(UUID.randomUUID()
+            .toString());
+    when(consortiaService.getAffiliatedTenants(anyString(), anyString()))
+            .thenReturn(List.of("tenant1"));
     when(userClient.getUserById(anyString())).thenReturn(new User().withUsername("testuser"));
 
-    var result = tenantResolver.getAffiliatedPermittedTenantIds(entityType, jobExecution, identifierType, tenantIds, itemIdentifier);
+    var result = tenantResolver.getAffiliatedPermittedTenantIds(entityType, jobExecution,
+            identifierType, tenantIds, itemIdentifier);
 
-    verify(errorService, times(tenantIds.size())).saveError(any(), eq("item123"), eq(expectedErrorMessage), eq(org.folio.bulkops.domain.dto.ErrorType.ERROR));
+    verify(errorService, times(tenantIds.size())).saveError(any(), eq("item123"),
+            eq(expectedErrorMessage), eq(org.folio.bulkops.domain.dto.ErrorType.ERROR));
     assertThat(result).isEmpty();
   }
 
   private static Stream<Arguments> validTenantScenarios() {
     return Stream.of(
-      Arguments.of(EntityType.ITEM, "ID", Set.of("tenant1", "tenant2"), Set.of("tenant1", "tenant2")),
+      Arguments.of(EntityType.ITEM, "ID", Set.of("tenant1", "tenant2"),
+              Set.of("tenant1", "tenant2")),
       Arguments.of(EntityType.HOLDINGS_RECORD, "ID", Set.of("tenant1"), Set.of("tenant1"))
     );
   }
 
   private static Stream<Arguments> invalidTenantScenarios() {
     return Stream.of(
-      Arguments.of(EntityType.ITEM, "ID", Set.of("tenant3"), "User testuser does not have required affiliation to view the item record - id=item123 on the tenant tenant3"),
-      Arguments.of(EntityType.HOLDINGS_RECORD, "ID", Set.of("tenant4"), "User testuser does not have required affiliation to view the holdings record - id=item123 on the tenant tenant4")
+      Arguments.of(EntityType.ITEM, "ID", Set.of("tenant3"),
+              "User testuser does not have required affiliation to view the item record - "
+                      + "id=item123 on the tenant tenant3"),
+      Arguments.of(EntityType.HOLDINGS_RECORD, "ID", Set.of("tenant4"),
+              "User testuser does not have required affiliation to view the holdings record - "
+                      + "id=item123 on the tenant tenant4")
     );
   }
 

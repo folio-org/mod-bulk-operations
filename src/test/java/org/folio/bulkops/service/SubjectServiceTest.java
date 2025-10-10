@@ -4,14 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
+import java.util.UUID;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.Subject;
 import org.folio.bulkops.exception.EntityFormatException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.util.UUID;
 
 class SubjectServiceTest  extends BaseTest {
 

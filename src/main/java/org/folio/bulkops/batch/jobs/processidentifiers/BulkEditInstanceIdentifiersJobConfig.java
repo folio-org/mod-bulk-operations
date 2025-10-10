@@ -11,9 +11,8 @@ import static org.folio.bulkops.util.Constants.BULK_EDIT_IDENTIFIERS;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.IDENTIFIERS_FILE_NAME;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
-
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
@@ -65,73 +64,116 @@ public class BulkEditInstanceIdentifiersJobConfig {
   private int numPartitions;
 
   @Bean
-  public Job bulkEditProcessInstanceIdentifiersJob(JobCompletionNotificationListener listener, Step instancePartitionStep, JobRepository jobRepository) {
-    return new JobBuilder(BULK_EDIT_IDENTIFIERS + HYPHEN + EntityType.INSTANCE, jobRepository)
-      .incrementer(new RunIdIncrementer())
-      .listener(listener)
-      .flow(instancePartitionStep)
-      .end()
-      .build();
+  public Job bulkEditProcessInstanceIdentifiersJob(
+      JobCompletionNotificationListener listener,
+      Step instancePartitionStep,
+      JobRepository jobRepository) {
+    return new JobBuilder(
+            BULK_EDIT_IDENTIFIERS + HYPHEN + EntityType.INSTANCE,
+            jobRepository)
+        .incrementer(new RunIdIncrementer())
+        .listener(listener)
+        .flow(instancePartitionStep)
+        .end()
+        .build();
   }
 
   @Bean
-  public Step instancePartitionStep(FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader,
-    CompositeItemWriter<List<ExtendedInstance>> compositeInstanceListWriter,
-    ListIdentifiersWriteListener<ExtendedInstance> listIdentifiersWriteListener,
-    JobRepository jobRepository, PlatformTransactionManager transactionManager,
-    @Qualifier("asyncTaskExecutorBulkEdit") TaskExecutor taskExecutor,
-    Partitioner bulkEditInstancePartitioner, BulkEditFileAssembler bulkEditFileAssembler) {
+  public Step instancePartitionStep(
+      FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader,
+      CompositeItemWriter<List<ExtendedInstance>> compositeInstanceListWriter,
+      ListIdentifiersWriteListener<ExtendedInstance> listIdentifiersWriteListener,
+      JobRepository jobRepository,
+      PlatformTransactionManager transactionManager,
+      @Qualifier("asyncTaskExecutorBulkEdit") TaskExecutor taskExecutor,
+      Partitioner bulkEditInstancePartitioner,
+      BulkEditFileAssembler bulkEditFileAssembler) {
+
     return new StepBuilder("instancePartitionStep", jobRepository)
-      .partitioner("bulkEditInstanceStep", bulkEditInstancePartitioner)
-      .gridSize(numPartitions)
-      .step(bulkEditInstanceStep(csvItemIdentifierReader, compositeInstanceListWriter, listIdentifiersWriteListener, jobRepository,
-        transactionManager))
-      .taskExecutor(taskExecutor)
-      .aggregator(bulkEditFileAssembler)
-      .build();
+        .partitioner("bulkEditInstanceStep", bulkEditInstancePartitioner)
+        .gridSize(numPartitions)
+        .step(
+            bulkEditInstanceStep(
+                csvItemIdentifierReader,
+                compositeInstanceListWriter,
+                listIdentifiersWriteListener,
+                jobRepository,
+                transactionManager))
+        .taskExecutor(taskExecutor)
+        .aggregator(bulkEditFileAssembler)
+        .build();
   }
 
   @Bean
   @StepScope
-  public Partitioner bulkEditInstancePartitioner(@Value("#{jobParameters['" + TEMP_LOCAL_FILE_PATH + "']}") String outputCsvJsonFilePath,
-                                                 @Value("#{jobParameters['" + TEMP_LOCAL_MARC_PATH + "']}") String outputMarcName,
-                                                 @Value("#{jobParameters['" + IDENTIFIERS_FILE_NAME + "']}") String uploadedFileName) {
-    return new BulkEditPartitioner(outputCsvJsonFilePath, outputCsvJsonFilePath, outputMarcName, remoteFileSystemClient.getNumOfLines(uploadedFileName));
+  public Partitioner bulkEditInstancePartitioner(
+      @Value("#{jobParameters['" + TEMP_LOCAL_FILE_PATH + "']}") String outputCsvJsonFilePath,
+      @Value("#{jobParameters['" + TEMP_LOCAL_MARC_PATH + "']}") String outputMarcName,
+      @Value("#{jobParameters['" + IDENTIFIERS_FILE_NAME + "']}") String uploadedFileName) {
+
+    var numOfLines = remoteFileSystemClient.getNumOfLines(uploadedFileName);
+    return new BulkEditPartitioner(
+        outputCsvJsonFilePath,
+        outputCsvJsonFilePath,
+        outputMarcName,
+        numOfLines);
   }
 
   @Bean
-  public Step bulkEditInstanceStep(FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader,
-    CompositeItemWriter<List<ExtendedInstance>> compositeInstanceListWriter,
-    ListIdentifiersWriteListener<ExtendedInstance> listIdentifiersWriteListener,
-    JobRepository jobRepository, PlatformTransactionManager transactionManager) {
+  public Step bulkEditInstanceStep(
+      FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader,
+      CompositeItemWriter<List<ExtendedInstance>> compositeInstanceListWriter,
+      ListIdentifiersWriteListener<ExtendedInstance> listIdentifiersWriteListener,
+      JobRepository jobRepository,
+      PlatformTransactionManager transactionManager) {
+
     return new StepBuilder("bulkEditInstanceStep", jobRepository)
-      .<ItemIdentifier, List<ExtendedInstance>> chunk(chunkSize, transactionManager)
-      .reader(csvItemIdentifierReader)
-      .processor(bulkEditInstanceProcessor)
-      .faultTolerant()
-      .skipLimit(1_000_000)
-      .processorNonTransactional() // Required to avoid repeating BulkEditItemProcessor#process after skip.
-      .skip(BulkEditException.class)
-      .listener(bulkEditSkipListener)
-      .writer(compositeInstanceListWriter)
-      .listener(listIdentifiersWriteListener)
-      .build();
+        .<ItemIdentifier, List<ExtendedInstance>>chunk(
+            chunkSize,
+            transactionManager)
+        .reader(csvItemIdentifierReader)
+        .processor(bulkEditInstanceProcessor)
+        .faultTolerant()
+        .skipLimit(1_000_000)
+        // Required to avoid repeating BulkEditItemProcessor#process after skip.
+        .processorNonTransactional()
+        .skip(BulkEditException.class)
+        .listener(bulkEditSkipListener)
+        .writer(compositeInstanceListWriter)
+        .listener(listIdentifiersWriteListener)
+        .build();
   }
 
   @Bean
   @StepScope
   @SneakyThrows
   public CompositeItemWriter<List<ExtendedInstance>> compositeInstanceListWriter(
-    @Value("#{stepExecutionContext['" + TEMP_OUTPUT_CSV_PATH + "']}") String csvPath,
-    @Value("#{stepExecutionContext['" + TEMP_OUTPUT_JSON_PATH + "']}") String jsonPath,
-    @Value("#{stepExecutionContext['" + TEMP_OUTPUT_MARC_PATH + "']}") String marcPath,
-    @Value("#{jobParameters['" + BULK_OPERATION_ID + "']}") String bulkOperationId,
-    @Value("#{jobParameters['" + IDENTIFIER_TYPE + "']}") String identifierType) {
+      @Value("#{stepExecutionContext['" + TEMP_OUTPUT_CSV_PATH + "']}") String csvPath,
+      @Value("#{stepExecutionContext['" + TEMP_OUTPUT_JSON_PATH + "']}") String jsonPath,
+      @Value("#{stepExecutionContext['" + TEMP_OUTPUT_MARC_PATH + "']}") String marcPath,
+      @Value("#{jobParameters['" + BULK_OPERATION_ID + "']}") String bulkOperationId,
+      @Value("#{jobParameters['" + IDENTIFIER_TYPE + "']}") String identifierType) {
+
+    var csvWriter = new CsvListItemWriter<>(
+        csvPath,
+        ExtendedInstance.class,
+        bulkOperationId,
+        identifierType);
+
+    var jsonWriter = new JsonListFileWriter<ExtendedInstance>(
+        new FileSystemResource(jsonPath));
+
+    var marcWriter = new MarcAsListStringsWriter<ExtendedInstance>(
+        marcPath, srsClient, jsonToMarcConverter);
+
+    List<org.springframework.batch.item.ItemWriter<? super List<ExtendedInstance>>>
+        delegates = new ArrayList<>();
+    delegates.add(csvWriter);
+    delegates.add(jsonWriter);
+    delegates.add(marcWriter);
+
     var writer = new CompositeItemWriter<List<ExtendedInstance>>();
-    writer.setDelegates(Arrays.asList(
-      new CsvListItemWriter<>(csvPath, ExtendedInstance.class, bulkOperationId, identifierType),
-      new JsonListFileWriter<>(new FileSystemResource(jsonPath)),
-      new MarcAsListStringsWriter<>(marcPath, srsClient, jsonToMarcConverter)));
+    writer.setDelegates(delegates);
     return writer;
   }
 }

@@ -15,7 +15,8 @@ public interface InstanceNoteTypesClient {
   InstanceNoteType getNoteTypeById(@PathVariable String id);
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  InstanceNoteTypeCollection getNoteTypesByQuery(@RequestParam String query, @RequestParam("limit") int limit);
+  InstanceNoteTypeCollection getNoteTypesByQuery(@RequestParam String query,
+                                                 @RequestParam("limit") int limit);
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   InstanceNoteTypeCollection getInstanceNoteTypes(@RequestParam("limit") int limit);

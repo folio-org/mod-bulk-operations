@@ -1,8 +1,9 @@
 package org.folio.bulkops.processor.folio;
 
+import jakarta.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
-
+import lombok.AllArgsConstructor;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
@@ -10,9 +11,6 @@ import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.processor.FolioDataProcessor;
 import org.springframework.stereotype.Service;
-
-import jakarta.annotation.PostConstruct;
-import lombok.AllArgsConstructor;
 
 @Service
 @AllArgsConstructor
@@ -24,7 +22,8 @@ public class DataProcessorFactory {
   private FolioDataProcessor<ExtendedInstance> instanceDataProcessor;
 
   private List<FolioDataProcessor<? extends BulkOperationsEntity>> services;
-  private Map<Class<? extends BulkOperationsEntity>, FolioDataProcessor<? extends BulkOperationsEntity>> pool;
+  private Map<Class<? extends BulkOperationsEntity>, FolioDataProcessor<?
+          extends BulkOperationsEntity>> pool;
 
   @PostConstruct
   private void initPostConstruct() {
@@ -33,7 +32,8 @@ public class DataProcessorFactory {
     }
   }
 
-  public <T extends BulkOperationsEntity> FolioDataProcessor<T> getProcessorFromFactory(Class<? extends BulkOperationsEntity> clazz) {
+  public <T extends BulkOperationsEntity> FolioDataProcessor<T> getProcessorFromFactory(
+          Class<? extends BulkOperationsEntity> clazz) {
     return (FolioDataProcessor<T>) pool.get(clazz);
   }
 }

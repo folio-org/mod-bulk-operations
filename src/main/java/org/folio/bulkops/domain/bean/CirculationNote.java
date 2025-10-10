@@ -1,13 +1,10 @@
 package org.folio.bulkops.domain.bean;
 
-import java.util.Date;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
-
+import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +25,7 @@ public class CirculationNote {
 
     OUT("Check out");
 
-    private String value;
+    private final String value;
 
     NoteTypeEnum(String value) {
       this.value = value;
@@ -68,8 +65,6 @@ public class CirculationNote {
   private Source source;
 
   @JsonProperty("date")
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
-  private Date date;
-
+  private String date;
 }
 

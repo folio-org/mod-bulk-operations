@@ -3,9 +3,16 @@ package org.folio.bulkops.batch;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.bean.JobParameterNames.BULK_OPERATION_ID;
 import static org.folio.bulkops.util.Constants.NUMBER_OF_PROCESSED_IDENTIFIERS;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.isNull;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.util.ReflectionTestUtils.setField;
 
+import java.util.Optional;
+import java.util.UUID;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.BulkEditException;
@@ -13,13 +20,12 @@ import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.ErrorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.item.ExecutionContext;
-
-import java.util.Optional;
-import java.util.UUID;
 
 class BulkEditSkipListenerTest {
 
@@ -36,7 +42,7 @@ class BulkEditSkipListenerTest {
     bulkOperationId = UUID.randomUUID();
     var jobParametersBuilder = new JobParametersBuilder();
     jobParametersBuilder.addString(BULK_OPERATION_ID, bulkOperationId.toString());
-    jobExecution = new JobExecution(1L,jobParametersBuilder.toJobParameters());
+    jobExecution = new JobExecution(1L, jobParametersBuilder.toJobParameters());
     setField(skipListener, "jobExecution", jobExecution);
   }
 
@@ -51,13 +57,12 @@ class BulkEditSkipListenerTest {
     skipListener.onSkipInProcess(identifier, exception);
 
     verify(errorService).saveError(eq(bulkOperationId), eq("item-1"), eq("error"), isNull());
-    assertThat(jobExecution.getExecutionContext().getInt(NUMBER_OF_PROCESSED_IDENTIFIERS)).isEqualTo(1);
+    assertThat(jobExecution.getExecutionContext().getInt(NUMBER_OF_PROCESSED_IDENTIFIERS))
+            .isEqualTo(1);
   }
 
   @Test
   void onSkipInProcess_shouldIncrementProcessedIfAlreadyPresent() {
-    ItemIdentifier identifier = new ItemIdentifier().withItemId("item-2");
-    BulkEditException exception = new BulkEditException("err", null);
     BulkOperation bulkOperation = new BulkOperation();
     bulkOperation.setId(bulkOperationId);
 
@@ -65,6 +70,9 @@ class BulkEditSkipListenerTest {
 
     ExecutionContext context = jobExecution.getExecutionContext();
     context.putInt(NUMBER_OF_PROCESSED_IDENTIFIERS, 5);
+
+    ItemIdentifier identifier = new ItemIdentifier().withItemId("item-2");
+    BulkEditException exception = new BulkEditException("err", null);
 
     skipListener.onSkipInProcess(identifier, exception);
 
@@ -81,6 +89,7 @@ class BulkEditSkipListenerTest {
     skipListener.onSkipInProcess(identifier, exception);
 
     verify(errorService, never()).saveError(any(), any(), any(), any());
-    assertThat(jobExecution.getExecutionContext().getInt(NUMBER_OF_PROCESSED_IDENTIFIERS)).isEqualTo(1);
+    assertThat(jobExecution.getExecutionContext().getInt(NUMBER_OF_PROCESSED_IDENTIFIERS))
+            .isEqualTo(1);
   }
 }

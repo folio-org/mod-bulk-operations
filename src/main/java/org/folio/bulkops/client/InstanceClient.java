@@ -22,7 +22,8 @@ public interface InstanceClient {
   BriefInstanceCollection getByQuery(@RequestParam String query);
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  InstanceCollection getInstanceByQuery(@RequestParam("query") String query, @RequestParam long limit);
+  InstanceCollection getInstanceByQuery(@RequestParam("query") String query,
+                                        @RequestParam long limit);
 
   @GetMapping(value = "/{instanceId}", produces = MediaType.APPLICATION_JSON_VALUE)
   JsonNode getInstanceJsonById(@PathVariable String instanceId);

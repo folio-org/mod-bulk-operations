@@ -2,8 +2,8 @@ package org.folio.bulkops.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_CLASSIFICATION;
-import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_ELECTRONIC_ACCESS;
+import static org.folio.bulkops.domain.bean.Instance.INSTANCE_PUBLICATION;
 import static org.folio.bulkops.domain.bean.Instance.INSTANCE_SUBJECT;
 import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
 import static org.folio.bulkops.util.Constants.NON_PRINTING_DELIMITER;
@@ -11,7 +11,6 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.UUID;
-
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.SubjectSource;
 import org.folio.bulkops.domain.bean.SubjectSourceCollection;
@@ -40,13 +39,15 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     var dataField = new DataFieldImpl("856", '4', '2');
     dataField.addSubfield(new SubfieldImpl('u', "url"));
     dataField.addSubfield(new SubfieldImpl('y', "text"));
-    dataField.addSubfield(new SubfieldImpl('3', "materials"));
+    dataField.addSubfield(new SubfieldImpl('3', "material"));
     dataField.addSubfield(new SubfieldImpl('z', "public note"));
     marcRecord.addVariableField(dataField);
-    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_ELECTRONIC_ACCESS), true);
+    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord,
+            List.of(INSTANCE_ELECTRONIC_ACCESS), true);
 
-    assertThat(rowData.getFirst()).isEqualTo("URL relationship;URI;Link text;Materials specified;URL public note\n" +
-      "Related resource;url;text;materials;public note");
+    assertThat(rowData.getFirst()).isEqualTo(
+            "URL relationship;URI;Link text;Material specified;URL public note\n"
+                    + "Related resource;url;text;material;public note");
   }
 
   @Test
@@ -61,19 +62,24 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     dataField.addSubfield(new SubfieldImpl('u', "url"));
     dataField.addSubfield(new SubfieldImpl('y', "text"));
     dataField.addSubfield(new SubfieldImpl('y', "text2"));
-    dataField.addSubfield(new SubfieldImpl('3', "materials"));
+    dataField.addSubfield(new SubfieldImpl('3', "material"));
     dataField.addSubfield(new SubfieldImpl('z', "public note"));
     dataField.addSubfield(new SubfieldImpl('z', "public note2"));
     marcRecord.addVariableField(dataField);
-    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_ELECTRONIC_ACCESS), true);
+    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord,
+            List.of(INSTANCE_ELECTRONIC_ACCESS), true);
 
-    assertThat(rowData.getFirst()).isEqualTo("URL relationship;URI;Link text;Materials specified;URL public note\n" +
-      "Related resource;url;text text2;materials;public note public note2");
+    assertThat(rowData.getFirst()).isEqualTo(
+            "URL relationship;URI;Link text;Material specified;URL public note\n"
+                    + "Related resource;url;text text2;material;public note public note2");
 
-    rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_ELECTRONIC_ACCESS), false);
+    rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord,
+            List.of(INSTANCE_ELECTRONIC_ACCESS), false);
 
-    assertThat(rowData.getFirst()).isEqualTo("Related resource%s;url%s;text text2%s;materials%s;public note public note2"
-      .formatted(NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER));
+    assertThat(rowData.getFirst()).isEqualTo(
+            "Related resource%s;url%s;text text2%s;material%s;public note public note2"
+                    .formatted(NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER,
+                            NON_PRINTING_DELIMITER, NON_PRINTING_DELIMITER));
   }
 
   @Test
@@ -87,17 +93,21 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     var dataField = new DataFieldImpl("856", '4', '2');
     dataField.addSubfield(new SubfieldImpl('u', ""));
     dataField.addSubfield(new SubfieldImpl('y', "text"));
-    dataField.addSubfield(new SubfieldImpl('3', "materials"));
+    dataField.addSubfield(new SubfieldImpl('3', "material"));
     dataField.addSubfield(new SubfieldImpl('z', "public note"));
     marcRecord.addVariableField(dataField);
-    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_ELECTRONIC_ACCESS), true);
+    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord,
+            List.of(INSTANCE_ELECTRONIC_ACCESS), true);
 
-    assertThat(rowData.getFirst()).isEqualTo(("URL relationship;URI;Link text;Materials specified;URL public note\n" +
-      "Related resource;-;text;materials;public note"));
+    assertThat(rowData.getFirst()).isEqualTo((
+            "URL relationship;URI;Link text;Material specified;URL public note\n"
+                    + "Related resource;-;text;material;public note"));
 
-    rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_ELECTRONIC_ACCESS), false);
+    rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord,
+            List.of(INSTANCE_ELECTRONIC_ACCESS), false);
 
-    assertThat(rowData.getFirst()).isEqualTo(("Related resource\u001f;-\u001f;text\u001f;materials\u001f;public note"));
+    assertThat(rowData.getFirst()).isEqualTo((
+            "Related resource\u001f;-\u001f;text\u001f;material\u001f;public note"));
   }
 
   @Test
@@ -114,14 +124,17 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     dataField.addSubfield(new SubfieldImpl('c', "subject c"));
     dataField.addSubfield(new SubfieldImpl('d', "subject d"));
     marcRecord.addVariableField(dataField);
-    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_SUBJECT), true);
+    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_SUBJECT),
+            true);
 
-    assertThat(rowData.getFirst()).isEqualTo(("Subject headings;Subject source;Subject type\n" +
-      "text subject c subject d;Medical Subject Headings;Personal name"));
+    assertThat(rowData.getFirst()).isEqualTo(("Subject headings;Subject source;Subject type\n"
+            + "text subject c subject d;Medical Subject Headings;Personal name"));
 
-    rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_SUBJECT), false);
+    rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_SUBJECT),
+            false);
 
-    assertThat(rowData.getFirst()).isEqualTo(("text subject c subject d\u001f;Medical Subject Headings\u001f;Personal name"));
+    assertThat(rowData.getFirst()).isEqualTo((
+            "text subject c subject d\u001f;Medical Subject Headings\u001f;Personal name"));
   }
 
   @Test
@@ -228,31 +241,40 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     dataField.addSubfield(new SubfieldImpl('2', "found"));
     marcRecord.addVariableField(dataField);
 
-    when(subjectSourcesClient.getByQuery("code==codeFound")).thenReturn(new SubjectSourceCollection()
-            .withSubjectSources(List.of(new SubjectSource().withId(UUID.randomUUID().toString()).withName("source1"))));
+    when(subjectSourcesClient.getByQuery("code==codeFound"))
+            .thenReturn(new SubjectSourceCollection()
+            .withSubjectSources(List.of(new SubjectSource()
+                    .withId(UUID.randomUUID().toString()).withName("source1"))));
     when(subjectSourcesClient.getByQuery("code==found")).thenReturn(new SubjectSourceCollection()
-            .withSubjectSources(List.of(new SubjectSource().withId(UUID.randomUUID().toString()).withName("found"))));
-    when(subjectSourcesClient.getByQuery("code==not found")).thenReturn(new SubjectSourceCollection().withSubjectSources(List.of()));
-    when(subjectSourcesClient.getByQuery("code==text")).thenReturn(new SubjectSourceCollection().withSubjectSources(List.of()));
-    when(subjectSourcesClient.getByQuery("code==subject 2")).thenReturn(new SubjectSourceCollection().withSubjectSources(List.of()));
+            .withSubjectSources(List.of(new SubjectSource()
+                    .withId(UUID.randomUUID().toString()).withName("found"))));
+    when(subjectSourcesClient.getByQuery("code==not found"))
+            .thenReturn(new SubjectSourceCollection().withSubjectSources(List.of()));
+    when(subjectSourcesClient.getByQuery("code==text"))
+            .thenReturn(new SubjectSourceCollection().withSubjectSources(List.of()));
+    when(subjectSourcesClient.getByQuery("code==subject 2"))
+            .thenReturn(new SubjectSourceCollection().withSubjectSources(List.of()));
 
-    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_SUBJECT), true);
+    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_SUBJECT),
+            true);
 
-    var expectedRowData = "Subject headings;Subject source;Subject type\n" +
-      "a 600 b text subject c subject d;Medical Subject Headings;Personal name | " +
-      "text subject c subject c 2 subject d;National Agriculture Library subject authority file;Corporate name | " +
-      "611 a text subject c subject d;Medical Subject Headings;Meeting name | " +
-      "text subject c subject d;Canadian Subject Headings;Uniform title | " +
-      "text subject c subject d;Medical Subject Headings;Named event | " +
-      "subject c subject d;-;Chronological term | " +
-      "text subject c subject d;-;Topical term | " +
-      "text subject c subject d;Medical Subject Headings;Geographic name | " +
-      "a text subject c subject d;Library of Congress Children’s and Young Adults' Subject Headings;Geographic name | " +
-      "text subject c subject d;-;Genre/Form |" +
-      " subject c subject d;source1;Chronological term |" +
-      " subject c subject d;-;Chronological term |" +
-      " text1;-;Topical term |" +
-      " text2;found;Topical term";
+    var expectedRowData = "Subject headings;Subject source;Subject type\n"
+            + "a 600 b text subject c subject d;Medical Subject Headings;Personal name | "
+            + "text subject c subject c 2 subject d;National Agriculture Library subject "
+            + "authority file;Corporate name | "
+            + "611 a text subject c subject d;Medical Subject Headings;Meeting name | "
+            + "text subject c subject d;Canadian Subject Headings;Uniform title | "
+            + "text subject c subject d;Medical Subject Headings;Named event | "
+            + "subject c subject d;-;Chronological term | "
+            + "text subject c subject d;-;Topical term | "
+            + "text subject c subject d;Medical Subject Headings;Geographic name | "
+            + "a text subject c subject d;Library of Congress Children’s and Young Adults' "
+            + "Subject Headings;Geographic name | "
+            + "text subject c subject d;-;Genre/Form |"
+            + " subject c subject d;source1;Chronological term |"
+            + " subject c subject d;-;Chronological term |"
+            + " text1;-;Topical term |"
+            + " text2;found;Topical term";
 
     assertThat(rowData.getFirst()).isEqualTo(expectedRowData);
   }
@@ -297,11 +319,16 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     dataField.addSubfield(new SubfieldImpl('b', "b 090"));
     marcRecord.addVariableField(dataField);
 
-    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_CLASSIFICATION), forCsv);
+    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord,
+            List.of(INSTANCE_CLASSIFICATION), forCsv);
 
-    var expectedCsvRowData = "Classification identifier type;Classification\n" +
-      "LC;a 050 b 050 | NLM;a 060 b 060 | UDC;a 080 b 080 | Dewey;a 082-1 | Dewey;a 082-2 b 082 | GDC;a 086 | GDC;z 086 | LC;a 090 b 090";
-    var expectedPreviewData = "LC\u001F;a 050 b 050\u001F|NLM\u001F;a 060 b 060\u001F|UDC\u001F;a 080 b 080\u001F|Dewey\u001F;a 082-1\u001F|Dewey\u001F;a 082-2 b 082\u001F|GDC\u001F;a 086\u001F|GDC\u001F;z 086\u001F|LC\u001F;a 090 b 090";
+    var expectedCsvRowData = "Classification identifier type;Classification\n"
+            + "LC;a 050 b 050 | NLM;a 060 b 060 | UDC;a 080 b 080 | Dewey;a 082-1 | "
+            + "Dewey;a 082-2 b 082 | GDC;a 086 | GDC;z 086 | LC;a 090 b 090";
+    var expectedPreviewData = "LC\u001F;a 050 b 050\u001F|NLM\u001F;a 060 b 060\u001F|"
+            + "UDC\u001F;a 080 b 080\u001F|Dewey\u001F;a 082-1\u001F|Dewey\u001F;"
+            + "a 082-2 b 082\u001F|GDC\u001F;a 086\u001F|GDC\u001F;z 086\u001F|LC\u001F;"
+            + "a 090 b 090";
 
     assertThat(rowData.getFirst()).isEqualTo(forCsv ? expectedCsvRowData : expectedPreviewData);
   }
@@ -320,9 +347,11 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     dataField.addSubfield(new SubfieldImpl('c', "2023"));
     marcRecord.addVariableField(dataField);
 
-    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_PUBLICATION), true);
+    var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord,
+            List.of(INSTANCE_PUBLICATION), true);
 
-    assertThat(rowData.getFirst()).isEqualTo("Publisher;Publisher role;Place of publication;Publication date\n" +
-      "Penguin Books;-;London;2023");
+    assertThat(rowData.getFirst()).isEqualTo(
+            "Publisher;Publisher role;Place of publication;Publication date\n"
+                    + "Penguin Books;-;London;2023");
   }
 }

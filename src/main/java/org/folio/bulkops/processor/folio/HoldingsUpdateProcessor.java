@@ -1,6 +1,5 @@
 package org.folio.bulkops.processor.folio;
 
-import static java.lang.Boolean.TRUE;
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.String.format;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
@@ -11,6 +10,9 @@ import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextFor
 import static org.folio.bulkops.util.RuleUtils.fetchParameters;
 import static org.folio.bulkops.util.RuleUtils.findRuleByOption;
 
+import java.util.Collections;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
@@ -30,16 +32,15 @@ import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.stereotype.Component;
 
-import lombok.RequiredArgsConstructor;
-
-import java.util.Collections;
-import java.util.List;
-
 @Component
 @RequiredArgsConstructor
 public class HoldingsUpdateProcessor extends FolioAbstractUpdateProcessor<ExtendedHoldingsRecord> {
-  private static final String ERROR_MESSAGE_TEMPLATE = "No change in value for holdings record required, associated %s item(s) have been updated.";
-  private static final String NO_HOLDING_WRITE_PERMISSIONS_TEMPLATE = "User %s does not have required permission to edit the holdings record - %s=%s on the tenant ";
+  private static final String ERROR_MESSAGE_TEMPLATE =
+          "No change in value for holdings record required, "
+                  + "associated %s item(s) have been updated.";
+  private static final String NO_HOLDING_WRITE_PERMISSIONS_TEMPLATE =
+          "User %s does not have required permission to edit the holdings record - %s=%s "
+                  + "on the tenant ";
 
   private final HoldingsStorageClient holdingsStorageClient;
   private final ItemClient itemClient;
@@ -55,32 +56,36 @@ public class HoldingsUpdateProcessor extends FolioAbstractUpdateProcessor<Extend
     var holdingsRecord = extendedHoldingsRecord.getEntity();
     if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
       var tenantId = extendedHoldingsRecord.getTenantId();
-      permissionsValidator.checkIfBulkEditWritePermissionExists(tenantId, EntityType.HOLDINGS_RECORD,
-        NO_HOLDING_WRITE_PERMISSIONS_TEMPLATE + tenantId);
-      try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
+      permissionsValidator.checkIfBulkEditWritePermissionExists(tenantId,
+              EntityType.HOLDINGS_RECORD, NO_HOLDING_WRITE_PERMISSIONS_TEMPLATE + tenantId);
+      try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
+              folioModuleMetadata, folioExecutionContext))) {
         holdingsStorageClient.updateHoldingsRecord(
-          holdingsRecord.withInstanceHrid(null).withItemBarcode(null).withInstanceTitle(null),
-          holdingsRecord.getId()
+                holdingsRecord.withInstanceHrid(null).withItemBarcode(null).withInstanceTitle(null),
+                holdingsRecord.getId()
         );
       }
     } else {
-      permissionsValidator.checkIfBulkEditWritePermissionExists(folioExecutionContext.getTenantId(), EntityType.HOLDINGS_RECORD,
-        NO_HOLDING_WRITE_PERMISSIONS_TEMPLATE + folioExecutionContext.getTenantId());
+      permissionsValidator.checkIfBulkEditWritePermissionExists(
+              folioExecutionContext.getTenantId(), EntityType.HOLDINGS_RECORD,
+              NO_HOLDING_WRITE_PERMISSIONS_TEMPLATE + folioExecutionContext.getTenantId());
       holdingsStorageClient.updateHoldingsRecord(
-        holdingsRecord.withInstanceHrid(null).withItemBarcode(null).withInstanceTitle(null),
-        holdingsRecord.getId()
+              holdingsRecord.withInstanceHrid(null).withItemBarcode(null).withInstanceTitle(null),
+              holdingsRecord.getId()
       );
     }
   }
 
   @Override
-  public void updateAssociatedRecords(ExtendedHoldingsRecord extendedHoldingsRecord, BulkOperation operation, boolean notChanged) {
+  public void updateAssociatedRecords(ExtendedHoldingsRecord extendedHoldingsRecord,
+                                      BulkOperation operation, boolean notChanged) {
     var holdingsRecord = extendedHoldingsRecord.getEntity();
     var bulkOperationRules = ruleService.getRules(operation.getId());
     boolean itemsUpdated;
     if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
       var tenantId = extendedHoldingsRecord.getTenantId();
-      try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
+      try (var ignored = new FolioExecutionContextSetter(
+              prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
         itemsUpdated = findRuleByOption(bulkOperationRules, SUPPRESS_FROM_DISCOVERY)
           .filter(bulkOperationRule -> suppressItemsIfRequired(holdingsRecord, bulkOperationRule))
           .isPresent();
@@ -92,29 +97,29 @@ public class HoldingsUpdateProcessor extends FolioAbstractUpdateProcessor<Extend
     }
     if (notChanged) {
       var errorMessage = buildErrorMessage(itemsUpdated, holdingsRecord.getDiscoverySuppress());
-      errorService.saveError(operation.getId(), holdingsRecord.getIdentifier(operation.getIdentifierType()), errorMessage, ErrorType.WARNING);
+      errorService.saveError(operation.getId(), holdingsRecord.getIdentifier(
+              operation.getIdentifierType()), errorMessage, ErrorType.WARNING);
     }
   }
 
   private boolean suppressItemsIfRequired(HoldingsRecord holdingsRecord, BulkOperationRule rule) {
-    List<Item> itemsForUpdate = parseBoolean(fetchParameters(rule).get(APPLY_TO_ITEMS)) ?
-      itemClient.getByQuery(format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsRecord.getId()), Integer.MAX_VALUE)
+    List<Item> itemsForUpdate = parseBoolean(fetchParameters(rule).get(APPLY_TO_ITEMS))
+            ? itemClient.getByQuery(format(GET_ITEMS_BY_HOLDING_ID_QUERY, holdingsRecord.getId()),
+                    Integer.MAX_VALUE)
         .getItems().stream()
         .filter(item -> !holdingsRecord.getDiscoverySuppress().equals(item.getDiscoverySuppress()))
-        .toList() :
-      Collections.emptyList();
+        .toList() : Collections.emptyList();
     if (itemsForUpdate.isEmpty()) {
       return false;
     }
-    itemsForUpdate.forEach(item -> itemClient.updateItem(item.withDiscoverySuppress(holdingsRecord.getDiscoverySuppress()), item.getId()));
+    itemsForUpdate.forEach(item -> itemClient.updateItem(item.withDiscoverySuppress(
+            holdingsRecord.getDiscoverySuppress()), item.getId()));
     return true;
   }
 
   private String buildErrorMessage(boolean itemsUpdated, boolean newValue) {
-    var affectedState = TRUE.equals(newValue) ? "unsuppressed" : "suppressed";
-    return itemsUpdated ?
-      format(ERROR_MESSAGE_TEMPLATE, affectedState) :
-      MSG_NO_CHANGE_REQUIRED;
+    var affectedState = newValue ? "unsuppressed" : "suppressed";
+    return itemsUpdated ? format(ERROR_MESSAGE_TEMPLATE, affectedState) : MSG_NO_CHANGE_REQUIRED;
   }
 
   @Override

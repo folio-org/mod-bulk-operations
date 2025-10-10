@@ -30,7 +30,6 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.TEMPORARY_LOCATION;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 
@@ -39,8 +38,11 @@ public class UpdateOptionTypeToFieldResolver {
   private UpdateOptionTypeToFieldResolver() {
   }
 
-  public static Set<String> getFieldsByUpdateOptionTypes(List<UpdateOptionType> options, EntityType entity) {
-    return options.stream().map(option -> UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option, entity)).collect(Collectors.toSet());
+  public static Set<String> getFieldsByUpdateOptionTypes(List<UpdateOptionType> options,
+                                                         EntityType entity) {
+    return options.stream().map(
+            option -> UpdateOptionTypeToFieldResolver
+                    .getFieldByUpdateOptionType(option, entity)).collect(Collectors.toSet());
   }
 
   public static String getFieldByUpdateOptionType(UpdateOptionType type, EntityType entity) {

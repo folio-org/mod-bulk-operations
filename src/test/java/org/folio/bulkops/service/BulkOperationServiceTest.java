@@ -78,7 +78,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.folio.bulkops.BaseTest;
@@ -135,7 +134,7 @@ import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
-import org.folio.bulkops.util.CSVHelper;
+import org.folio.bulkops.util.CsvHelper;
 import org.folio.bulkops.util.MarcCsvHelper;
 import org.folio.s3.client.FolioS3Client;
 import org.folio.s3.client.RemoteStorageWriter;
@@ -225,56 +224,67 @@ class BulkOperationServiceTest extends BaseTest {
   @Test
   @SneakyThrows
   void shouldPopulateErrorToBulkOperationIfS3IssuesForUploadIdentifiersInApp() {
-    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
-    var jobId = UUID.randomUUID();
     var bulkOperationId = UUID.randomUUID();
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
+            .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
 
     when(remoteFileSystemClient.put(any(), any()))
-      .thenThrow(new S3ClientException("error"));
+            .thenThrow(new S3ClientException("error"));
 
-    when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX,ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE + " : error"))
-      .thenReturn("/linkToMatchingErrorsFile.csv");
-
+    when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_MATCHING_FILE_NAME_PREFIX,
+            ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE + " : error"))
+            .thenReturn("/linkToMatchingErrorsFile.csv");
+    var file = new MockMultipartFile("file", "barcodes.csv",
+            MediaType.TEXT_PLAIN_VALUE,
+            new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
+    var jobId = UUID.randomUUID();
     bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
 
     when(bulkOperationRepository.findById(bulkOperationId))
-      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringCsvFile("barcodes.csv").build()));
+            .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId)
+                    .dataExportJobId(jobId).status(OperationStatusType.NEW)
+                    .linkToTriggeringCsvFile("barcodes.csv").build()));
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(2)).save(operationCaptor.capture());
     var capturedBulkOperation = operationCaptor.getValue();
     assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, "error")));
-    assertThat(capturedBulkOperation.getLinkToMatchedRecordsErrorsCsvFile(), equalTo("/linkToMatchingErrorsFile.csv"));
+    assertThat(capturedBulkOperation.getErrorMessage(), equalTo(format(ERROR_MESSAGE_PATTERN,
+            ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, "error")));
+    assertThat(capturedBulkOperation.getLinkToMatchedRecordsErrorsCsvFile(),
+            equalTo("/linkToMatchingErrorsFile.csv"));
   }
 
   @Test
   @SneakyThrows
   void shouldUploadManualInstances() {
-    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/modified-user.csv").readAllBytes());
 
     var operationId = UUID.randomUUID();
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(BulkOperation.builder().id(operationId).build());
+            .thenReturn(BulkOperation.builder().id(operationId).build());
 
     when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(BulkOperation.builder().id(operationId).linkToTriggeringCsvFile("path/barcodes.csv").status(DATA_MODIFICATION).build()));
+            .thenReturn(Optional.of(BulkOperation.builder().id(operationId)
+                    .linkToTriggeringCsvFile("path/barcodes.csv").status(DATA_MODIFICATION)
+                    .build()));
 
-    var linkToPreviewFile = operationId + "/" + LocalDate.now() + "-Updates-Preview-CSV-barcodes.csv";
+    var linkToPreviewFile = operationId + "/" + LocalDate.now()
+            + "-Updates-Preview-CSV-barcodes.csv";
     when(remoteFileSystemClient.put(any(InputStream.class), eq(linkToPreviewFile)))
-      .thenReturn(linkToPreviewFile);
+            .thenReturn(linkToPreviewFile);
 
     when(remoteFileSystemClient.getNumOfLines(linkToPreviewFile))
-      .thenReturn(3);
-
-    bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, true, operationId, UUID.randomUUID(), file);
+            .thenReturn(3);
+    var file = new MockMultipartFile("file", "barcodes.csv",
+            MediaType.TEXT_PLAIN_VALUE,
+            new FileInputStream("src/test/resources/files/modified-user.csv").readAllBytes());
+    bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, true,
+            operationId, UUID.randomUUID(), file);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(1)).save(operationCaptor.capture());
-    var capture = operationCaptor.getAllValues().get(0);
+    var capture = operationCaptor.getAllValues().getFirst();
     assertEquals(DATA_MODIFICATION, capture.getStatus());
     assertEquals(ApproachType.MANUAL, capture.getApproach());
     assertEquals(2, capture.getTotalNumOfRecords());
@@ -285,126 +295,148 @@ class BulkOperationServiceTest extends BaseTest {
   @Test
   @SneakyThrows
   void shouldPopulateErrorToBulkOperationIfS3IssuesForUploadIdentifiersManual() {
-    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv").readAllBytes());
+
     var bulkOperationId = UUID.randomUUID();
     var jobId = UUID.randomUUID();
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
+            .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
     when(remoteFileSystemClient.put(any(), any()))
-      .thenThrow(new S3ClientException("error"));
+            .thenThrow(new S3ClientException("error"));
     when(bulkOperationRepository.findById(bulkOperationId))
-      .thenReturn(Optional.of(BulkOperation.builder().id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW).linkToTriggeringCsvFile("barcodes.csv").build()));
-
-    bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, true, bulkOperationId, null, file);
+            .thenReturn(Optional.of(BulkOperation.builder()
+                    .id(bulkOperationId).dataExportJobId(jobId).status(OperationStatusType.NEW)
+                    .linkToTriggeringCsvFile("barcodes.csv").build()));
+    var file = new MockMultipartFile("file", "barcodes.csv",
+            MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/barcodes.csv")
+            .readAllBytes());
+    bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, true, bulkOperationId,
+            null, file);
 
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, times(1)).save(operationCaptor.capture());
     var capturedBulkOperation = operationCaptor.getValue();
     assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-    assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, "error")));
+    assertThat(capturedBulkOperation.getErrorMessage(), equalTo(format(ERROR_MESSAGE_PATTERN,
+            ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE, "error")));
   }
 
   @Test
   @SneakyThrows
   void shouldThrowExceptionIfOperationIdIsNull() {
-    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, new FileInputStream("src/test/resources/files/modified-user.csv").readAllBytes());
+    var file = new MockMultipartFile("file", "barcodes.csv",
+            MediaType.TEXT_PLAIN_VALUE,
+            new FileInputStream("src/test/resources/files/modified-user.csv").readAllBytes());
     var bulkOperationId = UUID.randomUUID();
-    assertThrows(NotFoundException.class, () -> bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, true, null, bulkOperationId, file));
+    assertThrows(NotFoundException.class, () -> bulkOperationService.uploadCsvFile(
+            USER, IdentifierType.BARCODE, true, null, bulkOperationId, file));
   }
 
   @ParameterizedTest
   @EnumSource(value = ApproachType.class, names = {"IN_APP"}, mode = EnumSource.Mode.INCLUDE)
   @SneakyThrows
   void shouldConfirmChanges(ApproachType approach) {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var originalPatronGroupId = "3684a786-6671-4268-8ed0-9db82ebca60b";
       var newPatronGroupId = "56c86552-20ec-41d1-964a-5a2be46969e5";
       var pathToTriggering = "/some/path/identifiers.csv";
       var pathToOrigin = "path/origin.json";
-      var pathToModified = bulkOperationId + "/json/" + LocalDate.now() + "-Updates-Preview-identifiers.json";
+      var pathToModified = bulkOperationId + "/json/" + LocalDate.now()
+              + "-Updates-Preview-identifiers.json";
       var pathToOriginalCsv = bulkOperationId + "/origin.csv";
-      var pathToModifiedCsv = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-CSV-identifiers.csv";
+      var pathToModifiedCsv = bulkOperationId + "/" + LocalDate.now()
+              + "-Updates-Preview-CSV-identifiers.csv";
       var pathToUserJson = "src/test/resources/files/user.json";
 
       when(consortiaService.isTenantCentral(any())).thenReturn(false);
 
       when(bulkOperationRepository.findById(any(UUID.class)))
-        .thenReturn(Optional.of(BulkOperation.builder()
-          .id(bulkOperationId)
-          .status(DATA_MODIFICATION)
-          .entityType(EntityType.USER)
-          .identifierType(IdentifierType.BARCODE)
-          .linkToTriggeringCsvFile(pathToTriggering)
-          .linkToMatchedRecordsJsonFile(pathToOrigin)
-          .linkToModifiedRecordsJsonFile("existing.csv")
-          .linkToModifiedRecordsCsvFile("existing.json")
-          .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
-          .processedNumOfRecords(0)
-          .build()));
+              .thenReturn(Optional.of(BulkOperation.builder()
+                      .id(bulkOperationId)
+                      .status(DATA_MODIFICATION)
+                      .entityType(EntityType.USER)
+                      .identifierType(IdentifierType.BARCODE)
+                      .linkToTriggeringCsvFile(pathToTriggering)
+                      .linkToMatchedRecordsJsonFile(pathToOrigin)
+                      .linkToModifiedRecordsJsonFile("existing.csv")
+                      .linkToModifiedRecordsCsvFile("existing.json")
+                      .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
+                      .processedNumOfRecords(0)
+                      .build()));
 
       when(ruleService.getRules(bulkOperationId))
-        .thenReturn(new BulkOperationRuleCollection()
-          .bulkOperationRules(List.of(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-              .option(UpdateOptionType.PATRON_GROUP)
-              .actions(List.of(new Action()
-                .type(UpdateActionType.REPLACE_WITH)
-                .updated(newPatronGroupId))))))
-          .totalRecords(1));
+              .thenReturn(new BulkOperationRuleCollection()
+                      .bulkOperationRules(List.of(new BulkOperationRule()
+                              .ruleDetails(new RuleDetails()
+                                      .option(UpdateOptionType.PATRON_GROUP)
+                                      .actions(List.of(new Action()
+                                              .type(UpdateActionType.REPLACE_WITH)
+                                              .updated(newPatronGroupId))))))
+                      .totalRecords(1));
       when(ruleService.getMarcRules(bulkOperationId))
-        .thenReturn(new BulkOperationMarcRuleCollection()
-          .bulkOperationMarcRules(Collections.emptyList())
-          .totalRecords(0));
+              .thenReturn(new BulkOperationMarcRuleCollection()
+                      .bulkOperationMarcRules(Collections.emptyList())
+                      .totalRecords(0));
 
       when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
-        .thenReturn(BulkOperationDataProcessing.builder()
-          .bulkOperationId(bulkOperationId)
-          .processedNumOfRecords(0)
-          .build());
+              .thenReturn(BulkOperationDataProcessing.builder()
+                      .bulkOperationId(bulkOperationId)
+                      .processedNumOfRecords(0)
+                      .build());
 
       when(dataProcessingRepository.findAllByBulkOperationId(bulkOperationId))
-        .thenReturn(Collections.singletonList(BulkOperationDataProcessing.builder()
-          .bulkOperationId(bulkOperationId)
-          .status(StatusType.COMPLETED)
-          .processedNumOfRecords(1)
-          .build()));
+              .thenReturn(Collections.singletonList(BulkOperationDataProcessing.builder()
+                      .bulkOperationId(bulkOperationId)
+                      .status(StatusType.COMPLETED)
+                      .processedNumOfRecords(1)
+                      .build()));
 
       when(remoteFileSystemClient.get(pathToOrigin))
-        .thenReturn(new FileInputStream(pathToUserJson));
+              .thenReturn(new FileInputStream(pathToUserJson));
 
       when(remoteFileSystemClient.get(pathToModified))
-        .thenReturn(new FileInputStream(pathToUserJson));
+              .thenReturn(new FileInputStream(pathToUserJson));
 
       // 56c86552-20ec-41d1-964a-5a2be46969e5
-      when(groupClient.getGroupById(newPatronGroupId)).thenReturn(new UserGroup().withGroup("original"));
-      when(groupClient.getGroupById(originalPatronGroupId)).thenReturn(new UserGroup().withGroup("updated"));
+      when(groupClient.getGroupById(newPatronGroupId)).thenReturn(
+              new UserGroup().withGroup("original"));
+      when(groupClient.getGroupById(originalPatronGroupId)).thenReturn(
+              new UserGroup().withGroup("updated"));
 
-      when(remoteFileSystemClient.writer(pathToModified)).thenReturn(new RemoteStorageWriter(pathToModified, 8192, remoteFolioS3Client));
-      when(remoteFileSystemClient.writer(pathToModifiedCsv)).thenReturn(new RemoteStorageWriter(pathToModifiedCsv, 8192, remoteFolioS3Client));
+      when(remoteFileSystemClient.writer(pathToModified))
+              .thenReturn(new RemoteStorageWriter(pathToModified, 8192, remoteFolioS3Client));
+      when(remoteFileSystemClient.writer(pathToModifiedCsv))
+              .thenReturn(new RemoteStorageWriter(pathToModifiedCsv, 8192, remoteFolioS3Client));
 
-      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(approach).step(EDIT));
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(),
+              new BulkOperationStart().approach(approach).step(EDIT));
 
-      var expectedPathToModifiedCsvFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-CSV-identifiers.csv";
+      var expectedPathToModifiedCsvFile = bulkOperationId + "/"
+              + LocalDate.now() + "-Updates-Preview-CSV-identifiers.csv";
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       var pathCaptor = ArgumentCaptor.forClass(String.class);
-      await().untilAsserted(() -> verify(remoteFolioS3Client, times(2)).write(pathCaptor.capture(), streamCaptor.capture()));
+      await().untilAsserted(() -> verify(remoteFolioS3Client,
+              times(2)).write(pathCaptor.capture(), streamCaptor.capture()));
 
-      assertThat(new String(streamCaptor.getAllValues().get(0).readAllBytes()), containsString(newPatronGroupId));
+      assertThat(new String(streamCaptor.getAllValues().get(0).readAllBytes()),
+              containsString(newPatronGroupId));
       assertEquals(expectedPathToModifiedCsvFile, pathCaptor.getAllValues().get(1));
 
       var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
-      await().untilAsserted(() -> verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));
+      await().untilAsserted(() -> verify(dataProcessingRepository,
+              times(2)).save(dataProcessingCaptor.capture()));
       var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(1);
       assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(1));
       assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));
       assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      await().untilAsserted(() -> verify(bulkOperationRepository, times(5)).save(bulkOperationCaptor.capture()));
+      await().untilAsserted(() -> verify(bulkOperationRepository,
+              times(5)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
-      assertThat(capturedBulkOperation.getLinkToModifiedRecordsCsvFile(), equalTo(expectedPathToModifiedCsvFile));
+      assertThat(capturedBulkOperation.getLinkToModifiedRecordsCsvFile(),
+              equalTo(expectedPathToModifiedCsvFile));
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
     }
   }
@@ -412,77 +444,83 @@ class BulkOperationServiceTest extends BaseTest {
   @Test
   @SneakyThrows
   void shouldPopulateErrorToBulkOperationIfS3IssuesForConfirmChanges() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var newPatronGroupId = "56c86552-20ec-41d1-964a-5a2be46969e5";
       var pathToTriggering = "/some/path/identifiers.csv";
       var pathToOrigin = "path/origin.json";
-      var pathToModified = bulkOperationId + "/json/" + LocalDate.now() + "-Updates-Preview-identifiers.json";
+      var pathToModified = bulkOperationId + "/json/" + LocalDate.now()
+              + "-Updates-Preview-identifiers.json";
       var pathToOriginalCsv = bulkOperationId + "/origin.csv";
       var pathToUserJson = "src/test/resources/files/user.json";
 
       when(consortiaService.isTenantCentral(any())).thenReturn(false);
 
       when(bulkOperationRepository.findById(any(UUID.class)))
-        .thenReturn(Optional.of(BulkOperation.builder()
-          .id(bulkOperationId)
-          .status(DATA_MODIFICATION)
-          .entityType(EntityType.USER)
-          .identifierType(IdentifierType.BARCODE)
-          .linkToTriggeringCsvFile(pathToTriggering)
-          .linkToMatchedRecordsJsonFile(pathToOrigin)
-          .linkToModifiedRecordsJsonFile("existing.csv")
-          .linkToModifiedRecordsCsvFile("existing.json")
-          .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
-          .processedNumOfRecords(0)
-          .build()));
+              .thenReturn(Optional.of(BulkOperation.builder()
+                      .id(bulkOperationId)
+                      .status(DATA_MODIFICATION)
+                      .entityType(EntityType.USER)
+                      .identifierType(IdentifierType.BARCODE)
+                      .linkToTriggeringCsvFile(pathToTriggering)
+                      .linkToMatchedRecordsJsonFile(pathToOrigin)
+                      .linkToModifiedRecordsJsonFile("existing.csv")
+                      .linkToModifiedRecordsCsvFile("existing.json")
+                      .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
+                      .processedNumOfRecords(0)
+                      .build()));
 
       when(ruleService.getRules(bulkOperationId))
-        .thenReturn(new BulkOperationRuleCollection()
-          .bulkOperationRules(List.of(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-              .option(UpdateOptionType.PATRON_GROUP)
-              .actions(List.of(new Action()
-                .type(UpdateActionType.REPLACE_WITH)
-                .updated(newPatronGroupId))))))
-          .totalRecords(1));
+              .thenReturn(new BulkOperationRuleCollection()
+                      .bulkOperationRules(List.of(new BulkOperationRule()
+                              .ruleDetails(new RuleDetails()
+                                      .option(UpdateOptionType.PATRON_GROUP)
+                                      .actions(List.of(new Action()
+                                              .type(UpdateActionType.REPLACE_WITH)
+                                              .updated(newPatronGroupId))))))
+                      .totalRecords(1));
 
       when(ruleService.getMarcRules(bulkOperationId))
-        .thenReturn(new BulkOperationMarcRuleCollection()
-          .bulkOperationMarcRules(Collections.emptyList())
-          .totalRecords(0));
+              .thenReturn(new BulkOperationMarcRuleCollection()
+                      .bulkOperationMarcRules(Collections.emptyList())
+                      .totalRecords(0));
 
       when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
-        .thenReturn(BulkOperationDataProcessing.builder()
-          .bulkOperationId(bulkOperationId)
-          .processedNumOfRecords(0)
-          .build());
+              .thenReturn(BulkOperationDataProcessing.builder()
+                      .bulkOperationId(bulkOperationId)
+                      .processedNumOfRecords(0)
+                      .build());
 
       when(remoteFileSystemClient.get(pathToOrigin))
-        .thenThrow(new S3ClientException("error"));
+              .thenThrow(new S3ClientException("error"));
 
       when(remoteFileSystemClient.get(pathToModified))
-        .thenReturn(new FileInputStream(pathToUserJson));
+              .thenReturn(new FileInputStream(pathToUserJson));
 
-      when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_COMMITTING_FILE_NAME_PREFIX,ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE + " : error"))
-        .thenReturn("/linkToCommittingErrorsFile.csv");
+      when(errorService.uploadErrorsToStorage(bulkOperationId,
+              ERROR_COMMITTING_FILE_NAME_PREFIX, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE + " : error"))
+              .thenReturn("/linkToCommittingErrorsFile.csv");
 
-      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(),
+              new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      await().untilAsserted(() -> verify(bulkOperationRepository, times(5)).save(bulkOperationCaptor.capture()));
+      await().untilAsserted(() -> verify(bulkOperationRepository,
+              times(5)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
 
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, "error")));
-      assertThat(capturedBulkOperation.getLinkToCommittedRecordsErrorsCsvFile(), equalTo("/linkToCommittingErrorsFile.csv"));
+      assertThat(capturedBulkOperation.getErrorMessage(),
+              equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, "error")));
+      assertThat(capturedBulkOperation.getLinkToCommittedRecordsErrorsCsvFile(),
+              equalTo("/linkToCommittingErrorsFile.csv"));
     }
   }
 
   @Test
   @SneakyThrows
   void shouldConfirmChangesForInstanceMarc() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var marcAction = new MarcAction();
       marcAction.setName(UpdateActionType.CLEAR_FIELD);
@@ -499,88 +537,100 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToTriggering = "/some/path/instance_marc.csv";
       var pathToMatchedRecordsMarcFile = "/some/path/Marc-Records-instance_marc.mrc";
       var pathToMatchedJson = bulkOperationId + "/instance_marc.json";
-      var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
+      var pathToModifiedRecordsMarcFileName = "Updates-Preview-Marc-Records-instance_marc.mrc";
       var pathToInstanceMarc = "src/test/resources/files/instance_marc.mrc";
       var pathToInstanceJson = "src/test/resources/files/instance_marc.json";
       var pathToFilteredInstanceJson = "src/test/resources/files/instance_marc_filtered.json";
-      var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-MARC-instance_marc.mrc";
+      var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now()
+              + "-Updates-Preview-MARC-instance_marc.mrc";
       var expectedPathToTmpModifiedJson = TMP_MATCHED_JSON_PATH_TEMPLATE.formatted(bulkOperationId);
 
       when(bulkOperationRepository.findById(any(UUID.class)))
-        .thenReturn(Optional.of(BulkOperation.builder()
-          .id(bulkOperationId)
-          .status(DATA_MODIFICATION)
-          .entityType(EntityType.INSTANCE_MARC)
-          .identifierType(IdentifierType.ID)
-          .linkToTriggeringCsvFile(pathToTriggering)
-          .linkToMatchedRecordsJsonFile(pathToMatchedJson)
-          .linkToMatchedRecordsMarcFile(pathToMatchedRecordsMarcFile)
-          .linkToModifiedRecordsMarcFile(pathToModifiedRecordsMarcFileName)
-          .processedNumOfRecords(0)
-          .build()));
+              .thenReturn(Optional.of(BulkOperation.builder()
+                      .id(bulkOperationId)
+                      .status(DATA_MODIFICATION)
+                      .entityType(EntityType.INSTANCE_MARC)
+                      .identifierType(IdentifierType.ID)
+                      .linkToTriggeringCsvFile(pathToTriggering)
+                      .linkToMatchedRecordsJsonFile(pathToMatchedJson)
+                      .linkToMatchedRecordsMarcFile(pathToMatchedRecordsMarcFile)
+                      .linkToModifiedRecordsMarcFile(pathToModifiedRecordsMarcFileName)
+                      .processedNumOfRecords(0)
+                      .build()));
       when(ruleService.getMarcRules(bulkOperationId))
-        .thenReturn(bulkOperationMarcRuleCollection);
+              .thenReturn(bulkOperationMarcRuleCollection);
       when(ruleService.getRules(bulkOperationId))
-        .thenReturn(new BulkOperationRuleCollection()
-          .bulkOperationRules(Collections.emptyList())
-          .totalRecords(0));
+              .thenReturn(new BulkOperationRuleCollection()
+                      .bulkOperationRules(Collections.emptyList())
+                      .totalRecords(0));
       when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
-        .thenReturn(BulkOperationDataProcessing.builder()
-          .bulkOperationId(bulkOperationId)
-          .processedNumOfRecords(0)
-          .build());
+              .thenReturn(BulkOperationDataProcessing.builder()
+                      .bulkOperationId(bulkOperationId)
+                      .processedNumOfRecords(0)
+                      .build());
       when(dataProcessingRepository.findAllByBulkOperationId(bulkOperationId))
-        .thenReturn(Collections.singletonList(BulkOperationDataProcessing.builder()
-          .bulkOperationId(bulkOperationId)
-          .status(StatusType.COMPLETED)
-          .processedNumOfRecords(1)
-          .build()));
+              .thenReturn(Collections.singletonList(BulkOperationDataProcessing.builder()
+                      .bulkOperationId(bulkOperationId)
+                      .status(StatusType.COMPLETED)
+                      .processedNumOfRecords(1)
+                      .build()));
       when(remoteFileSystemClient.get(pathToMatchedRecordsMarcFile))
-        .thenReturn(new FileInputStream(pathToInstanceMarc));
+              .thenReturn(new FileInputStream(pathToInstanceMarc));
       when(remoteFileSystemClient.get(pathToMatchedJson))
-        .thenReturn(new FileInputStream(pathToInstanceJson))
-        .thenReturn(new FileInputStream(pathToFilteredInstanceJson));
+              .thenReturn(new FileInputStream(pathToInstanceJson))
+              .thenReturn(new FileInputStream(pathToFilteredInstanceJson));
       when(remoteFileSystemClient.get(expectedPathToTmpModifiedJson))
-        .thenReturn(new FileInputStream(pathToInstanceJson));
+              .thenReturn(new FileInputStream(pathToInstanceJson));
       when(remoteFileSystemClient.writer(anyString()))
-        .thenReturn(new StringWriter());
-      when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenReturn(new MarcRemoteStorageWriter(new RemoteStorageWriter(expectedPathToModifiedMarcFile, 8192, remoteFolioS3Client)));
+              .thenReturn(new StringWriter());
+      when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile))
+              .thenReturn(new MarcRemoteStorageWriter(
+                      new RemoteStorageWriter(expectedPathToModifiedMarcFile, 8192,
+                              remoteFolioS3Client)));
       when(marcCsvHelper.getModifiedDataForCsv(any(Record.class)))
-        .thenReturn(new String[]{"a", "b", "c"});
+              .thenReturn(new String[]{"a", "b", "c"});
 
-      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(),
+              new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
 
 
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       var pathCaptor = ArgumentCaptor.forClass(String.class);
-      await().untilAsserted(() -> verify(remoteFolioS3Client, times(1)).write(pathCaptor.capture(), streamCaptor.capture()));
+      await().untilAsserted(() -> verify(remoteFolioS3Client,
+              times(1)).write(pathCaptor.capture(), streamCaptor.capture()));
 
       var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
-      await().untilAsserted(() -> verify(dataProcessingRepository, times(4)).save(dataProcessingCaptor.capture()));
+      await().untilAsserted(() -> verify(dataProcessingRepository,
+              times(4)).save(dataProcessingCaptor.capture()));
       var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(2);
       assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(1));
       assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));
       assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      await().untilAsserted(() -> verify(bulkOperationRepository, times(6)).save(bulkOperationCaptor.capture()));
+      await().untilAsserted(() -> verify(bulkOperationRepository,
+              times(6)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
-      assertThat(capturedBulkOperation.getLinkToModifiedRecordsMarcFile(), equalTo(expectedPathToModifiedMarcFile));
+      assertThat(capturedBulkOperation.getLinkToModifiedRecordsMarcFile(),
+              equalTo(expectedPathToModifiedMarcFile));
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
 
       var identifierArgumentCaptor = ArgumentCaptor.forClass(String.class);
       var errorMessageArgumentCaptor = ArgumentCaptor.forClass(String.class);
-      await().untilAsserted(() -> verify(errorService).saveError(eq(bulkOperationId), identifierArgumentCaptor.capture(),
-        errorMessageArgumentCaptor.capture(), eq(ErrorType.ERROR)));
-      Assertions.assertThat(errorMessageArgumentCaptor.getValue()).isEqualTo(MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY.formatted("FOLIO"));
-      Assertions.assertThat(identifierArgumentCaptor.getValue()).isEqualTo("69640328-788e-43fc-9c3c-af39e243f3b7");
+      await().untilAsserted(() -> verify(errorService).saveError(eq(bulkOperationId),
+              identifierArgumentCaptor.capture(),
+              errorMessageArgumentCaptor.capture(), eq(ErrorType.ERROR)));
+      Assertions.assertThat(errorMessageArgumentCaptor.getValue())
+              .isEqualTo(MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY.formatted("FOLIO"));
+      Assertions.assertThat(identifierArgumentCaptor.getValue())
+              .isEqualTo("69640328-788e-43fc-9c3c-af39e243f3b7");
     }
   }
 
   @Test
   @SneakyThrows
   void shouldNotBeProcessedRecordsIfUploadedNotMarcAndSelectedMarcEdit() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var marcAction = new MarcAction();
       marcAction.setName(UpdateActionType.CLEAR_FIELD);
@@ -597,52 +647,58 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToTriggering = "/some/path/instance_marc.csv";
       String pathToMatchedRecordsMarcFile = null;
       var pathToMatchedJson = bulkOperationId + "/instance_marc.json";
-      var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
+      var pathToModifiedRecordsMarcFileName = "Updates-Preview-Marc-Records-instance_marc.mrc";
       var pathToInstanceMarc = "src/test/resources/files/instance_marc.mrc";
       var pathToInstanceJson = "src/test/resources/files/instance_marc.json";
-      var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-MARC-instance_marc.mrc";
+      var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now()
+              + "-Updates-Preview-MARC-instance_marc.mrc";
 
       when(bulkOperationRepository.findById(any(UUID.class)))
-        .thenReturn(Optional.of(BulkOperation.builder()
-          .id(bulkOperationId)
-          .status(DATA_MODIFICATION)
-          .entityType(EntityType.INSTANCE_MARC)
-          .identifierType(IdentifierType.ID)
-          .linkToTriggeringCsvFile(pathToTriggering)
-          .linkToMatchedRecordsJsonFile(pathToMatchedJson)
-          .linkToMatchedRecordsMarcFile(pathToMatchedRecordsMarcFile)
-          .linkToModifiedRecordsMarcFile(pathToModifiedRecordsMarcFileName)
-          .processedNumOfRecords(0)
-          .build()));
+              .thenReturn(Optional.of(BulkOperation.builder()
+                      .id(bulkOperationId)
+                      .status(DATA_MODIFICATION)
+                      .entityType(EntityType.INSTANCE_MARC)
+                      .identifierType(IdentifierType.ID)
+                      .linkToTriggeringCsvFile(pathToTriggering)
+                      .linkToMatchedRecordsJsonFile(pathToMatchedJson)
+                      .linkToMatchedRecordsMarcFile(pathToMatchedRecordsMarcFile)
+                      .linkToModifiedRecordsMarcFile(pathToModifiedRecordsMarcFileName)
+                      .processedNumOfRecords(0)
+                      .build()));
       when(ruleService.getMarcRules(bulkOperationId))
-        .thenReturn(bulkOperationMarcRuleCollection);
+              .thenReturn(bulkOperationMarcRuleCollection);
       when(ruleService.getRules(bulkOperationId))
-        .thenReturn(new BulkOperationRuleCollection()
-          .bulkOperationRules(Collections.emptyList())
-          .totalRecords(0));
+              .thenReturn(new BulkOperationRuleCollection()
+                      .bulkOperationRules(Collections.emptyList())
+                      .totalRecords(0));
       when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
-        .thenReturn(BulkOperationDataProcessing.builder()
-          .bulkOperationId(bulkOperationId)
-          .processedNumOfRecords(0)
-          .build());
+              .thenReturn(BulkOperationDataProcessing.builder()
+                      .bulkOperationId(bulkOperationId)
+                      .processedNumOfRecords(0)
+                      .build());
       when(dataProcessingRepository.findAllByBulkOperationId(bulkOperationId))
-        .thenReturn(Collections.singletonList(BulkOperationDataProcessing.builder()
-          .bulkOperationId(bulkOperationId)
-          .status(StatusType.COMPLETED)
-          .processedNumOfRecords(1)
-          .build()));
+              .thenReturn(Collections.singletonList(BulkOperationDataProcessing.builder()
+                      .bulkOperationId(bulkOperationId)
+                      .status(StatusType.COMPLETED)
+                      .processedNumOfRecords(1)
+                      .build()));
       when(remoteFileSystemClient.get(pathToMatchedRecordsMarcFile))
-        .thenReturn(new FileInputStream(pathToInstanceMarc));
+              .thenReturn(new FileInputStream(pathToInstanceMarc));
       when(remoteFileSystemClient.get(pathToMatchedJson))
-        .thenReturn(new FileInputStream(pathToInstanceJson));
+              .thenReturn(new FileInputStream(pathToInstanceJson));
       when(remoteFileSystemClient.writer(anyString()))
-        .thenReturn(new StringWriter());
-      when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenReturn(new MarcRemoteStorageWriter(new RemoteStorageWriter(expectedPathToModifiedMarcFile, 8192, remoteFolioS3Client)));
+              .thenReturn(new StringWriter());
+      when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile))
+              .thenReturn(new MarcRemoteStorageWriter(
+                      new RemoteStorageWriter(expectedPathToModifiedMarcFile, 8192,
+                              remoteFolioS3Client)));
 
-      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(),
+              new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
 
       var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
-      await().untilAsserted(() -> verify(dataProcessingRepository, times(4)).save(dataProcessingCaptor.capture()));
+      await().untilAsserted(() -> verify(dataProcessingRepository,
+              times(4)).save(dataProcessingCaptor.capture()));
       var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(2);
       assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(0));
     }
@@ -650,8 +706,8 @@ class BulkOperationServiceTest extends BaseTest {
 
   @Test
   @SneakyThrows
-  void  shouldPopulateErrorToBulkOperationIfS3IssuesForConfirmChangesForInstanceMarc() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+  void shouldPopulateErrorToBulkOperationIfS3IssuesForConfirmChangesForInstanceMarc() {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var marcAction = new MarcAction();
       marcAction.setName(UpdateActionType.CLEAR_FIELD);
@@ -670,55 +726,62 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToMatchedRecordsJsonFile = "/some/path/Marc-Records-instance_marc.json";
       var pathToInstanceJson = "src/test/resources/files/instance_marc.json";
       var pathToOriginalCsv = bulkOperationId + "/origin.csv";
-      var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
-      var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-Marc-Records-instance_marc.mrc";
+      var pathToModifiedRecordsMarcFileName = "Updates-Preview-Marc-Records-instance_marc.mrc";
+      var expectedPathToModifiedMarcFile = bulkOperationId + "/" + LocalDate.now()
+              + "-Updates-Preview-Marc-Records-instance_marc.mrc";
 
       when(bulkOperationRepository.findById(any(UUID.class)))
-        .thenReturn(Optional.of(BulkOperation.builder()
-          .id(bulkOperationId)
-          .status(DATA_MODIFICATION)
-          .entityType(EntityType.INSTANCE_MARC)
-          .identifierType(IdentifierType.ID)
-          .linkToTriggeringCsvFile(pathToTriggering)
-          .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
-          .linkToMatchedRecordsJsonFile(pathToMatchedRecordsJsonFile)
-          .linkToMatchedRecordsMarcFile(pathToMatchedRecordsMarcFile)
-          .linkToModifiedRecordsMarcFile(pathToModifiedRecordsMarcFileName)
-          .processedNumOfRecords(0)
-          .build()));
+              .thenReturn(Optional.of(BulkOperation.builder()
+                      .id(bulkOperationId)
+                      .status(DATA_MODIFICATION)
+                      .entityType(EntityType.INSTANCE_MARC)
+                      .identifierType(IdentifierType.ID)
+                      .linkToTriggeringCsvFile(pathToTriggering)
+                      .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
+                      .linkToMatchedRecordsJsonFile(pathToMatchedRecordsJsonFile)
+                      .linkToMatchedRecordsMarcFile(pathToMatchedRecordsMarcFile)
+                      .linkToModifiedRecordsMarcFile(pathToModifiedRecordsMarcFileName)
+                      .processedNumOfRecords(0)
+                      .build()));
       when(ruleService.getMarcRules(bulkOperationId))
-        .thenReturn(bulkOperationMarcRuleCollection);
+              .thenReturn(bulkOperationMarcRuleCollection);
       when(ruleService.getRules(bulkOperationId))
-        .thenReturn(new BulkOperationRuleCollection()
-          .bulkOperationRules(Collections.emptyList())
-          .totalRecords(0));
+              .thenReturn(new BulkOperationRuleCollection()
+                      .bulkOperationRules(Collections.emptyList())
+                      .totalRecords(0));
       when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
-        .thenReturn(BulkOperationDataProcessing.builder()
-          .bulkOperationId(bulkOperationId)
-          .processedNumOfRecords(0)
-          .build());
+              .thenReturn(BulkOperationDataProcessing.builder()
+                      .bulkOperationId(bulkOperationId)
+                      .processedNumOfRecords(0)
+                      .build());
       when(remoteFileSystemClient.get(pathToMatchedRecordsJsonFile))
-        .thenReturn(new FileInputStream(pathToInstanceJson));
+              .thenReturn(new FileInputStream(pathToInstanceJson));
       when(remoteFileSystemClient.writer(anyString()))
-        .thenReturn(new StringWriter());
+              .thenReturn(new StringWriter());
       when(remoteFileSystemClient.get(pathToMatchedRecordsMarcFile))
-        .thenThrow(new S3ClientException("error"));
-      when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile)).thenReturn(new MarcRemoteStorageWriter(new RemoteStorageWriter(expectedPathToModifiedMarcFile, 8192, remoteFolioS3Client)));
+              .thenThrow(new S3ClientException("error"));
+      when(remoteFileSystemClient.marcWriter(expectedPathToModifiedMarcFile))
+              .thenReturn(new MarcRemoteStorageWriter(
+                      new RemoteStorageWriter(expectedPathToModifiedMarcFile,
+                              8192, remoteFolioS3Client)));
 
-      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(),
+              new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      await().untilAsserted(() -> verify(bulkOperationRepository, atLeast(6)).save(bulkOperationCaptor.capture()));
+      await().untilAsserted(() -> verify(bulkOperationRepository, atLeast(6))
+              .save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-      assertThat(capturedBulkOperation.getErrorMessage(),equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, "error")));
+      assertThat(capturedBulkOperation.getErrorMessage(),
+              equalTo(format(ERROR_MESSAGE_PATTERN, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, "error")));
     }
   }
 
   @Test
   @SneakyThrows
   void shouldFailConfirmChangesForInstanceMarcIfMarcWriterNotAvailable() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var marcAction = new MarcAction();
       marcAction.setName(UpdateActionType.CLEAR_FIELD);
@@ -736,156 +799,173 @@ class BulkOperationServiceTest extends BaseTest {
       var pathToMatchedRecordsMarcFile = "/some/path/Marc-Records-instance_marc.mrc";
       var pathToMatchedRecordsJsonFile = "/some/path/Marc-Records-instance_marc.json";
       var pathToOriginalJson = bulkOperationId + "/instance_marc.json";
-      var pathToModifiedRecordsMarcFileName= "Updates-Preview-Marc-Records-instance_marc.mrc";
+      var pathToModifiedRecordsMarcFileName = "Updates-Preview-Marc-Records-instance_marc.mrc";
       var pathToInstanceMarc = "src/test/resources/files/instance_marc.mrc";
       var pathToInstanceJson = "src/test/resources/files/instance_marc.json";
 
       when(bulkOperationRepository.findById(any(UUID.class)))
-        .thenReturn(Optional.of(BulkOperation.builder()
-          .id(bulkOperationId)
-          .status(DATA_MODIFICATION)
-          .entityType(EntityType.INSTANCE_MARC)
-          .identifierType(IdentifierType.ID)
-          .linkToTriggeringCsvFile(pathToTriggering)
-          .linkToMatchedRecordsCsvFile(pathToOriginalJson)
-          .linkToMatchedRecordsMarcFile(pathToMatchedRecordsMarcFile)
-          .linkToMatchedRecordsJsonFile(pathToMatchedRecordsJsonFile)
-          .linkToModifiedRecordsMarcFile(pathToModifiedRecordsMarcFileName)
-          .processedNumOfRecords(0)
-          .build()));
+              .thenReturn(Optional.of(BulkOperation.builder()
+                      .id(bulkOperationId)
+                      .status(DATA_MODIFICATION)
+                      .entityType(EntityType.INSTANCE_MARC)
+                      .identifierType(IdentifierType.ID)
+                      .linkToTriggeringCsvFile(pathToTriggering)
+                      .linkToMatchedRecordsCsvFile(pathToOriginalJson)
+                      .linkToMatchedRecordsMarcFile(pathToMatchedRecordsMarcFile)
+                      .linkToMatchedRecordsJsonFile(pathToMatchedRecordsJsonFile)
+                      .linkToModifiedRecordsMarcFile(pathToModifiedRecordsMarcFileName)
+                      .processedNumOfRecords(0)
+                      .build()));
       when(ruleService.getMarcRules(bulkOperationId))
-        .thenReturn(bulkOperationMarcRuleCollection);
+              .thenReturn(bulkOperationMarcRuleCollection);
       when(ruleService.getRules(bulkOperationId))
-        .thenReturn(new BulkOperationRuleCollection().bulkOperationRules(Collections.emptyList()).totalRecords(0));
+              .thenReturn(new BulkOperationRuleCollection().bulkOperationRules(
+                      Collections.emptyList()).totalRecords(0));
       when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
-        .thenReturn(BulkOperationDataProcessing.builder()
-          .bulkOperationId(bulkOperationId)
-          .processedNumOfRecords(0)
-          .build());
+              .thenReturn(BulkOperationDataProcessing.builder()
+                      .bulkOperationId(bulkOperationId)
+                      .processedNumOfRecords(0)
+                      .build());
       when(remoteFileSystemClient.get(pathToMatchedRecordsJsonFile))
-        .thenReturn(new FileInputStream(pathToInstanceJson));
+              .thenReturn(new FileInputStream(pathToInstanceJson));
       when(remoteFileSystemClient.writer(anyString()))
-        .thenReturn(new StringWriter());
+              .thenReturn(new StringWriter());
       when(remoteFileSystemClient.get(pathToMatchedRecordsMarcFile))
-        .thenReturn(new FileInputStream(pathToInstanceMarc));
+              .thenReturn(new FileInputStream(pathToInstanceMarc));
       when(remoteFileSystemClient.marcWriter(anyString())).thenThrow(new RuntimeException("error"));
       when(remoteFileSystemClient.writer(anyString())).thenReturn(new StringWriter());
-      when(errorService.uploadErrorsToStorage(bulkOperationId, ERROR_COMMITTING_FILE_NAME_PREFIX, "Confirm failed : error"))
-        .thenReturn("/linkToCommittingErrorsFile.csv");
+      when(errorService.uploadErrorsToStorage(bulkOperationId,
+              ERROR_COMMITTING_FILE_NAME_PREFIX, "Confirm failed : error"))
+              .thenReturn("/linkToCommittingErrorsFile.csv");
 
-      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(),
+              new BulkOperationStart().approach(ApproachType.IN_APP).step(EDIT));
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      await().untilAsserted(() -> verify(bulkOperationRepository, times(7)).save(bulkOperationCaptor.capture()));
+      await().untilAsserted(() -> verify(bulkOperationRepository,
+              times(7)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.FAILED));
-      assertThat(capturedBulkOperation.getLinkToCommittedRecordsErrorsCsvFile(), equalTo("/linkToCommittingErrorsFile.csv"));
+      assertThat(capturedBulkOperation.getLinkToCommittedRecordsErrorsCsvFile(),
+              equalTo("/linkToCommittingErrorsFile.csv"));
     }
   }
 
   @ParameterizedTest
   @EnumSource(value = ApproachType.class, names = {"IN_APP"}, mode = EnumSource.Mode.INCLUDE)
-  void shouldConfirmChangesForItemWhenValidationErrorAndOtherValidChangesExist(ApproachType approach) throws FileNotFoundException {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var bulkOperationId = UUID.randomUUID();
-      var pathToTriggering = "/some/path/identifiers.csv";
-      var pathToOrigin = "path/origin.json";
-      var pathToModified = bulkOperationId + "/json/" + LocalDate.now() + "-Updates-Preview-identifiers.json";
-      var pathToOriginalCsv = bulkOperationId + "/origin.csv";
-      var pathToModifiedCsv = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-CSV-identifiers.csv";
-      var pathToItemJson = "src/test/resources/files/item.json";
+  void shouldConfirmChangesForItemWhenValidationErrorAndOtherValidChangesExist(
+          ApproachType approach) throws FileNotFoundException {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
 
       mockHoldingsClient();
       mockLocationClient();
 
       when(consortiaService.isTenantCentral(any())).thenReturn(false);
+      var pathToTriggering = "/some/path/identifiers.csv";
+      var pathToOrigin = "path/origin.json";
+      var bulkOperationId = UUID.randomUUID();
+      var pathToModified = bulkOperationId + "/json/" + LocalDate.now()
+              + "-Updates-Preview-identifiers.json";
+      var pathToOriginalCsv = bulkOperationId + "/origin.csv";
+      var pathToModifiedCsv = bulkOperationId + "/" + LocalDate.now()
+              + "-Updates-Preview-CSV-identifiers.csv";
+      var pathToItemJson = "src/test/resources/files/item.json";
       when(bulkOperationRepository.findById(bulkOperationId))
-        .thenReturn(Optional.of(BulkOperation.builder()
-          .id(bulkOperationId)
-          .status(DATA_MODIFICATION)
-          .entityType(EntityType.ITEM)
-          .identifierType(IdentifierType.BARCODE)
-          .linkToTriggeringCsvFile(pathToTriggering)
-          .linkToMatchedRecordsJsonFile(pathToOrigin)
-          .linkToModifiedRecordsJsonFile("existing.csv")
-          .linkToModifiedRecordsCsvFile("existing.json")
-          .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
-          .processedNumOfRecords(0)
-          .committedNumOfErrors(0)
-          .build()));
+              .thenReturn(Optional.of(BulkOperation.builder()
+                      .id(bulkOperationId)
+                      .status(DATA_MODIFICATION)
+                      .entityType(EntityType.ITEM)
+                      .identifierType(IdentifierType.BARCODE)
+                      .linkToTriggeringCsvFile(pathToTriggering)
+                      .linkToMatchedRecordsJsonFile(pathToOrigin)
+                      .linkToModifiedRecordsJsonFile("existing.csv")
+                      .linkToModifiedRecordsCsvFile("existing.json")
+                      .linkToMatchedRecordsCsvFile(pathToOriginalCsv)
+                      .processedNumOfRecords(0)
+                      .committedNumOfErrors(0)
+                      .build()));
 
       var tempLocationRules = new BulkOperationRule()
-        .bulkOperationId(bulkOperationId)
-        .ruleDetails(new RuleDetails().
-          option(UpdateOptionType.TEMPORARY_LOCATION)
-          .actions(List.of(new Action()
-            .type(UpdateActionType.REPLACE_WITH)
-            .updated("fcd51ce2-1111-48f0-840e-89ffa2288371"))));
+              .bulkOperationId(bulkOperationId)
+              .ruleDetails(new RuleDetails()
+                      .option(UpdateOptionType.TEMPORARY_LOCATION)
+                      .actions(List.of(new Action()
+                              .type(UpdateActionType.REPLACE_WITH)
+                              .updated("fcd51ce2-1111-48f0-840e-89ffa2288371"))));
       var statusRules = new BulkOperationRule()
-        .bulkOperationId(bulkOperationId)
-        .ruleDetails(new RuleDetails()
-          .option(UpdateOptionType.STATUS)
-          .actions(List.of(new Action()
-            .type(UpdateActionType.REPLACE_WITH)
-            .updated("Available"))));
+              .bulkOperationId(bulkOperationId)
+              .ruleDetails(new RuleDetails()
+                      .option(UpdateOptionType.STATUS)
+                      .actions(List.of(new Action()
+                              .type(UpdateActionType.REPLACE_WITH)
+                              .updated("Available"))));
 
       when(itemReferenceService.getLocationById(any(), any())).thenReturn(new ItemLocation()
-        .withId("fcd51ce2-1111-48f0-840e-89ffa2288371").withName("Annex"));
+              .withId("fcd51ce2-1111-48f0-840e-89ffa2288371").withName("Annex"));
 
       when(ruleService.getRules(bulkOperationId))
-        .thenReturn(new BulkOperationRuleCollection()
-          .bulkOperationRules(List.of(tempLocationRules, statusRules))
-          .totalRecords(2));
+              .thenReturn(new BulkOperationRuleCollection()
+                      .bulkOperationRules(List.of(tempLocationRules, statusRules))
+                      .totalRecords(2));
       when(ruleService.getMarcRules(bulkOperationId))
-        .thenReturn(new BulkOperationMarcRuleCollection()
-          .bulkOperationMarcRules(Collections.emptyList())
-          .totalRecords(0));
+              .thenReturn(new BulkOperationMarcRuleCollection()
+                      .bulkOperationMarcRules(Collections.emptyList())
+                      .totalRecords(0));
 
       when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
-        .thenReturn(BulkOperationDataProcessing.builder()
-          .bulkOperationId(bulkOperationId)
-          .processedNumOfRecords(0)
-          .build());
+              .thenReturn(BulkOperationDataProcessing.builder()
+                      .bulkOperationId(bulkOperationId)
+                      .processedNumOfRecords(0)
+                      .build());
 
       when(dataProcessingRepository.findAllByBulkOperationId(bulkOperationId))
-        .thenReturn(Collections.singletonList(BulkOperationDataProcessing.builder()
-          .bulkOperationId(bulkOperationId)
-          .status(StatusType.COMPLETED)
-          .processedNumOfRecords(1)
-          .build()));
+              .thenReturn(Collections.singletonList(BulkOperationDataProcessing.builder()
+                      .bulkOperationId(bulkOperationId)
+                      .status(StatusType.COMPLETED)
+                      .processedNumOfRecords(1)
+                      .build()));
 
       when(remoteFileSystemClient.get(pathToOrigin))
-        .thenReturn(new FileInputStream(pathToItemJson));
+              .thenReturn(new FileInputStream(pathToItemJson));
 
       when(remoteFileSystemClient.get(pathToModified))
-        .thenReturn(new FileInputStream(pathToItemJson));
+              .thenReturn(new FileInputStream(pathToItemJson));
 
-      when(remoteFileSystemClient.writer(pathToModified)).thenReturn(new RemoteStorageWriter(pathToModified, 8192, remoteFolioS3Client));
-      when(remoteFileSystemClient.writer(pathToModifiedCsv)).thenReturn(new RemoteStorageWriter(pathToModifiedCsv, 8192, remoteFolioS3Client));
+      when(remoteFileSystemClient.writer(pathToModified))
+              .thenReturn(new RemoteStorageWriter(pathToModified, 8192, remoteFolioS3Client));
+      when(remoteFileSystemClient.writer(pathToModifiedCsv))
+              .thenReturn(new RemoteStorageWriter(pathToModifiedCsv, 8192, remoteFolioS3Client));
 
-      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(approach).step(EDIT));
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(),
+              new BulkOperationStart().approach(approach).step(EDIT));
 
-      var expectedPathToModifiedCsvFile = bulkOperationId + "/" + LocalDate.now() + "-Updates-Preview-CSV-identifiers.csv";
+      var expectedPathToModifiedCsvFile = bulkOperationId + "/" + LocalDate.now()
+              + "-Updates-Preview-CSV-identifiers.csv";
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       var pathCaptor = ArgumentCaptor.forClass(String.class);
 
-      await().untilAsserted(() -> verify(remoteFolioS3Client, times(2)).write(pathCaptor.capture(), streamCaptor.capture()));
+      await().untilAsserted(() -> verify(remoteFolioS3Client, times(2))
+              .write(pathCaptor.capture(), streamCaptor.capture()));
       assertEquals(expectedPathToModifiedCsvFile, pathCaptor.getAllValues().get(1));
 
       var dataProcessingCaptor = ArgumentCaptor.forClass(BulkOperationDataProcessing.class);
-      await().untilAsserted(() -> verify(dataProcessingRepository, times(2)).save(dataProcessingCaptor.capture()));
+      await().untilAsserted(() -> verify(dataProcessingRepository,
+              times(2)).save(dataProcessingCaptor.capture()));
       var capturedDataProcessingEntity = dataProcessingCaptor.getAllValues().get(1);
       assertThat(capturedDataProcessingEntity.getProcessedNumOfRecords(), is(1));
 
       assertThat(capturedDataProcessingEntity.getStatus(), equalTo(StatusType.COMPLETED));
       assertThat(capturedDataProcessingEntity.getEndTime(), notNullValue());
 
-      verify(errorService).saveError(eq(bulkOperationId), eq("10101"), any(String.class), eq(ErrorType.ERROR));
+      verify(errorService).saveError(eq(bulkOperationId), eq("10101"),
+              any(String.class), eq(ErrorType.ERROR));
 
       var bulkOperationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      await().untilAsserted(() -> verify(bulkOperationRepository, times(5)).save(bulkOperationCaptor.capture()));
+      await().untilAsserted(() -> verify(bulkOperationRepository,
+              times(5)).save(bulkOperationCaptor.capture()));
       var capturedBulkOperation = bulkOperationCaptor.getValue();
-      assertThat(capturedBulkOperation.getLinkToModifiedRecordsCsvFile(), equalTo(expectedPathToModifiedCsvFile));
+      assertThat(capturedBulkOperation.getLinkToModifiedRecordsCsvFile(),
+              equalTo(expectedPathToModifiedCsvFile));
       assertThat(capturedBulkOperation.getProcessedNumOfRecords(), equalTo(1));
       assertThat(capturedBulkOperation.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
     }
@@ -893,18 +973,18 @@ class BulkOperationServiceTest extends BaseTest {
 
   private void mockLocationClient() {
     when(locationClient.getLocationById(any())).thenReturn(
-      ItemLocation.builder()
-        .name("Main Library")
-        .build()
+            ItemLocation.builder()
+                    .name("Main Library")
+                    .build()
     );
   }
 
   private void mockHoldingsClient() {
     when(holdingsStorageClient.getHoldingById(any())).thenReturn(
-      HoldingsRecord.builder()
-        .effectiveLocationId(UUID.randomUUID().toString())
-        .callNumber("TK5105.88815 . A58 2004 FT MEADE")
-        .build()
+            HoldingsRecord.builder()
+                    .effectiveLocationId(UUID.randomUUID().toString())
+                    .callNumber("TK5105.88815 . A58 2004 FT MEADE")
+                    .build()
     );
   }
 
@@ -916,35 +996,35 @@ class BulkOperationServiceTest extends BaseTest {
     var pathToOrigin = bulkOperationId + "/origin.json";
 
     var operation = BulkOperation.builder()
-      .id(bulkOperationId)
-      .entityType(USER)
-      .identifierType(IdentifierType.BARCODE)
-      .linkToMatchedRecordsJsonFile(pathToOrigin)
-      .build();
+            .id(bulkOperationId)
+            .entityType(USER)
+            .identifierType(IdentifierType.BARCODE)
+            .linkToMatchedRecordsJsonFile(pathToOrigin)
+            .build();
 
     when(bulkOperationRepository.findById(any(UUID.class)))
-      .thenReturn(Optional.of(operation));
+            .thenReturn(Optional.of(operation));
 
     var rules = new BulkOperationRuleCollection()
-      .bulkOperationRules(List.of(new BulkOperationRule()
-        .ruleDetails(new RuleDetails()
-          .option(UpdateOptionType.PATRON_GROUP)
-          .actions(List.of(new Action()
-            .type(UpdateActionType.REPLACE_WITH)
-            .updated(newPatronGroupId))))))
-      .totalRecords(1);
+            .bulkOperationRules(List.of(new BulkOperationRule()
+                    .ruleDetails(new RuleDetails()
+                            .option(UpdateOptionType.PATRON_GROUP)
+                            .actions(List.of(new Action()
+                                    .type(UpdateActionType.REPLACE_WITH)
+                                    .updated(newPatronGroupId))))))
+            .totalRecords(1);
     when(ruleService.getRules(bulkOperationId)).thenReturn(rules);
 
     var dataProcessing = BulkOperationDataProcessing.builder()
-      .bulkOperationId(bulkOperationId)
-      .processedNumOfRecords(0)
-      .build();
+            .bulkOperationId(bulkOperationId)
+            .processedNumOfRecords(0)
+            .build();
 
     when(dataProcessingRepository.save(any(BulkOperationDataProcessing.class)))
-      .thenReturn(dataProcessing);
+            .thenReturn(dataProcessing);
 
     when(remoteFileSystemClient.get(pathToOrigin))
-      .thenThrow(new RuntimeException("Failed to read file"));
+            .thenThrow(new RuntimeException("Failed to read file"));
 
     bulkOperationService.confirm(dataProcessing);
 
@@ -960,97 +1040,112 @@ class BulkOperationServiceTest extends BaseTest {
   @CsvSource(value = {"'',COMPLETED", "path/to/file,COMPLETED_WITH_ERRORS"}, delimiter = ',')
   @SneakyThrows
   void shouldCommitChanges(String linkToErrors, OperationStatusType statusType) {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
 
       var bulkOperationId = UUID.randomUUID();
       var pathToTriggering = "/some/path/identifiers.csv";
       var pathToOrigin = bulkOperationId + "/json/origin.json";
       var pathToModified = bulkOperationId + "/json/modified-origin.json";
-      var pathToModifiedResult = bulkOperationId + "/json/" + LocalDate.now() + "-Changed-Records-identifiers.json";
+      var pathToModifiedResult = bulkOperationId + "/json/" + LocalDate.now()
+              + "-Changed-Records-identifiers.json";
       var pathToModifiedCsv = bulkOperationId + "/modified-origin.csv";
-      var pathToModifiedCsvResult = bulkOperationId + "/" + LocalDate.now() + "-Changed-Records-identifiers.csv";
+      var pathToModifiedCsvResult = bulkOperationId + "/" + LocalDate.now()
+              + "-Changed-Records-identifiers.csv";
       var pathToUserJson = "src/test/resources/files/user.json";
       var pathToModifiedUserJson = "src/test/resources/files/modified-user.json";
 
-      doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(anyString(), any(), anyString());
+      doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(
+              anyString(), any(), anyString());
 
       when(bulkOperationRepository.findById(any(UUID.class)))
-        .thenReturn(Optional.of(BulkOperation.builder()
-          .id(bulkOperationId)
-          .entityType(USER)
-          .status(REVIEW_CHANGES)
-          .identifierType(IdentifierType.BARCODE)
-          .linkToTriggeringCsvFile(pathToTriggering)
-          .linkToMatchedRecordsJsonFile(pathToOrigin)
-          .linkToMatchedRecordsCsvFile(pathToModifiedCsv)
-          .linkToModifiedRecordsJsonFile(pathToModified)
-          .committedNumOfRecords(0)
-          .build()));
+              .thenReturn(Optional.of(BulkOperation.builder()
+                      .id(bulkOperationId)
+                      .entityType(USER)
+                      .status(REVIEW_CHANGES)
+                      .identifierType(IdentifierType.BARCODE)
+                      .linkToTriggeringCsvFile(pathToTriggering)
+                      .linkToMatchedRecordsJsonFile(pathToOrigin)
+                      .linkToMatchedRecordsCsvFile(pathToModifiedCsv)
+                      .linkToModifiedRecordsJsonFile(pathToModified)
+                      .committedNumOfRecords(0)
+                      .build()));
 
       when(bulkOperationRepository.save(any(BulkOperation.class)))
-        .thenReturn(BulkOperation.builder()
-          .id(bulkOperationId)
-          .entityType(USER)
-          .identifierType(IdentifierType.BARCODE)
-          .linkToTriggeringCsvFile(pathToTriggering)
-          .linkToMatchedRecordsJsonFile(pathToOrigin)
-          .linkToMatchedRecordsCsvFile(pathToModifiedCsv)
-          .linkToModifiedRecordsJsonFile(pathToModified)
-          .committedNumOfRecords(0)
-          .build());
+              .thenReturn(BulkOperation.builder()
+                      .id(bulkOperationId)
+                      .entityType(USER)
+                      .identifierType(IdentifierType.BARCODE)
+                      .linkToTriggeringCsvFile(pathToTriggering)
+                      .linkToMatchedRecordsJsonFile(pathToOrigin)
+                      .linkToMatchedRecordsCsvFile(pathToModifiedCsv)
+                      .linkToModifiedRecordsJsonFile(pathToModified)
+                      .committedNumOfRecords(0)
+                      .build());
 
       when(executionRepository.save(any(BulkOperationExecution.class)))
-        .thenReturn(BulkOperationExecution.builder()
-          .processedRecords(0)
-          .build());
+              .thenReturn(BulkOperationExecution.builder()
+                      .processedRecords(0)
+                      .build());
 
       when(remoteFileSystemClient.get(pathToOrigin))
-        .thenReturn(new FileInputStream(pathToUserJson));
+              .thenReturn(new FileInputStream(pathToUserJson));
 
       when(remoteFileSystemClient.get(pathToModified))
-        .thenReturn(new FileInputStream(pathToModifiedUserJson));
+              .thenReturn(new FileInputStream(pathToModifiedUserJson));
 
-      var expectedPathToResultFile = bulkOperationId + "/json/" + LocalDate.now() + "-Changed-Records-identifiers.json";
+      var expectedPathToResultFile = bulkOperationId + "/json/" + LocalDate.now()
+              + "-Changed-Records-identifiers.json";
       when(remoteFileSystemClient.get(expectedPathToResultFile))
-        .thenReturn(new FileInputStream(pathToModifiedUserJson));
+              .thenReturn(new FileInputStream(pathToModifiedUserJson));
 
       when(executionContentRepository.save(any(BulkOperationExecutionContent.class)))
-        .thenReturn(BulkOperationExecutionContent.builder().build());
+              .thenReturn(BulkOperationExecutionContent.builder().build());
 
-      when(groupClient.getGroupById("cdd8a5c8-dce7-4d7f-859a-83754b36c740")).thenReturn(new UserGroup());
+      when(groupClient.getGroupById("cdd8a5c8-dce7-4d7f-859a-83754b36c740"))
+              .thenReturn(new UserGroup());
 
-      when(remoteFileSystemClient.writer(pathToModifiedResult)).thenReturn(new RemoteStorageWriter(pathToModifiedResult, 8192, remoteFolioS3Client));
-      when(remoteFileSystemClient.writer(pathToModifiedCsvResult)).thenReturn(new RemoteStorageWriter(pathToModifiedCsvResult, 8192, remoteFolioS3Client));
+      when(remoteFileSystemClient.writer(pathToModifiedResult))
+              .thenReturn(new RemoteStorageWriter(pathToModifiedResult, 8192, remoteFolioS3Client));
+      when(remoteFileSystemClient.writer(pathToModifiedCsvResult))
+              .thenReturn(new RemoteStorageWriter(pathToModifiedCsvResult, 8192,
+                      remoteFolioS3Client));
 
-      when(errorService.uploadErrorsToStorage(any(UUID.class), any(String.class), any())).thenReturn(linkToErrors);
+      when(errorService.uploadErrorsToStorage(any(UUID.class), any(String.class), any()))
+              .thenReturn(linkToErrors);
 
-      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.IN_APP).step(COMMIT));
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(),
+              new BulkOperationStart().approach(ApproachType.IN_APP).step(COMMIT));
 
       await().untilAsserted(() -> verify(userClient).updateUser(any(User.class), anyString()));
 
       var streamCaptor = ArgumentCaptor.forClass(InputStream.class);
       var pathCaptor = ArgumentCaptor.forClass(String.class);
-      await().untilAsserted(() -> verify(remoteFolioS3Client, times(1)).write(pathCaptor.capture(), streamCaptor.capture()));
-      assertEquals(new String(streamCaptor.getAllValues().get(0).readAllBytes()),
-        Files.readString(Path.of(pathToModifiedUserJson)).trim());
-      assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().get(0));
+      await().untilAsserted(() -> verify(remoteFolioS3Client, times(1))
+              .write(pathCaptor.capture(), streamCaptor.capture()));
+      assertEquals(new String(streamCaptor.getAllValues().getFirst().readAllBytes()),
+              Files.readString(Path.of(pathToModifiedUserJson)).trim());
+      assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().getFirst());
 
       var executionContentCaptor = ArgumentCaptor.forClass(BulkOperationExecutionContent.class);
-      await().untilAsserted(() -> verify(executionContentRepository).save(executionContentCaptor.capture()));
+      await().untilAsserted(() -> verify(executionContentRepository)
+              .save(executionContentCaptor.capture()));
       assertThat(executionContentCaptor.getValue().getState(), equalTo(StateType.PROCESSED));
 
       var executionCaptor = ArgumentCaptor.forClass(BulkOperationExecution.class);
-      await().untilAsserted(() -> verify(executionRepository, times(2)).save(executionCaptor.capture()));
+      await().untilAsserted(() -> verify(executionRepository,
+              times(2)).save(executionCaptor.capture()));
       var updatedExecution = executionCaptor.getAllValues().get(1);
       assertThat(updatedExecution.getProcessedRecords(), is(1));
       assertThat(updatedExecution.getStatus(), equalTo(StatusType.COMPLETED));
 
       var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      await().untilAsserted(() -> verify(bulkOperationRepository, times(2)).save(operationCaptor.capture()));
+      await().untilAsserted(() -> verify(bulkOperationRepository,
+              times(2)).save(operationCaptor.capture()));
       var firstCapture = operationCaptor.getAllValues().get(0);
       assertThat(firstCapture.getStatus(), equalTo(OperationStatusType.APPLY_CHANGES));
       var secondCapture = operationCaptor.getAllValues().get(1);
-      assertThat(secondCapture.getLinkToCommittedRecordsJsonFile(), equalTo(expectedPathToResultFile));
+      assertThat(secondCapture.getLinkToCommittedRecordsJsonFile(),
+              equalTo(expectedPathToResultFile));
       assertThat(secondCapture.getStatus(), equalTo(statusType));
       assertThat(secondCapture.getEndTime(), notNullValue());
     }
@@ -1062,59 +1157,64 @@ class BulkOperationServiceTest extends BaseTest {
     var bulkOperationId = UUID.randomUUID();
 
     when(bulkOperationRepository.findById(any(UUID.class)))
-      .thenReturn(Optional.of(BulkOperation.builder()
-        .id(bulkOperationId)
-        .entityType(USER)
-        .status(COMPLETED)
-        .identifierType(IdentifierType.BARCODE)
-        .build()));
+            .thenReturn(Optional.of(BulkOperation.builder()
+                    .id(bulkOperationId)
+                    .entityType(USER)
+                    .status(COMPLETED)
+                    .identifierType(IdentifierType.BARCODE)
+                    .build()));
 
     var bulkOperation = new BulkOperationStart().approach(approach).step(COMMIT);
-    assertThrows(BadRequestException.class, () -> bulkOperationService.startBulkOperation(bulkOperationId, null, bulkOperation));
+    assertThrows(BadRequestException.class,
+            () -> bulkOperationService.startBulkOperation(bulkOperationId, null, bulkOperation));
 
   }
 
   @Test
   @SneakyThrows
   void shouldApplyChanges() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var bulkOperationId = UUID.randomUUID();
       var pathToTriggering = "/some/path/identifiers.csv";
       var pathToOrigin = bulkOperationId + "/json/origin.json";
       var pathToModifiedCsv = bulkOperationId + "/modified-origin.csv";
-      var expectedPathToResultFile = bulkOperationId + "/json/" + LocalDate.now() + "-Updates-Preview-identifiers.json";
       var pathToUserJson = "src/test/resources/files/user.json";
       var pathToModifiedUserCsv = "src/test/resources/files/modified-user.csv";
       var pathToTempFile = bulkOperationId + "/temp.txt";
 
       when(bulkOperationRepository.findById(any(UUID.class)))
-        .thenReturn(Optional.of(BulkOperation.builder()
-          .id(bulkOperationId)
-          .entityType(USER)
-          .status(DATA_MODIFICATION)
-          .identifierType(IdentifierType.BARCODE)
-          .linkToTriggeringCsvFile(pathToTriggering)
-          .linkToMatchedRecordsJsonFile(pathToOrigin)
-          .linkToModifiedRecordsCsvFile(pathToModifiedCsv)
-          .processedNumOfRecords(0)
-          .build()));
+              .thenReturn(Optional.of(BulkOperation.builder()
+                      .id(bulkOperationId)
+                      .entityType(USER)
+                      .status(DATA_MODIFICATION)
+                      .identifierType(IdentifierType.BARCODE)
+                      .linkToTriggeringCsvFile(pathToTriggering)
+                      .linkToMatchedRecordsJsonFile(pathToOrigin)
+                      .linkToModifiedRecordsCsvFile(pathToModifiedCsv)
+                      .processedNumOfRecords(0)
+                      .build()));
 
       when(remoteFileSystemClient.get(pathToOrigin))
-        .thenReturn(new FileInputStream(pathToUserJson));
+              .thenReturn(new FileInputStream(pathToUserJson));
 
       when(remoteFileSystemClient.get(pathToModifiedCsv))
-        .thenReturn(new FileInputStream(pathToModifiedUserCsv));
+              .thenReturn(new FileInputStream(pathToModifiedUserCsv));
 
-      when(groupClient.getByQuery(format("group==\"%s\"", "staff"))).thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup())));
+      when(groupClient.getByQuery(format("group==\"%s\"", "staff")))
+              .thenReturn(new UserGroupCollection().withUsergroups(List.of(new UserGroup())));
 
       when(remoteFileSystemClient.writer(anyString()))
-        .thenReturn(new RemoteStorageWriter(pathToTempFile, 8192, remoteFolioS3Client));
+              .thenReturn(new RemoteStorageWriter(pathToTempFile, 8192, remoteFolioS3Client));
 
-      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), new BulkOperationStart().approach(ApproachType.MANUAL).step(EDIT));
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(),
+              new BulkOperationStart().approach(ApproachType.MANUAL).step(EDIT));
 
       var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
-      await().untilAsserted(() -> verify(bulkOperationRepository, times(2)).save(operationCaptor.capture()));
+      await().untilAsserted(() -> verify(bulkOperationRepository,
+              times(2)).save(operationCaptor.capture()));
       var capture = operationCaptor.getAllValues().get(0);
+      var expectedPathToResultFile = bulkOperationId + "/json/" + LocalDate.now()
+              + "-Updates-Preview-identifiers.json";
       assertThat(capture.getStatus(), equalTo(OperationStatusType.REVIEW_CHANGES));
       assertThat(capture.getLinkToModifiedRecordsJsonFile(), equalTo(expectedPathToResultFile));
     }
@@ -1131,53 +1231,59 @@ class BulkOperationServiceTest extends BaseTest {
     var pathToUserJson = "src/test/resources/files/user2.json";
 
     var operation = BulkOperation.builder()
-      .id(bulkOperationId)
-      .entityType(USER)
-      .identifierType(IdentifierType.BARCODE)
-      .linkToTriggeringCsvFile(pathToTriggering)
-      .linkToMatchedRecordsJsonFile(pathToOrigin)
-      .linkToMatchedRecordsCsvFile(pathToOriginCsv)
-      .linkToModifiedRecordsJsonFile(pathToModified)
-      .build();
+            .id(bulkOperationId)
+            .entityType(USER)
+            .identifierType(IdentifierType.BARCODE)
+            .linkToTriggeringCsvFile(pathToTriggering)
+            .linkToMatchedRecordsJsonFile(pathToOrigin)
+            .linkToMatchedRecordsCsvFile(pathToOriginCsv)
+            .linkToModifiedRecordsJsonFile(pathToModified)
+            .build();
 
     when(bulkOperationRepository.findById(any(UUID.class)))
-      .thenReturn(Optional.ofNullable(operation));
+            .thenReturn(Optional.ofNullable(operation));
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenAnswer(invocation -> invocation.getArguments()[0]);
+            .thenAnswer(invocation -> invocation.getArguments()[0]);
 
     when(executionRepository.save(any(BulkOperationExecution.class)))
-      .thenReturn(BulkOperationExecution.builder()
-        .processedRecords(0)
-        .build());
+            .thenReturn(BulkOperationExecution.builder()
+                    .processedRecords(0)
+                    .build());
 
     when(remoteFileSystemClient.get(pathToOrigin))
-      .thenReturn(new FileInputStream(pathToUserJson));
+            .thenReturn(new FileInputStream(pathToUserJson));
 
     when(remoteFileSystemClient.get(pathToModified))
-      .thenReturn(new FileInputStream(pathToUserJson));
+            .thenReturn(new FileInputStream(pathToUserJson));
 
-    var expectedPathToResultFile = bulkOperationId + "/json/" + LocalDate.now() + "-Changed-Records-identifiers.json";
-    var expectedPathToResultCsvFile = bulkOperationId + "/" + LocalDate.now() + "-Changed-Records-CSV-identifiers.csv";
+    var expectedPathToResultFile = bulkOperationId + "/json/" + LocalDate.now()
+            + "-Changed-Records-identifiers.json";
+    var expectedPathToResultCsvFile = bulkOperationId + "/" + LocalDate.now()
+            + "-Changed-Records-CSV-identifiers.csv";
 
     var jsonWriter = new StringWriter();
     when(remoteFileSystemClient.writer(expectedPathToResultFile))
-      .thenReturn(jsonWriter);
+            .thenReturn(jsonWriter);
     var csvWriter = new StringWriter();
     when(remoteFileSystemClient.writer(expectedPathToResultCsvFile))
-      .thenReturn(csvWriter);
+            .thenReturn(csvWriter);
 
     when(executionContentRepository.save(any(BulkOperationExecutionContent.class)))
-      .thenReturn(BulkOperationExecutionContent.builder().build());
+            .thenReturn(BulkOperationExecutionContent.builder().build());
 
+    org.junit.jupiter.api.Assertions.assertNotNull(operation);
     bulkOperationService.commit(operation);
 
     verify(userClient, times(0)).updateUser(any(User.class), anyString());
 
-    await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), eq(MSG_NO_CHANGE_REQUIRED), eq(ErrorType.WARNING)));
+    await().untilAsserted(() -> verify(errorService, times(1))
+            .saveError(eq(bulkOperationId), anyString(), eq(MSG_NO_CHANGE_REQUIRED),
+                    eq(ErrorType.WARNING)));
 
     var pathCaptor = ArgumentCaptor.forClass(String.class);
-    await().untilAsserted(() -> verify(remoteFileSystemClient, times(2)).writer(pathCaptor.capture()));
+    await().untilAsserted(() -> verify(remoteFileSystemClient,
+            times(2)).writer(pathCaptor.capture()));
     assertEquals(expectedPathToResultCsvFile, pathCaptor.getAllValues().get(0));
     assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().get(1));
     assertNull(operation.getLinkToCommittedRecordsCsvFile());
@@ -1197,41 +1303,44 @@ class BulkOperationServiceTest extends BaseTest {
     var pathToTempFile = bulkOperationId + "/temp.txt";
 
     var operation = BulkOperation.builder()
-      .id(bulkOperationId)
-      .entityType(USER)
-      .identifierType(IdentifierType.BARCODE)
-      .linkToMatchedRecordsJsonFile(pathToOrigin)
-      .linkToModifiedRecordsJsonFile(pathToModified)
-      .linkToMatchedRecordsCsvFile(pathToOriginCsv)
-      .build();
+            .id(bulkOperationId)
+            .entityType(USER)
+            .identifierType(IdentifierType.BARCODE)
+            .linkToMatchedRecordsJsonFile(pathToOrigin)
+            .linkToModifiedRecordsJsonFile(pathToModified)
+            .linkToMatchedRecordsCsvFile(pathToOriginCsv)
+            .build();
 
     when(bulkOperationRepository.findById(any(UUID.class)))
-      .thenReturn(Optional.of(operation));
+            .thenReturn(Optional.of(operation));
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(operation);
+            .thenReturn(operation);
 
     when(executionRepository.save(any(BulkOperationExecution.class)))
-      .thenReturn(BulkOperationExecution.builder()
-        .processedRecords(0)
-        .build());
+            .thenReturn(BulkOperationExecution.builder()
+                    .processedRecords(0)
+                    .build());
 
     when(remoteFileSystemClient.get(pathToOrigin))
-      .thenReturn(new FileInputStream(pathToUserJson));
+            .thenReturn(new FileInputStream(pathToUserJson));
 
     when(remoteFileSystemClient.get(pathToModified))
-      .thenReturn(new FileInputStream(pathToModifiedUserJson));
+            .thenReturn(new FileInputStream(pathToModifiedUserJson));
 
-    when(remoteFileSystemClient.writer(anyString())).thenReturn(new RemoteStorageWriter(pathToTempFile, 8192, remoteFolioS3Client));
+    when(remoteFileSystemClient.writer(anyString())).thenReturn(
+            new RemoteStorageWriter(pathToTempFile, 8192, remoteFolioS3Client));
 
     when(executionContentRepository.save(any(BulkOperationExecutionContent.class)))
-      .thenReturn(BulkOperationExecutionContent.builder().build());
+            .thenReturn(BulkOperationExecutionContent.builder().build());
 
-    doThrow(new BadRequestException("Bad request")).when(userClient).updateUser(any(User.class), anyString());
+    doThrow(new BadRequestException("Bad request")).when(userClient).updateUser(any(User.class),
+            anyString());
 
     bulkOperationService.commit(operation);
 
-    await().untilAsserted(() -> verify(errorService, times(1)).saveError(eq(bulkOperationId), anyString(), anyString(), eq(ErrorType.ERROR)));
+    await().untilAsserted(() -> verify(errorService, times(1))
+            .saveError(eq(bulkOperationId), anyString(), anyString(), eq(ErrorType.ERROR)));
 
   }
 
@@ -1243,31 +1352,32 @@ class BulkOperationServiceTest extends BaseTest {
     var pathToModified = bulkOperationId + "/json/modified-origin.json";
 
     var operation = BulkOperation.builder()
-      .id(bulkOperationId)
-      .entityType(USER)
-      .identifierType(IdentifierType.BARCODE)
-      .linkToMatchedRecordsJsonFile(pathToOrigin)
-      .linkToModifiedRecordsJsonFile(pathToModified)
-      .build();
+            .id(bulkOperationId)
+            .entityType(USER)
+            .identifierType(IdentifierType.BARCODE)
+            .linkToMatchedRecordsJsonFile(pathToOrigin)
+            .linkToModifiedRecordsJsonFile(pathToModified)
+            .build();
 
     when(bulkOperationRepository.findById(any(UUID.class)))
-      .thenReturn(Optional.of(operation));
+            .thenReturn(Optional.of(operation));
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenAnswer(args -> args.getArguments()[0]);
+            .thenAnswer(args -> args.getArguments()[0]);
 
     when(executionRepository.save(any(BulkOperationExecution.class)))
-      .thenReturn(BulkOperationExecution.builder()
-        .processedRecords(0)
-        .build());
+            .thenReturn(BulkOperationExecution.builder()
+                    .processedRecords(0)
+                    .build());
 
     when(remoteFileSystemClient.get(pathToOrigin))
-      .thenThrow(new RuntimeException("Failed to read file"));
+            .thenThrow(new RuntimeException("Failed to read file"));
 
     bulkOperationService.commit(operation);
 
     var executionCaptor = ArgumentCaptor.forClass(BulkOperationExecution.class);
-    await().untilAsserted(() -> verify(executionRepository, times(2)).save(executionCaptor.capture()));
+    await().untilAsserted(() -> verify(executionRepository, times(2))
+            .save(executionCaptor.capture()));
     var updatedExecution = executionCaptor.getAllValues().get(1);
     assertThat(updatedExecution.getProcessedRecords(), is(0));
     assertThat(updatedExecution.getStatus(), equalTo(StatusType.FAILED));
@@ -1283,15 +1393,15 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldProcessIfNoLinkToModifiedFile() {
 
     var operation = BulkOperation.builder()
-      .id(UUID.randomUUID())
-      .linkToMatchedRecordsJsonFile("link")
-      .linkToModifiedRecordsJsonFile(null)
-      .build();
+            .id(UUID.randomUUID())
+            .linkToMatchedRecordsJsonFile("link")
+            .linkToModifiedRecordsJsonFile(null)
+            .build();
 
     when(bulkOperationRepository.findById(any(UUID.class)))
-      .thenReturn(Optional.of(operation));
+            .thenReturn(Optional.of(operation));
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(operation);
+            .thenReturn(operation);
 
     assertDoesNotThrow(() -> bulkOperationService.commit(operation));
   }
@@ -1302,49 +1412,50 @@ class BulkOperationServiceTest extends BaseTest {
     var operationId = UUID.randomUUID();
 
     var bulkOperation = BulkOperation.builder()
-      .id(operationId)
-      .status(statusType)
-      .totalNumOfRecords(10)
-      .processedNumOfRecords(0)
-      .build();
+            .id(operationId)
+            .status(statusType)
+            .totalNumOfRecords(10)
+            .processedNumOfRecords(0)
+            .build();
 
     var experctedBulkOperation = BulkOperation.builder()
-      .id(operationId)
-      .status(statusType)
-      .totalNumOfRecords(10)
-      .processedNumOfRecords(5)
-      .build();
+            .id(operationId)
+            .status(statusType)
+            .totalNumOfRecords(10)
+            .processedNumOfRecords(5)
+            .build();
 
     when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(bulkOperation));
+            .thenReturn(Optional.of(bulkOperation));
 
     when(bulkOperationRepository.save(experctedBulkOperation))
-      .thenReturn(experctedBulkOperation);
+            .thenReturn(experctedBulkOperation);
 
     when(dataProcessingRepository.findById(operationId))
-      .thenReturn(Optional.of(BulkOperationDataProcessing.builder()
-        .status(StatusType.ACTIVE)
-        .processedNumOfRecords(5)
-        .build()));
+            .thenReturn(Optional.of(BulkOperationDataProcessing.builder()
+                    .status(StatusType.ACTIVE)
+                    .processedNumOfRecords(5)
+                    .build()));
 
     when(executionRepository.findByBulkOperationId(operationId))
-      .thenReturn(Optional.of(BulkOperationExecution.builder()
-        .status(StatusType.ACTIVE)
-        .processedRecords(5)
-        .build()));
+            .thenReturn(Optional.of(BulkOperationExecution.builder()
+                    .status(StatusType.ACTIVE)
+                    .processedRecords(5)
+                    .build()));
 
     when(metadataProviderService.getJobExecutions(operationId))
-      .thenReturn(Collections.emptyList());
+            .thenReturn(Collections.emptyList());
 
     when(metadataProviderService.calculateProgress(anyList()))
-      .thenReturn(new DataImportProgress().total(10).current(5));
+            .thenReturn(new DataImportProgress().total(10).current(5));
 
     when(queryService.retrieveRecordsAndCheckQueryExecutionStatus(any(BulkOperation.class)))
-      .thenReturn(experctedBulkOperation);
+            .thenReturn(experctedBulkOperation);
 
     var operation = bulkOperationService.getOperationById(operationId);
 
-    if (Set.of(DATA_MODIFICATION, APPLY_CHANGES, APPLY_MARC_CHANGES).contains(operation.getStatus())) {
+    if (Set.of(DATA_MODIFICATION, APPLY_CHANGES, APPLY_MARC_CHANGES)
+            .contains(operation.getStatus())) {
       assertThat(operation.getProcessedNumOfRecords(), equalTo(5));
     } else {
       assertThat(operation.getProcessedNumOfRecords(), equalTo(0));
@@ -1355,15 +1466,15 @@ class BulkOperationServiceTest extends BaseTest {
   void clearOperationProcessing() {
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
-      .id(operationId)
-      .build();
+            .id(operationId)
+            .build();
 
     when(dataProcessingRepository.findById(operationId))
-      .thenReturn(Optional.of(BulkOperationDataProcessing.builder()
-        .bulkOperationId(operationId)
-        .status(StatusType.ACTIVE)
-        .processedNumOfRecords(5)
-        .build()));
+            .thenReturn(Optional.of(BulkOperationDataProcessing.builder()
+                    .bulkOperationId(operationId)
+                    .status(StatusType.ACTIVE)
+                    .processedNumOfRecords(5)
+                    .build()));
 
     bulkOperationService.clearOperationProcessing(operation);
 
@@ -1372,7 +1483,8 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class, names = {"NEW", "RETRIEVING_RECORDS", "SAVING_RECORDS_LOCALLY"})
+  @EnumSource(value = OperationStatusType.class,
+          names = {"NEW", "RETRIEVING_RECORDS", "SAVING_RECORDS_LOCALLY"})
   void shouldRemoveTriggeringAndMatchedRecordsFilesOnCancel(OperationStatusType type) {
     var operationId = UUID.randomUUID();
     var linkToTriggeringCsv = "identifiers.csv";
@@ -1381,14 +1493,14 @@ class BulkOperationServiceTest extends BaseTest {
     var linkToMatchedErrorsCsv = "matched-errors.csv";
 
     when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(BulkOperation.builder()
-        .id(operationId)
-        .linkToTriggeringCsvFile(linkToTriggeringCsv)
-        .linkToMatchedRecordsCsvFile(linkToMatchedCsv)
-        .linkToMatchedRecordsJsonFile(linkToMatchedJson)
-        .linkToMatchedRecordsErrorsCsvFile(linkToMatchedErrorsCsv)
-        .status(type)
-        .build()));
+            .thenReturn(Optional.of(BulkOperation.builder()
+                    .id(operationId)
+                    .linkToTriggeringCsvFile(linkToTriggeringCsv)
+                    .linkToMatchedRecordsCsvFile(linkToMatchedCsv)
+                    .linkToMatchedRecordsJsonFile(linkToMatchedJson)
+                    .linkToMatchedRecordsErrorsCsvFile(linkToMatchedErrorsCsv)
+                    .status(type)
+                    .build()));
 
     bulkOperationService.cancelOperationById(operationId);
 
@@ -1406,13 +1518,13 @@ class BulkOperationServiceTest extends BaseTest {
     var linkToModifiedJson = "modified.json";
 
     when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(BulkOperation.builder()
-        .id(operationId)
-        .status(type)
-        .approach(ApproachType.MANUAL)
-        .linkToModifiedRecordsCsvFile(linkToModifiedCsv)
-        .linkToModifiedRecordsJsonFile(linkToModifiedJson)
-        .build()));
+            .thenReturn(Optional.of(BulkOperation.builder()
+                    .id(operationId)
+                    .status(type)
+                    .approach(ApproachType.MANUAL)
+                    .linkToModifiedRecordsCsvFile(linkToModifiedCsv)
+                    .linkToModifiedRecordsJsonFile(linkToModifiedJson)
+                    .build()));
 
     bulkOperationService.cancelOperationById(operationId);
 
@@ -1421,77 +1533,85 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class, names = {"NEW", "RETRIEVING_RECORDS", "SAVING_RECORDS_LOCALLY", "DATA_MODIFICATION", "REVIEW_CHANGES"}, mode = EnumSource.Mode.EXCLUDE)
+  @EnumSource(value = OperationStatusType.class,
+          names = {"NEW", "RETRIEVING_RECORDS", "SAVING_RECORDS_LOCALLY", "DATA_MODIFICATION",
+                   "REVIEW_CHANGES"},
+          mode = EnumSource.Mode.EXCLUDE)
   void shouldThrowExceptionOnInvalidStatusForCancel(OperationStatusType type) {
     var operationId = UUID.randomUUID();
 
     when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(BulkOperation.builder()
-        .id(operationId)
-        .status(type)
-        .build()));
+            .thenReturn(Optional.of(BulkOperation.builder()
+                    .id(operationId)
+                    .status(type)
+                    .build()));
 
-    assertThrows(IllegalOperationStateException.class, () -> bulkOperationService.cancelOperationById(operationId));
+    assertThrows(IllegalOperationStateException.class,
+            () -> bulkOperationService.cancelOperationById(operationId));
   }
 
   @ParameterizedTest
   @EnumSource(DiscoverySuppressTestData.class)
   @SneakyThrows
-  void shouldUpdateItemsWhenCommittingHoldingsRecordDiscoverySuppressed(DiscoverySuppressTestData testData) {
+  void shouldUpdateItemsWhenCommittingHoldingsRecordDiscoverySuppressed(
+          DiscoverySuppressTestData testData) {
     var triggeringFileName = "identifiers.csv";
     var matchedRecordsJsonFileName = "matched.json";
     var modifiedRecordsJsonFileName = "modified.json";
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
-      .id(operationId)
-      .linkToTriggeringCsvFile(triggeringFileName)
-      .linkToMatchedRecordsJsonFile(matchedRecordsJsonFileName)
-      .linkToModifiedRecordsJsonFile(modifiedRecordsJsonFileName)
-      .entityType(HOLDINGS_RECORD)
-      .identifierType(IdentifierType.ID)
-      .build();
+            .id(operationId)
+            .linkToTriggeringCsvFile(triggeringFileName)
+            .linkToMatchedRecordsJsonFile(matchedRecordsJsonFileName)
+            .linkToModifiedRecordsJsonFile(modifiedRecordsJsonFileName)
+            .entityType(HOLDINGS_RECORD)
+            .identifierType(IdentifierType.ID)
+            .build();
     var holdingsId = UUID.randomUUID().toString();
-    var originalHoldingsString = objectMapper.writeValueAsString(ExtendedHoldingsRecord.builder().entity(HoldingsRecord.builder()
-      .id(holdingsId)
-      .discoverySuppress(testData.originalHoldingsDiscoverySuppress).build()).build());
-    var modifiedHoldingsString = objectMapper.writeValueAsString(ExtendedHoldingsRecord.builder().entity(HoldingsRecord.builder()
-      .id(holdingsId)
-      .discoverySuppress(testData.modifiedHoldingsDiscoverySuppress).build()).build());
+    var originalHoldingsString = objectMapper.writeValueAsString(ExtendedHoldingsRecord
+            .builder().entity(HoldingsRecord.builder()
+            .id(holdingsId)
+            .discoverySuppress(testData.originalHoldingsDiscoverySuppress).build()).build());
+    var modifiedHoldingsString = objectMapper.writeValueAsString(ExtendedHoldingsRecord
+            .builder().entity(HoldingsRecord.builder()
+            .id(holdingsId)
+            .discoverySuppress(testData.modifiedHoldingsDiscoverySuppress).build()).build());
     when(bulkOperationRepository.save(any()))
-      .thenReturn(operation);
+            .thenReturn(operation);
     when(remoteFileSystemClient.get(matchedRecordsJsonFileName))
-      .thenReturn(new ByteArrayInputStream(originalHoldingsString.getBytes()));
+            .thenReturn(new ByteArrayInputStream(originalHoldingsString.getBytes()));
     when(remoteFileSystemClient.get(modifiedRecordsJsonFileName))
-      .thenReturn(new ByteArrayInputStream(modifiedHoldingsString.getBytes()));
+            .thenReturn(new ByteArrayInputStream(modifiedHoldingsString.getBytes()));
     when(remoteFileSystemClient.writer(anyString()))
-      .thenReturn(new StringWriter());
+            .thenReturn(new StringWriter());
     doNothing().when(errorService).saveError(any(), any(), any(), eq(ErrorType.ERROR));
     when(ruleService.getRules(operationId))
-      .thenReturn(new BulkOperationRuleCollection()
-        .bulkOperationRules(List.of(new BulkOperationRule()
-          .ruleDetails(new RuleDetails()
-            .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
-            .actions(List.of(new Action()
-              .type(testData.actionType)
-              .parameters(Collections.singletonList(new Parameter()
-                .key(APPLY_TO_ITEMS)
-                .value("true")))))))));
+            .thenReturn(new BulkOperationRuleCollection()
+                    .bulkOperationRules(List.of(new BulkOperationRule()
+                            .ruleDetails(new RuleDetails()
+                                    .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
+                                    .actions(List.of(new Action()
+                                            .type(testData.actionType)
+                                            .parameters(Collections.singletonList(new Parameter()
+                                                    .key(APPLY_TO_ITEMS)
+                                                    .value("true")))))))));
     when(itemClient.getByQuery(anyString(), anyInt()))
-      .thenReturn(ItemCollection.builder()
-        .items(List.of(
-          Item.builder()
-            .id(UUID.randomUUID().toString())
-            .discoverySuppress(testData.item1DiscoverySuppress)
-            .build(),
-          Item.builder()
-            .id(UUID.randomUUID().toString())
-            .discoverySuppress(testData.item2DiscoverySuppress)
-            .build()))
-        .build());
+            .thenReturn(ItemCollection.builder()
+                    .items(List.of(
+                            Item.builder()
+                                    .id(UUID.randomUUID().toString())
+                                    .discoverySuppress(testData.item1DiscoverySuppress)
+                                    .build(),
+                            Item.builder()
+                                    .id(UUID.randomUUID().toString())
+                                    .discoverySuppress(testData.item2DiscoverySuppress)
+                                    .build()))
+                    .build());
     when(executionRepository.save(any()))
-      .thenReturn(new BulkOperationExecution());
+            .thenReturn(new BulkOperationExecution());
 
-    doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(anyString(), any(), anyString());
+    doNothing().when(permissionsValidator).checkIfBulkEditWritePermissionExists(anyString(), any(),
+            anyString());
 
     bulkOperationService.commit(operation);
 
@@ -1499,7 +1619,8 @@ class BulkOperationServiceTest extends BaseTest {
       verify(itemClient, times(testData.expectedNumOfItemUpdates)).updateItem(any(), anyString());
     }
     if (nonNull(testData.expectedErrorMessage)) {
-      verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage), eq(ErrorType.WARNING));
+      verify(errorService).saveError(any(), any(), eq(testData.expectedErrorMessage),
+              eq(ErrorType.WARNING));
     }
   }
 
@@ -1508,24 +1629,24 @@ class BulkOperationServiceTest extends BaseTest {
   @SneakyThrows
   void shouldWriteBeanToCsvAfterConverterException(OperationStatusType operationStatusType) {
     var item = Item.builder()
-      .id(UUID.randomUUID().toString())
-      .barcode("barcode")
-      .statisticalCodes(Collections.singletonList(UUID.randomUUID().toString()))
-      .build();
+            .id(UUID.randomUUID().toString())
+            .barcode("barcode")
+            .statisticalCodes(Collections.singletonList(UUID.randomUUID().toString()))
+            .build();
 
     var operation = BulkOperation.builder()
-      .id(UUID.randomUUID())
-      .identifierType(IdentifierType.BARCODE)
-      .status(operationStatusType)
-      .build();
+            .id(UUID.randomUUID())
+            .identifierType(IdentifierType.BARCODE)
+            .status(operationStatusType)
+            .build();
 
     when(itemReferenceService.getStatisticalCodeById(anyString()))
-      .thenThrow(new NotFoundException("not found"));
+            .thenThrow(new NotFoundException("not found"));
 
     try (var stringWriter = new StringWriter()) {
       var writer = new BulkOperationsEntityCsvWriter(stringWriter, Item.class);
       List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
-      CSVHelper.writeBeanToCsv(operation, writer, item, bulkOperationExecutionContents);
+      CsvHelper.writeBeanToCsv(operation, writer, item, bulkOperationExecutionContents);
       assertThat(stringWriter.toString(), containsString("UNKNOWN"));
       if (APPLY_CHANGES.equals(operation.getStatus())) {
         assertThat(bulkOperationExecutionContents, hasSize(0));
@@ -1541,29 +1662,31 @@ class BulkOperationServiceTest extends BaseTest {
     headers.put("tenant", List.of("central"));
 
     var item = Item.builder()
-      .id(UUID.randomUUID().toString())
-      .barcode("barcode")
-      .statisticalCodes(Collections.singletonList(UUID.randomUUID().toString()))
-      .build();
+            .id(UUID.randomUUID().toString())
+            .barcode("barcode")
+            .statisticalCodes(Collections.singletonList(UUID.randomUUID().toString()))
+            .build();
     var extendedItem = ExtendedItem.builder().tenantId("member").entity(item).build();
 
     var operation = BulkOperation.builder()
-      .id(UUID.randomUUID())
-      .identifierType(IdentifierType.BARCODE)
-      .build();
+            .id(UUID.randomUUID())
+            .identifierType(IdentifierType.BARCODE)
+            .build();
 
     var rules = new BulkOperationRule()
-      .bulkOperationId(operation.getId())
-      .ruleDetails(new RuleDetails()
-        .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
-        .actions(List.of(new Action()
-          .type(UpdateActionType.SET_TO_TRUE))));
-    var rulesCollection = new BulkOperationRuleCollection().bulkOperationRules(List.of(rules)).totalRecords(1);
+            .bulkOperationId(operation.getId())
+            .ruleDetails(new RuleDetails()
+                    .option(UpdateOptionType.SUPPRESS_FROM_DISCOVERY)
+                    .actions(List.of(new Action()
+                            .type(UpdateActionType.SET_TO_TRUE))));
+    var rulesCollection = new BulkOperationRuleCollection().bulkOperationRules(List.of(rules))
+            .totalRecords(1);
 
     when(consortiaService.isTenantCentral(any())).thenReturn(true);
 
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      var modified = bulkOperationService.processUpdate(extendedItem, operation, rulesCollection, ExtendedItem.class);
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      var modified = bulkOperationService.processUpdate(extendedItem, operation, rulesCollection,
+              ExtendedItem.class);
       var itemEntity = (Item) modified.getUpdated().getRecordBulkOperationEntity();
 
       assertTrue(itemEntity.getDiscoverySuppress());
@@ -1572,31 +1695,33 @@ class BulkOperationServiceTest extends BaseTest {
 
   @Test
   void shouldProcessDataImportResult() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       UUID dataImportJobProfileId = UUID.randomUUID();
-      BulkOperation operation = BulkOperation.builder()
-        .id(UUID.randomUUID())
-        .dataImportJobProfileId(dataImportJobProfileId)
-        .build();
 
-      when(metadataProviderService.getJobExecutions(dataImportJobProfileId)).thenReturn(List.of(new DataImportJobExecution().status(DataImportStatus.COMMITTED)));
-      when(metadataProviderService.calculateProgress(any())).thenReturn(new DataImportProgress().current(10));
+      when(metadataProviderService.getJobExecutions(dataImportJobProfileId))
+              .thenReturn(List.of(new DataImportJobExecution().status(DataImportStatus.COMMITTED)));
+      when(metadataProviderService.calculateProgress(any()))
+              .thenReturn(new DataImportProgress().current(10));
       when(metadataProviderService.isDataImportJobCompleted(any())).thenReturn(true);
-      when(metadataProviderService.fetchUpdatedInstanceIds(any())).thenReturn(List.of(UUID.randomUUID().toString()));
-
+      when(metadataProviderService.fetchUpdatedInstanceIds(any()))
+              .thenReturn(List.of(UUID.randomUUID().toString()));
+      BulkOperation operation = BulkOperation.builder()
+              .id(UUID.randomUUID())
+              .dataImportJobProfileId(dataImportJobProfileId)
+              .build();
       bulkOperationService.processDataImportResult(operation);
 
       await().atMost(ASYNC_OPERATION_TIMEOUT_IN_SECONDS, SECONDS).untilAsserted(() ->
-        verify(metadataProviderService).getJobExecutions(dataImportJobProfileId)
+              verify(metadataProviderService).getJobExecutions(dataImportJobProfileId)
       );
       await().atMost(ASYNC_OPERATION_TIMEOUT_IN_SECONDS, SECONDS).untilAsserted(() ->
-        verify(metadataProviderService).calculateProgress(any())
+              verify(metadataProviderService).calculateProgress(any())
       );
       await().atMost(ASYNC_OPERATION_TIMEOUT_IN_SECONDS, SECONDS).untilAsserted(() ->
-        verify(metadataProviderService).isDataImportJobCompleted(any())
+              verify(metadataProviderService).isDataImportJobCompleted(any())
       );
       await().atMost(ASYNC_OPERATION_TIMEOUT_IN_SECONDS, SECONDS).untilAsserted(() ->
-        verify(metadataProviderService).fetchUpdatedInstanceIds(any())
+              verify(metadataProviderService).fetchUpdatedInstanceIds(any())
       );
     }
   }
@@ -1608,22 +1733,21 @@ class BulkOperationServiceTest extends BaseTest {
     var matchedCsvFileName = "matched.csv";
     var matchedJsonFileName = "matched.json";
     var operation = BulkOperation.builder()
-      .id(operationId)
-      .entityType(INSTANCE_MARC)
-      .linkToTriggeringCsvFile("instances.csv")
-      .linkToMatchedRecordsCsvFile(matchedCsvFileName)
-      .build();
-    var processing = BulkOperationDataProcessing.builder()
-      .bulkOperationId(operationId)
-      .build();
+            .id(operationId)
+            .entityType(INSTANCE_MARC)
+            .linkToTriggeringCsvFile("instances.csv")
+            .linkToMatchedRecordsCsvFile(matchedCsvFileName)
+            .build();
 
     when(remoteFileSystemClient.get(matchedCsvFileName))
-      .thenReturn(new FileInputStream("src/test/resources/files/instance.csv"));
+            .thenReturn(new FileInputStream("src/test/resources/files/instance.csv"));
     when(remoteFileSystemClient.get(matchedJsonFileName))
-      .thenReturn(new FileInputStream("src/test/resources/files/extended_instance.json"));
+            .thenReturn(new FileInputStream("src/test/resources/files/extended_instance.json"));
     when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(operation));
-
+            .thenReturn(Optional.of(operation));
+    var processing = BulkOperationDataProcessing.builder()
+            .bulkOperationId(operationId)
+            .build();
     bulkOperationService.confirm(processing);
 
     verify(bulkOperationRepository, times(0)).save(any(BulkOperation.class));
@@ -1633,15 +1757,15 @@ class BulkOperationServiceTest extends BaseTest {
   void shouldSkipConfirmForInstanceMarcIfNoMatchedRecordsMarcFile() {
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
-      .id(operationId)
-      .entityType(INSTANCE_MARC)
-      .build();
+            .id(operationId)
+            .entityType(INSTANCE_MARC)
+            .build();
     var processing = BulkOperationDataProcessing.builder()
-      .bulkOperationId(operationId)
-      .build();
+            .bulkOperationId(operationId)
+            .build();
 
     when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(operation));
+            .thenReturn(Optional.of(operation));
 
     bulkOperationService.confirmForInstanceMarc(processing);
 
@@ -1656,46 +1780,46 @@ class BulkOperationServiceTest extends BaseTest {
     var operationId = UUID.randomUUID();
     var matchedMrcFileName = "matched.mrc";
     var operation = BulkOperation.builder()
-      .id(operationId)
-      .linkToTriggeringCsvFile("instances.csv")
-      .linkToMatchedRecordsMarcFile(matchedMrcFileName)
-      .entityType(INSTANCE_MARC)
+            .id(operationId)
+            .linkToTriggeringCsvFile("instances.csv")
+            .linkToMatchedRecordsMarcFile(matchedMrcFileName)
+            .entityType(INSTANCE_MARC)
 
-      .build();
-    var processing = BulkOperationDataProcessing.builder()
-      .bulkOperationId(operationId)
-      .build();
+            .build();
 
     when(bulkOperationRepository.findById(operationId))
-      .thenReturn(Optional.of(operation));
+            .thenReturn(Optional.of(operation));
     when(ruleService.getMarcRules(operationId))
-      .thenReturn(new BulkOperationMarcRuleCollection());
+            .thenReturn(new BulkOperationMarcRuleCollection());
     when(remoteFileSystemClient.get(matchedMrcFileName))
-      .thenReturn(new FileInputStream("src/test/resources/files/matched.mrc"));
-
+            .thenReturn(new FileInputStream("src/test/resources/files/matched.mrc"));
+    var processing = BulkOperationDataProcessing.builder()
+            .bulkOperationId(operationId)
+            .build();
     bulkOperationService.confirmForInstanceMarc(processing);
 
     verify(marcInstanceDataProcessor, never()).update(any(BulkOperation.class), any(Record.class),
-      any(org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection.class), any(Date.class));
+            any(org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection.class),
+            any(Date.class));
   }
 
   @Test
   void shouldSkipCommitIfNoRules() {
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
-      .id(operationId)
-      .entityType(INSTANCE_MARC)
-      .linkToTriggeringCsvFile("instances.csv")
-      .linkToModifiedRecordsCsvFile("modified.csv")
-      .linkToModifiedRecordsMarcFile("modified.mrc")
-      .build();
+            .id(operationId)
+            .entityType(INSTANCE_MARC)
+            .linkToTriggeringCsvFile("instances.csv")
+            .linkToModifiedRecordsCsvFile("modified.csv")
+            .linkToModifiedRecordsMarcFile("modified.mrc")
+            .build();
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(operation);
+            .thenReturn(operation);
     when(ruleService.hasAdministrativeUpdates(operation))
-      .thenReturn(false);
+            .thenReturn(false);
     when(ruleService.hasMarcUpdates(operation))
-      .thenReturn(false);
+            .thenReturn(false);
 
     bulkOperationService.commit(operation);
 
@@ -1708,27 +1832,28 @@ class BulkOperationServiceTest extends BaseTest {
 
   @ParameterizedTest
   @CsvSource(textBlock = """
-    true  | false
-    false | true
-    """, delimiter = '|')
-  void shouldStartCommitInstanceMarcIfModifiedMarcFileIsPresent(boolean hasAdministrativeRules, boolean hasMarcRules) {
+          true  | false
+          false | true
+          """, delimiter = '|')
+  void shouldStartCommitInstanceMarcIfModifiedMarcFileIsPresent(boolean hasAdministrativeRules,
+                                                                boolean hasMarcRules) {
     var operationId = UUID.randomUUID();
     var operation = BulkOperation.builder()
-      .id(operationId)
-      .entityType(INSTANCE_MARC)
-      .linkToTriggeringCsvFile("instances.csv")
-      .linkToModifiedRecordsJsonFile("modified.json")
-      .linkToModifiedRecordsMarcFile(hasMarcRules ? "modified.mrc" : null)
-      .build();
+            .id(operationId)
+            .entityType(INSTANCE_MARC)
+            .linkToTriggeringCsvFile("instances.csv")
+            .linkToModifiedRecordsJsonFile("modified.json")
+            .linkToModifiedRecordsMarcFile(hasMarcRules ? "modified.mrc" : null)
+            .build();
 
     when(executionRepository.save(any(BulkOperationExecution.class)))
-      .thenReturn(new BulkOperationExecution());
+            .thenReturn(new BulkOperationExecution());
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(operation);
+            .thenReturn(operation);
     when(ruleService.hasAdministrativeUpdates(operation))
-      .thenReturn(hasAdministrativeRules);
+            .thenReturn(hasAdministrativeRules);
     when(ruleService.hasMarcUpdates(operation))
-      .thenReturn(hasMarcRules);
+            .thenReturn(hasMarcRules);
 
     bulkOperationService.commit(operation);
 
@@ -1736,24 +1861,27 @@ class BulkOperationServiceTest extends BaseTest {
       verify(executionRepository, times(2)).save(any(BulkOperationExecution.class));
     }
     if (hasMarcRules) {
-      verify(marcUpdateService).commitForInstanceMarc(any(BulkOperation.class), any(Set.class));
+      verify(marcUpdateService).commitForInstanceMarc(any(BulkOperation.class),
+              any(Set.class));
     }
   }
 
   @Test
   @SneakyThrows
-  void shouldRemoveBOMOnFileUpload() {
-    var inputStream = new SequenceInputStream(new ByteArrayInputStream(UTF_8_BOM), new ByteArrayInputStream("abc".getBytes()));
+  void shouldRemoveBomOnFileUpload() {
+    var inputStream = new SequenceInputStream(new ByteArrayInputStream(UTF_8_BOM),
+            new ByteArrayInputStream("abc".getBytes()));
     var file = new MockMultipartFile("file", "uuids.csv", MediaType.TEXT_PLAIN_VALUE, inputStream);
     var contentCaptor = ArgumentCaptor.forClass(InputStream.class);
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(new BulkOperation());
+            .thenReturn(new BulkOperation());
 
     bulkOperationService.uploadCsvFile(USER, IdentifierType.ID, false, null, null, file);
 
     verify(remoteFileSystemClient).put(contentCaptor.capture(), anyString());
-    var contentCharsByUtf8BomLen = Arrays.copyOfRange(contentCaptor.getValue().readAllBytes(), 0, UTF_8_BOM.length);
+    var contentCharsByUtf8BomLen = Arrays.copyOfRange(contentCaptor.getValue().readAllBytes(), 0,
+            UTF_8_BOM.length);
     assertFalse(Arrays.equals(UTF_8_BOM, contentCharsByUtf8BomLen));
   }
 
@@ -1764,21 +1892,23 @@ class BulkOperationServiceTest extends BaseTest {
     var filename = "file.csv";
     var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
     var bulkOperation = BulkOperation.builder()
-      .id(bulkOperationId)
-      .linkToTriggeringCsvFile(filename)
-      .entityType(INSTANCE)
-      .identifierType(IdentifierType.ID)
-      .build();
+            .id(bulkOperationId)
+            .linkToTriggeringCsvFile(filename)
+            .entityType(INSTANCE)
+            .identifierType(IdentifierType.ID)
+            .build();
 
     when(bulkOperationRepository.findById(bulkOperationId))
-      .thenReturn(Optional.of(bulkOperation));
+            .thenReturn(Optional.of(bulkOperation));
     when(remoteFileSystemClient.getNumOfLines(filename))
-      .thenReturn(1);
+            .thenReturn(1);
 
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
-      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(), bulkOperationStart);
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      bulkOperationService.startBulkOperation(bulkOperationId, UUID.randomUUID(),
+              bulkOperationStart);
 
-      await().untilAsserted(() -> verify(exportJobManagerSync).launchJob(any(JobLaunchRequest.class)));
+      await().untilAsserted(() -> verify(exportJobManagerSync)
+              .launchJob(any(JobLaunchRequest.class)));
     }
   }
 
@@ -1789,7 +1919,7 @@ class BulkOperationServiceTest extends BaseTest {
     var bulkOperationId = UUID.randomUUID();
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
+            .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
 
     bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
 
@@ -1797,23 +1927,26 @@ class BulkOperationServiceTest extends BaseTest {
     var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
     verify(bulkOperationRepository, atLeastOnce()).save(operationCaptor.capture());
     assertTrue(
-      operationCaptor.getAllValues().stream()
-        .anyMatch(op -> op.getErrorMessage() != null && op.getErrorMessage().toLowerCase().contains("empty"))
+            operationCaptor.getAllValues().stream()
+                    .anyMatch(op -> op.getErrorMessage() != null
+                            && op.getErrorMessage().toLowerCase().contains("empty"))
     );
   }
 
   @SneakyThrows
   @Test
   void processesFileSuccessfullyWhenNotEmpty() {
-    var file = new MockMultipartFile("file", "barcodes.csv", MediaType.TEXT_PLAIN_VALUE, "barcode1\nbarcode2".getBytes());
+    var file = new MockMultipartFile("file", "barcodes.csv",
+            MediaType.TEXT_PLAIN_VALUE, "barcode1\nbarcode2".getBytes());
     var bulkOperationId = UUID.randomUUID();
 
     when(bulkOperationRepository.save(any(BulkOperation.class)))
-      .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
+            .thenReturn(BulkOperation.builder().id(bulkOperationId).build());
     when(remoteFileSystemClient.put(any(), any()))
-      .thenReturn("uploadedFilePath");
+            .thenReturn("uploadedFilePath");
 
-    var operation = bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false, null, null, file);
+    var operation = bulkOperationService.uploadCsvFile(USER, IdentifierType.BARCODE, false,
+            null, null, file);
 
     assertThat(operation.getId(), equalTo(bulkOperationId));
     ArgumentCaptor<InputStream> streamCaptor = ArgumentCaptor.forClass(InputStream.class);
@@ -1829,31 +1962,34 @@ class BulkOperationServiceTest extends BaseTest {
     var operationId = UUID.randomUUID();
     var failedHrid = "inst-hrid-1";
     var operation = BulkOperation.builder()
-      .id(operationId)
-      .entityType(INSTANCE_MARC)
-      .linkToTriggeringCsvFile("instances.csv")
-      .linkToMatchedRecordsJsonFile("matched.json")
-      .linkToModifiedRecordsJsonFile("modified.json")
-      .linkToModifiedRecordsMarcFile("modified.mrc")
-      .matchedNumOfRecords(1)
-      .build();
+            .id(operationId)
+            .entityType(INSTANCE_MARC)
+            .linkToTriggeringCsvFile("instances.csv")
+            .linkToMatchedRecordsJsonFile("matched.json")
+            .linkToModifiedRecordsJsonFile("modified.json")
+            .linkToModifiedRecordsMarcFile("modified.mrc")
+            .matchedNumOfRecords(1)
+            .build();
 
     var recordUpdateService = mock(RecordUpdateService.class);
 
     when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
-    when(executionRepository.save(any(BulkOperationExecution.class))).thenReturn(new BulkOperationExecution());
+    when(executionRepository.save(any(BulkOperationExecution.class)))
+            .thenReturn(new BulkOperationExecution());
     when(ruleService.hasAdministrativeUpdates(operation)).thenReturn(true);
     when(ruleService.hasMarcUpdates(operation)).thenReturn(false);
 
     // Simulate reading a single instance with HRID
     var originalJson = "[{\"hrid\":\"" + failedHrid + "\"}]";
     var modifiedJson = "[{\"hrid\":\"" + failedHrid + "\"}]";
-    when(remoteFileSystemClient.get("matched.json")).thenReturn(new ByteArrayInputStream(originalJson.getBytes()));
-    when(remoteFileSystemClient.get("modified.json")).thenReturn(new ByteArrayInputStream(modifiedJson.getBytes()));
+    when(remoteFileSystemClient.get("matched.json"))
+            .thenReturn(new ByteArrayInputStream(originalJson.getBytes()));
+    when(remoteFileSystemClient.get("modified.json"))
+            .thenReturn(new ByteArrayInputStream(modifiedJson.getBytes()));
 
     // Simulate updateEntity throwing an exception
     doThrow(new OptimisticLockingException("Update failed", null, EMPTY)).when(recordUpdateService)
-      .updateEntity(any(), any(), any());
+            .updateEntity(any(), any(), any());
 
     // Act
     bulkOperationService.commit(operation);
@@ -1870,31 +2006,34 @@ class BulkOperationServiceTest extends BaseTest {
     var operationId = UUID.randomUUID();
     var failedHrid = "inst-hrid-1";
     var operation = BulkOperation.builder()
-      .id(operationId)
-      .entityType(INSTANCE_MARC)
-      .linkToTriggeringCsvFile("instances.csv")
-      .linkToMatchedRecordsJsonFile("matched.json")
-      .linkToModifiedRecordsJsonFile("modified.json")
-      .linkToModifiedRecordsMarcFile("modified.mrc")
-      .matchedNumOfRecords(1)
-      .build();
+            .id(operationId)
+            .entityType(INSTANCE_MARC)
+            .linkToTriggeringCsvFile("instances.csv")
+            .linkToMatchedRecordsJsonFile("matched.json")
+            .linkToModifiedRecordsJsonFile("modified.json")
+            .linkToModifiedRecordsMarcFile("modified.mrc")
+            .matchedNumOfRecords(1)
+            .build();
 
     var recordUpdateService = mock(RecordUpdateService.class);
 
     when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
-    when(executionRepository.save(any(BulkOperationExecution.class))).thenReturn(new BulkOperationExecution());
+    when(executionRepository.save(any(BulkOperationExecution.class)))
+            .thenReturn(new BulkOperationExecution());
     when(ruleService.hasAdministrativeUpdates(operation)).thenReturn(true);
     when(ruleService.hasMarcUpdates(operation)).thenReturn(false);
 
     // Simulate reading a single instance with HRID
     var originalJson = "[{\"hrid\":\"" + failedHrid + "\"}]";
     var modifiedJson = "[{\"hrid\":\"" + failedHrid + "\"}]";
-    when(remoteFileSystemClient.get("matched.json")).thenReturn(new ByteArrayInputStream(originalJson.getBytes()));
-    when(remoteFileSystemClient.get("modified.json")).thenReturn(new ByteArrayInputStream(modifiedJson.getBytes()));
+    when(remoteFileSystemClient.get("matched.json"))
+            .thenReturn(new ByteArrayInputStream(originalJson.getBytes()));
+    when(remoteFileSystemClient.get("modified.json"))
+            .thenReturn(new ByteArrayInputStream(modifiedJson.getBytes()));
 
     // Simulate updateEntity throwing an exception
     doThrow(new WritePermissionDoesNotExist("Update failed")).when(recordUpdateService)
-      .updateEntity(any(), any(), any());
+            .updateEntity(any(), any(), any());
 
     // Act
     bulkOperationService.commit(operation);
@@ -1908,10 +2047,8 @@ class BulkOperationServiceTest extends BaseTest {
   @Test
   void triggerByQuery_shouldSaveIdentifiersAndStartBulkOperation_whenFqmApproachIsFalse() {
 
-    try (var ignored =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var ignored = new FolioExecutionContextSetter(folioExecutionContext)) {
       // Arrange
-      var userId = UUID.randomUUID();
-      var queryRequest = mock(org.folio.bulkops.domain.dto.QueryRequest.class);
       var operation = BulkOperation.builder()
               .id(UUID.randomUUID())
               .status(OperationStatusType.NEW)
@@ -1921,11 +2058,13 @@ class BulkOperationServiceTest extends BaseTest {
       doNothing().when(queryService).saveIdentifiers(operation);
       when(bulkOperationRepository.findById(operation.getId())).thenReturn(Optional.of(operation));
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
-      when(entityTypeService.getEntityTypeById(any())).thenReturn(mock(org.folio.bulkops.domain.dto.EntityType.class));
+      when(entityTypeService.getEntityTypeById(any()))
+              .thenReturn(mock(org.folio.bulkops.domain.dto.EntityType.class));
 
       // Set fqmQueryApproach to false
       ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", false);
-
+      var userId = UUID.randomUUID();
+      var queryRequest = mock(org.folio.bulkops.domain.dto.QueryRequest.class);
       // Act
       var result = bulkOperationService.triggerByQuery(userId, queryRequest);
 
@@ -1939,8 +2078,6 @@ class BulkOperationServiceTest extends BaseTest {
   @Test
   void triggerByQuery_shouldNotStartBulkOperation_whenFqmApproachIsTrue() {
     // Arrange
-    var userId = UUID.randomUUID();
-    var queryRequest = mock(org.folio.bulkops.domain.dto.QueryRequest.class);
     var operation = BulkOperation.builder()
             .id(UUID.randomUUID())
             .status(OperationStatusType.NEW)
@@ -1951,7 +2088,8 @@ class BulkOperationServiceTest extends BaseTest {
 
     // Set fqmQueryApproach to true
     ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", true);
-
+    var userId = UUID.randomUUID();
+    var queryRequest = mock(org.folio.bulkops.domain.dto.QueryRequest.class);
     // Act
     var result = bulkOperationService.triggerByQuery(userId, queryRequest);
 
@@ -1990,12 +2128,15 @@ class BulkOperationServiceTest extends BaseTest {
     when(userClient.getUserById(userId)).thenReturn(originalUser);
     when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(operation));
     when(remoteFileSystemClient.get("modified.json")).thenReturn(
-            new ByteArrayInputStream(("{\"id\":\"" + userId + "\",\"personal\":{\"pronouns\":\"" + pronouns + "\"},\"patronGroup\":\"" + patronGroupModified + "\"}").getBytes())
+            new ByteArrayInputStream(("{\"id\":\"" + userId + "\",\"personal\":{\"pronouns\":\""
+                    + pronouns + "\"},\"patronGroup\":\"" + patronGroupModified + "\"}").getBytes())
     );
     when(remoteFileSystemClient.get("matched.json")).thenReturn(
-            new ByteArrayInputStream(("{\"id\":\"" + userId + "\",\"personal\":{\"pronouns\":\"" + pronouns + "\"},\"patronGroup\":\"" + patronGroupOriginal + "\"}").getBytes())
+            new ByteArrayInputStream(("{\"id\":\"" + userId + "\",\"personal\":{\"pronouns\":\""
+                    + pronouns + "\"},\"patronGroup\":\"" + patronGroupOriginal + "\"}").getBytes())
     );
-    when(executionRepository.save(any(BulkOperationExecution.class))).thenReturn(new BulkOperationExecution().withProcessedRecords(1));
+    when(executionRepository.save(any(BulkOperationExecution.class)))
+            .thenReturn(new BulkOperationExecution().withProcessedRecords(1));
     doAnswer(invocation -> {
       originalUser.setPatronGroup(patronGroupModified);
       return null;
@@ -2032,26 +2173,34 @@ class BulkOperationServiceTest extends BaseTest {
             .build();
     var originalInstance = Instance.builder()
             .id(instanceId)
-            .subject(List.of(Subject.builder().authorityId(authorityId).value(subjectValueOriginal).build()))
+            .subject(List.of(Subject.builder().authorityId(authorityId).value(subjectValueOriginal)
+                    .build()))
             .build();
 
     // Mock
     when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
-    when(instanceClient.getInstanceByQuery("id==" + instanceId, 1)).thenReturn(new InstanceCollection().withInstances(List.of(originalInstance)).withTotalRecords(1));
+    when(instanceClient.getInstanceByQuery("id==" + instanceId, 1))
+            .thenReturn(new InstanceCollection().withInstances(List.of(originalInstance))
+                    .withTotalRecords(1));
     when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(operation));
     when(remoteFileSystemClient.get("modified.json")).thenReturn(
-            new ByteArrayInputStream(("{\"tenantId\":\"diku\", \"entity\": {\"id\":\"" + instanceId + "\",\"source\": \"MARC\",\"subjects\":[{\"authorityId\":\"" + authorityId + "\",\"value\":\"" + subjectValueModified + "\"}]}}").getBytes())
+            new ByteArrayInputStream(("{\"tenantId\":\"diku\", \"entity\": {\"id\":\""
+                    + instanceId + "\",\"source\": \"MARC\",\"subjects\":[{\"authorityId\":\""
+                    + authorityId + "\",\"value\":\"" + subjectValueModified + "\"}]}}").getBytes())
     );
     when(remoteFileSystemClient.get("matched.json")).thenReturn(
-            new ByteArrayInputStream(("{\"tenantId\":\"diku\", \"entity\": {\"id\":\"" + instanceId + "\",\"source\": \"MARC\",\"subjects\":[{\"authorityId\":\"" + authorityId + "\",\"value\":\"" + subjectValueOriginal + "\"}]}}").getBytes())
+            new ByteArrayInputStream(("{\"tenantId\":\"diku\", \"entity\": {\"id\":\""
+                    + instanceId + "\",\"source\": \"MARC\",\"subjects\":[{\"authorityId\":\""
+                    + authorityId + "\",\"value\":\"" + subjectValueOriginal + "\"}]}}").getBytes())
     );
-    when(remoteFileSystemClient.get(argThat(name -> name.contains("Changed-Records-CSV")))).thenReturn(
-            new ByteArrayInputStream(("""
-                    Instance UUID,Subject
-                    "Subject headings;Subject source;Subject type
-                    modified value;-;-\"""").getBytes())
-    );
-    when(executionRepository.save(any(BulkOperationExecution.class))).thenReturn(new BulkOperationExecution().withProcessedRecords(1));
+    when(remoteFileSystemClient.get(argThat(name -> name.contains("Changed-Records-CSV"))))
+            .thenReturn(
+                    new ByteArrayInputStream(("""
+                            Instance UUID,Subject
+                            "Subject headings;Subject source;Subject type
+                            modified value;-;-\"""").getBytes()));
+    when(executionRepository.save(any(BulkOperationExecution.class)))
+            .thenReturn(new BulkOperationExecution().withProcessedRecords(1));
     doAnswer(invocation -> {
       originalInstance.getSubject().getFirst().setValue(subjectValueModified);
       return null;

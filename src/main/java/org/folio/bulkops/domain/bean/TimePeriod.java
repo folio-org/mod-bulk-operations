@@ -1,10 +1,8 @@
 package org.folio.bulkops.domain.bean;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -41,6 +39,6 @@ public class TimePeriod {
     final ChronoUnit chronoUnit = getInterval();
 
     return chronoUnit == ChronoUnit.DAYS || chronoUnit == ChronoUnit.WEEKS
-      || chronoUnit == ChronoUnit.MONTHS;
+            || chronoUnit == ChronoUnit.MONTHS;
   }
 }

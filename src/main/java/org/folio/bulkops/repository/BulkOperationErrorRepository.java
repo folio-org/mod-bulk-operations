@@ -1,7 +1,6 @@
 package org.folio.bulkops.repository;
 
 import java.util.UUID;
-
 import org.folio.bulkops.domain.entity.BulkOperationError;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -21,37 +21,38 @@ import static org.folio.bulkops.util.Constants.SUCCEEDING_TITLES;
 import static org.folio.bulkops.util.Constants.TENANT_ID;
 import static org.folio.bulkops.util.Constants.TITLE;
 import static org.folio.bulkops.util.FqmKeys.FQM_DATE_OF_PUBLICATION_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_PUBLICATION_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_CHILD_INSTANCES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PARENT_INSTANCES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PRECEDING_TITLES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PUBLICATION_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SHARED_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SUCCEEDING_TITLES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_PUBLISHER_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_USERS_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_USERS_TYPE_KEY;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.annotation.PostConstruct;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import jakarta.annotation.PostConstruct;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -66,7 +67,6 @@ import org.folio.bulkops.service.ConsortiaService;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 
 @Service
 @Log4j2
@@ -88,7 +88,8 @@ public class FqmContentFetcher {
 
   @PostConstruct
   private void logStartup() {
-    log.info("FqmContentFetcher initialized with parameters - max_parallel_chunks: {}, max_chunk_size: {}", maxParallelChunks, chunkSize);
+    log.info("FqmContentFetcher initialized with parameters - max_parallel_chunks: {}, "
+                    + "max_chunk_size: {}", maxParallelChunks, chunkSize);
   }
 
   /**
@@ -99,16 +100,19 @@ public class FqmContentFetcher {
    * @param total the total number of records to fetch
    * @return an InputStream containing the fetched content
    */
-  public InputStream fetch(UUID queryId, EntityType entityType, int total, List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+  public InputStream fetch(UUID queryId, EntityType entityType, int total,
+                           List<BulkOperationExecutionContent> bulkOperationExecutionContents,
                            UUID operationId) {
     try (var executor = Executors.newFixedThreadPool(maxParallelChunks)) {
       int chunks = (total + chunkSize - 1) / chunkSize;
 
-      boolean isCentralTenant = consortiaService.isTenantCentral(folioExecutionContext.getTenantId());
+      boolean isCentralTenant = consortiaService.isTenantCentral(
+              folioExecutionContext.getTenantId());
 
       List<CompletableFuture<InputStream>> tasks = IntStream.range(0, chunks)
           .mapToObj(chunk ->
-              CompletableFuture.supplyAsync(() -> task(queryId, entityType, chunk, total, bulkOperationExecutionContents, operationId, isCentralTenant), executor)
+              CompletableFuture.supplyAsync(() -> task(queryId, entityType, chunk, total,
+                      bulkOperationExecutionContents, operationId, isCentralTenant), executor)
           )
           .toList();
 
@@ -129,7 +133,8 @@ public class FqmContentFetcher {
     }
   }
 
-  private InputStream task(UUID queryId, EntityType entityType, int chunk, int total, List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+  private InputStream task(UUID queryId, EntityType entityType, int chunk, int total,
+                           List<BulkOperationExecutionContent> bulkOperationExecutionContents,
                            UUID operationId, boolean isCentralTenant) {
     int offset = chunk * chunkSize;
     int limit = Math.min(chunkSize, total - offset);
@@ -138,29 +143,15 @@ public class FqmContentFetcher {
         .map(json -> {
           try {
             if (isCentralTenant) {
-              if (isInstance(entityType) &&
-                !SHARED.equalsIgnoreCase(ofNullable(json.get(FQM_INSTANCE_SHARED_KEY))
+              if (isInstance(entityType)
+                      && !SHARED.equalsIgnoreCase(ofNullable(json.get(FQM_INSTANCE_SHARED_KEY))
                   .map(Object::toString).orElse(EMPTY))) {
-                var instanceId = ofNullable(json.get(FQM_INSTANCE_ID_KEY)).map(Object::toString).orElse(EMPTY);
-                bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
-                  .identifier(instanceId)
-                  .bulkOperationId(operationId)
-                  .state(StateType.FAILED)
-                  .errorType(ErrorType.ERROR)
-                  .errorMessage(NO_MATCH_FOUND_MESSAGE)
-                  .build());
+                addInstanceNoMatchFound(json, bulkOperationExecutionContents, operationId);
                 return EMPTY;
-              } else if (EntityType.USER.equals(entityType) &&
-                SHADOW.equalsIgnoreCase(ofNullable(json.get(FQM_USERS_TYPE_KEY))
+              } else if (EntityType.USER.equals(entityType)
+                      && SHADOW.equalsIgnoreCase(ofNullable(json.get(FQM_USERS_TYPE_KEY))
                   .map(Object::toString).orElse(EMPTY))) {
-                var userId = ofNullable(json.get(FQM_USERS_ID_KEY)).map(Object::toString).orElse(EMPTY);
-                bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
-                  .identifier(userId)
-                  .bulkOperationId(operationId)
-                  .state(StateType.FAILED)
-                  .errorType(ErrorType.ERROR)
-                  .errorMessage(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED)
-                  .build());
+                addShadowUserErrorContent(json, bulkOperationExecutionContents, operationId);
                 return EMPTY;
               }
             }
@@ -172,72 +163,22 @@ public class FqmContentFetcher {
             var jsonNode = (ObjectNode) objectMapper.readTree(jsonb.toString());
             var tenant = json.get(getContentTenantKey(entityType));
             if (tenant == null) {
-              checkForTenantFieldExistenceInEcs(jsonNode.get(ID).asText(), operationId, bulkOperationExecutionContents);
+              checkForTenantFieldExistenceInEcs(jsonNode.get(ID).asText(), operationId,
+                      bulkOperationExecutionContents);
               tenant = folioExecutionContext.getTenantId();
             }
             jsonNode.put(TENANT_ID, tenant.toString());
 
             if (entityType == EntityType.ITEM) {
-
-              var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
-              var value = json.get(FQM_INSTANCES_PUBLICATION_KEY);
-
-              var publications = nonNull(value)
-                  ? objectMapper.readTree(value.toString())
-                  : objectMapper.createArrayNode();
-
-              if (publications.isArray() && !publications.isEmpty()) {
-                title = title.concat(getFirstPublicationAsString(publications.get(0)));
-              }
-
-              jsonNode.put(TITLE,  title);
-
-              var callNumber = Stream.of(json.get(FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY), json.get(
-                      FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY), json.get(
-                      FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY))
-                  .filter(Objects::nonNull)
-                  .map(Object::toString)
-                  .collect(Collectors.joining(SPACE));
-
-              var permanentLocationName = ofNullable(json.get(
-                  FqmKeys.FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY)).orElse(EMPTY).toString();
-
-              jsonNode.put(HOLDINGS_DATA,
-                  join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER,
-                      permanentLocationName,
-                      callNumber));
+              processForItem(json, jsonNode);
             }
 
             if (entityType == EntityType.HOLDINGS_RECORD) {
-
-              var title = ofNullable(json.get(FQM_INSTANCE_TITLE_KEY)).orElse(EMPTY).toString();
-
-              var value = json.get(FQM_INSTANCE_PUBLICATION_KEY);
-
-              var publications = nonNull(value)
-                  ? objectMapper.readTree(value.toString())
-                  : objectMapper.createArrayNode();
-
-              if (publications.isArray() && !publications.isEmpty()) {
-                title = title.concat(getFirstPublicationAsString(publications.get(0)));
-              }
-
-              jsonNode.put(INSTANCE_TITLE, title);
+              processForHoldingsRecord(json, jsonNode);
             }
 
             if (isInstance(entityType)) {
-              var value = json.get(FQM_INSTANCE_CHILD_INSTANCES_KEY);
-              var childInstances = nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
-              jsonNode.putIfAbsent(CHILD_INSTANCES, childInstances);
-              value = json.get(FQM_INSTANCE_PARENT_INSTANCES_KEY);
-              var parentInstances = nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
-              jsonNode.putIfAbsent(PARENT_INSTANCES, parentInstances);
-              value = json.get(FQM_INSTANCE_PRECEDING_TITLES_KEY);
-              var precedingTitles = nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
-              jsonNode.putIfAbsent(PRECEDING_TITLES, precedingTitles);
-              value = json.get(FQM_INSTANCE_SUCCEEDING_TITLES_KEY);
-              var succeedingTitles = nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
-              jsonNode.putIfAbsent(SUCCEEDING_TITLES, succeedingTitles);
+              processInstanceEntity(json, jsonNode);
             }
 
             ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
@@ -255,7 +196,7 @@ public class FqmContentFetcher {
   }
 
   private String getEntityJsonKey(EntityType entityType) {
-    return switch(entityType) {
+    return switch (entityType) {
       case USER -> FqmKeys.FQM_USERS_JSONB_KEY;
       case ITEM -> FqmKeys.FQM_ITEMS_JSONB_KEY;
       case HOLDINGS_RECORD -> "holdings.jsonb";
@@ -264,7 +205,7 @@ public class FqmContentFetcher {
   }
 
   private String getContentTenantKey(EntityType entityType) {
-    return switch(entityType) {
+    return switch (entityType) {
       case USER -> StringUtils.EMPTY;
       case ITEM -> "items.tenant_id";
       case HOLDINGS_RECORD -> "holdings.tenant_id";
@@ -272,9 +213,12 @@ public class FqmContentFetcher {
     };
   }
 
-  private void checkForTenantFieldExistenceInEcs(String recordId, UUID operationId, List<BulkOperationExecutionContent> bulkOperationExecutionContents) {
+  private void checkForTenantFieldExistenceInEcs(
+          String recordId, UUID operationId,
+          List<BulkOperationExecutionContent> bulkOperationExecutionContents) {
     if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
-      var errorMessage = "Cannot get reference data: tenant field is missing in the FQM response for ECS environment.";
+      var errorMessage = "Cannot get reference data: tenant field is missing in "
+              + "the FQM response for ECS environment.";
       log.warn(errorMessage);
       bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
               .identifier(recordId)
@@ -291,14 +235,112 @@ public class FqmContentFetcher {
       var publisher = publication.get(FQM_PUBLISHER_KEY);
       var date = publication.get(FQM_DATE_OF_PUBLICATION_KEY);
       if (isNull(date) || date.isNull()) {
-        return isNull(publisher) || publisher.isNull() ? EMPTY : String.format(". %s", publisher.asText());
+        return isNull(publisher) || publisher.isNull() ? EMPTY : String.format(". %s",
+                publisher.asText());
       }
-      return String.format(". %s, %s", isNull(publisher) || publisher.isNull() ? EMPTY : publisher.asText(), date.asText());
+      return String.format(". %s, %s", isNull(publisher) || publisher.isNull() ? EMPTY
+              : publisher.asText(), date.asText());
     }
     return EMPTY;
   }
 
   private boolean isInstance(EntityType entityType) {
     return entityType == EntityType.INSTANCE || entityType == EntityType.INSTANCE_MARC;
+  }
+
+  private void addInstanceNoMatchFound(
+          Map<String, Object> json,
+          List<BulkOperationExecutionContent> bulkOperationExecutionContents, UUID operationId) {
+    var instanceId = ofNullable(json.get(FQM_INSTANCE_ID_KEY))
+            .map(Object::toString).orElse(EMPTY);
+    bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
+            .identifier(instanceId)
+            .bulkOperationId(operationId)
+            .state(StateType.FAILED)
+            .errorType(ErrorType.ERROR)
+            .errorMessage(NO_MATCH_FOUND_MESSAGE)
+            .build());
+  }
+
+  private void addShadowUserErrorContent(
+          Map<String, Object> json,
+          List<BulkOperationExecutionContent> bulkOperationExecutionContents, UUID operationId) {
+    var userId = ofNullable(json.get(FQM_USERS_ID_KEY))
+            .map(Object::toString).orElse(EMPTY);
+    bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
+            .identifier(userId)
+            .bulkOperationId(operationId)
+            .state(StateType.FAILED)
+            .errorType(ErrorType.ERROR)
+            .errorMessage(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED)
+            .build());
+  }
+
+  private void processForItem(Map<String, Object> json, ObjectNode jsonNode)
+          throws JsonProcessingException {
+    var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
+    var value = json.get(FQM_INSTANCES_PUBLICATION_KEY);
+
+    var publications = nonNull(value)
+            ? objectMapper.readTree(value.toString())
+            : objectMapper.createArrayNode();
+
+    if (publications.isArray() && !publications.isEmpty()) {
+      title = title.concat(getFirstPublicationAsString(publications.get(0)));
+    }
+
+    jsonNode.put(TITLE,  title);
+
+    var callNumber = Stream.of(json.get(FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY),
+                    json.get(FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY), json.get(
+                            FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY))
+            .filter(Objects::nonNull)
+            .map(Object::toString)
+            .collect(Collectors.joining(SPACE));
+
+    var permanentLocationName = ofNullable(json.get(
+            FqmKeys.FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY)).orElse(EMPTY).toString();
+
+    jsonNode.put(HOLDINGS_DATA,
+            join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER,
+                    permanentLocationName,
+                    callNumber));
+  }
+
+  private void processForHoldingsRecord(Map<String, Object> json, ObjectNode jsonNode)
+          throws JsonProcessingException {
+    var title = ofNullable(json.get(FQM_INSTANCE_TITLE_KEY)).orElse(EMPTY).toString();
+
+    var value = json.get(FQM_INSTANCE_PUBLICATION_KEY);
+
+    var publications = nonNull(value)
+            ? objectMapper.readTree(value.toString())
+            : objectMapper.createArrayNode();
+
+    if (publications.isArray() && !publications.isEmpty()) {
+      title = title.concat(getFirstPublicationAsString(publications.get(0)));
+    }
+
+    jsonNode.put(INSTANCE_TITLE, title);
+  }
+
+  private void processInstanceEntity(Map<String, Object> json, ObjectNode jsonNode)
+          throws JsonProcessingException {
+    var value = json.get(FQM_INSTANCE_CHILD_INSTANCES_KEY);
+    var childInstances = nonNull(value) ? objectMapper.readTree(value.toString())
+            : objectMapper.createArrayNode();
+    jsonNode.putIfAbsent(CHILD_INSTANCES, childInstances);
+    value = json.get(FQM_INSTANCE_PARENT_INSTANCES_KEY);
+    var parentInstances = nonNull(value) ? objectMapper.readTree(value.toString())
+            : objectMapper.createArrayNode();
+    jsonNode.putIfAbsent(PARENT_INSTANCES, parentInstances);
+    value = json.get(FQM_INSTANCE_PRECEDING_TITLES_KEY);
+    var precedingTitles = nonNull(value) ? objectMapper.readTree(value.toString())
+            : objectMapper.createArrayNode();
+    jsonNode.putIfAbsent(PRECEDING_TITLES, precedingTitles);
+    value = json.get(FQM_INSTANCE_SUCCEEDING_TITLES_KEY);
+    var succeedingTitles = nonNull(value) ? objectMapper.readTree(value.toString())
+            : objectMapper.createArrayNode();
+    jsonNode.putIfAbsent(SUCCEEDING_TITLES, succeedingTitles);
   }
 }
