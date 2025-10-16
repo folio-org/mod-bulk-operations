@@ -24,6 +24,7 @@ import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.HOLDINGS_DATA;
 import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.HOLDINGS_RECORD_ID;
 import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.HRID;
 import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ID;
+import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.IS_BOUND_WITH;
 import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ITEM_DAMAGED_STATUS_DATE;
 import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ITEM_DAMAGED_STATUS_ID;
 import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ITEM_IDENTIFIER;
@@ -31,7 +32,6 @@ import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ITEM_LEVEL_CAL
 import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ITEM_LEVEL_CALL_NUMBER_PREFIX;
 import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ITEM_LEVEL_CALL_NUMBER_SUFFIX;
 import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ITEM_LEVEL_CALL_NUMBER_TYPE_ID;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.IS_BOUND_WITH;
 import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.MATERIAL_TYPE;
 import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.MISSING_PIECES;
 import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.MISSING_PIECES_DATE;
