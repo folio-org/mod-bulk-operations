@@ -5,50 +5,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ACCESSION_NUMBER;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ADMINISTRATIVE_NOTES;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.BARCODE;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.BOUND_WITH_TITLES;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.CHRONOLOGY;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.CIRCULATION_NOTES;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.COPY_NUMBER;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.DESCRIPTION_OF_PIECES;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.DISCOVERY_SUPPRESS;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.EFFECTIVE_CALL_NUMBER_COMPONENTS;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.EFFECTIVE_LOCATION;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.EFFECTIVE_SHELVING_ORDER;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ELECTRONIC_ACCESS;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ENUMERATION;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.FORMER_IDS;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.HOLDINGS_DATA;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.HOLDINGS_RECORD_ID;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.HRID;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ID;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.IS_BOUND_WITH;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ITEM_DAMAGED_STATUS_DATE;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ITEM_DAMAGED_STATUS_ID;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ITEM_IDENTIFIER;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ITEM_LEVEL_CALL_NUMBER;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ITEM_LEVEL_CALL_NUMBER_PREFIX;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ITEM_LEVEL_CALL_NUMBER_SUFFIX;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.ITEM_LEVEL_CALL_NUMBER_TYPE_ID;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.MATERIAL_TYPE;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.MISSING_PIECES;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.MISSING_PIECES_DATE;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.NOTES;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.NUMBER_OF_MISSING_PIECES;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.NUMBER_OF_PIECES;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.PERMANENT_LOAN_TYPE;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.PERMANENT_LOCATION;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.STATISTICAL_CODE_IDS;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.STATUS;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.TAGS;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.TEMPORARY_LOAN_TYPE;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.TEMPORARY_LOCATION;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.TENANT_ID;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.TITLE;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.VOLUME;
-import static org.folio.bulkops.domain.bean.ItemJsonPropertyNames.YEAR_CAPTION;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -98,27 +54,27 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
     this.tenantId = tenantId;
   }
 
-  @JsonProperty(ID)
+  @JsonProperty("id")
   @CsvCustomBindByName(column = "Item UUID", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 0, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String id;
 
-  @JsonProperty(TITLE)
+  @JsonProperty("title")
   @CsvCustomBindByName(column = "Instance (Title, Publisher, Publication date)",
           converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 1, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String title;
 
-  @JsonProperty(HOLDINGS_DATA)
+  @JsonProperty("holdingsData")
   @CsvCustomBindByName(column = "Holdings (Location, Call number)",
           converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 2, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String holdingsData;
 
-  @JsonProperty(EFFECTIVE_LOCATION)
+  @JsonProperty("effectiveLocation")
   @CsvCustomBindByName(column = "Item effective location", converter = ItemLocationConverter.class)
   @CsvCustomBindByPosition(position = 3, converter = ItemLocationConverter.class)
   @UnifiedTableCell
@@ -142,51 +98,51 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
     return effectiveLocation;
   }
 
-  @JsonProperty(EFFECTIVE_CALL_NUMBER_COMPONENTS)
+  @JsonProperty("effectiveCallNumberComponents")
   @CsvCustomBindByName(column = "Effective call number",
           converter = EffectiveCallNumberComponentsConverter.class)
   @CsvCustomBindByPosition(position = 4, converter = EffectiveCallNumberComponentsConverter.class)
   @UnifiedTableCell
   private EffectiveCallNumberComponents effectiveCallNumberComponents;
 
-  @JsonProperty(DISCOVERY_SUPPRESS)
+  @JsonProperty("discoverySuppress")
   @CsvCustomBindByName(column = "Suppress from discovery", converter = BooleanConverter.class)
   @CsvCustomBindByPosition(position = 5, converter = BooleanConverter.class)
   @UnifiedTableCell(visible = false)
   private Boolean discoverySuppress;
 
-  @JsonProperty(HRID)
+  @JsonProperty("hrid")
   @CsvCustomBindByName(column = "Item HRID", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 6, converter = StringConverter.class)
   @UnifiedTableCell
   private String hrid;
 
-  @JsonProperty(BARCODE)
+  @JsonProperty("barcode")
   @CsvCustomBindByName(column = "Barcode", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 7, converter = StringConverter.class)
   @UnifiedTableCell
   private String barcode;
 
-  @JsonProperty(ACCESSION_NUMBER)
+  @JsonProperty("accessionNumber")
   @CsvCustomBindByName(column = "Accession number", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 8, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String accessionNumber;
 
-  @JsonProperty(ITEM_IDENTIFIER)
+  @JsonProperty("itemIdentifier")
   @CsvCustomBindByName(column = "Item identifier", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 9, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String itemIdentifier;
 
-  @JsonProperty(FORMER_IDS)
+  @JsonProperty("formerIds")
   @Valid
   @CsvCustomBindByName(column = "Former identifier", converter = StringListConverter.class)
   @CsvCustomBindByPosition(position = 10, converter = StringListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> formerIds;
 
-  @JsonProperty(STATISTICAL_CODE_IDS)
+  @JsonProperty("statisticalCodeIds")
   @Valid
   @CsvCustomBindByName(column = "Statistical codes",
           converter = ItemStatisticalCodeListConverter.class)
@@ -194,14 +150,14 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private List<String> statisticalCodes;
 
-  @JsonProperty(ADMINISTRATIVE_NOTES)
+  @JsonProperty("administrativeNotes")
   @Valid
   @CsvCustomBindByName(column = "Administrative note", converter = StringListConverter.class)
   @CsvCustomBindByPosition(position = 12, converter = StringListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> administrativeNotes;
 
-  @JsonProperty(MATERIAL_TYPE)
+  @JsonProperty("materialType")
   @CsvCustomBindByName(column = "Material type", converter = MaterialTypeConverter.class)
   @CsvCustomBindByPosition(position = 13, converter = MaterialTypeConverter.class)
   @UnifiedTableCell
@@ -225,111 +181,111 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
     return materialType;
   }
 
-  @JsonProperty(COPY_NUMBER)
+  @JsonProperty("copyNumber")
   @CsvCustomBindByName(column = "Copy number", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 14, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String copyNumber;
 
-  @JsonProperty(EFFECTIVE_SHELVING_ORDER)
+  @JsonProperty("effectiveShelvingOrder")
   @CsvCustomBindByName(column = "Shelving order", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 15, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String effectiveShelvingOrder;
 
-  @JsonProperty(ITEM_LEVEL_CALL_NUMBER_TYPE_ID)
+  @JsonProperty("itemLevelCallNumberTypeId")
   @CsvCustomBindByName(column = "Item level call number type",
           converter = CallNumberTypeConverter.class)
   @CsvCustomBindByPosition(position = 16, converter = CallNumberTypeConverter.class)
   @UnifiedTableCell(visible = false)
   private String itemLevelCallNumberType;
 
-  @JsonProperty(ITEM_LEVEL_CALL_NUMBER_PREFIX)
+  @JsonProperty("itemLevelCallNumberPrefix")
   @CsvCustomBindByName(column = "Item level call number prefix", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 17, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String itemLevelCallNumberPrefix;
 
-  @JsonProperty(ITEM_LEVEL_CALL_NUMBER)
+  @JsonProperty("itemLevelCallNumber")
   @CsvCustomBindByName(column = "Item level call number", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 18, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String itemLevelCallNumber;
 
-  @JsonProperty(ITEM_LEVEL_CALL_NUMBER_SUFFIX)
+  @JsonProperty("itemLevelCallNumberSuffix")
   @CsvCustomBindByName(column = "Item level call number suffix", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 19, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String itemLevelCallNumberSuffix;
 
-  @JsonProperty(NUMBER_OF_PIECES)
+  @JsonProperty("numberOfPieces")
   @CsvCustomBindByName(column = "Number of pieces", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 20, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String numberOfPieces;
 
-  @JsonProperty(DESCRIPTION_OF_PIECES)
+  @JsonProperty("descriptionOfPieces")
   @CsvCustomBindByName(column = "Description of pieces", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 21, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String descriptionOfPieces;
 
-  @JsonProperty(ENUMERATION)
+  @JsonProperty("enumeration")
   @CsvCustomBindByName(column = "Enumeration", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 22, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String enumeration;
 
-  @JsonProperty(CHRONOLOGY)
+  @JsonProperty("chronology")
   @CsvCustomBindByName(column = "Chronology", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 23, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String chronology;
 
-  @JsonProperty(VOLUME)
+  @JsonProperty("volume")
   @CsvCustomBindByName(column = "Volume", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 24, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String volume;
 
-  @JsonProperty(YEAR_CAPTION)
+  @JsonProperty("yearCaption")
   @Valid
   @CsvCustomBindByName(column = "Year, caption", converter = StringListConverter.class)
   @CsvCustomBindByPosition(position = 25, converter = StringListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> yearCaption;
 
-  @JsonProperty(NUMBER_OF_MISSING_PIECES)
+  @JsonProperty("numberOfMissingPieces")
   @CsvCustomBindByName(column = "Number of missing pieces", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 26, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String numberOfMissingPieces;
 
-  @JsonProperty(MISSING_PIECES)
+  @JsonProperty("missingPieces")
   @CsvCustomBindByName(column = "Missing pieces", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 27, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String missingPieces;
 
-  @JsonProperty(MISSING_PIECES_DATE)
+  @JsonProperty("missingPiecesDate")
   @CsvCustomBindByName(column = "Missing pieces date", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 28, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String missingPiecesDate;
 
-  @JsonProperty(ITEM_DAMAGED_STATUS_ID)
+  @JsonProperty("itemDamagedStatusId")
   @CsvCustomBindByName(column = "Item damaged status", converter = DamagedStatusConverter.class)
   @CsvCustomBindByPosition(position = 29, converter = DamagedStatusConverter.class)
   @UnifiedTableCell(visible = false)
   private String itemDamagedStatus;
 
-  @JsonProperty(ITEM_DAMAGED_STATUS_DATE)
+  @JsonProperty("itemDamagedStatusDate")
   @CsvCustomBindByName(column = "Item damaged status date", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 30, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String itemDamagedStatusDate;
 
-  @JsonProperty(NOTES)
+  @JsonProperty("notes")
   @Valid
   @CsvCustomBindByName(column = "Notes", converter = ItemNoteListConverter.class)
   @CsvCustomBindByPosition(position = 31, converter = ItemNoteListConverter.class)
@@ -347,7 +303,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
     this.notes = notes;
   }
 
-  @JsonProperty(PERMANENT_LOAN_TYPE)
+  @JsonProperty("permanentLoanType")
   @CsvCustomBindByName(column = "Permanent loan type", converter = LoanTypeConverter.class)
   @CsvCustomBindByPosition(position = 32, converter = LoanTypeConverter.class)
   @UnifiedTableCell
@@ -371,7 +327,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
     return permanentLoanType;
   }
 
-  @JsonProperty(TEMPORARY_LOAN_TYPE)
+  @JsonProperty("temporaryLoanType")
   @CsvCustomBindByName(column = "Temporary loan type", converter = LoanTypeConverter.class)
   @CsvCustomBindByPosition(position = 33, converter = LoanTypeConverter.class)
   @UnifiedTableCell
@@ -395,7 +351,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
     return temporaryLoanType;
   }
 
-  @JsonProperty(STATUS)
+  @JsonProperty("status")
   @CsvCustomBindByName(column = "Status", converter = ItemStatusConverter.class)
   @CsvCustomBindByPosition(position = 34, converter = ItemStatusConverter.class)
   @UnifiedTableCell
@@ -413,7 +369,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private List<CirculationNote> checkOutNotes;
 
-  @JsonProperty(PERMANENT_LOCATION)
+  @JsonProperty("permanentLocation")
   @CsvCustomBindByName(column = "Item permanent location", converter = ItemLocationConverter.class)
   @CsvCustomBindByPosition(position = 37, converter = ItemLocationConverter.class)
   @UnifiedTableCell(visible = false)
@@ -437,7 +393,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
     return permanentLocation;
   }
 
-  @JsonProperty(TEMPORARY_LOCATION)
+  @JsonProperty("temporaryLocation")
   @CsvCustomBindByName(column = "Item temporary location", converter = ItemLocationConverter.class)
   @CsvCustomBindByPosition(position = 38, converter = ItemLocationConverter.class)
   @UnifiedTableCell(visible = false)
@@ -461,7 +417,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
     return temporaryLocation;
   }
 
-  @JsonProperty(ELECTRONIC_ACCESS)
+  @JsonProperty("electronicAccess")
   @Valid
   @CsvCustomBindByName(column = "Electronic access",
           converter = ItemElectronicAccessListConverter.class)
@@ -469,32 +425,32 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private List<ElectronicAccess> electronicAccess;
 
-  @JsonProperty(IS_BOUND_WITH)
+  @JsonProperty("isBoundWith")
   @CsvCustomBindByName(column = "Is bound with", converter = BooleanConverter.class)
   @CsvCustomBindByPosition(position = 40, converter = BooleanConverter.class)
   @UnifiedTableCell(visible = false)
   private Boolean isBoundWith;
 
-  @JsonProperty(BOUND_WITH_TITLES)
+  @JsonProperty("boundWithTitles")
   @Valid
   @CsvCustomBindByName(column = "Bound with titles", converter = BoundWithTitlesConverter.class)
   @CsvCustomBindByPosition(position = 41, converter = BoundWithTitlesConverter.class)
   @UnifiedTableCell(visible = false)
   private List<Title> boundWithTitles = emptyList();
 
-  @JsonProperty(TAGS)
+  @JsonProperty("tags")
   @CsvCustomBindByName(column = "Tags", converter = TagsConverter.class)
   @CsvCustomBindByPosition(position = 42, converter = TagsConverter.class)
   @UnifiedTableCell(visible = false)
   private Tags tags;
 
-  @JsonProperty(HOLDINGS_RECORD_ID)
+  @JsonProperty("holdingsRecordId")
   @CsvCustomBindByName(column = "Holdings UUID", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 43, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String holdingsRecordId;
 
-  @JsonProperty(TENANT_ID)
+  @JsonProperty("tenantId")
   @CsvCustomBindByName(column = "Tenant", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 44, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
@@ -503,7 +459,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @JsonProperty("_version")
   private Integer version;
 
-  @JsonProperty(CIRCULATION_NOTES)
+  @JsonProperty("circulationNotes")
   @Valid
   private List<CirculationNote> circulationNotes;
 
