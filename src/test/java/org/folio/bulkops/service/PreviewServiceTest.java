@@ -3,7 +3,6 @@ package org.folio.bulkops.service;
 import static java.util.Collections.emptySet;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
-import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
@@ -104,22 +103,22 @@ class PreviewServiceTest extends BaseTest {
   private NoteTableUpdater noteTableUpdater;
 
   @CsvSource(value = {
-      "users_preview.csv,USER,UPLOAD,IN_APP",
-      "users_preview.csv,USER,EDIT,IN_APP",
-      "users_preview.csv,USER,COMMIT,IN_APP",
-      "users_preview.csv,USER,COMMIT,MANUAL",
-      "items_preview.csv,ITEM,UPLOAD,IN_APP",
-      "items_preview.csv,ITEM,EDIT,IN_APP",
-      "items_preview.csv,ITEM,COMMIT,IN_APP",
-      "items_preview.csv,ITEM,COMMIT,MANUAL",
-      "holdings_preview.csv,HOLDINGS_RECORD,UPLOAD,IN_APP",
-      "holdings_preview.csv,HOLDINGS_RECORD,EDIT,IN_APP",
-      "holdings_preview.csv,HOLDINGS_RECORD,COMMIT,IN_APP",
-      "holdings_preview.csv,HOLDINGS_RECORD,COMMIT,MANUAL",
-      "instances_preview.csv,INSTANCE,UPLOAD,IN_APP",
-      "instances_preview.csv,INSTANCE,EDIT,IN_APP",
-      "instances_preview.csv,INSTANCE,COMMIT,IN_APP",
-      "instances_preview.csv,INSTANCE,COMMIT,MANUAL"}, delimiter = ',')
+      "users_for_preview.json,USER,UPLOAD,IN_APP",
+      "users_for_preview.json,USER,EDIT,IN_APP",
+      "users_for_preview.json,USER,COMMIT,IN_APP",
+      "users_for_preview.json,USER,COMMIT,MANUAL",
+      "items_for_preview.json,ITEM,UPLOAD,IN_APP",
+      "items_for_preview.json,ITEM,EDIT,IN_APP",
+      "items_for_preview.json,ITEM,COMMIT,IN_APP",
+      "items_for_preview.json,ITEM,COMMIT,MANUAL",
+      "holdings_for_preview.json,HOLDINGS_RECORD,UPLOAD,IN_APP",
+      "holdings_for_preview.json,HOLDINGS_RECORD,EDIT,IN_APP",
+      "holdings_for_preview.json,HOLDINGS_RECORD,COMMIT,IN_APP",
+      "holdings_for_preview.json,HOLDINGS_RECORD,COMMIT,MANUAL",
+      "instances_for_preview.json,INSTANCE,UPLOAD,IN_APP",
+      "instances_for_preview.json,INSTANCE,EDIT,IN_APP",
+      "instances_for_preview.json,INSTANCE,COMMIT,IN_APP",
+      "instances_for_preview.json,INSTANCE,COMMIT,MANUAL"}, delimiter = ',')
   @SneakyThrows
   @ParameterizedTest
   void shouldReturnPreviewIfAvailable(String fileName, EntityType entityType,
@@ -232,190 +231,6 @@ class PreviewServiceTest extends BaseTest {
             .noneMatch(s -> s.contains("%3A") || s.contains("%3B") || s.contains("%7C")));
   }
 
-  @Test
-  @SneakyThrows
-  void shouldReturnPreviewWithCorrectNumberOfRecordsWhenRecordsContainLineBreaks() {
-    var path = "src/test/resources/files/items_preview_line_breaks.csv";
-    var operationId = UUID.randomUUID();
-
-    var bulkOperation = buildBulkOperation("items_preview_line_breaks.csv", ITEM, COMMIT);
-    bulkOperation.setId(operationId);
-    when(bulkOperationRepository.findById(operationId))
-            .thenReturn(Optional.of(bulkOperation));
-
-    when(remoteFileSystemClient.get(anyString()))
-            .thenReturn(new FileInputStream(path));
-
-    when(ruleService.getRules(any())).thenReturn(
-            new BulkOperationRuleCollection().bulkOperationRules(
-                    List.of(new BulkOperationRule().ruleDetails(
-                            new RuleDetails().option(UpdateOptionType.STATUS)
-                                    .actions(List.of(new Action().type(
-                                            UpdateActionType.REPLACE_WITH)
-                                            .updated("New")))))).totalRecords(1));
-
-    when(locationClient.getLocationById(anyString()))
-            .thenReturn(new ItemLocation().withName("Location"));
-
-    when(mappingRulesClient.getMarcBibMappingRules())
-            .thenReturn(Files.readString(Path.of(
-                    "src/test/resources/files/mappingRulesResponse.json")));
-
-    var offset = 1;
-    var limit = 10;
-
-    var table = previewService.getPreview(bulkOperation, COMMIT, offset, limit);
-
-    assertThat(table.getRows(), hasSize(limit));
-  }
-
-  @Test
-  @SneakyThrows
-  void shouldProperlyParseContentWithBackSlashes() {
-    var path = "src/test/resources/files/items_preview_back_slashes.csv";
-    var operationId = UUID.randomUUID();
-
-    var bulkOperation = buildBulkOperation("items_preview_back_slashes.csv", ITEM, UPLOAD);
-    bulkOperation.setId(operationId);
-    when(bulkOperationRepository.findById(operationId))
-            .thenReturn(Optional.of(bulkOperation));
-
-    when(remoteFileSystemClient.get(anyString()))
-            .thenReturn(new FileInputStream(path));
-
-    when(ruleService.getRules(any()))
-            .thenReturn(new BulkOperationRuleCollection().bulkOperationRules(
-                    List.of(new BulkOperationRule().ruleDetails(
-                            new RuleDetails().option(UpdateOptionType.STATUS)
-                                    .actions(List.of(
-                                            new Action().type(UpdateActionType.REPLACE_WITH)
-                                            .updated("New")))))).totalRecords(1));
-
-    when(locationClient.getLocationById(anyString()))
-            .thenReturn(new ItemLocation().withName("Location"));
-
-    when(itemNoteTypeClient.getNoteTypes(Integer.MAX_VALUE))
-            .thenReturn(new NoteTypeCollection().withItemNoteTypes(
-                    List.of(new NoteType().withName("Binding"),
-                            new NoteType().withName("Custom"),
-                            new NoteType().withName("Provenance"),
-                            new NoteType().withName("Reproduction"),
-                            new NoteType().withName("Note"))));
-
-    when(itemNoteTypeClient.getNoteTypeById("0e40884c-3523-4c6d-8187-d578e3d2794e"))
-            .thenReturn(new NoteType().withName("Binding"));
-    when(itemNoteTypeClient.getNoteTypeById("f3ae3823-d096-4c65-8734-0c1efd2ffea8"))
-            .thenReturn(new NoteType().withName("Provenance"));
-    when(itemNoteTypeClient.getNoteTypeById("c3a539b9-9576-4e3a-b6de-d910200b2919"))
-            .thenReturn(new NoteType().withName("Reproduction"));
-    when(itemNoteTypeClient.getNoteTypeById("87c450be-2033-41fb-80ba-dd2409883681"))
-            .thenReturn(new NoteType().withName("Custom"));
-    when(itemNoteTypeClient.getNoteTypeById("8d0a5eca-25de-4391-81a9-236eeefdd20b"))
-            .thenReturn(new NoteType().withName("Note"));
-    when(mappingRulesClient.getMarcBibMappingRules())
-            .thenReturn(Files.readString(Path.of(
-                    "src/test/resources/files/mappingRulesResponse.json")));
-
-    var offset = 0;
-    var limit = 10;
-
-    var table = previewService.getPreview(bulkOperation, UPLOAD, offset, limit);
-
-    assertThat(table.getRows(), hasSize(1));
-
-    checkForTitle(table);
-    checkForHoldingsData(table);
-    checkForCallNumber(table);
-    checkForEffectiveShelvingOrder(table);
-    checkForEffectiveCallNumberComponents(table);
-    checkForCopyNumber(table);
-    checkForStatus(table);
-    checkForMaterialType(table);
-    checkForPermanentLoanType(table);
-    checkForEffectiveLocation(table);
-  }
-
-  private void checkForTitle(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(1).getValue();
-    assertEquals("Instance (Title, Publisher, Publication date)", headerValue);
-
-    var rowResult = table.getRows().getFirst().getRow().get(6);
-    assertEquals("Magazine - Q4", rowResult);
-  }
-
-  private void checkForHoldingsData(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(2).getValue();
-    assertEquals("Holdings (Location, Call number)", headerValue);
-
-    var rowResult = table.getRows().getFirst().getRow().get(7);
-    assertEquals("Main Library > R11.A38\\", rowResult);
-  }
-
-  private void checkForCallNumber(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(18).getValue();
-    assertEquals("Item level call number", headerValue);
-
-    var rowResult = table.getRows().getFirst().getRow().get(9);
-    assertEquals("R11.A38\\", rowResult);
-  }
-
-  private void checkForEffectiveShelvingOrder(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(15).getValue();
-    assertEquals("Shelving order", headerValue);
-
-    var rowResult = table.getRows().getFirst().getRow().get(11);
-    assertEquals("R11.A38\\ First copy of Q4", rowResult);
-  }
-
-  private void checkForEffectiveCallNumberComponents(
-          org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(4).getValue();
-    assertEquals("Effective call number", headerValue);
-
-    var rowResult = table.getRows().getFirst().getRow().get(17);
-    assertEquals("R11.A38\\", rowResult);
-  }
-
-  private void checkForCopyNumber(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(14).getValue();
-    assertEquals("Copy number", headerValue);
-
-    var rowResult = table.getRows().getFirst().getRow().get(23);
-    assertEquals("First copy of Q4", rowResult);
-  }
-
-  private void checkForStatus(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(38).getValue();
-    assertEquals("Status", headerValue);
-
-    var rowResult = table.getRows().getFirst().getRow().get(39);
-    assertEquals("Available", rowResult);
-  }
-
-  private void checkForMaterialType(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(13).getValue();
-    assertEquals("Material type", headerValue);
-
-    var rowResult = table.getRows().getFirst().getRow().get(40);
-    assertEquals("text", rowResult);
-  }
-
-  private void checkForPermanentLoanType(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(36).getValue();
-    assertEquals("Permanent loan type", headerValue);
-
-    var rowResult = table.getRows().getFirst().getRow().get(43);
-    assertEquals("Can circulate", rowResult);
-  }
-
-  private void checkForEffectiveLocation(org.folio.bulkops.domain.dto.UnifiedTable table) {
-    var headerValue = table.getHeader().get(3).getValue();
-    assertEquals("Item effective location", headerValue);
-
-    var rowResult = table.getRows().getFirst().getRow().get(47);
-    assertEquals("Main Library", rowResult);
-  }
-
   @ParameterizedTest
   @EnumSource(value = org.folio.bulkops.domain.dto.OperationStatusType.class,
           names = {"DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED"},
@@ -506,11 +321,11 @@ class PreviewServiceTest extends BaseTest {
     var summaryNoteTypeId = "10e2e11b-450f-45c8-b09b-0f819999966e";
     var bulkOperationId = UUID.randomUUID();
     var pathToMarcFile = bulkOperationId + "/" + "file.mrc";
-    var pathToMatchedCsvFile = bulkOperationId + "/" + "file.csv";
+    var pathToMatchedJsonFile = bulkOperationId + "/" + "file.json";
     var bulkOperation = BulkOperation.builder()
             .id(bulkOperationId)
             .entityType(INSTANCE_MARC)
-            .linkToMatchedRecordsCsvFile(pathToMatchedCsvFile)
+            .linkToMatchedRecordsJsonFile(pathToMatchedJsonFile)
             .linkToModifiedRecordsMarcFile(pathToMarcFile)
             .build();
 
@@ -532,8 +347,9 @@ class PreviewServiceTest extends BaseTest {
                     new InstanceNoteType().name(GENERAL_NOTE)));
     when(remoteFileSystemClient.get(pathToMarcFile))
             .thenReturn(new FileInputStream("src/test/resources/files/preview.mrc"));
-    when(remoteFileSystemClient.get(pathToMatchedCsvFile))
-            .thenReturn(new FileInputStream("src/test/resources/files/instances_preview.csv"));
+    when(remoteFileSystemClient.get(pathToMatchedJsonFile))
+            .thenReturn(new FileInputStream(
+                "src/test/resources/files/instances_for_preview.json"));
     when(instanceReferenceService.getContributorTypesByCode("art"))
             .thenReturn(new ContributorTypeCollection().contributorTypes(
                     Collections.singletonList(new ContributorType().name("Artist"))));
@@ -564,12 +380,9 @@ class PreviewServiceTest extends BaseTest {
 
     assertThat(res.getRows().get(1).getRow().get(0),
             equalTo("ed32b4a6-3895-42a0-b696-7b8ed667313f"));
-    assertThat(res.getRows().get(1).getRow().get(4), equalTo("false"));
     assertThat(res.getRows().get(1).getRow().get(5), equalTo("inst000000000001"));
     assertThat(res.getRows().get(1).getRow().get(6), equalTo("FOLIO"));
     assertThat(res.getRows().get(1).getRow().get(7), equalTo("2023-12-27"));
-    assertThat(res.getRows().get(1).getRow().get(8), equalTo("Other"));
-    assertThat(res.getRows().get(1).getRow().get(9), equalTo("serial"));
     assertThat(res.getRows().get(1).getRow().get(11), equalTo("Sample note"));
     assertThat(res.getRows().get(1).getRow().get(12), equalTo("ABA Journal"));
     assertThat(res.getRows().get(1).getRow().get(13), equalTo("Index title"));
@@ -578,41 +391,9 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(1).getRow().get(17), equalTo("2021 | 2022"));
     assertThat(res.getRows().get(1).getRow().get(18),
             equalTo("Physical description1 | Physical description2"));
-    assertThat(res.getRows().get(1).getRow().get(19), equalTo("text"));
-    assertThat(res.getRows().get(1).getRow().get(21), equalTo("computer -- other"));
     assertThat(res.getRows().get(1).getRow().get(22), equalTo("eng | fre"));
     assertThat(res.getRows().get(1).getRow().get(23), equalTo("freq1 | freq2"));
     assertThat(res.getRows().get(1).getRow().get(24), equalTo("range1 | range2"));
-    assertThat(res.getRows().get(1).getRow().get(25), equalTo("General note text"));
-    assertThat(res.getRows().get(1).getRow().get(26), equalTo("Summary note text"));
-
-    assertThat(res.getRows().get(2).getRow().get(0),
-            equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
-    assertThat(res.getRows().get(2).getRow().get(2), equalTo("true"));
-    assertThat(res.getRows().get(1).getRow().get(4), equalTo("false"));
-    assertThat(res.getRows().get(2).getRow().get(5), equalTo("in00000000002"));
-    assertThat(res.getRows().get(2).getRow().get(6), equalTo("MARC"));
-    assertThat(res.getRows().get(2).getRow().get(9), equalTo("single unit"));
-    assertThat(res.getRows().get(2).getRow().get(11), equalTo("Sample note"));
-    assertThat(res.getRows().get(2).getRow().get(12), equalTo("summerland / Michael Chabon."));
-    assertThat(res.getRows().get(2).getRow().get(13), equalTo("Mmerland /"));
-    assertThat(res.getRows().get(2).getRow().get(14),
-            equalTo("series800 | series810 | series811 | series830"));
-    assertThat(res.getRows().get(2).getRow().get(15),
-            equalTo("Chabon, Michael; Another Contributor"));
-    assertThat(res.getRows().get(2).getRow().get(17), equalTo("1st ed."));
-    assertThat(res.getRows().get(2).getRow().get(18), equalTo("500 p. ; 22 cm."));
-    assertThat(res.getRows().get(2).getRow().get(19), equalTo("Text"));
-    assertThat(res.getRows().get(2).getRow().get(21), equalTo("computer -- other"));
-    assertThat(res.getRows().get(2).getRow().get(22), equalTo("eng | fre"));
-    assertThat(res.getRows().get(2).getRow().get(23),
-            equalTo("monthly. Jun 10, 2024 | yearly. 2024"));
-    assertThat(res.getRows().get(2).getRow().get(24), equalTo("2002-2024"));
-    assertThat(res.getRows().get(2).getRow().get(25), equalTo("language note (staff only)"));
-    assertThat(res.getRows().get(2).getRow().get(26),
-            equalTo("Ethan Feld, the worst baseball player in the history of "
-                    + "the game, finds himself recruited by a 100-year-old scout to help "
-                    + "a band of fairies triumph over an ancient enemy. 2nd."));
   }
 
   @Test
@@ -621,11 +402,11 @@ class PreviewServiceTest extends BaseTest {
     var summaryNoteTypeId = "10e2e11b-450f-45c8-b09b-0f819999966e";
     var bulkOperationId = UUID.randomUUID();
     var pathToMarcFile = bulkOperationId + "/" + "file.mrc";
-    var pathToUpdatedCsvFile = bulkOperationId + "/" + "modified_file.csv";
+    var pathToUpdatedJsonFile = bulkOperationId + "/" + "modified_file.json";
     var bulkOperation = BulkOperation.builder()
             .id(bulkOperationId)
             .entityType(INSTANCE_MARC)
-            .linkToModifiedRecordsCsvFile(pathToUpdatedCsvFile)
+            .linkToModifiedRecordsJsonFile(pathToUpdatedJsonFile)
             .linkToModifiedRecordsMarcFile(pathToMarcFile)
             .build();
 
@@ -650,9 +431,9 @@ class PreviewServiceTest extends BaseTest {
                     new InstanceNoteType().name(GENERAL_NOTE)));
     when(remoteFileSystemClient.get(pathToMarcFile)).thenReturn(
             new FileInputStream("src/test/resources/files/preview.mrc"));
-    when(remoteFileSystemClient.get(pathToUpdatedCsvFile))
+    when(remoteFileSystemClient.get(pathToUpdatedJsonFile))
             .thenReturn(new FileInputStream(
-                    "src/test/resources/files/modified_instances_preview.csv"));
+                    "src/test/resources/files/modified_instances_for_preview.json"));
     when(instanceReferenceService.getContributorTypesByCode("art"))
             .thenReturn(new ContributorTypeCollection().contributorTypes(
                     Collections.singletonList(new ContributorType().name("Artist"))));
@@ -684,19 +465,14 @@ class PreviewServiceTest extends BaseTest {
 
     assertThat(res.getRows().get(1).getRow().get(0),
             equalTo("ed32b4a6-3895-42a0-b696-7b8ed667313f"));
-    assertThat(res.getRows().get(1).getRow().get(4), equalTo("false"));
     assertThat(res.getRows().get(1).getRow().get(5), equalTo("inst000000000001"));
     assertThat(res.getRows().get(1).getRow().get(6), equalTo("FOLIO"));
     assertThat(res.getRows().get(1).getRow().get(7), equalTo("2023-12-27"));
-    assertThat(res.getRows().get(1).getRow().get(8), equalTo("Other"));
-    assertThat(res.getRows().get(1).getRow().get(9), equalTo("serial"));
     var csvChanges = "Sample note for folio and marc instance";
     assertThat(res.getRows().get(1).getRow().get(11), equalTo(csvChanges));
 
     assertThat(res.getRows().get(2).getRow().get(0),
             equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
-    assertThat(res.getRows().get(2).getRow().get(2), equalTo("true"));
-    assertThat(res.getRows().get(1).getRow().get(4), equalTo("false"));
     assertThat(res.getRows().get(2).getRow().get(5), equalTo("in00000000002"));
     assertThat(res.getRows().get(2).getRow().get(6), equalTo("MARC"));
     assertThat(res.getRows().get(2).getRow().get(9), equalTo("single unit"));
@@ -711,11 +487,11 @@ class PreviewServiceTest extends BaseTest {
     var summaryNoteTypeId = "10e2e11b-450f-45c8-b09b-0f819999966e";
     var bulkOperationId = UUID.randomUUID();
     var pathToMarcFile = bulkOperationId + "/" + "file.mrc";
-    var pathToMatchedCsvFile = bulkOperationId + "/" + "file.csv";
+    var pathToMatchedJsonFile = bulkOperationId + "/" + "file.json";
     var bulkOperation = BulkOperation.builder()
             .id(bulkOperationId)
             .entityType(INSTANCE_MARC)
-            .linkToMatchedRecordsCsvFile(pathToMatchedCsvFile)
+            .linkToMatchedRecordsJsonFile(pathToMatchedJsonFile)
             .linkToMatchedRecordsMarcFile(pathToMarcFile)
             .linkToModifiedRecordsMarcFile(pathToMarcFile)
             .linkToCommittedRecordsMarcFile(pathToMarcFile)
@@ -738,8 +514,9 @@ class PreviewServiceTest extends BaseTest {
                     new InstanceNoteType().name(GENERAL_NOTE)));
     when(remoteFileSystemClient.get(pathToMarcFile))
             .thenReturn(new FileInputStream("src/test/resources/files/preview.mrc"));
-    when(remoteFileSystemClient.get(pathToMatchedCsvFile))
-            .thenReturn(new FileInputStream("src/test/resources/files/preview.csv"));
+    when(remoteFileSystemClient.get(pathToMatchedJsonFile))
+            .thenReturn(new FileInputStream(
+                "src/test/resources/files/single_instance_for_preview.json"));
     when(instanceReferenceService.getContributorTypesByCode("art"))
             .thenReturn(new ContributorTypeCollection().contributorTypes(
                     Collections.singletonList(new ContributorType().name("Artist"))));
@@ -773,12 +550,12 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().getFirst().getRow().get(17), equalTo("1st ed."));
     assertThat(res.getRows().getFirst().getRow().get(18), equalTo("500 p. ; 22 cm."));
     assertThat(res.getRows().getFirst().getRow().get(19), equalTo("Text"));
-    assertThat(res.getRows().getFirst().getRow().get(20), equalTo("computer -- other"));
     assertThat(res.getRows().getFirst().getRow().get(22), equalTo("eng | fre"));
     assertThat(res.getRows().getFirst().getRow().get(23),
             equalTo("monthly. Jun 10, 2024 | yearly. 2024"));
     assertThat(res.getRows().getFirst().getRow().get(24), equalTo("2002-2024"));
-    assertThat(res.getRows().getFirst().getRow().get(25), equalTo("language note (staff only)"));
+    assertThat(res.getRows().getFirst().getRow().get(25),
+        equalTo("language note (staff only)"));
     assertThat(res.getRows().getFirst().getRow().get(26), equalTo(
             "Ethan Feld, the worst baseball player in the history of the game, "
                     + "finds himself recruited by a 100-year-old scout to help a band of "
@@ -792,11 +569,11 @@ class PreviewServiceTest extends BaseTest {
     var summaryNoteTypeId = "10e2e11b-450f-45c8-b09b-0f819999966e";
     var bulkOperationId = UUID.randomUUID();
     var pathToMarcFile = bulkOperationId + "/" + "file.mrc";
-    var pathToCommittedCsvFile = bulkOperationId + "/" + "modified_file.csv";
+    var pathToCommittedJsonFile = bulkOperationId + "/" + "modified_file.json";
     var bulkOperation = BulkOperation.builder()
             .id(bulkOperationId)
             .entityType(INSTANCE_MARC)
-            .linkToCommittedRecordsCsvFile(pathToCommittedCsvFile)
+            .linkToCommittedRecordsJsonFile(pathToCommittedJsonFile)
             .linkToCommittedRecordsMarcFile(pathToMarcFile)
             .build();
 
@@ -818,9 +595,9 @@ class PreviewServiceTest extends BaseTest {
                     new InstanceNoteType().name(GENERAL_NOTE)));
     when(remoteFileSystemClient.get(pathToMarcFile)).thenReturn(new FileInputStream(
             "src/test/resources/files/preview.mrc"));
-    when(remoteFileSystemClient.get(pathToCommittedCsvFile))
+    when(remoteFileSystemClient.get(pathToCommittedJsonFile))
             .thenReturn(new FileInputStream(
-                    "src/test/resources/files/modified_instances_preview.csv"));
+                    "src/test/resources/files/modified_instances_for_preview.json"));
     when(instanceReferenceService.getContributorTypesByCode("art"))
             .thenReturn(new ContributorTypeCollection().contributorTypes(
                     Collections.singletonList(new ContributorType().name("Artist"))));
@@ -850,54 +627,12 @@ class PreviewServiceTest extends BaseTest {
 
     assertThat(res.getRows().get(2).getRow().get(0),
             equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
-    assertThat(res.getRows().get(2).getRow().get(2), equalTo("true"));
     assertThat(res.getRows().get(2).getRow().get(5), equalTo("in00000000002"));
     assertThat(res.getRows().get(2).getRow().get(6), equalTo("MARC"));
     var csvChanges = "Sample note for folio and marc instance";
     assertThat(res.getRows().get(2).getRow().get(11), equalTo(csvChanges));
     assertThat(res.getRows().get(2).getRow().get(14),
             equalTo("series800 | series810 | series811 | series830"));
-  }
-
-  @SneakyThrows
-  @Test
-  void shouldCorrectlyProcessSlashCommaSequence() {
-    var operationId = UUID.randomUUID();
-
-    var bulkOperation = buildBulkOperation("instance_preview_slash_before_comma.csv",
-            INSTANCE, UPLOAD);
-    bulkOperation.setId(operationId);
-    bulkOperation.setApproach(ApproachType.IN_APP);
-    bulkOperation.setStatus(NEW);
-    when(bulkOperationRepository.findById(operationId))
-            .thenReturn(Optional.of(bulkOperation));
-
-    var path = "src/test/resources/files/instance_preview_slash_before_comma.csv";
-
-    when(remoteFileSystemClient.get(anyString()))
-            .thenReturn(new FileInputStream(path));
-
-    bulkOperation.setTenantNotePairs(List.of());
-    when(bulkOperationService.getBulkOperationOrThrow(any(UUID.class))).thenReturn(bulkOperation);
-    when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(bulkOperation);
-    when(instanceReferenceService.getAllInstanceNoteTypes())
-            .thenReturn(List.of(
-                    new InstanceNoteType().name("General note"),
-                    new InstanceNoteType().name("Bibliography note"),
-                    new InstanceNoteType().name("Accumulation and Frequency of Use note")));
-
-    var offset = 0;
-    var limit = 5;
-    var table = previewService.getPreview(bulkOperation, UPLOAD, offset, limit);
-
-    assertThat(table.getHeader().size(), equalTo(31));
-    assertThat(table.getRows().getFirst().getRow().size(), equalTo(31));
-    assertThat(table.getRows().getFirst().getRow().get(25),
-            equalTo("Accumulation and Frequency of Use note text"));
-    assertThat(table.getRows().getFirst().getRow().get(26), equalTo("Bibliography note text"));
-    assertThat(table.getRows().getFirst().getRow().get(27), equalTo("General note text"));
-    assertThat(table.getRows().getFirst().getRow().get(10),
-            equalTo("some type: some code - some name"));
   }
 
   @Test

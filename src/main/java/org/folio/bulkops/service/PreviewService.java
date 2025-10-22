@@ -45,8 +45,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.CsvCustomBindByPosition;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,9 +52,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Spliterators;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
@@ -434,22 +434,18 @@ public class PreviewService {
                                        int offset, int limit,
                                        UnifiedTable table, Set<String> forceVisible,
                                        BulkOperation bulkOperation) {
-    try (Reader reader = new InputStreamReader(remoteFileSystemClient.get(pathToFile));
-        var jsonParser = new JsonFactory().createParser(reader)) {
-      for (int i = 0; i <= offset; i++) {
-        jsonParser.nextToken();
-      }
+    try (var is = remoteFileSystemClient.get(pathToFile);
+        var jsonParser = new JsonFactory().createParser(is)) {
       var processor = previewProcessorFactory.getProcessorFromFactory(clazz);
       var extendedClazz = resolveExtendedEntityClass(bulkOperation.getEntityType());
       var iterator = objectMapper.readValues(jsonParser, extendedClazz);
-      int numOfLines = 0;
-      while (iterator.hasNext() && ++numOfLines <= limit) {
-        var entity = iterator.next();
-        if (!(entity instanceof User)) {
-          entity = entity.getRecordBulkOperationEntity();
-        }
-        table.addRowsItem(processor.transformToRow(entity));
-      }
+      StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false)
+          .skip(offset)
+          .limit(limit)
+          .map(entity -> entity instanceof User
+              ? entity : entity.getRecordBulkOperationEntity())
+          .forEach(entity ->
+              table.addRowsItem(processor.transformToRow(entity)));
       processNoteFields(table, clazz, forceVisible, bulkOperation);
       table.getRows().forEach(row -> {
         var rowData = removeSubColumnsAndGetRowForPreview(row);

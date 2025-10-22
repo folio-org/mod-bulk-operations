@@ -66,14 +66,18 @@ public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
     try {
       return convertToString((T) object);
     } catch (ReferenceDataNotFoundException e) {
-      CsvIdentifierContextHelper.service().saveError(CsvRecordContext.getBulkOperationId(),
-              CsvRecordContext.getIdentifier(),
-              new ConverterException(this.getField(), object, e.getMessage(), ErrorType.WARNING));
+      if (CsvRecordContext.getBulkOperationId() != null) {
+        CsvIdentifierContextHelper.service().saveError(CsvRecordContext.getBulkOperationId(),
+                CsvRecordContext.getIdentifier(),
+                new ConverterException(this.getField(), object, e.getMessage(), ErrorType.ERROR));
+      }
       return FAILED_FIELD_MARKER;
     } catch (Exception e) {
-      CsvIdentifierContextHelper.service().saveError(CsvRecordContext.getBulkOperationId(),
-              CsvRecordContext.getIdentifier(),
-              new ConverterException(this.getField(), object, e.getMessage(), ErrorType.ERROR));
+      if (CsvRecordContext.getBulkOperationId() != null) {
+        CsvIdentifierContextHelper.service().saveError(CsvRecordContext.getBulkOperationId(),
+            CsvRecordContext.getIdentifier(),
+          new ConverterException(this.getField(), object, e.getMessage(), ErrorType.ERROR));
+      }
       return FAILED_FIELD_MARKER;
     }
   }
