@@ -38,25 +38,25 @@ import static org.folio.bulkops.util.Constants.FOLIO;
 import static org.folio.bulkops.util.Constants.PUBLICATION_HEADINGS;
 import static org.folio.bulkops.util.Constants.SUBJECT_HEADINGS;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
+import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.CsvCustomBindByPosition;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Spliterators;
 import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
@@ -70,6 +70,7 @@ import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
@@ -84,7 +85,7 @@ import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
-import org.folio.bulkops.util.CsvHelper;
+import org.folio.bulkops.processor.preview.PreviewProcessorFactory;
 import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
 import org.folio.bulkops.util.UpdateOptionTypeToFieldResolver;
 import org.folio.spring.FolioExecutionContext;
@@ -110,6 +111,8 @@ public class PreviewService {
   private final BulkOperationService bulkOperationService;
   private final TenantTableUpdater tenantTableUpdater;
   private final Marc21ReferenceProvider referenceProvider;
+  private final ObjectMapper objectMapper;
+  private final PreviewProcessorFactory previewProcessorFactory;
 
   private static final Pattern UUID_REGEX =
           Pattern.compile(
@@ -120,86 +123,86 @@ public class PreviewService {
                                  int limit) {
     var clazz = resolveEntityClass(operation.getEntityType());
     return switch (step) {
-      case UPLOAD -> buildPreviewFromCsvFile(operation.getLinkToMatchedRecordsCsvFile(), clazz,
+      case UPLOAD -> buildPreviewFromJsonFile(operation.getLinkToMatchedRecordsJsonFile(), clazz,
               offset, limit, operation);
       case EDIT -> {
         if (INSTANCE_MARC == operation.getEntityType()) {
           if (isFolioInstanceEditPreview(operation)) {
-            yield getPreviewFromCsvWithChangedOptions(operation,
-                    operation.getLinkToModifiedRecordsCsvFile(), offset, limit);
+            yield buildPreviewFromJsonWithChangedOptions(operation,
+                    operation.getLinkToModifiedRecordsJsonFile(), offset, limit);
           } else if (isMarcInstanceEditPreview(operation)) {
             yield buildCompositePreview(operation, offset, limit,
-                    operation.getLinkToMatchedRecordsCsvFile(),
+                    operation.getLinkToMatchedRecordsJsonFile(),
                     operation.getLinkToModifiedRecordsMarcFile());
           } else {
             yield buildCompositePreview(operation, offset, limit,
-                    operation.getLinkToModifiedRecordsCsvFile(),
+                    operation.getLinkToModifiedRecordsJsonFile(),
                     operation.getLinkToModifiedRecordsMarcFile());
           }
         } else {
-          yield getPreviewFromCsvWithChangedOptions(operation,
-                  operation.getLinkToModifiedRecordsCsvFile(), offset, limit);
+          yield buildPreviewFromJsonWithChangedOptions(operation,
+                  operation.getLinkToModifiedRecordsJsonFile(), offset, limit);
         }
       }
       case COMMIT -> {
         if (MANUAL == operation.getApproach()) {
-          yield buildPreviewFromCsvFile(operation.getLinkToCommittedRecordsCsvFile(),
+          yield buildPreviewFromJsonFile(operation.getLinkToCommittedRecordsJsonFile(),
                   clazz, offset, limit, operation);
         } else {
           if (INSTANCE_MARC == operation.getEntityType()) {
             if (isFolioInstanceCommitPreview(operation)) {
-              yield getPreviewFromCsvWithChangedOptions(operation,
-                      operation.getLinkToCommittedRecordsCsvFile(), offset, limit);
+              yield buildPreviewFromJsonWithChangedOptions(operation,
+                      operation.getLinkToCommittedRecordsJsonFile(), offset, limit);
             } else if (isMarcInstanceCommitPreview(operation)) {
               yield buildCompositePreview(operation, offset, limit,
-                      operation.getLinkToMatchedRecordsCsvFile(),
+                      operation.getLinkToMatchedRecordsJsonFile(),
                       operation.getLinkToCommittedRecordsMarcFile());
             } else {
               yield buildCompositePreview(operation, offset, limit,
-                      operation.getLinkToCommittedRecordsCsvFile(),
+                      operation.getLinkToCommittedRecordsJsonFile(),
                       operation.getLinkToCommittedRecordsMarcFile());
             }
           } else {
-            yield getPreviewFromCsvWithChangedOptions(operation,
-                    operation.getLinkToCommittedRecordsCsvFile(), offset, limit);
+            yield buildPreviewFromJsonWithChangedOptions(operation,
+                    operation.getLinkToCommittedRecordsJsonFile(), offset, limit);
           }
         }
       }
     };
   }
 
-  private UnifiedTable getPreviewFromCsvWithChangedOptions(BulkOperation operation,
-                                                           String linkToCsvFile,
+  private UnifiedTable buildPreviewFromJsonWithChangedOptions(BulkOperation operation,
+                                                           String linkToJsonFile,
                                                            int offset, int limit) {
     var clazz = resolveEntityClass(operation.getEntityType());
     var rules = ruleService.getRules(operation.getId());
     var options = getChangedOptionsSet(operation.getId(), operation.getEntityType(), rules, clazz);
-    return buildPreviewFromCsvFile(linkToCsvFile, clazz, offset, limit, options, operation);
+    return buildPreviewFromJsonFile(linkToJsonFile, clazz, offset, limit, options, operation);
   }
 
   private boolean isFolioInstanceEditPreview(BulkOperation operation) {
-    return StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsCsvFile())
+    return StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsJsonFile())
             && StringUtils.isEmpty(operation.getLinkToModifiedRecordsMarcFile());
   }
 
   private boolean isMarcInstanceEditPreview(BulkOperation operation) {
     return StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsMarcFile())
-            && StringUtils.isEmpty(operation.getLinkToModifiedRecordsCsvFile());
+            && StringUtils.isEmpty(operation.getLinkToModifiedRecordsJsonFile());
   }
 
   private boolean isFolioInstanceCommitPreview(BulkOperation operation) {
-    return StringUtils.isNotEmpty(operation.getLinkToCommittedRecordsCsvFile())
+    return StringUtils.isNotEmpty(operation.getLinkToCommittedRecordsJsonFile())
             && StringUtils.isEmpty(operation.getLinkToCommittedRecordsMarcFile());
   }
 
   private boolean isMarcInstanceCommitPreview(BulkOperation operation) {
     return StringUtils.isNotEmpty(operation.getLinkToCommittedRecordsMarcFile())
-            && StringUtils.isEmpty(operation.getLinkToCommittedRecordsCsvFile());
+            && StringUtils.isEmpty(operation.getLinkToCommittedRecordsJsonFile());
   }
 
   private UnifiedTable buildCompositePreview(BulkOperation bulkOperation, int offset, int limit,
-                                             String linkToCsvFile, String linkToMarcFile) {
-    var csvTable = buildPreviewFromCsvFile(linkToCsvFile, resolveEntityClass(
+                                             String linkToJsonFile, String linkToMarcFile) {
+    var inventoryTable = buildPreviewFromJsonFile(linkToJsonFile, resolveEntityClass(
             bulkOperation.getEntityType()), offset, limit, bulkOperation);
     if (isNotEmpty(linkToMarcFile)) {
       referenceProvider.updateMappingRules();
@@ -213,19 +216,19 @@ public class PreviewService {
       var headers = compositeTable.getHeader().stream()
               .map(Cell::getValue)
               .toList();
-      var hrids = csvTable.getRows().stream()
+      var hrids = inventoryTable.getRows().stream()
               .map(row -> row.getRow().get(hridPosition))
               .toList();
       var marcRecords = findMarcRecordsByHrids(linkToMarcFile, hrids);
-      csvTable.getRows().forEach(csvRow -> {
-        if (FOLIO.equals(csvRow.getRow().get(sourcePosition))) {
-          compositeTable.addRowsItem(csvRow);
+      inventoryTable.getRows().forEach(inventoryRow -> {
+        if (FOLIO.equals(inventoryRow.getRow().get(sourcePosition))) {
+          compositeTable.addRowsItem(inventoryRow);
         } else {
-          var hrid = csvRow.getRow().get(hridPosition);
+          var hrid = inventoryRow.getRow().get(hridPosition);
           if (marcRecords.containsKey(hrid)) {
             var marcRow = new Row().row(marcToUnifiedTableRowMapper.processRecord(
                     marcRecords.get(hrid), headers, false));
-            enrichRowWithAdministrativeData(marcRow, csvRow);
+            enrichRowWithAdministrativeData(marcRow, inventoryRow);
             compositeTable.addRowsItem(marcRow);
           }
         }
@@ -233,8 +236,8 @@ public class PreviewService {
       forceVisibleAdministrativeDataHeaders(compositeTable, bulkOperation);
       return compositeTable;
     }
-    forceVisibleAdministrativeDataHeaders(csvTable, bulkOperation);
-    return csvTable;
+    forceVisibleAdministrativeDataHeaders(inventoryTable, bulkOperation);
+    return inventoryTable;
   }
 
   private void forceVisibleAdministrativeDataHeaders(UnifiedTable unifiedTable,
@@ -272,25 +275,25 @@ public class PreviewService {
     });
   }
 
-  private void enrichRowWithAdministrativeData(Row marcRow, Row csvRow) {
+  private void enrichRowWithAdministrativeData(Row marcRow, Row inventoryRow) {
     var positions = getAdministrativeDataFieldPositions();
-    marcRow.getRow().set(positions.get(INSTANCE_STAFF_SUPPRESS), csvRow.getRow()
+    marcRow.getRow().set(positions.get(INSTANCE_STAFF_SUPPRESS), inventoryRow.getRow()
             .get(positions.get(INSTANCE_STAFF_SUPPRESS)));
-    marcRow.getRow().set(positions.get(INSTANCE_ADMINISTRATIVE_NOTE), csvRow.getRow()
+    marcRow.getRow().set(positions.get(INSTANCE_ADMINISTRATIVE_NOTE), inventoryRow.getRow()
             .get(positions.get(INSTANCE_ADMINISTRATIVE_NOTE)));
-    marcRow.getRow().set(positions.get(INSTANCE_SUPPRESS_FROM_DISCOVERY), csvRow.getRow()
+    marcRow.getRow().set(positions.get(INSTANCE_SUPPRESS_FROM_DISCOVERY), inventoryRow.getRow()
             .get(positions.get(INSTANCE_SUPPRESS_FROM_DISCOVERY)));
-    marcRow.getRow().set(positions.get(INSTANCE_PREVIOUSLY_HELD), csvRow.getRow()
+    marcRow.getRow().set(positions.get(INSTANCE_PREVIOUSLY_HELD), inventoryRow.getRow()
             .get(positions.get(INSTANCE_PREVIOUSLY_HELD)));
-    marcRow.getRow().set(positions.get(INSTANCE_STATUS_TERM), csvRow.getRow()
+    marcRow.getRow().set(positions.get(INSTANCE_STATUS_TERM), inventoryRow.getRow()
             .get(positions.get(INSTANCE_STATUS_TERM)));
-    marcRow.getRow().set(positions.get(INSTANCE_NATURE_OF_CONTENT), csvRow.getRow()
+    marcRow.getRow().set(positions.get(INSTANCE_NATURE_OF_CONTENT), inventoryRow.getRow()
             .get(positions.get(INSTANCE_NATURE_OF_CONTENT)));
-    marcRow.getRow().set(positions.get(INSTANCE_CATALOGED_DATE), csvRow.getRow()
+    marcRow.getRow().set(positions.get(INSTANCE_CATALOGED_DATE), inventoryRow.getRow()
             .get(positions.get(INSTANCE_CATALOGED_DATE)));
-    marcRow.getRow().set(positions.get(INSTANCE_STATISTICAL_CODES), csvRow.getRow()
+    marcRow.getRow().set(positions.get(INSTANCE_STATISTICAL_CODES), inventoryRow.getRow()
             .get(positions.get(INSTANCE_STATISTICAL_CODES)));
-    marcRow.getRow().set(positions.get(INSTANCE_SET_FOR_DELETION), csvRow.getRow()
+    marcRow.getRow().set(positions.get(INSTANCE_SET_FOR_DELETION), inventoryRow.getRow()
             .get(positions.get(INSTANCE_SET_FOR_DELETION)));
   }
 
@@ -410,7 +413,7 @@ public class PreviewService {
     }
   }
 
-  private UnifiedTable buildPreviewFromCsvFile(String pathToFile,
+  private UnifiedTable buildPreviewFromJsonFile(String pathToFile,
                                                Class<? extends BulkOperationsEntity> clazz,
                                                int offset,
                                                int limit, Set<String> forceVisible,
@@ -419,7 +422,7 @@ public class PreviewService {
     return populatePreview(pathToFile, clazz, offset, limit, table, forceVisible, bulkOperation);
   }
 
-  private UnifiedTable buildPreviewFromCsvFile(String pathToFile,
+  private UnifiedTable buildPreviewFromJsonFile(String pathToFile,
                                                Class<? extends BulkOperationsEntity> clazz,
                                                int offset, int limit, BulkOperation bulkOperation) {
     var table =  UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
@@ -431,19 +434,18 @@ public class PreviewService {
                                        int offset, int limit,
                                        UnifiedTable table, Set<String> forceVisible,
                                        BulkOperation bulkOperation) {
-    try (Reader reader = new InputStreamReader(remoteFileSystemClient.get(pathToFile))) {
-      var readerBuilder = new CSVReaderBuilder(reader)
-              .withCSVParser(CsvHelper.getCsvParser());
-      CSVReader csvReader = readerBuilder.build();
-      var recordsToSkip = offset + 1;
-      csvReader.skip(recordsToSkip);
-      String[] line;
-      while ((line = csvReader.readNext()) != null && csvReader.getRecordsRead() <= limit
-              + recordsToSkip) {
-        var row = new org.folio.bulkops.domain.dto.Row();
-        row.setRow(new ArrayList<>(Arrays.asList(line)));
-        table.addRowsItem(row);
-      }
+    try (var is = remoteFileSystemClient.get(pathToFile);
+        var jsonParser = new JsonFactory().createParser(is)) {
+      var processor = previewProcessorFactory.getProcessorFromFactory(clazz);
+      var extendedClazz = resolveExtendedEntityClass(bulkOperation.getEntityType());
+      var iterator = objectMapper.readValues(jsonParser, extendedClazz);
+      StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false)
+          .skip(offset)
+          .limit(limit)
+          .map(entity -> entity instanceof User
+              ? entity : entity.getRecordBulkOperationEntity())
+          .forEach(entity ->
+              table.addRowsItem(processor.transformToRow(entity)));
       processNoteFields(table, clazz, forceVisible, bulkOperation);
       table.getRows().forEach(row -> {
         var rowData = removeSubColumnsAndGetRowForPreview(row);

@@ -338,15 +338,15 @@ public abstract class BaseTest {
     return switch (step) {
       case UPLOAD -> BulkOperation.builder()
         .entityType(entityType)
-        .linkToMatchedRecordsCsvFile(fileName)
+        .linkToMatchedRecordsJsonFile(fileName)
         .build();
       case EDIT -> BulkOperation.builder()
         .entityType(entityType)
-        .linkToModifiedRecordsCsvFile(fileName)
+        .linkToModifiedRecordsJsonFile(fileName)
         .build();
       case COMMIT -> BulkOperation.builder()
         .entityType(entityType)
-        .linkToCommittedRecordsCsvFile(fileName)
+        .linkToCommittedRecordsJsonFile(fileName)
         .build();
     };
   }
