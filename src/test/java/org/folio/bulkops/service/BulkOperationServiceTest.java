@@ -81,6 +81,7 @@ import java.util.UUID;
 import lombok.SneakyThrows;
 import org.assertj.core.api.Assertions;
 import org.folio.bulkops.BaseTest;
+import org.folio.bulkops.batch.CsvRecordContext;
 import org.folio.bulkops.batch.ExportJobManagerSync;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
@@ -1643,7 +1644,9 @@ class BulkOperationServiceTest extends BaseTest {
     when(itemReferenceService.getStatisticalCodeById(anyString()))
             .thenThrow(new NotFoundException("not found"));
 
-    try (var stringWriter = new StringWriter()) {
+    try (var stringWriter = new StringWriter();
+        var ignored = new CsvRecordContext()) {
+      CsvRecordContext.setBulkOperationId(UUID.randomUUID());
       var writer = new BulkOperationsEntityCsvWriter(stringWriter, Item.class);
       List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
       CsvHelper.writeBeanToCsv(operation, writer, item, bulkOperationExecutionContents);
