@@ -87,7 +87,11 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
           itemIdentifier.getItemId()
       );
 
+      log.info("Searching user with query: {}", query);
+
       var userCollection = userClient.getByQuery(query, limit);
+
+      log.info("user collection: {}", userCollection);
 
       if (userCollection.getUsers().isEmpty()) {
         throw new BulkEditException(NO_MATCH_FOUND_MESSAGE, ErrorType.ERROR);
