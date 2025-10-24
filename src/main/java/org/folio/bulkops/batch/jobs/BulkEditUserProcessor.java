@@ -98,8 +98,10 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
       }
 
       var user = userCollection.getUsers().getFirst();
+      log.info("user type: {}", user.getType());
       if (SHADOW.equalsIgnoreCase(ofNullable(user.getType())
               .map(Object::toString).orElse(EMPTY))) {
+        log.info("Exception thrown for shadow user with id: {}", user.getId());
         throw new BulkEditException(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED, ErrorType.ERROR);
       }
       var birthDate = user.getPersonal().getDateOfBirth();
