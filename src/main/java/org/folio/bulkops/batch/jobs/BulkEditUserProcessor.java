@@ -26,12 +26,14 @@ import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.User;
+import org.folio.bulkops.domain.bean.UserCollection;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.processor.EntityExtractor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.util.ExceptionHelper;
 import org.folio.spring.FolioExecutionContext;
 import org.jetbrains.annotations.NotNull;
@@ -50,6 +52,8 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
     EntityExtractor {
   private static final String USER_SEARCH_QUERY =
       "(cql.allRecords=1 NOT type=\"\" or type<>\"shadow\") and %s==\"%s\"";
+  private static final String USER_SEARCH_QUERY_CENTRAL_TENANT =
+          "(cql.allRecords=1 NOT type=\"\") and %s==\"%s\"";
 
   private final UserClient userClient;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
@@ -60,6 +64,7 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
   private JobExecution jobExecution;
   private final FolioExecutionContext folioExecutionContext;
   private final PermissionsValidator permissionsValidator;
+  private final ConsortiaService consortiaService;
 
   @Override
   public User process(@NotNull ItemIdentifier itemIdentifier) throws BulkEditException {
@@ -82,7 +87,11 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
 
     try {
       var limit = 1;
-      var query = USER_SEARCH_QUERY.formatted(
+      var userSearchQuery = USER_SEARCH_QUERY;
+      if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
+        userSearchQuery = USER_SEARCH_QUERY_CENTRAL_TENANT;
+      }
+      var query = userSearchQuery.formatted(
           resolveIdentifier(identifierType),
           itemIdentifier.getItemId()
       );
