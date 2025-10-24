@@ -1,26 +1,34 @@
 package org.folio.bulkops.batch.jobs;
 
 import static java.util.Objects.nonNull;
+import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.dateToString;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.resolveIdentifier;
 import static org.folio.bulkops.util.Constants.MIN_YEAR_FOR_BIRTH_DATE;
+import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.MULTIPLE_MATCHES_MESSAGE;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.Constants.NO_USER_VIEW_PERMISSIONS;
+import static org.folio.bulkops.util.FqmContentFetcher.SHADOW;
 
 import feign.codec.DecodeException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
+import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
+import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.processor.EntityExtractor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
@@ -90,6 +98,10 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
       }
 
       var user = userCollection.getUsers().getFirst();
+      if (SHADOW.equalsIgnoreCase(ofNullable(user.getType())
+              .map(Object::toString).orElse(EMPTY))) {
+        throw new BulkEditException(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED, ErrorType.ERROR);
+      }
       var birthDate = user.getPersonal().getDateOfBirth();
       validateBirthDate(birthDate);
       return user;
@@ -110,5 +122,17 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
         throw new BulkEditException(msg, ErrorType.ERROR);
       }
     }
+  }
+
+  private void addShadowUserErrorContent(
+          String userId,
+          List<BulkOperationExecutionContent> bulkOperationExecutionContents, UUID operationId) {
+    bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
+            .identifier(userId)
+            .bulkOperationId(operationId)
+            .state(StateType.FAILED)
+            .errorType(ErrorType.ERROR)
+            .errorMessage(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED)
+            .build());
   }
 }
