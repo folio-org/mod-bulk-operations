@@ -342,7 +342,7 @@ public abstract class BaseTest {
         .build();
       case EDIT -> BulkOperation.builder()
         .entityType(entityType)
-        .linkToModifiedRecordsJsonFile(fileName)
+        .linkToModifiedRecordsJsonPreviewFile(fileName)
         .build();
       case COMMIT -> BulkOperation.builder()
         .entityType(entityType)

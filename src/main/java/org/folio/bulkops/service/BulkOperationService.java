@@ -151,8 +151,10 @@ public class BulkOperationService {
   private final ExportJobManagerSync exportJobManagerSync;
   private final List<Job> jobs;
   private static final int OPERATION_UPDATING_STEP = 100;
-  private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/json/%s-Updates-Preview-%s.json";
+  private static final String MODIFIED_JSON_PATH_TEMPLATE = "%s/json/%s-Modified-%s.json";
   private static final String PREVIEW_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-CSV-%s.csv";
+  private static final String PREVIEW_JSON_PATH_TEMPLATE =
+      "%s/json/%s-Updates-Preview-JSON-%s.json";
   private static final String PREVIEW_MARC_PATH_TEMPLATE = "%s/%s-Updates-Preview-MARC-%s.mrc";
   private static final String PREVIEW_MARC_CSV_PATH_TEMPLATE =
           "%s/%s-Updates-Preview-MARC-CSV-%s.csv";
@@ -259,8 +261,10 @@ public class BulkOperationService {
     var extendedClazz = resolveExtendedEntityClass(operation.getEntityType());
 
     var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
-    var modifiedJsonFileName = String.format(PREVIEW_JSON_PATH_TEMPLATE, operationId,
+    var modifiedJsonFileName = String.format(MODIFIED_JSON_PATH_TEMPLATE, operationId,
             LocalDate.now(), triggeringFileName);
+    var modifiedJsonPreviewFileName = String.format(PREVIEW_JSON_PATH_TEMPLATE, operationId,
+        LocalDate.now(), triggeringFileName);
     var modifiedPreviewCsvFileName = String.format(PREVIEW_CSV_PATH_TEMPLATE, operationId,
             LocalDate.now(), triggeringFileName);
 
@@ -268,7 +272,9 @@ public class BulkOperationService {
             operation.getLinkToMatchedRecordsJsonFile());
          var writerForModifiedPreviewCsvFile = remoteFileSystemClient.writer(
                  modifiedPreviewCsvFileName);
-         var writerForModifiedJsonFile = remoteFileSystemClient.writer(modifiedJsonFileName)) {
+         var writerForModifiedJsonFile = remoteFileSystemClient.writer(modifiedJsonFileName);
+         var writerForModifiedJsonPreviewFile = remoteFileSystemClient
+            .writer(modifiedJsonPreviewFileName)) {
 
       var csvWriter = new BulkOperationsEntityCsvWriter(writerForModifiedPreviewCsvFile, clazz);
 
@@ -293,23 +299,21 @@ public class BulkOperationService {
         var modified = processUpdate(original, operation, ruleCollection, extendedClazz);
         List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
         if (Objects.nonNull(modified)) {
-          // Prepare CSV for download and preview
-          if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId())
+          // Prepare CSV for download and JSON for preview
+          if (!isCurrentTenantNotCentral(folioExecutionContext.getTenantId())
                   || clazz == User.class) {
-            CsvHelper.writeBeanToCsv(operation, csvWriter,
-                    modified.getPreview().getRecordBulkOperationEntity(),
-                    bulkOperationExecutionContents);
-          } else {
             var tenantIdOfEntity = modified.getPreview().getTenant();
             try (var ignored = new FolioExecutionContextSetter(
                     prepareContextForTenant(
                             tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
               modified.getPreview().setTenantToNotes(operation.getTenantNotePairs());
-              CsvHelper.writeBeanToCsv(operation, csvWriter,
-                      modified.getPreview().getRecordBulkOperationEntity(),
-                      bulkOperationExecutionContents);
             }
           }
+          CsvHelper.writeBeanToCsv(operation, csvWriter,
+              modified.getPreview().getRecordBulkOperationEntity(),
+              bulkOperationExecutionContents);
+          writerForModifiedJsonPreviewFile.write(
+              objectMapper.writeValueAsString(modified.getPreview()) + LF);
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
           bulkOperationExecutionContents.forEach(errorService::saveError);
           writerForModifiedJsonFile.write(modifiedRecord);
@@ -321,6 +325,7 @@ public class BulkOperationService {
       if (processedNumOfRecords > 0) {
         operation.setLinkToModifiedRecordsCsvFile(modifiedPreviewCsvFileName);
         operation.setLinkToModifiedRecordsJsonFile(modifiedJsonFileName);
+        operation.setLinkToModifiedRecordsJsonPreviewFile(modifiedJsonPreviewFileName);
         saveLinks(operation);
       }
 
@@ -653,7 +658,7 @@ public class BulkOperationService {
     operation.setProcessedNumOfRecords(0);
     var bulkOperationId = operation.getId();
     var linkToModifiedRecordsCsvFile = operation.getLinkToModifiedRecordsCsvFile();
-    var linkToModifiedRecordsJsonFile = String.format(PREVIEW_JSON_PATH_TEMPLATE, bulkOperationId,
+    var linkToModifiedRecordsJsonFile = String.format(MODIFIED_JSON_PATH_TEMPLATE, bulkOperationId,
             LocalDate.now(), FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile()));
     try (Reader readerForModifiedCsvFile = new InputStreamReader(remoteFileSystemClient.get(
             linkToModifiedRecordsCsvFile));
@@ -898,6 +903,10 @@ public class BulkOperationService {
     }
     if (nonNull(source.getLinkToModifiedRecordsJsonFile())) {
       dest.setLinkToModifiedRecordsJsonFile(source.getLinkToModifiedRecordsJsonFile());
+    }
+    if (nonNull(source.getLinkToModifiedRecordsJsonPreviewFile())) {
+      dest.setLinkToModifiedRecordsJsonPreviewFile(
+          source.getLinkToModifiedRecordsJsonPreviewFile());
     }
     if (nonNull(source.getLinkToModifiedRecordsMarcFile())) {
       dest.setLinkToModifiedRecordsMarcFile(source.getLinkToModifiedRecordsMarcFile());
