@@ -129,19 +129,19 @@ public class PreviewService {
         if (INSTANCE_MARC == operation.getEntityType()) {
           if (isFolioInstanceEditPreview(operation)) {
             yield buildPreviewFromJsonWithChangedOptions(operation,
-                    operation.getLinkToModifiedRecordsJsonFile(), offset, limit);
+                    operation.getLinkToModifiedRecordsJsonPreviewFile(), offset, limit);
           } else if (isMarcInstanceEditPreview(operation)) {
             yield buildCompositePreview(operation, offset, limit,
                     operation.getLinkToMatchedRecordsJsonFile(),
                     operation.getLinkToModifiedRecordsMarcFile());
           } else {
             yield buildCompositePreview(operation, offset, limit,
-                    operation.getLinkToModifiedRecordsJsonFile(),
+                    operation.getLinkToModifiedRecordsJsonPreviewFile(),
                     operation.getLinkToModifiedRecordsMarcFile());
           }
         } else {
           yield buildPreviewFromJsonWithChangedOptions(operation,
-                  operation.getLinkToModifiedRecordsJsonFile(), offset, limit);
+                  operation.getLinkToModifiedRecordsJsonPreviewFile(), offset, limit);
         }
       }
       case COMMIT -> {
@@ -181,13 +181,13 @@ public class PreviewService {
   }
 
   private boolean isFolioInstanceEditPreview(BulkOperation operation) {
-    return StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsJsonFile())
+    return StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsJsonPreviewFile())
             && StringUtils.isEmpty(operation.getLinkToModifiedRecordsMarcFile());
   }
 
   private boolean isMarcInstanceEditPreview(BulkOperation operation) {
     return StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsMarcFile())
-            && StringUtils.isEmpty(operation.getLinkToModifiedRecordsJsonFile());
+            && StringUtils.isEmpty(operation.getLinkToModifiedRecordsJsonPreviewFile());
   }
 
   private boolean isFolioInstanceCommitPreview(BulkOperation operation) {

@@ -1,8 +1,7 @@
 package org.folio.bulkops.util;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
-import static org.folio.bulkops.domain.bean.CirculationNote.NoteTypeEnum.IN;
-import static org.folio.bulkops.domain.bean.CirculationNote.NoteTypeEnum.OUT;
+import static org.folio.bulkops.processor.folio.ItemCirculationNoteProcessor.splitCirculationNotes;
 
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
@@ -12,7 +11,6 @@ import java.io.Writer;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.exception.ConverterException;
-import org.springframework.util.ObjectUtils;
 
 public class BulkOperationsEntityCsvWriter {
 
@@ -38,14 +36,5 @@ public class BulkOperationsEntityCsvWriter {
       return splitCirculationNotes(item);
     }
     return entity;
-  }
-
-  private Item splitCirculationNotes(Item item) {
-    var notes = item.getCirculationNotes();
-    return ObjectUtils.isEmpty(notes) ? item :
-      item.withCheckInNotes(notes.stream().filter(
-              circulationNote -> IN.equals(circulationNote.getNoteType())).toList())
-        .withCheckOutNotes(notes.stream().filter(
-                circulationNote -> OUT.equals(circulationNote.getNoteType())).toList());
   }
 }
