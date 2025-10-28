@@ -153,7 +153,8 @@ public class BulkOperationService {
   private static final int OPERATION_UPDATING_STEP = 100;
   private static final String MODIFIED_JSON_PATH_TEMPLATE = "%s/json/%s-Modified-%s.json";
   private static final String PREVIEW_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-CSV-%s.csv";
-  private static final String PREVIEW_JSON_PATH_TEMPLATE = "%s/%s-Updates-Preview-JSON-%s.json";
+  private static final String PREVIEW_JSON_PATH_TEMPLATE =
+      "%s/json/%s-Updates-Preview-JSON-%s.json";
   private static final String PREVIEW_MARC_PATH_TEMPLATE = "%s/%s-Updates-Preview-MARC-%s.mrc";
   private static final String PREVIEW_MARC_CSV_PATH_TEMPLATE =
           "%s/%s-Updates-Preview-MARC-CSV-%s.csv";

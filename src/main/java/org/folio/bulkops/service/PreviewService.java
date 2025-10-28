@@ -181,13 +181,13 @@ public class PreviewService {
   }
 
   private boolean isFolioInstanceEditPreview(BulkOperation operation) {
-    return StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsJsonFile())
+    return StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsJsonPreviewFile())
             && StringUtils.isEmpty(operation.getLinkToModifiedRecordsMarcFile());
   }
 
   private boolean isMarcInstanceEditPreview(BulkOperation operation) {
     return StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsMarcFile())
-            && StringUtils.isEmpty(operation.getLinkToModifiedRecordsJsonFile());
+            && StringUtils.isEmpty(operation.getLinkToModifiedRecordsJsonPreviewFile());
   }
 
   private boolean isFolioInstanceCommitPreview(BulkOperation operation) {
