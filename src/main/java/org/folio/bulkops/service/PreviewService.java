@@ -129,14 +129,14 @@ public class PreviewService {
         if (INSTANCE_MARC == operation.getEntityType()) {
           if (isFolioInstanceEditPreview(operation)) {
             yield buildPreviewFromJsonWithChangedOptions(operation,
-                    operation.getLinkToModifiedRecordsJsonFile(), offset, limit);
+                    operation.getLinkToModifiedRecordsJsonPreviewFile(), offset, limit);
           } else if (isMarcInstanceEditPreview(operation)) {
             yield buildCompositePreview(operation, offset, limit,
                     operation.getLinkToMatchedRecordsJsonFile(),
                     operation.getLinkToModifiedRecordsMarcFile());
           } else {
             yield buildCompositePreview(operation, offset, limit,
-                    operation.getLinkToModifiedRecordsJsonFile(),
+                    operation.getLinkToModifiedRecordsJsonPreviewFile(),
                     operation.getLinkToModifiedRecordsMarcFile());
           }
         } else {

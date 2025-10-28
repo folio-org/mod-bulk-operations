@@ -263,7 +263,7 @@ public class BulkOperationService {
     var modifiedJsonFileName = String.format(MODIFIED_JSON_PATH_TEMPLATE, operationId,
             LocalDate.now(), triggeringFileName);
     var modifiedJsonPreviewFileName = String.format(PREVIEW_JSON_PATH_TEMPLATE, operationId,
-      LocalDate.now(), triggeringFileName);
+        LocalDate.now(), triggeringFileName);
     var modifiedPreviewCsvFileName = String.format(PREVIEW_CSV_PATH_TEMPLATE, operationId,
             LocalDate.now(), triggeringFileName);
 
@@ -309,8 +309,8 @@ public class BulkOperationService {
             }
           }
           CsvHelper.writeBeanToCsv(operation, csvWriter,
-            modified.getPreview().getRecordBulkOperationEntity(),
-            bulkOperationExecutionContents);
+              modified.getPreview().getRecordBulkOperationEntity(),
+              bulkOperationExecutionContents);
           writerForModifiedJsonPreviewFile.write(
               objectMapper.writeValueAsString(modified.getPreview()) + LF);
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
