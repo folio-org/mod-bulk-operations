@@ -141,7 +141,7 @@ public class PreviewService {
           }
         } else {
           yield buildPreviewFromJsonWithChangedOptions(operation,
-                  operation.getLinkToModifiedRecordsJsonFile(), offset, limit);
+                  operation.getLinkToModifiedRecordsJsonPreviewFile(), offset, limit);
         }
       }
       case COMMIT -> {
