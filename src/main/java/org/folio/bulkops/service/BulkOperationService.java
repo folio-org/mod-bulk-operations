@@ -300,20 +300,26 @@ public class BulkOperationService {
         List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
         if (Objects.nonNull(modified)) {
           // Prepare CSV for download and JSON for preview
-          if (!isCurrentTenantNotCentral(folioExecutionContext.getTenantId())
+          if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId())
                   || clazz == User.class) {
+            CsvHelper.writeBeanToCsv(operation, csvWriter,
+                modified.getPreview().getRecordBulkOperationEntity(),
+                bulkOperationExecutionContents);
+            writerForModifiedJsonPreviewFile.write(
+                objectMapper.writeValueAsString(modified.getPreview()) + LF);
+          } else {
             var tenantIdOfEntity = modified.getPreview().getTenant();
             try (var ignored = new FolioExecutionContextSetter(
                     prepareContextForTenant(
                             tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
               modified.getPreview().setTenantToNotes(operation.getTenantNotePairs());
+              CsvHelper.writeBeanToCsv(operation, csvWriter,
+                  modified.getPreview().getRecordBulkOperationEntity(),
+                  bulkOperationExecutionContents);
+              writerForModifiedJsonPreviewFile.write(
+                  objectMapper.writeValueAsString(modified.getPreview()) + LF);
             }
           }
-          CsvHelper.writeBeanToCsv(operation, csvWriter,
-              modified.getPreview().getRecordBulkOperationEntity(),
-              bulkOperationExecutionContents);
-          writerForModifiedJsonPreviewFile.write(
-              objectMapper.writeValueAsString(modified.getPreview()) + LF);
           var modifiedRecord = objectMapper.writeValueAsString(modified.getUpdated()) + LF;
           bulkOperationExecutionContents.forEach(errorService::saveError);
           writerForModifiedJsonFile.write(modifiedRecord);
