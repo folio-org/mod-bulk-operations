@@ -53,7 +53,7 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
   private static final String USER_SEARCH_QUERY =
       "(cql.allRecords=1 NOT type=\"\" or type<>\"shadow\") and %s==\"%s\"";
   private static final String USER_SEARCH_QUERY_CENTRAL_TENANT =
-          "(cql.allRecords=1 NOT type=\"\") and %s==\"%s\"";
+          "(cql.allRecords=1) and %s==\"%s\"";
 
   private final UserClient userClient;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
