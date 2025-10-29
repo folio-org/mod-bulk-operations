@@ -1,12 +1,16 @@
 package org.folio.bulkops.batch.jobs;
 
 import static java.util.Objects.nonNull;
+import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.dateToString;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.resolveIdentifier;
 import static org.folio.bulkops.util.Constants.MIN_YEAR_FOR_BIRTH_DATE;
+import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.MULTIPLE_MATCHES_MESSAGE;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.Constants.NO_USER_VIEW_PERMISSIONS;
+import static org.folio.bulkops.util.FqmContentFetcher.SHADOW;
 
 import feign.codec.DecodeException;
 import java.time.Instant;
@@ -24,6 +28,7 @@ import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.processor.EntityExtractor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.util.ExceptionHelper;
 import org.folio.spring.FolioExecutionContext;
 import org.jetbrains.annotations.NotNull;
@@ -42,6 +47,8 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
     EntityExtractor {
   private static final String USER_SEARCH_QUERY =
       "(cql.allRecords=1 NOT type=\"\" or type<>\"shadow\") and %s==\"%s\"";
+  private static final String USER_SEARCH_QUERY_CENTRAL_TENANT =
+          "(cql.allRecords=1) and %s==\"%s\"";
 
   private final UserClient userClient;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
@@ -52,6 +59,7 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
   private JobExecution jobExecution;
   private final FolioExecutionContext folioExecutionContext;
   private final PermissionsValidator permissionsValidator;
+  private final ConsortiaService consortiaService;
 
   @Override
   public User process(@NotNull ItemIdentifier itemIdentifier) throws BulkEditException {
@@ -74,7 +82,11 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
 
     try {
       var limit = 1;
-      var query = USER_SEARCH_QUERY.formatted(
+      var userSearchQuery = USER_SEARCH_QUERY;
+      if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
+        userSearchQuery = USER_SEARCH_QUERY_CENTRAL_TENANT;
+      }
+      var query = userSearchQuery.formatted(
           resolveIdentifier(identifierType),
           itemIdentifier.getItemId()
       );
@@ -90,6 +102,11 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
       }
 
       var user = userCollection.getUsers().getFirst();
+      if (SHADOW.equalsIgnoreCase(ofNullable(user.getType())
+              .map(Object::toString).orElse(EMPTY))) {
+        log.error("Exception thrown for shadow user with id: {}", user.getId());
+        throw new BulkEditException(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED, ErrorType.ERROR);
+      }
       var birthDate = user.getPersonal().getDateOfBirth();
       validateBirthDate(birthDate);
       return user;

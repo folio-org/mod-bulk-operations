@@ -2,6 +2,7 @@ package org.folio.bulkops.batch.jobs;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDITED;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -25,6 +26,7 @@ import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.spring.FolioExecutionContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +48,8 @@ class BulkEditUserProcessorTest {
   private FolioExecutionContext folioExecutionContext;
   @Mock
   private PermissionsValidator permissionsValidator;
+  @Mock
+  private ConsortiaService consortiaService;
 
   @InjectMocks
   private BulkEditUserProcessor processor;
@@ -119,6 +123,7 @@ class BulkEditUserProcessorTest {
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
             .thenReturn(new HashSet<>());
     when(userClient.getByQuery(anyString(), anyLong())).thenReturn(emptyCollection);
+    when(consortiaService.isTenantCentral(anyString())).thenReturn(false);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
       .isInstanceOf(BulkEditException.class).hasMessageContaining("No match found");
@@ -137,6 +142,7 @@ class BulkEditUserProcessorTest {
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
             .thenReturn(new HashSet<>());
     when(userClient.getByQuery(anyString(), anyLong())).thenReturn(collection);
+    when(consortiaService.isTenantCentral(anyString())).thenReturn(false);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
       .isInstanceOf(BulkEditException.class).hasMessageContaining("Multiple matches");
@@ -156,9 +162,30 @@ class BulkEditUserProcessorTest {
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
             .thenReturn(new HashSet<>());
     when(userClient.getByQuery(anyString(), anyLong())).thenReturn(userCollection);
+    when(consortiaService.isTenantCentral(anyString())).thenReturn(false);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
       .isInstanceOf(BulkEditException.class)
             .hasMessageContaining("Failed to parse Date from value");
+  }
+
+  @Test
+  void throwsWhenShadowUsers() {
+    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("badbirth");
+    User user = new User().withId("userId").withUsername("testuser")
+            .withType("shadow");
+    UserCollection userCollection = UserCollection.builder().users(List.of(user))
+            .totalRecords(1).build();
+
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.USER)))
+            .thenReturn(true);
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+            .thenReturn(new HashSet<>());
+    when(userClient.getByQuery(anyString(), anyLong())).thenReturn(userCollection);
+    when(consortiaService.isTenantCentral(anyString())).thenReturn(true);
+
+    assertThatThrownBy(() -> processor.process(itemIdentifier))
+            .isInstanceOf(BulkEditException.class)
+            .hasMessageContaining(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
   }
 }

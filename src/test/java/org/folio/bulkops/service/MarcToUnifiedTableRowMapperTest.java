@@ -241,18 +241,19 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     dataField.addSubfield(new SubfieldImpl('2', "found"));
     marcRecord.addVariableField(dataField);
 
-    when(subjectSourcesClient.getByQuery("code==codeFound"))
+    when(subjectSourcesClient.getByQuery("code==\"codeFound\""))
             .thenReturn(new SubjectSourceCollection()
             .withSubjectSources(List.of(new SubjectSource()
                     .withId(UUID.randomUUID().toString()).withName("source1"))));
-    when(subjectSourcesClient.getByQuery("code==found")).thenReturn(new SubjectSourceCollection()
+    when(subjectSourcesClient.getByQuery("code==\"found\""))
+            .thenReturn(new SubjectSourceCollection()
             .withSubjectSources(List.of(new SubjectSource()
-                    .withId(UUID.randomUUID().toString()).withName("found"))));
-    when(subjectSourcesClient.getByQuery("code==not found"))
+            .withId(UUID.randomUUID().toString()).withName("found"))));
+    when(subjectSourcesClient.getByQuery("code==\"not found\""))
             .thenReturn(new SubjectSourceCollection().withSubjectSources(List.of()));
-    when(subjectSourcesClient.getByQuery("code==text"))
+    when(subjectSourcesClient.getByQuery("code==\"text\""))
             .thenReturn(new SubjectSourceCollection().withSubjectSources(List.of()));
-    when(subjectSourcesClient.getByQuery("code==subject 2"))
+    when(subjectSourcesClient.getByQuery("code==\"subject 2\""))
             .thenReturn(new SubjectSourceCollection().withSubjectSources(List.of()));
 
     var rowData = marcToUnifiedTableRowMapper.processRecord(marcRecord, List.of(INSTANCE_SUBJECT),
