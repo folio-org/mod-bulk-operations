@@ -52,4 +52,5 @@
   <include file="changes/06-23-2025_update_profile_table.xml" relativeToChangelogFile="true"/>
   <include file="changes/19-08-2025_add_allowed_item_statuses_table_with_data.xml" relativeToChangelogFile="true"/>
   <include file="changes/14-08-2025_add_update_option_to_marc_rule.xml" relativeToChangelogFile="true"/>
+  <include file="changes/28-10-2025_update_bulk_operation_add_modified_json_preview_link.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
