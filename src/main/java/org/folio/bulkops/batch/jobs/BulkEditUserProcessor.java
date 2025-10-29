@@ -133,16 +133,4 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
       }
     }
   }
-
-  private void addShadowUserErrorContent(
-          String userId,
-          List<BulkOperationExecutionContent> bulkOperationExecutionContents, UUID operationId) {
-    bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
-            .identifier(userId)
-            .bulkOperationId(operationId)
-            .state(StateType.FAILED)
-            .errorType(ErrorType.ERROR)
-            .errorMessage(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED)
-            .build());
-  }
 }
