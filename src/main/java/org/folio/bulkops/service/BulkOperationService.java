@@ -515,13 +515,13 @@ public class BulkOperationService {
             if (result != original) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result)
-                      + (hasNextRecord ? LF : EMPTY));
+                  + getEndOfLineSymbol(hasNextRecord));
               if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId())
                       || entityClass == User.class) {
                 CsvHelper.writeBeanToCsv(operation, csvWriter,
                         result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
                 writerForJsonPreviewFile.write(objectMapper.writeValueAsString(result)
-                    + (hasNextRecord ? LF : EMPTY));
+                    + getEndOfLineSymbol(hasNextRecord));
               } else {
                 var tenantIdOfEntity = result.getTenant();
                 try (var ignored = new FolioExecutionContextSetter(
@@ -533,7 +533,7 @@ public class BulkOperationService {
                   CsvHelper.writeBeanToCsv(operation, csvWriter,
                           result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
                   writerForJsonPreviewFile.write(objectMapper.writeValueAsString(result)
-                      + (hasNextRecord ? LF : EMPTY));
+                      + getEndOfLineSymbol(hasNextRecord));
                 }
               }
               bulkOperationExecutionContents.forEach(errorService::saveError);
@@ -589,6 +589,10 @@ public class BulkOperationService {
     } else {
       marcUpdateService.commitForInstanceMarc(operation, failedInstanceHrids);
     }
+  }
+
+  private String getEndOfLineSymbol(boolean hasNextRecord) {
+    return hasNextRecord ? LF : EMPTY;
   }
 
   private void saveFailedInstanceHrid(Set<String> failedInstanceHrids,
