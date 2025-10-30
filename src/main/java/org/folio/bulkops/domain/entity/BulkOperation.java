@@ -70,6 +70,7 @@ public class BulkOperation {
   private String linkToModifiedRecordsMarcCsvFile;
   private String linkToPreviewRecordsJsonFile;
   private String linkToCommittedRecordsJsonFile;
+  private String linkToCommittedRecordsJsonPreviewFile;
   private String linkToCommittedRecordsCsvFile;
   private String linkToCommittedRecordsMarcFile;
   private String linkToCommittedRecordsMarcCsvFile;

@@ -152,19 +152,19 @@ public class PreviewService {
           if (INSTANCE_MARC == operation.getEntityType()) {
             if (isFolioInstanceCommitPreview(operation)) {
               yield buildPreviewFromJsonWithChangedOptions(operation,
-                      operation.getLinkToCommittedRecordsJsonFile(), offset, limit);
+                      operation.getLinkToCommittedRecordsJsonPreviewFile(), offset, limit);
             } else if (isMarcInstanceCommitPreview(operation)) {
               yield buildCompositePreview(operation, offset, limit,
                       operation.getLinkToMatchedRecordsJsonFile(),
                       operation.getLinkToCommittedRecordsMarcFile());
             } else {
               yield buildCompositePreview(operation, offset, limit,
-                      operation.getLinkToCommittedRecordsJsonFile(),
+                      operation.getLinkToCommittedRecordsJsonPreviewFile(),
                       operation.getLinkToCommittedRecordsMarcFile());
             }
           } else {
             yield buildPreviewFromJsonWithChangedOptions(operation,
-                    operation.getLinkToCommittedRecordsJsonFile(), offset, limit);
+                    operation.getLinkToCommittedRecordsJsonPreviewFile(), offset, limit);
           }
         }
       }
@@ -191,13 +191,13 @@ public class PreviewService {
   }
 
   private boolean isFolioInstanceCommitPreview(BulkOperation operation) {
-    return StringUtils.isNotEmpty(operation.getLinkToCommittedRecordsJsonFile())
+    return StringUtils.isNotEmpty(operation.getLinkToCommittedRecordsJsonPreviewFile())
             && StringUtils.isEmpty(operation.getLinkToCommittedRecordsMarcFile());
   }
 
   private boolean isMarcInstanceCommitPreview(BulkOperation operation) {
     return StringUtils.isNotEmpty(operation.getLinkToCommittedRecordsMarcFile())
-            && StringUtils.isEmpty(operation.getLinkToCommittedRecordsJsonFile());
+            && StringUtils.isEmpty(operation.getLinkToCommittedRecordsJsonPreviewFile());
   }
 
   private UnifiedTable buildCompositePreview(BulkOperation bulkOperation, int offset, int limit,
