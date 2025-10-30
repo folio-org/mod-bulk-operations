@@ -1276,12 +1276,16 @@ class BulkOperationServiceTest extends BaseTest {
 
     var expectedPathToResultFile = bulkOperationId + "/json/" + LocalDate.now()
             + "-Changed-Records-identifiers.json";
+    var expectedPathToResultPreviewFile = bulkOperationId + "/json/" + LocalDate.now()
+        + "-Changed-Records-Preview-identifiers.json";
     var expectedPathToResultCsvFile = bulkOperationId + "/" + LocalDate.now()
             + "-Changed-Records-CSV-identifiers.csv";
 
     var jsonWriter = new StringWriter();
     when(remoteFileSystemClient.writer(expectedPathToResultFile))
             .thenReturn(jsonWriter);
+    when(remoteFileSystemClient.writer(expectedPathToResultPreviewFile))
+        .thenReturn(jsonWriter);
     var csvWriter = new StringWriter();
     when(remoteFileSystemClient.writer(expectedPathToResultCsvFile))
             .thenReturn(csvWriter);
@@ -1300,7 +1304,7 @@ class BulkOperationServiceTest extends BaseTest {
 
     var pathCaptor = ArgumentCaptor.forClass(String.class);
     await().untilAsserted(() -> verify(remoteFileSystemClient,
-            times(2)).writer(pathCaptor.capture()));
+            times(3)).writer(pathCaptor.capture()));
     assertEquals(expectedPathToResultCsvFile, pathCaptor.getAllValues().get(0));
     assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().get(1));
     assertNull(operation.getLinkToCommittedRecordsCsvFile());

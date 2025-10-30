@@ -573,7 +573,7 @@ class PreviewServiceTest extends BaseTest {
     var bulkOperation = BulkOperation.builder()
             .id(bulkOperationId)
             .entityType(INSTANCE_MARC)
-            .linkToCommittedRecordsJsonFile(pathToCommittedJsonFile)
+            .linkToCommittedRecordsJsonPreviewFile(pathToCommittedJsonFile)
             .linkToCommittedRecordsMarcFile(pathToMarcFile)
             .build();
 
