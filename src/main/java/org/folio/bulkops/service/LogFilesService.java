@@ -52,6 +52,10 @@ public class LogFilesService {
       remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsJsonFile());
       bulkOperation.setLinkToCommittedRecordsJsonFile(null);
     }
+    if (isNotEmpty(bulkOperation.getLinkToCommittedRecordsJsonPreviewFile())) {
+      remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsJsonPreviewFile());
+      bulkOperation.setLinkToCommittedRecordsJsonPreviewFile(null);
+    }
     if (isNotEmpty(bulkOperation.getLinkToCommittedRecordsErrorsCsvFile())) {
       remoteFileSystemClient.remove(bulkOperation.getLinkToCommittedRecordsErrorsCsvFile());
       bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(null);
@@ -111,6 +115,10 @@ public class LogFilesService {
     if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsJsonFile())) {
       remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsJsonFile());
       bulkOperation.setLinkToModifiedRecordsJsonFile(null);
+    }
+    if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsJsonPreviewFile())) {
+      remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsJsonPreviewFile());
+      bulkOperation.setLinkToModifiedRecordsJsonPreviewFile(null);
     }
     if (isNotEmpty(bulkOperation.getLinkToModifiedRecordsCsvFile())) {
       remoteFileSystemClient.remove(bulkOperation.getLinkToModifiedRecordsCsvFile());

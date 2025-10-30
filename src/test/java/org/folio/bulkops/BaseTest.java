@@ -347,6 +347,7 @@ public abstract class BaseTest {
       case COMMIT -> BulkOperation.builder()
         .entityType(entityType)
         .linkToCommittedRecordsJsonFile(fileName)
+        .linkToCommittedRecordsJsonPreviewFile(fileName)
         .build();
     };
   }

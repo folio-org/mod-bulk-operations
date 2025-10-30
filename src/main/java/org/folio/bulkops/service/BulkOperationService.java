@@ -159,6 +159,8 @@ public class BulkOperationService {
   private static final String PREVIEW_MARC_CSV_PATH_TEMPLATE =
           "%s/%s-Updates-Preview-MARC-CSV-%s.csv";
   private static final String CHANGED_JSON_PATH_TEMPLATE = "%s/json/%s-Changed-Records-%s.json";
+  private static final String CHANGED_JSON_PREVIEW_PATH_TEMPLATE =
+      "%s/json/%s-Changed-Records-Preview-%s.json";
 
   public static final String TMP_MATCHED_JSON_PATH_TEMPLATE = "%s/json/tmp-matched.json";
 
@@ -469,6 +471,8 @@ public class BulkOperationService {
 
       var resultJsonFileName = String.format(CHANGED_JSON_PATH_TEMPLATE, operation.getId(),
               LocalDate.now(), triggeringFileName);
+      var resultJsonPreviewFileName = String.format(CHANGED_JSON_PREVIEW_PATH_TEMPLATE,
+          operation.getId(), LocalDate.now(), triggeringFileName);
 
       try (var originalFileReader = new InputStreamReader(
               new BufferedInputStream(remoteFileSystemClient.get(
@@ -477,7 +481,9 @@ public class BulkOperationService {
                    new BufferedInputStream(remoteFileSystemClient.get(
                            operation.getLinkToModifiedRecordsJsonFile())));
            var writerForResultCsvFile = remoteFileSystemClient.writer(resultCsvFileName);
-           var writerForResultJsonFile = remoteFileSystemClient.writer(resultJsonFileName)) {
+           var writerForResultJsonFile = remoteFileSystemClient.writer(resultJsonFileName);
+           var writerForJsonPreviewFile =
+              remoteFileSystemClient.writer(resultJsonPreviewFileName)) {
 
         var originalFileParser = new JsonFactory().createParser(originalFileReader);
         var originalFileIterator = objectMapper.readValues(originalFileParser, extendedClass);
@@ -509,11 +515,13 @@ public class BulkOperationService {
             if (result != original) {
               var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
               writerForResultJsonFile.write(objectMapper.writeValueAsString(result)
-                      + (hasNextRecord ? LF : EMPTY));
+                  + getEndOfLineSymbol(hasNextRecord));
               if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId())
                       || entityClass == User.class) {
                 CsvHelper.writeBeanToCsv(operation, csvWriter,
                         result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
+                writerForJsonPreviewFile.write(objectMapper.writeValueAsString(result)
+                    + getEndOfLineSymbol(hasNextRecord));
               } else {
                 var tenantIdOfEntity = result.getTenant();
                 try (var ignored = new FolioExecutionContextSetter(
@@ -524,6 +532,8 @@ public class BulkOperationService {
                           operation.getTenantNotePairs());
                   CsvHelper.writeBeanToCsv(operation, csvWriter,
                           result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
+                  writerForJsonPreviewFile.write(objectMapper.writeValueAsString(result)
+                      + getEndOfLineSymbol(hasNextRecord));
                 }
               }
               bulkOperationExecutionContents.forEach(errorService::saveError);
@@ -560,6 +570,7 @@ public class BulkOperationService {
         if (operation.getCommittedNumOfRecords() > 0) {
           operation.setLinkToCommittedRecordsCsvFile(resultCsvFileName);
           operation.setLinkToCommittedRecordsJsonFile(resultJsonFileName);
+          operation.setLinkToCommittedRecordsJsonPreviewFile(resultJsonPreviewFileName);
         }
       } catch (Exception e) {
         log.error("Error committing changes", e);
@@ -578,6 +589,10 @@ public class BulkOperationService {
     } else {
       marcUpdateService.commitForInstanceMarc(operation, failedInstanceHrids);
     }
+  }
+
+  private String getEndOfLineSymbol(boolean hasNextRecord) {
+    return hasNextRecord ? LF : EMPTY;
   }
 
   private void saveFailedInstanceHrid(Set<String> failedInstanceHrids,
