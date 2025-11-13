@@ -79,8 +79,8 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
             EntityType.INSTANCE, NO_INSTANCE_WRITE_PERMISSIONS_TEMPLATE
                     + extendedInstance.getTenantId());
     var instance = extendedInstance.getEntity();
-    log.info("Updating instance: {}", instance);
-    instanceClient.updateInstance(instance.withIsbn(null).withIssn(null), instance.getId());
+    instanceClient.updateInstance(instance.withIsbn(null).withIssn(null).withPrecedingTitles(null)
+      .withSucceedingTitles(null), instance.getId());
   }
 
   @Override

@@ -37,15 +37,12 @@ public class RecordUpdateService {
       try {
         updater.updateRecord(modified);
       } catch (FeignException e) {
-        e.printStackTrace();
         if (e.status() == 409 && e.getMessage().contains("optimistic locking")) {
           var message = Utils.getMessageFromFeignException(e);
           var link = entityPathResolver.resolve(operation.getEntityType(), original);
           throw new OptimisticLockingException(format("%s %s", message, link), message, link);
         }
         throw e;
-      } catch (Exception e) {
-        e.printStackTrace();
       }
       executionContentRepository.save(BulkOperationExecutionContent.builder()
               .bulkOperationId(operation.getId())
