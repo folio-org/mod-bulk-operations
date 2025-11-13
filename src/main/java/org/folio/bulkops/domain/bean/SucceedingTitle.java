@@ -1,5 +1,6 @@
 package org.folio.bulkops.domain.bean;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.UUID;
@@ -18,12 +19,14 @@ public class SucceedingTitle {
   @JsonProperty("id")
   private UUID id;
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   @JsonProperty("succeedingInstanceId")
   private UUID succeedingInstanceId;
 
   @JsonProperty("title")
   private String title;
 
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   @JsonProperty("hrid")
   private String hrid;
 
