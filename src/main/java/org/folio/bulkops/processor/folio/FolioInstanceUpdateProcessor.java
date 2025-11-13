@@ -80,7 +80,7 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
                     + extendedInstance.getTenantId());
     var instance = extendedInstance.getEntity();
     instanceClient.updateInstance(instance.withIsbn(null).withIssn(null).withPrecedingTitles(null)
-      .withSucceedingTitles(null), instance.getId());
+        .withSucceedingTitles(null), instance.getId());
   }
 
   @Override
