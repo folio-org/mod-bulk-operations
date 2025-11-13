@@ -188,6 +188,7 @@ public class QueryService {
       while (iterator.hasNext()) {
 
         var extendedRecord = iterator.next();
+        log.info("extendedRecord: {}", extendedRecord.getRecordBulkOperationEntity());
         if (extendedRecord.getRecordBulkOperationEntity() instanceof Item item) {
           localReferenceDataService.enrichWithTenant(item, extendedRecord.getTenant());
         }
