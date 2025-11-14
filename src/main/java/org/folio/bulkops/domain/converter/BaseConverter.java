@@ -69,7 +69,8 @@ public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
       if (CsvRecordContext.getBulkOperationId() != null) {
         CsvIdentifierContextHelper.service().saveError(CsvRecordContext.getBulkOperationId(),
                 CsvRecordContext.getIdentifier(),
-                new ConverterException(this.getField(), object, e.getMessage(), ErrorType.ERROR));
+                new ConverterException(this.getField(), object, e.getMessage(),
+                ErrorType.WARNING));
       }
       return FAILED_FIELD_MARKER;
     } catch (Exception e) {

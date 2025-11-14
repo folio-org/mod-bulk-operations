@@ -37,6 +37,8 @@ import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
 import static org.folio.bulkops.util.Constants.FOLIO;
 import static org.folio.bulkops.util.Constants.PUBLICATION_HEADINGS;
 import static org.folio.bulkops.util.Constants.SUBJECT_HEADINGS;
+import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
+import static org.folio.bulkops.util.Utils.encode;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 
@@ -90,6 +92,7 @@ import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
 import org.folio.bulkops.util.UpdateOptionTypeToFieldResolver;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.marc4j.MarcStreamReader;
 import org.marc4j.marc.Record;
 import org.springframework.stereotype.Service;
@@ -99,6 +102,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PreviewService {
 
+  private final ConsortiaService consortiaService;
   private final RuleService ruleService;
   private final NoteTableUpdater noteTableUpdater;
   private final RemoteFileSystemClient remoteFileSystemClient;
@@ -442,10 +446,19 @@ public class PreviewService {
       StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false)
           .skip(offset)
           .limit(limit)
-          .map(entity -> entity instanceof User
-              ? entity : entity.getRecordBulkOperationEntity())
-          .forEach(entity ->
-              table.addRowsItem(processor.transformToRow(entity)));
+          .forEach(entity -> {
+            if (!consortiaService.isTenantCentral(folioExecutionContext.getTenantId())
+                || clazz == User.class) {
+              var ent = clazz == User.class ? entity : entity.getRecordBulkOperationEntity();
+              table.addRowsItem(processor.transformToRow(ent));
+            } else {
+              try (var ignored = new FolioExecutionContextSetter(
+                  prepareContextForTenant(entity.getTenant(), folioModuleMetadata,
+                  folioExecutionContext))) {
+                table.addRowsItem(processor.transformToRow(entity.getRecordBulkOperationEntity()));
+              }
+            }
+          });
       processNoteFields(table, clazz, forceVisible, bulkOperation);
       table.getRows().forEach(row -> {
         var rowData = removeSubColumnsAndGetRowForPreview(row);
