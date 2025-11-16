@@ -25,8 +25,9 @@ public class HoldingsNote {
 
   @JsonProperty("staffOnly")
   private Boolean staffOnly;
-  @JsonIgnore
+  @JsonProperty("tenantId")
   private String tenantId;
+  @JsonProperty("holdingsNoteTypeName")
   private String holdingsNoteTypeName;
 }
 
