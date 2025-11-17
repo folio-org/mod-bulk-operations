@@ -326,8 +326,6 @@ public class FqmContentFetcher {
 
   private void processInstanceEntity(Map<String, Object> json, ObjectNode jsonNode)
           throws JsonProcessingException {
-    log.info("json: {}", json);
-    log.info("jsonNode: {}", jsonNode);
     var value = json.get(FQM_INSTANCE_CHILD_INSTANCES_KEY);
     var childInstances = nonNull(value) ? objectMapper.readTree(value.toString())
             : objectMapper.createArrayNode();
@@ -344,6 +342,5 @@ public class FqmContentFetcher {
     var succeedingTitles = nonNull(value) ? objectMapper.readTree(value.toString())
             : objectMapper.createArrayNode();
     jsonNode.putIfAbsent(SUCCEEDING_TITLES, succeedingTitles);
-    log.info("Processed jsonNode: {}", jsonNode);
   }
 }
