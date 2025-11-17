@@ -18,14 +18,8 @@ public class PrecedingTitle {
   @JsonProperty("id")
   private UUID id;
 
-  @JsonProperty("succeedingInstanceId")
-  private UUID succeedingInstanceId;
-
   @JsonProperty("title")
   private String title;
-
-  @JsonProperty("hrid")
-  private String hrid;
 
   @JsonProperty("identifiers")
   private List<Identifier> identifiers;
