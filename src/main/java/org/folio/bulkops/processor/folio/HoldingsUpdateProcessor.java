@@ -2,6 +2,7 @@ package org.folio.bulkops.processor.folio;
 
 import static java.lang.Boolean.parseBoolean;
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.GET_ITEMS_BY_HOLDING_ID_QUERY;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
+import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
@@ -61,7 +63,7 @@ public class HoldingsUpdateProcessor extends FolioAbstractUpdateProcessor<Extend
       try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
               folioModuleMetadata, folioExecutionContext))) {
         holdingsStorageClient.updateHoldingsRecord(
-                holdingsRecord.withInstanceHrid(null).withItemBarcode(null).withInstanceTitle(null),
+                cleanupHoldingsRecord(holdingsRecord),
                 holdingsRecord.getId()
         );
       }
@@ -70,7 +72,7 @@ public class HoldingsUpdateProcessor extends FolioAbstractUpdateProcessor<Extend
               folioExecutionContext.getTenantId(), EntityType.HOLDINGS_RECORD,
               NO_HOLDING_WRITE_PERMISSIONS_TEMPLATE + folioExecutionContext.getTenantId());
       holdingsStorageClient.updateHoldingsRecord(
-              holdingsRecord.withInstanceHrid(null).withItemBarcode(null).withInstanceTitle(null),
+              cleanupHoldingsRecord(holdingsRecord),
               holdingsRecord.getId()
       );
     }
@@ -125,5 +127,21 @@ public class HoldingsUpdateProcessor extends FolioAbstractUpdateProcessor<Extend
   @Override
   public Class<ExtendedHoldingsRecord> getUpdatedType() {
     return ExtendedHoldingsRecord.class;
+  }
+
+  private HoldingsRecord cleanupHoldingsRecord(HoldingsRecord holdingsRecord) {
+    return holdingsRecord
+      .withInstanceHrid(null)
+      .withItemBarcode(null)
+      .withInstanceTitle(null)
+      .withNotes(ofNullable(holdingsRecord.getNotes())
+          .map(this::cleanupHoldingsNotes).orElse(null));
+  }
+
+  private List<HoldingsNote> cleanupHoldingsNotes(List<HoldingsNote> notes) {
+    return notes.stream()
+        .map(holdingsNote -> holdingsNote.withTenantId(null))
+        .map(holdingsNote -> holdingsNote.withHoldingsNoteTypeName(null))
+        .toList();
   }
 }
