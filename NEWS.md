@@ -1,3 +1,7 @@
+## v2.2.7 - Released 2025/11/19
+
+This release contains folio-spring-support update.
+
 ## v2.2.6 - Released 2025/07/21
 
 This release contains bug fix.
