@@ -1,3 +1,10 @@
+## v2.2.8 - Released 2025/11/20
+
+This release contains new schema update for instances.
+
+### Technical stories
+* [MODBULKOPS-555](https://folio-org.atlassian.net/browse/MODBULKOPS-555) Instance, Holdings, Item schemas updating - new fields
+
 ## v2.2.7 - Released 2025/11/19
 
 This release contains folio-spring-support update.
