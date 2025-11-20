@@ -246,7 +246,8 @@ public class Instance implements BulkOperationsEntity {
   private Boolean isBoundWith = false;
   @JsonProperty("deleted")
   private Boolean deleted = false;
-
+  @JsonProperty("sourceUri")
+  private String sourceUri;
 
 
   @Override
