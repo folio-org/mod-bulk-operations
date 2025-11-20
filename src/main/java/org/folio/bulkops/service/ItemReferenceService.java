@@ -143,6 +143,7 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "statisticalCodeNames")
   public StatisticalCode getStatisticalCodeById(String statisticalCodeId, String tenantId) {
+    log.info("getStatisticalCodeById:: tenant = {}", tenantId);
     try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
         folioModuleMetadata, folioExecutionContext))) {
       return statisticalCodeClient.getById(statisticalCodeId);
