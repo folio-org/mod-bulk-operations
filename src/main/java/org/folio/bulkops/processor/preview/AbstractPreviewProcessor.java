@@ -21,9 +21,9 @@ public abstract class AbstractPreviewProcessor<T extends BulkOperationsEntity>
 
     try (var ignored = new CsvRecordContext()) {
       if (entity instanceof Item item) {
-        CsvRecordContext.setTenantId(item.getTenant());
+        CsvRecordContext.setTenantId(item.getTenantId());
       } else if (entity instanceof HoldingsRecord holdingsRecord) {
-        CsvRecordContext.setTenantId(holdingsRecord.getTenant());
+        CsvRecordContext.setTenantId(holdingsRecord.getTenantId());
       }
       strategy.generateHeader(entity);
       res.setRow(new ArrayList<>(Arrays.asList(strategy.transmuteBean(entity))));
