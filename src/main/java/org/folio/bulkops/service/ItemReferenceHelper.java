@@ -46,12 +46,12 @@ public class ItemReferenceHelper implements InitializingBean {
     return itemReferenceService.getServicePointByName(name);
   }
 
-  public StatisticalCode getStatisticalCodeById(String statisticalCodeId) {
-    return itemReferenceService.getStatisticalCodeById(statisticalCodeId);
+  public StatisticalCode getStatisticalCodeById(String statisticalCodeId, String tenantId) {
+    return itemReferenceService.getStatisticalCodeById(statisticalCodeId, tenantId);
   }
 
-  public StatisticalCodeType getStatisticalCodeTypeById(String id) {
-    return itemReferenceService.getStatisticalCodeTypeById(id);
+  public StatisticalCodeType getStatisticalCodeTypeById(String id, String tenantId) {
+    return itemReferenceService.getStatisticalCodeTypeById(id, tenantId);
   }
 
   public String getStatisticalCodeIdByCode(String code) {

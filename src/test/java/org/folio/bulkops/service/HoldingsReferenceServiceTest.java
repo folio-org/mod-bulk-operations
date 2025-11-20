@@ -345,10 +345,10 @@ class HoldingsReferenceServiceTest {
         .withName("Agriculture")
         .withCode("ABC")
         .withStatisticalCodeTypeId("stat-type-1");
-    when(holdingsReferenceCacheService.getStatisticalCodeById("stat-id-1"))
+    when(holdingsReferenceCacheService.getStatisticalCodeById("stat-id-1", "test"))
             .thenReturn(statisticalCode);
 
-    StatisticalCode result = holdingsReferenceService.getStatisticalCodeById("stat-id-1");
+    StatisticalCode result = holdingsReferenceService.getStatisticalCodeById("stat-id-1", "test");
     assertEquals("Agriculture", result.getName());
     assertEquals("ABC", result.getCode());
     assertEquals("stat-id-1", result.getId());
@@ -377,11 +377,11 @@ class HoldingsReferenceServiceTest {
         .withId("stat-type-id-1")
         .withName("Subject")
         .withSource("local");
-    when(holdingsReferenceCacheService.getStatisticalCodeTypeById("stat-type-id-1"))
+    when(holdingsReferenceCacheService.getStatisticalCodeTypeById("stat-type-id-1", "test"))
             .thenReturn(statisticalCodeType);
 
     StatisticalCodeType result = holdingsReferenceService.getStatisticalCodeTypeById(
-            "stat-type-id-1");
+            "stat-type-id-1", "test");
     assertEquals("Subject", result.getName());
     assertEquals("stat-type-id-1", result.getId());
     assertEquals("local", result.getSource());
