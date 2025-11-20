@@ -134,6 +134,7 @@ public class HoldingsUpdateProcessor extends FolioAbstractUpdateProcessor<Extend
       .withInstanceHrid(null)
       .withItemBarcode(null)
       .withInstanceTitle(null)
+      .withTenantId(null)
       .withNotes(ofNullable(holdingsRecord.getNotes())
           .map(this::cleanupHoldingsNotes).orElse(null));
   }

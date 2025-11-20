@@ -119,16 +119,16 @@ public class HoldingsReferenceService {
     return holdingsReferenceCacheService.getSourceByName(name, tenantId);
   }
 
-  public StatisticalCode getStatisticalCodeById(String id) {
-    return holdingsReferenceCacheService.getStatisticalCodeById(id);
+  public StatisticalCode getStatisticalCodeById(String id, String tenantId) {
+    return holdingsReferenceCacheService.getStatisticalCodeById(id, tenantId);
   }
 
   public StatisticalCode getStatisticalCodeByName(String name, String tenantId) {
     return holdingsReferenceCacheService.getStatisticalCodeByName(name, tenantId);
   }
 
-  public StatisticalCodeType getStatisticalCodeTypeById(String id) {
-    return holdingsReferenceCacheService.getStatisticalCodeTypeById(id);
+  public StatisticalCodeType getStatisticalCodeTypeById(String id, String tenantId) {
+    return holdingsReferenceCacheService.getStatisticalCodeTypeById(id, tenantId);
   }
 
   public List<HoldingsNoteType> getAllHoldingsNoteTypes(String tenantId) {
