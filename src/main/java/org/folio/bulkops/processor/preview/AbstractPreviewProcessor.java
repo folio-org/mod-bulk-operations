@@ -20,7 +20,7 @@ public abstract class AbstractPreviewProcessor<T extends BulkOperationsEntity>
     var res = new Row();
 
     try (var ignored = new CsvRecordContext()) {
-      if (entity instanceof Item item)  {
+      if (entity instanceof Item item) {
         CsvRecordContext.setTenantId(item.getTenant());
       } else if (entity instanceof HoldingsRecord holdingsRecord) {
         CsvRecordContext.setTenantId(holdingsRecord.getTenant());

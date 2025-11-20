@@ -31,7 +31,7 @@ public class CsvRecordContext implements AutoCloseable {
   }
 
   public static void setTenantId(String id) {
-    identifier.set(id);
+    tenantId.set(id);
   }
 
   @Override
