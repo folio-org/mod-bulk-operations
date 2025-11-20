@@ -1661,7 +1661,7 @@ class BulkOperationServiceTest extends BaseTest {
             .status(operationStatusType)
             .build();
 
-    when(itemReferenceService.getStatisticalCodeById(anyString(), anyString()))
+    when(itemReferenceService.getStatisticalCodeById(anyString(), any()))
             .thenThrow(new NotFoundException("not found"));
 
     try (var stringWriter = new StringWriter();
