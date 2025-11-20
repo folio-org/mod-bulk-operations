@@ -232,7 +232,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
     when(statisticalCodeClient.getById("id_1"))
             .thenReturn(new StatisticalCode().withName("name_1"));
-    var actual = holdingsReferenceHelper.getStatisticalCodeById("id_1");
+    var actual = holdingsReferenceHelper.getStatisticalCodeById("id_1", "test");
     assertEquals("name_1", actual.getName());
 
     when(statisticalCodeClient.getByQuery("name==\"\"name_2\"\""))
@@ -244,7 +244,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
 
     when(statisticalCodeClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
     assertThrows(ReferenceDataNotFoundException.class,
-            () -> holdingsReferenceHelper.getStatisticalCodeById("id_3"));
+            () -> holdingsReferenceHelper.getStatisticalCodeById("id_3", "test"));
 
     when(statisticalCodeClient.getByQuery("name==\"\"name_4\"\""))
             .thenReturn(new StatisticalCodeCollection()
@@ -268,7 +268,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
             .withName("Subject")
             .withSource("local")
     );
-    var actual = holdingsReferenceHelper.getStatisticalCodeTypeById("type_id_1");
+    var actual = holdingsReferenceHelper.getStatisticalCodeTypeById("type_id_1", "test");
     assertEquals("Subject", actual.getName());
     assertEquals("type_id_1", actual.getId());
     assertEquals("local", actual.getSource());
@@ -276,6 +276,6 @@ class HoldingsReferenceHelperTest extends BaseTest {
     when(statisticalCodeTypeClient.getById("type_id_3"))
             .thenThrow(new NotFoundException("Not found"));
     assertThrows(ReferenceDataNotFoundException.class,
-            () -> holdingsReferenceHelper.getStatisticalCodeTypeById("type_id_3"));
+            () -> holdingsReferenceHelper.getStatisticalCodeTypeById("type_id_3", "test"));
   }
 }

@@ -159,7 +159,7 @@ public class PreviewService {
                       operation.getLinkToCommittedRecordsJsonPreviewFile(), offset, limit);
             } else if (isMarcInstanceCommitPreview(operation)) {
               yield buildCompositePreview(operation, offset, limit,
-                      operation.getLinkToMatchedRecordsJsonFile(),
+                      operation.getLinkToModifiedRecordsJsonPreviewFile(),
                       operation.getLinkToCommittedRecordsMarcFile());
             } else {
               yield buildCompositePreview(operation, offset, limit,

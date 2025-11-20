@@ -72,8 +72,8 @@ public class HoldingsReferenceHelper implements InitializingBean {
     return holdingsReferenceService.getSourceByName(name, folioExecutionContext.getTenantId());
   }
 
-  public StatisticalCode getStatisticalCodeById(String id) {
-    return holdingsReferenceService.getStatisticalCodeById(id);
+  public StatisticalCode getStatisticalCodeById(String id, String tenantId) {
+    return holdingsReferenceService.getStatisticalCodeById(id, tenantId);
   }
 
   public StatisticalCode getStatisticalCodeByName(String name) {
@@ -81,8 +81,8 @@ public class HoldingsReferenceHelper implements InitializingBean {
             folioExecutionContext.getTenantId());
   }
 
-  public StatisticalCodeType getStatisticalCodeTypeById(String id) {
-    return holdingsReferenceService.getStatisticalCodeTypeById(id);
+  public StatisticalCodeType getStatisticalCodeTypeById(String id, String tenantId) {
+    return holdingsReferenceService.getStatisticalCodeTypeById(id, tenantId);
   }
 
   private static HoldingsReferenceHelper service;

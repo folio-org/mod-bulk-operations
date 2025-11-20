@@ -8,6 +8,8 @@ public class CsvRecordContext implements AutoCloseable {
 
   private static final ThreadLocal<UUID> bulkOperationId = new ThreadLocal<>();
 
+  private static final ThreadLocal<String> tenantId = new ThreadLocal<>();
+
   public static String getIdentifier() {
     return identifier.get();
   }
@@ -24,9 +26,18 @@ public class CsvRecordContext implements AutoCloseable {
     bulkOperationId.set(id);
   }
 
+  public static String getTenantId() {
+    return tenantId.get();
+  }
+
+  public static void setTenantId(String id) {
+    tenantId.set(id);
+  }
+
   @Override
   public void close() {
     identifier.remove();
     bulkOperationId.remove();
+    tenantId.remove();
   }
 }

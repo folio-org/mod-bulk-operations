@@ -51,6 +51,9 @@ public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter
       try (var ignored = new CsvRecordContext()) {
         CsvRecordContext.setIdentifier(entity.getIdentifier(identifierType));
         CsvRecordContext.setBulkOperationId(bulkOperationId);
+        if (!(entity instanceof User)) {
+          CsvRecordContext.setTenantId(entity.getTenant());
+        }
         delegate.write(entity.getRecordBulkOperationEntity());
       }
     }

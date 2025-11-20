@@ -153,7 +153,7 @@ class ItemReferenceServiceTest extends BaseTest {
       when(statisticalCodeClient.getById("valid_id"))
           .thenReturn(new StatisticalCode().withId("valid_id").withCode("Code 1"));
 
-      var actual = itemReferenceService.getStatisticalCodeById("valid_id");
+      var actual = itemReferenceService.getStatisticalCodeById("valid_id", "test");
       assertEquals("Code 1", actual.getCode());
     }
   }
@@ -166,7 +166,7 @@ class ItemReferenceServiceTest extends BaseTest {
           .thenThrow(new ReferenceDataNotFoundException("Not found"));
 
       assertThrows(ReferenceDataNotFoundException.class,
-          () -> itemReferenceService.getStatisticalCodeById("invalid_id"));
+          () -> itemReferenceService.getStatisticalCodeById("invalid_id", "test"));
     }
   }
 }

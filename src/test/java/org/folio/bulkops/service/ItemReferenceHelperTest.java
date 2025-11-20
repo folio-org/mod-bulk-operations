@@ -145,7 +145,7 @@ class ItemReferenceHelperTest extends BaseTest {
 
     when(statisticalCodeClient.getById("id_1"))
             .thenReturn(new StatisticalCode().withId("id_1").withCode("code_1"));
-    var actualCode = itemReferenceHelper.getStatisticalCodeById("id_1");
+    var actualCode = itemReferenceHelper.getStatisticalCodeById("id_1", "test");
     assertEquals("code_1", actualCode.getCode());
 
     when(statisticalCodeClient.getByQuery("code==\"\"code_2\"\""))
@@ -157,7 +157,7 @@ class ItemReferenceHelperTest extends BaseTest {
 
     when(statisticalCodeClient.getById("id_3")).thenThrow(new NotFoundException("Not found"));
     assertThrows(ReferenceDataNotFoundException.class,
-            () -> itemReferenceHelper.getStatisticalCodeById("id_3"));
+            () -> itemReferenceHelper.getStatisticalCodeById("id_3", "test"));
 
     when(statisticalCodeClient.getByQuery("code==\"\"code_4\"\""))
             .thenReturn(new StatisticalCodeCollection()
@@ -180,7 +180,7 @@ class ItemReferenceHelperTest extends BaseTest {
             .withName("Subject")
             .withSource("local")
     );
-    var actual = itemReferenceHelper.getStatisticalCodeTypeById("type_id_1");
+    var actual = itemReferenceHelper.getStatisticalCodeTypeById("type_id_1", "test");
     assertEquals("Subject", actual.getName());
     assertEquals("type_id_1", actual.getId());
     assertEquals("local", actual.getSource());
@@ -188,7 +188,7 @@ class ItemReferenceHelperTest extends BaseTest {
     when(statisticalCodeTypeClient.getById("type_id_3"))
             .thenThrow(new NotFoundException("Not found"));
     assertThrows(ReferenceDataNotFoundException.class,
-            () -> itemReferenceHelper.getStatisticalCodeTypeById("type_id_3"));
+            () -> itemReferenceHelper.getStatisticalCodeTypeById("type_id_3", "test"));
   }
 
   @Test
