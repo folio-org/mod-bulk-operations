@@ -241,6 +241,14 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     dataField.addSubfield(new SubfieldImpl('2', "found"));
     marcRecord.addVariableField(dataField);
 
+    dataField = new DataFieldImpl("653", '/', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "653added"));
+    marcRecord.addVariableField(dataField);
+
+    dataField = new DataFieldImpl("654", '/', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "654added"));
+    marcRecord.addVariableField(dataField);
+
     when(subjectSourcesClient.getByQuery("code==\"codeFound\""))
             .thenReturn(new SubjectSourceCollection()
             .withSubjectSources(List.of(new SubjectSource()
@@ -275,7 +283,9 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
             + " subject c subject d;source1;Chronological term |"
             + " subject c subject d;-;Chronological term |"
             + " text1;-;Topical term |"
-            + " text2;found;Topical term";
+            + " text2;found;Topical term | "
+            + "653added;Library of Congress Children’s and Young Adults' Subject Headings;- | "
+            + "654added;Library of Congress Children’s and Young Adults' Subject Headings;-";
 
     assertThat(rowData.getFirst()).isEqualTo(expectedRowData);
   }
