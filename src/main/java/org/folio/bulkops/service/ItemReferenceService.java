@@ -142,10 +142,9 @@ public class ItemReferenceService {
   }
 
   @Cacheable(cacheNames = "statisticalCodeNames")
-  public StatisticalCode getStatisticalCodeById(String statisticalCodeId) {
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(
-            localReferenceDataService.getTenantByStatisticalCodeId(statisticalCodeId),
-            folioModuleMetadata, folioExecutionContext))) {
+  public StatisticalCode getStatisticalCodeById(String statisticalCodeId, String tenantId) {
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
+        folioModuleMetadata, folioExecutionContext))) {
       return statisticalCodeClient.getById(statisticalCodeId);
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Statistical code was not found by id=%s",
@@ -165,10 +164,9 @@ public class ItemReferenceService {
   }
 
   @Cacheable(cacheNames = "statisticalCodeTypes")
-  public StatisticalCodeType getStatisticalCodeTypeById(String id) {
+  public StatisticalCodeType getStatisticalCodeTypeById(String id, String tenantId) {
     try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(
-            localReferenceDataService.getTenantByStatisticalCodeTypeId(id),
-            folioModuleMetadata, folioExecutionContext))) {
+        tenantId, folioModuleMetadata, folioExecutionContext))) {
       return statisticalCodeTypeClient.getById(id);
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Statistical code type not found by id=%s",
