@@ -237,7 +237,14 @@ public class MarcToUnifiedTableRowMapperHelper {
       case "648" -> "Chronological term";
       case "650" -> "Topical term";
       case "651" -> "Geographic name";
+      case "653" -> "Uncontrolled";
+      case "654" -> "Faceted topical terms";
       case "655" -> "Genre/Form";
+      case "656" -> "Occupation";
+      case "657" -> "Function";
+      case "658" -> "Curriculum objective";
+      case "662" -> "Hierarchical place name";
+      case "688" -> "Type of entity unspecified";
       default -> HYPHEN;
     };
   }
