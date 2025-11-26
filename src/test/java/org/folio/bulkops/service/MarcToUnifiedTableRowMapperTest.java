@@ -284,8 +284,10 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
             + " subject c subject d;-;Chronological term |"
             + " text1;-;Topical term |"
             + " text2;found;Topical term | "
-            + "653added;Library of Congress Children’s and Young Adults' Subject Headings;- | "
-            + "654added;Library of Congress Children’s and Young Adults' Subject Headings;-";
+            + "653added;Library of Congress Children’s and Young Adults' Subject Headings;"
+            + "Uncontrolled | "
+            + "654added;Library of Congress Children’s and Young Adults' Subject Headings;"
+            + "Faceted topical terms";
 
     assertThat(rowData.getFirst()).isEqualTo(expectedRowData);
   }

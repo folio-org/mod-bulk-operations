@@ -46,10 +46,10 @@ public class Constants {
   public static final String LINE_BREAK = "\n";
   public static final String LINE_BREAK_REPLACEMENT = "\\n";
 
-  public static final String QUERY_PATTERN_NAME = "name==\"%s\"";
+  public static final String QUERY_PATTERN_NAME = "name==%s";
   public static final String QUERY_PATTERN_HRID = "hrid==\"%s\"";
   public static final String QUERY_PATTERN_BARCODE = "barcode==\"%s\"";
-  public static final String QUERY_PATTERN_CODE = "code==\"%s\"";
+  public static final String QUERY_PATTERN_CODE = "code==%s";
   public static final String QUERY_PATTERN_USERNAME = "username==%s";
   public static final String QUERY_PATTERN_ADDRESS_TYPE = "addressType==%s";
   public static final String QUERY_PATTERN_GROUP = "group==%s";
