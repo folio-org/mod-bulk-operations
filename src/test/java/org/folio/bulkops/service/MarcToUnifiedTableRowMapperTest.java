@@ -249,6 +249,26 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
     dataField.addSubfield(new SubfieldImpl('a', "654added"));
     marcRecord.addVariableField(dataField);
 
+    dataField = new DataFieldImpl("656", '2', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "656added"));
+    marcRecord.addVariableField(dataField);
+
+    dataField = new DataFieldImpl("657", '/', '3');
+    dataField.addSubfield(new SubfieldImpl('a', "657added"));
+    marcRecord.addVariableField(dataField);
+
+    dataField = new DataFieldImpl("658", '2', '5');
+    dataField.addSubfield(new SubfieldImpl('a', "658added"));
+    marcRecord.addVariableField(dataField);
+
+    dataField = new DataFieldImpl("662", '/', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "662added"));
+    marcRecord.addVariableField(dataField);
+
+    dataField = new DataFieldImpl("688", '6', '7');
+    dataField.addSubfield(new SubfieldImpl('a', "688added"));
+    marcRecord.addVariableField(dataField);
+
     when(subjectSourcesClient.getByQuery("code==\"codeFound\""))
             .thenReturn(new SubjectSourceCollection()
             .withSubjectSources(List.of(new SubjectSource()
@@ -287,7 +307,14 @@ class MarcToUnifiedTableRowMapperTest extends BaseTest {
             + "653added;Library of Congress Children’s and Young Adults' Subject Headings;"
             + "Uncontrolled | "
             + "654added;Library of Congress Children’s and Young Adults' Subject Headings;"
-            + "Faceted topical terms";
+            + "Faceted topical terms |"
+            + " 656added;Library of Congress Children’s and Young Adults' Subject Headings;"
+            + "Occupation |"
+            + " 657added;National Agriculture Library subject authority file;Function |"
+            + " 658added;Canadian Subject Headings;Curriculum objective |"
+            + " 662added;Library of Congress Children’s and Young Adults' Subject Headings;"
+            + "Hierarchical place name |"
+            + " 688added;-;Type of entity unspecified";
 
     assertThat(rowData.getFirst()).isEqualTo(expectedRowData);
   }
