@@ -56,7 +56,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     var actual = holdingsReferenceHelper.getHoldingsTypeById("id_1");
     assertEquals("name_1", actual.getName());
 
-    when(holdingsTypeClient.getByQuery("name==\"\"name_2\"\""))
+    when(holdingsTypeClient.getByQuery("name==\"name_2\""))
             .thenReturn(new HoldingsTypeCollection()
             .withHoldingsTypes(Collections.singletonList(new HoldingsType().withId("id_2"))));
     actual = holdingsReferenceHelper.getHoldingsTypeByName("name_2");
@@ -66,7 +66,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     assertThrows(ReferenceDataNotFoundException.class,
             () -> holdingsReferenceHelper.getHoldingsTypeById("id_3"));
 
-    when(holdingsTypeClient.getByQuery("name==\"\"name_4\"\""))
+    when(holdingsTypeClient.getByQuery("name==\"name_4\""))
             .thenReturn(new HoldingsTypeCollection().withHoldingsTypes(Collections.emptyList()));
     assertThrows(ReferenceDataNotFoundException.class,
             () -> holdingsReferenceHelper.getHoldingsTypeByName("name_4"));
@@ -84,7 +84,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     var actual = holdingsReferenceHelper.getLocationById("id_1");
     assertEquals("name_1", actual.getName());
 
-    when(locationClient.getByQuery("name==\"\"name_2\"\""))
+    when(locationClient.getByQuery("name==\"name_2\""))
             .thenReturn(new ItemLocationCollection()
                     .withLocations(Collections.singletonList(new ItemLocation().withId("id_2"))));
     actual = holdingsReferenceHelper.getLocationByName("name_2");
@@ -94,7 +94,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     assertThrows(ReferenceDataNotFoundException.class,
             () -> holdingsReferenceHelper.getLocationById("id_3"));
 
-    when(locationClient.getByQuery("name==\"\"name_4\"\""))
+    when(locationClient.getByQuery("name==\"name_4\""))
             .thenReturn(new ItemLocationCollection().withLocations(Collections.emptyList()));
     assertThrows(ReferenceDataNotFoundException.class,
             () -> holdingsReferenceHelper.getLocationByName("name_4"));
@@ -111,7 +111,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     var actual = holdingsReferenceHelper.getCallNumberTypeNameById("id_1");
     assertEquals("name_1", actual);
 
-    when(callNumberTypeClient.getByQuery("name==\"\"name_2\"\""))
+    when(callNumberTypeClient.getByQuery("name==\"name_2\""))
             .thenReturn(new CallNumberTypeCollection()
                     .withCallNumberTypes(
                             Collections.singletonList(new CallNumberType().withId("id_2"))));
@@ -122,7 +122,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     assertThrows(ReferenceDataNotFoundException.class,
             () -> holdingsReferenceHelper.getCallNumberTypeNameById("id_3"));
 
-    when(callNumberTypeClient.getByQuery("name==\"\"name_4\"\""))
+    when(callNumberTypeClient.getByQuery("name==\"name_4\""))
             .thenReturn(new CallNumberTypeCollection()
                     .withCallNumberTypes(Collections.emptyList()));
     assertThrows(ReferenceDataNotFoundException.class,
@@ -141,7 +141,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     var actual = holdingsReferenceHelper.getNoteTypeNameById("id_1", null);
     assertEquals("name_1", actual);
 
-    when(holdingsNoteTypeClient.getNoteTypesByQuery("name==\"\"name_2\"\"", 1))
+    when(holdingsNoteTypeClient.getNoteTypesByQuery("name==\"name_2\"", 1))
             .thenReturn(new HoldingsNoteTypeCollection()
                     .withHoldingsNoteTypes(Collections.singletonList(
                             new HoldingsNoteType().withId("id_2"))));
@@ -153,7 +153,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     assertThrows(ReferenceDataNotFoundException.class,
             () -> holdingsReferenceHelper.getNoteTypeNameById("id_3", null));
 
-    when(holdingsNoteTypeClient.getNoteTypesByQuery("name==\"\"name_4\"\"", 1))
+    when(holdingsNoteTypeClient.getNoteTypesByQuery("name==\"name_4\"", 1))
             .thenReturn(new HoldingsNoteTypeCollection()
                     .withHoldingsNoteTypes(Collections.emptyList()));
     assertThrows(ReferenceDataNotFoundException.class,
@@ -171,7 +171,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     var actual = holdingsReferenceHelper.getIllPolicyNameById("id_1");
     assertEquals("name_1", actual.getName());
 
-    when(illPolicyClient.getByQuery("name==\"\"name_2\"\""))
+    when(illPolicyClient.getByQuery("name==\"name_2\""))
             .thenReturn(new IllPolicyCollection().withIllPolicies(
                     Collections.singletonList(new IllPolicy().withId("id_2"))));
     actual = holdingsReferenceHelper.getIllPolicyByName("name_2");
@@ -182,7 +182,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
             () -> holdingsReferenceHelper.getIllPolicyNameById("id_3"));
 
 
-    when(illPolicyClient.getByQuery("name==\"\"name_4\"\""))
+    when(illPolicyClient.getByQuery("name==\"name_4\""))
             .thenReturn(new IllPolicyCollection().withIllPolicies(Collections.emptyList()));
     assertThrows(ReferenceDataNotFoundException.class,
             () -> holdingsReferenceHelper.getIllPolicyByName("name_4"));
@@ -200,7 +200,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     var actual = holdingsReferenceHelper.getSourceById("id_1");
     assertEquals("name_1", actual.getName());
 
-    when(holdingsSourceClient.getByQuery("name==\"\"name_2\"\""))
+    when(holdingsSourceClient.getByQuery("name==\"name_2\""))
             .thenReturn(new HoldingsRecordsSourceCollection()
                     .withHoldingsRecordsSources(
                             Collections.singletonList(new HoldingsRecordsSource().withId("id_2"))));
@@ -235,7 +235,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     var actual = holdingsReferenceHelper.getStatisticalCodeById("id_1", "test");
     assertEquals("name_1", actual.getName());
 
-    when(statisticalCodeClient.getByQuery("name==\"\"name_2\"\""))
+    when(statisticalCodeClient.getByQuery("name==\"name_2\""))
             .thenReturn(new StatisticalCodeCollection()
                     .withStatisticalCodes(
                             Collections.singletonList(new StatisticalCode().withId("id_2"))));
@@ -246,7 +246,7 @@ class HoldingsReferenceHelperTest extends BaseTest {
     assertThrows(ReferenceDataNotFoundException.class,
             () -> holdingsReferenceHelper.getStatisticalCodeById("id_3", "test"));
 
-    when(statisticalCodeClient.getByQuery("name==\"\"name_4\"\""))
+    when(statisticalCodeClient.getByQuery("name==\"name_4\""))
             .thenReturn(new StatisticalCodeCollection()
                     .withStatisticalCodes(Collections.emptyList()));
     assertThrows(ReferenceDataNotFoundException.class,
