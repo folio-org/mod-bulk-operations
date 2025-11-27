@@ -302,7 +302,7 @@ public class BulkOperationService {
         List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
         if (Objects.nonNull(modified)) {
           // Prepare CSV for download and JSON for preview
-          if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId())
+          if (isMemberTenant(folioExecutionContext.getTenantId())
                   || clazz == User.class) {
             CsvHelper.writeBeanToCsv(operation, csvWriter,
                 modified.getPreview().getRecordBulkOperationEntity(),
@@ -512,31 +512,34 @@ public class BulkOperationService {
 
           try {
             var result = recordUpdateService.updateEntity(original, modified, operation);
+            var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
+            var useCurrentContext = isMemberTenant(folioExecutionContext.getTenantId())
+                || entityClass == User.class;
+            var tenantIdOfEntity = result.getTenant();
+            if (!useCurrentContext) {
+              result.getRecordBulkOperationEntity().setTenant(tenantIdOfEntity);
+              result.getRecordBulkOperationEntity().setTenantToNotes(
+                  operation.getTenantNotePairs());
+            }
+            var context = useCurrentContext
+                ? null
+                : new FolioExecutionContextSetter(
+                    prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata,
+                        folioExecutionContext));
             if (result != original) {
-              var hasNextRecord = hasNextRecord(originalFileIterator, modifiedFileIterator);
-              writerForResultJsonFile.write(objectMapper.writeValueAsString(result)
-                  + getEndOfLineSymbol(hasNextRecord));
-              if (isCurrentTenantNotCentral(folioExecutionContext.getTenantId())
-                      || entityClass == User.class) {
-                CsvHelper.writeBeanToCsv(operation, csvWriter,
-                        result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
+              try (var ignored = context) {
+                writerForResultJsonFile.write(objectMapper.writeValueAsString(result)
+                    + getEndOfLineSymbol(hasNextRecord));
                 writerForJsonPreviewFile.write(objectMapper.writeValueAsString(result)
                     + getEndOfLineSymbol(hasNextRecord));
-              } else {
-                var tenantIdOfEntity = result.getTenant();
-                try (var ignored = new FolioExecutionContextSetter(
-                        prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata,
-                                folioExecutionContext))) {
-                  result.getRecordBulkOperationEntity().setTenant(tenantIdOfEntity);
-                  result.getRecordBulkOperationEntity().setTenantToNotes(
-                          operation.getTenantNotePairs());
-                  CsvHelper.writeBeanToCsv(operation, csvWriter,
-                          result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
-                  writerForJsonPreviewFile.write(objectMapper.writeValueAsString(result)
-                      + getEndOfLineSymbol(hasNextRecord));
-                }
+                CsvHelper.writeBeanToCsv(operation, csvWriter,
+                    result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
               }
               bulkOperationExecutionContents.forEach(errorService::saveError);
+            } else if (original instanceof ExtendedInstance extendedInstance
+                && MARC.equals(extendedInstance.getEntity().getSource())) {
+              writerForJsonPreviewFile.write(objectMapper.writeValueAsString(result)
+                  + getEndOfLineSymbol(hasNextRecord));
             }
           } catch (OptimisticLockingException e) {
             saveFailedInstanceHrid(failedInstanceHrids, original);
@@ -603,7 +606,7 @@ public class BulkOperationService {
     }
   }
 
-  private boolean isCurrentTenantNotCentral(String tenantId) {
+  private boolean isMemberTenant(String tenantId) {
     return !consortiaService.isTenantCentral(tenantId);
   }
 
