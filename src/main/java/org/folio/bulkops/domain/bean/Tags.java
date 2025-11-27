@@ -19,4 +19,3 @@ public class Tags {
   @Valid
   private List<String> tagList = null;
 }
-

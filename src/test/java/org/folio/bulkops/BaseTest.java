@@ -92,15 +92,16 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}")
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ContextConfiguration(initializers = BaseTest.Initializer.class)
 @Testcontainers
 @AutoConfigureMockMvc
 @Log4j2
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@EmbeddedKafka(topics = { "folio.Default.diku.DI_JOB_COMPLETED" })
+@EmbeddedKafka(topics = {"folio.Default.diku.DI_JOB_COMPLETED"})
 @EnableKafka
 public abstract class BaseTest {
   public static final String S3_ACCESS_KEY = "minio-access-key";
@@ -119,132 +120,104 @@ public abstract class BaseTest {
   static {
     postgresDBContainer = new PostgreSQLContainer<>("postgres:12");
     postgresDBContainer.start();
-    s3 = new GenericContainer<>("minio/minio:latest")
-        .withEnv("MINIO_ACCESS_KEY", S3_ACCESS_KEY)
-        .withEnv("MINIO_SECRET_KEY", S3_SECRET_KEY)
-        .withCommand("server /data")
-        .withExposedPorts(S3_PORT)
-        .waitingFor(new HttpWaitStrategy().forPath("/minio/health/ready")
-          .forPort(S3_PORT)
-          .withStartupTimeout(Duration.ofSeconds(10))
-        );
+    s3 =
+        new GenericContainer<>("minio/minio:latest")
+            .withEnv("MINIO_ACCESS_KEY", S3_ACCESS_KEY)
+            .withEnv("MINIO_SECRET_KEY", S3_SECRET_KEY)
+            .withCommand("server /data")
+            .withExposedPorts(S3_PORT)
+            .waitingFor(
+                new HttpWaitStrategy()
+                    .forPath("/minio/health/ready")
+                    .forPort(S3_PORT)
+                    .withStartupTimeout(Duration.ofSeconds(10)));
     s3.start();
     MINIO_ENDPOINT = format("http://%s:%s", s3.getHost(), s3.getFirstMappedPort());
     client =
-        new RemoteFileSystemClient(S3ClientFactory.getS3Client(S3ClientProperties.builder()
-            .endpoint(MINIO_ENDPOINT)
-            .secretKey(S3_SECRET_KEY)
-            .accessKey(S3_ACCESS_KEY)
-            .bucket(BUCKET)
-            .awsSdk(false)
-            .region(REGION)
-            .build()));
+        new RemoteFileSystemClient(
+            S3ClientFactory.getS3Client(
+                S3ClientProperties.builder()
+                    .endpoint(MINIO_ENDPOINT)
+                    .secretKey(S3_SECRET_KEY)
+                    .accessKey(S3_ACCESS_KEY)
+                    .bucket(BUCKET)
+                    .awsSdk(false)
+                    .region(REGION)
+                    .build()));
   }
 
-  public static LocalDateTimeDeserializer localDateTimeDeserializer = new LocalDateTimeDeserializer(
-          DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
+  public static LocalDateTimeDeserializer localDateTimeDeserializer =
+      new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
 
-  public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+  public static final ObjectMapper OBJECT_MAPPER =
+      new ObjectMapper()
           .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-          .registerModule(new JavaTimeModule().addDeserializer(LocalDateTime.class,
-                  localDateTimeDeserializer))
+          .registerModule(
+              new JavaTimeModule().addDeserializer(LocalDateTime.class, localDateTimeDeserializer))
           .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
           .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
 
-  protected static final String TOKEN
-          = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkaWt1X2FkbWluIiwidXNlcl9pZCI6IjFkM2I1OGNiLTA3YjUt"
+  protected static final String TOKEN =
+      "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkaWt1X2FkbWluIiwidXNlcl9pZCI6IjFkM2I1OGNiLTA3YjUt"
           + "NWZjZC04YTJhLTNjZTA2YTBlYjkwZiIsImlhdCI6MTYxNjQyMDM5MywidGVuYW50IjoiZGlrdSJ9.2nvEY"
           + "QBbJP1PewEgxixBWLHSX_eELiBEBpjufWiJZRs";
   protected static final String TENANT = "diku";
 
-  @MockitoBean
-  public HoldingsStorageClient holdingsStorageClient;
-  @MockitoBean
-  public ItemClient itemClient;
-  @MockitoBean
-  public UserClient userClient;
-  @MockitoBean
-  public LoanTypeClient loanTypeClient;
-  @MockitoBean
-  public GroupClient groupClient;
-  @MockitoBean
-  public DepartmentClient departmentClient;
-  @MockitoBean
-  public AddressTypeClient addressTypeClient;
-  @MockitoBean
-  public CustomFieldsClient customFieldsClient;
-  @MockitoBean
-  public OkapiClient okapiClient;
-  @MockitoBean
-  public LocationClient locationClient;
-  @MockitoBean
-  public HoldingsSourceClient holdingsSourceClient;
-  @MockitoBean
-  public CallNumberTypeClient callNumberTypeClient;
-  @MockitoBean
-  public HoldingsTypeClient holdingsTypeClient;
-  @MockitoBean
-  public HoldingsNoteTypeClient holdingsNoteTypeClient;
-  @MockitoBean
-  public IllPolicyClient illPolicyClient;
-  @MockitoBean
-  public StatisticalCodeClient statisticalCodeClient;
-  @MockitoBean
-  public StatisticalCodeTypeClient statisticalCodeTypeClient;
-  @MockitoBean
-  public DamagedStatusClient damagedStatusClient;
-  @MockitoBean
-  public ItemNoteTypeClient itemNoteTypeClient;
-  @MockitoBean
-  public ServicePointClient servicePointClient;
-  @MockitoBean
-  public MaterialTypeClient materialTypeClient;
-  @MockitoBean
-  public ElectronicAccessRelationshipClient relationshipClient;
-  @MockitoBean
-  public InstanceStatusesClient instanceStatusesClient;
-  @MockitoBean
-  public ModesOfIssuanceClient modesOfIssuanceClient;
-  @MockitoBean
-  public InstanceTypesClient instanceTypesClient;
-  @MockitoBean
-  public NatureOfContentTermsClient natureOfContentTermsClient;
-  @MockitoBean
-  public InstanceFormatsClient instanceFormatsClient;
-  @MockitoBean
-  public InstanceClient instanceClient;
-  @MockitoBean
-  public InstanceNoteTypesClient instanceNoteTypesClient;
-  @MockitoBean
-  public PrepareSystemUserService prepareSystemUserService;
-  @MockitoBean
-  public SubjectSourcesClient subjectSourcesClient;
+  @MockitoBean public HoldingsStorageClient holdingsStorageClient;
+  @MockitoBean public ItemClient itemClient;
+  @MockitoBean public UserClient userClient;
+  @MockitoBean public LoanTypeClient loanTypeClient;
+  @MockitoBean public GroupClient groupClient;
+  @MockitoBean public DepartmentClient departmentClient;
+  @MockitoBean public AddressTypeClient addressTypeClient;
+  @MockitoBean public CustomFieldsClient customFieldsClient;
+  @MockitoBean public OkapiClient okapiClient;
+  @MockitoBean public LocationClient locationClient;
+  @MockitoBean public HoldingsSourceClient holdingsSourceClient;
+  @MockitoBean public CallNumberTypeClient callNumberTypeClient;
+  @MockitoBean public HoldingsTypeClient holdingsTypeClient;
+  @MockitoBean public HoldingsNoteTypeClient holdingsNoteTypeClient;
+  @MockitoBean public IllPolicyClient illPolicyClient;
+  @MockitoBean public StatisticalCodeClient statisticalCodeClient;
+  @MockitoBean public StatisticalCodeTypeClient statisticalCodeTypeClient;
+  @MockitoBean public DamagedStatusClient damagedStatusClient;
+  @MockitoBean public ItemNoteTypeClient itemNoteTypeClient;
+  @MockitoBean public ServicePointClient servicePointClient;
+  @MockitoBean public MaterialTypeClient materialTypeClient;
+  @MockitoBean public ElectronicAccessRelationshipClient relationshipClient;
+  @MockitoBean public InstanceStatusesClient instanceStatusesClient;
+  @MockitoBean public ModesOfIssuanceClient modesOfIssuanceClient;
+  @MockitoBean public InstanceTypesClient instanceTypesClient;
+  @MockitoBean public NatureOfContentTermsClient natureOfContentTermsClient;
+  @MockitoBean public InstanceFormatsClient instanceFormatsClient;
+  @MockitoBean public InstanceClient instanceClient;
+  @MockitoBean public InstanceNoteTypesClient instanceNoteTypesClient;
+  @MockitoBean public PrepareSystemUserService prepareSystemUserService;
+  @MockitoBean public SubjectSourcesClient subjectSourcesClient;
 
-  @Autowired
-  protected MockMvc mockMvc;
-  @Autowired
-  private FolioModuleMetadata folioModuleMetadata;
-  @Autowired
-  public ObjectMapper objectMapper;
+  @Autowired protected MockMvc mockMvc;
+  @Autowired private FolioModuleMetadata folioModuleMetadata;
+  @Autowired public ObjectMapper objectMapper;
 
   public final Map<String, Object> okapiHeaders = new HashMap<>();
 
   public FolioExecutionContext folioExecutionContext;
 
   public static class Initializer
-          implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+      implements ApplicationContextInitializer<ConfigurableApplicationContext> {
     @Override
     public void initialize(ConfigurableApplicationContext context) {
-      TestPropertySourceUtils.addInlinedPropertiesToEnvironment(context,
-              "spring.datasource.url=" + postgresDBContainer.getJdbcUrl(),
-              "spring.datasource.username=" + postgresDBContainer.getUsername(),
-              "spring.datasource.password=" + postgresDBContainer.getPassword(),
-              "application.remote-files-storage.endpoint=" + MINIO_ENDPOINT,
-              "application.remote-files-storage.region=" + REGION,
-              "application.remote-files-storage.bucket=" + BUCKET,
-              "application.remote-files-storage.accessKey=" + S3_ACCESS_KEY,
-              "application.remote-files-storage.secretKey=" + S3_SECRET_KEY,
-              "application.remote-files-storage.awsSdk=false");
+      TestPropertySourceUtils.addInlinedPropertiesToEnvironment(
+          context,
+          "spring.datasource.url=" + postgresDBContainer.getJdbcUrl(),
+          "spring.datasource.username=" + postgresDBContainer.getUsername(),
+          "spring.datasource.password=" + postgresDBContainer.getPassword(),
+          "application.remote-files-storage.endpoint=" + MINIO_ENDPOINT,
+          "application.remote-files-storage.region=" + REGION,
+          "application.remote-files-storage.bucket=" + BUCKET,
+          "application.remote-files-storage.accessKey=" + S3_ACCESS_KEY,
+          "application.remote-files-storage.secretKey=" + S3_SECRET_KEY,
+          "application.remote-files-storage.awsSdk=false");
     }
   }
 
@@ -261,25 +234,28 @@ public abstract class BaseTest {
     okapiHeaders.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     var localHeaders =
-            okapiHeaders.entrySet()
-                    .stream()
-                    .filter(e -> e.getKey().startsWith(XOkapiHeaders.OKAPI_HEADERS_PREFIX))
-                    .collect(Collectors.toMap(Map.Entry::getKey,
-                            e -> (Collection<String>) List.of(String.valueOf(e.getValue()))));
+        okapiHeaders.entrySet().stream()
+            .filter(e -> e.getKey().startsWith(XOkapiHeaders.OKAPI_HEADERS_PREFIX))
+            .collect(
+                Collectors.toMap(
+                    Map.Entry::getKey,
+                    e -> (Collection<String>) List.of(String.valueOf(e.getValue()))));
 
     folioExecutionContext = new DefaultFolioExecutionContext(folioModuleMetadata, localHeaders);
   }
 
   @AfterEach
-  void eachTearDown() {
-  }
+  void eachTearDown() {}
 
   @SneakyThrows
   protected static void setUpTenant(MockMvc mockMvc) {
-    mockMvc.perform(post("/_/tenant")
-      .content(asJsonString(new TenantAttributes().moduleTo("mod-bulk-operations")))
-      .headers(defaultHeaders())
-      .contentType(APPLICATION_JSON)).andExpect(status().isNoContent());
+    mockMvc
+        .perform(
+            post("/_/tenant")
+                .content(asJsonString(new TenantAttributes().moduleTo("mod-bulk-operations")))
+                .headers(defaultHeaders())
+                .contentType(APPLICATION_JSON))
+        .andExpect(status().isNoContent());
   }
 
   public static HttpHeaders defaultHeaders() {
@@ -303,52 +279,59 @@ public abstract class BaseTest {
     var uuid = UUID.randomUUID();
 
     return new BulkOperationRuleCollection()
-      .bulkOperationRules(Arrays.stream(rules).map(rule -> rule.bulkOperationId(uuid)).toList())
-      .totalRecords(rules.length);
+        .bulkOperationRules(Arrays.stream(rules).map(rule -> rule.bulkOperationId(uuid)).toList())
+        .totalRecords(rules.length);
   }
 
-  public static BulkOperationRule rule(UpdateOptionType option, UpdateActionType action,
-                                       String initial, String updated) {
+  public static BulkOperationRule rule(
+      UpdateOptionType option, UpdateActionType action, String initial, String updated) {
     return new BulkOperationRule()
-      .ruleDetails(new RuleDetails()
-        .option(option)
-        .actions(Collections.singletonList(new Action()
-          .type(action)
-            .initial(initial)
-          .updated(updated))));
+        .ruleDetails(
+            new RuleDetails()
+                .option(option)
+                .actions(
+                    Collections.singletonList(
+                        new Action().type(action).initial(initial).updated(updated))));
   }
 
-  public static BulkOperationRule rule(UpdateOptionType option, UpdateActionType action,
-                                       String updated) {
+  public static BulkOperationRule rule(
+      UpdateOptionType option, UpdateActionType action, String updated) {
     return rule(option, action, null, updated);
   }
 
-  public static BulkOperationRule rule(UpdateOptionType option, UpdateActionType action,
-                                       String updated, List<String> actionsTenants,
-                                       List<String> ruleTenants) {
+  public static BulkOperationRule rule(
+      UpdateOptionType option,
+      UpdateActionType action,
+      String updated,
+      List<String> actionsTenants,
+      List<String> ruleTenants) {
     var rule = rule(option, action, null, updated);
     rule.getRuleDetails().setTenants(ruleTenants);
     rule.getRuleDetails().getActions().forEach(act -> act.setTenants(actionsTenants));
     return rule;
   }
 
-  public BulkOperation buildBulkOperation(String fileName,
-                                          org.folio.bulkops.domain.dto.EntityType entityType,
-                                          org.folio.bulkops.domain.dto.BulkOperationStep step) {
+  public BulkOperation buildBulkOperation(
+      String fileName,
+      org.folio.bulkops.domain.dto.EntityType entityType,
+      org.folio.bulkops.domain.dto.BulkOperationStep step) {
     return switch (step) {
-      case UPLOAD -> BulkOperation.builder()
-        .entityType(entityType)
-        .linkToMatchedRecordsJsonFile(fileName)
-        .build();
-      case EDIT -> BulkOperation.builder()
-        .entityType(entityType)
-        .linkToModifiedRecordsJsonPreviewFile(fileName)
-        .build();
-      case COMMIT -> BulkOperation.builder()
-        .entityType(entityType)
-        .linkToCommittedRecordsJsonFile(fileName)
-        .linkToCommittedRecordsJsonPreviewFile(fileName)
-        .build();
+      case UPLOAD ->
+          BulkOperation.builder()
+              .entityType(entityType)
+              .linkToMatchedRecordsJsonFile(fileName)
+              .build();
+      case EDIT ->
+          BulkOperation.builder()
+              .entityType(entityType)
+              .linkToModifiedRecordsJsonPreviewFile(fileName)
+              .build();
+      case COMMIT ->
+          BulkOperation.builder()
+              .entityType(entityType)
+              .linkToCommittedRecordsJsonFile(fileName)
+              .linkToCommittedRecordsJsonPreviewFile(fileName)
+              .build();
     };
   }
 }

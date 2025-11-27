@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum CustomFieldTypes {
-
   DATE_PICKER("DATE_PICKER"),
   RADIO_BUTTON("RADIO_BUTTON"),
   SINGLE_CHECKBOX("SINGLE_CHECKBOX"),

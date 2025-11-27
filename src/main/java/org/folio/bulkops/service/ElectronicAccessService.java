@@ -38,8 +38,7 @@ public class ElectronicAccessService {
     log.debug(
         "electronicAccessToString: {}, {}",
         access.getRelationshipId(),
-        folioExecutionContext.getTenantId()
-    );
+        folioExecutionContext.getTenantId());
 
     return String.join(
         delimiter,
@@ -47,8 +46,7 @@ public class ElectronicAccessService {
         isNull(access.getUri()) ? HYPHEN : access.getUri(),
         isEmpty(access.getLinkText()) ? HYPHEN : access.getLinkText(),
         isEmpty(access.getMaterialsSpecification()) ? HYPHEN : access.getMaterialsSpecification(),
-        isEmpty(access.getPublicNote()) ? HYPHEN : access.getPublicNote()
-    );
+        isEmpty(access.getPublicNote()) ? HYPHEN : access.getPublicNote());
   }
 
   public String electronicAccessInstanceToString(ElectronicAccess access) {
@@ -59,8 +57,7 @@ public class ElectronicAccessService {
     log.debug(
         "electronicAccessInstanceToString: {}, {}",
         access.getRelationshipId(),
-        folioExecutionContext.getTenantId()
-    );
+        folioExecutionContext.getTenantId());
 
     return String.join(
         delimiter,
@@ -68,8 +65,7 @@ public class ElectronicAccessService {
         isEmpty(access.getUri()) ? HYPHEN : access.getUri(),
         isEmpty(access.getLinkText()) ? HYPHEN : access.getLinkText(),
         isEmpty(access.getMaterialsSpecification()) ? HYPHEN : access.getMaterialsSpecification(),
-        isEmpty(access.getPublicNote()) ? HYPHEN : access.getPublicNote()
-    );
+        isEmpty(access.getPublicNote()) ? HYPHEN : access.getPublicNote());
   }
 
   public String itemElectronicAccessToString(ElectronicAccess access) {
@@ -82,30 +78,29 @@ public class ElectronicAccessService {
       if (NUMBER_OF_ELECTRONIC_ACCESS_COMPONENTS == tokens.length) {
         var uri = tokens[ELECTRONIC_ACCESS_URI_INDEX];
         return ElectronicAccess.builder()
-                .relationshipId(
-                        electronicAccessReferenceService.getRelationshipIdByName(
-                                tokens[ELECTRONIC_ACCESS_RELATIONSHIP_ID_INDEX]
-                        )
-                )
-                .uri(isNull(uri) ? EMPTY : uri)
-                .linkText(isEmpty(tokens[ELECTRONIC_ACCESS_LINK_TEXT_INDEX]) ? null
-                        : tokens[ELECTRONIC_ACCESS_LINK_TEXT_INDEX])
-                .materialsSpecification(isEmpty(
-                        tokens[ELECTRONIC_ACCESS_MATERIAL_SPECIFICATION_INDEX])
-                        ? null
-                        : tokens[ELECTRONIC_ACCESS_MATERIAL_SPECIFICATION_INDEX])
-                .publicNote(isEmpty(tokens[ELECTRONIC_ACCESS_PUBLIC_NOTE_INDEX]) ? null
-                        : tokens[ELECTRONIC_ACCESS_PUBLIC_NOTE_INDEX])
-                .build();
+            .relationshipId(
+                electronicAccessReferenceService.getRelationshipIdByName(
+                    tokens[ELECTRONIC_ACCESS_RELATIONSHIP_ID_INDEX]))
+            .uri(isNull(uri) ? EMPTY : uri)
+            .linkText(
+                isEmpty(tokens[ELECTRONIC_ACCESS_LINK_TEXT_INDEX])
+                    ? null
+                    : tokens[ELECTRONIC_ACCESS_LINK_TEXT_INDEX])
+            .materialsSpecification(
+                isEmpty(tokens[ELECTRONIC_ACCESS_MATERIAL_SPECIFICATION_INDEX])
+                    ? null
+                    : tokens[ELECTRONIC_ACCESS_MATERIAL_SPECIFICATION_INDEX])
+            .publicNote(
+                isEmpty(tokens[ELECTRONIC_ACCESS_PUBLIC_NOTE_INDEX])
+                    ? null
+                    : tokens[ELECTRONIC_ACCESS_PUBLIC_NOTE_INDEX])
+            .build();
       }
 
       throw new EntityFormatException(
-              String.format(
-                      "Illegal number of electronic access elements: %d, expected: %d",
-                      tokens.length,
-                      NUMBER_OF_ELECTRONIC_ACCESS_COMPONENTS
-              )
-      );
+          String.format(
+              "Illegal number of electronic access elements: %d, expected: %d",
+              tokens.length, NUMBER_OF_ELECTRONIC_ACCESS_COMPONENTS));
     }
     return null;
   }
@@ -123,8 +118,7 @@ public class ElectronicAccessService {
         "getRelationshipName {}, {}, {}",
         access.getRelationshipId(),
         access.getTenantId(),
-        folioExecutionContext.getTenantId()
-    );
+        folioExecutionContext.getTenantId());
     return electronicAccessReferenceService.getRelationshipNameById(access.getRelationshipId());
   }
 }

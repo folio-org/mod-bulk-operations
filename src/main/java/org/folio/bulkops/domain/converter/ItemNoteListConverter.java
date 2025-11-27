@@ -20,26 +20,32 @@ public class ItemNoteListConverter extends BaseConverter<List<ItemNote>> {
   @Override
   public String convertToString(List<ItemNote> object) {
     return object.stream()
-      .filter(Objects::nonNull)
-      .map(itemNote -> {
-        var noteTypeName = itemNote.getItemNoteTypeName();
-        if (isNull(noteTypeName)) {
-          noteTypeName = "";
-          try {
-            noteTypeName = ItemReferenceHelper.service()
-              .getNoteTypeNameById(itemNote.getItemNoteTypeId(),
-                itemNote.getTenantId());
-          } catch (NotFoundException e) {
-            log.error("Item note type with id = {} not found : {}",
-                itemNote.getItemNoteTypeId(), e.getMessage());
-          }
-        }
-        return String.join(ARRAY_DELIMITER,
-          escape(noteTypeName),
-          escape(itemNote.getNote()),
-          escape(booleanToStringNullSafe(itemNote.getStaffOnly())),
-          itemNote.getTenantId(),
-          itemNote.getItemNoteTypeId());
-      }).collect(Collectors.joining(ITEM_DELIMITER));
+        .filter(Objects::nonNull)
+        .map(
+            itemNote -> {
+              var noteTypeName = itemNote.getItemNoteTypeName();
+              if (isNull(noteTypeName)) {
+                noteTypeName = "";
+                try {
+                  noteTypeName =
+                      ItemReferenceHelper.service()
+                          .getNoteTypeNameById(
+                              itemNote.getItemNoteTypeId(), itemNote.getTenantId());
+                } catch (NotFoundException e) {
+                  log.error(
+                      "Item note type with id = {} not found : {}",
+                      itemNote.getItemNoteTypeId(),
+                      e.getMessage());
+                }
+              }
+              return String.join(
+                  ARRAY_DELIMITER,
+                  escape(noteTypeName),
+                  escape(itemNote.getNote()),
+                  escape(booleanToStringNullSafe(itemNote.getStaffOnly())),
+                  itemNote.getTenantId(),
+                  itemNote.getItemNoteTypeId());
+            })
+        .collect(Collectors.joining(ITEM_DELIMITER));
   }
 }

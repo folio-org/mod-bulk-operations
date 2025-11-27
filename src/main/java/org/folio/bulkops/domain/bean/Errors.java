@@ -14,7 +14,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Errors   {
+public class Errors {
   @JsonProperty("errors")
   @Valid
   private List<Error> errors = null;
@@ -22,4 +22,3 @@ public class Errors   {
   @JsonProperty("total_records")
   private Integer totalRecords;
 }
-

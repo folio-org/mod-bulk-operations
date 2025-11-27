@@ -27,9 +27,7 @@ public class ScheduleParameters {
   @JsonProperty("scheduleFrequency")
   private Integer scheduleFrequency;
 
-  /**
-   * Time period for repeating job.
-   */
+  /** Time period for repeating job. */
   public enum SchedulePeriodEnum {
     MONTH("MONTH"),
 
@@ -75,15 +73,13 @@ public class ScheduleParameters {
 
   @JsonProperty("schedulingDate")
   @org.springframework.format.annotation.DateTimeFormat(
-          iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
+      iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
   private OffsetDateTime schedulingDate;
 
   @JsonProperty("scheduleTime")
   private String scheduleTime;
 
-  /**
-   * Day of week.
-   */
+  /** Day of week. */
   public enum WeekDaysEnum {
     MONDAY("MONDAY"),
 
@@ -133,4 +129,3 @@ public class ScheduleParameters {
   @JsonProperty("timeZone")
   private String timeZone = UTC;
 }
-

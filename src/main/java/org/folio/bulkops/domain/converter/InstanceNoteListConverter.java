@@ -16,11 +16,16 @@ public class InstanceNoteListConverter extends BaseConverter<List<InstanceNote>>
   @Override
   public String convertToString(List<InstanceNote> object) {
     return object.stream()
-      .filter(Objects::nonNull)
-      .map(note -> String.join(ARRAY_DELIMITER,
-        escape(InstanceReferenceHelper.service().getNoteTypeNameById(note.getInstanceNoteTypeId())),
-        escape(note.getNote()),
-        booleanToStringNullSafe(note.getStaffOnly())))
-      .collect(Collectors.joining(ITEM_DELIMITER));
+        .filter(Objects::nonNull)
+        .map(
+            note ->
+                String.join(
+                    ARRAY_DELIMITER,
+                    escape(
+                        InstanceReferenceHelper.service()
+                            .getNoteTypeNameById(note.getInstanceNoteTypeId())),
+                    escape(note.getNote()),
+                    booleanToStringNullSafe(note.getStaffOnly())))
+        .collect(Collectors.joining(ITEM_DELIMITER));
   }
 }

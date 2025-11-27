@@ -23,40 +23,50 @@ public class UnifiedTableHeaderBuilder {
     return new UnifiedTable().header(getHeaders(clazz));
   }
 
-  public static UnifiedTable getEmptyTableWithHeaders(Class<? extends BulkOperationsEntity> clazz,
-                                                      Set<String> forceVisibleList) {
+  public static UnifiedTable getEmptyTableWithHeaders(
+      Class<? extends BulkOperationsEntity> clazz, Set<String> forceVisibleList) {
     return new UnifiedTable().header(getHeaders(clazz, forceVisibleList));
   }
 
   public static List<Cell> getHeaders(Class<? extends BulkOperationsEntity> clazz) {
-    return new ArrayList<>(Stream.concat(
-        FieldUtils.getFieldsListWithAnnotation(clazz, CsvRecurse.class).stream()
-          .map(Field::getType)
-          .map(aclass -> FieldUtils.getFieldsListWithAnnotation(aclass, CsvCustomBindByName.class))
-          .flatMap(List::stream),
-        FieldUtils.getFieldsListWithAnnotation(clazz, CsvCustomBindByName.class).stream())
-      .collect(Collectors.toMap(
-              field -> field.getAnnotation(CsvCustomBindByPosition.class).position(),
-        UnifiedTableHeaderBuilder::toUnifiedTableCell,
-        (key1, key2) -> key1,
-        TreeMap::new))
-      .values());
+    return new ArrayList<>(
+        Stream.concat(
+                FieldUtils.getFieldsListWithAnnotation(clazz, CsvRecurse.class).stream()
+                    .map(Field::getType)
+                    .map(
+                        aclass ->
+                            FieldUtils.getFieldsListWithAnnotation(
+                                aclass, CsvCustomBindByName.class))
+                    .flatMap(List::stream),
+                FieldUtils.getFieldsListWithAnnotation(clazz, CsvCustomBindByName.class).stream())
+            .collect(
+                Collectors.toMap(
+                    field -> field.getAnnotation(CsvCustomBindByPosition.class).position(),
+                    UnifiedTableHeaderBuilder::toUnifiedTableCell,
+                    (key1, key2) -> key1,
+                    TreeMap::new))
+            .values());
   }
 
-  public static List<Cell> getHeaders(Class<? extends BulkOperationsEntity> clazz,
-                                      Set<String> forceVisibleList) {
-    return new ArrayList<>(Stream.concat(
-        FieldUtils.getFieldsListWithAnnotation(clazz, CsvRecurse.class).stream()
-          .map(Field::getType)
-          .map(aclass -> FieldUtils.getFieldsListWithAnnotation(aclass, CsvCustomBindByName.class))
-          .flatMap(List::stream),
-        FieldUtils.getFieldsListWithAnnotation(clazz, CsvCustomBindByName.class).stream())
-      .collect(Collectors.toMap(
-              field -> field.getAnnotation(CsvCustomBindByPosition.class).position(),
-        field -> toUnifiedTableCell(field, forceVisibleList),
-        (key1, key2) -> key1,
-        TreeMap::new))
-      .values());
+  public static List<Cell> getHeaders(
+      Class<? extends BulkOperationsEntity> clazz, Set<String> forceVisibleList) {
+    return new ArrayList<>(
+        Stream.concat(
+                FieldUtils.getFieldsListWithAnnotation(clazz, CsvRecurse.class).stream()
+                    .map(Field::getType)
+                    .map(
+                        aclass ->
+                            FieldUtils.getFieldsListWithAnnotation(
+                                aclass, CsvCustomBindByName.class))
+                    .flatMap(List::stream),
+                FieldUtils.getFieldsListWithAnnotation(clazz, CsvCustomBindByName.class).stream())
+            .collect(
+                Collectors.toMap(
+                    field -> field.getAnnotation(CsvCustomBindByPosition.class).position(),
+                    field -> toUnifiedTableCell(field, forceVisibleList),
+                    (key1, key2) -> key1,
+                    TreeMap::new))
+            .values());
   }
 
   /**
@@ -67,9 +77,9 @@ public class UnifiedTableHeaderBuilder {
    */
   private static Cell toUnifiedTableCell(Field field) {
     return new Cell()
-      .dataType(field.getAnnotation(UnifiedTableCell.class).dataType())
-      .value(field.getAnnotation(CsvCustomBindByName.class).column())
-      .visible(field.getAnnotation(UnifiedTableCell.class).visible());
+        .dataType(field.getAnnotation(UnifiedTableCell.class).dataType())
+        .value(field.getAnnotation(CsvCustomBindByName.class).column())
+        .visible(field.getAnnotation(UnifiedTableCell.class).visible());
   }
 
   /**
@@ -82,9 +92,9 @@ public class UnifiedTableHeaderBuilder {
   private static Cell toUnifiedTableCell(Field field, Set<String> forcedVisible) {
     var column = field.getAnnotation(CsvCustomBindByName.class).column();
     return new Cell()
-      .dataType(field.getAnnotation(UnifiedTableCell.class).dataType())
-      .value(column)
-      .visible(field.getAnnotation(UnifiedTableCell.class).visible())
-      .forceVisible(forcedVisible.contains(column));
+        .dataType(field.getAnnotation(UnifiedTableCell.class).dataType())
+        .value(column)
+        .visible(field.getAnnotation(UnifiedTableCell.class).visible())
+        .forceVisible(forcedVisible.contains(column));
   }
 }

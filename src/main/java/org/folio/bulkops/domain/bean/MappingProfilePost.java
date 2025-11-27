@@ -19,5 +19,4 @@ public class MappingProfilePost {
 
   @JsonProperty("profile")
   private MappingProfile profile;
-
 }

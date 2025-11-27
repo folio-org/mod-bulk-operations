@@ -27,17 +27,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ConsortiaServiceTest {
 
-  @Mock
-  private ConsortiaClient consortiaClient;
-  @Mock
-  private ConsortiumClient consortiumClient;
-  @Mock
-  private FolioExecutionContext folioExecutionContext;
-  @Mock
-  private FolioModuleMetadata folioModuleMetadata;
+  @Mock private ConsortiaClient consortiaClient;
+  @Mock private ConsortiumClient consortiumClient;
+  @Mock private FolioExecutionContext folioExecutionContext;
+  @Mock private FolioModuleMetadata folioModuleMetadata;
 
-  @InjectMocks
-  private ConsortiaService consortiaService;
+  @InjectMocks private ConsortiaService consortiaService;
 
   @Test
   void shouldReturnNothing_whenNoCentralTenantExist() {
@@ -75,8 +70,8 @@ class ConsortiaServiceTest {
     userTenantCollection.setUserTenants(List.of(userTenant));
 
     when(consortiumClient.getConsortia()).thenReturn(consortiaCollection);
-    when(consortiumClient.getConsortiaUserTenants("consortiaId", "userId",
-            Integer.MAX_VALUE)).thenReturn(userTenantCollection);
+    when(consortiumClient.getConsortiaUserTenants("consortiaId", "userId", Integer.MAX_VALUE))
+        .thenReturn(userTenantCollection);
 
     var expected = List.of("memberTenantId");
     var actual = consortiaService.getAffiliatedTenants("currentTenantId", "userId");
@@ -111,7 +106,7 @@ class ConsortiaServiceTest {
     when(consortiaClient.getUserTenantCollection()).thenReturn(userTenantCollectionToGetCentral);
     when(consortiumClient.getConsortia()).thenReturn(consortiaCollection);
     when(consortiumClient.getConsortiaUserTenants("consortiaId", "userId", Integer.MAX_VALUE))
-            .thenReturn(userTenantCollection);
+        .thenReturn(userTenantCollection);
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
 
     var actual = consortiaService.getUserTenantsPerId("currentTenantId", "userId");

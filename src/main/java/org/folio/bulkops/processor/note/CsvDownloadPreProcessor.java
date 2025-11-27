@@ -58,31 +58,32 @@ public abstract class CsvDownloadPreProcessor {
 
   public byte[] processCsvContent(byte[] input, BulkOperation bulkOperation) {
     Map<String, UserTenant> userTenants = new HashMap<>();
-    boolean isCentralOrMemberTenant = consortiaService.isTenantInConsortia(
-            folioExecutionContext.getTenantId());
-    boolean isTypeWithTenant = bulkOperation.getEntityType() == EntityType.ITEM
+    boolean isCentralOrMemberTenant =
+        consortiaService.isTenantInConsortia(folioExecutionContext.getTenantId());
+    boolean isTypeWithTenant =
+        bulkOperation.getEntityType() == EntityType.ITEM
             || bulkOperation.getEntityType() == EntityType.HOLDINGS_RECORD;
     if (isCentralOrMemberTenant && isTypeWithTenant) {
-      userTenants = consortiaService.getUserTenantsPerId(folioExecutionContext.getTenantId(),
-              folioExecutionContext.getUserId().toString());
+      userTenants =
+          consortiaService.getUserTenantsPerId(
+              folioExecutionContext.getTenantId(), folioExecutionContext.getUserId().toString());
     }
     List<String> noteTypeNames = getNoteTypeNames(bulkOperation);
-    var noteTypeHeaders = noteTypeNames.stream()
-            .map(noteTableUpdater::concatNotePostfixIfRequired)
-            .toList();
+    var noteTypeHeaders =
+        noteTypeNames.stream().map(noteTableUpdater::concatNotePostfixIfRequired).toList();
 
-    try (var reader = new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(input)))
-            .withCSVParser(CsvHelper.getCsvParser()).build();
-         var stringWriter = new StringWriter()) {
+    try (var reader =
+            new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(input)))
+                .withCSVParser(CsvHelper.getCsvParser())
+                .build();
+        var stringWriter = new StringWriter()) {
       String[] line;
       while ((line = reader.readNext()) != null) {
         if (reader.getRecordsRead() == FIRST_LINE) {
           var headers = new ArrayList<>(Arrays.asList(line));
           headers.remove(getNotePosition());
           headers.addAll(getNotePosition(), noteTypeHeaders);
-          line = headers.stream()
-                  .map(this::processSpecialCharacters)
-                  .toArray(String[]::new);
+          line = headers.stream().map(this::processSpecialCharacters).toArray(String[]::new);
           line = processTenantInHeaders(line, isCentralOrMemberTenant, isTypeWithTenant);
         } else {
           line = processTenantInRows(line, isCentralOrMemberTenant, isTypeWithTenant, userTenants);
@@ -102,19 +103,23 @@ public abstract class CsvDownloadPreProcessor {
 
   protected abstract int getNotePosition();
 
-  private String[] processNotesData(String[] line, List<String> noteTypeNames,
-                                    BulkOperation bulkOperation) {
-    return noteTableUpdater.enrichWithNotesByType(new ArrayList<>(Arrays.asList(line)),
-                    getNotePosition(), noteTypeNames,
-                    bulkOperation.getTenantNotePairs(),
-                    bulkOperation.getEntityType() == EntityType.INSTANCE
-                            || bulkOperation.getEntityType() == EntityType.INSTANCE_MARC).stream()
-            .map(this::processSpecialCharacters)
-            .toArray(String[]::new);
+  private String[] processNotesData(
+      String[] line, List<String> noteTypeNames, BulkOperation bulkOperation) {
+    return noteTableUpdater
+        .enrichWithNotesByType(
+            new ArrayList<>(Arrays.asList(line)),
+            getNotePosition(),
+            noteTypeNames,
+            bulkOperation.getTenantNotePairs(),
+            bulkOperation.getEntityType() == EntityType.INSTANCE
+                || bulkOperation.getEntityType() == EntityType.INSTANCE_MARC)
+        .stream()
+        .map(this::processSpecialCharacters)
+        .toArray(String[]::new);
   }
 
-  protected String[] processTenantInHeaders(String[] line, boolean isCentralOrMemberTenant,
-                                            boolean isTypeWithTenant) {
+  protected String[] processTenantInHeaders(
+      String[] line, boolean isCentralOrMemberTenant, boolean isTypeWithTenant) {
     if (isTypeWithTenant) {
       int tenantPosition = line.length - 1;
       if (isCentralOrMemberTenant) {
@@ -126,9 +131,11 @@ public abstract class CsvDownloadPreProcessor {
     return line;
   }
 
-  protected String[] processTenantInRows(String[] line, boolean isCentralOrMemberTenant,
-                                         boolean isTypeWithTenant,
-                                         Map<String, UserTenant> userTenants) {
+  protected String[] processTenantInRows(
+      String[] line,
+      boolean isCentralOrMemberTenant,
+      boolean isTypeWithTenant,
+      Map<String, UserTenant> userTenants) {
     int tenantPosition = line.length - 1;
     if (isTypeWithTenant) {
       if (isCentralOrMemberTenant) {

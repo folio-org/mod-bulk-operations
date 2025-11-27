@@ -14,16 +14,16 @@ public class TagsConverter extends BaseConverter<Tags> {
   @Override
   public Tags convertToObject(String value) {
     Tags tags = new Tags();
-    List<String> tagList = SpecialCharacterEscaper.restore(
-            Arrays.asList(value.split(ARRAY_DELIMITER)));
+    List<String> tagList =
+        SpecialCharacterEscaper.restore(Arrays.asList(value.split(ARRAY_DELIMITER)));
     return tags.withTagList(tagList);
   }
 
   @Override
   public String convertToString(Tags object) {
     return object.getTagList().stream()
-      .filter(Objects::nonNull)
-      .map(SpecialCharacterEscaper::escape)
-      .collect(Collectors.joining(ARRAY_DELIMITER));
+        .filter(Objects::nonNull)
+        .map(SpecialCharacterEscaper::escape)
+        .collect(Collectors.joining(ARRAY_DELIMITER));
   }
 }

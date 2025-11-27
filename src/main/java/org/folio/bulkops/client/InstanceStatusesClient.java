@@ -16,5 +16,4 @@ public interface InstanceStatusesClient {
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   InstanceStatuses getByQuery(@RequestParam String query, @RequestParam long limit);
-
 }

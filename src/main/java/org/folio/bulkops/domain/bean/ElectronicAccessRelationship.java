@@ -12,7 +12,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class ElectronicAccessRelationship   {
+public class ElectronicAccessRelationship {
   @JsonProperty("id")
   private String id;
 
@@ -22,4 +22,3 @@ public class ElectronicAccessRelationship   {
   @JsonProperty("metadata")
   private Metadata metadata;
 }
-

@@ -14,16 +14,19 @@ public class ItemStatisticalCodeListConverter extends BaseConverter<List<String>
   @Override
   public String convertToString(List<String> object) {
     return object.stream()
-      .filter(Objects::nonNull)
-      .map(id -> {
-        var sc = ItemReferenceHelper.service().getStatisticalCodeById(id,
-            CsvRecordContext.getTenantId());
-        var sct = ItemReferenceHelper.service()
-                .getStatisticalCodeTypeById(sc.getStatisticalCodeTypeId(),
-                    CsvRecordContext.getTenantId());
-        return String.format("%s: %s - %s", escape(sct.getName()),
-                escape(sc.getCode()), escape(sc.getName()));
-      })
-      .collect(Collectors.joining(ITEM_DELIMITER));
+        .filter(Objects::nonNull)
+        .map(
+            id -> {
+              var sc =
+                  ItemReferenceHelper.service()
+                      .getStatisticalCodeById(id, CsvRecordContext.getTenantId());
+              var sct =
+                  ItemReferenceHelper.service()
+                      .getStatisticalCodeTypeById(
+                          sc.getStatisticalCodeTypeId(), CsvRecordContext.getTenantId());
+              return String.format(
+                  "%s: %s - %s", escape(sct.getName()), escape(sc.getCode()), escape(sc.getName()));
+            })
+        .collect(Collectors.joining(ITEM_DELIMITER));
   }
 }

@@ -26,4 +26,3 @@ public class ConfigurationCollection {
   @JsonProperty("resultInfo")
   private ResultInfo resultInfo;
 }
-

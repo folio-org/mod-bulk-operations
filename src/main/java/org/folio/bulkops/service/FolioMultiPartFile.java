@@ -17,7 +17,7 @@ public class FolioMultiPartFile implements MultipartFile {
   private final byte[] content;
 
   public FolioMultiPartFile(String name, String contentType, InputStream contentStream)
-          throws IOException {
+      throws IOException {
 
     this.name = name;
     this.originalFilename = name;
@@ -66,5 +66,4 @@ public class FolioMultiPartFile implements MultipartFile {
   public void transferTo(@NonNull File dest) throws IOException, IllegalStateException {
     FileCopyUtils.copy(this.content, dest);
   }
-
 }

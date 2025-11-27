@@ -19,4 +19,3 @@ public class MaterialType {
   @JsonProperty("name")
   private String name;
 }
-

@@ -6,7 +6,6 @@ import org.folio.bulkops.domain.bean.Publication;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 
-
 @Service
 @RequiredArgsConstructor
 @Log4j2
@@ -32,5 +31,4 @@ public class PublicationHelperService implements InitializingBean {
   public static PublicationHelperService service() {
     return service;
   }
-
 }

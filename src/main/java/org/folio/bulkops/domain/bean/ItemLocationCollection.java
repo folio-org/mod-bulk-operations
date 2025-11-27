@@ -25,4 +25,3 @@ public class ItemLocationCollection {
   @JsonProperty("resultInfo")
   private ResultInfo resultInfo;
 }
-

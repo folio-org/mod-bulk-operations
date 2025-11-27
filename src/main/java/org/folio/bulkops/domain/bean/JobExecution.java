@@ -25,5 +25,4 @@ public class JobExecution {
 
   @JsonProperty("status")
   private String status;
-
 }

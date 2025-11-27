@@ -26,16 +26,18 @@ public class BulkOperationServiceHelper {
   public void completeBulkOperation(BulkOperation bulkOperation) {
     bulkOperation.setTotalNumOfRecords(bulkOperation.getMatchedNumOfRecords());
     bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(
-            errorService.uploadErrorsToStorage(bulkOperation.getId(),
-                    ERROR_COMMITTING_FILE_NAME_PREFIX, null));
+        errorService.uploadErrorsToStorage(
+            bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, null));
     if (nonNull(bulkOperation.getLinkToCommittedRecordsErrorsCsvFile())) {
       bulkOperation.setCommittedNumOfErrors(
-              errorService.getCommittedNumOfErrors(bulkOperation.getId()));
+          errorService.getCommittedNumOfErrors(bulkOperation.getId()));
       bulkOperation.setCommittedNumOfWarnings(
-              errorService.getCommittedNumOfWarnings(bulkOperation.getId()));
+          errorService.getCommittedNumOfWarnings(bulkOperation.getId()));
     }
-    bulkOperation.setStatus(isEmpty(bulkOperation.getLinkToCommittedRecordsErrorsCsvFile())
-            ? COMPLETED : COMPLETED_WITH_ERRORS);
+    bulkOperation.setStatus(
+        isEmpty(bulkOperation.getLinkToCommittedRecordsErrorsCsvFile())
+            ? COMPLETED
+            : COMPLETED_WITH_ERRORS);
     if (INSTANCE_MARC.equals(bulkOperation.getEntityType())) {
       marcFlowCommitProcessor.processCommit(bulkOperation);
     }
@@ -47,8 +49,11 @@ public class BulkOperationServiceHelper {
   public void failCommit(BulkOperation bulkOperation, Exception e) {
     logFilesService.removeCommittedFiles(bulkOperation);
     bulkOperation.setErrorMessage(e.getMessage());
-    var linkToCommittingErrorsFile = errorService.uploadErrorsToStorage(bulkOperation.getId(),
-            ERROR_COMMITTING_FILE_NAME_PREFIX, bulkOperation.getErrorMessage());
+    var linkToCommittingErrorsFile =
+        errorService.uploadErrorsToStorage(
+            bulkOperation.getId(),
+            ERROR_COMMITTING_FILE_NAME_PREFIX,
+            bulkOperation.getErrorMessage());
     bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
     bulkOperation.setStatus(FAILED);
     bulkOperation.setEndTime(LocalDateTime.now());

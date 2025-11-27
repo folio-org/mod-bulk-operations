@@ -62,7 +62,6 @@ public class Profile implements Serializable {
   @Column(name = "created_by")
   private UUID createdBy;
 
-
   @Column(name = "updated_date")
   private OffsetDateTime updatedDate;
 

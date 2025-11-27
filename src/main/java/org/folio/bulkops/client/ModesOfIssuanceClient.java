@@ -16,5 +16,4 @@ public interface ModesOfIssuanceClient {
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   ModesOfIssuance getByQuery(@RequestParam String query, @RequestParam long limit);
-
 }

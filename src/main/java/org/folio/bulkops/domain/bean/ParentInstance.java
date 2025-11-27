@@ -23,4 +23,3 @@ public class ParentInstance {
   @JsonProperty("instanceRelationshipTypeId")
   private String instanceRelationshipTypeId;
 }
-

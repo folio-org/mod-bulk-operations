@@ -14,7 +14,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class EdiFtp   {
+public class EdiFtp {
   public enum FtpConnModeEnum {
     ACTIVE("Active"),
 
@@ -50,9 +50,7 @@ public class EdiFtp   {
   @JsonProperty("ftpConnMode")
   private FtpConnModeEnum ftpConnMode;
 
-  /**
-   * The FTP format for this EDI.
-   */
+  /** The FTP format for this EDI. */
   public enum FtpFormatEnum {
     SFTP("SFTP"),
 
@@ -88,9 +86,7 @@ public class EdiFtp   {
   @JsonProperty("ftpFormat")
   private FtpFormatEnum ftpFormat;
 
-  /**
-   * The FTP mode for this EDI.
-   */
+  /** The FTP mode for this EDI. */
   public enum FtpModeEnum {
     ASCII("ASCII"),
 
@@ -150,4 +146,3 @@ public class EdiFtp   {
   @JsonProperty("username")
   private String username;
 }
-

@@ -44,7 +44,7 @@ import org.springframework.stereotype.Component;
 @Log4j2
 @SuppressWarnings("unused")
 public class BulkEditInstanceProcessor
-        implements ItemProcessor<ItemIdentifier, List<ExtendedInstance>>, EntityExtractor {
+    implements ItemProcessor<ItemIdentifier, List<ExtendedInstance>>, EntityExtractor {
   private final InstanceClient instanceClient;
   private final FolioExecutionContext folioExecutionContext;
   private final PermissionsValidator permissionsValidator;
@@ -73,20 +73,22 @@ public class BulkEditInstanceProcessor
       throws BulkEditException {
     log.debug("Instance processor current thread: {}", Thread.currentThread().getName());
     try {
-      boolean hasPermission = permissionsValidator.isBulkEditReadPermissionExists(
-          folioExecutionContext.getTenantId(), EntityType.INSTANCE);
+      boolean hasPermission =
+          permissionsValidator.isBulkEditReadPermissionExists(
+              folioExecutionContext.getTenantId(), EntityType.INSTANCE);
       if (!hasPermission) {
         var user = userClient.getUserById(folioExecutionContext.getUserId().toString());
-        var message = NO_INSTANCE_VIEW_PERMISSIONS.formatted(
-            user.getUsername(),
-            resolveIdentifier(identifierType),
-            itemIdentifier.getItemId(),
-            folioExecutionContext.getTenantId()
-        );
+        var message =
+            NO_INSTANCE_VIEW_PERMISSIONS.formatted(
+                user.getUsername(),
+                resolveIdentifier(identifierType),
+                itemIdentifier.getItemId(),
+                folioExecutionContext.getTenantId());
         throw new BulkEditException(message, ErrorType.ERROR);
       }
 
-      if (!duplicationCheckerFactory.getIdentifiersToCheckDuplication(jobExecution)
+      if (!duplicationCheckerFactory
+          .getIdentifiersToCheckDuplication(jobExecution)
           .add(itemIdentifier)) {
         throw new BulkEditException(DUPLICATE_ENTRY, ErrorType.WARNING);
       }
@@ -99,9 +101,10 @@ public class BulkEditInstanceProcessor
 
       if (duplicationCheckerFactory.getFetchedIds(jobExecution).add(instance.getId())) {
         checkSrsInstance(instance);
-        return List.of(new ExtendedInstance()
-            .withEntity(instance)
-            .withTenantId(folioExecutionContext.getTenantId()));
+        return List.of(
+            new ExtendedInstance()
+                .withEntity(instance)
+                .withTenantId(folioExecutionContext.getTenantId()));
       }
       return emptyList();
     } catch (BulkEditException e) {
@@ -123,11 +126,11 @@ public class BulkEditInstanceProcessor
   private Instance getInstance(ItemIdentifier itemIdentifier) {
     return switch (IdentifierType.fromValue(identifierType)) {
       case ID, HRID -> {
-        var query = String.format(
-            getMatchPattern(identifierType),
-            resolveIdentifier(identifierType),
-            itemIdentifier.getItemId()
-        );
+        var query =
+            String.format(
+                getMatchPattern(identifierType),
+                resolveIdentifier(identifierType),
+                itemIdentifier.getItemId());
         var instances = instanceClient.getInstanceByQuery(query, 1);
 
         if (instances.getTotalRecords() > 1) {
@@ -139,9 +142,10 @@ public class BulkEditInstanceProcessor
         }
         yield instances.getInstances().getFirst();
       }
-      default -> throw new BulkEditException(
-          String.format("Identifier type \"%s\" is not supported", identifierType),
-          ErrorType.ERROR);
+      default ->
+          throw new BulkEditException(
+              String.format("Identifier type \"%s\" is not supported", identifierType),
+              ErrorType.ERROR);
     };
   }
 

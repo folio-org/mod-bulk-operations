@@ -12,8 +12,8 @@ public class ContributorListConverter extends BaseConverter<List<ContributorName
   @Override
   public String convertToString(List<ContributorName> object) {
     return object.stream()
-      .filter(Objects::nonNull)
-      .map(ContributorName::getName)
-      .collect(Collectors.joining(ARRAY_DELIMITER_SPACED));
+        .filter(Objects::nonNull)
+        .map(ContributorName::getName)
+        .collect(Collectors.joining(ARRAY_DELIMITER_SPACED));
   }
 }

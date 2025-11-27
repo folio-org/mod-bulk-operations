@@ -37,23 +37,17 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 class ProfileServiceTest extends BaseTest {
 
-  @Autowired
-  private ProfileService profileService;
+  @Autowired private ProfileService profileService;
 
-  @MockitoBean
-  private ProfileRepository profileRepository;
+  @MockitoBean private ProfileRepository profileRepository;
 
-  @MockitoBean
-  private PermissionsValidator permissionsValidator;
+  @MockitoBean private PermissionsValidator permissionsValidator;
 
-  @Mock
-  private FolioExecutionContext ec;
+  @Mock private FolioExecutionContext ec;
 
-  @MockitoBean
-  private JpaCqlRepository<Profile, UUID> profileUuidJpaCqlRepository;
+  @MockitoBean private JpaCqlRepository<Profile, UUID> profileUuidJpaCqlRepository;
 
   private final UUID contextUserId = UUID.randomUUID();
-
 
   @Test
   void shouldReturnAllProfileSummaries() {
@@ -67,9 +61,9 @@ class ProfileServiceTest extends BaseTest {
     List<Profile> profileList = List.of(profile);
     Page<Profile> profilePage = new PageImpl<>(profileList);
 
-    when(profileUuidJpaCqlRepository.findByCql("cql.allRecords=1",
-            OffsetRequest.of(0, Integer.MAX_VALUE)))
-            .thenReturn(profilePage);
+    when(profileUuidJpaCqlRepository.findByCql(
+            "cql.allRecords=1", OffsetRequest.of(0, Integer.MAX_VALUE)))
+        .thenReturn(profilePage);
 
     ProfilesDto result = profileService.getProfiles(null, null, null);
 
@@ -104,7 +98,7 @@ class ProfileServiceTest extends BaseTest {
     int limit = 5;
 
     when(profileUuidJpaCqlRepository.findByCql(query, OffsetRequest.of(offset, limit)))
-            .thenReturn(profilePage);
+        .thenReturn(profilePage);
 
     ProfilesDto result = profileService.getProfiles(query, offset, limit);
 
@@ -145,7 +139,7 @@ class ProfileServiceTest extends BaseTest {
     Page<Profile> profilePage = new PageImpl<>(profileList);
 
     when(profileUuidJpaCqlRepository.findByCql("cql.allRecords=1", OffsetRequest.of(20, 10)))
-            .thenReturn(profilePage);
+        .thenReturn(profilePage);
 
     ProfilesDto result = profileService.getProfiles(null, 20, 10);
 
@@ -181,11 +175,11 @@ class ProfileServiceTest extends BaseTest {
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(lockedProfile));
 
     doThrow(new ProfileLockedException("Cannot delete a locked profile without proper permission"))
-            .when(permissionsValidator).checkIfLockPermissionExists();
+        .when(permissionsValidator)
+        .checkIfLockPermissionExists();
 
-    ProfileLockedException ex = assertThrows(ProfileLockedException.class, () ->
-            profileService.deleteById(profileId)
-    );
+    ProfileLockedException ex =
+        assertThrows(ProfileLockedException.class, () -> profileService.deleteById(profileId));
 
     assertEquals("Cannot delete a locked profile without proper permission", ex.getMessage());
   }
@@ -271,9 +265,10 @@ class ProfileServiceTest extends BaseTest {
     UUID nonExistentId = UUID.randomUUID();
     when(profileRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
-    NotFoundException ex = assertThrows(NotFoundException.class, () ->
-            profileService.updateProfile(nonExistentId, updateRequest)
-    );
+    NotFoundException ex =
+        assertThrows(
+            NotFoundException.class,
+            () -> profileService.updateProfile(nonExistentId, updateRequest));
     assertEquals("Profile not found with ID: " + nonExistentId, ex.getMessage());
   }
 
@@ -292,11 +287,13 @@ class ProfileServiceTest extends BaseTest {
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(lockedProfile));
 
     doThrow(new ProfileLockedException("Cannot update a locked profile"))
-            .when(permissionsValidator).checkIfLockPermissionExists();
+        .when(permissionsValidator)
+        .checkIfLockPermissionExists();
 
-    ProfileLockedException ex = assertThrows(ProfileLockedException.class, () ->
-            profileService.updateProfile(profileId, updateRequest)
-    );
+    ProfileLockedException ex =
+        assertThrows(
+            ProfileLockedException.class,
+            () -> profileService.updateProfile(profileId, updateRequest));
 
     assertEquals("Cannot update a locked profile", ex.getMessage());
   }
@@ -337,11 +334,13 @@ class ProfileServiceTest extends BaseTest {
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(unlockedProfile));
 
     doThrow(new ProfileLockedException("Missing permission"))
-            .when(permissionsValidator).checkIfLockPermissionExists();
+        .when(permissionsValidator)
+        .checkIfLockPermissionExists();
 
-    ProfileLockedException ex = assertThrows(ProfileLockedException.class, () ->
-            profileService.updateProfile(profileId, updateRequest)
-    );
+    ProfileLockedException ex =
+        assertThrows(
+            ProfileLockedException.class,
+            () -> profileService.updateProfile(profileId, updateRequest));
 
     assertEquals("Missing permission", ex.getMessage());
   }
@@ -395,11 +394,13 @@ class ProfileServiceTest extends BaseTest {
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(lockedProfile));
 
     doThrow(new ProfileLockedException("Missing permission"))
-            .when(permissionsValidator).checkIfLockPermissionExists();
+        .when(permissionsValidator)
+        .checkIfLockPermissionExists();
 
-    ProfileLockedException ex = assertThrows(ProfileLockedException.class, () ->
-            profileService.updateProfile(profileId, updateRequest)
-    );
+    ProfileLockedException ex =
+        assertThrows(
+            ProfileLockedException.class,
+            () -> profileService.updateProfile(profileId, updateRequest));
 
     assertEquals("Missing permission", ex.getMessage());
   }
@@ -421,7 +422,6 @@ class ProfileServiceTest extends BaseTest {
     updated.setName(updateRequest.getName());
     updated.setDescription(updateRequest.getDescription());
     updated.setUpdatedBy(contextUserId);
-
 
     ReflectionTestUtils.setField(profileService, "folioExecutionContext", ec);
 
@@ -476,11 +476,11 @@ class ProfileServiceTest extends BaseTest {
 
     when(profileRepository.findById(profileId)).thenReturn(Optional.of(lockedProfile));
     doThrow(new ProfileLockedException("Cannot delete a locked profile without proper permission"))
-            .when(permissionsValidator).checkIfLockPermissionExists();
+        .when(permissionsValidator)
+        .checkIfLockPermissionExists();
 
-    ProfileLockedException ex = assertThrows(ProfileLockedException.class, () ->
-            profileService.deleteById(profileId)
-    );
+    ProfileLockedException ex =
+        assertThrows(ProfileLockedException.class, () -> profileService.deleteById(profileId));
 
     assertEquals("Cannot delete a locked profile without proper permission", ex.getMessage());
     verify(permissionsValidator).checkIfLockPermissionExists();

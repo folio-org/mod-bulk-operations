@@ -22,8 +22,10 @@ public class FolioUpdateProcessorFactory {
   private FolioUpdateProcessor<ExtendedInstance> instanceUpdateProcessor;
 
   private List<FolioUpdateProcessor<? extends BulkOperationsEntity>> processors;
-  private Map<Class<? extends BulkOperationsEntity>,
-          FolioUpdateProcessor<? extends BulkOperationsEntity>> pool;
+  private Map<
+          Class<? extends BulkOperationsEntity>,
+          FolioUpdateProcessor<? extends BulkOperationsEntity>>
+      pool;
 
   @PostConstruct
   private void initPostConstruct() {
@@ -33,7 +35,7 @@ public class FolioUpdateProcessorFactory {
   }
 
   public <T extends BulkOperationsEntity> FolioUpdateProcessor<T> getProcessorFromFactory(
-          Class<? extends BulkOperationsEntity> clazz) {
+      Class<? extends BulkOperationsEntity> clazz) {
     return (FolioUpdateProcessor<T>) pool.get(clazz);
   }
 }

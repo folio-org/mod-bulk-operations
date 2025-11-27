@@ -25,9 +25,7 @@ public class BursarFeeFinesTypeMapping {
   @JsonProperty("itemDescription")
   private String itemDescription;
 
-  /**
-   * Gets or Sets itemCode.
-   */
+  /** Gets or Sets itemCode. */
   public enum ItemCodeEnum {
     CHARGE("CHARGE"),
 
@@ -63,4 +61,3 @@ public class BursarFeeFinesTypeMapping {
   @JsonProperty("itemCode")
   private ItemCodeEnum itemCode;
 }
-

@@ -32,5 +32,4 @@ public class SubjectHelper implements InitializingBean {
   public static SubjectHelper service() {
     return service;
   }
-
 }

@@ -18,7 +18,7 @@ import org.folio.bulkops.domain.bean.Address;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
 import org.folio.bulkops.service.UserReferenceHelper;
 
-public  class AddressesConverter extends BaseConverter<List<Address>> {
+public class AddressesConverter extends BaseConverter<List<Address>> {
 
   private static final int ADDRESS_ID = 0;
   private static final int ADDRESS_COUNTRY_ID = 1;
@@ -34,36 +34,38 @@ public  class AddressesConverter extends BaseConverter<List<Address>> {
   public List<Address> convertToObject(String value) {
     String[] addresses = value.split(ITEM_DELIMITER_PATTERN);
     return Arrays.stream(addresses)
-            .filter(StringUtils::isNotEmpty)
-            .map(this::getAddressFromString)
-            .toList();
+        .filter(StringUtils::isNotEmpty)
+        .map(this::getAddressFromString)
+        .toList();
   }
 
   @Override
   public String convertToString(List<Address> object) {
     return object.stream()
-            .filter(Objects::nonNull)
-            .map(this::toCsvString)
-            .filter(StringUtils::isNotEmpty)
-            .collect(Collectors.joining(ITEM_DELIMITER));
+        .filter(Objects::nonNull)
+        .map(this::toCsvString)
+        .filter(StringUtils::isNotEmpty)
+        .collect(Collectors.joining(ITEM_DELIMITER));
   }
 
   private Address getAddressFromString(String stringAddress) {
-    List<String> fields = SpecialCharacterEscaper.restore(Arrays.asList(stringAddress
-            .split(ARRAY_DELIMITER, -1)));
+    List<String> fields =
+        SpecialCharacterEscaper.restore(Arrays.asList(stringAddress.split(ARRAY_DELIMITER, -1)));
     return Address.builder()
         .id(convertToNullableString(fields.get(ADDRESS_ID)))
-          .countryId(convertToNullableString(fields.get(ADDRESS_COUNTRY_ID)))
-            .addressLine1(convertToNullableString(fields.get(ADDRESS_LINE_1)))
-              .addressLine2(convertToNullableString(fields.get(ADDRESS_LINE_2)))
-                .city(convertToNullableString(fields.get(ADDRESS_CITY)))
-                  .region(convertToNullableString(fields.get(ADDRESS_REGION)))
-                    .postalCode(convertToNullableString(fields.get(ADDRESS_POSTAL_CODE)))
-                      .primaryAddress(convertToNullableBoolean(fields.get(ADDRESS_PRIMARY_ADDRESS)))
-                        .addressTypeId(convertToNullableString(UserReferenceHelper.service()
-                                .getAddressTypeByAddressTypeValue(fields.get(ADDRESS_TYPE))
-                                .getId()))
-                          .build();
+        .countryId(convertToNullableString(fields.get(ADDRESS_COUNTRY_ID)))
+        .addressLine1(convertToNullableString(fields.get(ADDRESS_LINE_1)))
+        .addressLine2(convertToNullableString(fields.get(ADDRESS_LINE_2)))
+        .city(convertToNullableString(fields.get(ADDRESS_CITY)))
+        .region(convertToNullableString(fields.get(ADDRESS_REGION)))
+        .postalCode(convertToNullableString(fields.get(ADDRESS_POSTAL_CODE)))
+        .primaryAddress(convertToNullableBoolean(fields.get(ADDRESS_PRIMARY_ADDRESS)))
+        .addressTypeId(
+            convertToNullableString(
+                UserReferenceHelper.service()
+                    .getAddressTypeByAddressTypeValue(fields.get(ADDRESS_TYPE))
+                    .getId()))
+        .build();
   }
 
   private String toCsvString(Address address) {
@@ -76,7 +78,9 @@ public  class AddressesConverter extends BaseConverter<List<Address>> {
     data.add(isEmpty(address.getRegion()) ? EMPTY : address.getRegion());
     data.add(isEmpty(address.getPostalCode()) ? EMPTY : address.getPostalCode());
     data.add(isNull(address.getPrimaryAddress()) ? EMPTY : address.getPrimaryAddress().toString());
-    data.add(UserReferenceHelper.service().getAddressTypeById(address.getAddressTypeId())
+    data.add(
+        UserReferenceHelper.service()
+            .getAddressTypeById(address.getAddressTypeId())
             .getAddressType());
     return String.join(ARRAY_DELIMITER, escape(data));
   }

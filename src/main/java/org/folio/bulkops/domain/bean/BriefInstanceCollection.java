@@ -25,4 +25,3 @@ public class BriefInstanceCollection {
   @JsonProperty("resultInfo")
   private ResultInfo resultInfo;
 }
-

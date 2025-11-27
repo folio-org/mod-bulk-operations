@@ -23,31 +23,30 @@ public class PublicationService {
   private static final String DELIMITER = SPECIAL_ARRAY_DELIMITER;
 
   public String publicationToString(Publication publication) {
-    return String.join(DELIMITER,
-      isEmpty(publication.getPublisher()) ? HYPHEN : publication.getPublisher(),
-      isEmpty(publication.getRole()) ? HYPHEN : publication.getRole(),
-      isEmpty(publication.getPlace()) ? HYPHEN : publication.getPlace(),
-      isEmpty(publication.getDateOfPublication()) ? HYPHEN : publication.getDateOfPublication()
-    );
+    return String.join(
+        DELIMITER,
+        isEmpty(publication.getPublisher()) ? HYPHEN : publication.getPublisher(),
+        isEmpty(publication.getRole()) ? HYPHEN : publication.getRole(),
+        isEmpty(publication.getPlace()) ? HYPHEN : publication.getPlace(),
+        isEmpty(publication.getDateOfPublication()) ? HYPHEN : publication.getDateOfPublication());
   }
-
 
   public Publication restorePublicationItem(String publicationString) {
     if (isNotEmpty(publicationString)) {
       var tokens = publicationString.split(DELIMITER, -1);
       if (NUMBER_OF_PUBLICATION_COMPONENTS == tokens.length) {
         return Publication.builder()
-          .publisher(tokens[PUBLISHER_INDEX])
-          .role(tokens[ROLE_INDEX])
-          .place(tokens[PLACE_INDEX])
-          .dateOfPublication(tokens[DATE_INDEX])
-          .build();
+            .publisher(tokens[PUBLISHER_INDEX])
+            .role(tokens[ROLE_INDEX])
+            .place(tokens[PLACE_INDEX])
+            .dateOfPublication(tokens[DATE_INDEX])
+            .build();
       }
       throw new EntityFormatException(
-              String.format("Illegal number of publication elements: %d, expected: %d",
+          String.format(
+              "Illegal number of publication elements: %d, expected: %d",
               tokens.length, NUMBER_OF_PUBLICATION_COMPONENTS));
     }
     return null;
   }
 }
-

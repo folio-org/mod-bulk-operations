@@ -19,4 +19,3 @@ public class FacetValue {
   @JsonProperty("value")
   private Object value;
 }
-

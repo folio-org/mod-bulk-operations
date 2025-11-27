@@ -40,19 +40,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 class BulkEditUserProcessorTest {
 
-  @Mock
-  private UserClient userClient;
-  @Mock
-  private DuplicationCheckerFactory duplicationCheckerFactory;
-  @Mock
-  private FolioExecutionContext folioExecutionContext;
-  @Mock
-  private PermissionsValidator permissionsValidator;
-  @Mock
-  private ConsortiaService consortiaService;
+  @Mock private UserClient userClient;
+  @Mock private DuplicationCheckerFactory duplicationCheckerFactory;
+  @Mock private FolioExecutionContext folioExecutionContext;
+  @Mock private PermissionsValidator permissionsValidator;
+  @Mock private ConsortiaService consortiaService;
 
-  @InjectMocks
-  private BulkEditUserProcessor processor;
+  @InjectMocks private BulkEditUserProcessor processor;
 
   @BeforeEach
   void setUp() {
@@ -67,15 +61,18 @@ class BulkEditUserProcessorTest {
   @Test
   void returnsUserWhenFoundAndPermitted() {
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("barcode1");
-    User user = new User().withId("userId").withUsername("testuser")
+    User user =
+        new User()
+            .withId("userId")
+            .withUsername("testuser")
             .withPersonal(new Personal().withDateOfBirth(new Date(946684800000L))); // 2000-01-01
-    UserCollection userCollection = UserCollection.builder().users(List.of(user))
-            .totalRecords(1).build();
+    UserCollection userCollection =
+        UserCollection.builder().users(List.of(user)).totalRecords(1).build();
 
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.USER)))
-            .thenReturn(true);
+        .thenReturn(true);
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
-            .thenReturn(new HashSet<>());
+        .thenReturn(new HashSet<>());
     when(userClient.getByQuery(anyString(), anyLong())).thenReturn(userCollection);
 
     User result = processor.process(itemIdentifier);
@@ -89,12 +86,12 @@ class BulkEditUserProcessorTest {
   void throwsWhenNoPermission() {
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("barcode2");
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.USER)))
-            .thenReturn(false);
+        .thenReturn(false);
     when(userClient.getUserById(anyString())).thenReturn(new User().withUsername("admin"));
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
-      .isInstanceOf(BulkEditException.class)
-            .hasMessageContaining("does not have required permission");
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("does not have required permission");
   }
 
   @Test
@@ -103,30 +100,32 @@ class BulkEditUserProcessorTest {
     Set<ItemIdentifier> set = Mockito.mock(Set.class);
     when(set.add(any())).thenReturn(false);
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.USER)))
-            .thenReturn(true);
+        .thenReturn(true);
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(set);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
-      .isInstanceOf(BulkEditException.class)
-      .hasMessageContaining("Duplicate entry")
-      .extracting("errorType").isEqualTo(ErrorType.WARNING);
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("Duplicate entry")
+        .extracting("errorType")
+        .isEqualTo(ErrorType.WARNING);
   }
 
   @Test
   void throwsWhenNoMatchFound() {
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("notfound");
-    UserCollection emptyCollection = UserCollection.builder().users(
-            Collections.emptyList()).totalRecords(0).build();
+    UserCollection emptyCollection =
+        UserCollection.builder().users(Collections.emptyList()).totalRecords(0).build();
 
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.USER)))
-            .thenReturn(true);
+        .thenReturn(true);
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
-            .thenReturn(new HashSet<>());
+        .thenReturn(new HashSet<>());
     when(userClient.getByQuery(anyString(), anyLong())).thenReturn(emptyCollection);
     when(consortiaService.isTenantCentral(anyString())).thenReturn(false);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
-      .isInstanceOf(BulkEditException.class).hasMessageContaining("No match found");
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("No match found");
   }
 
   @Test
@@ -134,58 +133,61 @@ class BulkEditUserProcessorTest {
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("multi");
     User user1 = new User().withId("1");
     User user2 = new User().withId("2");
-    UserCollection collection = UserCollection.builder().users(List.of(user1, user2))
-            .totalRecords(2).build();
+    UserCollection collection =
+        UserCollection.builder().users(List.of(user1, user2)).totalRecords(2).build();
 
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.USER)))
-            .thenReturn(true);
+        .thenReturn(true);
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
-            .thenReturn(new HashSet<>());
+        .thenReturn(new HashSet<>());
     when(userClient.getByQuery(anyString(), anyLong())).thenReturn(collection);
     when(consortiaService.isTenantCentral(anyString())).thenReturn(false);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
-      .isInstanceOf(BulkEditException.class).hasMessageContaining("Multiple matches");
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("Multiple matches");
   }
 
   @Test
   void throwsWhenBirthDateIsTooEarly() {
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("badbirth");
     // 1800-01-01
-    User user = new User().withId("userId").withUsername("testuser")
+    User user =
+        new User()
+            .withId("userId")
+            .withUsername("testuser")
             .withPersonal(new Personal().withDateOfBirth(new Date(-5364662400000L)));
-    UserCollection userCollection = UserCollection.builder().users(List.of(user))
-            .totalRecords(1).build();
+    UserCollection userCollection =
+        UserCollection.builder().users(List.of(user)).totalRecords(1).build();
 
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.USER)))
-            .thenReturn(true);
+        .thenReturn(true);
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
-            .thenReturn(new HashSet<>());
+        .thenReturn(new HashSet<>());
     when(userClient.getByQuery(anyString(), anyLong())).thenReturn(userCollection);
     when(consortiaService.isTenantCentral(anyString())).thenReturn(false);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
-      .isInstanceOf(BulkEditException.class)
-            .hasMessageContaining("Failed to parse Date from value");
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("Failed to parse Date from value");
   }
 
   @Test
   void throwsWhenShadowUsers() {
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("badbirth");
-    User user = new User().withId("userId").withUsername("testuser")
-            .withType("shadow");
-    UserCollection userCollection = UserCollection.builder().users(List.of(user))
-            .totalRecords(1).build();
+    User user = new User().withId("userId").withUsername("testuser").withType("shadow");
+    UserCollection userCollection =
+        UserCollection.builder().users(List.of(user)).totalRecords(1).build();
 
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.USER)))
-            .thenReturn(true);
+        .thenReturn(true);
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
-            .thenReturn(new HashSet<>());
+        .thenReturn(new HashSet<>());
     when(userClient.getByQuery(anyString(), anyLong())).thenReturn(userCollection);
     when(consortiaService.isTenantCentral(anyString())).thenReturn(true);
 
     assertThatThrownBy(() -> processor.process(itemIdentifier))
-            .isInstanceOf(BulkEditException.class)
-            .hasMessageContaining(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
   }
 }

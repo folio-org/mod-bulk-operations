@@ -28,8 +28,9 @@ public class ElectronicAccessReferenceService {
   public String getRelationshipNameById(String id) {
     var tenantId = localReferenceDataService.getTenantByUrlRelationshipId(id);
     log.info("getRelationshipNameById: {}, {}", id, tenantId);
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
-            folioModuleMetadata, folioExecutionContext))) {
+    try (var ignored =
+        new FolioExecutionContextSetter(
+            prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return relationshipClient.getById(id).getName();
     } catch (NotFoundException e) {
       var msg = format("Electronic access relationship not found by id=%s", id);
@@ -42,6 +43,7 @@ public class ElectronicAccessReferenceService {
   public String getRelationshipIdByName(String name) {
     var relationShips = relationshipClient.getByQuery(String.format(QUERY_PATTERN_NAME, name));
     return relationShips.getElectronicAccessRelationships().isEmpty()
-            ? name : relationShips.getElectronicAccessRelationships().getFirst().getId();
+        ? name
+        : relationShips.getElectronicAccessRelationships().getFirst().getId();
   }
 }

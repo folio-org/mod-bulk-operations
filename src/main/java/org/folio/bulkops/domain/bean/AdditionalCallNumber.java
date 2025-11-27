@@ -25,4 +25,3 @@ public class AdditionalCallNumber {
   @JsonProperty("suffix")
   private String suffix;
 }
-

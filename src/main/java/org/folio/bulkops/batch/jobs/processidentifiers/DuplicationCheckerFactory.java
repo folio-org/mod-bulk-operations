@@ -21,8 +21,10 @@ public class DuplicationCheckerFactory {
       if (!context.containsKey(key)) {
         context.put(key, Collections.synchronizedSet(new HashSet<>()));
       }
-      return Collections.synchronizedSet((Set<ItemIdentifier>) Optional.ofNullable(context.get(key))
-          .orElse(Collections.synchronizedSet(new HashSet<>())));
+      return Collections.synchronizedSet(
+          (Set<ItemIdentifier>)
+              Optional.ofNullable(context.get(key))
+                  .orElse(Collections.synchronizedSet(new HashSet<>())));
     }
   }
 
@@ -35,8 +37,10 @@ public class DuplicationCheckerFactory {
       if (!context.containsKey(key)) {
         context.put(key, Collections.synchronizedSet(new HashSet<>()));
       }
-      return Collections.synchronizedSet((Set<String>) Optional.ofNullable(context.get(key))
-          .orElse(Collections.synchronizedSet(new HashSet<>())));
+      return Collections.synchronizedSet(
+          (Set<String>)
+              Optional.ofNullable(context.get(key))
+                  .orElse(Collections.synchronizedSet(new HashSet<>())));
     }
   }
 }

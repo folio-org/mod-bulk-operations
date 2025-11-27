@@ -27,16 +27,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 class EntityPathResolverTest extends BaseTest {
 
-  @Autowired
-  private EntityPathResolver entityPathResolver;
-  @MockitoSpyBean
-  private FolioExecutionContext folioExecutionContext;
+  @Autowired private EntityPathResolver entityPathResolver;
+  @MockitoSpyBean private FolioExecutionContext folioExecutionContext;
 
   @Test
   void testUserPathResolving() {
-    var entity = User.builder()
-        .id(UUID.randomUUID().toString())
-        .build();
+    var entity = User.builder().id(UUID.randomUUID().toString()).build();
     var actual = entityPathResolver.resolve(EntityType.USER, entity);
     var expected = format("/users/%s", entity.getId());
 
@@ -44,15 +40,13 @@ class EntityPathResolverTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = EntityType.class, names = {"INSTANCE", "INSTANCE_MARC"})
+  @EnumSource(
+      value = EntityType.class,
+      names = {"INSTANCE", "INSTANCE_MARC"})
   void testInstancePathResolving(EntityType entityType) {
-    var entity = Instance.builder()
-        .id(UUID.randomUUID().toString())
-        .build();
-    final var extendedInstance = ExtendedInstance.builder()
-        .entity(entity)
-        .tenantId("tenantId")
-        .build();
+    var entity = Instance.builder().id(UUID.randomUUID().toString()).build();
+    final var extendedInstance =
+        ExtendedInstance.builder().entity(entity).tenantId("tenantId").build();
 
     var actual = entityPathResolver.resolve(entityType, extendedInstance);
     var expected = format("/inventory/view/%s", entity.getId());
@@ -61,33 +55,27 @@ class EntityPathResolverTest extends BaseTest {
 
   @Test
   void testHoldingPathResolving() {
-    var entity = HoldingsRecord.builder()
-        .id(UUID.randomUUID().toString())
-        .instanceId(UUID.randomUUID().toString())
-        .build();
-    final var extendedEntity = ExtendedHoldingsRecord.builder()
-        .entity(entity)
-        .tenantId("tenantId")
-        .build();
+    var entity =
+        HoldingsRecord.builder()
+            .id(UUID.randomUUID().toString())
+            .instanceId(UUID.randomUUID().toString())
+            .build();
+    final var extendedEntity =
+        ExtendedHoldingsRecord.builder().entity(entity).tenantId("tenantId").build();
 
     var actual = entityPathResolver.resolve(EntityType.HOLDINGS_RECORD, extendedEntity);
-    var expected = format(
-        "/inventory/view/%s/%s",
-        entity.getInstanceId(),
-        entity.getId());
+    var expected = format("/inventory/view/%s/%s", entity.getInstanceId(), entity.getId());
     assertThat(expected).isEqualTo(actual);
   }
 
   @Test
   void testItemPathResolving() {
-    var entity = Item.builder()
-        .id(UUID.randomUUID().toString())
-        .holdingsRecordId(UUID.randomUUID().toString())
-        .build();
-    final var extendedEntity = ExtendedItem.builder()
-        .entity(entity)
-        .tenantId("tenantId")
-        .build();
+    var entity =
+        Item.builder()
+            .id(UUID.randomUUID().toString())
+            .holdingsRecordId(UUID.randomUUID().toString())
+            .build();
+    final var extendedEntity = ExtendedItem.builder().entity(entity).tenantId("tenantId").build();
 
     final var instanceId = UUID.randomUUID().toString();
     var tenantId = "diku";
@@ -100,11 +88,9 @@ class EntityPathResolverTest extends BaseTest {
         .thenReturn(HoldingsRecord.builder().instanceId(instanceId).build());
 
     var actual = entityPathResolver.resolve(EntityType.ITEM, extendedEntity);
-    var expected = format(
-        "/inventory/view/%s/%s/%s",
-        instanceId,
-        entity.getHoldingsRecordId(),
-        entity.getId());
+    var expected =
+        format(
+            "/inventory/view/%s/%s/%s", instanceId, entity.getHoldingsRecordId(), entity.getId());
     assertThat(expected).isEqualTo(actual);
   }
 }

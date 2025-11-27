@@ -14,7 +14,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 @With
 @Getter
-
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
@@ -93,4 +92,3 @@ public class InventoryItemStatus {
     return Objects.hash(name);
   }
 }
-

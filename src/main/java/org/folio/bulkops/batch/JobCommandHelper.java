@@ -35,22 +35,14 @@ public class JobCommandHelper {
   public static JobParameters prepareJobParameters(BulkOperation bulkOperation, int numOfLines) {
     createTmpWorkDir(bulkOperation);
 
-    var baseFileName =
-        FilenameUtils.getBaseName(bulkOperation.getLinkToTriggeringCsvFile());
+    var baseFileName = FilenameUtils.getBaseName(bulkOperation.getLinkToTriggeringCsvFile());
 
-    var fileName = MATCHED_RECORDS_PATH_TEMPLATE
-        .formatted(
-            bulkOperation.getId(),
-            LocalDate.now(),
-            baseFileName
-        );
+    var fileName =
+        MATCHED_RECORDS_PATH_TEMPLATE.formatted(
+            bulkOperation.getId(), LocalDate.now(), baseFileName);
 
-    var marcFileName = MARC_RECORDS_PATH_TEMPLATE
-        .formatted(
-            bulkOperation.getId(),
-            LocalDate.now(),
-            baseFileName
-        );
+    var marcFileName =
+        MARC_RECORDS_PATH_TEMPLATE.formatted(bulkOperation.getId(), LocalDate.now(), baseFileName);
 
     var paramsBuilder = new JobParametersBuilder();
 
@@ -60,56 +52,36 @@ public class JobCommandHelper {
     paramsBuilder.addString(
         IDENTIFIERS_FILE_NAME,
         bulkOperation.getLinkToTriggeringCsvFile(),
-        JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE
-    );
+        JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
 
     paramsBuilder.addString(
         FILE_NAME,
         bulkOperation.getLinkToTriggeringCsvFile(),
-        JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE
-    );
+        JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
 
     paramsBuilder.addLong(
-        TOTAL_CSV_LINES,
-        (long) numOfLines,
-        JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE
-    );
+        TOTAL_CSV_LINES, (long) numOfLines, JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
 
     paramsBuilder.addString(
-        TEMP_LOCAL_FILE_PATH,
-        getWorkDir() + fileName,
-        JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE
-    );
+        TEMP_LOCAL_FILE_PATH, getWorkDir() + fileName, JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
+
+    paramsBuilder.addString(STORAGE_FILE_PATH, fileName, JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
 
     paramsBuilder.addString(
-        STORAGE_FILE_PATH,
-        fileName,
-        JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE
-    );
+        TEMP_LOCAL_MARC_PATH, getWorkDir() + marcFileName, JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
 
     paramsBuilder.addString(
-        TEMP_LOCAL_MARC_PATH,
-        getWorkDir() + marcFileName,
-        JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE
-    );
-
-    paramsBuilder.addString(
-        STORAGE_MARC_PATH,
-        marcFileName,
-        JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE
-    );
+        STORAGE_MARC_PATH, marcFileName, JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
 
     paramsBuilder.addString(
         IDENTIFIER_TYPE,
         bulkOperation.getIdentifierType().getValue(),
-        JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE
-    );
+        JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
 
     paramsBuilder.addString(
         ENTITY_TYPE,
         bulkOperation.getEntityType().getValue(),
-        JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE
-    );
+        JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
 
     return paramsBuilder.toJobParameters();
   }

@@ -16,4 +16,3 @@ public class TextField {
   @JsonProperty("fieldFormat")
   private Format fieldFormat;
 }
-

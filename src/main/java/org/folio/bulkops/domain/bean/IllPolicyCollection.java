@@ -23,4 +23,3 @@ public class IllPolicyCollection {
   @JsonProperty("totalRecords")
   private Integer totalRecords;
 }
-

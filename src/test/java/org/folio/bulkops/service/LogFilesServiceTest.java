@@ -24,11 +24,9 @@ import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 
 class LogFilesServiceTest extends BaseTest {
 
-  @Autowired
-  private LogFilesService logFilesService;
+  @Autowired private LogFilesService logFilesService;
 
-  @Autowired
-  private BulkOperationRepository bulkOperationRepository;
+  @Autowired private BulkOperationRepository bulkOperationRepository;
 
   private UUID oldBulkOperationId;
   private UUID nonOldBulkOperationId;
@@ -38,50 +36,58 @@ class LogFilesServiceTest extends BaseTest {
     var back31days = LocalDateTime.now().minusDays(31);
     var back29days = LocalDateTime.now().minusDays(29);
     try (var ignored = new FolioExecutionContextSetter(folioExecutionContext)) {
-      oldBulkOperationId = bulkOperationRepository.save(BulkOperation.builder()
-        .id(UUID.randomUUID())
-        .linkToTriggeringCsvFile("some/path/records.csv")
-        .linkToMatchedRecordsJsonFile("some/path/records.csv")
-        .linkToMatchedRecordsMarcFile("some/path/records.mrc")
-        .linkToModifiedRecordsCsvFile("some/path/records.csv")
-        .linkToModifiedRecordsMarcFile("some/path/records.mrc")
-        .linkToModifiedRecordsMarcCsvFile("some/path/records.csv")
-        .linkToModifiedRecordsJsonFile("some/path/records.csv")
-        .linkToPreviewRecordsJsonFile("some/path/records.csv")
-        .linkToCommittedRecordsJsonFile("some/path/records.csv")
-        .linkToMatchedRecordsCsvFile("some/path/records.csv")
-        .linkToMatchedRecordsErrorsCsvFile("some/path/records.csv")
-        .linkToCommittedRecordsErrorsCsvFile("some/path/records.csv")
-        .linkToCommittedRecordsCsvFile("some/path/records.csv")
-        .linkToCommittedRecordsMarcFile("some/path/records.mrc")
-        .linkToCommittedRecordsMarcCsvFile("some/path/records.csv")
-        .endTime(back31days)
-        .build()).getId();
-      nonOldBulkOperationId = bulkOperationRepository.save(BulkOperation.builder()
-        .id(UUID.randomUUID())
-        .linkToTriggeringCsvFile("some/path/records.csv")
-        .linkToMatchedRecordsJsonFile("some/path/records.csv")
-        .linkToMatchedRecordsMarcFile("some/path/records.mrc")
-        .linkToModifiedRecordsCsvFile("some/path/records.csv")
-        .linkToModifiedRecordsMarcFile("some/path/records.mrc")
-        .linkToModifiedRecordsMarcCsvFile("some/path/records.csv")
-        .linkToModifiedRecordsJsonFile("some/path/records.csv")
-        .linkToPreviewRecordsJsonFile("some/path/records.csv")
-        .linkToCommittedRecordsJsonFile("some/path/records.csv")
-        .linkToMatchedRecordsCsvFile("some/path/records.csv")
-        .linkToMatchedRecordsErrorsCsvFile("some/path/records.csv")
-        .linkToCommittedRecordsErrorsCsvFile("some/path/records.csv")
-        .linkToCommittedRecordsCsvFile("some/path/records.csv")
-        .linkToCommittedRecordsMarcFile("some/path/records.mrc")
-        .linkToCommittedRecordsMarcCsvFile("some/path/records.csv")
-        .endTime(back29days)
-        .build()).getId();
+      oldBulkOperationId =
+          bulkOperationRepository
+              .save(
+                  BulkOperation.builder()
+                      .id(UUID.randomUUID())
+                      .linkToTriggeringCsvFile("some/path/records.csv")
+                      .linkToMatchedRecordsJsonFile("some/path/records.csv")
+                      .linkToMatchedRecordsMarcFile("some/path/records.mrc")
+                      .linkToModifiedRecordsCsvFile("some/path/records.csv")
+                      .linkToModifiedRecordsMarcFile("some/path/records.mrc")
+                      .linkToModifiedRecordsMarcCsvFile("some/path/records.csv")
+                      .linkToModifiedRecordsJsonFile("some/path/records.csv")
+                      .linkToPreviewRecordsJsonFile("some/path/records.csv")
+                      .linkToCommittedRecordsJsonFile("some/path/records.csv")
+                      .linkToMatchedRecordsCsvFile("some/path/records.csv")
+                      .linkToMatchedRecordsErrorsCsvFile("some/path/records.csv")
+                      .linkToCommittedRecordsErrorsCsvFile("some/path/records.csv")
+                      .linkToCommittedRecordsCsvFile("some/path/records.csv")
+                      .linkToCommittedRecordsMarcFile("some/path/records.mrc")
+                      .linkToCommittedRecordsMarcCsvFile("some/path/records.csv")
+                      .endTime(back31days)
+                      .build())
+              .getId();
+      nonOldBulkOperationId =
+          bulkOperationRepository
+              .save(
+                  BulkOperation.builder()
+                      .id(UUID.randomUUID())
+                      .linkToTriggeringCsvFile("some/path/records.csv")
+                      .linkToMatchedRecordsJsonFile("some/path/records.csv")
+                      .linkToMatchedRecordsMarcFile("some/path/records.mrc")
+                      .linkToModifiedRecordsCsvFile("some/path/records.csv")
+                      .linkToModifiedRecordsMarcFile("some/path/records.mrc")
+                      .linkToModifiedRecordsMarcCsvFile("some/path/records.csv")
+                      .linkToModifiedRecordsJsonFile("some/path/records.csv")
+                      .linkToPreviewRecordsJsonFile("some/path/records.csv")
+                      .linkToCommittedRecordsJsonFile("some/path/records.csv")
+                      .linkToMatchedRecordsCsvFile("some/path/records.csv")
+                      .linkToMatchedRecordsErrorsCsvFile("some/path/records.csv")
+                      .linkToCommittedRecordsErrorsCsvFile("some/path/records.csv")
+                      .linkToCommittedRecordsCsvFile("some/path/records.csv")
+                      .linkToCommittedRecordsMarcFile("some/path/records.mrc")
+                      .linkToCommittedRecordsMarcCsvFile("some/path/records.csv")
+                      .endTime(back29days)
+                      .build())
+              .getId();
     }
   }
 
   @AfterEach
   void clearTestData() {
-    try (var ignored =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var ignored = new FolioExecutionContextSetter(folioExecutionContext)) {
       bulkOperationRepository.deleteById(oldBulkOperationId);
       bulkOperationRepository.deleteById(nonOldBulkOperationId);
     }
@@ -155,5 +161,4 @@ class LogFilesServiceTest extends BaseTest {
     assertNotNull(operation.getLinkToModifiedRecordsJsonFile());
     assertNotNull(operation.getLinkToMatchedRecordsErrorsCsvFile());
   }
-
 }

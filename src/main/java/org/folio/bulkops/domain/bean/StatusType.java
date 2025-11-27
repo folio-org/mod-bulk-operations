@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum StatusType {
-
   ACTIVE("ACTIVE"),
 
   COMPLETED("COMPLETED"),
@@ -37,4 +36,3 @@ public enum StatusType {
     throw new IllegalArgumentException("Unexpected value '" + value + "'");
   }
 }
-

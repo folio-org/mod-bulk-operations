@@ -3,7 +3,6 @@ package org.folio.bulkops.domain.bean;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public enum PreferredEmailCommunication {
-
   @JsonProperty("Support")
   SUPPORT("Support"),
   @JsonProperty("Programs")

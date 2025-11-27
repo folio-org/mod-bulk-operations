@@ -12,7 +12,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddressType   {
+public class AddressType {
   @JsonProperty("addressType")
   private String addressType;
 
@@ -25,4 +25,3 @@ public class AddressType   {
   @JsonProperty("metadata")
   private Metadata metadata;
 }
-

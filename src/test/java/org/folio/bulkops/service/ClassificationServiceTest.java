@@ -12,22 +12,21 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class ClassificationServiceTest extends BaseTest {
 
-  @Autowired
-  private ClassificationService classificationService;
+  @Autowired private ClassificationService classificationService;
 
-  @MockitoBean
-  private ClassificationReferenceService classificationReferenceService;
+  @MockitoBean private ClassificationReferenceService classificationReferenceService;
 
   @Test
   void classificationToStringTest() {
     var classificationTypeId = UUID.randomUUID().toString();
-    var classification = Classification.builder()
+    var classification =
+        Classification.builder()
             .classificationTypeId(classificationTypeId)
             .classificationNumber("abc")
             .build();
 
     when(classificationReferenceService.getClassificationTypeNameById(classificationTypeId, null))
-            .thenReturn("LC");
+        .thenReturn("LC");
 
     var res = classificationService.classificationToString(classification);
 

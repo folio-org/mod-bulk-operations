@@ -25,4 +25,3 @@ public class InstanceType {
   @JsonProperty("source")
   private String source;
 }
-

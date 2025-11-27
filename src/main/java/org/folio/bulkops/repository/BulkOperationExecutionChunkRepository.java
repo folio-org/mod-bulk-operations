@@ -7,5 +7,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BulkOperationExecutionChunkRepository
-        extends JpaRepository<BulkOperationExecutionChunk, UUID> {
-}
+    extends JpaRepository<BulkOperationExecutionChunk, UUID> {}

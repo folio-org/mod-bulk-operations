@@ -27,7 +27,7 @@ public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter
   private final IdentifierType identifierType;
 
   public CsvItemWriter(String path, Class<T> clazz, String bulkOperationId, String identifierType)
-          throws IOException {
+      throws IOException {
     this.writer = new BufferedWriter(new FileWriter(path));
     if (clazz == ExtendedItem.class) {
       delegate = new BulkOperationsEntityCsvWriter(writer, Item.class);
@@ -38,8 +38,8 @@ public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter
     } else if (clazz == User.class) {
       delegate = new BulkOperationsEntityCsvWriter(writer, clazz);
     } else {
-      throw new IllegalArgumentException("Class " + clazz.getName()
-              + " is not supported for writing");
+      throw new IllegalArgumentException(
+          "Class " + clazz.getName() + " is not supported for writing");
     }
     this.bulkOperationId = UUID.fromString(bulkOperationId);
     this.identifierType = IdentifierType.fromValue(identifierType);

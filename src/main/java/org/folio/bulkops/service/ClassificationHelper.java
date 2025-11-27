@@ -32,5 +32,4 @@ public class ClassificationHelper implements InitializingBean {
   public static ClassificationHelper service() {
     return service;
   }
-
 }

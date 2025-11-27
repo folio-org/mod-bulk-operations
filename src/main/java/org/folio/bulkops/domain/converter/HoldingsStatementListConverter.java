@@ -14,12 +14,14 @@ public class HoldingsStatementListConverter extends BaseConverter<List<HoldingsS
   @Override
   public String convertToString(List<HoldingsStatement> object) {
     return object.stream()
-      .filter(Objects::nonNull)
-      .map(statement ->
-        String.join(ARRAY_DELIMITER,
-          escape(statement.getStatement()),
-          escape(statement.getNote()),
-          escape(statement.getStaffNote())))
-      .collect(Collectors.joining(ITEM_DELIMITER));
+        .filter(Objects::nonNull)
+        .map(
+            statement ->
+                String.join(
+                    ARRAY_DELIMITER,
+                    escape(statement.getStatement()),
+                    escape(statement.getNote()),
+                    escape(statement.getStaffNote())))
+        .collect(Collectors.joining(ITEM_DELIMITER));
   }
 }

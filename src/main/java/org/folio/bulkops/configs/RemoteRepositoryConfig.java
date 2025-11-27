@@ -27,16 +27,25 @@ public class RemoteRepositoryConfig {
 
   @Bean
   public FolioS3Client remoteFolioS3Client() {
-    log.debug("remote-files-storage: endpoint {}, region {}, bucket {}, accessKey {}, "
-            + "secretKey {}, awsSdk {}", endpoint, region, bucket, accessKey, secretKey, awsSdk);
-    var client = S3ClientFactory.getS3Client(S3ClientProperties.builder()
-            .endpoint(endpoint)
-            .secretKey(secretKey)
-            .accessKey(accessKey)
-            .bucket(bucket)
-            .awsSdk(awsSdk)
-            .region(region)
-            .build());
+    log.debug(
+        "remote-files-storage: endpoint {}, region {}, bucket {}, accessKey {}, "
+            + "secretKey {}, awsSdk {}",
+        endpoint,
+        region,
+        bucket,
+        accessKey,
+        secretKey,
+        awsSdk);
+    var client =
+        S3ClientFactory.getS3Client(
+            S3ClientProperties.builder()
+                .endpoint(endpoint)
+                .secretKey(secretKey)
+                .accessKey(accessKey)
+                .bucket(bucket)
+                .awsSdk(awsSdk)
+                .region(region)
+                .build());
     try {
       client.createBucketIfNotExists();
     } catch (S3ClientException e) {

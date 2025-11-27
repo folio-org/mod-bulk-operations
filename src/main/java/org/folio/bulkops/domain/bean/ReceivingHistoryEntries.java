@@ -22,4 +22,3 @@ public class ReceivingHistoryEntries {
   @Valid
   private List<ReceivingHistoryEntry> entries = null;
 }
-

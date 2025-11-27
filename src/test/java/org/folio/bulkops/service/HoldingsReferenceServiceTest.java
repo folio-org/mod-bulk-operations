@@ -47,24 +47,15 @@ import org.mockito.MockitoAnnotations;
 
 class HoldingsReferenceServiceTest {
 
-  @Mock
-  private HoldingsStorageClient holdingsStorageClient;
-  @Mock
-  private InstanceClient instanceClient;
-  @Mock
-  private InstanceStorageClient instanceStorageClient;
-  @Mock
-  private LocationClient locationClient;
-  @Mock
-  private FolioExecutionContext folioExecutionContext;
-  @Mock
-  private FolioModuleMetadata folioModuleMetadata;
-  @Mock
-  private ItemClient itemClient;
-  @Mock
-  private HoldingsReferenceCacheService holdingsReferenceCacheService;
-  @InjectMocks
-  private HoldingsReferenceService holdingsReferenceService;
+  @Mock private HoldingsStorageClient holdingsStorageClient;
+  @Mock private InstanceClient instanceClient;
+  @Mock private InstanceStorageClient instanceStorageClient;
+  @Mock private LocationClient locationClient;
+  @Mock private FolioExecutionContext folioExecutionContext;
+  @Mock private FolioModuleMetadata folioModuleMetadata;
+  @Mock private ItemClient itemClient;
+  @Mock private HoldingsReferenceCacheService holdingsReferenceCacheService;
+  @InjectMocks private HoldingsReferenceService holdingsReferenceService;
 
   @BeforeEach
   void setUp() {
@@ -81,21 +72,28 @@ class HoldingsReferenceServiceTest {
   @Test
   void getInstanceTitleById_throwsBulkEditExceptionOnNotFound() {
     when(instanceStorageClient.getInstanceJsonById("notfound"))
-            .thenThrow(new NotFoundException("not found"));
-    assertThatThrownBy(() -> holdingsReferenceService
-            .getInstanceTitleById("notfound", "tenant"))
-      .isInstanceOf(BulkEditException.class)
-      .hasMessageContaining("Instance not found by id=notfound")
-      .extracting("errorType").isEqualTo(ErrorType.WARNING);
+        .thenThrow(new NotFoundException("not found"));
+    assertThatThrownBy(() -> holdingsReferenceService.getInstanceTitleById("notfound", "tenant"))
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("Instance not found by id=notfound")
+        .extracting("errorType")
+        .isEqualTo(ErrorType.WARNING);
   }
 
   @Test
   void getInstanceTitleById_returnsTitleWithPublication() {
     ObjectMapper mapper = new ObjectMapper();
-    JsonNode instanceJson = mapper.createObjectNode()
+    JsonNode instanceJson =
+        mapper
+            .createObjectNode()
             .put("title", "Test Title")
-            .set("publication", mapper.createArrayNode()
-                    .add(mapper.createObjectNode()
+            .set(
+                "publication",
+                mapper
+                    .createArrayNode()
+                    .add(
+                        mapper
+                            .createObjectNode()
                             .put("publisher", "Pub")
                             .put("dateOfPublication", "2020")));
     when(instanceStorageClient.getInstanceJsonById("id1")).thenReturn(instanceJson);
@@ -107,11 +105,13 @@ class HoldingsReferenceServiceTest {
   @Test
   void getInstanceTitleById_returnsTitleWithPublisherOnly() {
     ObjectMapper mapper = new ObjectMapper();
-    JsonNode instanceJson = mapper.createObjectNode()
+    JsonNode instanceJson =
+        mapper
+            .createObjectNode()
             .put("title", "Test Title")
-            .set("publication", mapper.createArrayNode()
-                    .add(mapper.createObjectNode()
-                            .put("publisher", "Pub")));
+            .set(
+                "publication",
+                mapper.createArrayNode().add(mapper.createObjectNode().put("publisher", "Pub")));
     when(instanceStorageClient.getInstanceJsonById("id2")).thenReturn(instanceJson);
 
     String result = holdingsReferenceService.getInstanceTitleById("id2", "tenant");
@@ -133,7 +133,7 @@ class HoldingsReferenceServiceTest {
     ObjectMapper mapper = new ObjectMapper();
     JsonNode locationJson = mapper.createObjectNode().put("id", "loc1");
     when(holdingsReferenceCacheService.getHoldingsLocationById("loc1", "tenant"))
-            .thenReturn(locationJson);
+        .thenReturn(locationJson);
 
     JsonNode result = holdingsReferenceService.getHoldingsLocationById("loc1", "tenant");
     assertThat(result.get("id").asText()).isEqualTo("loc1");
@@ -156,9 +156,10 @@ class HoldingsReferenceServiceTest {
     when(instanceClient.getByQuery(anyString())).thenReturn(collection);
 
     assertThatThrownBy(() -> holdingsReferenceService.getInstanceIdByHrid("hrid-2"))
-      .isInstanceOf(BulkEditException.class)
-      .hasMessageContaining("Instance not found by hrid=hrid-2")
-      .extracting("errorType").isEqualTo(ErrorType.WARNING);
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("Instance not found by hrid=hrid-2")
+        .extracting("errorType")
+        .isEqualTo(ErrorType.WARNING);
   }
 
   @Test
@@ -180,18 +181,23 @@ class HoldingsReferenceServiceTest {
     when(itemClient.getByQuery(anyString(), eq(1))).thenReturn(collection);
 
     assertThatThrownBy(() -> holdingsReferenceService.getHoldingsIdByItemBarcode("barcode-2"))
-      .isInstanceOf(BulkEditException.class)
-      .hasMessageContaining("Item not found by barcode=barcode-2")
-      .extracting("errorType").isEqualTo(ErrorType.WARNING);
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("Item not found by barcode=barcode-2")
+        .extracting("errorType")
+        .isEqualTo(ErrorType.WARNING);
   }
 
   @Test
   void getInstanceTitleById_returnsTitleWithPublisherAndDate() {
     ObjectMapper mapper = new ObjectMapper();
-    JsonNode publication = mapper.createObjectNode()
+    JsonNode publication =
+        mapper
+            .createObjectNode()
             .put("publisher", "Test Publisher")
             .put("dateOfPublication", "2021");
-    JsonNode instanceJson = mapper.createObjectNode()
+    JsonNode instanceJson =
+        mapper
+            .createObjectNode()
             .put("title", "Title1")
             .set("publication", mapper.createArrayNode().add(publication));
     when(instanceStorageClient.getInstanceJsonById("id-pub-date")).thenReturn(instanceJson);
@@ -203,9 +209,10 @@ class HoldingsReferenceServiceTest {
   @Test
   void getInstanceTitleById_returnsTitleWithPublisherOnly2() {
     ObjectMapper mapper = new ObjectMapper();
-    JsonNode publication = mapper.createObjectNode()
-            .put("publisher", "Only Publisher");
-    JsonNode instanceJson = mapper.createObjectNode()
+    JsonNode publication = mapper.createObjectNode().put("publisher", "Only Publisher");
+    JsonNode instanceJson =
+        mapper
+            .createObjectNode()
             .put("title", "Title2")
             .set("publication", mapper.createArrayNode().add(publication));
     when(instanceStorageClient.getInstanceJsonById("id-pub-only")).thenReturn(instanceJson);
@@ -217,9 +224,10 @@ class HoldingsReferenceServiceTest {
   @Test
   void getInstanceTitleById_returnsTitleWithDateOnly() {
     ObjectMapper mapper = new ObjectMapper();
-    JsonNode publication = mapper.createObjectNode()
-            .put("dateOfPublication", "2022");
-    JsonNode instanceJson = mapper.createObjectNode()
+    JsonNode publication = mapper.createObjectNode().put("dateOfPublication", "2022");
+    JsonNode instanceJson =
+        mapper
+            .createObjectNode()
             .put("title", "Title3")
             .set("publication", mapper.createArrayNode().add(publication));
     when(instanceStorageClient.getInstanceJsonById("id-date-only")).thenReturn(instanceJson);
@@ -232,7 +240,9 @@ class HoldingsReferenceServiceTest {
   void getInstanceTitleById_returnsTitleWithEmptyPublication() {
     ObjectMapper mapper = new ObjectMapper();
     JsonNode publication = mapper.createObjectNode();
-    JsonNode instanceJson = mapper.createObjectNode()
+    JsonNode instanceJson =
+        mapper
+            .createObjectNode()
             .put("title", "Title4")
             .set("publication", mapper.createArrayNode().add(publication));
     when(instanceStorageClient.getInstanceJsonById("id-empty-pub")).thenReturn(instanceJson);
@@ -244,8 +254,7 @@ class HoldingsReferenceServiceTest {
   @Test
   void getInstanceTitleById_returnsTitleWhenNoPublicationArray() {
     ObjectMapper mapper = new ObjectMapper();
-    JsonNode instanceJson = mapper.createObjectNode()
-            .put("title", "Title5");
+    JsonNode instanceJson = mapper.createObjectNode().put("title", "Title5");
     when(instanceStorageClient.getInstanceJsonById("id-no-pub")).thenReturn(instanceJson);
 
     String result = holdingsReferenceService.getInstanceTitleById("id-no-pub", "tenant");
@@ -255,7 +264,9 @@ class HoldingsReferenceServiceTest {
   @Test
   void getInstanceTitleById_returnsTitleWhenPublicationArrayIsEmpty() {
     ObjectMapper mapper = new ObjectMapper();
-    JsonNode instanceJson = mapper.createObjectNode()
+    JsonNode instanceJson =
+        mapper
+            .createObjectNode()
             .put("title", "Title6")
             .set("publication", mapper.createArrayNode());
     when(instanceStorageClient.getInstanceJsonById("id-empty-pub-array")).thenReturn(instanceJson);
@@ -270,12 +281,13 @@ class HoldingsReferenceServiceTest {
     HoldingsRecord holdingsRecord = new HoldingsRecord().withInstanceId("instanceId");
 
     when(holdingsReferenceCacheService.getHoldingsRecordById("holdingsId", "tenant"))
-            .thenReturn(holdingsRecord);
+        .thenReturn(holdingsRecord);
 
     when(instanceStorageClient.getInstanceJsonById("instanceId"))
-            .thenReturn(new ObjectMapper().readTree("{\"title\":\"Instance Title\"}"));
+        .thenReturn(new ObjectMapper().readTree("{\"title\":\"Instance Title\"}"));
 
-    String result = holdingsReferenceService.getInstanceTitleByHoldingsRecordId(
+    String result =
+        holdingsReferenceService.getInstanceTitleByHoldingsRecordId(
             item.getHoldingsRecordId(), "tenant");
     assertEquals("Instance Title", result);
   }
@@ -285,7 +297,8 @@ class HoldingsReferenceServiceTest {
     Item item = new Item().withHoldingsRecordId("holdingsId");
     when(holdingsReferenceService.getHoldingsRecordById("holdingsId", "tenant")).thenReturn(null);
 
-    String result = holdingsReferenceService.getInstanceTitleByHoldingsRecordId(
+    String result =
+        holdingsReferenceService.getInstanceTitleByHoldingsRecordId(
             item.getHoldingsRecordId(), "tenant");
     assertEquals(EMPTY, result);
   }
@@ -337,16 +350,16 @@ class HoldingsReferenceServiceTest {
     assertEquals(EMPTY, result);
   }
 
-
   @Test
   void getStatisticalCodeById_returnsStatisticalCode() {
-    StatisticalCode statisticalCode = new StatisticalCode()
-        .withId("stat-id-1")
-        .withName("Agriculture")
-        .withCode("ABC")
-        .withStatisticalCodeTypeId("stat-type-1");
+    StatisticalCode statisticalCode =
+        new StatisticalCode()
+            .withId("stat-id-1")
+            .withName("Agriculture")
+            .withCode("ABC")
+            .withStatisticalCodeTypeId("stat-type-1");
     when(holdingsReferenceCacheService.getStatisticalCodeById("stat-id-1", "test"))
-            .thenReturn(statisticalCode);
+        .thenReturn(statisticalCode);
 
     StatisticalCode result = holdingsReferenceService.getStatisticalCodeById("stat-id-1", "test");
     assertEquals("Agriculture", result.getName());
@@ -357,13 +370,14 @@ class HoldingsReferenceServiceTest {
 
   @Test
   void getStatisticalCodeByName_returnsStatisticalCode() {
-    StatisticalCode statisticalCode = new StatisticalCode()
-        .withId("stat-id-2")
-        .withName("Science")
-        .withCode("SCI")
-        .withStatisticalCodeTypeId("stat-type-2");
-    when(holdingsReferenceCacheService.getStatisticalCodeByName(
-            "Science", "tenant")).thenReturn(statisticalCode);
+    StatisticalCode statisticalCode =
+        new StatisticalCode()
+            .withId("stat-id-2")
+            .withName("Science")
+            .withCode("SCI")
+            .withStatisticalCodeTypeId("stat-type-2");
+    when(holdingsReferenceCacheService.getStatisticalCodeByName("Science", "tenant"))
+        .thenReturn(statisticalCode);
 
     StatisticalCode result = holdingsReferenceService.getStatisticalCodeByName("Science", "tenant");
     assertEquals("Science", result.getName());
@@ -373,15 +387,13 @@ class HoldingsReferenceServiceTest {
 
   @Test
   void getStatisticalCodeTypeById_returnsStatisticalCodeType() {
-    StatisticalCodeType statisticalCodeType = new StatisticalCodeType()
-        .withId("stat-type-id-1")
-        .withName("Subject")
-        .withSource("local");
+    StatisticalCodeType statisticalCodeType =
+        new StatisticalCodeType().withId("stat-type-id-1").withName("Subject").withSource("local");
     when(holdingsReferenceCacheService.getStatisticalCodeTypeById("stat-type-id-1", "test"))
-            .thenReturn(statisticalCodeType);
+        .thenReturn(statisticalCodeType);
 
-    StatisticalCodeType result = holdingsReferenceService.getStatisticalCodeTypeById(
-            "stat-type-id-1", "test");
+    StatisticalCodeType result =
+        holdingsReferenceService.getStatisticalCodeTypeById("stat-type-id-1", "test");
     assertEquals("Subject", result.getName());
     assertEquals("stat-type-id-1", result.getId());
     assertEquals("local", result.getSource());

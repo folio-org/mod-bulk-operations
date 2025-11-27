@@ -29,8 +29,12 @@ public class ListUsersService {
 
   public Users getListUsers(String query, Integer offset, Integer limit) {
 
-    var ids = bulkOperationCqlRepository.findByCql(query, OffsetRequest.of(
-            Objects.isNull(offset) ? 0 : offset,
+    var ids =
+        bulkOperationCqlRepository
+            .findByCql(
+                query,
+                OffsetRequest.of(
+                    Objects.isNull(offset) ? 0 : offset,
                     Objects.isNull(limit) ? Integer.MAX_VALUE : limit))
             .stream()
             .map(BulkOperation::getUserId)
@@ -38,16 +42,21 @@ public class ListUsersService {
             .map(UUID::toString)
             .toList();
 
-    var chunks = IntStream.range(0, (ids.size() + CHUNK_SIZE - 1) / CHUNK_SIZE)
+    var chunks =
+        IntStream.range(0, (ids.size() + CHUNK_SIZE - 1) / CHUNK_SIZE)
             .mapToObj(i -> ids.subList(i * CHUNK_SIZE, Math.min((i + 1) * CHUNK_SIZE, ids.size())))
             .toList();
 
-    var users = chunks
-            .stream()
-            .flatMap(listOfIds -> userClient.getByQuery(format(QUERY,
-                            join(OR_DELIMETER, listOfIds)), listOfIds.size()).getUsers()
-                    .stream()
-                    .map(this::mapUserToUserDto)).toList();
+    var users =
+        chunks.stream()
+            .flatMap(
+                listOfIds ->
+                    userClient
+                        .getByQuery(format(QUERY, join(OR_DELIMETER, listOfIds)), listOfIds.size())
+                        .getUsers()
+                        .stream()
+                        .map(this::mapUserToUserDto))
+            .toList();
 
     return new Users().users(users).totalRecords(users.size());
   }
@@ -55,10 +64,10 @@ public class ListUsersService {
   private org.folio.bulkops.domain.dto.User mapUserToUserDto(User user) {
     Personal userPersonal = user.getPersonal();
     return new org.folio.bulkops.domain.dto.User()
-      .id(UUID.fromString(user.getId()))
-      .firstName(userPersonal.getFirstName())
-      .lastName(userPersonal.getLastName())
-      .preferredFirstName(userPersonal.getPreferredFirstName())
-      .middleName(userPersonal.getMiddleName());
+        .id(UUID.fromString(user.getId()))
+        .firstName(userPersonal.getFirstName())
+        .lastName(userPersonal.getLastName())
+        .preferredFirstName(userPersonal.getPreferredFirstName())
+        .middleName(userPersonal.getMiddleName());
   }
 }

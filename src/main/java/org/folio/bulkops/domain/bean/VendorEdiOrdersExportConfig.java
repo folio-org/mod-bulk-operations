@@ -47,4 +47,3 @@ public class VendorEdiOrdersExportConfig {
   @JsonProperty("fileFormat")
   private String fileFormat;
 }
-

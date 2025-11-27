@@ -34,5 +34,4 @@ public class ActionProfile {
 
   @JsonProperty("remove9Subfields")
   private Boolean remove9Subfields;
-
 }

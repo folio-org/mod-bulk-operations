@@ -14,7 +14,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class CallNumberTypeCollection   {
+public class CallNumberTypeCollection {
   @JsonProperty("callNumberTypes")
   @Valid
   private List<CallNumberType> callNumberTypes = null;
@@ -25,4 +25,3 @@ public class CallNumberTypeCollection   {
   @JsonProperty("resultInfo")
   private ResultInfo resultInfo;
 }
-

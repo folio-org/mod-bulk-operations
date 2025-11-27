@@ -21,8 +21,10 @@ public class PreviewProcessorFactory {
   private PreviewRowProcessor<Instance> instancePreviewProcessor;
 
   private List<PreviewRowProcessor<? extends BulkOperationsEntity>> processors;
-  private Map<Class<? extends BulkOperationsEntity>, PreviewRowProcessor<?
-          extends BulkOperationsEntity>> pool;
+  private Map<
+          Class<? extends BulkOperationsEntity>,
+          PreviewRowProcessor<? extends BulkOperationsEntity>>
+      pool;
 
   @PostConstruct
   private void initPostConstruct() {
@@ -32,7 +34,7 @@ public class PreviewProcessorFactory {
   }
 
   public <T extends BulkOperationsEntity> PreviewRowProcessor<T> getProcessorFromFactory(
-          Class<? extends BulkOperationsEntity> clazz) {
+      Class<? extends BulkOperationsEntity> clazz) {
     return (PreviewRowProcessor<T>) pool.get(clazz);
   }
 }

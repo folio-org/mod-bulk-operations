@@ -10,14 +10,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class PublicationServiceTest extends BaseTest {
 
-  @Autowired
-  private PublicationService publicationService;
-  @MockitoBean
-  private PublicationHelperService publicationHelperService;
+  @Autowired private PublicationService publicationService;
+  @MockitoBean private PublicationHelperService publicationHelperService;
 
   @Test
   void publicationToStringTest() {
-    var publication = Publication.builder()
+    var publication =
+        Publication.builder()
             .publisher("Springer")
             .role("Editor")
             .place("Berlin")
@@ -31,7 +30,8 @@ class PublicationServiceTest extends BaseTest {
 
   @Test
   void publicationToString_shouldUseHyphenForMissingFields() {
-    Publication publication = Publication.builder()
+    Publication publication =
+        Publication.builder()
             .publisher(null)
             .role("")
             .place("Paris")
@@ -41,7 +41,6 @@ class PublicationServiceTest extends BaseTest {
     var res = publicationService.publicationToString(publication);
 
     Assertions.assertEquals("-\u001f;-\u001f;Paris\u001f;-", res);
-
   }
 
   @Test
@@ -60,8 +59,8 @@ class PublicationServiceTest extends BaseTest {
   void restorePublicationItem_shouldThrowExceptionIfInvalidComponentCount() {
     String input = String.join("\u001f;", "Only", "Three", "Fields");
 
-    Assertions.assertThrows(EntityFormatException.class,
-            () -> publicationService.restorePublicationItem(input));
+    Assertions.assertThrows(
+        EntityFormatException.class, () -> publicationService.restorePublicationItem(input));
   }
 
   @Test
@@ -69,5 +68,4 @@ class PublicationServiceTest extends BaseTest {
     Assertions.assertNull(publicationService.restorePublicationItem(""));
     Assertions.assertNull(publicationService.restorePublicationItem(null));
   }
-
 }

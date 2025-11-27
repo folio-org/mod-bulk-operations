@@ -21,18 +21,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 class BulkOperationExecutionChunkRepositoryTest extends BaseTest {
-  @Autowired
-  private BulkOperationExecutionChunkRepository repository;
+  @Autowired private BulkOperationExecutionChunkRepository repository;
 
-  @Autowired
-  private BulkOperationRepository bulkOperationRepository;
+  @Autowired private BulkOperationRepository bulkOperationRepository;
 
-  @Autowired
-  private BulkOperationExecutionRepository bulkOperationExecutionRepository;
+  @Autowired private BulkOperationExecutionRepository bulkOperationExecutionRepository;
 
   @Test
   void shouldSaveEntity() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var saved = repository.save(createEntity());
       assertThat(saved.getId(), notNullValue());
     }
@@ -40,7 +37,7 @@ class BulkOperationExecutionChunkRepositoryTest extends BaseTest {
 
   @Test
   void shouldFindEntityById() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       var retrieved = repository.findById(created.getId());
       assertTrue(retrieved.isPresent() && created.getId().equals(retrieved.get().getId()));
@@ -49,7 +46,7 @@ class BulkOperationExecutionChunkRepositoryTest extends BaseTest {
 
   @Test
   void shouldUpdateEntity() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       var endTime = LocalDateTime.now();
       var updated = repository.save(created.withEndTime(endTime));
@@ -59,7 +56,7 @@ class BulkOperationExecutionChunkRepositoryTest extends BaseTest {
 
   @Test
   void shouldDeleteEntity() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       repository.deleteById(created.getId());
       assertTrue(repository.findById(created.getId()).isEmpty());
@@ -67,36 +64,39 @@ class BulkOperationExecutionChunkRepositoryTest extends BaseTest {
   }
 
   private BulkOperationExecutionChunk createEntity() {
-    var bulkOperation = bulkOperationRepository.save(BulkOperation.builder()
-            .id(UUID.randomUUID())
-            .userId(UUID.randomUUID())
-            .operationType(UPDATE)
-            .entityType(USER)
-            .identifierType(BARCODE)
-            .status(NEW)
-            .dataExportJobId(UUID.randomUUID())
-            .totalNumOfRecords(10)
-            .processedNumOfRecords(0)
-            .executionChunkSize(5)
-            .startTime(LocalDateTime.now())
-            .build());
+    var bulkOperation =
+        bulkOperationRepository.save(
+            BulkOperation.builder()
+                .id(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .operationType(UPDATE)
+                .entityType(USER)
+                .identifierType(BARCODE)
+                .status(NEW)
+                .dataExportJobId(UUID.randomUUID())
+                .totalNumOfRecords(10)
+                .processedNumOfRecords(0)
+                .executionChunkSize(5)
+                .startTime(LocalDateTime.now())
+                .build());
 
-    var bulkOperationExecution = bulkOperationExecutionRepository
-            .save(BulkOperationExecution.builder()
-            .bulkOperationId(bulkOperation.getId())
-            .userId(UUID.randomUUID())
-            .startTime(LocalDateTime.now())
-            .processedRecords(5)
-            .status(ACTIVE)
-            .build());
+    var bulkOperationExecution =
+        bulkOperationExecutionRepository.save(
+            BulkOperationExecution.builder()
+                .bulkOperationId(bulkOperation.getId())
+                .userId(UUID.randomUUID())
+                .startTime(LocalDateTime.now())
+                .processedRecords(5)
+                .status(ACTIVE)
+                .build());
 
     return BulkOperationExecutionChunk.builder()
-      .bulkOperationExecutionId(bulkOperationExecution.getId())
-      .bulkOperationId(bulkOperation.getId())
-      .firstRecordIndex(10)
-      .lastRecordIndex(20)
-      .startTime(LocalDateTime.now())
-      .state(PROCESSED)
-      .build();
+        .bulkOperationExecutionId(bulkOperationExecution.getId())
+        .bulkOperationId(bulkOperation.getId())
+        .firstRecordIndex(10)
+        .lastRecordIndex(20)
+        .startTime(LocalDateTime.now())
+        .state(PROCESSED)
+        .build();
   }
 }

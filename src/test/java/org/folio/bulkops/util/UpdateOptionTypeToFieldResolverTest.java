@@ -39,43 +39,40 @@ class UpdateOptionTypeToFieldResolverTest {
 
   @ParameterizedTest()
   @MethodSource("fieldToOptionToEntity")
-  void getFieldByUpdateOptionTypeTest(String expected,
-                                      org.folio.bulkops.domain.dto.UpdateOptionType type,
-                                      EntityType entityType) {
-    assertEquals(expected,
-            UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(type, entityType));
+  void getFieldByUpdateOptionTypeTest(
+      String expected, org.folio.bulkops.domain.dto.UpdateOptionType type, EntityType entityType) {
+    assertEquals(
+        expected, UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(type, entityType));
   }
 
   private static Stream<Arguments> fieldToOptionToEntity() {
     return Stream.of(
-      Arguments.of("Patron group", PATRON_GROUP, ITEM),
-      Arguments.of("Expiration date", EXPIRATION_DATE, ITEM),
-      Arguments.of("Email", EMAIL_ADDRESS, ITEM),
-      Arguments.of("Item permanent location", PERMANENT_LOCATION, ITEM),
-      Arguments.of("Holdings permanent location", PERMANENT_LOCATION, HOLDINGS_RECORD),
-      Arguments.of("Permanent location", PERMANENT_LOCATION, USER),
-      Arguments.of("Item temporary location", TEMPORARY_LOCATION, ITEM),
-      Arguments.of("Holdings temporary location", TEMPORARY_LOCATION, HOLDINGS_RECORD),
-      Arguments.of("Temporary location", TEMPORARY_LOCATION, USER),
-      Arguments.of("Permanent loan type", PERMANENT_LOAN_TYPE, ITEM),
-      Arguments.of("Temporary loan type", TEMPORARY_LOAN_TYPE, ITEM),
-      Arguments.of("Status", STATUS, ITEM),
-      Arguments.of("Suppress from discovery", SUPPRESS_FROM_DISCOVERY, ITEM),
-      Arguments.of("Staff suppress", STAFF_SUPPRESS, INSTANCE),
-      Arguments.of("Notes", ITEM_NOTE, INSTANCE),
-      Arguments.of("Administrative note", ADMINISTRATIVE_NOTE, INSTANCE),
-      Arguments.of("Check in note", CHECK_IN_NOTE, INSTANCE),
-      Arguments.of("Check out note", CHECK_OUT_NOTE, INSTANCE),
-      Arguments.of("Notes", HOLDINGS_NOTE, INSTANCE),
-      Arguments.of("Electronic access", ELECTRONIC_ACCESS_URL_RELATIONSHIP, INSTANCE),
-      Arguments.of("Electronic access", ELECTRONIC_ACCESS_URI, INSTANCE),
-      Arguments.of("Electronic access", ELECTRONIC_ACCESS_LINK_TEXT, INSTANCE),
-      Arguments.of("Electronic access", ELECTRONIC_ACCESS_MATERIALS_SPECIFIED, INSTANCE),
-      Arguments.of("Electronic access", ELECTRONIC_ACCESS_URL_PUBLIC_NOTE, INSTANCE),
-      Arguments.of("Instance note", INSTANCE_NOTE, INSTANCE),
-      Arguments.of("Statistical code", STATISTICAL_CODE, INSTANCE),
-      Arguments.of("Set for deletion", SET_RECORDS_FOR_DELETE, INSTANCE)
-      );
+        Arguments.of("Patron group", PATRON_GROUP, ITEM),
+        Arguments.of("Expiration date", EXPIRATION_DATE, ITEM),
+        Arguments.of("Email", EMAIL_ADDRESS, ITEM),
+        Arguments.of("Item permanent location", PERMANENT_LOCATION, ITEM),
+        Arguments.of("Holdings permanent location", PERMANENT_LOCATION, HOLDINGS_RECORD),
+        Arguments.of("Permanent location", PERMANENT_LOCATION, USER),
+        Arguments.of("Item temporary location", TEMPORARY_LOCATION, ITEM),
+        Arguments.of("Holdings temporary location", TEMPORARY_LOCATION, HOLDINGS_RECORD),
+        Arguments.of("Temporary location", TEMPORARY_LOCATION, USER),
+        Arguments.of("Permanent loan type", PERMANENT_LOAN_TYPE, ITEM),
+        Arguments.of("Temporary loan type", TEMPORARY_LOAN_TYPE, ITEM),
+        Arguments.of("Status", STATUS, ITEM),
+        Arguments.of("Suppress from discovery", SUPPRESS_FROM_DISCOVERY, ITEM),
+        Arguments.of("Staff suppress", STAFF_SUPPRESS, INSTANCE),
+        Arguments.of("Notes", ITEM_NOTE, INSTANCE),
+        Arguments.of("Administrative note", ADMINISTRATIVE_NOTE, INSTANCE),
+        Arguments.of("Check in note", CHECK_IN_NOTE, INSTANCE),
+        Arguments.of("Check out note", CHECK_OUT_NOTE, INSTANCE),
+        Arguments.of("Notes", HOLDINGS_NOTE, INSTANCE),
+        Arguments.of("Electronic access", ELECTRONIC_ACCESS_URL_RELATIONSHIP, INSTANCE),
+        Arguments.of("Electronic access", ELECTRONIC_ACCESS_URI, INSTANCE),
+        Arguments.of("Electronic access", ELECTRONIC_ACCESS_LINK_TEXT, INSTANCE),
+        Arguments.of("Electronic access", ELECTRONIC_ACCESS_MATERIALS_SPECIFIED, INSTANCE),
+        Arguments.of("Electronic access", ELECTRONIC_ACCESS_URL_PUBLIC_NOTE, INSTANCE),
+        Arguments.of("Instance note", INSTANCE_NOTE, INSTANCE),
+        Arguments.of("Statistical code", STATISTICAL_CODE, INSTANCE),
+        Arguments.of("Set for deletion", SET_RECORDS_FOR_DELETE, INSTANCE));
   }
-
 }

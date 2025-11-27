@@ -26,4 +26,3 @@ public class UserCollection {
   @JsonProperty("resultInfo")
   private ResultInfo resultInfo;
 }
-

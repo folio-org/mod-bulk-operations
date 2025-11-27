@@ -29,8 +29,9 @@ public class ClassificationReferenceService {
     if (isNull(tenantId)) {
       tenantId = folioExecutionContext.getTenantId();
     }
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
-            folioModuleMetadata, folioExecutionContext))) {
+    try (var ignored =
+        new FolioExecutionContextSetter(
+            prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return classificationTypesClient.getById(id).getName();
     } catch (NotFoundException e) {
       log.error("Classification type was not found by id={}", id);
@@ -42,6 +43,7 @@ public class ClassificationReferenceService {
   public String getClassificationTypeIdByName(String name) {
     var classifications = classificationTypesClient.getByQuery(QUERY_PATTERN_NAME.formatted(name));
     return classifications.getClassificationTypes().isEmpty()
-            ? name : classifications.getClassificationTypes().getFirst().getId();
+        ? name
+        : classifications.getClassificationTypes().getFirst().getId();
   }
 }

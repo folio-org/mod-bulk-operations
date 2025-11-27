@@ -14,16 +14,14 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class HoldingsRecordsSource   {
+public class HoldingsRecordsSource {
   @JsonProperty("id")
   private String id;
 
   @JsonProperty("name")
   private String name;
 
-  /**
-   * The holdings records source.
-   */
+  /** The holdings records source. */
   public enum SourceEnum {
     FOLIO("folio"),
 
@@ -64,4 +62,3 @@ public class HoldingsRecordsSource   {
   @JsonProperty("metadata")
   private Metadata metadata;
 }
-

@@ -19,6 +19,7 @@ public class ExtendedItem implements BulkOperationsEntity {
 
   @JsonProperty("tenantId")
   private String tenantId;
+
   @JsonProperty("entity")
   private Item entity;
 
@@ -45,17 +46,21 @@ public class ExtendedItem implements BulkOperationsEntity {
 
   @Override
   public void setTenantToNotes(List<TenantNotePair> tenantNotePairs) {
-    entity.getNotes().forEach(note -> {
-      var tenantNotePair = tenantNotePairs.stream()
-              .filter(pair -> pair.getNoteTypeId().equals(note.getItemNoteTypeId()))
-              .findFirst();
-      if (tenantNotePair.isPresent()) {
-        note.setTenantId(tenantNotePair.get().getTenantId());
-        note.setItemNoteTypeName(tenantNotePair.get().getNoteTypeName());
-      } else {
-        note.setTenantId(tenantId);
-      }
-    });
+    entity
+        .getNotes()
+        .forEach(
+            note -> {
+              var tenantNotePair =
+                  tenantNotePairs.stream()
+                      .filter(pair -> pair.getNoteTypeId().equals(note.getItemNoteTypeId()))
+                      .findFirst();
+              if (tenantNotePair.isPresent()) {
+                note.setTenantId(tenantNotePair.get().getTenantId());
+                note.setItemNoteTypeName(tenantNotePair.get().getNoteTypeName());
+              } else {
+                note.setTenantId(tenantId);
+              }
+            });
   }
 
   @Override

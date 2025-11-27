@@ -25,14 +25,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class SubjectReferenceServiceTest {
 
-  @Mock
-  private SubjectTypesClient subjectTypesClient;
-  @Mock
-  private SubjectSourcesClient subjectSourcesClient;
-  @Mock
-  private FolioExecutionContext folioExecutionContext;
-  @InjectMocks
-  private SubjectReferenceService subjectReferenceService;
+  @Mock private SubjectTypesClient subjectTypesClient;
+  @Mock private SubjectSourcesClient subjectSourcesClient;
+  @Mock private FolioExecutionContext folioExecutionContext;
+  @InjectMocks private SubjectReferenceService subjectReferenceService;
 
   @Test
   void shouldReturnSubjectSourceNameById() {
@@ -102,7 +98,7 @@ class SubjectReferenceServiceTest {
     var subjectSources = new SubjectSourceCollection().withSubjectSources(List.of(subjectSource));
 
     when(subjectSourcesClient.getByQuery(String.format(QUERY_PATTERN_NAME, name)))
-            .thenReturn(subjectSources);
+        .thenReturn(subjectSources);
 
     var actualId = subjectReferenceService.getSubjectSourceIdByName(name);
 
@@ -115,7 +111,7 @@ class SubjectReferenceServiceTest {
     var subjectSources = new SubjectSourceCollection().withSubjectSources(List.of());
 
     when(subjectSourcesClient.getByQuery(String.format(QUERY_PATTERN_NAME, name)))
-            .thenReturn(subjectSources);
+        .thenReturn(subjectSources);
 
     var actualId = subjectReferenceService.getSubjectSourceIdByName(name);
 
@@ -127,11 +123,12 @@ class SubjectReferenceServiceTest {
     var name = "TestType";
     var expectedId = "type123";
     var subjectType = new SubjectType().withId(expectedId);
-    var subjectTypes = new org.folio.bulkops.domain.bean.SubjectTypeCollection()
+    var subjectTypes =
+        new org.folio.bulkops.domain.bean.SubjectTypeCollection()
             .withSubjectTypes(List.of(subjectType));
 
     when(subjectTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, name)))
-            .thenReturn(subjectTypes);
+        .thenReturn(subjectTypes);
 
     var actualId = subjectReferenceService.getSubjectTypeIdByName(name);
 
@@ -141,11 +138,11 @@ class SubjectReferenceServiceTest {
   @Test
   void shouldReturnNameIfSubjectTypeNotFoundByName() {
     var name = "UnknownType";
-    var subjectTypes = new org.folio.bulkops.domain.bean.SubjectTypeCollection()
-            .withSubjectTypes(List.of());
+    var subjectTypes =
+        new org.folio.bulkops.domain.bean.SubjectTypeCollection().withSubjectTypes(List.of());
 
     when(subjectTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, name)))
-            .thenReturn(subjectTypes);
+        .thenReturn(subjectTypes);
 
     var actualId = subjectReferenceService.getSubjectTypeIdByName(name);
 
@@ -158,7 +155,7 @@ class SubjectReferenceServiceTest {
     var subjectSources = new SubjectSourceCollection().withSubjectSources(List.of());
 
     when(subjectSourcesClient.getByQuery(String.format(QUERY_PATTERN_CODE, code)))
-            .thenReturn(subjectSources);
+        .thenReturn(subjectSources);
 
     var actualName = subjectReferenceService.getSubjectSourceNameByCode(code);
 
@@ -173,7 +170,7 @@ class SubjectReferenceServiceTest {
     var subjectSources = new SubjectSourceCollection().withSubjectSources(List.of(subjectSource));
 
     when(subjectSourcesClient.getByQuery(String.format(QUERY_PATTERN_CODE, code)))
-            .thenReturn(subjectSources);
+        .thenReturn(subjectSources);
 
     var actualName = subjectReferenceService.getSubjectSourceNameByCode(code);
 
@@ -187,11 +184,10 @@ class SubjectReferenceServiceTest {
     var subjectSources = new SubjectSourceCollection().withSubjectSources(List.of(subjectSource));
 
     when(subjectSourcesClient.getByQuery(String.format(QUERY_PATTERN_CODE, code)))
-            .thenReturn(subjectSources);
+        .thenReturn(subjectSources);
 
     var actualName = subjectReferenceService.getSubjectSourceNameByCode(code);
 
     assertEquals("-", actualName);
   }
-
 }

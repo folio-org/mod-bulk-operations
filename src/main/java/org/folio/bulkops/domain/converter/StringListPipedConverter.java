@@ -11,7 +11,7 @@ public class StringListPipedConverter extends BaseConverter<List<String>> {
   @Override
   public String convertToString(List<String> object) {
     return object.stream()
-      .filter(Objects::nonNull)
-      .collect(Collectors.joining(ITEM_DELIMITER_SPACED));
+        .filter(Objects::nonNull)
+        .collect(Collectors.joining(ITEM_DELIMITER_SPACED));
   }
 }

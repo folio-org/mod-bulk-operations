@@ -16,13 +16,13 @@ public class CirculationNoteListConverter extends BaseConverter<List<Circulation
   @Override
   public String convertToString(List<CirculationNote> object) {
     return object.stream()
-      .filter(Objects::nonNull)
-      .map(this::circulationNotesToString)
-      .collect(Collectors.joining(ITEM_DELIMITER_SPACED));
+        .filter(Objects::nonNull)
+        .map(this::circulationNotesToString)
+        .collect(Collectors.joining(ITEM_DELIMITER_SPACED));
   }
 
   private String circulationNotesToString(CirculationNote note) {
-    return escape(note.getNote() + (Boolean.TRUE.equals(note.getStaffOnly())
-            ? SPACE + STAFF_ONLY : EMPTY));
+    return escape(
+        note.getNote() + (Boolean.TRUE.equals(note.getStaffOnly()) ? SPACE + STAFF_ONLY : EMPTY));
   }
 }

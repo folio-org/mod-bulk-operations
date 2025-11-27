@@ -16,8 +16,12 @@ class BulkEditItemListProcessorTest {
     var item = Item.builder().id(UUID.randomUUID().toString()).build();
     var extendedItem = ExtendedItem.builder().tenantId("tenant").entity(item).build();
     var processor = new BulkEditItemListProcessor();
-    var result = processor.process(ExtendedItemCollection.builder()
-            .extendedItems(List.of(extendedItem)).totalRecords(1).build());
+    var result =
+        processor.process(
+            ExtendedItemCollection.builder()
+                .extendedItems(List.of(extendedItem))
+                .totalRecords(1)
+                .build());
 
     assertThat(result).hasSize(1);
     assertThat(result.getFirst().getEntity().getId()).isEqualTo(item.getId());

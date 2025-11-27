@@ -14,7 +14,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class ServicePoint   {
+public class ServicePoint {
   @JsonProperty("id")
   private String id;
 
@@ -46,4 +46,3 @@ public class ServicePoint   {
   @JsonProperty("metadata")
   private Metadata metadata;
 }
-

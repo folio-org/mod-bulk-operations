@@ -53,15 +53,17 @@ public class IdentifiersWriteListener<T> implements ItemWriteListener<T> {
     context.putInt(NUMBER_OF_PROCESSED_IDENTIFIERS, processed);
     context.putInt(NUMBER_OF_MATCHED_RECORDS, matched);
 
-    var bulkOperation = ofNullable(jobExecution.getJobParameters().getString(BULK_OPERATION_ID))
-        .map(UUID::fromString)
-        .map(bulkOperationRepository::findById)
-        .flatMap(opt -> opt)
-        .orElseThrow(() -> new IllegalStateException(
-            "Bulk operation was not found, aborting batch execution."));
+    var bulkOperation =
+        ofNullable(jobExecution.getJobParameters().getString(BULK_OPERATION_ID))
+            .map(UUID::fromString)
+            .map(bulkOperationRepository::findById)
+            .flatMap(opt -> opt)
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "Bulk operation was not found, aborting batch execution."));
 
     bulkOperation.setProcessedNumOfRecords(processed);
     bulkOperationRepository.save(bulkOperation);
   }
-
 }

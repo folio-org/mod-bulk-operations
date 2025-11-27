@@ -42,35 +42,37 @@ public class FolioInstanceDataProcessor extends FolioAbstractDataProcessor<Exten
 
   @Override
   public Validator<UpdateOptionType, Action, BulkOperationRule> validator(
-          ExtendedInstance extendedInstance) {
+      ExtendedInstance extendedInstance) {
     return (option, action, rule) -> {
-      boolean suppressClear = CLEAR_FIELD.equals(action.getType())
+      boolean suppressClear =
+          CLEAR_FIELD.equals(action.getType())
               && Set.of(STAFF_SUPPRESS, SUPPRESS_FROM_DISCOVERY).contains(option);
       if (suppressClear) {
         throw new RuleValidationException("Suppress flag cannot be cleared.");
       }
 
-      boolean instanceNoteUnsupported = INSTANCE_NOTE.equals(option)
-              && !"FOLIO".equals(extendedInstance.getEntity().getSource());
+      boolean instanceNoteUnsupported =
+          INSTANCE_NOTE.equals(option) && !"FOLIO".equals(extendedInstance.getEntity().getSource());
       if (instanceNoteUnsupported) {
         throw new RuleValidationException(
-                "Bulk edit of instance notes is not supported for MARC Instances.");
+            "Bulk edit of instance notes is not supported for MARC Instances.");
       }
 
-      boolean adminNoteChangeUnsupported = ADMINISTRATIVE_NOTE.equals(option)
+      boolean adminNoteChangeUnsupported =
+          ADMINISTRATIVE_NOTE.equals(option)
               && CHANGE_TYPE.equals(action.getType())
               && !"FOLIO".equals(extendedInstance.getEntity().getSource());
       if (adminNoteChangeUnsupported) {
-        String msg
-                = "Change note type for administrative notes is not supported for MARC Instances.";
+        String msg =
+            "Change note type for administrative notes is not supported for MARC Instances.";
         throw new RuleValidationException(msg);
       }
     };
   }
 
   @Override
-  public Updater<ExtendedInstance> updater(UpdateOptionType option, Action action,
-                                           ExtendedInstance entity, boolean forPreview) {
+  public Updater<ExtendedInstance> updater(
+      UpdateOptionType option, Action action, ExtendedInstance entity, boolean forPreview) {
     if (STAFF_SUPPRESS.equals(option)) {
       if (SET_TO_TRUE.equals(action.getType())) {
         return extendedInstance -> extendedInstance.getEntity().setStaffSuppress(true);
@@ -98,11 +100,12 @@ public class FolioInstanceDataProcessor extends FolioAbstractDataProcessor<Exten
     }
 
     var updaterOpt = instanceNotesUpdaterFactory.getUpdater(option, action, forPreview);
-    return updaterOpt.orElseGet(() -> instance -> {
-      throw new BulkOperationException(
-        format("Combination %s and %s isn't supported yet", option, action.getType())
-      );
-    });
+    return updaterOpt.orElseGet(
+        () ->
+            instance -> {
+              throw new BulkOperationException(
+                  format("Combination %s and %s isn't supported yet", option, action.getType()));
+            });
   }
 
   @Override
@@ -152,9 +155,9 @@ public class FolioInstanceDataProcessor extends FolioAbstractDataProcessor<Exten
     }
 
     return ExtendedInstance.builder()
-      .tenantId(extendedInstance.getTenantId())
-      .entity(clone)
-      .build();
+        .tenantId(extendedInstance.getTenantId())
+        .entity(clone)
+        .build();
   }
 
   @Override

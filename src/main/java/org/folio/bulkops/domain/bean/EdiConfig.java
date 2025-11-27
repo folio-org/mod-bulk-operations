@@ -17,7 +17,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class EdiConfig   {
+public class EdiConfig {
   @JsonProperty("accountNoList")
   @Valid
   private List<String> accountNoList = null;
@@ -32,9 +32,7 @@ public class EdiConfig   {
   @JsonProperty("libEdiCode")
   private String libEdiCode;
 
-  /**
-   * The library type for this EDI.
-   */
+  /** The library type for this EDI. */
   public enum LibEdiTypeEnum {
     _014_EAN("014/EAN"),
 
@@ -77,9 +75,7 @@ public class EdiConfig   {
   @JsonProperty("vendorEdiCode")
   private String vendorEdiCode;
 
-  /**
-   * The library type for this EDI.
-   */
+  /** The library type for this EDI. */
   public enum VendorEdiTypeEnum {
     _014_EAN("014/EAN"),
 
@@ -131,4 +127,3 @@ public class EdiConfig   {
   @JsonProperty("supportInvoice")
   private Boolean supportInvoice = false;
 }
-

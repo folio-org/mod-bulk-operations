@@ -30,4 +30,3 @@ public class SucceedingTitle {
   @JsonProperty("identifiers")
   private List<Identifier> identifiers;
 }
-

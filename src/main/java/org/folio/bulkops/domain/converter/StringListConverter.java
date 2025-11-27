@@ -12,8 +12,8 @@ public class StringListConverter extends BaseConverter<List<String>> {
   @Override
   public String convertToString(List<String> object) {
     return object.stream()
-      .filter(Objects::nonNull)
-      .map(SpecialCharacterEscaper::escape)
-      .collect(Collectors.joining(ITEM_DELIMITER));
+        .filter(Objects::nonNull)
+        .map(SpecialCharacterEscaper::escape)
+        .collect(Collectors.joining(ITEM_DELIMITER));
   }
 }

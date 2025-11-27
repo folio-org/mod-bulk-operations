@@ -14,7 +14,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Error   {
+public class Error {
   @JsonProperty("message")
   private String message;
 
@@ -28,4 +28,3 @@ public class Error   {
   @Valid
   private List<Parameter> parameters = null;
 }
-

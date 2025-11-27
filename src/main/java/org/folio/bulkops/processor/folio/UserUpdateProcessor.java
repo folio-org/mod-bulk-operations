@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 public class UserUpdateProcessor extends FolioAbstractUpdateProcessor<User> {
 
   private static final String NO_USER_WRITE_PERMISSIONS_TEMPLATE =
-          "User %s does not have required permission to edit the user record - %s=%s "
-                  + "on the tenant ";
+      "User %s does not have required permission to edit the user record - %s=%s "
+          + "on the tenant ";
 
   private final UserClient userClient;
   private final PermissionsValidator permissionsValidator;
@@ -23,9 +23,10 @@ public class UserUpdateProcessor extends FolioAbstractUpdateProcessor<User> {
 
   @Override
   public void updateRecord(User user) {
-    permissionsValidator.checkIfBulkEditWritePermissionExists(folioExecutionContext.getTenantId(),
-            EntityType.USER, NO_USER_WRITE_PERMISSIONS_TEMPLATE
-                    + folioExecutionContext.getTenantId());
+    permissionsValidator.checkIfBulkEditWritePermissionExists(
+        folioExecutionContext.getTenantId(),
+        EntityType.USER,
+        NO_USER_WRITE_PERMISSIONS_TEMPLATE + folioExecutionContext.getTenantId());
     userClient.updateUser(user, user.getId());
   }
 

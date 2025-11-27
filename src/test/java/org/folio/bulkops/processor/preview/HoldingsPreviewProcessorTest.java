@@ -22,4 +22,3 @@ class HoldingsPreviewProcessorTest {
     assertNotNull(row);
   }
 }
-

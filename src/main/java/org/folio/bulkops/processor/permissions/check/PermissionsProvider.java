@@ -24,8 +24,9 @@ public class PermissionsProvider {
 
   @Cacheable(cacheNames = "userPermissions")
   public List<String> getUserPermissions(String tenantId, UUID userId) {
-    try (var ignored =  new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
-            folioModuleMetadata, folioExecutionContext))) {
+    try (var ignored =
+        new FolioExecutionContextSetter(
+            prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       log.info("getUserPermissions:: user {} tenant {}", userId, tenantId);
 
       return userPermissionsService.getPermissions();

@@ -52,8 +52,11 @@ public class MarcCsvHelper {
   public String[] getModifiedDataForCsv(Record marcRecord) {
     var instanceHeaderNames = getInstanceHeaderNames();
     var csvData = marcToUnifiedTableRowMapper.processRecord(marcRecord, instanceHeaderNames, true);
-    var concatenatedNotes = csvData.subList(INSTANCE_NOTE_POSITION,
-                    instanceHeaderNames.indexOf(INSTANCE_ELECTRONIC_ACCESS)).stream()
+    var concatenatedNotes =
+        csvData
+            .subList(
+                INSTANCE_NOTE_POSITION, instanceHeaderNames.indexOf(INSTANCE_ELECTRONIC_ACCESS))
+            .stream()
             .filter(StringUtils::isNotBlank)
             .collect(Collectors.joining(ITEM_DELIMITER_SPACED));
     var electronicAccessData = csvData.get(instanceHeaderNames.indexOf(INSTANCE_ELECTRONIC_ACCESS));
@@ -70,16 +73,17 @@ public class MarcCsvHelper {
   }
 
   public byte[] enrichCsvWithMarcChanges(byte[] content, BulkOperation bulkOperation) {
-    var instanceHeaderNames = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class)
-            .getHeader().stream()
+    var instanceHeaderNames =
+        UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class).getHeader().stream()
             .map(Cell::getValue)
             .toList();
     var changedMarcData = getChangedMarcData(bulkOperation);
     if (!changedMarcData.isEmpty()) {
-      try (var reader = new CSVReaderBuilder(new InputStreamReader(
-              new ByteArrayInputStream(content)))
-              .withCSVParser(CsvHelper.getCsvParser()).build();
-           var writer = new StringWriter()) {
+      try (var reader =
+              new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(content)))
+                  .withCSVParser(CsvHelper.getCsvParser())
+                  .build();
+          var writer = new StringWriter()) {
         String[] line;
         while ((line = reader.readNext()) != null) {
           var hrid = line[instanceHeaderNames.indexOf(INSTANCE_HRID)];
@@ -101,18 +105,20 @@ public class MarcCsvHelper {
   }
 
   private Map<String, Map<String, String>> getChangedMarcData(BulkOperation bulkOperation) {
-    var instanceHeaderNames = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class)
-            .getHeader().stream()
+    var instanceHeaderNames =
+        UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class).getHeader().stream()
             .map(Cell::getValue)
             .toList();
     Map<String, Map<String, String>> result = new HashMap<>();
     var fileName = getCsvFileName(bulkOperation);
     if (nonNull(fileName)) {
-      try (var reader = new CSVReaderBuilder(new InputStreamReader(
-              remoteFileSystemClient.get(fileName)))
-              .withCSVParser(CsvHelper.getCsvParser()).build()) {
+      try (var reader =
+          new CSVReaderBuilder(new InputStreamReader(remoteFileSystemClient.get(fileName)))
+              .withCSVParser(CsvHelper.getCsvParser())
+              .build()) {
         marc21ReferenceProvider.updateMappingRules();
-        var changedOptionsSet = marc21ReferenceProvider.getChangedOptionsSetForCsv(
+        var changedOptionsSet =
+            marc21ReferenceProvider.getChangedOptionsSetForCsv(
                 ruleService.getMarcRules(bulkOperation.getId()));
         String[] line;
         while ((line = reader.readNext()) != null) {
@@ -139,8 +145,8 @@ public class MarcCsvHelper {
 
   private String getCsvFileName(BulkOperation bulkOperation) {
     return switch (bulkOperation.getStatus()) {
-      case REVIEW_CHANGES, COMPLETED, COMPLETED_WITH_ERRORS -> bulkOperation
-              .getLinkToModifiedRecordsMarcCsvFile();
+      case REVIEW_CHANGES, COMPLETED, COMPLETED_WITH_ERRORS ->
+          bulkOperation.getLinkToModifiedRecordsMarcCsvFile();
       default -> null;
     };
   }
@@ -148,9 +154,7 @@ public class MarcCsvHelper {
   private List<String> getInstanceHeaderNames() {
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class);
     noteTableUpdater.extendTableWithInstanceNotesTypes(table, Collections.emptySet());
-    return table.getHeader().stream()
-      .map(Cell::getValue)
-      .toList();
+    return table.getHeader().stream().map(Cell::getValue).toList();
   }
 
   private void handleSpecialCharacters(String[] strings) {

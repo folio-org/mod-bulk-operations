@@ -57,8 +57,8 @@ import org.springframework.stereotype.Component;
 @StepScope
 @RequiredArgsConstructor
 @Log4j2
-public class BulkEditHoldingsProcessor implements
-    ItemProcessor<ItemIdentifier, List<ExtendedHoldingsRecord>>, EntityExtractor {
+public class BulkEditHoldingsProcessor
+    implements ItemProcessor<ItemIdentifier, List<ExtendedHoldingsRecord>>, EntityExtractor {
   private final HoldingsStorageClient holdingsStorageClient;
   private final HoldingsReferenceService holdingsReferenceService;
   private final SearchClient searchClient;
@@ -74,12 +74,15 @@ public class BulkEditHoldingsProcessor implements
   @SuppressWarnings("unused")
   @Value("#{stepExecution.jobExecution}")
   private JobExecution jobExecution;
+
   @SuppressWarnings("unused")
   @Value("#{jobParameters['identifierType']}")
   private String identifierType;
+
   @SuppressWarnings("unused")
   @Value("#{jobParameters['jobId']}")
   private String jobId;
+
   @SuppressWarnings("unused")
   @Value("#{jobParameters['fileName']}")
   private String fileName;
@@ -87,24 +90,28 @@ public class BulkEditHoldingsProcessor implements
   @Override
   public List<ExtendedHoldingsRecord> process(@NotNull ItemIdentifier itemIdentifier)
       throws BulkEditException {
-    if (!duplicationCheckerFactory.getIdentifiersToCheckDuplication(jobExecution)
+    if (!duplicationCheckerFactory
+        .getIdentifiersToCheckDuplication(jobExecution)
         .add(itemIdentifier)) {
       throw new BulkEditException("Duplicate entry", ErrorType.WARNING);
     }
 
     var holdings = getHoldingsRecords(itemIdentifier);
 
-    var distinctHoldings = holdings.getExtendedHoldingsRecords()
-        .stream()
-        .filter(holdingsRecord ->
-            duplicationCheckerFactory.getFetchedIds(jobExecution)
-                .add(holdingsRecord.getEntity().getId()))
-        .toList();
+    var distinctHoldings =
+        holdings.getExtendedHoldingsRecords().stream()
+            .filter(
+                holdingsRecord ->
+                    duplicationCheckerFactory
+                        .getFetchedIds(jobExecution)
+                        .add(holdingsRecord.getEntity().getId()))
+            .toList();
 
     var fetchedIds = duplicationCheckerFactory.getFetchedIds(jobExecution);
-    var idsToAdd = distinctHoldings.stream()
-        .map(extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().getId())
-        .toList();
+    var idsToAdd =
+        distinctHoldings.stream()
+            .map(extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().getId())
+            .toList();
     fetchedIds.addAll(idsToAdd);
 
     return distinctHoldings;
@@ -117,65 +124,76 @@ public class BulkEditHoldingsProcessor implements
     var instanceHrid = INSTANCE_HRID.equals(type) ? itemIdentifier.getItemId() : null;
     var itemBarcode = ITEM_BARCODE.equals(type) ? itemIdentifier.getItemId() : null;
 
-    var centralTenantId = consortiaService.getCentralTenantId(
-        folioExecutionContext.getTenantId());
+    var centralTenantId = consortiaService.getCentralTenantId(folioExecutionContext.getTenantId());
 
     if (isCurrentTenantCentral(centralTenantId)) {
       // Process central tenant
       var identifierTypeEnum = getSearchIdentifierType(type);
-      var consortiumHoldingsCollection = searchClient.getConsortiumHoldingCollection(
-          new BatchIdsDto()
-              .identifierType(getSearchIdentifierType(type))
-              .identifierValues(List.of(identifier)));
+      var consortiumHoldingsCollection =
+          searchClient.getConsortiumHoldingCollection(
+              new BatchIdsDto()
+                  .identifierType(getSearchIdentifierType(type))
+                  .identifierValues(List.of(identifier)));
 
       if (consortiumHoldingsCollection != null
           && consortiumHoldingsCollection.getTotalRecords() > 0) {
-        var extendedHoldingsRecordCollection = new ExtendedHoldingsRecordCollection()
-            .withExtendedHoldingsRecords(new ArrayList<>())
-            .withTotalRecords(0);
+        var extendedHoldingsRecordCollection =
+            new ExtendedHoldingsRecordCollection()
+                .withExtendedHoldingsRecords(new ArrayList<>())
+                .withTotalRecords(0);
 
-        var tenantIds = consortiumHoldingsCollection.getHoldings()
-            .stream()
-            .map(ConsortiumHolding::getTenantId)
-            .collect(Collectors.toSet());
+        var tenantIds =
+            consortiumHoldingsCollection.getHoldings().stream()
+                .map(ConsortiumHolding::getTenantId)
+                .collect(Collectors.toSet());
 
         if (INSTANCEHRID != identifierTypeEnum && tenantIds.size() > 1) {
           throw new BulkEditException(DUPLICATES_ACROSS_TENANTS, ErrorType.ERROR);
         }
 
-        var affiliatedPermittedTenants = tenantResolver.getAffiliatedPermittedTenantIds(
-            HOLDINGS_RECORD, jobExecution, identifierType, tenantIds, itemIdentifier);
+        var affiliatedPermittedTenants =
+            tenantResolver.getAffiliatedPermittedTenantIds(
+                HOLDINGS_RECORD, jobExecution, identifierType, tenantIds, itemIdentifier);
 
-        affiliatedPermittedTenants.forEach(tenantId -> {
-          try (@SuppressWarnings("unused") var context = new FolioExecutionContextSetter(
-              prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
-            var holdingsRecordCollection = getHoldingsRecordCollection(type, itemIdentifier);
+        affiliatedPermittedTenants.forEach(
+            tenantId -> {
+              try (@SuppressWarnings("unused")
+                  var context =
+                      new FolioExecutionContextSetter(
+                          prepareContextForTenant(
+                              tenantId, folioModuleMetadata, folioExecutionContext))) {
+                var holdingsRecordCollection = getHoldingsRecordCollection(type, itemIdentifier);
 
-            var toAdd = holdingsRecordCollection.getHoldingsRecords()
-                .stream()
-                .map(holdingsRecord -> holdingsRecord.withInstanceHrid(instanceHrid))
-                .map(holdingsRecord -> holdingsRecord.withItemBarcode(itemBarcode))
-                .map(holdingsRecord -> holdingsRecord.withInstanceTitle(
-                    holdingsReferenceService.getInstanceTitleById(
-                        holdingsRecord.getInstanceId(), tenantId)))
-                .map(holdingsRecord -> {
-                  localReferenceDataService.enrichWithTenant(holdingsRecord, tenantId);
-                  return holdingsRecord.withTenantId(tenantId);
-                })
-                .map(holdingsRecord -> new ExtendedHoldingsRecord()
-                    .withTenantId(tenantId)
-                    .withEntity(holdingsRecord))
-                .toList();
+                var toAdd =
+                    holdingsRecordCollection.getHoldingsRecords().stream()
+                        .map(holdingsRecord -> holdingsRecord.withInstanceHrid(instanceHrid))
+                        .map(holdingsRecord -> holdingsRecord.withItemBarcode(itemBarcode))
+                        .map(
+                            holdingsRecord ->
+                                holdingsRecord.withInstanceTitle(
+                                    holdingsReferenceService.getInstanceTitleById(
+                                        holdingsRecord.getInstanceId(), tenantId)))
+                        .map(
+                            holdingsRecord -> {
+                              localReferenceDataService.enrichWithTenant(holdingsRecord, tenantId);
+                              return holdingsRecord.withTenantId(tenantId);
+                            })
+                        .map(
+                            holdingsRecord ->
+                                new ExtendedHoldingsRecord()
+                                    .withTenantId(tenantId)
+                                    .withEntity(holdingsRecord))
+                        .toList();
 
-            extendedHoldingsRecordCollection.getExtendedHoldingsRecords().addAll(toAdd);
-            extendedHoldingsRecordCollection.setTotalRecords(
-                extendedHoldingsRecordCollection.getTotalRecords()
-                    + holdingsRecordCollection.getTotalRecords());
-          } catch (Exception e) {
-            log.error(e.getMessage());
-            throw e;
-          }
-        });
+                extendedHoldingsRecordCollection.getExtendedHoldingsRecords().addAll(toAdd);
+                extendedHoldingsRecordCollection.setTotalRecords(
+                    extendedHoldingsRecordCollection.getTotalRecords()
+                        + holdingsRecordCollection.getTotalRecords());
+              } catch (Exception e) {
+                log.error(e.getMessage());
+                throw e;
+              }
+            });
         return extendedHoldingsRecordCollection;
       } else {
         throw new BulkEditException(NO_MATCH_FOUND_MESSAGE, ErrorType.ERROR);
@@ -185,21 +203,26 @@ public class BulkEditHoldingsProcessor implements
       checkReadPermissions(folioExecutionContext.getTenantId(), identifier);
       var holdingsRecordCollection = getHoldingsRecordCollection(type, itemIdentifier);
 
-      var extendedHoldings = holdingsRecordCollection.getHoldingsRecords()
-          .stream()
-          .map(holdingsRecord -> holdingsRecord.withInstanceHrid(instanceHrid))
-          .map(holdingsRecord -> holdingsRecord.withItemBarcode(itemBarcode))
-          .map(holdingsRecord -> holdingsRecord.withInstanceTitle(
-              holdingsReferenceService.getInstanceTitleById(
-                  holdingsRecord.getInstanceId(), folioExecutionContext.getTenantId())))
-          .map(holdingsRecord -> new ExtendedHoldingsRecord()
-              .withTenantId(folioExecutionContext.getTenantId())
-              .withEntity(holdingsRecord))
-          .toList();
+      var extendedHoldings =
+          holdingsRecordCollection.getHoldingsRecords().stream()
+              .map(holdingsRecord -> holdingsRecord.withInstanceHrid(instanceHrid))
+              .map(holdingsRecord -> holdingsRecord.withItemBarcode(itemBarcode))
+              .map(
+                  holdingsRecord ->
+                      holdingsRecord.withInstanceTitle(
+                          holdingsReferenceService.getInstanceTitleById(
+                              holdingsRecord.getInstanceId(), folioExecutionContext.getTenantId())))
+              .map(
+                  holdingsRecord ->
+                      new ExtendedHoldingsRecord()
+                          .withTenantId(folioExecutionContext.getTenantId())
+                          .withEntity(holdingsRecord))
+              .toList();
 
-      var extendedHoldingsRecordCollection = new ExtendedHoldingsRecordCollection()
-          .withExtendedHoldingsRecords(extendedHoldings)
-          .withTotalRecords(holdingsRecordCollection.getTotalRecords());
+      var extendedHoldingsRecordCollection =
+          new ExtendedHoldingsRecordCollection()
+              .withExtendedHoldingsRecords(extendedHoldings)
+              .withTotalRecords(holdingsRecordCollection.getTotalRecords());
 
       if (extendedHoldingsRecordCollection.getExtendedHoldingsRecords().isEmpty()) {
         throw new BulkEditException(NO_MATCH_FOUND_MESSAGE, ErrorType.ERROR);
@@ -230,8 +253,11 @@ public class BulkEditHoldingsProcessor implements
   private HoldingsRecordCollection getHoldingsRecordCollection(
       IdentifierType type, ItemIdentifier itemIdentifier) {
     if (Set.of(ID, HRID).contains(type)) {
-      var url = format(getMatchPattern(identifierType), resolveIdentifier(identifierType),
-          itemIdentifier.getItemId());
+      var url =
+          format(
+              getMatchPattern(identifierType),
+              resolveIdentifier(identifierType),
+              itemIdentifier.getItemId());
       var holdingsRecordCollection = holdingsStorageClient.getByQuery(url);
       if (holdingsRecordCollection.getTotalRecords() > 1) {
         log.error(
@@ -244,17 +270,15 @@ public class BulkEditHoldingsProcessor implements
       return holdingsRecordCollection;
     } else if (INSTANCE_HRID == type) {
       return holdingsStorageClient.getByQuery(
-          "instanceId==" + holdingsReferenceService.getInstanceIdByHrid(
-              itemIdentifier.getItemId()),
+          "instanceId==" + holdingsReferenceService.getInstanceIdByHrid(itemIdentifier.getItemId()),
           Integer.MAX_VALUE);
     } else if (ITEM_BARCODE == type) {
       return holdingsStorageClient.getByQuery(
-          "id==" + holdingsReferenceService.getHoldingsIdByItemBarcode(
-              itemIdentifier.getItemId()),
+          "id==" + holdingsReferenceService.getHoldingsIdByItemBarcode(itemIdentifier.getItemId()),
           1);
     } else {
-      throw new BulkEditException(format("Identifier type \"%s\" is not supported", identifierType),
-          ErrorType.ERROR);
+      throw new BulkEditException(
+          format("Identifier type \"%s\" is not supported", identifierType), ErrorType.ERROR);
     }
   }
 }

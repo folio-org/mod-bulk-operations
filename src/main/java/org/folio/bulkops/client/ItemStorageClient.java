@@ -11,5 +11,4 @@ public interface ItemStorageClient {
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   ItemCollection getByQuery(@RequestParam("query") String query, @RequestParam("limit") int limit);
-
 }

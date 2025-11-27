@@ -26,8 +26,7 @@ public class DataImportProfilesBuilder {
 
   @SuppressWarnings("unused")
   public ActionProfilePost getActionProfilePostToUpdateInstance(
-      MappingProfile mappingProfileToUpdateInstance)
-      throws IOException {
+      MappingProfile mappingProfileToUpdateInstance) throws IOException {
     String path = DATA_IMPORT_PROFILES_PATH + "action_update_instance_profile_post.json";
     try (var is = DataImportProfilesBuilder.class.getResourceAsStream(path)) {
       var actionProfile = OBJECT_MAPPER.readValue(is, ActionProfilePost.class);
@@ -39,8 +38,7 @@ public class DataImportProfilesBuilder {
     }
   }
 
-  public ActionProfilePost getActionProfilePostToUpdateSrs(
-      MappingProfile mappingProfileToUpdateSrs)
+  public ActionProfilePost getActionProfilePostToUpdateSrs(MappingProfile mappingProfileToUpdateSrs)
       throws IOException {
     String path = DATA_IMPORT_PROFILES_PATH + "action_update_srs_profile_post.json";
     try (var is = DataImportProfilesBuilder.class.getResourceAsStream(path)) {
@@ -69,9 +67,7 @@ public class DataImportProfilesBuilder {
   }
 
   public JobProfilePost getJobProfilePost(
-      MatchProfile matchProfile,
-      ActionProfile actionProfileToUpdateSrs)
-      throws IOException {
+      MatchProfile matchProfile, ActionProfile actionProfileToUpdateSrs) throws IOException {
     String path = DATA_IMPORT_PROFILES_PATH + "job_profile_post.json";
     try (var is = DataImportProfilesBuilder.class.getResourceAsStream(path)) {
       var jobProfilePost = OBJECT_MAPPER.readValue(is, JobProfilePost.class);
@@ -82,10 +78,11 @@ public class DataImportProfilesBuilder {
       addedRelations.stream()
           .skip(1)
           .findFirst()
-          .ifPresent(r -> {
-            r.setMasterProfileId(matchProfile.getId());
-            r.setDetailProfileId(actionProfileToUpdateSrs.getId());
-          });
+          .ifPresent(
+              r -> {
+                r.setMasterProfileId(matchProfile.getId());
+                r.setDetailProfileId(actionProfileToUpdateSrs.getId());
+              });
       return jobProfilePost;
     }
   }

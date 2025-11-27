@@ -66,9 +66,12 @@ public class HoldingsReferenceCacheService {
 
   @Cacheable(cacheNames = "holdingsTypesNames")
   HoldingsType getHoldingsTypeById(String id) {
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(
-            localReferenceDataService.getTenantByHoldingsTypeId(id), folioModuleMetadata,
-            folioExecutionContext))) {
+    try (var ignored =
+        new FolioExecutionContextSetter(
+            prepareContextForTenant(
+                localReferenceDataService.getTenantByHoldingsTypeId(id),
+                folioModuleMetadata,
+                folioExecutionContext))) {
       return holdingsTypeClient.getById(id);
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Holdings type not found by id=%s", id));
@@ -86,9 +89,12 @@ public class HoldingsReferenceCacheService {
 
   @Cacheable(cacheNames = "holdingsLocationsNames")
   ItemLocation getLocationById(String id) {
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(
-            localReferenceDataService.getTenantByLocationId(id), folioModuleMetadata,
-            folioExecutionContext))) {
+    try (var ignored =
+        new FolioExecutionContextSetter(
+            prepareContextForTenant(
+                localReferenceDataService.getTenantByLocationId(id),
+                folioModuleMetadata,
+                folioExecutionContext))) {
       return locationClient.getLocationById(id);
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Location not found by id=%s", id));
@@ -97,10 +103,13 @@ public class HoldingsReferenceCacheService {
 
   @Cacheable(cacheNames = "holdingsCallNumberTypesNames")
   String getCallNumberTypeNameById(String id) {
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(
-            localReferenceDataService.getTenantByCallNumberTypeId(id), folioModuleMetadata,
-            folioExecutionContext))) {
-      return  callNumberTypeClient.getById(id).getName();
+    try (var ignored =
+        new FolioExecutionContextSetter(
+            prepareContextForTenant(
+                localReferenceDataService.getTenantByCallNumberTypeId(id),
+                folioModuleMetadata,
+                folioExecutionContext))) {
+      return callNumberTypeClient.getById(id).getName();
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Call number type not found by id=%s", id));
     }
@@ -110,8 +119,8 @@ public class HoldingsReferenceCacheService {
   String getCallNumberTypeIdByName(String name, String tenantId) {
     var callNumberTypes = callNumberTypeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (callNumberTypes.getCallNumberTypes().isEmpty()) {
-      throw new ReferenceDataNotFoundException(format("Call number type not found by name=%s",
-              name));
+      throw new ReferenceDataNotFoundException(
+          format("Call number type not found by name=%s", name));
     }
     return callNumberTypes.getCallNumberTypes().getFirst().getId();
   }
@@ -121,8 +130,9 @@ public class HoldingsReferenceCacheService {
     if (isNull(tenantId)) {
       tenantId = folioExecutionContext.getTenantId();
     }
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
-            folioModuleMetadata, folioExecutionContext))) {
+    try (var ignored =
+        new FolioExecutionContextSetter(
+            prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return holdingsNoteTypeClient.getNoteTypeById(id).getName();
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Note type not found by id=%s", id));
@@ -131,8 +141,8 @@ public class HoldingsReferenceCacheService {
 
   @Cacheable(cacheNames = "holdingsNoteTypes")
   String getNoteTypeIdByName(String name, String tenantId) {
-    var noteTypes = holdingsNoteTypeClient.getNoteTypesByQuery(
-            format(QUERY_PATTERN_NAME, encode(name)), 1);
+    var noteTypes =
+        holdingsNoteTypeClient.getNoteTypesByQuery(format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (noteTypes.getHoldingsNoteTypes().isEmpty()) {
       throw new ReferenceDataNotFoundException(format("Note type not found by name=%s", name));
     }
@@ -141,9 +151,12 @@ public class HoldingsReferenceCacheService {
 
   @Cacheable(cacheNames = "illPolicyNames")
   IllPolicy getIllPolicyById(String id) {
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(
-            localReferenceDataService.getTenantByIllPolicyId(id), folioModuleMetadata,
-            folioExecutionContext))) {
+    try (var ignored =
+        new FolioExecutionContextSetter(
+            prepareContextForTenant(
+                localReferenceDataService.getTenantByIllPolicyId(id),
+                folioModuleMetadata,
+                folioExecutionContext))) {
       return illPolicyClient.getById(id);
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Ill policy not found by id=%s", id));
@@ -164,11 +177,15 @@ public class HoldingsReferenceCacheService {
 
   @Cacheable(cacheNames = "holdingsSourceNames")
   HoldingsRecordsSource getSourceById(String id) {
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(
-            localReferenceDataService.getTenantByHoldingsSourceId(id), folioModuleMetadata,
-            folioExecutionContext))) {
-      return isEmpty(id) ? HoldingsRecordsSource.builder().name(EMPTY).build() :
-        holdingsSourceClient.getById(id);
+    try (var ignored =
+        new FolioExecutionContextSetter(
+            prepareContextForTenant(
+                localReferenceDataService.getTenantByHoldingsSourceId(id),
+                folioModuleMetadata,
+                folioExecutionContext))) {
+      return isEmpty(id)
+          ? HoldingsRecordsSource.builder().name(EMPTY).build()
+          : holdingsSourceClient.getById(id);
     } catch (Exception e) {
       log.error(e);
       throw new NotFoundException(format("Holdings record source not found by id=%s", id));
@@ -186,8 +203,9 @@ public class HoldingsReferenceCacheService {
 
   @Cacheable(cacheNames = "holdingsStatisticalCodeNames")
   StatisticalCode getStatisticalCodeById(String id, String tenantId) {
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
-          folioModuleMetadata, folioExecutionContext))) {
+    try (var ignored =
+        new FolioExecutionContextSetter(
+            prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return statisticalCodeClient.getById(id);
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Statistical code not found by id=%s", id));
@@ -196,23 +214,24 @@ public class HoldingsReferenceCacheService {
 
   @Cacheable(cacheNames = "holdingsStatisticalCodes")
   public StatisticalCode getStatisticalCodeByName(String name, String tenantId) {
-    var statisticalCodes = statisticalCodeClient.getByQuery(format(QUERY_PATTERN_NAME,
-            encode(name)));
+    var statisticalCodes =
+        statisticalCodeClient.getByQuery(format(QUERY_PATTERN_NAME, encode(name)));
     if (statisticalCodes.getStatisticalCodes().isEmpty()) {
-      throw new ReferenceDataNotFoundException(format("Statistical code not found by name=%s",
-              name));
+      throw new ReferenceDataNotFoundException(
+          format("Statistical code not found by name=%s", name));
     }
     return statisticalCodes.getStatisticalCodes().getFirst();
   }
 
   @Cacheable(cacheNames = "holdingsStatisticalCodeTypes")
   public StatisticalCodeType getStatisticalCodeTypeById(String id, String tenantId) {
-    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
-          folioModuleMetadata, folioExecutionContext))) {
+    try (var ignored =
+        new FolioExecutionContextSetter(
+            prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return statisticalCodeTypeClient.getById(id);
     } catch (Exception e) {
-      throw new ReferenceDataNotFoundException(format("Statistical code type not found by id=%s",
-              id));
+      throw new ReferenceDataNotFoundException(
+          format("Statistical code type not found by id=%s", id));
     }
   }
 
@@ -225,8 +244,9 @@ public class HoldingsReferenceCacheService {
 
   @Cacheable(cacheNames = "holdingsJsons")
   public JsonNode getHoldingsJsonById(String holdingsId, String tenantId) {
-    try (var context = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
-            folioModuleMetadata, folioExecutionContext))) {
+    try (var context =
+        new FolioExecutionContextSetter(
+            prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return holdingsStorageClient.getHoldingsJsonById(holdingsId);
     }
   }
@@ -236,8 +256,9 @@ public class HoldingsReferenceCacheService {
     if (ObjectUtils.isEmpty(locationId)) {
       return new ObjectMapper().createObjectNode();
     }
-    try (var context = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
-            folioModuleMetadata, folioExecutionContext))) {
+    try (var context =
+        new FolioExecutionContextSetter(
+            prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       return locationClient.getLocationJsonById(locationId);
     }
   }

@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BulkOperationMarcRuleRepository
-        extends JpaRepository<BulkOperationMarcRule, UUID> {
+    extends JpaRepository<BulkOperationMarcRule, UUID> {
 
   List<BulkOperationMarcRule> findAllByBulkOperationId(UUID bulkOperationId);
 

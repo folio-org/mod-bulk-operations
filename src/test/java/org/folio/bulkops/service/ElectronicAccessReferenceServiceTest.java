@@ -24,14 +24,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class ElectronicAccessReferenceServiceTest {
-  @Mock
-  private ElectronicAccessRelationshipClient electronicAccessRelationshipClient;
-  @Mock
-  private FolioExecutionContext folioExecutionContext;
-  @Mock
-  private LocalReferenceDataService localReferenceDataService;
-  @InjectMocks
-  private ElectronicAccessReferenceService electronicAccessReferenceService;
+  @Mock private ElectronicAccessRelationshipClient electronicAccessRelationshipClient;
+  @Mock private FolioExecutionContext folioExecutionContext;
+  @Mock private LocalReferenceDataService localReferenceDataService;
+  @InjectMocks private ElectronicAccessReferenceService electronicAccessReferenceService;
 
   @Test
   void shouldReturnRelationshipNameById() {
@@ -42,7 +38,7 @@ class ElectronicAccessReferenceServiceTest {
     when(localReferenceDataService.getTenantByUrlRelationshipId(id)).thenReturn("diku");
     var expectedName = "name";
     when(electronicAccessRelationshipClient.getById(id))
-            .thenReturn(new ElectronicAccessRelationship().withName(expectedName));
+        .thenReturn(new ElectronicAccessRelationship().withName(expectedName));
 
     var actualName = electronicAccessReferenceService.getRelationshipNameById(id);
 
@@ -56,12 +52,13 @@ class ElectronicAccessReferenceServiceTest {
     HashMap<String, Collection<String>> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, List.of("tenant"));
     when(electronicAccessRelationshipClient.getById(id))
-            .thenThrow(new NotFoundException("Not found"));
+        .thenThrow(new NotFoundException("Not found"));
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(localReferenceDataService.getTenantByUrlRelationshipId(id)).thenReturn("tenant");
 
-    assertThrows(ReferenceDataNotFoundException.class,
-            () -> electronicAccessReferenceService.getRelationshipNameById(id));
+    assertThrows(
+        ReferenceDataNotFoundException.class,
+        () -> electronicAccessReferenceService.getRelationshipNameById(id));
   }
 
   @Test
@@ -69,9 +66,11 @@ class ElectronicAccessReferenceServiceTest {
     var name = "name";
     var expectedId = "id";
     when(electronicAccessRelationshipClient.getByQuery(String.format(QUERY_PATTERN_NAME, name)))
-            .thenReturn(new ElectronicAccessRelationshipCollection()
-        .withElectronicAccessRelationships(Collections.singletonList(
-                new ElectronicAccessRelationship().withId(expectedId))));
+        .thenReturn(
+            new ElectronicAccessRelationshipCollection()
+                .withElectronicAccessRelationships(
+                    Collections.singletonList(
+                        new ElectronicAccessRelationship().withId(expectedId))));
 
     var actualId = electronicAccessReferenceService.getRelationshipIdByName(name);
 
@@ -82,8 +81,9 @@ class ElectronicAccessReferenceServiceTest {
   void shouldReturnNameIfRelationshipNotFound() {
     var name = "name";
     when(electronicAccessRelationshipClient.getByQuery(String.format(QUERY_PATTERN_NAME, name)))
-            .thenReturn(new ElectronicAccessRelationshipCollection()
-                    .withElectronicAccessRelationships(Collections.emptyList()));
+        .thenReturn(
+            new ElectronicAccessRelationshipCollection()
+                .withElectronicAccessRelationships(Collections.emptyList()));
 
     var actualId = electronicAccessReferenceService.getRelationshipIdByName(name);
     var expectedId = name;

@@ -58,32 +58,26 @@ class NoteTableUpdaterTest {
   private static final int NOTE_HOLDINGS_POSITION = HOLDINGS_NOTE_POSITION + 1;
   private static final int OTHER_HOLDINGS_POSITION = HOLDINGS_NOTE_POSITION + 2;
 
-  @Mock
-  private FolioExecutionContext folioExecutionContext;
-  @Mock
-  private ConsortiaService consortiaService;
-  @Mock
-  private ItemReferenceService itemReferenceService;
-  @Mock
-  private HoldingsReferenceService holdingsReferenceService;
-  @Mock
-  private BulkOperationRepository bulkOperationRepository;
-  @Mock
-  private CacheManager cacheManager;
-  @Mock
-  private Cache cache;
-  @Mock
-  private SearchConsortium searchConsortium;
+  @Mock private FolioExecutionContext folioExecutionContext;
+  @Mock private ConsortiaService consortiaService;
+  @Mock private ItemReferenceService itemReferenceService;
+  @Mock private HoldingsReferenceService holdingsReferenceService;
+  @Mock private BulkOperationRepository bulkOperationRepository;
+  @Mock private CacheManager cacheManager;
+  @Mock private Cache cache;
+  @Mock private SearchConsortium searchConsortium;
 
-  @InjectMocks
-  private NoteTableUpdater noteTableUpdater;
+  @InjectMocks private NoteTableUpdater noteTableUpdater;
 
   @Test
   void shouldExtendTableWithItemNoteTypes() {
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Item.class);
-    var row = Arrays.stream(new String[table.getHeader().size()])
+    var row =
+        Arrays.stream(new String[table.getHeader().size()])
             .collect(Collectors.toCollection(ArrayList::new));
-    row.set(ITEM_NOTE_POSITION, "Action note;Action note text;false;tenant;"
+    row.set(
+        ITEM_NOTE_POSITION,
+        "Action note;Action note text;false;tenant;"
             + "3e095251-4e9a-4484-8473-d5580abeccd0|Note;Note text;false;tenant;"
             + "3e095251-4e9a-4484-8473-d5580abeccd0|Other;Other text;false;tenant;"
             + "3e095251-4e9a-4484-8473-d5580abeccd0");
@@ -92,9 +86,11 @@ class NoteTableUpdaterTest {
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
     when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(itemReferenceService.getAllItemNoteTypes("tenantId"))
-        .thenReturn(List.of(NoteType.builder().name("Action note").build(),
-        NoteType.builder().name("Note").build(),
-        NoteType.builder().name("Other").build()));
+        .thenReturn(
+            List.of(
+                NoteType.builder().name("Action note").build(),
+                NoteType.builder().name("Note").build(),
+                NoteType.builder().name("Other").build()));
     var expectedTableSize = table.getHeader().size() + 2;
     noteTableUpdater.extendTableWithItemNotesTypes(table, Set.of("Action note", "Other"), null);
 
@@ -120,9 +116,12 @@ class NoteTableUpdaterTest {
     Map<String, Collection<String>> headers = new HashMap<>();
     headers.put("tenant", List.of("central"));
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Item.class);
-    var row = Arrays.stream(new String[table.getHeader().size()])
+    var row =
+        Arrays.stream(new String[table.getHeader().size()])
             .collect(Collectors.toCollection(ArrayList::new));
-    row.set(ITEM_NOTE_POSITION, "Action note;Action note text;false;member;"
+    row.set(
+        ITEM_NOTE_POSITION,
+        "Action note;Action note text;false;member;"
             + "60b1f73e-bbf2-4807-806b-3166620a7aaa|Note;Note text;false;member;"
             + "60b1f73e-bbf2-4807-806b-3166620a7aaa|Other;Other text;false;member;"
             + "60b1f73e-bbf2-4807-806b-3166620a7aaa");
@@ -139,16 +138,18 @@ class NoteTableUpdaterTest {
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(itemReferenceService.getAllItemNoteTypes("central")).thenReturn(List.of());
     when(itemReferenceService.getAllItemNoteTypes("member"))
-        .thenReturn(List.of(NoteType.builder().name("Action note").tenantId("member").build(),
-        NoteType.builder().name("Note").tenantId("member").build(),
-        NoteType.builder().name("Other").tenantId("member").build()));
+        .thenReturn(
+            List.of(
+                NoteType.builder().name("Action note").tenantId("member").build(),
+                NoteType.builder().name("Note").tenantId("member").build(),
+                NoteType.builder().name("Other").tenantId("member").build()));
     when(cacheManager.getCache("itemNoteTypes")).thenReturn(cache);
 
     var bulkOperation = new BulkOperation();
     bulkOperation.setUsedTenants(List.of("central", "member"));
     var expectedTableSize = table.getHeader().size() + 2;
-    noteTableUpdater.extendTableWithItemNotesTypes(table, Set.of("Action note", "Other"),
-            bulkOperation);
+    noteTableUpdater.extendTableWithItemNotesTypes(
+        table, Set.of("Action note", "Other"), bulkOperation);
 
     assertThat(table.getHeader(), hasSize(expectedTableSize));
     var headerNames = table.getHeader().stream().map(Cell::getValue).toList();
@@ -170,16 +171,19 @@ class NoteTableUpdaterTest {
   @Test
   void shouldExtendTableWithEmptyItemsNotes() {
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Item.class);
-    var row = Arrays.stream(new String[table.getHeader().size()])
+    var row =
+        Arrays.stream(new String[table.getHeader().size()])
             .collect(Collectors.toCollection(ArrayList::new));
     table.setRows(List.of(new Row().row(row)));
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
     when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(itemReferenceService.getAllItemNoteTypes("tenantId"))
-        .thenReturn(List.of(NoteType.builder().name("Action note").build(),
-        NoteType.builder().name("Note").build(),
-        NoteType.builder().name("Other").build()));
+        .thenReturn(
+            List.of(
+                NoteType.builder().name("Action note").build(),
+                NoteType.builder().name("Note").build(),
+                NoteType.builder().name("Other").build()));
     var expectedTableSize = table.getHeader().size() + 2;
     noteTableUpdater.extendTableWithItemNotesTypes(table, emptySet(), null);
 
@@ -199,9 +203,12 @@ class NoteTableUpdaterTest {
   @Test
   void shouldAddStaffOnlyPostfixWhenRequiredForItemNotes() {
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Item.class);
-    var row = Arrays.stream(new String[table.getHeader().size()])
+    var row =
+        Arrays.stream(new String[table.getHeader().size()])
             .collect(Collectors.toCollection(ArrayList::new));
-    row.set(ITEM_NOTE_POSITION, "Action note;Action note text;true;tenantId;"
+    row.set(
+        ITEM_NOTE_POSITION,
+        "Action note;Action note text;true;tenantId;"
             + "60b1f73e-bbf2-4807-806b-3166620a7aaa|Note;Note text;false;tenantId;"
             + "60b1f73e-bbf2-4807-806b-3166620a7aaa|Other;Other text;true;tenantId;"
             + "60b1f73e-bbf2-4807-806b-3166620a7aaa");
@@ -210,9 +217,11 @@ class NoteTableUpdaterTest {
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
     when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(itemReferenceService.getAllItemNoteTypes("tenantId"))
-        .thenReturn(List.of(NoteType.builder().name("Action note").build(),
-        NoteType.builder().name("Note").build(),
-        NoteType.builder().name("Other").build()));
+        .thenReturn(
+            List.of(
+                NoteType.builder().name("Action note").build(),
+                NoteType.builder().name("Note").build(),
+                NoteType.builder().name("Other").build()));
     var expectedTableSize = table.getHeader().size() + 2;
     noteTableUpdater.extendTableWithItemNotesTypes(table, emptySet(), null);
 
@@ -232,9 +241,12 @@ class NoteTableUpdaterTest {
   @Test
   void shouldExtendTableWithHoldingsNoteTypes() {
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Item.class);
-    var row = Arrays.stream(new String[table.getHeader().size()])
+    var row =
+        Arrays.stream(new String[table.getHeader().size()])
             .collect(Collectors.toCollection(ArrayList::new));
-    row.set(HOLDINGS_NOTE_POSITION, "Action note;Action note text;false;tenant;"
+    row.set(
+        HOLDINGS_NOTE_POSITION,
+        "Action note;Action note text;false;tenant;"
             + "60b1f73e-bbf2-4807-806b-3166620a7aaa|Note;Note text;false;tenant;"
             + "60b1f73e-bbf2-4807-806b-3166620a7aaa|Other;Other text;false;tenant;"
             + "60b1f73e-bbf2-4807-806b-3166620a7aaa");
@@ -243,12 +255,13 @@ class NoteTableUpdaterTest {
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
     when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(holdingsReferenceService.getAllHoldingsNoteTypes("tenantId"))
-        .thenReturn(List.of(HoldingsNoteType.builder().name("Action note").build(),
-        HoldingsNoteType.builder().name("Note").build(),
-        HoldingsNoteType.builder().name("Other").build()));
+        .thenReturn(
+            List.of(
+                HoldingsNoteType.builder().name("Action note").build(),
+                HoldingsNoteType.builder().name("Note").build(),
+                HoldingsNoteType.builder().name("Other").build()));
     var expectedTableSize = table.getHeader().size() + 2;
-    noteTableUpdater.extendTableWithHoldingsNotesTypes(table, Set.of("Action note", "Other"),
-            null);
+    noteTableUpdater.extendTableWithHoldingsNotesTypes(table, Set.of("Action note", "Other"), null);
 
     assertThat(table.getHeader(), hasSize(expectedTableSize));
     var headerNames = table.getHeader().stream().map(Cell::getValue).toList();
@@ -272,10 +285,13 @@ class NoteTableUpdaterTest {
     Map<String, Collection<String>> headers = new HashMap<>();
     headers.put("tenant", List.of("central"));
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Item.class);
-    var row = Arrays.stream(new String[table.getHeader().size()])
+    var row =
+        Arrays.stream(new String[table.getHeader().size()])
             .collect(Collectors.toCollection(ArrayList::new));
     row.set(0, UUID.randomUUID().toString());
-    row.set(HOLDINGS_NOTE_POSITION, "Action note;Action note text;false;member;"
+    row.set(
+        HOLDINGS_NOTE_POSITION,
+        "Action note;Action note text;false;member;"
             + "3e095251-4e9a-4484-8473-d5580abeccd0|Note;Note text;false;"
             + "member;3e095251-4e9a-4484-8473-d5580abeccd0|Other;Other text;"
             + "false;member;3e095251-4e9a-4484-8473-d5580abeccd0");
@@ -291,16 +307,17 @@ class NoteTableUpdaterTest {
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     when(holdingsReferenceService.getAllHoldingsNoteTypes("central")).thenReturn(List.of());
     when(holdingsReferenceService.getAllHoldingsNoteTypes("member"))
-        .thenReturn(List.of(HoldingsNoteType.builder().name("Action note").tenantId("member")
-                        .build(),
-        HoldingsNoteType.builder().name("Note").tenantId("member").build(),
-        HoldingsNoteType.builder().name("Other").tenantId("member").build()));
+        .thenReturn(
+            List.of(
+                HoldingsNoteType.builder().name("Action note").tenantId("member").build(),
+                HoldingsNoteType.builder().name("Note").tenantId("member").build(),
+                HoldingsNoteType.builder().name("Other").tenantId("member").build()));
     when(cacheManager.getCache("holdingsNoteTypes")).thenReturn(cache);
     var expectedTableSize = table.getHeader().size() + 2;
     var bulkOperation = new BulkOperation();
     bulkOperation.setUsedTenants(List.of("central", "member"));
-    noteTableUpdater.extendTableWithHoldingsNotesTypes(table, Set.of("Action note", "Other"),
-            bulkOperation);
+    noteTableUpdater.extendTableWithHoldingsNotesTypes(
+        table, Set.of("Action note", "Other"), bulkOperation);
 
     assertThat(table.getHeader(), hasSize(expectedTableSize));
     var headerNames = table.getHeader().stream().map(Cell::getValue).toList();
@@ -322,16 +339,19 @@ class NoteTableUpdaterTest {
   @Test
   void shouldExtendTableWithEmptyHoldingsNotes() {
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Item.class);
-    var row = Arrays.stream(new String[table.getHeader().size()])
+    var row =
+        Arrays.stream(new String[table.getHeader().size()])
             .collect(Collectors.toCollection(ArrayList::new));
     table.setRows(List.of(new Row().row(row)));
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
     when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(holdingsReferenceService.getAllHoldingsNoteTypes("tenantId"))
-        .thenReturn(List.of(HoldingsNoteType.builder().name("Action note").build(),
-        HoldingsNoteType.builder().name("Note").build(),
-        HoldingsNoteType.builder().name("Other").build()));
+        .thenReturn(
+            List.of(
+                HoldingsNoteType.builder().name("Action note").build(),
+                HoldingsNoteType.builder().name("Note").build(),
+                HoldingsNoteType.builder().name("Other").build()));
     var expectedTableSize = table.getHeader().size() + 2;
     noteTableUpdater.extendTableWithHoldingsNotesTypes(table, emptySet(), null);
 
@@ -351,9 +371,12 @@ class NoteTableUpdaterTest {
   @Test
   void shouldAddStaffOnlyPostfixWhenRequiredForHoldingsNotes() {
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Item.class);
-    var row = Arrays.stream(new String[table.getHeader().size()])
+    var row =
+        Arrays.stream(new String[table.getHeader().size()])
             .collect(Collectors.toCollection(ArrayList::new));
-    row.set(HOLDINGS_NOTE_POSITION, "Action note;Action note text;true;tenantId;"
+    row.set(
+        HOLDINGS_NOTE_POSITION,
+        "Action note;Action note text;true;tenantId;"
             + "3e095251-4e9a-4484-8473-d5580abeccd0|Note;Note text;false;tenantId;"
             + "3e095251-4e9a-4484-8473-d5580abeccd0|Other;Other text;true;tenantId;"
             + "3e095251-4e9a-4484-8473-d5580abeccd0");
@@ -362,10 +385,11 @@ class NoteTableUpdaterTest {
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
     when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(holdingsReferenceService.getAllHoldingsNoteTypes("tenantId"))
-        .thenReturn(List.of(HoldingsNoteType.builder().name("Action note")
-                        .tenantId("tenantId").build(),
-        HoldingsNoteType.builder().name("Note").tenantId("tenantId").build(),
-        HoldingsNoteType.builder().name("Other").tenantId("tenantId").build()));
+        .thenReturn(
+            List.of(
+                HoldingsNoteType.builder().name("Action note").tenantId("tenantId").build(),
+                HoldingsNoteType.builder().name("Note").tenantId("tenantId").build(),
+                HoldingsNoteType.builder().name("Other").tenantId("tenantId").build()));
     var expectedTableSize = table.getHeader().size() + 2;
     noteTableUpdater.extendTableWithHoldingsNotesTypes(table, emptySet(), new BulkOperation());
 
@@ -385,95 +409,116 @@ class NoteTableUpdaterTest {
   @Test
   void shouldAddNotePostfixWhenRequiredForHoldingsNoteTypeNames() {
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(HoldingsRecord.class);
-    var row = Arrays.stream(new String[table.getHeader().size()])
+    var row =
+        Arrays.stream(new String[table.getHeader().size()])
             .collect(Collectors.toCollection(ArrayList::new));
     table.setRows(List.of(new Row().row(row)));
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
     when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(holdingsReferenceService.getAllHoldingsNoteTypes("tenantId"))
-        .thenReturn(List.of(HoldingsNoteType.builder().name("Binding").build(),
-        HoldingsNoteType.builder().name("Electronic bookplate").build(),
-        HoldingsNoteType.builder().name("Provenance").build(),
-        HoldingsNoteType.builder().name("Reproduction").build()));
+        .thenReturn(
+            List.of(
+                HoldingsNoteType.builder().name("Binding").build(),
+                HoldingsNoteType.builder().name("Electronic bookplate").build(),
+                HoldingsNoteType.builder().name("Provenance").build(),
+                HoldingsNoteType.builder().name("Reproduction").build()));
 
     noteTableUpdater.extendTableWithHoldingsNotesTypes(table, emptySet(), null);
 
     var headerNames = table.getHeader().stream().map(Cell::getValue).toList();
-    List.of("Binding", "Electronic bookplate", "Provenance", "Reproduction").forEach(name ->
-        assertTrue(headerNames.contains(name + " note")));
+    List.of("Binding", "Electronic bookplate", "Provenance", "Reproduction")
+        .forEach(name -> assertTrue(headerNames.contains(name + " note")));
   }
 
   @Test
   void shouldAddNotePostfixWhenRequiredForItemNoteTypeNames() {
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Item.class);
-    var row = Arrays.stream(new String[table.getHeader().size()])
+    var row =
+        Arrays.stream(new String[table.getHeader().size()])
             .collect(Collectors.toCollection(ArrayList::new));
     table.setRows(List.of(new Row().row(row)));
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenantId");
     when(consortiaService.isTenantCentral("tenantId")).thenReturn(false);
     when(itemReferenceService.getAllItemNoteTypes("tenantId"))
-        .thenReturn(List.of(NoteType.builder().name("Binding").build(),
-        NoteType.builder().name("Electronic bookplate").build(),
-        NoteType.builder().name("Provenance").build(),
-        NoteType.builder().name("Reproduction").build()));
+        .thenReturn(
+            List.of(
+                NoteType.builder().name("Binding").build(),
+                NoteType.builder().name("Electronic bookplate").build(),
+                NoteType.builder().name("Provenance").build(),
+                NoteType.builder().name("Reproduction").build()));
 
     noteTableUpdater.extendTableWithItemNotesTypes(table, emptySet(), null);
 
     var headerNames = table.getHeader().stream().map(Cell::getValue).toList();
-    List.of("Binding", "Electronic bookplate", "Provenance", "Reproduction").forEach(name ->
-        assertTrue(headerNames.contains(name + " note")));
+    List.of("Binding", "Electronic bookplate", "Provenance", "Reproduction")
+        .forEach(name -> assertTrue(headerNames.contains(name + " note")));
   }
 
   @Test
   void shouldEnrichWithNotesByTypeIfNoteTypeHasSpecialCharacters() {
     var noteTypeWithEscapedSpecialCharacters = SpecialCharacterEscaper.escape("O|;:ther");
-    var row = new ArrayList<>(List.of("Note;Note text;false;"
-            + "tenant;6c8e4b97-4224-4155-8b13-07e29aca88ad|"
-            + noteTypeWithEscapedSpecialCharacters
-            + ";Other text;true;tenant;6c8e4b97-4224-4155-8b13-07e29aca88ad"));
+    var row =
+        new ArrayList<>(
+            List.of(
+                "Note;Note text;false;"
+                    + "tenant;6c8e4b97-4224-4155-8b13-07e29aca88ad|"
+                    + noteTypeWithEscapedSpecialCharacters
+                    + ";Other text;true;tenant;6c8e4b97-4224-4155-8b13-07e29aca88ad"));
     var noteTypeNames = List.of("Note", "O|;:ther");
-    var enriched = noteTableUpdater.enrichWithNotesByType(row, 0, noteTypeNames,
-            Collections.emptyList(), false);
+    var enriched =
+        noteTableUpdater.enrichWithNotesByType(
+            row, 0, noteTypeNames, Collections.emptyList(), false);
     assertEquals(2, enriched.size());
     assertEquals("Other text (staff only)", enriched.get(1));
   }
 
   @Test
   void shouldUpdateNoteTypeNamesWithTenants_whenNoteIdsAreDifferent() {
-    List<NoteType> noteTypesFromUserTenants = List.of(
-        NoteType.builder().name("Binding").tenantId("memberA").id("id1").build(),
-        NoteType.builder().name("Binding").tenantId("memberB").id("id2").build());
+    List<NoteType> noteTypesFromUserTenants =
+        List.of(
+            NoteType.builder().name("Binding").tenantId("memberA").id("id1").build(),
+            NoteType.builder().name("Binding").tenantId("memberB").id("id2").build());
     noteTableUpdater.updateNoteTypeNamesWithTenants(noteTypesFromUserTenants);
-    noteTypesFromUserTenants.forEach(noteType -> assertEquals("Binding ("
-            + noteType.getTenantId() + ")", noteType.getName()));
+    noteTypesFromUserTenants.forEach(
+        noteType -> assertEquals("Binding (" + noteType.getTenantId() + ")", noteType.getName()));
   }
 
   @Test
   void shouldNotUpdateNoteTypeNamesWithTenants_whenNoteIdsAreTheSame() {
-    List<NoteType> noteTypesFromUserTenants = List.of(
-        NoteType.builder().name("Binding").tenantId("memberA").id("id1").build(),
-        NoteType.builder().name("Binding").tenantId("memberB").id("id1").build());
+    List<NoteType> noteTypesFromUserTenants =
+        List.of(
+            NoteType.builder().name("Binding").tenantId("memberA").id("id1").build(),
+            NoteType.builder().name("Binding").tenantId("memberB").id("id1").build());
     noteTableUpdater.updateNoteTypeNamesWithTenants(noteTypesFromUserTenants);
     noteTypesFromUserTenants.forEach(noteType -> assertEquals("Binding", noteType.getName()));
   }
 
   @Test
   void shouldUpdateNoteTypeNamesWithTenants_whenThereAreNoteTypesInAllTenants() {
-    List<NoteType> noteTypesFromUserTenants = List.of(
-        NoteType.builder().name("Binding").tenantId("memberA").id("id1").build(),
-        NoteType.builder().name("Binding").tenantId("memberB").id("id1").build(),
-        NoteType.builder().name("Binding2").tenantId("memberB").id("id2").build(),
-        NoteType.builder().name("Binding").tenantId("memberC").id("id1").build(),
-        NoteType.builder().name("Binding3").tenantId("memberC").id("id1").build()
-    );
+    List<NoteType> noteTypesFromUserTenants =
+        List.of(
+            NoteType.builder().name("Binding").tenantId("memberA").id("id1").build(),
+            NoteType.builder().name("Binding").tenantId("memberB").id("id1").build(),
+            NoteType.builder().name("Binding2").tenantId("memberB").id("id2").build(),
+            NoteType.builder().name("Binding").tenantId("memberC").id("id1").build(),
+            NoteType.builder().name("Binding3").tenantId("memberC").id("id1").build());
     noteTableUpdater.updateNoteTypeNamesWithTenants(noteTypesFromUserTenants);
-    Assertions.assertThat(noteTypesFromUserTenants.stream()
-            .filter(note -> note.getName().equals("Binding")).count()).isEqualTo(3);
-    Assertions.assertThat(noteTypesFromUserTenants.stream()
-            .filter(note -> note.getName().equals("Binding2 (memberB)")).count()).isEqualTo(1);
-    Assertions.assertThat(noteTypesFromUserTenants.stream()
-            .filter(note -> note.getName().equals("Binding3 (memberC)")).count()).isEqualTo(1);
+    Assertions.assertThat(
+            noteTypesFromUserTenants.stream()
+                .filter(note -> note.getName().equals("Binding"))
+                .count())
+        .isEqualTo(3);
+    Assertions.assertThat(
+            noteTypesFromUserTenants.stream()
+                .filter(note -> note.getName().equals("Binding2 (memberB)"))
+                .count())
+        .isEqualTo(1);
+    Assertions.assertThat(
+            noteTypesFromUserTenants.stream()
+                .filter(note -> note.getName().equals("Binding3 (memberC)"))
+                .count())
+        .isEqualTo(1);
   }
 }

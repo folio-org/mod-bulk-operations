@@ -22,4 +22,3 @@ public class InstanceNote {
   @JsonProperty("staffOnly")
   private Boolean staffOnly = false;
 }
-

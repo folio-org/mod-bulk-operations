@@ -13,7 +13,6 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.stereotype.Service;
 
-
 @Service
 @Log4j2
 @RequiredArgsConstructor
@@ -25,12 +24,9 @@ public class DataImportJobCompletionReceiverService {
   @KafkaListener(
       containerFactory = "kafkaListenerContainerFactoryDi",
       topicPattern = "${application.kafka.topic-pattern-di}",
-      groupId = "${application.kafka.group-id}"
-  )
+      groupId = "${application.kafka.group-id}")
   public void receiveJobExecutionUpdate(
-      DataImportJobExecution dataImportJobExecution,
-      @Headers Map<String, Object> messageHeaders
-  ) {
+      DataImportJobExecution dataImportJobExecution, @Headers Map<String, Object> messageHeaders) {
     var defaultFolioExecutionContext =
         DefaultFolioExecutionContext.fromMessageHeaders(folioModuleMetadata, messageHeaders);
     try (var context = new FolioExecutionContextSetter(defaultFolioExecutionContext)) {
@@ -45,11 +41,12 @@ public class DataImportJobCompletionReceiverService {
 
       var importProfileId = jobProfileInfo.getId();
 
-      bulkOperationRepository.findByDataImportJobProfileId(importProfileId)
+      bulkOperationRepository
+          .findByDataImportJobProfileId(importProfileId)
           .ifPresent(bulkOperationService::processDataImportResult);
     } catch (Exception e) {
-      log.error("Failed to process DI event: {}, reason: {}",
-          dataImportJobExecution, e.getMessage());
+      log.error(
+          "Failed to process DI event: {}, reason: {}", dataImportJobExecution, e.getMessage());
     }
   }
 }

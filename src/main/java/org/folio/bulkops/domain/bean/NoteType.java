@@ -12,7 +12,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class NoteType   {
+public class NoteType {
   @JsonProperty("id")
   private String id;
 
@@ -24,6 +24,6 @@ public class NoteType   {
 
   @JsonProperty("metadata")
   private Metadata metadata;
+
   private String tenantId;
 }
-

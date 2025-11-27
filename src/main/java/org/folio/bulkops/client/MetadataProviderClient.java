@@ -15,15 +15,17 @@ public interface MetadataProviderClient {
 
   @GetMapping(value = "/jobExecutions", produces = MediaType.APPLICATION_JSON_VALUE)
   DataImportJobExecutionCollection getJobExecutionsByJobProfileId(
-          @RequestParam("profileIdAny") UUID profileId, @RequestParam long limit);
+      @RequestParam("profileIdAny") UUID profileId, @RequestParam long limit);
 
-  @GetMapping(value = "/jobLogEntries/{jobExecutionId}",
-          produces = MediaType.APPLICATION_JSON_VALUE)
-  JobLogEntryCollection getJobLogEntries(@PathVariable String jobExecutionId,
-                                         @RequestParam long limit);
+  @GetMapping(
+      value = "/jobLogEntries/{jobExecutionId}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  JobLogEntryCollection getJobLogEntries(
+      @PathVariable String jobExecutionId, @RequestParam long limit);
 
-  @GetMapping(value = "/jobLogEntries/{jobExecutionId}",
-          produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(
+      value = "/jobLogEntries/{jobExecutionId}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
   JobLogEntryCollection getJobLogEntries(
       @PathVariable String jobExecutionId, @RequestParam long offset, @RequestParam long limit);
 }

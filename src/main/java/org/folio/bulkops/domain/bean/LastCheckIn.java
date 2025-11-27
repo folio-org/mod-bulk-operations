@@ -22,4 +22,3 @@ public class LastCheckIn {
   @JsonProperty("staffMemberId")
   private String staffMemberId;
 }
-

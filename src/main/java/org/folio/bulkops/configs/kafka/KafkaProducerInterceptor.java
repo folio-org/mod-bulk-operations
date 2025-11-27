@@ -41,11 +41,7 @@ public class KafkaProducerInterceptor implements ProducerInterceptor<Object, Obj
 
   private RecordHeader toRecordHeader(Entry<String, Collection<String>> entry) {
     byte[] value =
-        entry.getValue()
-          .stream()
-          .findFirst()
-          .orElse("")
-          .getBytes(StandardCharsets.UTF_8);
+        entry.getValue().stream().findFirst().orElse("").getBytes(StandardCharsets.UTF_8);
     return new RecordHeader(entry.getKey(), value);
   }
 }
