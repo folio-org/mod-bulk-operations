@@ -141,7 +141,7 @@ class InstanceReferenceServiceTest {
 
   @Test
   void shouldReturnContributorTypesByCodeIfCodeContainsSlashes() {
-    when(contributorTypesClient.getByQuery("code==\"\"http://code/code\"\"", 1))
+    when(contributorTypesClient.getByQuery("code==\"http://code/code\"", 1))
             .thenReturn(new ContributorTypeCollection().totalRecords(1));
 
     var res = instanceReferenceService.getContributorTypesByCode("http://code/code");
@@ -153,7 +153,7 @@ class InstanceReferenceServiceTest {
     var id = UUID.randomUUID().toString();
     doThrow(new NotFoundException("not found")).when(statisticalCodeClient).getById(id);
     doThrow(new NotFoundException("not found")).when(statisticalCodeClient)
-            .getByQuery("name==\"\"some name\"\"");
+            .getByQuery("name==\"some name\"");
     assertThrows(ReferenceDataNotFoundException.class,
             () -> instanceReferenceService.getStatisticalCodeById(id, "tenant"));
     assertThrows(NotFoundException.class,

@@ -116,11 +116,11 @@ class UserReferenceServiceTest {
   @Test
   void getDepartmentIdByNameTest() {
     var expected = UUID.randomUUID().toString();
-    when(departmentClient.getByQuery("name==\"" + encode("*") + "\""))
+    when(departmentClient.getByQuery("name==" + encode("*")))
         .thenReturn(new DepartmentCollection()
             .withDepartments(List.of(new Department().withId(expected))));
     var actual = userReferenceService.getDepartmentByName("*");
-    verify(departmentClient).getByQuery("name==\"" + encode("*") + "\"");
+    verify(departmentClient).getByQuery("name==" + encode("*"));
     assertEquals(expected, actual.getId());
   }
 
@@ -177,7 +177,7 @@ class UserReferenceServiceTest {
   void getCustomFieldByNameTest() {
     var customField = new CustomField().withRefId("refId").withName("name");
     when(customFieldsClient.getByQuery(isA(String.class),
-        eq("name==\"" + encode("name") + "\"")))
+        eq("name==" + encode("name"))))
         .thenReturn(
             new CustomFieldCollection()
                 .withCustomFields(List.of(customField))
@@ -188,7 +188,7 @@ class UserReferenceServiceTest {
     assertEquals(customField, actual);
 
     when(customFieldsClient.getByQuery(isA(String.class),
-        eq("name==\"" + encode("name") + "\"")))
+        eq("name==" + encode("name"))))
         .thenReturn(
             new CustomFieldCollection().withCustomFields(new ArrayList<>())
         );
