@@ -113,8 +113,9 @@ public class MarcToUnifiedTableRowMapper {
         case "336" -> processResourceType(rowData, dataField, headers);
         case "338" -> processInstanceFormats(rowData, dataField, headers);
         case "362" -> processPublicationRange(rowData, dataField, headers);
-        case "600", "610", "611", "630", "647", "648", "650", "651", "655" -> processSubject(
-                rowData, dataField, headers, forCsv);
+        case "600", "610", "611", "630", "647", "648", "650", "651", "653", "654",
+             "655", "656", "657", "658", "662", "688" -> processSubject(
+                     rowData, dataField, headers, forCsv);
         case "800", "810", "811", "830" -> processSeries(rowData, dataField, headers);
         case "856" -> processElectronicAccess(rowData, dataField, headers, forCsv);
         case "999" -> processInstanceId(rowData, dataField, headers);

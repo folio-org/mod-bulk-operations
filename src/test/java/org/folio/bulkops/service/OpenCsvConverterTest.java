@@ -488,7 +488,7 @@ class OpenCsvConverterTest extends BaseTest {
     when(groupClient.getByQuery("group==\"staff\"")).thenReturn(new UserGroupCollection()
             .withUsergroups(List.of(new UserGroup().withId("503a81cd-6c26-400f-b620-14c08943697c")
                     .withGroup("staff"))));
-    when(departmentClient.getByQuery("name==\"\"Department\"\""))
+    when(departmentClient.getByQuery("name==\"Department\""))
         .thenReturn(new DepartmentCollection()
         .withDepartments(List.of(new Department()
         .withId("4ac6b846-e184-4cdd-8101-68f4af97d103")

@@ -63,14 +63,14 @@ class UserReferenceHelperTest extends BaseTest {
     assertThrows(ReferenceDataNotFoundException.class,
         () -> userReferenceHelper.getDepartmentById("id_2"));
 
-    when(departmentClient.getByQuery("name==\"\"name_2\"\""))
+    when(departmentClient.getByQuery("name==\"name_2\""))
         .thenReturn(DepartmentCollection.builder()
             .departments(singletonList(Department.builder().id("id_3").build()))
             .build());
     actual = userReferenceHelper.getDepartmentByName("name_2");
     assertEquals("id_3", actual.getId());
 
-    when(departmentClient.getByQuery("name==\"\"name_3\"\""))
+    when(departmentClient.getByQuery("name==\"name_3\""))
         .thenReturn(DepartmentCollection.builder().departments(emptyList()).build());
     assertThrows(ReferenceDataNotFoundException.class,
         () -> userReferenceHelper.getDepartmentByName("name_3"));
