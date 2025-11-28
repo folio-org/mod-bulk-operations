@@ -68,12 +68,11 @@ public class ItemReferenceService {
   @Cacheable(cacheNames = "callNumberTypeNames")
   public String getCallNumberTypeNameById(String callNumberTypeId) {
     try {
-      return isEmpty(callNumberTypeId)
-          ? EMPTY
-          : callNumberTypeClient.getById(callNumberTypeId).getName();
+      return isEmpty(callNumberTypeId) ? EMPTY
+              : callNumberTypeClient.getById(callNumberTypeId).getName();
     } catch (Exception e) {
-      throw new ReferenceDataNotFoundException(
-          format("Call number type was not found by id=%s", callNumberTypeId));
+      throw new ReferenceDataNotFoundException(format("Call number type was not found by id=%s",
+              callNumberTypeId));
     }
   }
 
@@ -82,8 +81,8 @@ public class ItemReferenceService {
     try {
       return damagedStatusClient.getById(damagedStatusId);
     } catch (Exception e) {
-      throw new ReferenceDataNotFoundException(
-          format("Damaged status was not found by id=%s", damagedStatusId));
+      throw new ReferenceDataNotFoundException(format("Damaged status was not found by id=%s",
+              damagedStatusId));
     }
   }
 
@@ -91,8 +90,8 @@ public class ItemReferenceService {
   public DamagedStatus getDamagedStatusByName(String name) {
     var response = damagedStatusClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     if (response.getItemDamageStatuses().isEmpty()) {
-      throw new ReferenceDataNotFoundException(
-          format("Damaged status was not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Damaged status was not found by name=%s",
+              name));
     }
     return response.getItemDamageStatuses().getFirst();
   }
@@ -102,20 +101,19 @@ public class ItemReferenceService {
     if (isNull(tenantId)) {
       tenantId = folioExecutionContext.getTenantId();
     }
-    try (var ignored =
-        new FolioExecutionContextSetter(
-            prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
+            folioModuleMetadata, folioExecutionContext))) {
       return isEmpty(noteTypeId) ? EMPTY : itemNoteTypeClient.getNoteTypeById(noteTypeId).getName();
     } catch (Exception e) {
-      throw new ReferenceDataNotFoundException(
-          format("Note type was not found by id=%s", noteTypeId));
+      throw new ReferenceDataNotFoundException(format("Note type was not found by id=%s",
+              noteTypeId));
     }
   }
 
   @Cacheable(cacheNames = "noteTypeIds")
   public String getNoteTypeIdByName(String name) {
-    var response =
-        itemNoteTypeClient.getNoteTypesByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
+    var response = itemNoteTypeClient.getNoteTypesByQuery(
+            String.format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (response.getItemNoteTypes().isEmpty()) {
       throw new ReferenceDataNotFoundException(format("Note type was not found by name=%s", name));
     }
@@ -127,54 +125,56 @@ public class ItemReferenceService {
     try {
       return servicePointClient.getById(servicePointId);
     } catch (Exception e) {
-      throw new ReferenceDataNotFoundException(
-          format("Service point was not found by id=%s", servicePointId));
+      throw new ReferenceDataNotFoundException(format("Service point was not found by id=%s",
+              servicePointId));
     }
   }
 
   @Cacheable(cacheNames = "servicePointIds")
   public ServicePoint getServicePointByName(String name) {
-    var response =
-        servicePointClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1L);
+    var response = servicePointClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)),
+            1L);
     if (response.getServicepoints().isEmpty()) {
-      throw new ReferenceDataNotFoundException(
-          format("Service point was not found by name=%s", name));
+      throw new ReferenceDataNotFoundException(format("Service point was not found by name=%s",
+              name));
     }
     return response.getServicepoints().getFirst();
   }
 
   @Cacheable(cacheNames = "statisticalCodeNames")
   public StatisticalCode getStatisticalCodeById(String statisticalCodeId, String tenantId) {
-    try (var ignored =
-        new FolioExecutionContextSetter(
-            prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
+    try (var ignored = isNull(tenantId)
+        ? null
+        : new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
+            folioModuleMetadata, folioExecutionContext))) {
       return statisticalCodeClient.getById(statisticalCodeId);
     } catch (Exception e) {
-      throw new ReferenceDataNotFoundException(
-          format("Statistical code was not found by id=%s", statisticalCodeId));
+      throw new ReferenceDataNotFoundException(format("Statistical code was not found by id=%s",
+              statisticalCodeId));
     }
   }
 
   @Cacheable(cacheNames = "statisticalCodeIds")
   public String getStatisticalCodeIdByCode(String code) {
-    var response =
-        statisticalCodeClient.getByQuery(String.format(QUERY_PATTERN_CODE, encode(code)));
+    var response = statisticalCodeClient.getByQuery(String.format(QUERY_PATTERN_CODE,
+            encode(code)));
     if (response.getStatisticalCodes().isEmpty()) {
-      throw new ReferenceDataNotFoundException(
-          format("Statistical code was not found by code=%s", code));
+      throw new ReferenceDataNotFoundException(format("Statistical code was not found by code=%s",
+              code));
     }
     return response.getStatisticalCodes().getFirst().getId();
   }
 
   @Cacheable(cacheNames = "statisticalCodeTypes")
   public StatisticalCodeType getStatisticalCodeTypeById(String id, String tenantId) {
-    try (var ignored =
-        new FolioExecutionContextSetter(
-            prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
+    try (var ignored = isNull(tenantId)
+        ? null
+        : new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
+            folioModuleMetadata, folioExecutionContext))) {
       return statisticalCodeTypeClient.getById(id);
     } catch (Exception e) {
-      throw new ReferenceDataNotFoundException(
-          format("Statistical code type not found by id=%s", id));
+      throw new ReferenceDataNotFoundException(format("Statistical code type not found by id=%s",
+              id));
     }
   }
 
@@ -201,9 +201,8 @@ public class ItemReferenceService {
     if (isNull(tenantId)) {
       tenantId = folioExecutionContext.getTenantId();
     }
-    try (var ignored =
-        new FolioExecutionContextSetter(
-            prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
+            folioModuleMetadata, folioExecutionContext))) {
       return locationClient.getLocationById(id);
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Location was not found by id=%s", id));
@@ -239,9 +238,8 @@ public class ItemReferenceService {
     if (isNull(tenantId)) {
       tenantId = folioExecutionContext.getTenantId();
     }
-    try (var ignored =
-        new FolioExecutionContextSetter(
-            prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
+            folioModuleMetadata, folioExecutionContext))) {
       return materialTypeClient.getById(id);
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Material type not found by id=%s", id));
@@ -253,9 +251,8 @@ public class ItemReferenceService {
     if (isNull(tenantId)) {
       tenantId = folioExecutionContext.getTenantId();
     }
-    try (var ignored =
-        new FolioExecutionContextSetter(
-            prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
+    try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(tenantId,
+            folioModuleMetadata, folioExecutionContext))) {
       return loanTypeClient.getLoanTypeById(id);
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(format("Loan type not found by id=%s", id));
@@ -272,10 +269,9 @@ public class ItemReferenceService {
 
   @Cacheable(cacheNames = "statusMapping")
   public List<String> getAllowedStatuses(String statusName) {
-    return allowedItemStatusesRepository
-        .findByStatus(statusName)
-        .map(AllowedItemStatuses::getAllowedStatuses)
-        .orElse(Collections.emptyList());
+    return allowedItemStatusesRepository.findByStatus(statusName)
+      .map(AllowedItemStatuses::getAllowedStatuses)
+      .orElse(Collections.emptyList());
   }
 
   @Cacheable(cacheNames = "itemNoteTypes")

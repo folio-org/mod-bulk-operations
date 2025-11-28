@@ -591,7 +591,8 @@ public class Marc21ReferenceProvider {
     mappedFields.put("336", INSTANCE_RESOURCE_TYPE);
     mappedFields.put("338", INSTANCE_FORMATS);
     mappedFields.put("362", INSTANCE_PUBLICATION_RANGE);
-    List.of("600", "610", "611", "630", "647", "648", "650", "651", "655")
+    List.of("600", "610", "611", "630", "647", "648", "650", "651", "653",
+        "654", "655", "656", "657", "658", "662", "688")
         .forEach(tag -> mappedFields.put(tag, INSTANCE_SUBJECT));
     List.of("800", "810", "811", "830")
         .forEach(tag -> mappedFields.put(tag, INSTANCE_SERIES_STATEMENTS));

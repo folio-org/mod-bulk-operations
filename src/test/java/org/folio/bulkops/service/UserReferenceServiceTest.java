@@ -43,33 +43,42 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class UserReferenceServiceTest {
 
-  @Mock private AddressTypeClient addressTypeClient;
-  @Mock private DepartmentClient departmentClient;
-  @Mock private GroupClient groupClient;
-  @Mock private CustomFieldsClient customFieldsClient;
-  @Mock private FolioExecutionContext folioExecutionContext;
-  @Mock private OkapiClient okapiClient;
-  @InjectMocks @Spy private UserReferenceService userReferenceService;
+  @Mock
+  private AddressTypeClient addressTypeClient;
+  @Mock
+  private DepartmentClient departmentClient;
+  @Mock
+  private GroupClient groupClient;
+  @Mock
+  private CustomFieldsClient customFieldsClient;
+  @Mock
+  private FolioExecutionContext folioExecutionContext;
+  @Mock
+  private OkapiClient okapiClient;
+  @InjectMocks
+  @Spy
+  private UserReferenceService userReferenceService;
 
   @Test
   void getAddressTypeDescByIdTest() {
-    when(addressTypeClient.getAddressTypeById("id")).thenReturn(new AddressType().withDesc("type"));
+    when(addressTypeClient.getAddressTypeById("id"))
+        .thenReturn(new AddressType().withDesc("type"));
     var actual = userReferenceService.getAddressTypeById("id");
     verify(addressTypeClient).getAddressTypeById("id");
     assertEquals("type", actual.getDesc());
 
-    when(addressTypeClient.getAddressTypeById("id")).thenThrow(NotFoundException.class);
-    assertThrows(
-        ReferenceDataNotFoundException.class, () -> userReferenceService.getAddressTypeById("id"));
+    when(addressTypeClient.getAddressTypeById("id"))
+        .thenThrow(NotFoundException.class);
+    assertThrows(ReferenceDataNotFoundException.class,
+        () -> userReferenceService.getAddressTypeById("id"));
   }
 
   @Test
   void getAddressTypeIdByAddressTypeValueTest() {
     var expected = UUID.randomUUID().toString();
     when(addressTypeClient.getByQuery("addressType==" + encode("*")))
-        .thenReturn(
-            new AddressTypeCollection()
-                .withAddressTypes(List.of(new AddressType().withId(expected))));
+        .thenReturn(new AddressTypeCollection()
+            .withAddressTypes(List.of(new AddressType().withId(expected))));
 
     var actual = userReferenceService.getAddressTypeByAddressTypeValue("*");
     verify(addressTypeClient).getByQuery("addressType==" + encode("*"));
@@ -79,10 +88,9 @@ class UserReferenceServiceTest {
   @Test
   void getAddressTypeIdByAddressTypeValueNotFoundTest() {
     when(addressTypeClient.getByQuery("addressType==" + encode("at_1")))
-        .thenReturn(new AddressTypeCollection().withAddressTypes(Collections.emptyList()));
-    assertThrows(
-        ReferenceDataNotFoundException.class,
-        () -> userReferenceService.getAddressTypeByAddressTypeValue("at_1"));
+            .thenReturn(new AddressTypeCollection().withAddressTypes(Collections.emptyList()));
+    assertThrows(ReferenceDataNotFoundException.class,
+            () -> userReferenceService.getAddressTypeByAddressTypeValue("at_1"));
   }
 
   @Test
@@ -99,19 +107,20 @@ class UserReferenceServiceTest {
     verify(departmentClient).getDepartmentById("id");
     assertEquals("departmentName", actual.getName());
 
-    when(departmentClient.getDepartmentById("id")).thenThrow(NotFoundException.class);
-    assertThrows(
-        ReferenceDataNotFoundException.class, () -> userReferenceService.getDepartmentById("id"));
+    when(departmentClient.getDepartmentById("id"))
+        .thenThrow(NotFoundException.class);
+    assertThrows(ReferenceDataNotFoundException.class,
+        () -> userReferenceService.getDepartmentById("id"));
   }
 
   @Test
   void getDepartmentIdByNameTest() {
     var expected = UUID.randomUUID().toString();
-    when(departmentClient.getByQuery("name==\"" + encode("*") + "\""))
-        .thenReturn(
-            new DepartmentCollection().withDepartments(List.of(new Department().withId(expected))));
+    when(departmentClient.getByQuery("name==" + encode("*")))
+        .thenReturn(new DepartmentCollection()
+            .withDepartments(List.of(new Department().withId(expected))));
     var actual = userReferenceService.getDepartmentByName("*");
-    verify(departmentClient).getByQuery("name==\"" + encode("*") + "\"");
+    verify(departmentClient).getByQuery("name==" + encode("*"));
     assertEquals(expected, actual.getId());
   }
 
@@ -124,23 +133,26 @@ class UserReferenceServiceTest {
 
   @Test
   void getPatronGroupNameByIdTest() {
-    when(groupClient.getGroupById("id")).thenReturn(new UserGroup().withGroup("userGroup"));
+    when(groupClient.getGroupById("id"))
+        .thenReturn(new UserGroup().withGroup("userGroup"));
     var actual = userReferenceService.getPatronGroupById("id");
     verify(groupClient).getGroupById("id");
     assertEquals("userGroup", actual.getGroup());
 
-    when(groupClient.getGroupById("id")).thenThrow(NotFoundException.class);
-    assertThrows(
-        ReferenceDataNotFoundException.class, () -> userReferenceService.getPatronGroupById("id"));
+    when(groupClient.getGroupById("id"))
+        .thenThrow(NotFoundException.class);
+    assertThrows(ReferenceDataNotFoundException.class,
+        () -> userReferenceService.getPatronGroupById("id"));
   }
 
   @Test
   void getPatronGroupIdByNameTest() {
     var expected = UUID.randomUUID().toString();
-    var userGroupCollection =
-        new UserGroupCollection().withUsergroups(List.of(new UserGroup().withId(expected)));
+    var userGroupCollection = new UserGroupCollection()
+        .withUsergroups(List.of(new UserGroup().withId(expected)));
 
-    when(groupClient.getByQuery("group==" + encode("*"))).thenReturn(userGroupCollection);
+    when(groupClient.getByQuery("group==" + encode("*")))
+        .thenReturn(userGroupCollection);
     var actual = userReferenceService.getPatronGroupByName("*");
     verify(groupClient).getByQuery("group==" + encode("*"));
     assertEquals(expected, actual.getId());
@@ -149,8 +161,12 @@ class UserReferenceServiceTest {
   @Test
   void getCustomFieldByRefIdTest() {
     var customField = new CustomField().withRefId("refId").withName("name");
-    when(customFieldsClient.getByQuery(isA(String.class), eq("refId==" + encode("refId"))))
-        .thenReturn(new CustomFieldCollection().withCustomFields(List.of(customField)));
+    when(customFieldsClient.getByQuery(isA(String.class),
+        eq("refId==" + encode("refId"))))
+        .thenReturn(
+            new CustomFieldCollection()
+                .withCustomFields(List.of(customField))
+        );
     doReturn("module").when(userReferenceService).getModuleId(isA(String.class));
 
     var actual = userReferenceService.getCustomFieldByRefId("refId");
@@ -160,26 +176,32 @@ class UserReferenceServiceTest {
   @Test
   void getCustomFieldByNameTest() {
     var customField = new CustomField().withRefId("refId").withName("name");
-    when(customFieldsClient.getByQuery(isA(String.class), eq("name==\"" + encode("name") + "\"")))
-        .thenReturn(new CustomFieldCollection().withCustomFields(List.of(customField)));
+    when(customFieldsClient.getByQuery(isA(String.class),
+        eq("name==" + encode("name"))))
+        .thenReturn(
+            new CustomFieldCollection()
+                .withCustomFields(List.of(customField))
+        );
     doReturn("module").when(userReferenceService).getModuleId(isA(String.class));
 
     var actual = userReferenceService.getCustomFieldByName("name");
     assertEquals(customField, actual);
 
-    when(customFieldsClient.getByQuery(isA(String.class), eq("name==\"" + encode("name") + "\"")))
-        .thenReturn(new CustomFieldCollection().withCustomFields(new ArrayList<>()));
+    when(customFieldsClient.getByQuery(isA(String.class),
+        eq("name==" + encode("name"))))
+        .thenReturn(
+            new CustomFieldCollection().withCustomFields(new ArrayList<>())
+        );
     doReturn("module").when(userReferenceService).getModuleId(isA(String.class));
-    assertThrows(
-        ReferenceDataNotFoundException.class,
+    assertThrows(ReferenceDataNotFoundException.class,
         () -> userReferenceService.getCustomFieldByName("name"));
   }
 
   @Test
   void getPatronGroupByNameNotFoundTest() {
-    when(groupClient.getByQuery("group==" + encode("name"))).thenReturn(new UserGroupCollection());
-    assertThrows(
-        ReferenceDataNotFoundException.class,
+    when(groupClient.getByQuery("group==" + encode("name")))
+        .thenReturn(new UserGroupCollection());
+    assertThrows(ReferenceDataNotFoundException.class,
         () -> userReferenceService.getPatronGroupByName("name"));
   }
 
@@ -188,14 +210,13 @@ class UserReferenceServiceTest {
     when(okapiClient.getModuleIds(any(URI.class), any(String.class), any(String.class)))
         .thenReturn(new TextNode(""));
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
-    assertThrows(
-        ReferenceDataNotFoundException.class, () -> userReferenceService.getModuleId("name"));
+    assertThrows(ReferenceDataNotFoundException.class,
+        () -> userReferenceService.getModuleId("name"));
   }
 
   @Test
   void getPreferredContactTypeByIdNotFoundTest() {
-    assertThrows(
-        ReferenceDataNotFoundException.class,
+    assertThrows(ReferenceDataNotFoundException.class,
         () -> userReferenceService.getPreferredContactTypeById("not found id"));
   }
 }
