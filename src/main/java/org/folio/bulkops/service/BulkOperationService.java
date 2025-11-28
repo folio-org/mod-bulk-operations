@@ -563,23 +563,18 @@ public class BulkOperationService {
                   .getRecordBulkOperationEntity()
                   .setTenantToNotes(operation.getTenantNotePairs());
             }
-            var context =
-                useCurrentContext
-                    ? null
-                    : new FolioExecutionContextSetter(
-                        prepareContextForTenant(
-                            tenantIdOfEntity, folioModuleMetadata, folioExecutionContext));
             if (result != original) {
-              try (var ignored = context) {
-                writerForResultJsonFile.write(
-                    objectMapper.writeValueAsString(result) + getEndOfLineSymbol(hasNextRecord));
-                writerForJsonPreviewFile.write(
-                    objectMapper.writeValueAsString(result) + getEndOfLineSymbol(hasNextRecord));
-                CsvHelper.writeBeanToCsv(
-                    operation,
-                    csvWriter,
-                    result.getRecordBulkOperationEntity(),
-                    bulkOperationExecutionContents);
+              try (var ignored = useCurrentContext
+                  ? null
+                  : new FolioExecutionContextSetter(
+                      prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata,
+                          folioExecutionContext))) {
+                writerForResultJsonFile.write(objectMapper.writeValueAsString(result)
+                    + getEndOfLineSymbol(hasNextRecord));
+                writerForJsonPreviewFile.write(objectMapper.writeValueAsString(result)
+                    + getEndOfLineSymbol(hasNextRecord));
+                CsvHelper.writeBeanToCsv(operation, csvWriter,
+                    result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
               }
               bulkOperationExecutionContents.forEach(errorService::saveError);
             } else if (original instanceof ExtendedInstance extendedInstance
@@ -626,7 +621,7 @@ public class BulkOperationService {
                   .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
           if (processedNumOfRecords - execution.getProcessedRecords() > OPERATION_UPDATING_STEP) {
             execution.setProcessedRecords(processedNumOfRecords);
-            executionRepository.save(execution);
+            execution = executionRepository.save(execution);
           }
         }
 
