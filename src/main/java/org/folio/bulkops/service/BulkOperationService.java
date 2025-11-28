@@ -565,7 +565,7 @@ public class BulkOperationService {
             .withEndTime(originalFileIterator.hasNext() ? null : LocalDateTime.now());
           if (processedNumOfRecords - execution.getProcessedRecords() > OPERATION_UPDATING_STEP) {
             execution.setProcessedRecords(processedNumOfRecords);
-            executionRepository.save(execution);
+            execution = executionRepository.save(execution);
           }
         }
 
