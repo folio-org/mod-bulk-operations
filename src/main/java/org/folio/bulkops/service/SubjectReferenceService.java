@@ -63,8 +63,8 @@ public class SubjectReferenceService {
 
   @Cacheable(cacheNames = "subjectSourceIds")
   public String getSubjectSourceIdByName(String name) {
-    var subjectSources = subjectSourcesClient.getByQuery(
-            String.format(QUERY_PATTERN_NAME, encode(name)));
+    var subjectSources =
+        subjectSourcesClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     return subjectSources.getSubjectSources().isEmpty()
         ? name
         : subjectSources.getSubjectSources().getFirst().getId();
@@ -72,8 +72,8 @@ public class SubjectReferenceService {
 
   @Cacheable(cacheNames = "subjectSourceNameByCode")
   public String getSubjectSourceNameByCode(String code) {
-    var subjectSources = subjectSourcesClient.getByQuery(
-            String.format(QUERY_PATTERN_CODE, encode(code)));
+    var subjectSources =
+        subjectSourcesClient.getByQuery(String.format(QUERY_PATTERN_CODE, encode(code)));
     return subjectSources.getSubjectSources().isEmpty()
         ? HYPHEN
         : ofNullable(subjectSources.getSubjectSources().getFirst().getName()).orElse(HYPHEN);
@@ -81,8 +81,8 @@ public class SubjectReferenceService {
 
   @Cacheable(cacheNames = "subjectTypeIds")
   public String getSubjectTypeIdByName(String name) {
-    var subjectTypes = subjectTypesClient.getByQuery(
-            String.format(QUERY_PATTERN_NAME, encode(name)));
+    var subjectTypes =
+        subjectTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     return subjectTypes.getSubjectTypes().isEmpty()
         ? name
         : subjectTypes.getSubjectTypes().getFirst().getId();
