@@ -521,13 +521,12 @@ public class BulkOperationService {
               result.getRecordBulkOperationEntity().setTenantToNotes(
                   operation.getTenantNotePairs());
             }
-            var context = useCurrentContext
-                ? null
-                : new FolioExecutionContextSetter(
-                    prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata,
-                        folioExecutionContext));
             if (result != original) {
-              try (var ignored = context) {
+              try (var ignored = useCurrentContext
+                  ? null
+                  : new FolioExecutionContextSetter(
+                      prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata,
+                          folioExecutionContext))) {
                 writerForResultJsonFile.write(objectMapper.writeValueAsString(result)
                     + getEndOfLineSymbol(hasNextRecord));
                 writerForJsonPreviewFile.write(objectMapper.writeValueAsString(result)
