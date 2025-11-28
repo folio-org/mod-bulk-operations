@@ -17,9 +17,7 @@ import lombok.Singular;
 @Entity
 @Table(name = "allowed_item_statuses")
 public class AllowedItemStatuses {
-  @Id
-  private String status;
+  @Id private String status;
 
-  @Singular
-  private List<String> allowedStatuses;
+  @Singular private List<String> allowedStatuses;
 }

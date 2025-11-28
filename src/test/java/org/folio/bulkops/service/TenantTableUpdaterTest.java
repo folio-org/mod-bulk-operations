@@ -33,19 +33,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class TenantTableUpdaterTest {
 
-  @Mock
-  private FolioExecutionContext folioExecutionContext;
-  @Mock
-  private ConsortiaService consortiaService;
+  @Mock private FolioExecutionContext folioExecutionContext;
+  @Mock private ConsortiaService consortiaService;
 
-  @InjectMocks
-  private TenantTableUpdater tableUpdater;
+  @InjectMocks private TenantTableUpdater tableUpdater;
 
   @ParameterizedTest
   @MethodSource("getEntityClassesWithTenant")
   void updateTenantInHeadersAndRowsForNotConsortiaTest(
-      Class<? extends BulkOperationsEntity> entityClass
-  ) {
+      Class<? extends BulkOperationsEntity> entityClass) {
     var table = new UnifiedTable();
     var cell = new Cell();
     cell.setValue("Tenant");
@@ -68,8 +64,7 @@ class TenantTableUpdaterTest {
   @ParameterizedTest
   @MethodSource("getEntityClassesWithTenant")
   void updateTenantInHeadersAndRowsForConsortiaTest(
-      Class<? extends BulkOperationsEntity> entityClass
-  ) {
+      Class<? extends BulkOperationsEntity> entityClass) {
     Map<String, UserTenant> userTenants = new HashMap<>();
     var userTenant = new UserTenant();
     userTenant.setTenantId("tenantId");
@@ -88,10 +83,7 @@ class TenantTableUpdaterTest {
     when(folioExecutionContext.getTenantId()).thenReturn(UUID.randomUUID().toString());
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
     when(consortiaService.isTenantInConsortia(anyString())).thenReturn(true);
-    when(consortiaService.getUserTenantsPerId(
-        anyString(),
-        anyString()
-    )).thenReturn(userTenants);
+    when(consortiaService.getUserTenantsPerId(anyString(), anyString())).thenReturn(userTenants);
 
     tableUpdater.updateTenantInHeadersAndRows(table, entityClass);
 

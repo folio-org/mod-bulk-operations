@@ -38,4 +38,3 @@ public class BursarFeeFines {
   @Valid
   private Map<String, List<BursarFeeFinesTypeMapping>> typeMappings = null;
 }
-

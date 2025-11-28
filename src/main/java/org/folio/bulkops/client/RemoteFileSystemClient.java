@@ -22,8 +22,7 @@ public class RemoteFileSystemClient {
   }
 
   public int getNumOfLines(String file) {
-    return (int) new BufferedReader(new InputStreamReader(get(file))).lines()
-      .count();
+    return (int) new BufferedReader(new InputStreamReader(get(file))).lines().count();
   }
 
   public InputStream get(String fileName) {

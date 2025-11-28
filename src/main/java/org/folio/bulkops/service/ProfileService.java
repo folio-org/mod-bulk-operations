@@ -28,25 +28,19 @@ public class ProfileService {
   private final JpaCqlRepository<Profile, UUID> profileCqlRepository;
   private final PermissionsValidator validator;
 
-
   public ProfilesDto getProfiles(String query, Integer offset, Integer limit) {
     String effectiveQuery = (query == null || query.isBlank()) ? "cql.allRecords=1" : query;
 
-    var page = profileCqlRepository.findByCql(
+    var page =
+        profileCqlRepository.findByCql(
             effectiveQuery,
             OffsetRequest.of(
-                    Objects.requireNonNullElse(offset, 0),
-                    Objects.requireNonNullElse(limit, Integer.MAX_VALUE)
-            )
-    );
+                Objects.requireNonNullElse(offset, 0),
+                Objects.requireNonNullElse(limit, Integer.MAX_VALUE)));
 
-    List<ProfileDto> items = page.stream()
-            .map(this::toDto)
-            .toList();
+    List<ProfileDto> items = page.stream().map(this::toDto).toList();
 
-    return new ProfilesDto()
-            .content(items)
-            .totalRecords(page.getTotalElements());
+    return new ProfilesDto().content(items).totalRecords(page.getTotalElements());
   }
 
   public ProfileDto createProfile(ProfileRequest profileRequest) {
@@ -56,7 +50,8 @@ public class ProfileService {
       validator.checkIfLockPermissionExists();
     }
 
-    Profile entity = Profile.builder()
+    Profile entity =
+        Profile.builder()
             .name(profileRequest.getName())
             .description(profileRequest.getDescription())
             .locked(Boolean.TRUE.equals(profileRequest.getLocked()))
@@ -109,8 +104,9 @@ public class ProfileService {
   }
 
   private Profile getProfile(UUID profileId) {
-    return profileRepository.findById(profileId)
-            .orElseThrow(() -> new NotFoundException("Profile not found with ID: " + profileId));
+    return profileRepository
+        .findById(profileId)
+        .orElseThrow(() -> new NotFoundException("Profile not found with ID: " + profileId));
   }
 
   private ProfileDto toDto(Profile profile) {
@@ -122,11 +118,11 @@ public class ProfileService {
     dto.setEntityType(profile.getEntityType());
     dto.setRuleDetails(profile.getRuleDetails());
     dto.setMarcRuleDetails(profile.getMarcRuleDetails());
-    dto.setCreatedDate(profile.getCreatedDate() == null ? null : Date.from(profile.getCreatedDate()
-            .toInstant()));
+    dto.setCreatedDate(
+        profile.getCreatedDate() == null ? null : Date.from(profile.getCreatedDate().toInstant()));
     dto.setCreatedBy(profile.getCreatedBy());
-    dto.setUpdatedDate(profile.getUpdatedDate() == null ? null : Date.from(profile.getUpdatedDate()
-            .toInstant()));
+    dto.setUpdatedDate(
+        profile.getUpdatedDate() == null ? null : Date.from(profile.getUpdatedDate().toInstant()));
     dto.setUpdatedBy(profile.getUpdatedBy());
     return dto;
   }

@@ -32,8 +32,8 @@ public class InstanceReferenceHelper implements InitializingBean {
   }
 
   public StatisticalCode getStatisticalCodeByName(String name) {
-    return instanceReferenceService.getStatisticalCodeByName(name,
-            folioExecutionContext.getTenantId());
+    return instanceReferenceService.getStatisticalCodeByName(
+        name, folioExecutionContext.getTenantId());
   }
 
   public StatisticalCode getStatisticalCodeById(String id) {
@@ -41,8 +41,8 @@ public class InstanceReferenceHelper implements InitializingBean {
   }
 
   public StatisticalCodeType getStatisticalCodeTypeById(String id) {
-    return instanceReferenceService.getStatisticalCodeTypeById(id,
-            folioExecutionContext.getTenantId());
+    return instanceReferenceService.getStatisticalCodeTypeById(
+        id, folioExecutionContext.getTenantId());
   }
 
   public String getInstanceTypeNameById(String id) {

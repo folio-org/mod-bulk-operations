@@ -23,4 +23,3 @@ public class InstanceCollection {
   @JsonProperty("totalRecords")
   private Integer totalRecords;
 }
-

@@ -12,8 +12,8 @@ public class SeriesListConverter extends BaseConverter<List<Series>> {
   @Override
   public String convertToString(List<Series> object) {
     return object.stream()
-      .filter(Objects::nonNull)
-      .map(Series::getValue)
-      .collect(Collectors.joining(ITEM_DELIMITER_SPACED));
+        .filter(Objects::nonNull)
+        .map(Series::getValue)
+        .collect(Collectors.joining(ITEM_DELIMITER_SPACED));
   }
 }

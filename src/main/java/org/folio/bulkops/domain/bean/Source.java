@@ -19,4 +19,3 @@ public class Source {
   @JsonProperty("personal")
   private Personal personal;
 }
-

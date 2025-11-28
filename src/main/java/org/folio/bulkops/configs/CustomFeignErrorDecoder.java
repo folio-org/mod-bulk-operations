@@ -27,8 +27,9 @@ public class CustomFeignErrorDecoder implements ErrorDecoder {
       }
     } else if (HttpStatus.INTERNAL_SERVER_ERROR.value() == response.status()) {
       String reason = response.reason() != null ? response.reason() : "Unknown error";
-      return new BulkEditException(CANNOT_GET_RECORD.formatted(requestUrl, reason),
-              org.folio.bulkops.domain.dto.ErrorType.ERROR);
+      return new BulkEditException(
+          CANNOT_GET_RECORD.formatted(requestUrl, reason),
+          org.folio.bulkops.domain.dto.ErrorType.ERROR);
     }
     return errorStatus(methodKey, response);
   }

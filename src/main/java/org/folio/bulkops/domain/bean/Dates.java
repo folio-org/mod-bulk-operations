@@ -23,4 +23,3 @@ public class Dates {
   @JsonProperty("date2")
   private String date2;
 }
-

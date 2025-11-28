@@ -16,6 +16,7 @@ import lombok.With;
 public class GetParsedRecordsBatchConditions {
   @JsonProperty("ids")
   private List<String> ids;
+
   @JsonProperty("idType")
   private String idType;
 }

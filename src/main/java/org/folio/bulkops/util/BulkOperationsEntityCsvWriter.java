@@ -19,15 +19,16 @@ public class BulkOperationsEntityCsvWriter {
   public BulkOperationsEntityCsvWriter(Writer writer, Class<? extends BulkOperationsEntity> clazz) {
     CustomMappingStrategy<BulkOperationsEntity> strategy = new CustomMappingStrategy<>();
     strategy.setType(clazz);
-    delegate = new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writer)
-      .withSeparator(DEFAULT_SEPARATOR)
-      .withApplyQuotesToAll(false)
-      .withMappingStrategy(strategy)
-      .build();
+    delegate =
+        new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writer)
+            .withSeparator(DEFAULT_SEPARATOR)
+            .withApplyQuotesToAll(false)
+            .withMappingStrategy(strategy)
+            .build();
   }
 
-  public void write(BulkOperationsEntity entity) throws ConverterException,
-          CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
+  public void write(BulkOperationsEntity entity)
+      throws ConverterException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
     delegate.write(processNotes(entity));
   }
 

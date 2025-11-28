@@ -1,4 +1,3 @@
 package org.folio.bulkops.processor;
 
-public interface EntityExtractor {
-}
+public interface EntityExtractor {}

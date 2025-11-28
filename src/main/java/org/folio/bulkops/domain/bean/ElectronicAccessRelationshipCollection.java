@@ -14,7 +14,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class ElectronicAccessRelationshipCollection   {
+public class ElectronicAccessRelationshipCollection {
   @JsonProperty("electronicAccessRelationships")
   @Valid
   private List<ElectronicAccessRelationship> electronicAccessRelationships = null;
@@ -25,4 +25,3 @@ public class ElectronicAccessRelationshipCollection   {
   @JsonProperty("resultInfo")
   private ResultInfo resultInfo;
 }
-

@@ -97,8 +97,8 @@ public class BulkOperation {
   @Type(JsonBinaryType.class)
   @Column(columnDefinition = "jsonb[]")
   private List<TenantNotePair> tenantNotePairs;
-  @Singular
-  private List<String> usedTenants;
+
+  @Singular private List<String> usedTenants;
 
   private UUID dataImportJobProfileId;
 }

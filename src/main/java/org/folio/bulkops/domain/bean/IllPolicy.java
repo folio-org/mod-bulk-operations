@@ -25,4 +25,3 @@ public class IllPolicy {
   @JsonProperty("metadata")
   private Metadata metadata;
 }
-

@@ -15,7 +15,7 @@ public class FolioExecutionContextUtil {
   private FolioExecutionContextUtil() {}
 
   public static FolioExecutionContext prepareContextForTenant(
-          String tenantId, FolioModuleMetadata folioModuleMetadata, FolioExecutionContext context) {
+      String tenantId, FolioModuleMetadata folioModuleMetadata, FolioExecutionContext context) {
     if (MapUtils.isNotEmpty(context.getOkapiHeaders())) {
       var headersCopy = new HashMap<>(context.getAllHeaders());
       headersCopy.put(XOkapiHeaders.TENANT, List.of(tenantId));

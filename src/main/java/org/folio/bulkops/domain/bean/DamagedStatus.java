@@ -12,7 +12,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class DamagedStatus   {
+public class DamagedStatus {
   @JsonProperty("id")
   private String id;
 
@@ -25,4 +25,3 @@ public class DamagedStatus   {
   @JsonProperty("metadata")
   private Metadata metadata;
 }
-

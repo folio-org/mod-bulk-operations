@@ -28,16 +28,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 class BulkOperationMarcRuleRepositoryTest extends BaseTest {
-  @Autowired
-  private BulkOperationMarcRuleRepository repository;
+  @Autowired private BulkOperationMarcRuleRepository repository;
 
-  @Autowired
-  private BulkOperationRepository bulkOperationRepository;
+  @Autowired private BulkOperationRepository bulkOperationRepository;
 
   @Test
   @SneakyThrows
   void shouldSaveEntity() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var saved = repository.save(createEntity());
       assertThat(saved.getId(), notNullValue());
     }
@@ -45,7 +43,7 @@ class BulkOperationMarcRuleRepositoryTest extends BaseTest {
 
   @Test
   void shouldFindEntityById() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       var retrieved = repository.findById(created.getId());
       assertTrue(retrieved.isPresent() && created.getId().equals(retrieved.get().getId()));
@@ -55,17 +53,18 @@ class BulkOperationMarcRuleRepositoryTest extends BaseTest {
   @Test
   void shouldUpdateEntity() {
     var parameter = new MarcParameter().key(MarcParameterType.OVERRIDE_PROTECTED).value("true");
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       var updated = repository.save(created.withParameters(Collections.singletonList(parameter)));
-      assertTrue(created.getId().equals(updated.getId()) && parameter.equals(updated.getParameters()
-              .get(0)));
+      assertTrue(
+          created.getId().equals(updated.getId())
+              && parameter.equals(updated.getParameters().get(0)));
     }
   }
 
   @Test
   void shouldDeleteEntity() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       repository.deleteById(created.getId());
       assertTrue(repository.findById(created.getId()).isEmpty());
@@ -73,39 +72,49 @@ class BulkOperationMarcRuleRepositoryTest extends BaseTest {
   }
 
   private BulkOperationMarcRule createEntity() {
-    var bulkOperation = bulkOperationRepository.save(BulkOperation.builder()
-            .id(UUID.randomUUID())
-            .userId(UUID.randomUUID())
-            .operationType(UPDATE)
-            .entityType(EntityType.INSTANCE)
-            .identifierType(ID)
-            .status(NEW)
-            .dataExportJobId(UUID.randomUUID())
-            .totalNumOfRecords(10)
-            .processedNumOfRecords(0)
-            .executionChunkSize(5)
-            .startTime(LocalDateTime.now())
-            .build());
+    var bulkOperation =
+        bulkOperationRepository.save(
+            BulkOperation.builder()
+                .id(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .operationType(UPDATE)
+                .entityType(EntityType.INSTANCE)
+                .identifierType(ID)
+                .status(NEW)
+                .dataExportJobId(UUID.randomUUID())
+                .totalNumOfRecords(10)
+                .processedNumOfRecords(0)
+                .executionChunkSize(5)
+                .startTime(LocalDateTime.now())
+                .build());
 
     return BulkOperationMarcRule.builder()
-      .bulkOperationId(bulkOperation.getId())
-      .userId(UUID.randomUUID())
-      .tag("500")
-      .actions(Collections.singletonList(new MarcAction()
-        .name(UpdateActionType.FIND)
-        .data(Collections.singletonList(new MarcActionDataInner()
-          .key(MarcDataType.VALUE)
-          .value("text")))))
-      .parameters(Collections.singletonList(new MarcParameter()
-        .key(MarcParameterType.OVERRIDE_PROTECTED)
-        .value("false")))
-      .subfields(Collections.singletonList(new MarcSubfieldAction()
-        .subfield(StringUtils.EMPTY)
-        .actions(Collections.singletonList(new MarcAction()
-            .name(UpdateActionType.ADD_TO_EXISTING)
-            .data(Collections.singletonList(new MarcActionDataInner()
-              .key(MarcDataType.VALUE)
-              .value("text")))))))
-      .build();
+        .bulkOperationId(bulkOperation.getId())
+        .userId(UUID.randomUUID())
+        .tag("500")
+        .actions(
+            Collections.singletonList(
+                new MarcAction()
+                    .name(UpdateActionType.FIND)
+                    .data(
+                        Collections.singletonList(
+                            new MarcActionDataInner().key(MarcDataType.VALUE).value("text")))))
+        .parameters(
+            Collections.singletonList(
+                new MarcParameter().key(MarcParameterType.OVERRIDE_PROTECTED).value("false")))
+        .subfields(
+            Collections.singletonList(
+                new MarcSubfieldAction()
+                    .subfield(StringUtils.EMPTY)
+                    .actions(
+                        Collections.singletonList(
+                            new MarcAction()
+                                .name(UpdateActionType.ADD_TO_EXISTING)
+                                .data(
+                                    Collections.singletonList(
+                                        new MarcActionDataInner()
+                                            .key(MarcDataType.VALUE)
+                                            .value("text")))))))
+        .build();
   }
 }

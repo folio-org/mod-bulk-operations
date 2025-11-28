@@ -25,5 +25,4 @@ public class StatisticalCodeType {
 
   @JsonProperty("metadata")
   private Metadata metadata;
-
 }

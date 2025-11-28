@@ -54,12 +54,11 @@ public class BulkEditHoldingsIdentifiersJobConfig {
   private int numPartitions;
 
   @Bean
-  public Job bulkEditProcessHoldingsIdentifiersJob(JobCompletionNotificationListener listener,
-                                                   JobRepository jobRepository,
-                                                   Step holdingsPartitionStep) {
-    return new JobBuilder(
-            BULK_EDIT_IDENTIFIERS + HYPHEN + HOLDINGS_RECORD,
-            jobRepository)
+  public Job bulkEditProcessHoldingsIdentifiersJob(
+      JobCompletionNotificationListener listener,
+      JobRepository jobRepository,
+      Step holdingsPartitionStep) {
+    return new JobBuilder(BULK_EDIT_IDENTIFIERS + HYPHEN + HOLDINGS_RECORD, jobRepository)
         .incrementer(new RunIdIncrementer())
         .listener(listener)
         .flow(holdingsPartitionStep)
@@ -99,11 +98,7 @@ public class BulkEditHoldingsIdentifiersJobConfig {
       @Value("#{jobParameters['" + TEMP_LOCAL_FILE_PATH + "']}") String outputCsvJsonFilePath,
       @Value("#{jobParameters['" + IDENTIFIERS_FILE_NAME + "']}") String uploadedFileName) {
     var numOfLines = remoteFileSystemClient.getNumOfLines(uploadedFileName);
-    return new BulkEditPartitioner(
-        outputCsvJsonFilePath,
-        outputCsvJsonFilePath,
-        null,
-        numOfLines);
+    return new BulkEditPartitioner(outputCsvJsonFilePath, outputCsvJsonFilePath, null, numOfLines);
   }
 
   @Bean
@@ -115,8 +110,7 @@ public class BulkEditHoldingsIdentifiersJobConfig {
       PlatformTransactionManager transactionManager) {
 
     return new StepBuilder("bulkEditHoldingsStep", jobRepository)
-        .<ItemIdentifier, List<ExtendedHoldingsRecord>>chunk(
-            chunkSize, transactionManager)
+        .<ItemIdentifier, List<ExtendedHoldingsRecord>>chunk(chunkSize, transactionManager)
         .reader(csvItemIdentifierReader)
         .processor(bulkEditHoldingsProcessor)
         .faultTolerant()
@@ -140,16 +134,14 @@ public class BulkEditHoldingsIdentifiersJobConfig {
       @Value("#{jobParameters['" + IDENTIFIER_TYPE + "']}") String identifierType) {
 
     var writer = new CompositeItemWriter<List<ExtendedHoldingsRecord>>();
-    var csvWriter = new CsvListItemWriter<>(
-        csvPath,
-        ExtendedHoldingsRecord.class,
-        bulkOperationId,
-        identifierType);
-    var jsonWriter = new JsonListFileWriter<ExtendedHoldingsRecord>(
-        new FileSystemResource(jsonPath));
+    var csvWriter =
+        new CsvListItemWriter<>(
+            csvPath, ExtendedHoldingsRecord.class, bulkOperationId, identifierType);
+    var jsonWriter =
+        new JsonListFileWriter<ExtendedHoldingsRecord>(new FileSystemResource(jsonPath));
 
-    List<org.springframework.batch.item.ItemWriter<? super
-            List<ExtendedHoldingsRecord>>> delegates = new java.util.ArrayList<>();
+    List<org.springframework.batch.item.ItemWriter<? super List<ExtendedHoldingsRecord>>>
+        delegates = new java.util.ArrayList<>();
     delegates.add(csvWriter);
     delegates.add(jsonWriter);
     writer.setDelegates(delegates);

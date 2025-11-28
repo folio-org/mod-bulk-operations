@@ -83,46 +83,40 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class PreviewServiceTest extends BaseTest {
 
-  @Autowired
-  private PreviewService previewService;
-  @MockitoBean
-  private BulkOperationRepository bulkOperationRepository;
-  @MockitoBean
-  private RemoteFileSystemClient remoteFileSystemClient;
-  @MockitoBean
-  private RuleService ruleService;
-  @MockitoBean
-  private InstanceReferenceService instanceReferenceService;
-  @MockitoBean
-  private ConsortiaService consortiaService;
-  @MockitoBean
-  private MappingRulesClient mappingRulesClient;
-  @MockitoBean
-  private BulkOperationService bulkOperationService;
-  @Autowired
-  private NoteTableUpdater noteTableUpdater;
+  @Autowired private PreviewService previewService;
+  @MockitoBean private BulkOperationRepository bulkOperationRepository;
+  @MockitoBean private RemoteFileSystemClient remoteFileSystemClient;
+  @MockitoBean private RuleService ruleService;
+  @MockitoBean private InstanceReferenceService instanceReferenceService;
+  @MockitoBean private ConsortiaService consortiaService;
+  @MockitoBean private MappingRulesClient mappingRulesClient;
+  @MockitoBean private BulkOperationService bulkOperationService;
+  @Autowired private NoteTableUpdater noteTableUpdater;
 
-  @CsvSource(value = {
-      "users_for_preview.json,USER,UPLOAD,IN_APP",
-      "users_for_preview.json,USER,EDIT,IN_APP",
-      "users_for_preview.json,USER,COMMIT,IN_APP",
-      "users_for_preview.json,USER,COMMIT,MANUAL",
-      "items_for_preview.json,ITEM,UPLOAD,IN_APP",
-      "items_for_preview.json,ITEM,EDIT,IN_APP",
-      "items_for_preview.json,ITEM,COMMIT,IN_APP",
-      "items_for_preview.json,ITEM,COMMIT,MANUAL",
-      "holdings_for_preview.json,HOLDINGS_RECORD,UPLOAD,IN_APP",
-      "holdings_for_preview.json,HOLDINGS_RECORD,EDIT,IN_APP",
-      "holdings_for_preview.json,HOLDINGS_RECORD,COMMIT,IN_APP",
-      "holdings_for_preview.json,HOLDINGS_RECORD,COMMIT,MANUAL",
-      "instances_for_preview.json,INSTANCE,UPLOAD,IN_APP",
-      "instances_for_preview.json,INSTANCE,EDIT,IN_APP",
-      "instances_for_preview.json,INSTANCE,COMMIT,IN_APP",
-      "instances_for_preview.json,INSTANCE,COMMIT,MANUAL"}, delimiter = ',')
+  @CsvSource(
+      value = {
+        "users_for_preview.json,USER,UPLOAD,IN_APP",
+        "users_for_preview.json,USER,EDIT,IN_APP",
+        "users_for_preview.json,USER,COMMIT,IN_APP",
+        "users_for_preview.json,USER,COMMIT,MANUAL",
+        "items_for_preview.json,ITEM,UPLOAD,IN_APP",
+        "items_for_preview.json,ITEM,EDIT,IN_APP",
+        "items_for_preview.json,ITEM,COMMIT,IN_APP",
+        "items_for_preview.json,ITEM,COMMIT,MANUAL",
+        "holdings_for_preview.json,HOLDINGS_RECORD,UPLOAD,IN_APP",
+        "holdings_for_preview.json,HOLDINGS_RECORD,EDIT,IN_APP",
+        "holdings_for_preview.json,HOLDINGS_RECORD,COMMIT,IN_APP",
+        "holdings_for_preview.json,HOLDINGS_RECORD,COMMIT,MANUAL",
+        "instances_for_preview.json,INSTANCE,UPLOAD,IN_APP",
+        "instances_for_preview.json,INSTANCE,EDIT,IN_APP",
+        "instances_for_preview.json,INSTANCE,COMMIT,IN_APP",
+        "instances_for_preview.json,INSTANCE,COMMIT,MANUAL"
+      },
+      delimiter = ',')
   @SneakyThrows
   @ParameterizedTest
-  void shouldReturnPreviewIfAvailable(String fileName, EntityType entityType,
-                                      BulkOperationStep step, ApproachType approachType) {
+  void shouldReturnPreviewIfAvailable(
+      String fileName, EntityType entityType, BulkOperationStep step, ApproachType approachType) {
     var operationId = UUID.randomUUID();
 
     var bulkOperation = buildBulkOperation(fileName, entityType, step);
@@ -130,52 +124,60 @@ class PreviewServiceTest extends BaseTest {
     bulkOperation.setApproach(approachType);
     bulkOperation.setStatus(NEW);
     bulkOperation.setTenantNotePairs(List.of());
-    when(bulkOperationRepository.findById(operationId))
-            .thenReturn(Optional.of(bulkOperation));
+    when(bulkOperationRepository.findById(operationId)).thenReturn(Optional.of(bulkOperation));
     var path = "src/test/resources/files/" + fileName;
 
-    when(remoteFileSystemClient.get(anyString()))
-            .thenReturn(new FileInputStream(path));
+    when(remoteFileSystemClient.get(anyString())).thenReturn(new FileInputStream(path));
 
     when(groupClient.getGroupById(anyString())).thenReturn(new UserGroup().withGroup("Group"));
     when(locationClient.getLocationById(anyString()))
-            .thenReturn(new ItemLocation().withName("Location"));
+        .thenReturn(new ItemLocation().withName("Location"));
     when(holdingsSourceClient.getById(anyString()))
-            .thenReturn(new HoldingsRecordsSource().withName("Source"));
+        .thenReturn(new HoldingsRecordsSource().withName("Source"));
 
     when(itemNoteTypeClient.getNoteTypes(Integer.MAX_VALUE))
-            .thenReturn(new NoteTypeCollection().withItemNoteTypes(List.of(
-                    new NoteType().withName("Binding"), new NoteType().withName("Custom"),
-                    new NoteType().withName("Provenance"), new NoteType().withName("Reproduction"),
-                    new NoteType().withName("Note"))));
+        .thenReturn(
+            new NoteTypeCollection()
+                .withItemNoteTypes(
+                    List.of(
+                        new NoteType().withName("Binding"),
+                        new NoteType().withName("Custom"),
+                        new NoteType().withName("Provenance"),
+                        new NoteType().withName("Reproduction"),
+                        new NoteType().withName("Note"))));
     when(holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE))
-            .thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(List.of(
-                    new HoldingsNoteType().withName("Binding"),
-                    new HoldingsNoteType().withName("Provenance"),
-                    new HoldingsNoteType().withName("Reproduction"))));
+        .thenReturn(
+            new HoldingsNoteTypeCollection()
+                .withHoldingsNoteTypes(
+                    List.of(
+                        new HoldingsNoteType().withName("Binding"),
+                        new HoldingsNoteType().withName("Provenance"),
+                        new HoldingsNoteType().withName("Reproduction"))));
 
     when(itemNoteTypeClient.getNoteTypeById("0e40884c-3523-4c6d-8187-d578e3d2794e"))
-            .thenReturn(new NoteType().withName("Binding"));
+        .thenReturn(new NoteType().withName("Binding"));
     when(itemNoteTypeClient.getNoteTypeById("f3ae3823-d096-4c65-8734-0c1efd2ffea8"))
-            .thenReturn(new NoteType().withName("Provenance"));
+        .thenReturn(new NoteType().withName("Provenance"));
     when(itemNoteTypeClient.getNoteTypeById("c3a539b9-9576-4e3a-b6de-d910200b2919"))
-            .thenReturn(new NoteType().withName("Reproduction"));
+        .thenReturn(new NoteType().withName("Reproduction"));
     when(itemNoteTypeClient.getNoteTypeById("87c450be-2033-41fb-80ba-dd2409883681"))
-            .thenReturn(new NoteType().withName("Custom"));
+        .thenReturn(new NoteType().withName("Custom"));
 
     when(itemNoteTypeClient.getNoteTypeById("8d0a5eca-25de-4391-81a9-236eeefdd20b"))
-            .thenReturn(new NoteType().withName("Note"));
+        .thenReturn(new NoteType().withName("Note"));
 
     when(holdingsNoteTypeClient.getNoteTypeById("e19eabab-a85c-4aef-a7b2-33bd9acef24e"))
-            .thenReturn(new HoldingsNoteType().withName("Reproduction"));
+        .thenReturn(new HoldingsNoteType().withName("Reproduction"));
     when(consortiaService.isTenantCentral(any())).thenReturn(false);
 
     when(mappingRulesClient.getMarcBibMappingRules())
-            .thenReturn(Files.readString(Path.of(
-                    "src/test/resources/files/mappingRulesResponse.json")));
+        .thenReturn(
+            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
 
-    var bulkOperationRuleCollection = objectMapper.readValue(new FileInputStream(
-            getPathToContentUpdateRequest(entityType)), BulkOperationRuleCollection.class);
+    var bulkOperationRuleCollection =
+        objectMapper.readValue(
+            new FileInputStream(getPathToContentUpdateRequest(entityType)),
+            BulkOperationRuleCollection.class);
     when(ruleService.getRules(any(UUID.class))).thenReturn(bulkOperationRuleCollection);
     bulkOperation.setTenantNotePairs(List.of());
     when(bulkOperationService.getBulkOperationOrThrow(any(UUID.class))).thenReturn(bulkOperation);
@@ -189,8 +191,12 @@ class PreviewServiceTest extends BaseTest {
     assertThat(table.getRows(), hasSize(limit - offset));
     if (USER.equals(entityType)) {
       if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
-        assertThat(table.getHeader(), equalTo(
-                getHeaders(User.class, UpdateOptionTypeToFieldResolver.getFieldsByUpdateOptionTypes(
+        assertThat(
+            table.getHeader(),
+            equalTo(
+                getHeaders(
+                    User.class,
+                    UpdateOptionTypeToFieldResolver.getFieldsByUpdateOptionTypes(
                         List.of(UpdateOptionType.EMAIL_ADDRESS, UpdateOptionType.EXPIRATION_DATE),
                         entityType))));
       } else {
@@ -199,32 +205,61 @@ class PreviewServiceTest extends BaseTest {
     } else if (ITEM.equals(entityType)) {
       List<Cell> headers;
       if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
-        headers = getHeaders(Item.class, Set.of("Binding", "Custom", "Status",
-                "Check out note", "Provenance", "Reproduction", "Check in note",
-                "Note", "Administrative note"));
-        noteTableUpdater.extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, headers,
-                List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"),
-                Set.of("Binding", "Status", "Check out note", "Provenance", "Check in note",
-                        "Note", "Custom", "Reproduction", "Administrative notes"));
+        headers =
+            getHeaders(
+                Item.class,
+                Set.of(
+                    "Binding",
+                    "Custom",
+                    "Status",
+                    "Check out note",
+                    "Provenance",
+                    "Reproduction",
+                    "Check in note",
+                    "Note",
+                    "Administrative note"));
+        noteTableUpdater.extendHeadersWithNoteTypeNames(
+            ITEM_NOTE_POSITION,
+            headers,
+            List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"),
+            Set.of(
+                "Binding",
+                "Status",
+                "Check out note",
+                "Provenance",
+                "Check in note",
+                "Note",
+                "Custom",
+                "Reproduction",
+                "Administrative notes"));
       } else {
         headers = getHeaders(Item.class);
-        noteTableUpdater.extendHeadersWithNoteTypeNames(ITEM_NOTE_POSITION, headers,
-                List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"), emptySet());
+        noteTableUpdater.extendHeadersWithNoteTypeNames(
+            ITEM_NOTE_POSITION,
+            headers,
+            List.of("Binding", "Custom", "Note", "Provenance", "Reproduction"),
+            emptySet());
       }
       headers.removeLast();
       assertThat(table.getHeader(), equalTo(headers));
     } else if (INSTANCE.equals(entityType)) {
       if ((step == EDIT || step == COMMIT) && approachType == ApproachType.IN_APP) {
-        assertThat(table.getHeader(), equalTo(
-                getHeaders(Instance.class, UpdateOptionTypeToFieldResolver
-                        .getFieldsByUpdateOptionTypes(List.of(UpdateOptionType.STAFF_SUPPRESS,
-                                UpdateOptionType.SUPPRESS_FROM_DISCOVERY), entityType))));
+        assertThat(
+            table.getHeader(),
+            equalTo(
+                getHeaders(
+                    Instance.class,
+                    UpdateOptionTypeToFieldResolver.getFieldsByUpdateOptionTypes(
+                        List.of(
+                            UpdateOptionType.STAFF_SUPPRESS,
+                            UpdateOptionType.SUPPRESS_FROM_DISCOVERY),
+                        entityType))));
       } else {
         assertThat(table.getHeader(), equalTo(getHeaders(Instance.class)));
       }
-
     }
-    assertTrue(table.getRows().stream()
+    assertTrue(
+        table.getRows().stream()
             .map(org.folio.bulkops.domain.dto.Row::getRow)
             .flatMap(List::stream)
             .filter(Objects::nonNull)
@@ -232,81 +267,99 @@ class PreviewServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = org.folio.bulkops.domain.dto.OperationStatusType.class,
-          names = {"DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED"},
-          mode = EnumSource.Mode.EXCLUDE)
+  @EnumSource(
+      value = org.folio.bulkops.domain.dto.OperationStatusType.class,
+      names = {"DATA_MODIFICATION", "REVIEW_CHANGES", "COMPLETED"},
+      mode = EnumSource.Mode.EXCLUDE)
   @SneakyThrows
   void shouldReturnOnlyHeadersIfPreviewIsNotAvailable(
-          org.folio.bulkops.domain.dto.OperationStatusType status) {
+      org.folio.bulkops.domain.dto.OperationStatusType status) {
     var bulkOperation = BulkOperation.builder().entityType(USER).status(status).build();
 
     when(mappingRulesClient.getMarcBibMappingRules())
-            .thenReturn(Files.readString(Path.of(
-                    "src/test/resources/files/mappingRulesResponse.json")));
+        .thenReturn(
+            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
 
-    var table = previewService.getPreview(bulkOperation,
-            org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD, 0, 10);
+    var table =
+        previewService.getPreview(
+            bulkOperation, org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD, 0, 10);
     assertEquals(0, table.getRows().size());
     Assertions.assertFalse(table.getHeader().isEmpty());
   }
 
   @ParameterizedTest
-  @CsvSource(textBlock = """
+  @CsvSource(
+      textBlock =
+          """
           CHANGE_TYPE     | INSTANCE_NOTE | INSTANCE_NOTE_TYPE_ID_KEY
           ADD_TO_EXISTING | INSTANCE_NOTE | INSTANCE_NOTE_TYPE_ID_KEY
-          """, delimiter = '|')
+          """,
+      delimiter = '|')
   @SneakyThrows
-  void shouldSetForceVisibleForUpdatedInstanceNotes(UpdateActionType actionType,
-                                                    UpdateOptionType updateOption,
-                                                    String key) {
+  void shouldSetForceVisibleForUpdatedInstanceNotes(
+      UpdateActionType actionType, UpdateOptionType updateOption, String key) {
     var operationId = UUID.randomUUID();
     var oldNoteTypeId = UUID.randomUUID().toString();
     var newNoteTypeId = UUID.randomUUID().toString();
     var pathToCsv = "commited.csv";
-    var rules = rules(new BulkOperationRule().bulkOperationId(operationId)
-            .ruleDetails(new RuleDetails()
-                    .option(updateOption)
-                    .actions(Collections.singletonList(new Action()
-                            .type(actionType)
-                            .updated(newNoteTypeId)
-                            .parameters(Collections.singletonList(new Parameter()
-                                    .key(key)
-                                    .value(oldNoteTypeId)))))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .bulkOperationId(operationId)
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(updateOption)
+                        .actions(
+                            Collections.singletonList(
+                                new Action()
+                                    .type(actionType)
+                                    .updated(newNoteTypeId)
+                                    .parameters(
+                                        Collections.singletonList(
+                                            new Parameter().key(key).value(oldNoteTypeId)))))));
 
     when(ruleService.getRules(operationId)).thenReturn(rules);
     when(instanceNoteTypesClient.getNoteTypeById(oldNoteTypeId))
-            .thenReturn(new InstanceNoteType().name("old note type"));
+        .thenReturn(new InstanceNoteType().name("old note type"));
     when(instanceNoteTypesClient.getNoteTypeById(newNoteTypeId))
-            .thenReturn(new InstanceNoteType().name("new note type"));
+        .thenReturn(new InstanceNoteType().name("new note type"));
     when(instanceReferenceService.getAllInstanceNoteTypes())
-            .thenReturn(List.of(new InstanceNoteType().name("old note type"),
-                    new InstanceNoteType().name("new note type")));
+        .thenReturn(
+            List.of(
+                new InstanceNoteType().name("old note type"),
+                new InstanceNoteType().name("new note type")));
     when(holdingsNoteTypeClient.getNoteTypeById(oldNoteTypeId))
-            .thenReturn(new HoldingsNoteType().withName("old note type"));
+        .thenReturn(new HoldingsNoteType().withName("old note type"));
     when(holdingsNoteTypeClient.getNoteTypeById(newNoteTypeId))
-            .thenReturn(new HoldingsNoteType().withName("new note type"));
+        .thenReturn(new HoldingsNoteType().withName("new note type"));
     when(holdingsNoteTypeClient.getNoteTypes(Integer.MAX_VALUE))
-            .thenReturn(new HoldingsNoteTypeCollection().withHoldingsNoteTypes(List.of(
-                    new HoldingsNoteType().withName("old note type"),
-                    new HoldingsNoteType().withName("new note type"))).withTotalRecords(2));
+        .thenReturn(
+            new HoldingsNoteTypeCollection()
+                .withHoldingsNoteTypes(
+                    List.of(
+                        new HoldingsNoteType().withName("old note type"),
+                        new HoldingsNoteType().withName("new note type")))
+                .withTotalRecords(2));
     when(remoteFileSystemClient.get(pathToCsv))
-            .thenReturn(new ByteArrayInputStream(",,,,,,,,,,".getBytes()));
+        .thenReturn(new ByteArrayInputStream(",,,,,,,,,,".getBytes()));
     when(mappingRulesClient.getMarcBibMappingRules())
-            .thenReturn(Files.readString(Path.of(
-                    "src/test/resources/files/mappingRulesResponse.json")));
+        .thenReturn(
+            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
     var bulkOperation = new BulkOperation();
     bulkOperation.setTenantNotePairs(List.of());
     when(bulkOperationService.getBulkOperationOrThrow(any(UUID.class))).thenReturn(bulkOperation);
     when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(bulkOperation);
 
-    var operation = BulkOperation.builder()
+    var operation =
+        BulkOperation.builder()
             .id(operationId)
             .entityType(INSTANCE)
-            .linkToCommittedRecordsCsvFile(pathToCsv).build();
+            .linkToCommittedRecordsCsvFile(pathToCsv)
+            .build();
     var table = previewService.getPreview(operation, COMMIT, 0, 10);
 
-    var position = HOLDINGS_NOTE.equals(updateOption) ? HOLDINGS_NOTE_POSITION
-            : INSTANCE_NOTE_POSITION;
+    var position =
+        HOLDINGS_NOTE.equals(updateOption) ? HOLDINGS_NOTE_POSITION : INSTANCE_NOTE_POSITION;
     assertEquals("new note type", table.getHeader().get(position).getValue());
     if (CHANGE_TYPE.equals(actionType)) {
       assertTrue(table.getHeader().get(position).getForceVisible());
@@ -322,64 +375,80 @@ class PreviewServiceTest extends BaseTest {
     var bulkOperationId = UUID.randomUUID();
     var pathToMarcFile = bulkOperationId + "/" + "file.mrc";
     var pathToMatchedJsonFile = bulkOperationId + "/" + "file.json";
-    var bulkOperation = BulkOperation.builder()
+    var bulkOperation =
+        BulkOperation.builder()
             .id(bulkOperationId)
             .entityType(INSTANCE_MARC)
             .linkToMatchedRecordsJsonFile(pathToMatchedJsonFile)
             .linkToModifiedRecordsMarcFile(pathToMarcFile)
             .build();
 
-    var rules = new BulkOperationMarcRuleCollection()
-            .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule()
-                    .bulkOperationId(bulkOperationId)
-                    .tag("520")))
+    var rules =
+        new BulkOperationMarcRuleCollection()
+            .bulkOperationMarcRules(
+                Collections.singletonList(
+                    new BulkOperationMarcRule().bulkOperationId(bulkOperationId).tag("520")))
             .totalRecords(1);
 
     when(ruleService.getMarcRules(bulkOperationId)).thenReturn(rules);
     when(ruleService.getRules(bulkOperationId))
-            .thenReturn(new BulkOperationRuleCollection()
-                    .bulkOperationRules(Collections.emptyList())
-                    .totalRecords(0));
+        .thenReturn(
+            new BulkOperationRuleCollection()
+                .bulkOperationRules(Collections.emptyList())
+                .totalRecords(0));
     when(instanceNoteTypesClient.getNoteTypeById(summaryNoteTypeId))
-            .thenReturn(new InstanceNoteType().name("Summary"));
+        .thenReturn(new InstanceNoteType().name("Summary"));
     when(instanceReferenceService.getAllInstanceNoteTypes())
-            .thenReturn(List.of(new InstanceNoteType().name("Summary"),
-                    new InstanceNoteType().name(GENERAL_NOTE)));
+        .thenReturn(
+            List.of(
+                new InstanceNoteType().name("Summary"), new InstanceNoteType().name(GENERAL_NOTE)));
     when(remoteFileSystemClient.get(pathToMarcFile))
-            .thenReturn(new FileInputStream("src/test/resources/files/preview.mrc"));
+        .thenReturn(new FileInputStream("src/test/resources/files/preview.mrc"));
     when(remoteFileSystemClient.get(pathToMatchedJsonFile))
-            .thenReturn(new FileInputStream(
-                "src/test/resources/files/instances_for_preview.json"));
+        .thenReturn(new FileInputStream("src/test/resources/files/instances_for_preview.json"));
     when(instanceReferenceService.getContributorTypesByCode("art"))
-            .thenReturn(new ContributorTypeCollection().contributorTypes(
-                    Collections.singletonList(new ContributorType().name("Artist"))));
+        .thenReturn(
+            new ContributorTypeCollection()
+                .contributorTypes(Collections.singletonList(new ContributorType().name("Artist"))));
     when(instanceReferenceService.getContributorTypesByCode(null))
-            .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
+        .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
     when(instanceReferenceService.getContributorTypesByName("contributor"))
-            .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
+        .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
     when(instanceReferenceService.getInstanceTypesByName("Text"))
-            .thenReturn(InstanceTypes.builder()
-                    .types(Collections.singletonList(InstanceType.builder().name("Text")
-                            .code("txt").source("rdacontent").build())).build());
+        .thenReturn(
+            InstanceTypes.builder()
+                .types(
+                    Collections.singletonList(
+                        InstanceType.builder()
+                            .name("Text")
+                            .code("txt")
+                            .source("rdacontent")
+                            .build()))
+                .build());
     when(instanceReferenceService.getInstanceFormatsByCode("cz"))
-            .thenReturn(InstanceFormats.builder()
-                    .formats(Collections.singletonList(
-                            InstanceFormat.builder().name("computer -- other").code("cz")
-                                    .source("rdacarrier").build())).build());
+        .thenReturn(
+            InstanceFormats.builder()
+                .formats(
+                    Collections.singletonList(
+                        InstanceFormat.builder()
+                            .name("computer -- other")
+                            .code("cz")
+                            .source("rdacarrier")
+                            .build()))
+                .build());
     when(mappingRulesClient.getMarcBibMappingRules())
-            .thenReturn(Files.readString(Path.of(
-                    "src/test/resources/files/mappingRulesResponse.json")));
+        .thenReturn(
+            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
 
     var res = previewService.getPreview(bulkOperation, EDIT, 0, 10);
-
 
     assertThat(res.getHeader().get(25).getValue(), equalTo("General note"));
     assertThat(res.getHeader().get(25).getForceVisible(), equalTo(Boolean.FALSE));
     assertThat(res.getHeader().get(26).getValue(), equalTo("Summary"));
     assertThat(res.getHeader().get(26).getForceVisible(), equalTo(Boolean.TRUE));
 
-    assertThat(res.getRows().get(1).getRow().get(0),
-            equalTo("ed32b4a6-3895-42a0-b696-7b8ed667313f"));
+    assertThat(
+        res.getRows().get(1).getRow().get(0), equalTo("ed32b4a6-3895-42a0-b696-7b8ed667313f"));
     assertThat(res.getRows().get(1).getRow().get(5), equalTo("inst000000000001"));
     assertThat(res.getRows().get(1).getRow().get(6), equalTo("FOLIO"));
     assertThat(res.getRows().get(1).getRow().get(7), equalTo("2023-12-27"));
@@ -389,8 +458,9 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getRows().get(1).getRow().get(14), equalTo("series"));
     assertThat(res.getRows().get(1).getRow().get(15), equalTo("Sample contributor"));
     assertThat(res.getRows().get(1).getRow().get(17), equalTo("2021 | 2022"));
-    assertThat(res.getRows().get(1).getRow().get(18),
-            equalTo("Physical description1 | Physical description2"));
+    assertThat(
+        res.getRows().get(1).getRow().get(18),
+        equalTo("Physical description1 | Physical description2"));
     assertThat(res.getRows().get(1).getRow().get(22), equalTo("eng | fre"));
     assertThat(res.getRows().get(1).getRow().get(23), equalTo("freq1 | freq2"));
     assertThat(res.getRows().get(1).getRow().get(24), equalTo("range1 | range2"));
@@ -403,56 +473,72 @@ class PreviewServiceTest extends BaseTest {
     var bulkOperationId = UUID.randomUUID();
     var pathToMarcFile = bulkOperationId + "/" + "file.mrc";
     var pathToUpdatedJsonFile = bulkOperationId + "/" + "modified_file.json";
-    var bulkOperation = BulkOperation.builder()
+    var bulkOperation =
+        BulkOperation.builder()
             .id(bulkOperationId)
             .entityType(INSTANCE_MARC)
             .linkToModifiedRecordsJsonPreviewFile(pathToUpdatedJsonFile)
             .linkToModifiedRecordsMarcFile(pathToMarcFile)
             .build();
 
-    var rules = new BulkOperationMarcRuleCollection()
-            .bulkOperationMarcRules(List.of(new BulkOperationMarcRule()
-                            .bulkOperationId(bulkOperationId)
-                            .tag("520"),
-                    new BulkOperationMarcRule()
-                            .bulkOperationId(bulkOperationId)
-                            .tag("710")))
+    var rules =
+        new BulkOperationMarcRuleCollection()
+            .bulkOperationMarcRules(
+                List.of(
+                    new BulkOperationMarcRule().bulkOperationId(bulkOperationId).tag("520"),
+                    new BulkOperationMarcRule().bulkOperationId(bulkOperationId).tag("710")))
             .totalRecords(2);
 
     when(ruleService.getMarcRules(bulkOperationId)).thenReturn(rules);
     when(ruleService.getRules(bulkOperationId))
-            .thenReturn(new BulkOperationRuleCollection()
-                    .bulkOperationRules(Collections.emptyList())
-                    .totalRecords(0));
+        .thenReturn(
+            new BulkOperationRuleCollection()
+                .bulkOperationRules(Collections.emptyList())
+                .totalRecords(0));
     when(instanceNoteTypesClient.getNoteTypeById(summaryNoteTypeId))
-            .thenReturn(new InstanceNoteType().name("Summary"));
+        .thenReturn(new InstanceNoteType().name("Summary"));
     when(instanceReferenceService.getAllInstanceNoteTypes())
-            .thenReturn(List.of(new InstanceNoteType().name("Summary"),
-                    new InstanceNoteType().name(GENERAL_NOTE)));
-    when(remoteFileSystemClient.get(pathToMarcFile)).thenReturn(
-            new FileInputStream("src/test/resources/files/preview.mrc"));
+        .thenReturn(
+            List.of(
+                new InstanceNoteType().name("Summary"), new InstanceNoteType().name(GENERAL_NOTE)));
+    when(remoteFileSystemClient.get(pathToMarcFile))
+        .thenReturn(new FileInputStream("src/test/resources/files/preview.mrc"));
     when(remoteFileSystemClient.get(pathToUpdatedJsonFile))
-            .thenReturn(new FileInputStream(
-                    "src/test/resources/files/modified_instances_for_preview.json"));
+        .thenReturn(
+            new FileInputStream("src/test/resources/files/modified_instances_for_preview.json"));
     when(instanceReferenceService.getContributorTypesByCode("art"))
-            .thenReturn(new ContributorTypeCollection().contributorTypes(
-                    Collections.singletonList(new ContributorType().name("Artist"))));
+        .thenReturn(
+            new ContributorTypeCollection()
+                .contributorTypes(Collections.singletonList(new ContributorType().name("Artist"))));
     when(instanceReferenceService.getContributorTypesByCode(null))
-            .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
+        .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
     when(instanceReferenceService.getContributorTypesByName("contributor"))
-            .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
+        .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
     when(instanceReferenceService.getInstanceTypesByName("Text"))
-            .thenReturn(InstanceTypes.builder()
-                    .types(Collections.singletonList(InstanceType.builder()
-                            .name("Text").code("txt").source("rdacontent").build())).build());
+        .thenReturn(
+            InstanceTypes.builder()
+                .types(
+                    Collections.singletonList(
+                        InstanceType.builder()
+                            .name("Text")
+                            .code("txt")
+                            .source("rdacontent")
+                            .build()))
+                .build());
     when(instanceReferenceService.getInstanceFormatsByCode("cz"))
-            .thenReturn(InstanceFormats.builder()
-                    .formats(Collections.singletonList(
-                            InstanceFormat.builder().name("computer -- other")
-                                    .code("cz").source("rdacarrier").build())).build());
+        .thenReturn(
+            InstanceFormats.builder()
+                .formats(
+                    Collections.singletonList(
+                        InstanceFormat.builder()
+                            .name("computer -- other")
+                            .code("cz")
+                            .source("rdacarrier")
+                            .build()))
+                .build());
     when(mappingRulesClient.getMarcBibMappingRules())
-            .thenReturn(Files.readString(Path.of(
-                    "src/test/resources/files/mappingRulesResponse.json")));
+        .thenReturn(
+            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
 
     var res = previewService.getPreview(bulkOperation, EDIT, 0, 10);
 
@@ -463,22 +549,23 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getHeader().get(26).getValue(), equalTo("Summary"));
     assertThat(res.getHeader().get(26).getForceVisible(), equalTo(Boolean.TRUE));
 
-    assertThat(res.getRows().get(1).getRow().get(0),
-            equalTo("ed32b4a6-3895-42a0-b696-7b8ed667313f"));
+    assertThat(
+        res.getRows().get(1).getRow().get(0), equalTo("ed32b4a6-3895-42a0-b696-7b8ed667313f"));
     assertThat(res.getRows().get(1).getRow().get(5), equalTo("inst000000000001"));
     assertThat(res.getRows().get(1).getRow().get(6), equalTo("FOLIO"));
     assertThat(res.getRows().get(1).getRow().get(7), equalTo("2023-12-27"));
     var csvChanges = "Sample note for folio and marc instance";
     assertThat(res.getRows().get(1).getRow().get(11), equalTo(csvChanges));
 
-    assertThat(res.getRows().get(2).getRow().get(0),
-            equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
+    assertThat(
+        res.getRows().get(2).getRow().get(0), equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
     assertThat(res.getRows().get(2).getRow().get(5), equalTo("in00000000002"));
     assertThat(res.getRows().get(2).getRow().get(6), equalTo("MARC"));
     assertThat(res.getRows().get(2).getRow().get(9), equalTo("single unit"));
     assertThat(res.getRows().get(2).getRow().get(11), equalTo(csvChanges));
-    assertThat(res.getRows().get(2).getRow().get(14),
-            equalTo("series800 | series810 | series811 | series830"));
+    assertThat(
+        res.getRows().get(2).getRow().get(14),
+        equalTo("series800 | series810 | series811 | series830"));
   }
 
   @Test
@@ -488,7 +575,8 @@ class PreviewServiceTest extends BaseTest {
     var bulkOperationId = UUID.randomUUID();
     var pathToMarcFile = bulkOperationId + "/" + "file.mrc";
     var pathToMatchedJsonFile = bulkOperationId + "/" + "file.json";
-    var bulkOperation = BulkOperation.builder()
+    var bulkOperation =
+        BulkOperation.builder()
             .id(bulkOperationId)
             .entityType(INSTANCE_MARC)
             .linkToModifiedRecordsJsonPreviewFile(pathToMatchedJsonFile)
@@ -497,45 +585,63 @@ class PreviewServiceTest extends BaseTest {
             .linkToCommittedRecordsMarcFile(pathToMarcFile)
             .build();
 
-    var rules = new BulkOperationMarcRuleCollection()
-            .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule()
-                    .bulkOperationId(bulkOperationId)
-                    .tag("520")))
+    var rules =
+        new BulkOperationMarcRuleCollection()
+            .bulkOperationMarcRules(
+                Collections.singletonList(
+                    new BulkOperationMarcRule().bulkOperationId(bulkOperationId).tag("520")))
             .totalRecords(1);
 
     when(ruleService.getMarcRules(bulkOperationId)).thenReturn(rules);
-    when(ruleService.getRules(any(UUID.class))).thenReturn(new BulkOperationRuleCollection()
-            .bulkOperationRules(Collections.emptyList())
-            .totalRecords(0));
+    when(ruleService.getRules(any(UUID.class)))
+        .thenReturn(
+            new BulkOperationRuleCollection()
+                .bulkOperationRules(Collections.emptyList())
+                .totalRecords(0));
     when(instanceNoteTypesClient.getNoteTypeById(summaryNoteTypeId))
-            .thenReturn(new InstanceNoteType().name("Summary"));
+        .thenReturn(new InstanceNoteType().name("Summary"));
     when(instanceReferenceService.getAllInstanceNoteTypes())
-            .thenReturn(List.of(new InstanceNoteType().name("Summary"),
-                    new InstanceNoteType().name(GENERAL_NOTE)));
+        .thenReturn(
+            List.of(
+                new InstanceNoteType().name("Summary"), new InstanceNoteType().name(GENERAL_NOTE)));
     when(remoteFileSystemClient.get(pathToMarcFile))
-            .thenReturn(new FileInputStream("src/test/resources/files/preview.mrc"));
+        .thenReturn(new FileInputStream("src/test/resources/files/preview.mrc"));
     when(remoteFileSystemClient.get(pathToMatchedJsonFile))
-            .thenReturn(new FileInputStream(
-                "src/test/resources/files/single_instance_for_preview.json"));
+        .thenReturn(
+            new FileInputStream("src/test/resources/files/single_instance_for_preview.json"));
     when(instanceReferenceService.getContributorTypesByCode("art"))
-            .thenReturn(new ContributorTypeCollection().contributorTypes(
-                    Collections.singletonList(new ContributorType().name("Artist"))));
+        .thenReturn(
+            new ContributorTypeCollection()
+                .contributorTypes(Collections.singletonList(new ContributorType().name("Artist"))));
     when(instanceReferenceService.getContributorTypesByCode(null))
-            .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
+        .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
     when(instanceReferenceService.getContributorTypesByName("contributor"))
-            .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
+        .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
     when(instanceReferenceService.getInstanceTypesByName("Text"))
-            .thenReturn(InstanceTypes.builder()
-                    .types(Collections.singletonList(InstanceType.builder()
-                            .name("Text").code("txt").source("rdacontent").build())).build());
+        .thenReturn(
+            InstanceTypes.builder()
+                .types(
+                    Collections.singletonList(
+                        InstanceType.builder()
+                            .name("Text")
+                            .code("txt")
+                            .source("rdacontent")
+                            .build()))
+                .build());
     when(instanceReferenceService.getInstanceFormatsByCode("cz"))
-            .thenReturn(InstanceFormats.builder()
-                    .formats(Collections.singletonList(InstanceFormat.builder()
-                            .name("computer -- other").code("cz").source("rdacarrier")
-                            .build())).build());
+        .thenReturn(
+            InstanceFormats.builder()
+                .formats(
+                    Collections.singletonList(
+                        InstanceFormat.builder()
+                            .name("computer -- other")
+                            .code("cz")
+                            .source("rdacarrier")
+                            .build()))
+                .build());
     when(mappingRulesClient.getMarcBibMappingRules())
-            .thenReturn(Files.readString(
-                    Path.of("src/test/resources/files/mappingRulesResponse.json")));
+        .thenReturn(
+            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
 
     var res = previewService.getPreview(bulkOperation, COMMIT, 0, 10);
 
@@ -544,23 +650,25 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getHeader().get(26).getValue(), equalTo("Summary"));
     assertThat(res.getHeader().get(26).getForceVisible(), equalTo(Boolean.TRUE));
 
-    assertThat(res.getRows().getFirst().getRow().get(16),
-            equalTo("Miramax Books/Hyperion Books "
-                    + "for Children,\u001f;-\u001f;New York :\u001f;c2002."));
+    assertThat(
+        res.getRows().getFirst().getRow().get(16),
+        equalTo(
+            "Miramax Books/Hyperion Books "
+                + "for Children,\u001f;-\u001f;New York :\u001f;c2002."));
     assertThat(res.getRows().getFirst().getRow().get(17), equalTo("1st ed."));
     assertThat(res.getRows().getFirst().getRow().get(18), equalTo("500 p. ; 22 cm."));
     assertThat(res.getRows().getFirst().getRow().get(19), equalTo("Text"));
     assertThat(res.getRows().getFirst().getRow().get(22), equalTo("eng | fre"));
-    assertThat(res.getRows().getFirst().getRow().get(23),
-            equalTo("monthly. Jun 10, 2024 | yearly. 2024"));
+    assertThat(
+        res.getRows().getFirst().getRow().get(23), equalTo("monthly. Jun 10, 2024 | yearly. 2024"));
     assertThat(res.getRows().getFirst().getRow().get(24), equalTo("2002-2024"));
-    assertThat(res.getRows().getFirst().getRow().get(25),
-        equalTo("language note (staff only)"));
-    assertThat(res.getRows().getFirst().getRow().get(26), equalTo(
+    assertThat(res.getRows().getFirst().getRow().get(25), equalTo("language note (staff only)"));
+    assertThat(
+        res.getRows().getFirst().getRow().get(26),
+        equalTo(
             "Ethan Feld, the worst baseball player in the history of the game, "
-                    + "finds himself recruited by a 100-year-old scout to help a band of "
-                    + "fairies triumph over an ancient enemy. 2nd."
-    ));
+                + "finds himself recruited by a 100-year-old scout to help a band of "
+                + "fairies triumph over an ancient enemy. 2nd."));
   }
 
   @Test
@@ -570,53 +678,71 @@ class PreviewServiceTest extends BaseTest {
     var bulkOperationId = UUID.randomUUID();
     var pathToMarcFile = bulkOperationId + "/" + "file.mrc";
     var pathToCommittedJsonFile = bulkOperationId + "/" + "modified_file.json";
-    var bulkOperation = BulkOperation.builder()
+    var bulkOperation =
+        BulkOperation.builder()
             .id(bulkOperationId)
             .entityType(INSTANCE_MARC)
             .linkToCommittedRecordsJsonPreviewFile(pathToCommittedJsonFile)
             .linkToCommittedRecordsMarcFile(pathToMarcFile)
             .build();
 
-    var rules = new BulkOperationMarcRuleCollection()
-            .bulkOperationMarcRules(Collections.singletonList(new BulkOperationMarcRule()
-                    .bulkOperationId(bulkOperationId)
-                    .tag("520")))
+    var rules =
+        new BulkOperationMarcRuleCollection()
+            .bulkOperationMarcRules(
+                Collections.singletonList(
+                    new BulkOperationMarcRule().bulkOperationId(bulkOperationId).tag("520")))
             .totalRecords(1);
 
     when(ruleService.getMarcRules(bulkOperationId)).thenReturn(rules);
     when(ruleService.getRules(bulkOperationId))
-            .thenReturn(new BulkOperationRuleCollection()
-                    .bulkOperationRules(Collections.emptyList())
-                    .totalRecords(0));
+        .thenReturn(
+            new BulkOperationRuleCollection()
+                .bulkOperationRules(Collections.emptyList())
+                .totalRecords(0));
     when(instanceNoteTypesClient.getNoteTypeById(summaryNoteTypeId))
-            .thenReturn(new InstanceNoteType().name("Summary"));
+        .thenReturn(new InstanceNoteType().name("Summary"));
     when(instanceReferenceService.getAllInstanceNoteTypes())
-            .thenReturn(List.of(new InstanceNoteType().name("Summary"),
-                    new InstanceNoteType().name(GENERAL_NOTE)));
-    when(remoteFileSystemClient.get(pathToMarcFile)).thenReturn(new FileInputStream(
-            "src/test/resources/files/preview.mrc"));
+        .thenReturn(
+            List.of(
+                new InstanceNoteType().name("Summary"), new InstanceNoteType().name(GENERAL_NOTE)));
+    when(remoteFileSystemClient.get(pathToMarcFile))
+        .thenReturn(new FileInputStream("src/test/resources/files/preview.mrc"));
     when(remoteFileSystemClient.get(pathToCommittedJsonFile))
-            .thenReturn(new FileInputStream(
-                    "src/test/resources/files/modified_instances_for_preview.json"));
+        .thenReturn(
+            new FileInputStream("src/test/resources/files/modified_instances_for_preview.json"));
     when(instanceReferenceService.getContributorTypesByCode("art"))
-            .thenReturn(new ContributorTypeCollection().contributorTypes(
-                    Collections.singletonList(new ContributorType().name("Artist"))));
+        .thenReturn(
+            new ContributorTypeCollection()
+                .contributorTypes(Collections.singletonList(new ContributorType().name("Artist"))));
     when(instanceReferenceService.getContributorTypesByCode(null))
-            .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
+        .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
     when(instanceReferenceService.getContributorTypesByName("contributor"))
-            .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
+        .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
     when(instanceReferenceService.getInstanceTypesByName("Text"))
-            .thenReturn(InstanceTypes.builder()
-                    .types(Collections.singletonList(InstanceType.builder()
-                            .name("Text").code("txt").source("rdacontent").build())).build());
+        .thenReturn(
+            InstanceTypes.builder()
+                .types(
+                    Collections.singletonList(
+                        InstanceType.builder()
+                            .name("Text")
+                            .code("txt")
+                            .source("rdacontent")
+                            .build()))
+                .build());
     when(instanceReferenceService.getInstanceFormatsByCode("cz"))
-            .thenReturn(InstanceFormats.builder()
-                    .formats(Collections.singletonList(InstanceFormat.builder()
-                            .name("computer -- other").code("cz").source("rdacarrier").build()))
-                    .build());
+        .thenReturn(
+            InstanceFormats.builder()
+                .formats(
+                    Collections.singletonList(
+                        InstanceFormat.builder()
+                            .name("computer -- other")
+                            .code("cz")
+                            .source("rdacarrier")
+                            .build()))
+                .build());
     when(mappingRulesClient.getMarcBibMappingRules())
-            .thenReturn(Files.readString(
-                    Path.of("src/test/resources/files/mappingRulesResponse.json")));
+        .thenReturn(
+            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
 
     var res = previewService.getPreview(bulkOperation, COMMIT, 0, 10);
 
@@ -625,14 +751,15 @@ class PreviewServiceTest extends BaseTest {
     assertThat(res.getHeader().get(26).getValue(), equalTo("Summary"));
     assertThat(res.getHeader().get(26).getForceVisible(), equalTo(Boolean.TRUE));
 
-    assertThat(res.getRows().get(2).getRow().get(0),
-            equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
+    assertThat(
+        res.getRows().get(2).getRow().get(0), equalTo("e3784e11-1431-4658-b147-cad88ada1920"));
     assertThat(res.getRows().get(2).getRow().get(5), equalTo("in00000000002"));
     assertThat(res.getRows().get(2).getRow().get(6), equalTo("MARC"));
     var csvChanges = "Sample note for folio and marc instance";
     assertThat(res.getRows().get(2).getRow().get(11), equalTo(csvChanges));
-    assertThat(res.getRows().get(2).getRow().get(14),
-            equalTo("series800 | series810 | series811 | series830"));
+    assertThat(
+        res.getRows().get(2).getRow().get(14),
+        equalTo("series800 | series810 | series811 | series830"));
   }
 
   @Test
@@ -640,27 +767,24 @@ class PreviewServiceTest extends BaseTest {
     var operationId = UUID.randomUUID();
     var pathToCsv = "committed.csv";
 
-    var rule = new BulkOperationRule()
+    var rule =
+        new BulkOperationRule()
             .bulkOperationId(operationId)
-            .ruleDetails(new RuleDetails()
-                    .option(SET_RECORDS_FOR_DELETE)
-                    .actions(List.of()));
+            .ruleDetails(new RuleDetails().option(SET_RECORDS_FOR_DELETE).actions(List.of()));
 
-    var rules = new BulkOperationRuleCollection()
-            .bulkOperationRules(List.of(rule))
-            .totalRecords(1);
+    var rules = new BulkOperationRuleCollection().bulkOperationRules(List.of(rule)).totalRecords(1);
 
     when(ruleService.getRules(operationId)).thenReturn(rules);
     when(remoteFileSystemClient.get(pathToCsv))
-            .thenReturn(new ByteArrayInputStream(",,,,,,,,,,".getBytes()));
-    when(mappingRulesClient.getMarcBibMappingRules())
-            .thenReturn("{}");
+        .thenReturn(new ByteArrayInputStream(",,,,,,,,,,".getBytes()));
+    when(mappingRulesClient.getMarcBibMappingRules()).thenReturn("{}");
     var emptyBulkOperation = new BulkOperation();
     emptyBulkOperation.setTenantNotePairs(List.of());
     when(bulkOperationService.getBulkOperationOrThrow(any(UUID.class)))
-            .thenReturn(emptyBulkOperation);
+        .thenReturn(emptyBulkOperation);
     when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(emptyBulkOperation);
-    var bulkOperation = BulkOperation.builder()
+    var bulkOperation =
+        BulkOperation.builder()
             .id(operationId)
             .entityType(INSTANCE)
             .linkToCommittedRecordsCsvFile(pathToCsv)

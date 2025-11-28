@@ -49,9 +49,8 @@ public class BulkEditPartitioner implements Partitioner {
     for (var i = 0; i < numberOfPartitions; i++) {
       final String tempOutputCsvPath = outputCsvPathTemplate.formatted(i);
       final String tempOutputJsonPath = outputJsonPathTemplate.formatted(i);
-      final String tempOutputMarcPath = outputMarcPathTemplate == null
-          ? null
-          : outputMarcPathTemplate.formatted(i);
+      final String tempOutputMarcPath =
+          outputMarcPathTemplate == null ? null : outputMarcPathTemplate.formatted(i);
       currentLimit = limit - partitionSize >= partitionSize ? partitionSize : limit;
 
       var executionContext = new ExecutionContext();
@@ -72,13 +71,11 @@ public class BulkEditPartitioner implements Partitioner {
           currentLimit,
           tempOutputCsvPath,
           tempOutputJsonPath,
-          tempOutputMarcPath
-      );
+          tempOutputMarcPath);
 
       offset += currentLimit;
       limit -= partitionSize;
     }
     return result;
   }
-
 }

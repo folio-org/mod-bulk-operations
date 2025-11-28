@@ -8,5 +8,4 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface BulkOperationErrorRepository extends JpaRepository<BulkOperationError, UUID> {
   Page<BulkOperationError> findAllByBulkOperationId(UUID bulkOperationId, Pageable pageable);
-
 }

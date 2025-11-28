@@ -60,20 +60,24 @@ public class LocalReferenceDataService {
 
   public void enrichWithTenant(Item item, String tenantId) {
     if (nonNull(item.getElectronicAccess())) {
-      item.getElectronicAccess().forEach(el -> {
-        el.setTenantId(tenantId);
-        if (nonNull(el.getRelationshipId())) {
-          updateTenantForUrlRelationship(el.getRelationshipId(), tenantId);
-        }
-      });
+      item.getElectronicAccess()
+          .forEach(
+              el -> {
+                el.setTenantId(tenantId);
+                if (nonNull(el.getRelationshipId())) {
+                  updateTenantForUrlRelationship(el.getRelationshipId(), tenantId);
+                }
+              });
     }
     if (nonNull(item.getNotes())) {
       item.getNotes().forEach(note -> note.setTenantId(tenantId));
     }
     if (nonNull(item.getStatisticalCodes())) {
-      item.getStatisticalCodes().forEach(codeId ->
-          Objects.requireNonNull(cacheManager.getCache("statisticalCodeId"))
-            .put(codeId, tenantId));
+      item.getStatisticalCodes()
+          .forEach(
+              codeId ->
+                  Objects.requireNonNull(cacheManager.getCache("statisticalCodeId"))
+                      .put(codeId, tenantId));
     }
     if (nonNull(item.getItemLevelCallNumberType())) {
       Objects.requireNonNull(cacheManager.getCache("callNumberTypeId"))
@@ -83,20 +87,26 @@ public class LocalReferenceDataService {
 
   public void enrichWithTenant(HoldingsRecord holdingsRecord, String tenantId) {
     if (nonNull(holdingsRecord.getElectronicAccess())) {
-      holdingsRecord.getElectronicAccess().forEach(el -> {
-        el.setTenantId(tenantId);
-        if (nonNull(el.getRelationshipId())) {
-          updateTenantForUrlRelationship(el.getRelationshipId(), tenantId);
-        }
-      });
+      holdingsRecord
+          .getElectronicAccess()
+          .forEach(
+              el -> {
+                el.setTenantId(tenantId);
+                if (nonNull(el.getRelationshipId())) {
+                  updateTenantForUrlRelationship(el.getRelationshipId(), tenantId);
+                }
+              });
     }
     if (nonNull(holdingsRecord.getNotes())) {
       holdingsRecord.getNotes().forEach(note -> note.setTenantId(tenantId));
     }
     if (nonNull(holdingsRecord.getStatisticalCodeIds())) {
-      holdingsRecord.getStatisticalCodeIds().forEach(codeId ->
-          Objects.requireNonNull(cacheManager.getCache("statisticalCodeId"))
-            .put(codeId, tenantId));
+      holdingsRecord
+          .getStatisticalCodeIds()
+          .forEach(
+              codeId ->
+                  Objects.requireNonNull(cacheManager.getCache("statisticalCodeId"))
+                      .put(codeId, tenantId));
     }
     if (nonNull(holdingsRecord.getIllPolicyId())) {
       Objects.requireNonNull(cacheManager.getCache("illPolicyId"))

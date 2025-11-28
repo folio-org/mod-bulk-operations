@@ -27,22 +27,31 @@ public class LogFilesService {
   private final BulkOperationRepository bulkOperationRepository;
 
   public void clearLogFiles() {
-    final var back30days = LocalDateTime.now(ZoneId.of("UTC"))
-            .minusDays(MIN_DAYS_TO_CLEAR_LOG_FILES);
+    final var back30days =
+        LocalDateTime.now(ZoneId.of("UTC")).minusDays(MIN_DAYS_TO_CLEAR_LOG_FILES);
     var bulkOperations = bulkOperationRepository.findAll();
-    var oldOperations = bulkOperations.stream().filter(bulkOperation -> {
-      var time = nonNull(bulkOperation.getEndTime()) ? bulkOperation.getEndTime()
-              : bulkOperation.getStartTime();
-      return !bulkOperation.isExpired() && nonNull(time) && time.isBefore(back30days);
-    }).toList();
+    var oldOperations =
+        bulkOperations.stream()
+            .filter(
+                bulkOperation -> {
+                  var time =
+                      nonNull(bulkOperation.getEndTime())
+                          ? bulkOperation.getEndTime()
+                          : bulkOperation.getStartTime();
+                  return !bulkOperation.isExpired() && nonNull(time) && time.isBefore(back30days);
+                })
+            .toList();
     log.info("Found {} old bulk operations to clear files.", oldOperations.size());
-    oldOperations.forEach(bulkOperation -> {
-      bulkOperation.setExpired(true);
-      removeCommittedFiles(bulkOperation);
-      bulkOperationRepository.save(bulkOperation);
-      log.info("Bulk operation with id {} is older than {} days. All files were removed.",
-              bulkOperation.getId(), MIN_DAYS_TO_CLEAR_LOG_FILES);
-    });
+    oldOperations.forEach(
+        bulkOperation -> {
+          bulkOperation.setExpired(true);
+          removeCommittedFiles(bulkOperation);
+          bulkOperationRepository.save(bulkOperation);
+          log.info(
+              "Bulk operation with id {} is older than {} days. All files were removed.",
+              bulkOperation.getId(),
+              MIN_DAYS_TO_CLEAR_LOG_FILES);
+        });
   }
 
   public void removeCommittedFiles(BulkOperation bulkOperation) {

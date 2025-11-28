@@ -19,15 +19,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 class BulkOperationDataProcessingRepositoryTest extends BaseTest {
-  @Autowired
-  private BulkOperationDataProcessingRepository repository;
+  @Autowired private BulkOperationDataProcessingRepository repository;
 
-  @Autowired
-  private BulkOperationRepository bulkOperationRepository;
+  @Autowired private BulkOperationRepository bulkOperationRepository;
 
   @Test
   void shouldSaveEntity() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var saved = repository.save(createEntity());
       assertThat(saved.getBulkOperationId(), notNullValue());
     }
@@ -35,28 +33,30 @@ class BulkOperationDataProcessingRepositoryTest extends BaseTest {
 
   @Test
   void shouldFindEntityById() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       var retrieved = repository.findById(created.getId());
-      assertTrue(retrieved.isPresent() && created.getBulkOperationId()
-              .equals(retrieved.get().getBulkOperationId()));
+      assertTrue(
+          retrieved.isPresent()
+              && created.getBulkOperationId().equals(retrieved.get().getBulkOperationId()));
     }
   }
 
   @Test
   void shouldUpdateEntity() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       var endTime = LocalDateTime.now();
       var updated = repository.save(created.withEndTime(endTime));
-      assertTrue(created.getBulkOperationId().equals(updated.getBulkOperationId())
+      assertTrue(
+          created.getBulkOperationId().equals(updated.getBulkOperationId())
               && endTime.isEqual(updated.getEndTime()));
     }
   }
 
   @Test
   void shouldDeleteEntity() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       repository.deleteById(created.getBulkOperationId());
       assertTrue(repository.findById(created.getBulkOperationId()).isEmpty());
@@ -64,26 +64,28 @@ class BulkOperationDataProcessingRepositoryTest extends BaseTest {
   }
 
   private BulkOperationDataProcessing createEntity() {
-    var bulkOperation = bulkOperationRepository.save(BulkOperation.builder()
-            .id(UUID.randomUUID())
-            .userId(UUID.randomUUID())
-            .operationType(UPDATE)
-            .entityType(USER)
-            .identifierType(BARCODE)
-            .status(NEW)
-            .dataExportJobId(UUID.randomUUID())
-            .totalNumOfRecords(10)
-            .processedNumOfRecords(0)
-            .executionChunkSize(5)
-            .startTime(LocalDateTime.now())
-            .build());
+    var bulkOperation =
+        bulkOperationRepository.save(
+            BulkOperation.builder()
+                .id(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .operationType(UPDATE)
+                .entityType(USER)
+                .identifierType(BARCODE)
+                .status(NEW)
+                .dataExportJobId(UUID.randomUUID())
+                .totalNumOfRecords(10)
+                .processedNumOfRecords(0)
+                .executionChunkSize(5)
+                .startTime(LocalDateTime.now())
+                .build());
 
     return BulkOperationDataProcessing.builder()
-      .bulkOperationId(bulkOperation.getId())
-      .status(ACTIVE)
-      .startTime(LocalDateTime.now())
-      .totalNumOfRecords(10)
-      .processedNumOfRecords(5)
-      .build();
+        .bulkOperationId(bulkOperation.getId())
+        .status(ACTIVE)
+        .startTime(LocalDateTime.now())
+        .totalNumOfRecords(10)
+        .processedNumOfRecords(5)
+        .build();
   }
 }

@@ -15,7 +15,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class ServicePoints   {
+public class ServicePoints {
   @JsonProperty("servicepoints")
   @Valid
   private List<ServicePoint> servicepoints = new ArrayList<>();
@@ -23,4 +23,3 @@ public class ServicePoints   {
   @JsonProperty("totalRecords")
   private Integer totalRecords;
 }
-

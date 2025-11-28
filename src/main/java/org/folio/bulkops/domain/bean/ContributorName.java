@@ -32,4 +32,3 @@ public class ContributorName {
   @JsonProperty("primary")
   private Boolean primary;
 }
-

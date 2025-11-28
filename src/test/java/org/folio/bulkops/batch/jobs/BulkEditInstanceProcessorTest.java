@@ -44,24 +44,15 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 class BulkEditInstanceProcessorTest {
 
-  @Mock
-  private InstanceClient instanceClient;
-  @Mock
-  private FolioExecutionContext folioExecutionContext;
-  @Mock
-  private PermissionsValidator permissionsValidator;
-  @Mock
-  private UserClient userClient;
-  @Mock
-  private SrsClient srsClient;
-  @Mock
-  private DuplicationCheckerFactory duplicationCheckerFactory;
-  @Mock
-  private JobExecution jobExecution;
-  @Mock
-  private JsonToMarcConverter jsonToMarcConverter;
-  @InjectMocks
-  private SrsService srsService;
+  @Mock private InstanceClient instanceClient;
+  @Mock private FolioExecutionContext folioExecutionContext;
+  @Mock private PermissionsValidator permissionsValidator;
+  @Mock private UserClient userClient;
+  @Mock private SrsClient srsClient;
+  @Mock private DuplicationCheckerFactory duplicationCheckerFactory;
+  @Mock private JobExecution jobExecution;
+  @Mock private JsonToMarcConverter jsonToMarcConverter;
+  @InjectMocks private SrsService srsService;
 
   private BulkEditInstanceProcessor processor;
   private final ObjectMapper objectMapper = new ObjectMapper();
@@ -69,15 +60,20 @@ class BulkEditInstanceProcessorTest {
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
-    processor = new BulkEditInstanceProcessor(
-            instanceClient, folioExecutionContext, permissionsValidator, userClient,
-            duplicationCheckerFactory, srsService);
+    processor =
+        new BulkEditInstanceProcessor(
+            instanceClient,
+            folioExecutionContext,
+            permissionsValidator,
+            userClient,
+            duplicationCheckerFactory,
+            srsService);
     ReflectionTestUtils.setField(processor, "identifierType", IdentifierType.ID.getValue());
     ReflectionTestUtils.setField(processor, "jobExecution", jobExecution);
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
-            .thenReturn(new HashSet<>());
+        .thenReturn(new HashSet<>());
     when(duplicationCheckerFactory.getFetchedIds(any())).thenReturn(new HashSet<>());
   }
 
@@ -86,10 +82,10 @@ class BulkEditInstanceProcessorTest {
     ItemIdentifier identifier = new ItemIdentifier().withItemId("111");
     Instance instance = Instance.builder().id("id1").source("FOLIO").title("Sample title").build();
     when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
-            .thenReturn(InstanceCollection.builder().instances(List.of(instance)).totalRecords(1)
-                    .build());
+        .thenReturn(
+            InstanceCollection.builder().instances(List.of(instance)).totalRecords(1).build());
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
-            .thenReturn(true);
+        .thenReturn(true);
 
     List<ExtendedInstance> result = processor.process(identifier);
 
@@ -103,20 +99,20 @@ class BulkEditInstanceProcessorTest {
     ReflectionTestUtils.setField(processor, "identifierType", IdentifierType.ID.getValue());
     ItemIdentifier identifier = new ItemIdentifier().withItemId("222");
     String instanceId = "id2";
-    Instance instance = Instance.builder().id(instanceId).source("MARC").title("Sample title")
-            .build();
+    Instance instance =
+        Instance.builder().id(instanceId).source("MARC").title("Sample title").build();
     when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
-            .thenReturn(InstanceCollection.builder().instances(List.of(instance)).totalRecords(1)
-                    .build());
+        .thenReturn(
+            InstanceCollection.builder().instances(List.of(instance)).totalRecords(1).build());
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
-            .thenReturn(true);
+        .thenReturn(true);
 
-    var srsJson = objectMapper.readTree(
-            new File("src/test/resources/files/srs_response_for_validator.json"));
+    var srsJson =
+        objectMapper.readTree(new File("src/test/resources/files/srs_response_for_validator.json"));
     when(srsClient.getMarc(instanceId, "INSTANCE", true)).thenReturn(srsJson);
 
-    when(jobExecution.getExecutionContext()).thenReturn(
-            new org.springframework.batch.item.ExecutionContext());
+    when(jobExecution.getExecutionContext())
+        .thenReturn(new org.springframework.batch.item.ExecutionContext());
 
     List<ExtendedInstance> result = processor.process(identifier);
 
@@ -127,76 +123,81 @@ class BulkEditInstanceProcessorTest {
   @Test
   void shouldThrowWhenSrsIsMissingForMarc() {
     String instanceId = "id3";
-    Instance instance = Instance.builder().id(instanceId).source("MARC").title("Sample title")
-            .build();
+    Instance instance =
+        Instance.builder().id(instanceId).source("MARC").title("Sample title").build();
     when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
-            .thenReturn(InstanceCollection.builder().instances(
-                    List.of(instance)).totalRecords(1).build());
-    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(),
-            eq(EntityType.INSTANCE))).thenReturn(true);
+        .thenReturn(
+            InstanceCollection.builder().instances(List.of(instance)).totalRecords(1).build());
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
+        .thenReturn(true);
 
     ObjectNode srsJson = objectMapper.createObjectNode();
     srsJson.set("sourceRecords", objectMapper.createArrayNode());
     when(srsClient.getMarc(instanceId, "INSTANCE", true)).thenReturn(srsJson);
 
-    when(jobExecution.getExecutionContext()).thenReturn(
-            new org.springframework.batch.item.ExecutionContext());
+    when(jobExecution.getExecutionContext())
+        .thenReturn(new org.springframework.batch.item.ExecutionContext());
     ItemIdentifier identifier = new ItemIdentifier().withItemId("333");
     assertThatThrownBy(() -> processor.process(identifier))
-      .isInstanceOf(BulkEditException.class).hasMessageContaining(SRS_MISSING);
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining(SRS_MISSING);
   }
 
   @Test
   void shouldThrowWhenMultipleSrsForMarc() {
     String instanceId = "id4";
-    Instance instance = Instance.builder().id(instanceId).source("MARC").title("Sample title")
-            .build();
+    Instance instance =
+        Instance.builder().id(instanceId).source("MARC").title("Sample title").build();
     when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
-            .thenReturn(InstanceCollection.builder().instances(List.of(instance)).totalRecords(1)
-                    .build());
+        .thenReturn(
+            InstanceCollection.builder().instances(List.of(instance)).totalRecords(1).build());
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
-            .thenReturn(true);
+        .thenReturn(true);
 
     ObjectNode srsJson = objectMapper.createObjectNode();
-    srsJson.set("sourceRecords", objectMapper.createArrayNode()
+    srsJson.set(
+        "sourceRecords",
+        objectMapper
+            .createArrayNode()
             .add(objectMapper.createObjectNode().put("recordId", "rec1"))
             .add(objectMapper.createObjectNode().put("recordId", "rec2")));
     when(srsClient.getMarc(instanceId, "INSTANCE", true)).thenReturn(srsJson);
 
     when(jobExecution.getExecutionContext())
-            .thenReturn(new org.springframework.batch.item.ExecutionContext());
+        .thenReturn(new org.springframework.batch.item.ExecutionContext());
     ItemIdentifier identifier = new ItemIdentifier().withItemId("444");
     assertThatThrownBy(() -> processor.process(identifier))
-      .isInstanceOf(BulkEditException.class).hasMessageContaining("Multiple SRS records");
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("Multiple SRS records");
   }
 
   @Test
   void shouldThrowWhenSourceIsLinkedData() {
     ItemIdentifier identifier = new ItemIdentifier().withItemId("555");
-    Instance instance = Instance.builder().id("id5").source("LINKED_DATA").title("Sample title")
-            .build();
+    Instance instance =
+        Instance.builder().id("id5").source("LINKED_DATA").title("Sample title").build();
     when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
-            .thenReturn(InstanceCollection.builder().instances(List.of(instance)).totalRecords(1)
-                    .build());
-    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(),
-            eq(EntityType.INSTANCE))).thenReturn(true);
+        .thenReturn(
+            InstanceCollection.builder().instances(List.of(instance)).totalRecords(1).build());
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
+        .thenReturn(true);
 
     assertThatThrownBy(() -> processor.process(identifier))
-      .isInstanceOf(BulkEditException.class)
-            .hasMessageContaining(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED);
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED);
   }
 
   @Test
   void shouldThrowWhenNoPermission() {
     ItemIdentifier identifier = new ItemIdentifier().withItemId("666");
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
-            .thenReturn(false);
-    when(userClient.getUserById(anyString())).thenReturn(new org.folio.bulkops.domain.bean.User()
-            .withUsername("testuser"));
+        .thenReturn(false);
+    when(userClient.getUserById(anyString()))
+        .thenReturn(new org.folio.bulkops.domain.bean.User().withUsername("testuser"));
 
     assertThatThrownBy(() -> processor.process(identifier))
-      .isInstanceOf(BulkEditException.class)
-            .hasMessageContaining("does not have required permission");
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("does not have required permission");
   }
 
   @Test
@@ -205,12 +206,12 @@ class BulkEditInstanceProcessorTest {
     Set<ItemIdentifier> set = new HashSet<>();
     set.add(identifier);
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any())).thenReturn(set);
-    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(),
-            eq(EntityType.INSTANCE))).thenReturn(true);
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
+        .thenReturn(true);
 
     assertThatThrownBy(() -> processor.process(identifier))
-      .isInstanceOf(BulkEditException.class)
-            .hasMessageContaining("Duplicate entry");
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("Duplicate entry");
   }
 
   @Test
@@ -219,25 +220,30 @@ class BulkEditInstanceProcessorTest {
     Instance i1 = Instance.builder().id("id1").source("FOLIO").build();
     Instance i2 = Instance.builder().id("id2").source("FOLIO").build();
     when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
-            .thenReturn(InstanceCollection.builder().instances(List.of(i1, i2))
-                    .totalRecords(2).build());
+        .thenReturn(
+            InstanceCollection.builder().instances(List.of(i1, i2)).totalRecords(2).build());
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
-            .thenReturn(true);
+        .thenReturn(true);
 
     assertThatThrownBy(() -> processor.process(identifier))
-      .isInstanceOf(BulkEditException.class).hasMessageContaining("Multiple matches");
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("Multiple matches");
   }
 
   @Test
   void shouldThrowOnNoMatchFound() {
     ItemIdentifier identifier = new ItemIdentifier().withItemId("999");
     when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
-            .thenReturn(InstanceCollection.builder().instances(Collections.emptyList())
-                    .totalRecords(0).build());
-    when(permissionsValidator.isBulkEditReadPermissionExists(
-            anyString(), eq(EntityType.INSTANCE))).thenReturn(true);
+        .thenReturn(
+            InstanceCollection.builder()
+                .instances(Collections.emptyList())
+                .totalRecords(0)
+                .build());
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
+        .thenReturn(true);
 
     assertThatThrownBy(() -> processor.process(identifier))
-      .isInstanceOf(BulkEditException.class).hasMessageContaining("No match found");
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("No match found");
   }
 }

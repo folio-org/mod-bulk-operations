@@ -12,7 +12,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserGroup   {
+public class UserGroup {
   @JsonProperty("group")
   private String group;
 
@@ -28,4 +28,3 @@ public class UserGroup   {
   @JsonProperty("metadata")
   private Metadata metadata;
 }
-

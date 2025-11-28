@@ -25,4 +25,3 @@ public class ExportTypeSpecificParameters {
   @JsonProperty("eHoldingsExportConfig")
   private EholdingsExportConfig eholdingsExportConfig;
 }
-

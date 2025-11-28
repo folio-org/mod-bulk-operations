@@ -15,7 +15,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class AddressTypeCollection   {
+public class AddressTypeCollection {
   @JsonProperty("addressTypes")
   @Valid
   private List<AddressType> addressTypes = new ArrayList<>();
@@ -23,4 +23,3 @@ public class AddressTypeCollection   {
   @JsonProperty("totalRecords")
   private Integer totalRecords;
 }
-

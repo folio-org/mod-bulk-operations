@@ -29,26 +29,28 @@ public class ItemNoteProcessor extends CsvDownloadPreProcessor {
 
   @Override
   public List<String> getNoteTypeNames(BulkOperation bulkOperation) {
-    var noteTypeNamesSet = new HashSet<>(itemReferenceService.getAllItemNoteTypes(
-            folioExecutionContext.getTenantId()).stream()
-            .map(NoteType::getName)
-            .filter(Objects::nonNull)
-            .toList());
+    var noteTypeNamesSet =
+        new HashSet<>(
+            itemReferenceService.getAllItemNoteTypes(folioExecutionContext.getTenantId()).stream()
+                .map(NoteType::getName)
+                .filter(Objects::nonNull)
+                .toList());
     if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
       noteTypeNamesSet.clear();
       List<NoteType> noteTypesFromUsedTenants = new ArrayList<>();
       var usedTenants = bulkOperation.getUsedTenants();
       for (var usedTenant : usedTenants) {
-        try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(usedTenant,
-                folioModuleMetadata, folioExecutionContext))) {
+        try (var ignored =
+            new FolioExecutionContextSetter(
+                prepareContextForTenant(usedTenant, folioModuleMetadata, folioExecutionContext))) {
           var noteTypesFromUsedTenant = itemReferenceService.getAllItemNoteTypes(usedTenant);
           ofNullable(cacheManager.getCache("itemNoteTypes")).ifPresent(Cache::invalidate);
           noteTypesFromUsedTenants.addAll(noteTypesFromUsedTenant);
         }
       }
       noteTableUpdater.updateNoteTypeNamesWithTenants(noteTypesFromUsedTenants);
-      noteTypeNamesSet.addAll(noteTypesFromUsedTenants.stream().map(NoteType::getName)
-              .collect(Collectors.toSet()));
+      noteTypeNamesSet.addAll(
+          noteTypesFromUsedTenants.stream().map(NoteType::getName).collect(Collectors.toSet()));
     }
     return noteTypeNamesSet.stream().sorted().toList();
   }

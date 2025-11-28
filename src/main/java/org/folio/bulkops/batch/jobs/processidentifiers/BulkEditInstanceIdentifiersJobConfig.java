@@ -68,9 +68,7 @@ public class BulkEditInstanceIdentifiersJobConfig {
       JobCompletionNotificationListener listener,
       Step instancePartitionStep,
       JobRepository jobRepository) {
-    return new JobBuilder(
-            BULK_EDIT_IDENTIFIERS + HYPHEN + EntityType.INSTANCE,
-            jobRepository)
+    return new JobBuilder(BULK_EDIT_IDENTIFIERS + HYPHEN + EntityType.INSTANCE, jobRepository)
         .incrementer(new RunIdIncrementer())
         .listener(listener)
         .flow(instancePartitionStep)
@@ -113,10 +111,7 @@ public class BulkEditInstanceIdentifiersJobConfig {
 
     var numOfLines = remoteFileSystemClient.getNumOfLines(uploadedFileName);
     return new BulkEditPartitioner(
-        outputCsvJsonFilePath,
-        outputCsvJsonFilePath,
-        outputMarcName,
-        numOfLines);
+        outputCsvJsonFilePath, outputCsvJsonFilePath, outputMarcName, numOfLines);
   }
 
   @Bean
@@ -128,9 +123,7 @@ public class BulkEditInstanceIdentifiersJobConfig {
       PlatformTransactionManager transactionManager) {
 
     return new StepBuilder("bulkEditInstanceStep", jobRepository)
-        .<ItemIdentifier, List<ExtendedInstance>>chunk(
-            chunkSize,
-            transactionManager)
+        .<ItemIdentifier, List<ExtendedInstance>>chunk(chunkSize, transactionManager)
         .reader(csvItemIdentifierReader)
         .processor(bulkEditInstanceProcessor)
         .faultTolerant()
@@ -154,20 +147,16 @@ public class BulkEditInstanceIdentifiersJobConfig {
       @Value("#{jobParameters['" + BULK_OPERATION_ID + "']}") String bulkOperationId,
       @Value("#{jobParameters['" + IDENTIFIER_TYPE + "']}") String identifierType) {
 
-    var csvWriter = new CsvListItemWriter<>(
-        csvPath,
-        ExtendedInstance.class,
-        bulkOperationId,
-        identifierType);
+    var csvWriter =
+        new CsvListItemWriter<>(csvPath, ExtendedInstance.class, bulkOperationId, identifierType);
 
-    var jsonWriter = new JsonListFileWriter<ExtendedInstance>(
-        new FileSystemResource(jsonPath));
+    var jsonWriter = new JsonListFileWriter<ExtendedInstance>(new FileSystemResource(jsonPath));
 
-    var marcWriter = new MarcAsListStringsWriter<ExtendedInstance>(
-        marcPath, srsClient, jsonToMarcConverter);
+    var marcWriter =
+        new MarcAsListStringsWriter<ExtendedInstance>(marcPath, srsClient, jsonToMarcConverter);
 
-    List<org.springframework.batch.item.ItemWriter<? super List<ExtendedInstance>>>
-        delegates = new ArrayList<>();
+    List<org.springframework.batch.item.ItemWriter<? super List<ExtendedInstance>>> delegates =
+        new ArrayList<>();
     delegates.add(csvWriter);
     delegates.add(jsonWriter);
     delegates.add(marcWriter);

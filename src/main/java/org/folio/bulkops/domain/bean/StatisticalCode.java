@@ -12,7 +12,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class StatisticalCode   {
+public class StatisticalCode {
   @JsonProperty("id")
   private String id;
 
@@ -31,4 +31,3 @@ public class StatisticalCode   {
   @JsonProperty("metadata")
   private Metadata metadata;
 }
-

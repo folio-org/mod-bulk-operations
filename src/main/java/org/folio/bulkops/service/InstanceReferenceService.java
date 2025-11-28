@@ -50,18 +50,18 @@ public class InstanceReferenceService {
     try {
       return isEmpty(id) ? EMPTY : instanceStatusesClient.getById(id).getName();
     } catch (Exception e) {
-      throw new ReferenceDataNotFoundException(format("Instance status was not found by id=%s",
-              id));
+      throw new ReferenceDataNotFoundException(
+          format("Instance status was not found by id=%s", id));
     }
   }
 
   @Cacheable(cacheNames = "instanceStatusIds")
   public String getInstanceStatusIdByName(String name) {
-    var response = instanceStatusesClient.getByQuery(String.format(QUERY_PATTERN_NAME,
-            encode(name)), 1);
+    var response =
+        instanceStatusesClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (response.getStatuses().isEmpty()) {
-      throw new ReferenceDataNotFoundException(format("Instance status was not found by name=%s",
-              name));
+      throw new ReferenceDataNotFoundException(
+          format("Instance status was not found by name=%s", name));
     }
     return response.getStatuses().getFirst().getId();
   }
@@ -72,28 +72,28 @@ public class InstanceReferenceService {
       return isEmpty(id) ? EMPTY : modesOfIssuanceClient.getById(id).getName();
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(
-              format("Mode of issuance was not found by id=%s", id));
+          format("Mode of issuance was not found by id=%s", id));
     }
   }
 
   @Cacheable(cacheNames = "modesOfIssuanceIds")
   public String getModeOfIssuanceIdByName(String name) {
-    var response = modesOfIssuanceClient.getByQuery(
-            String.format(QUERY_PATTERN_NAME, encode(name)), 1);
+    var response =
+        modesOfIssuanceClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (response.getModes().isEmpty()) {
       throw new ReferenceDataNotFoundException(
-              format("Mode of issuance was not found by name=%s", name));
+          format("Mode of issuance was not found by name=%s", name));
     }
     return response.getModes().getFirst().getId();
   }
 
   @Cacheable(cacheNames = "instanceStatisticalCodes")
   public StatisticalCode getStatisticalCodeByName(String name, String tenantId) {
-    var response = statisticalCodeClient.getByQuery(
-            String.format(QUERY_PATTERN_NAME, encode(name)));
+    var response =
+        statisticalCodeClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)));
     if (response.getStatisticalCodes().isEmpty()) {
-      throw new ReferenceDataNotFoundException(format("Statistical code was not found by name=%s",
-              name));
+      throw new ReferenceDataNotFoundException(
+          format("Statistical code was not found by name=%s", name));
     }
     return response.getStatisticalCodes().getFirst();
   }
@@ -103,8 +103,8 @@ public class InstanceReferenceService {
     try {
       return statisticalCodeClient.getById(id);
     } catch (Exception e) {
-      throw new ReferenceDataNotFoundException(format("Statistical code was not found by id=%s",
-              id));
+      throw new ReferenceDataNotFoundException(
+          format("Statistical code was not found by id=%s", id));
     }
   }
 
@@ -114,7 +114,7 @@ public class InstanceReferenceService {
       return statisticalCodeTypeClient.getById(id);
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(
-              format("Statistical code type was not found by id=%s", id));
+          format("Statistical code type was not found by id=%s", id));
     }
   }
 
@@ -129,11 +129,11 @@ public class InstanceReferenceService {
 
   @Cacheable(cacheNames = "instanceTypeIds")
   public String getInstanceTypeIdByName(String name) {
-    var response = instanceTypesClient.getByQuery(
-            String.format(QUERY_PATTERN_NAME, encode(name)), 1);
+    var response =
+        instanceTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (response.getTypes().isEmpty()) {
       throw new ReferenceDataNotFoundException(
-              format("Instance type was not found by name=%s", name));
+          format("Instance type was not found by name=%s", name));
     }
     return response.getTypes().getFirst().getId();
   }
@@ -144,17 +144,17 @@ public class InstanceReferenceService {
       return isEmpty(id) ? EMPTY : natureOfContentTermsClient.getById(id).getName();
     } catch (Exception e) {
       throw new ReferenceDataNotFoundException(
-              format("Nature of content term was not found by id=%s", id));
+          format("Nature of content term was not found by id=%s", id));
     }
   }
 
   @Cacheable(cacheNames = "natureOfContentTermIds")
   public String getNatureOfContentTermIdByName(String name) {
-    var response = natureOfContentTermsClient.getByQuery(
-            String.format(QUERY_PATTERN_NAME, encode(name)), 1);
+    var response =
+        natureOfContentTermsClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (response.getTerms().isEmpty()) {
       throw new ReferenceDataNotFoundException(
-              format("Nature of content term was not found by name=%s", name));
+          format("Nature of content term was not found by name=%s", name));
     }
     return response.getTerms().getFirst().getId();
   }
@@ -164,18 +164,18 @@ public class InstanceReferenceService {
     try {
       return isEmpty(id) ? EMPTY : instanceFormatsClient.getById(id).getName();
     } catch (Exception e) {
-      throw new ReferenceDataNotFoundException(format("Instance format was not found by id=%s",
-              id));
+      throw new ReferenceDataNotFoundException(
+          format("Instance format was not found by id=%s", id));
     }
   }
 
   @Cacheable(cacheNames = "instanceFormatIds")
   public String getInstanceFormatIdByName(String name) {
-    var response = instanceFormatsClient.getByQuery(String.format(QUERY_PATTERN_NAME,
-            encode(name)), 1);
+    var response =
+        instanceFormatsClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (response.getFormats().isEmpty()) {
-      throw new ReferenceDataNotFoundException(format("Instance format was not found by name=%s",
-              name));
+      throw new ReferenceDataNotFoundException(
+          format("Instance format was not found by name=%s", name));
     }
     return response.getFormats().getFirst().getId();
   }
@@ -183,8 +183,8 @@ public class InstanceReferenceService {
   @Cacheable(cacheNames = "instanceFormats")
   public InstanceFormats getInstanceFormatsByCode(String code) {
     return isNull(code)
-            ? InstanceFormats.builder().formats(Collections.emptyList()).totalRecords(0).build() :
-      instanceFormatsClient.getByQuery(String.format(QUERY_PATTERN_CODE, encode(code)), 1);
+        ? InstanceFormats.builder().formats(Collections.emptyList()).totalRecords(0).build()
+        : instanceFormatsClient.getByQuery(String.format(QUERY_PATTERN_CODE, encode(code)), 1);
   }
 
   @Cacheable(cacheNames = "instanceNoteTypesNames")
@@ -198,8 +198,8 @@ public class InstanceReferenceService {
 
   @Cacheable(cacheNames = "instanceNoteTypes")
   public String getNoteTypeIdByName(String name) {
-    var noteTypes = instanceNoteTypesClient.getNoteTypesByQuery(format(QUERY_PATTERN_NAME,
-            encode(name)), 1);
+    var noteTypes =
+        instanceNoteTypesClient.getNoteTypesByQuery(format(QUERY_PATTERN_NAME, encode(name)), 1);
     if (noteTypes.getInstanceNoteTypes().isEmpty()) {
       throw new ReferenceDataNotFoundException(format("Note type not found by name=%s", name));
     }
@@ -214,30 +214,28 @@ public class InstanceReferenceService {
   @Cacheable(cacheNames = "contributorTypesByName")
   public ContributorTypeCollection getContributorTypesByName(String name) {
     return isNull(name)
-            ? new ContributorTypeCollection().contributorTypes(Collections.emptyList())
-            .totalRecords(0) :
-      contributorTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
+        ? new ContributorTypeCollection().contributorTypes(Collections.emptyList()).totalRecords(0)
+        : contributorTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
   }
 
   @Cacheable(cacheNames = "contributorTypesByCode")
   public ContributorTypeCollection getContributorTypesByCode(String code) {
     return isNull(code)
-            ? new ContributorTypeCollection().contributorTypes(
-                    Collections.emptyList()).totalRecords(0) : contributorTypesClient.getByQuery(
-                            String.format(QUERY_PATTERN_CODE, encode(code)), 1);
+        ? new ContributorTypeCollection().contributorTypes(Collections.emptyList()).totalRecords(0)
+        : contributorTypesClient.getByQuery(String.format(QUERY_PATTERN_CODE, encode(code)), 1);
   }
 
   @Cacheable(cacheNames = "instanceTypesByNames")
   public InstanceTypes getInstanceTypesByName(String name) {
     return isNull(name)
-            ? InstanceTypes.builder().types(Collections.emptyList()).totalRecords(0).build() :
-      instanceTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
+        ? InstanceTypes.builder().types(Collections.emptyList()).totalRecords(0).build()
+        : instanceTypesClient.getByQuery(String.format(QUERY_PATTERN_NAME, encode(name)), 1);
   }
 
   @Cacheable(cacheNames = "instanceTypesByCodes")
   public InstanceTypes getInstanceTypesByCode(String code) {
     return isNull(code)
-            ? InstanceTypes.builder().types(Collections.emptyList()).totalRecords(0).build() :
-      instanceTypesClient.getByQuery(String.format(QUERY_PATTERN_CODE, encode(code)), 1);
+        ? InstanceTypes.builder().types(Collections.emptyList()).totalRecords(0).build()
+        : instanceTypesClient.getByQuery(String.format(QUERY_PATTERN_CODE, encode(code)), 1);
   }
 }

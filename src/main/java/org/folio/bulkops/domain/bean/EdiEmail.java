@@ -12,7 +12,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class EdiEmail   {
+public class EdiEmail {
   @JsonProperty("emailFrom")
   private String emailFrom;
 
@@ -22,4 +22,3 @@ public class EdiEmail   {
   @JsonProperty("isPrimaryTransmissionMethod")
   private Boolean isPrimaryTransmissionMethod;
 }
-

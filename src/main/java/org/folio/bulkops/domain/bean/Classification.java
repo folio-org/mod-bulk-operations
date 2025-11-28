@@ -19,4 +19,3 @@ public class Classification {
   @JsonProperty("classificationTypeId")
   private String classificationTypeId;
 }
-

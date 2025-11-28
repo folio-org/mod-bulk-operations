@@ -35,5 +35,5 @@
     <!-- variable declaration usage distance -->
     <suppress checks="VariableDeclarationUsageDistance"
               files="ItemsNotesUpdater.java"
-              lines="366"/>
+              lines="488"/>
 </suppressions>

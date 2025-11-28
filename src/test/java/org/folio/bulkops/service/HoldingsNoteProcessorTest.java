@@ -16,18 +16,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class HoldingsNoteProcessorTest extends BaseTest {
-  @MockitoBean
-  private HoldingsReferenceService holdingsReferenceService;
-  @MockitoBean
-  private ConsortiaService consortiaService;
-  @Autowired
-  private CsvDownloadPreProcessor holdingsNotesProcessor;
-  @Autowired
-  private NoteProcessorFactory noteProcessorFactory;
+  @MockitoBean private HoldingsReferenceService holdingsReferenceService;
+  @MockitoBean private ConsortiaService consortiaService;
+  @Autowired private CsvDownloadPreProcessor holdingsNotesProcessor;
+  @Autowired private NoteProcessorFactory noteProcessorFactory;
 
   @Test
   void shouldEnrichPreviewWithHoldingsRecordsNoteTypeColumns() {
-    var sourceCsv = "Holdings UUID,\"Instance (Title, Publisher, Publication date)\","
+    var sourceCsv =
+        "Holdings UUID,\"Instance (Title, Publisher, Publication date)\","
             + "Suppress from discovery,Holdings HRID,Source,Former holdings Id,Holdings type,"
             + "Statistical codes,Administrative note,Holdings permanent location,Holdings "
             + "temporary location,Shelving title,Holdings copy number,Holdings level call number "
@@ -45,11 +42,15 @@ class HoldingsNoteProcessorTest extends BaseTest {
 
     when(consortiaService.isTenantCentral(any())).thenReturn(false);
     when(holdingsReferenceService.getAllHoldingsNoteTypes(any()))
-            .thenReturn(List.of(new HoldingsNoteType().withName("Note type 3"),
-                    new HoldingsNoteType().withName("Note type 1"),
-                    new HoldingsNoteType().withName("Note type 2")));
+        .thenReturn(
+            List.of(
+                new HoldingsNoteType().withName("Note type 3"),
+                new HoldingsNoteType().withName("Note type 1"),
+                new HoldingsNoteType().withName("Note type 2")));
 
-    var res = noteProcessorFactory.getNoteProcessor(EntityType.HOLDINGS_RECORD.getValue())
+    var res =
+        noteProcessorFactory
+            .getNoteProcessor(EntityType.HOLDINGS_RECORD.getValue())
             .processCsvContent(sourceCsv.getBytes(), new BulkOperation());
 
     var lines = new String(res).split("\n");
@@ -57,7 +58,9 @@ class HoldingsNoteProcessorTest extends BaseTest {
     var headers = lines[0];
     assertThat(headers).contains("Note type 1,Note type 2,Note type 3");
     var data = lines[1];
-    assertThat(data).contains("59b36165-fcf2-49d2-bf7f-25fedbc07e44,Sample instance;123,,"
-            + "ho14,FOLIO,,,,,Main Library,,,,,,,,,,,,,,,note1 (staff only),note2,note3,,,,,");
+    assertThat(data)
+        .contains(
+            "59b36165-fcf2-49d2-bf7f-25fedbc07e44,Sample instance;123,,"
+                + "ho14,FOLIO,,,,,Main Library,,,,,,,,,,,,,,,note1 (staff only),note2,note3,,,,,");
   }
 }

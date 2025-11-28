@@ -30,30 +30,40 @@ public class HoldingsNotesProcessor extends CsvDownloadPreProcessor {
 
   @Override
   public List<String> getNoteTypeNames(BulkOperation bulkOperation) {
-    var noteTypeNamesSet = new HashSet<>(holdingsReferenceService.getAllHoldingsNoteTypes(
-            folioExecutionContext.getTenantId()).stream()
-            .map(HoldingsNoteType::getName)
-            .filter(Objects::nonNull)
-            .toList());
+    var noteTypeNamesSet =
+        new HashSet<>(
+            holdingsReferenceService
+                .getAllHoldingsNoteTypes(folioExecutionContext.getTenantId())
+                .stream()
+                .map(HoldingsNoteType::getName)
+                .filter(Objects::nonNull)
+                .toList());
     if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
       noteTypeNamesSet.clear();
       List<HoldingsNoteType> noteTypesFromUsedTenants = new ArrayList<>();
       var usedTenants = bulkOperation.getUsedTenants();
       for (var usedTenant : usedTenants) {
-        try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(usedTenant,
-                folioModuleMetadata, folioExecutionContext))) {
-          var noteTypesFromUsedTenant = holdingsReferenceService
-                  .getAllHoldingsNoteTypes(usedTenant);
+        try (var ignored =
+            new FolioExecutionContextSetter(
+                prepareContextForTenant(usedTenant, folioModuleMetadata, folioExecutionContext))) {
+          var noteTypesFromUsedTenant =
+              holdingsReferenceService.getAllHoldingsNoteTypes(usedTenant);
           ofNullable(cacheManager.getCache("holdingsNoteTypes")).ifPresent(Cache::invalidate);
           noteTypesFromUsedTenants.addAll(noteTypesFromUsedTenant);
         }
       }
-      var noteTypes = noteTypesFromUsedTenants.stream().map(
-              note -> new NoteType().withName(note.getName())
-              .withTenantId(note.getTenantId()).withId(note.getId())).toList();
+      var noteTypes =
+          noteTypesFromUsedTenants.stream()
+              .map(
+                  note ->
+                      new NoteType()
+                          .withName(note.getName())
+                          .withTenantId(note.getTenantId())
+                          .withId(note.getId()))
+              .toList();
       noteTableUpdater.updateNoteTypeNamesWithTenants(noteTypes);
-      noteTypeNamesSet.addAll(noteTypes.stream().map(NoteType::getName)
-              .collect(Collectors.toSet()));
+      noteTypeNamesSet.addAll(
+          noteTypes.stream().map(NoteType::getName).collect(Collectors.toSet()));
     }
     return noteTypeNamesSet.stream().sorted().toList();
   }

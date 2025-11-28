@@ -19,4 +19,3 @@ public class LoanType {
   @JsonProperty("name")
   private String name;
 }
-

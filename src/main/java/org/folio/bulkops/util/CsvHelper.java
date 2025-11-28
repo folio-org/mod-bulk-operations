@@ -22,34 +22,36 @@ import org.folio.bulkops.exception.ConverterException;
 @Log4j2
 public class CsvHelper {
   private static final char ASCII_ZERO_CHAR = '\0';
-  @Getter
-  private static final CSVParser csvParser;
+  @Getter private static final CSVParser csvParser;
 
   static {
     csvParser = new CSVParserBuilder().withEscapeChar(ASCII_ZERO_CHAR).build();
   }
 
-  public static void writeBeanToCsv(BulkOperation operation,
-                                    BulkOperationsEntityCsvWriter csvWriter,
-                                    BulkOperationsEntity bean,
-                                    List<BulkOperationExecutionContent>
-                                            bulkOperationExecutionContents)
-          throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
+  public static void writeBeanToCsv(
+      BulkOperation operation,
+      BulkOperationsEntityCsvWriter csvWriter,
+      BulkOperationsEntity bean,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents)
+      throws CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
     try {
       csvWriter.write(bean);
     } catch (ConverterException e) {
       if (APPLY_CHANGES.equals(operation.getStatus())) {
-        log.error("Record {}, field: {}, converter exception: {}",
-                bean.getIdentifier(operation.getIdentifierType()), e.getField().getName(),
-                e.getMessage());
+        log.error(
+            "Record {}, field: {}, converter exception: {}",
+            bean.getIdentifier(operation.getIdentifierType()),
+            e.getField().getName(),
+            e.getMessage());
       } else {
-        bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
+        bulkOperationExecutionContents.add(
+            BulkOperationExecutionContent.builder()
                 .identifier(bean.getIdentifier(operation.getIdentifierType()))
                 .bulkOperationId(operation.getId())
                 .state(StateType.FAILED)
                 .errorType(e.getErrorType())
-                .errorMessage(format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(),
-                        e.getMessage()))
+                .errorMessage(
+                    format(FIELD_ERROR_MESSAGE_PATTERN, e.getField().getName(), e.getMessage()))
                 .build());
       }
       writeBeanToCsv(operation, csvWriter, bean, bulkOperationExecutionContents);

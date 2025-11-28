@@ -19,4 +19,3 @@ public class StaffSlip {
   @JsonProperty("printByDefault")
   private Boolean printByDefault;
 }
-

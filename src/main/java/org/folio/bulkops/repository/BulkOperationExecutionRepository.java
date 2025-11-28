@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BulkOperationExecutionRepository
-        extends JpaRepository<BulkOperationExecution, UUID> {
+    extends JpaRepository<BulkOperationExecution, UUID> {
 
   Optional<BulkOperationExecution> findByBulkOperationId(UUID uuid);
 

@@ -80,8 +80,9 @@ public class Instance implements BulkOperationsEntity {
   private Integer version;
 
   @JsonProperty("discoverySuppress")
-  @CsvCustomBindByName(column = INSTANCE_SUPPRESS_FROM_DISCOVERY,
-          converter = BooleanConverter.class)
+  @CsvCustomBindByName(
+      column = INSTANCE_SUPPRESS_FROM_DISCOVERY,
+      converter = BooleanConverter.class)
   @CsvCustomBindByPosition(position = 1, converter = BooleanConverter.class)
   @UnifiedTableCell
   private Boolean discoverySuppress;
@@ -130,22 +131,25 @@ public class Instance implements BulkOperationsEntity {
   private String statusId;
 
   @JsonProperty("modeOfIssuanceId")
-  @CsvCustomBindByName(column = INSTANCE_MODE_OF_ISSUANCE,
-          converter = ModeOfIssuanceConverter.class)
+  @CsvCustomBindByName(
+      column = INSTANCE_MODE_OF_ISSUANCE,
+      converter = ModeOfIssuanceConverter.class)
   @CsvCustomBindByPosition(position = 9, converter = ModeOfIssuanceConverter.class)
   @UnifiedTableCell(visible = false)
   private String modeOfIssuanceId;
 
   @JsonProperty("statisticalCodeIds")
-  @CsvCustomBindByName(column = INSTANCE_STATISTICAL_CODES,
-          converter = InstanceStatisticalCodeListConverter.class)
+  @CsvCustomBindByName(
+      column = INSTANCE_STATISTICAL_CODES,
+      converter = InstanceStatisticalCodeListConverter.class)
   @CsvCustomBindByPosition(position = 10, converter = InstanceStatisticalCodeListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> statisticalCodeIds;
 
   @JsonProperty("administrativeNotes")
-  @CsvCustomBindByName(column = INSTANCE_ADMINISTRATIVE_NOTE,
-          converter = StringListPipedConverter.class)
+  @CsvCustomBindByName(
+      column = INSTANCE_ADMINISTRATIVE_NOTE,
+      converter = StringListPipedConverter.class)
   @CsvCustomBindByPosition(position = 11, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> administrativeNotes;
@@ -188,8 +192,9 @@ public class Instance implements BulkOperationsEntity {
   private List<String> editions;
 
   @JsonProperty("physicalDescriptions")
-  @CsvCustomBindByName(column = INSTANCE_PHYSICAL_DESCRIPTION,
-          converter = StringListPipedConverter.class)
+  @CsvCustomBindByName(
+      column = INSTANCE_PHYSICAL_DESCRIPTION,
+      converter = StringListPipedConverter.class)
   @CsvCustomBindByPosition(position = 18, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> physicalDescriptions;
@@ -201,8 +206,9 @@ public class Instance implements BulkOperationsEntity {
   private String instanceTypeId;
 
   @JsonProperty("natureOfContentTermIds")
-  @CsvCustomBindByName(column = INSTANCE_NATURE_OF_CONTENT,
-          converter = NatureOfContentTermListConverter.class)
+  @CsvCustomBindByName(
+      column = INSTANCE_NATURE_OF_CONTENT,
+      converter = NatureOfContentTermListConverter.class)
   @CsvCustomBindByPosition(position = 20, converter = NatureOfContentTermListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> natureOfContentTermIds;
@@ -221,15 +227,17 @@ public class Instance implements BulkOperationsEntity {
 
   @JsonProperty("publicationFrequency")
   @Valid
-  @CsvCustomBindByName(column = INSTANCE_PUBLICATION_FREQUENCY,
-          converter = StringListPipedConverter.class)
+  @CsvCustomBindByName(
+      column = INSTANCE_PUBLICATION_FREQUENCY,
+      converter = StringListPipedConverter.class)
   @CsvCustomBindByPosition(position = 23, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> publicationFrequency;
 
   @JsonProperty("publicationRange")
-  @CsvCustomBindByName(column = INSTANCE_PUBLICATION_RANGE,
-          converter = StringListPipedConverter.class)
+  @CsvCustomBindByName(
+      column = INSTANCE_PUBLICATION_RANGE,
+      converter = StringListPipedConverter.class)
   @CsvCustomBindByPosition(position = 24, converter = StringListPipedConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> publicationRange;
@@ -242,8 +250,9 @@ public class Instance implements BulkOperationsEntity {
 
   @JsonProperty("electronicAccess")
   @Valid
-  @CsvCustomBindByName(column = INSTANCE_ELECTRONIC_ACCESS,
-          converter = ElectronicAccessListInstanceConverter.class)
+  @CsvCustomBindByName(
+      column = INSTANCE_ELECTRONIC_ACCESS,
+      converter = ElectronicAccessListInstanceConverter.class)
   @CsvCustomBindByPosition(position = 26, converter = ElectronicAccessListInstanceConverter.class)
   @UnifiedTableCell(visible = false)
   private List<ElectronicAccess> electronicAccess = null;
@@ -257,41 +266,55 @@ public class Instance implements BulkOperationsEntity {
 
   @JsonProperty("classifications")
   @Valid
-  @CsvCustomBindByName(column = INSTANCE_CLASSIFICATION,
-          converter = ClassificationListConverter.class)
+  @CsvCustomBindByName(
+      column = INSTANCE_CLASSIFICATION,
+      converter = ClassificationListConverter.class)
   @CsvCustomBindByPosition(position = 28, converter = ClassificationListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<Classification> classifications;
 
   @JsonProperty("matchKey")
   private String matchKey;
+
   @JsonProperty("alternativeTitles")
   private List<AlternativeTitle> alternativeTitles;
+
   @JsonProperty("identifiers")
   private List<Identifier> identifiers;
 
   @JsonProperty("sourceRecordFormat")
   private String sourceRecordFormat;
+
   @JsonProperty("statusUpdatedDate")
   private String statusUpdatedDate;
+
   @JsonProperty("tags")
   private Tags tags;
+
   @JsonProperty("precedingTitles")
   private List<PrecedingTitle> precedingTitles;
+
   @JsonProperty("succeedingTitles")
   private List<SucceedingTitle> succeedingTitles;
+
   @JsonProperty("ISBN")
   private String isbn;
+
   @JsonProperty("ISSN")
   private String issn;
+
   @JsonProperty("parentInstances")
   private List<ParentInstance> parentInstances;
+
   @JsonProperty("childInstances")
   private List<ChildInstance> childInstances;
+
   @JsonProperty("dates")
   private Dates dates;
+
   @JsonProperty("isBoundWith")
   private Boolean isBoundWith = false;
+
   @JsonProperty("sourceUri")
   private String sourceUri;
 

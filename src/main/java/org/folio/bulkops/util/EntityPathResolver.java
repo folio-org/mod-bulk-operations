@@ -45,8 +45,10 @@ public class EntityPathResolver {
         var item = (Item) recordEntity;
         var holdingId = item.getHoldingsRecordId();
         HoldingsRecord holding;
-        try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(
-                tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
+        try (var ignored =
+            new FolioExecutionContextSetter(
+                prepareContextForTenant(
+                    tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
           holding = holdingsStorageClient.getHoldingById(holdingId);
         }
         var instanceId = holding.getInstanceId();

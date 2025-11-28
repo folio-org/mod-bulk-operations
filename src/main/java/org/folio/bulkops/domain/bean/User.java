@@ -25,7 +25,6 @@ import lombok.Setter;
 import lombok.With;
 import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.CustomFieldsConverter;
-import org.folio.bulkops.domain.converter.DateWithTimeConverter;
 import org.folio.bulkops.domain.converter.DateWithoutTimeConverter;
 import org.folio.bulkops.domain.converter.DepartmentsConverter;
 import org.folio.bulkops.domain.converter.PatronGroupConverter;
@@ -140,8 +139,9 @@ public class User implements BulkOperationsEntity {
 
   @JsonProperty("preferredEmailCommunication")
   @Valid
-  @CsvCustomBindByName(column = "Preferred email communications",
-          converter = PreferredEmailCommunicationConverter.class)
+  @CsvCustomBindByName(
+      column = "Preferred email communications",
+      converter = PreferredEmailCommunicationConverter.class)
   @CsvCustomBindByPosition(position = 24, converter = PreferredEmailCommunicationConverter.class)
   @UnifiedTableCell(visible = false)
   private Set<PreferredEmailCommunication> preferredEmailCommunication;

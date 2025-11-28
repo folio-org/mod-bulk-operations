@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum Format {
-
   TEXT("TEXT"),
 
   EMAIL("EMAIL"),
@@ -39,4 +38,3 @@ public enum Format {
     throw new IllegalArgumentException("Unexpected value '" + value + "'");
   }
 }
-

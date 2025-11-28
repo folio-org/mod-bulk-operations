@@ -13,14 +13,16 @@ public class InstanceStatisticalCodeListConverter extends BaseConverter<List<Str
   @Override
   public String convertToString(List<String> object) {
     return object.stream()
-      .filter(Objects::nonNull)
-      .map(id -> {
-        var sc = InstanceReferenceHelper.service().getStatisticalCodeById(id);
-        var sct = InstanceReferenceHelper.service()
-                .getStatisticalCodeTypeById(sc.getStatisticalCodeTypeId());
-        return String.format("%s: %s - %s", escape(sct.getName()),
-                escape(sc.getCode()), escape(sc.getName()));
-      })
-      .collect(Collectors.joining(ITEM_DELIMITER));
+        .filter(Objects::nonNull)
+        .map(
+            id -> {
+              var sc = InstanceReferenceHelper.service().getStatisticalCodeById(id);
+              var sct =
+                  InstanceReferenceHelper.service()
+                      .getStatisticalCodeTypeById(sc.getStatisticalCodeTypeId());
+              return String.format(
+                  "%s: %s - %s", escape(sct.getName()), escape(sc.getCode()), escape(sc.getName()));
+            })
+        .collect(Collectors.joining(ITEM_DELIMITER));
   }
 }

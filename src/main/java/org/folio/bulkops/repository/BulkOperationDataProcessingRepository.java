@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BulkOperationDataProcessingRepository
-        extends JpaRepository<BulkOperationDataProcessing, UUID> {
+    extends JpaRepository<BulkOperationDataProcessing, UUID> {
   List<BulkOperationDataProcessing> findAllByBulkOperationId(UUID bulkOperationId);
 
   void deleteAllByBulkOperationId(UUID bulkOperationId);

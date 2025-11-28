@@ -31,4 +31,3 @@ public class Diagnostic {
   @JsonProperty("query")
   private String query;
 }
-

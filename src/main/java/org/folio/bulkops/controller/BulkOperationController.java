@@ -93,43 +93,40 @@ public class BulkOperationController implements BulkOperationsApi {
   @Override
   public ResponseEntity<BulkOperationCollection> getBulkOperationCollection(
       String query, Integer offset, Integer limit) {
-    var page = bulkOperationCqlRepository.findByCql(
-        query,
-        OffsetRequest.of(
-            Objects.isNull(offset) ? 0 : offset,
-            Objects.isNull(limit) ? Integer.MAX_VALUE : limit
-        )
-    );
+    var page =
+        bulkOperationCqlRepository.findByCql(
+            query,
+            OffsetRequest.of(
+                Objects.isNull(offset) ? 0 : offset,
+                Objects.isNull(limit) ? Integer.MAX_VALUE : limit));
     var dtoList = bulkOperationMapper.mapToDtoList(page.toList());
-    var response = new BulkOperationCollection()
-        .bulkOperations(dtoList)
-        .totalRecords((int) page.getTotalElements());
+    var response =
+        new BulkOperationCollection()
+            .bulkOperations(dtoList)
+            .totalRecords((int) page.getTotalElements());
     return new ResponseEntity<>(response, HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<Errors> getErrorsPreviewByOperationId(UUID operationId, Integer limit,
-                                                              Integer offset, ErrorType errorType) {
+  public ResponseEntity<Errors> getErrorsPreviewByOperationId(
+      UUID operationId, Integer limit, Integer offset, ErrorType errorType) {
     return new ResponseEntity<>(
         errorService.getErrorsPreviewByBulkOperationId(operationId, limit, offset, errorType),
-        HttpStatus.OK
-    );
+        HttpStatus.OK);
   }
 
   @Override
-  public ResponseEntity<UnifiedTable> getPreviewByOperationId(UUID operationId,
-                                                              BulkOperationStep step,
-                                                              Integer limit, Integer offset) {
+  public ResponseEntity<UnifiedTable> getPreviewByOperationId(
+      UUID operationId, BulkOperationStep step, Integer limit, Integer offset) {
     var bulkOperation = bulkOperationService.getBulkOperationOrThrow(operationId);
     return new ResponseEntity<>(
         previewService.getPreview(bulkOperation, step, Objects.isNull(offset) ? 0 : offset, limit),
-        HttpStatus.OK
-    );
+        HttpStatus.OK);
   }
 
   @Override
   public ResponseEntity<BulkOperationRuleCollection> postContentUpdates(
-          UUID operationId, BulkOperationRuleCollection bulkOperationRuleCollection) {
+      UUID operationId, BulkOperationRuleCollection bulkOperationRuleCollection) {
     var operation = bulkOperationService.getBulkOperationOrThrow(operationId);
     final var rules = ruleService.saveRules(operation, bulkOperationRuleCollection);
 
@@ -145,7 +142,7 @@ public class BulkOperationController implements BulkOperationsApi {
 
   @Override
   public ResponseEntity<BulkOperationMarcRuleCollection> postMarcContentUpdates(
-          UUID operationId, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection) {
+      UUID operationId, BulkOperationMarcRuleCollection bulkOperationMarcRuleCollection) {
     var operation = bulkOperationService.getBulkOperationOrThrow(operationId);
     final var rules = ruleService.saveMarcRules(operation, bulkOperationMarcRuleCollection);
 
@@ -159,12 +156,10 @@ public class BulkOperationController implements BulkOperationsApi {
 
   @Override
   public ResponseEntity<BulkOperationDto> startBulkOperation(
-      UUID operationId,
-      BulkOperationStart bulkOperationStart,
-      UUID xokapiUserId) {
-    var dto = bulkOperationMapper.mapToDto(
-        bulkOperationService.startBulkOperation(operationId, xokapiUserId, bulkOperationStart)
-    );
+      UUID operationId, BulkOperationStart bulkOperationStart, UUID xokapiUserId) {
+    var dto =
+        bulkOperationMapper.mapToDto(
+            bulkOperationService.startBulkOperation(operationId, xokapiUserId, bulkOperationStart));
     return new ResponseEntity<>(dto, HttpStatus.OK);
   }
 
@@ -176,10 +171,10 @@ public class BulkOperationController implements BulkOperationsApi {
       UUID operationId,
       UUID xokapiUserId,
       MultipartFile file) {
-    var dto = bulkOperationMapper.mapToDto(
-        bulkOperationService.uploadCsvFile(entityType, identifierType, manual, operationId,
-                xokapiUserId, file)
-    );
+    var dto =
+        bulkOperationMapper.mapToDto(
+            bulkOperationService.uploadCsvFile(
+                entityType, identifierType, manual, operationId, xokapiUserId, file));
     return new ResponseEntity<>(dto, HttpStatus.OK);
   }
 
@@ -187,14 +182,12 @@ public class BulkOperationController implements BulkOperationsApi {
   public ResponseEntity<BulkOperationDto> getBulkOperationById(UUID operationId) {
     return new ResponseEntity<>(
         bulkOperationMapper.mapToDto(bulkOperationService.getOperationById(operationId)),
-        HttpStatus.OK
-    );
+        HttpStatus.OK);
   }
 
   @Override
   public ResponseEntity<Resource> downloadFileByOperationId(
-      UUID operationId,
-      FileContentType fileContentType) {
+      UUID operationId, FileContentType fileContentType) {
     var bulkOperation = bulkOperationService.getOperationById(operationId);
 
     String path;
@@ -225,16 +218,18 @@ public class BulkOperationController implements BulkOperationsApi {
       try (var is = remoteFileSystemClient.get(path)) {
         byte[] content;
         if (CSV_EXTENSION.equalsIgnoreCase(FilenameUtils.getExtension(path))) {
-          content = ArrayUtils.removeAllOccurrences(is.readAllBytes(),
-                  (byte) NON_PRINTING_DELIMITER);
+          content =
+              ArrayUtils.removeAllOccurrences(is.readAllBytes(), (byte) NON_PRINTING_DELIMITER);
         } else {
           content = is.readAllBytes();
         }
 
         var entityType = bulkOperation.getEntityType().getValue();
         if (isDownloadPreview(fileContentType) && SPLIT_NOTE_ENTITIES.contains(entityType)) {
-          content = noteProcessorFactory.getNoteProcessor(entityType)
-              .processCsvContent(content, bulkOperation);
+          content =
+              noteProcessorFactory
+                  .getNoteProcessor(entityType)
+                  .processCsvContent(content, bulkOperation);
         }
 
         if (INSTANCE_MARC.equals(bulkOperation.getEntityType())
@@ -249,14 +244,12 @@ public class BulkOperationController implements BulkOperationsApi {
         var decodedPath = URLDecoder.decode(path, StandardCharsets.UTF_8);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentDispositionFormData(
-            FileUtils.filename(decodedPath),
-            FileUtils.filename(decodedPath)
-        );
+            FileUtils.filename(decodedPath), FileUtils.filename(decodedPath));
         return ResponseEntity.ok()
-          .headers(headers)
-          .contentType(MediaType.APPLICATION_OCTET_STREAM)
-          .contentLength(content.length)
-          .body(new InputStreamResource(new ByteArrayInputStream(content)));
+            .headers(headers)
+            .contentType(MediaType.APPLICATION_OCTET_STREAM)
+            .contentLength(content.length)
+            .body(new InputStreamResource(new ByteArrayInputStream(content)));
       } catch (IOException e) {
         log.error(e);
         return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -310,13 +303,12 @@ public class BulkOperationController implements BulkOperationsApi {
   }
 
   @Override
-  public ResponseEntity<BulkOperationDto> triggerBulkEditByQuery(UUID xokapiUserId,
-                                                                 QueryRequest queryRequest) {
+  public ResponseEntity<BulkOperationDto> triggerBulkEditByQuery(
+      UUID xokapiUserId, QueryRequest queryRequest) {
     return new ResponseEntity<>(
-        bulkOperationMapper.mapToDto(bulkOperationService.triggerByQuery(xokapiUserId,
-                queryRequest)),
-        HttpStatus.OK
-    );
+        bulkOperationMapper.mapToDto(
+            bulkOperationService.triggerByQuery(xokapiUserId, queryRequest)),
+        HttpStatus.OK);
   }
 
   @Override

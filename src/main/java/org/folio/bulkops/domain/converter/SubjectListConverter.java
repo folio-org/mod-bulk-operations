@@ -15,10 +15,12 @@ public class SubjectListConverter extends BaseConverter<List<Subject>> {
 
   @Override
   public String convertToString(List<Subject> object) {
-    return ObjectUtils.isEmpty(object) ? EMPTY : SUBJECT_HEADINGS + object.stream()
-          .filter(Objects::nonNull)
-          .map(SubjectHelper.service()::subjectToString)
-          .collect(Collectors.joining(SPECIAL_ITEM_DELIMITER));
+    return ObjectUtils.isEmpty(object)
+        ? EMPTY
+        : SUBJECT_HEADINGS
+            + object.stream()
+                .filter(Objects::nonNull)
+                .map(SubjectHelper.service()::subjectToString)
+                .collect(Collectors.joining(SPECIAL_ITEM_DELIMITER));
   }
-
 }

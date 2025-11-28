@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum StateType {
-
   PROCESSED("PROCESSED"),
 
   FAILED("FAILED");
@@ -35,4 +34,3 @@ public enum StateType {
     throw new IllegalArgumentException("Unexpected value '" + value + "'");
   }
 }
-

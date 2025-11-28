@@ -22,10 +22,10 @@ public interface QueryClient {
   QueryDetails getQuery(@RequestHeader UUID queryId, @RequestParam Boolean includeResults);
 
   @GetMapping("/{queryId}?includeResults=true")
-  QueryDetails getQuery(@RequestHeader UUID queryId, @RequestParam Integer offset,
-                        @RequestParam Integer limit);
+  QueryDetails getQuery(
+      @RequestHeader UUID queryId, @RequestParam Integer offset, @RequestParam Integer limit);
 
   @GetMapping("/{queryId}/sortedIds")
-  List<List<String>> getSortedIds(@RequestHeader UUID queryId, @RequestParam Integer offset,
-                                  @RequestParam Integer limit);
+  List<List<String>> getSortedIds(
+      @RequestHeader UUID queryId, @RequestParam Integer offset, @RequestParam Integer limit);
 }

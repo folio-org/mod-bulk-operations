@@ -12,8 +12,9 @@ import org.apache.commons.lang3.StringUtils;
 
 public class SpecialCharacterEscaper {
 
-  private static final String[] SPECIAL_CHARACTERS = {ITEM_DELIMITER, ARRAY_DELIMITER,
-    KEY_VALUE_DELIMITER};
+  private static final String[] SPECIAL_CHARACTERS = {
+    ITEM_DELIMITER, ARRAY_DELIMITER, KEY_VALUE_DELIMITER
+  };
   private static final String[] ESCAPED_VALUES = {"%7C", "%3B", "%3A"};
 
   public static String escape(String initial) {

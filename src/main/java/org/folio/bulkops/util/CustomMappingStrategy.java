@@ -9,9 +9,12 @@ public class CustomMappingStrategy<T> extends ColumnPositionMappingStrategy<T> {
   @Override
   public String[] generateHeader(T bean) {
 
-    var headers = getFieldMap().values().stream().map(BeanField::getField)
+    var headers =
+        getFieldMap().values().stream()
+            .map(BeanField::getField)
             .map(field -> field.getDeclaredAnnotation(CsvCustomBindByName.class))
-            .map(CsvCustomBindByName::column).toArray(String[]::new);
+            .map(CsvCustomBindByName::column)
+            .toArray(String[]::new);
 
     super.setColumnMapping(headers);
 

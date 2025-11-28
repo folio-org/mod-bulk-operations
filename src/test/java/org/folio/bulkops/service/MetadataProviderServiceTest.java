@@ -40,15 +40,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class MetadataProviderServiceTest extends BaseTest {
-  @MockitoBean
-  DataImportClient dataImportClient;
-  @MockitoBean
-  private MetadataProviderClient metadataProviderClient;
-  @MockitoBean
-  private ErrorService errorService;
+  @MockitoBean DataImportClient dataImportClient;
+  @MockitoBean private MetadataProviderClient metadataProviderClient;
+  @MockitoBean private ErrorService errorService;
 
-  @Autowired
-  private MetadataProviderService metadataProviderService;
+  @Autowired private MetadataProviderService metadataProviderService;
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
@@ -56,27 +52,30 @@ class MetadataProviderServiceTest extends BaseTest {
     var jobProfileId = UUID.randomUUID();
     var compositeChildId = UUID.randomUUID();
     var parentSingleId = UUID.randomUUID();
-    var executions = new DataImportJobExecutionCollection()
-            .jobExecutions(List.of(new DataImportJobExecution()
-                            .id(compositeChildId)
-                            .subordinationType(
-                                    DataImportJobExecution.SubordinationTypeEnum.COMPOSITE_PARENT),
+    var executions =
+        new DataImportJobExecutionCollection()
+            .jobExecutions(
+                List.of(
                     new DataImportJobExecution()
-                            .id(compositeChildId)
-                            .jobProfileInfo(new ProfileInfo().id(jobProfileId))
-                            .subordinationType(
-                                    DataImportJobExecution.SubordinationTypeEnum.COMPOSITE_CHILD),
+                        .id(compositeChildId)
+                        .subordinationType(
+                            DataImportJobExecution.SubordinationTypeEnum.COMPOSITE_PARENT),
                     new DataImportJobExecution()
-                            .id(parentSingleId)
-                            .jobProfileInfo(new ProfileInfo().id(jobProfileId))
-                            .subordinationType(
-                                    DataImportJobExecution.SubordinationTypeEnum.PARENT_SINGLE)))
+                        .id(compositeChildId)
+                        .jobProfileInfo(new ProfileInfo().id(jobProfileId))
+                        .subordinationType(
+                            DataImportJobExecution.SubordinationTypeEnum.COMPOSITE_CHILD),
+                    new DataImportJobExecution()
+                        .id(parentSingleId)
+                        .jobProfileInfo(new ProfileInfo().id(jobProfileId))
+                        .subordinationType(
+                            DataImportJobExecution.SubordinationTypeEnum.PARENT_SINGLE)))
             .totalRecords(3);
 
     when(dataImportClient.getSplitStatus())
-            .thenReturn(SplitStatus.builder().splitStatus(splitStatusEnabled).build());
+        .thenReturn(SplitStatus.builder().splitStatus(splitStatusEnabled).build());
     when(metadataProviderClient.getJobExecutionsByJobProfileId(jobProfileId, Integer.MAX_VALUE))
-            .thenReturn(executions);
+        .thenReturn(executions);
 
     var res = metadataProviderService.getJobExecutions(jobProfileId);
 
@@ -91,22 +90,22 @@ class MetadataProviderServiceTest extends BaseTest {
 
   @Test
   void shouldReturnDataImportJobCompletionWhenAllExecutionsCompleted() {
-    var jobExecutions = List.of(
+    var jobExecutions =
+        List.of(
             new DataImportJobExecution().status(DataImportStatus.COMMITTED).totalJobParts(3),
             new DataImportJobExecution().status(DataImportStatus.CANCELLED),
-            new DataImportJobExecution().status(DataImportStatus.ERROR)
-    );
+            new DataImportJobExecution().status(DataImportStatus.ERROR));
 
     assertTrue(metadataProviderService.isDataImportJobCompleted(jobExecutions));
   }
 
   @Test
   void shouldReturnDataImportJobIncompleteWhenSomeExecutionsNotCompleted() {
-    var jobExecutions = List.of(
+    var jobExecutions =
+        List.of(
             new DataImportJobExecution().status(DataImportStatus.COMMITTED),
             new DataImportJobExecution().status(DataImportStatus.CANCELLED),
-            new DataImportJobExecution().status(DataImportStatus.PARSING_IN_PROGRESS)
-    );
+            new DataImportJobExecution().status(DataImportStatus.PARSING_IN_PROGRESS));
 
     assertFalse(metadataProviderService.isDataImportJobCompleted(jobExecutions));
   }
@@ -120,10 +119,10 @@ class MetadataProviderServiceTest extends BaseTest {
 
   @Test
   void shouldCalculateProgress() {
-    var jobExecutions = List.of(
+    var jobExecutions =
+        List.of(
             new DataImportJobExecution().progress(new DataImportProgress().current(10).total(100)),
-            new DataImportJobExecution().progress(new DataImportProgress().current(10).total(100))
-    );
+            new DataImportJobExecution().progress(new DataImportProgress().current(10).total(100)));
 
     var progress = metadataProviderService.calculateProgress(jobExecutions);
 
@@ -135,31 +134,32 @@ class MetadataProviderServiceTest extends BaseTest {
   void shouldFetchUpdatedInstanceIds() {
     var updatedId1 = UUID.randomUUID().toString();
     var updatedId2 = UUID.randomUUID().toString();
-    var logEntries = List.of(
+    var logEntries =
+        List.of(
             JobLogEntry.builder()
-                    .sourceRecordActionStatus(UPDATED)
-                    .relatedInstanceInfo(RelatedInstanceInfo.builder()
-                            .idList(List.of(updatedId1))
-                            .build())
-                    .build(),
+                .sourceRecordActionStatus(UPDATED)
+                .relatedInstanceInfo(
+                    RelatedInstanceInfo.builder().idList(List.of(updatedId1)).build())
+                .build(),
             JobLogEntry.builder()
-                    .sourceRecordActionStatus(DISCARDED)
-                    .relatedInstanceInfo(RelatedInstanceInfo.builder()
-                            .idList(List.of(UUID.randomUUID().toString()))
-                            .build())
-                    .build(),
+                .sourceRecordActionStatus(DISCARDED)
+                .relatedInstanceInfo(
+                    RelatedInstanceInfo.builder()
+                        .idList(List.of(UUID.randomUUID().toString()))
+                        .build())
+                .build(),
             JobLogEntry.builder()
-                    .sourceRecordActionStatus(UPDATED)
-                    .relatedInstanceInfo(RelatedInstanceInfo.builder()
-                            .idList(List.of(updatedId2))
-                            .build())
-                    .build(),
+                .sourceRecordActionStatus(UPDATED)
+                .relatedInstanceInfo(
+                    RelatedInstanceInfo.builder().idList(List.of(updatedId2)).build())
+                .build(),
             JobLogEntry.builder()
-                    .sourceRecordActionStatus(DISCARDED)
-                    .relatedInstanceInfo(RelatedInstanceInfo.builder()
-                            .idList(List.of(UUID.randomUUID().toString()))
-                            .build())
-                    .build());
+                .sourceRecordActionStatus(DISCARDED)
+                .relatedInstanceInfo(
+                    RelatedInstanceInfo.builder()
+                        .idList(List.of(UUID.randomUUID().toString()))
+                        .build())
+                .build());
 
     var ids = metadataProviderService.fetchUpdatedInstanceIds(logEntries);
 
@@ -174,36 +174,41 @@ class MetadataProviderServiceTest extends BaseTest {
       var dataImportJobId = UUID.randomUUID();
 
       when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), 1))
-              .thenReturn(JobLogEntryCollection.builder()
-                      .entries(Collections.emptyList())
-                      .totalRecords(9)
-                      .build())
-              .thenReturn(JobLogEntryCollection.builder()
-                      .entries(Collections.emptyList())
-                      .totalRecords(10)
-                      .build());
-      var threeEntriesCollection = JobLogEntryCollection.builder()
-              .entries(List.of(
+          .thenReturn(
+              JobLogEntryCollection.builder()
+                  .entries(Collections.emptyList())
+                  .totalRecords(9)
+                  .build())
+          .thenReturn(
+              JobLogEntryCollection.builder()
+                  .entries(Collections.emptyList())
+                  .totalRecords(10)
+                  .build());
+      var threeEntriesCollection =
+          JobLogEntryCollection.builder()
+              .entries(
+                  List.of(
                       JobLogEntry.builder().sourceRecordActionStatus(UPDATED).build(),
                       JobLogEntry.builder()
-                              .sourceRecordActionStatus(DISCARDED)
-                              .error("error")
-                              .relatedInstanceInfo(RelatedInstanceInfo.builder()
-                                      .hridList(List.of("123"))
-                                      .build())
-                              .build(),
-                      JobLogEntry.builder().sourceRecordActionStatus(UPDATED).build()
-              ))
+                          .sourceRecordActionStatus(DISCARDED)
+                          .error("error")
+                          .relatedInstanceInfo(
+                              RelatedInstanceInfo.builder().hridList(List.of("123")).build())
+                          .build(),
+                      JobLogEntry.builder().sourceRecordActionStatus(UPDATED).build()))
               .totalRecords(10)
               .build();
-      var singleEntryCollection = JobLogEntryCollection.builder()
-              .entries(Collections.singletonList(JobLogEntry.builder()
-                      .sourceRecordActionStatus(UPDATED).build()))
+      var singleEntryCollection =
+          JobLogEntryCollection.builder()
+              .entries(
+                  Collections.singletonList(
+                      JobLogEntry.builder().sourceRecordActionStatus(UPDATED).build()))
               .totalRecords(10)
               .build();
-      when(metadataProviderClient.getJobLogEntries(eq(dataImportJobId.toString()), anyLong(),
-              anyLong()))
-              .thenAnswer(invocation -> {
+      when(metadataProviderClient.getJobLogEntries(
+              eq(dataImportJobId.toString()), anyLong(), anyLong()))
+          .thenAnswer(
+              invocation -> {
                 var offset = (Long) invocation.getArguments()[1];
                 return switch (offset.intValue()) {
                   case 0, 3, 6 -> threeEntriesCollection;
@@ -211,17 +216,18 @@ class MetadataProviderServiceTest extends BaseTest {
                   default -> throw new IllegalStateException("Unexpected value: " + offset);
                 };
               });
-      var executions = Collections.singletonList(new DataImportJobExecution()
-              .id(dataImportJobId)
-              .progress(new DataImportProgress().current(10).total(10)));
+      var executions =
+          Collections.singletonList(
+              new DataImportJobExecution()
+                  .id(dataImportJobId)
+                  .progress(new DataImportProgress().current(10).total(10)));
       var operation = new BulkOperation();
 
       var entries = metadataProviderService.getJobLogEntries(operation, executions);
 
       assertThat(entries).hasSize(10);
 
-      verify(metadataProviderClient, times(2))
-              .getJobLogEntries(dataImportJobId.toString(), 1);
+      verify(metadataProviderClient, times(2)).getJobLogEntries(dataImportJobId.toString(), 1);
 
       verify(metadataProviderClient).getJobLogEntries(dataImportJobId.toString(), 0, 3);
       verify(metadataProviderClient).getJobLogEntries(dataImportJobId.toString(), 3, 3);
@@ -237,33 +243,37 @@ class MetadataProviderServiceTest extends BaseTest {
       var operationId = UUID.randomUUID();
 
       when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), 1))
-              .thenReturn(JobLogEntryCollection.builder()
-                      .entries(Collections.emptyList())
-                      .totalRecords(10)
-                      .build());
+          .thenReturn(
+              JobLogEntryCollection.builder()
+                  .entries(Collections.emptyList())
+                  .totalRecords(10)
+                  .build());
 
-      var threeEntriesCollection = JobLogEntryCollection.builder()
-              .entries(List.of(
+      var threeEntriesCollection =
+          JobLogEntryCollection.builder()
+              .entries(
+                  List.of(
                       JobLogEntry.builder().sourceRecordActionStatus(UPDATED).build(),
                       JobLogEntry.builder()
-                              .sourceRecordActionStatus(DISCARDED)
-                              .error("error")
-                              .relatedInstanceInfo(RelatedInstanceInfo.builder()
-                                      .hridList(List.of("123"))
-                                      .build())
-                              .build(),
-                      JobLogEntry.builder().sourceRecordActionStatus(UPDATED).build()
-              ))
+                          .sourceRecordActionStatus(DISCARDED)
+                          .error("error")
+                          .relatedInstanceInfo(
+                              RelatedInstanceInfo.builder().hridList(List.of("123")).build())
+                          .build(),
+                      JobLogEntry.builder().sourceRecordActionStatus(UPDATED).build()))
               .totalRecords(10)
               .build();
-      var singleEntryCollection = JobLogEntryCollection.builder()
-              .entries(Collections.singletonList(JobLogEntry.builder()
-                      .sourceRecordActionStatus(UPDATED).build()))
+      var singleEntryCollection =
+          JobLogEntryCollection.builder()
+              .entries(
+                  Collections.singletonList(
+                      JobLogEntry.builder().sourceRecordActionStatus(UPDATED).build()))
               .totalRecords(10)
               .build();
-      when(metadataProviderClient.getJobLogEntries(eq(dataImportJobId.toString()), anyLong(),
-              anyLong()))
-              .thenAnswer(invocation -> {
+      when(metadataProviderClient.getJobLogEntries(
+              eq(dataImportJobId.toString()), anyLong(), anyLong()))
+          .thenAnswer(
+              invocation -> {
                 var offset = (Long) invocation.getArguments()[1];
                 return switch (offset.intValue()) {
                   case 0, 6 -> threeEntriesCollection;
@@ -273,9 +283,11 @@ class MetadataProviderServiceTest extends BaseTest {
                 };
               });
 
-      var executions = Collections.singletonList(new DataImportJobExecution()
-              .id(dataImportJobId)
-              .progress(new DataImportProgress().current(10).total(10)));
+      var executions =
+          Collections.singletonList(
+              new DataImportJobExecution()
+                  .id(dataImportJobId)
+                  .progress(new DataImportProgress().current(10).total(10)));
       var operation = BulkOperation.builder().id(operationId).build();
 
       var entries = metadataProviderService.getJobLogEntries(operation, executions);
@@ -287,8 +299,8 @@ class MetadataProviderServiceTest extends BaseTest {
       verify(metadataProviderClient).getJobLogEntries(dataImportJobId.toString(), 6, 3);
       verify(metadataProviderClient).getJobLogEntries(dataImportJobId.toString(), 9, 3);
 
-      var expectedMessage = MSG_FAILED_TO_GET_LOG_ENTRIES_CHUNK.formatted(3,
-              "Log entries were not found");
+      var expectedMessage =
+          MSG_FAILED_TO_GET_LOG_ENTRIES_CHUNK.formatted(3, "Log entries were not found");
       verify(errorService).saveError(operationId, EMPTY, expectedMessage, ErrorType.ERROR);
     }
   }
@@ -299,43 +311,41 @@ class MetadataProviderServiceTest extends BaseTest {
       var dataImportJobId = UUID.randomUUID();
 
       when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), 1))
-              .thenReturn(JobLogEntryCollection.builder()
-                      .entries(Collections.emptyList())
-                      .totalRecords(2)
-                      .build());
-      var entriesContainingNullStatus = JobLogEntryCollection.builder()
-              .entries(List.of(
-                      JobLogEntry.builder()
-                              .sourceRecordActionStatus(UPDATED)
-                              .build(),
-                      JobLogEntry.builder()
-                              .sourceRecordActionStatus(null)
-                              .build()))
+          .thenReturn(
+              JobLogEntryCollection.builder()
+                  .entries(Collections.emptyList())
+                  .totalRecords(2)
+                  .build());
+      var entriesContainingNullStatus =
+          JobLogEntryCollection.builder()
+              .entries(
+                  List.of(
+                      JobLogEntry.builder().sourceRecordActionStatus(UPDATED).build(),
+                      JobLogEntry.builder().sourceRecordActionStatus(null).build()))
               .totalRecords(2)
               .build();
-      var entriesWithoutNullStatus = JobLogEntryCollection.builder()
-              .entries(List.of(
-                      JobLogEntry.builder()
-                              .sourceRecordActionStatus(UPDATED)
-                              .build(),
-                      JobLogEntry.builder()
-                              .sourceRecordActionStatus(DISCARDED)
-                              .build()))
+      var entriesWithoutNullStatus =
+          JobLogEntryCollection.builder()
+              .entries(
+                  List.of(
+                      JobLogEntry.builder().sourceRecordActionStatus(UPDATED).build(),
+                      JobLogEntry.builder().sourceRecordActionStatus(DISCARDED).build()))
               .totalRecords(2)
               .build();
-      when(metadataProviderClient.getJobLogEntries(eq(dataImportJobId.toString()), anyLong(),
-              anyLong()))
-              .thenReturn(entriesContainingNullStatus)
-              .thenReturn(entriesWithoutNullStatus);
-      var executions = Collections.singletonList(new DataImportJobExecution()
-              .id(dataImportJobId)
-              .progress(new DataImportProgress().current(2).total(2)));
+      when(metadataProviderClient.getJobLogEntries(
+              eq(dataImportJobId.toString()), anyLong(), anyLong()))
+          .thenReturn(entriesContainingNullStatus)
+          .thenReturn(entriesWithoutNullStatus);
+      var executions =
+          Collections.singletonList(
+              new DataImportJobExecution()
+                  .id(dataImportJobId)
+                  .progress(new DataImportProgress().current(2).total(2)));
       var operation = new BulkOperation();
 
       var entries = metadataProviderService.getJobLogEntries(operation, executions);
 
-      verify(metadataProviderClient, times(2))
-              .getJobLogEntries(dataImportJobId.toString(), 0, 3);
+      verify(metadataProviderClient, times(2)).getJobLogEntries(dataImportJobId.toString(), 0, 3);
       assertThat(entries).hasSize(2);
       assertThat(entries).noneMatch(entry -> entry.getSourceRecordActionStatus() == null);
     }
@@ -347,32 +357,32 @@ class MetadataProviderServiceTest extends BaseTest {
       var dataImportJobId = UUID.randomUUID();
 
       when(metadataProviderClient.getJobLogEntries(dataImportJobId.toString(), 1))
-              .thenReturn(JobLogEntryCollection.builder()
-                      .entries(Collections.emptyList())
-                      .totalRecords(2)
-                      .build());
-      var entriesContainingNullStatus = JobLogEntryCollection.builder()
-              .entries(List.of(
-                      JobLogEntry.builder()
-                              .sourceRecordActionStatus(UPDATED)
-                              .build(),
-                      JobLogEntry.builder()
-                              .sourceRecordActionStatus(null)
-                              .build()))
+          .thenReturn(
+              JobLogEntryCollection.builder()
+                  .entries(Collections.emptyList())
+                  .totalRecords(2)
+                  .build());
+      var entriesContainingNullStatus =
+          JobLogEntryCollection.builder()
+              .entries(
+                  List.of(
+                      JobLogEntry.builder().sourceRecordActionStatus(UPDATED).build(),
+                      JobLogEntry.builder().sourceRecordActionStatus(null).build()))
               .totalRecords(2)
               .build();
-      when(metadataProviderClient.getJobLogEntries(eq(dataImportJobId.toString()), anyLong(),
-              anyLong()))
-              .thenReturn(entriesContainingNullStatus);
-      var executions = Collections.singletonList(new DataImportJobExecution()
-              .id(dataImportJobId)
-              .progress(new DataImportProgress().current(2).total(2)));
+      when(metadataProviderClient.getJobLogEntries(
+              eq(dataImportJobId.toString()), anyLong(), anyLong()))
+          .thenReturn(entriesContainingNullStatus);
+      var executions =
+          Collections.singletonList(
+              new DataImportJobExecution()
+                  .id(dataImportJobId)
+                  .progress(new DataImportProgress().current(2).total(2)));
       var operation = new BulkOperation();
 
       var entries = metadataProviderService.getJobLogEntries(operation, executions);
 
-      verify(metadataProviderClient, times(10))
-              .getJobLogEntries(dataImportJobId.toString(), 0, 3);
+      verify(metadataProviderClient, times(10)).getJobLogEntries(dataImportJobId.toString(), 0, 3);
       assertThat(entries).hasSize(2);
       assertThat(entries).anyMatch(entry -> entry.getSourceRecordActionStatus() == null);
     }

@@ -13,6 +13,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface EurekaUserPermissionsClient {
 
   @GetMapping(value = "/{userId}/permissions", produces = MediaType.APPLICATION_JSON_VALUE)
-  UserPermissions getPermissions(@PathVariable String userId,
-                                 @RequestParam List<String> desiredPermissions);
+  UserPermissions getPermissions(
+      @PathVariable String userId, @RequestParam List<String> desiredPermissions);
 }

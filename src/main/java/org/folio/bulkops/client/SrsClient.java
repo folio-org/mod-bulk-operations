@@ -17,6 +17,8 @@ public interface SrsClient {
   JsonNode getParsedRecordsInBatch(@RequestBody GetParsedRecordsBatchRequestBody body);
 
   @GetMapping(value = "/source-records", produces = MediaType.APPLICATION_JSON_VALUE)
-  JsonNode getMarc(@RequestParam("instanceId") String instanceId,
-                   @RequestParam("idType") String idType, @RequestParam("deleted") boolean deleted);
+  JsonNode getMarc(
+      @RequestParam("instanceId") String instanceId,
+      @RequestParam("idType") String idType,
+      @RequestParam("deleted") boolean deleted);
 }

@@ -32,9 +32,7 @@ public class MarcAsListStringsWriter<T extends BulkOperationsEntity>
   private final JsonToMarcConverter jsonToMarcConverter;
 
   public MarcAsListStringsWriter(
-      String outputFileName,
-      SrsClient srsClient,
-      JsonToMarcConverter jsonToMarcConverter) {
+      String outputFileName, SrsClient srsClient, JsonToMarcConverter jsonToMarcConverter) {
     super();
     this.srsClient = srsClient;
     this.jsonToMarcConverter = jsonToMarcConverter;
@@ -43,23 +41,25 @@ public class MarcAsListStringsWriter<T extends BulkOperationsEntity>
 
   @Override
   public void write(@NonNull Chunk<? extends List<T>> entities) throws Exception {
-    var items = entities.getItems().stream()
-        .flatMap(List::stream)
-        .map(this::getIdIfExtendedInstanceMarc)
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .map(id -> {
-          try {
-            return getMarcContent(id);
-          } catch (Exception e) {
-            log.error(e);
-            throw new BulkEditException(NO_MARC_CONTENT.formatted(id, e.getMessage()),
-                    ErrorType.ERROR);
-          }
-        })
-        .flatMap(List::stream)
-        .filter(Objects::nonNull)
-        .toList();
+    var items =
+        entities.getItems().stream()
+            .flatMap(List::stream)
+            .map(this::getIdIfExtendedInstanceMarc)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .map(
+                id -> {
+                  try {
+                    return getMarcContent(id);
+                  } catch (Exception e) {
+                    log.error(e);
+                    throw new BulkEditException(
+                        NO_MARC_CONTENT.formatted(id, e.getMessage()), ErrorType.ERROR);
+                  }
+                })
+            .flatMap(List::stream)
+            .filter(Objects::nonNull)
+            .toList();
 
     delegateToStringWriter.write(new Chunk<>(items));
   }
@@ -103,7 +103,7 @@ public class MarcAsListStringsWriter<T extends BulkOperationsEntity>
       log.warn("No SRS records found by instanceId = {}", id);
       return mrcRecords;
     }
-    for (var jsonNodeIterator = srsRecords.elements(); jsonNodeIterator.hasNext();) {
+    for (var jsonNodeIterator = srsRecords.elements(); jsonNodeIterator.hasNext(); ) {
       var srsRec = jsonNodeIterator.next();
       var parsedRec = srsRec.get("parsedRecord");
       var content = parsedRec.get("content").toString();

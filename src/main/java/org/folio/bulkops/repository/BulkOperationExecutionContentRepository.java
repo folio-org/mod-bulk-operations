@@ -12,22 +12,23 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BulkOperationExecutionContentRepository
-        extends JpaRepository<BulkOperationExecutionContent, UUID> {
+    extends JpaRepository<BulkOperationExecutionContent, UUID> {
 
   Page<BulkOperationExecutionContent> findByBulkOperationIdAndErrorMessageIsNotNullOrderByErrorType(
-          UUID bulkOperationId, OffsetRequest offsetRequest);
+      UUID bulkOperationId, OffsetRequest offsetRequest);
 
   Page<BulkOperationExecutionContent>
-        findByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIsOrderByErrorType(
+      findByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIsOrderByErrorType(
           UUID bulkOperationId, OffsetRequest offsetRequest, ErrorType errorType);
 
   Optional<BulkOperationExecutionContent> findFirstByBulkOperationIdAndIdentifier(
-          UUID bulkOperationId, String identifier);
+      UUID bulkOperationId, String identifier);
 
   int countAllByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIs(
-          UUID bulkOperationId, ErrorType errorType);
+      UUID bulkOperationId, ErrorType errorType);
 
-  @Query("SELECT COUNT(i) FROM BulkOperationExecutionContent i WHERE i.bulkOperationId = "
+  @Query(
+      "SELECT COUNT(i) FROM BulkOperationExecutionContent i WHERE i.bulkOperationId = "
           + ":bulkOperationId AND i.errorType = :errorType")
   long countByBulkOperationIdAndErrorType(UUID bulkOperationId, ErrorType errorType);
 

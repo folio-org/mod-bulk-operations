@@ -16,5 +16,4 @@ public interface InstanceFormatsClient {
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   InstanceFormats getByQuery(@RequestParam String query, @RequestParam long limit);
-
 }

@@ -12,7 +12,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class EdiSchedule   {
+public class EdiSchedule {
   @JsonProperty("enableScheduledExport")
   private Boolean enableScheduledExport = false;
 
@@ -22,4 +22,3 @@ public class EdiSchedule   {
   @JsonProperty("schedulingNotes")
   private String schedulingNotes;
 }
-

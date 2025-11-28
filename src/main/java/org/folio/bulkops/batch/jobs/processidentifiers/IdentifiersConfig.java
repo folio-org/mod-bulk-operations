@@ -25,10 +25,11 @@ public class IdentifiersConfig {
   @Bean
   @StepScope
   public FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader(
-          @Value("#{jobParameters['" + IDENTIFIERS_FILE_NAME + "']}") String uploadedFileName,
-          @Value("#{stepExecutionContext['offset']}") Long offset,
-          @Value("#{stepExecutionContext['limit']}") Long limit) {
-    var builder = new FlatFileItemReaderBuilder<ItemIdentifier>()
+      @Value("#{jobParameters['" + IDENTIFIERS_FILE_NAME + "']}") String uploadedFileName,
+      @Value("#{stepExecutionContext['offset']}") Long offset,
+      @Value("#{stepExecutionContext['limit']}") Long limit) {
+    var builder =
+        new FlatFileItemReaderBuilder<ItemIdentifier>()
             .name("csvItemIdentifierReader")
             .resource(new InputStreamResource(remoteFileSystemClient.get(uploadedFileName)))
             .linesToSkip(Math.toIntExact(offset))

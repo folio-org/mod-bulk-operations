@@ -25,4 +25,3 @@ public class MaterialTypeCollection {
   @JsonProperty("resultInfo")
   private ResultInfo resultInfo;
 }
-

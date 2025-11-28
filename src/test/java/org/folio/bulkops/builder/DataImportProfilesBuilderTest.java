@@ -11,10 +11,9 @@ import org.folio.bulkops.domain.bean.MatchProfile;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-class DataImportProfilesBuilderTest extends BaseTest  {
+class DataImportProfilesBuilderTest extends BaseTest {
 
-  @Autowired
-  private DataImportProfilesBuilder dataImportProfilesBuilder;
+  @Autowired private DataImportProfilesBuilder dataImportProfilesBuilder;
 
   @Test
   @SneakyThrows
@@ -26,13 +25,14 @@ class DataImportProfilesBuilderTest extends BaseTest  {
   @Test
   @SneakyThrows
   void shouldGetActionProfilePostToUpdateSrs() {
-    var mappingProfileUpdateSrs = MappingProfile.builder().id("mapping_profile_update_srs_id")
-            .build();
-    var actionProfilePost = dataImportProfilesBuilder
-            .getActionProfilePostToUpdateSrs(mappingProfileUpdateSrs);
+    var mappingProfileUpdateSrs =
+        MappingProfile.builder().id("mapping_profile_update_srs_id").build();
+    var actionProfilePost =
+        dataImportProfilesBuilder.getActionProfilePostToUpdateSrs(mappingProfileUpdateSrs);
     assertNotNull(actionProfilePost);
-    assertEquals("mapping_profile_update_srs_id",
-            actionProfilePost.getAddedRelations().getFirst().getDetailProfileId());
+    assertEquals(
+        "mapping_profile_update_srs_id",
+        actionProfilePost.getAddedRelations().getFirst().getDetailProfileId());
   }
 
   @Test
@@ -47,15 +47,15 @@ class DataImportProfilesBuilderTest extends BaseTest  {
   void shouldGetJobProfilePost() {
     var actionProfileUpdateSrs = ActionProfile.builder().id("action_profile_update_srs_id").build();
     var matchProfile = MatchProfile.builder().id("match_profile_id").build();
-    var jobProfilePost = dataImportProfilesBuilder.getJobProfilePost(matchProfile,
-            actionProfileUpdateSrs);
+    var jobProfilePost =
+        dataImportProfilesBuilder.getJobProfilePost(matchProfile, actionProfileUpdateSrs);
     assertNotNull(jobProfilePost);
-    assertEquals("match_profile_id", jobProfilePost.getAddedRelations()
-            .get(0).getDetailProfileId());
-    assertEquals("action_profile_update_srs_id", jobProfilePost.getAddedRelations().get(1)
-            .getDetailProfileId());
-    assertEquals("match_profile_id", jobProfilePost.getAddedRelations()
-            .get(1).getMasterProfileId());
-
+    assertEquals(
+        "match_profile_id", jobProfilePost.getAddedRelations().get(0).getDetailProfileId());
+    assertEquals(
+        "action_profile_update_srs_id",
+        jobProfilePost.getAddedRelations().get(1).getDetailProfileId());
+    assertEquals(
+        "match_profile_id", jobProfilePost.getAddedRelations().get(1).getMasterProfileId());
   }
 }

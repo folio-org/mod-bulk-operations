@@ -35,14 +35,13 @@ import org.folio.bulkops.domain.dto.UpdateOptionType;
 
 public class UpdateOptionTypeToFieldResolver {
 
-  private UpdateOptionTypeToFieldResolver() {
-  }
+  private UpdateOptionTypeToFieldResolver() {}
 
-  public static Set<String> getFieldsByUpdateOptionTypes(List<UpdateOptionType> options,
-                                                         EntityType entity) {
-    return options.stream().map(
-            option -> UpdateOptionTypeToFieldResolver
-                    .getFieldByUpdateOptionType(option, entity)).collect(Collectors.toSet());
+  public static Set<String> getFieldsByUpdateOptionTypes(
+      List<UpdateOptionType> options, EntityType entity) {
+    return options.stream()
+        .map(option -> UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option, entity))
+        .collect(Collectors.toSet());
   }
 
   public static String getFieldByUpdateOptionType(UpdateOptionType type, EntityType entity) {

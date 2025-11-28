@@ -16,5 +16,4 @@ public interface NatureOfContentTermsClient {
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   NatureOfContentTerms getByQuery(@RequestParam String query, @RequestParam long limit);
-
 }

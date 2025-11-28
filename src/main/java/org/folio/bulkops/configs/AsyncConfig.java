@@ -55,5 +55,4 @@ public class AsyncConfig {
         FolioExecutionScopeExecutionContextManager::getRunnableWithCurrentFolioContext);
     return threadPoolTaskExecutor;
   }
-
 }

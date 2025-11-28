@@ -16,18 +16,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class FolioTenantServiceTest {
 
-  @InjectMocks
-  FolioTenantService folioTenantService;
+  @InjectMocks FolioTenantService folioTenantService;
 
-  @Mock
-  PrepareSystemUserService prepareSystemUserService;
+  @Mock PrepareSystemUserService prepareSystemUserService;
 
   @Test
   void shouldProcessAfterTenantUpdating() {
     TenantAttributes tenantAttributes = createTenantAttributes();
 
-    doNothing().when(prepareSystemUserService)
-      .setupSystemUser();
+    doNothing().when(prepareSystemUserService).setupSystemUser();
 
     folioTenantService.afterTenantUpdate(tenantAttributes);
 
@@ -38,11 +35,10 @@ class FolioTenantServiceTest {
   void shouldFailAfterTenantUpdating() {
     TenantAttributes tenantAttributes = createTenantAttributes();
 
-    doThrow(NullPointerException.class).when(prepareSystemUserService)
-      .setupSystemUser();
+    doThrow(NullPointerException.class).when(prepareSystemUserService).setupSystemUser();
 
-    assertThrows(NullPointerException.class,
-            () -> folioTenantService.afterTenantUpdate(tenantAttributes));
+    assertThrows(
+        NullPointerException.class, () -> folioTenantService.afterTenantUpdate(tenantAttributes));
   }
 
   private TenantAttributes createTenantAttributes() {

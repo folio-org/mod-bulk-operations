@@ -54,15 +54,16 @@ public class BulkEditUserIdentifiersJobConfig {
   private int numPartitions;
 
   @Bean
-  public Job bulkEditProcessUserIdentifiersJob(JobCompletionNotificationListener listener,
-                                               Step userPartitionStep,
-                                               JobRepository jobRepository) {
+  public Job bulkEditProcessUserIdentifiersJob(
+      JobCompletionNotificationListener listener,
+      Step userPartitionStep,
+      JobRepository jobRepository) {
     return new JobBuilder(BULK_EDIT_IDENTIFIERS + HYPHEN + EntityType.USER, jobRepository)
-            .incrementer(new RunIdIncrementer())
-            .listener(listener)
-            .flow(userPartitionStep)
-            .end()
-            .build();
+        .incrementer(new RunIdIncrementer())
+        .listener(listener)
+        .flow(userPartitionStep)
+        .end()
+        .build();
   }
 
   @Bean
@@ -76,18 +77,18 @@ public class BulkEditUserIdentifiersJobConfig {
       Partitioner bulkEditUserPartitioner,
       BulkEditFileAssembler bulkEditFileAssembler) {
     return new StepBuilder("userPartitionStep", jobRepository)
-            .partitioner("bulkEditUserStep", bulkEditUserPartitioner)
-            .gridSize(numPartitions)
-            .step(bulkEditUserStep(
+        .partitioner("bulkEditUserStep", bulkEditUserPartitioner)
+        .gridSize(numPartitions)
+        .step(
+            bulkEditUserStep(
                 csvItemIdentifierReader,
                 compositeUserListWriter,
                 identifiersWriteListener,
                 jobRepository,
-                transactionManager
-            ))
-            .taskExecutor(taskExecutor)
-            .aggregator(bulkEditFileAssembler)
-            .build();
+                transactionManager))
+        .taskExecutor(taskExecutor)
+        .aggregator(bulkEditFileAssembler)
+        .build();
   }
 
   @Bean
@@ -99,44 +100,44 @@ public class BulkEditUserIdentifiersJobConfig {
         outputCsvJsonFilePath,
         outputCsvJsonFilePath,
         null,
-        remoteFileSystemClient.getNumOfLines(uploadedFileName)
-    );
+        remoteFileSystemClient.getNumOfLines(uploadedFileName));
   }
 
   @Bean
-  public Step bulkEditUserStep(FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader,
-                               CompositeItemWriter<User> compositeItemWriter,
-                               IdentifiersWriteListener<User> identifiersWriteListener,
-                               JobRepository jobRepository,
-                               PlatformTransactionManager transactionManager) {
+  public Step bulkEditUserStep(
+      FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader,
+      CompositeItemWriter<User> compositeItemWriter,
+      IdentifiersWriteListener<User> identifiersWriteListener,
+      JobRepository jobRepository,
+      PlatformTransactionManager transactionManager) {
     return new StepBuilder("bulkEditUserStep", jobRepository)
-            .<ItemIdentifier, User>chunk(chunkSize, transactionManager)
-            .reader(csvItemIdentifierReader)
-            .processor(bulkEditUserProcessor)
-            .faultTolerant()
-            .skipLimit(1_000_000)
-            // Required to avoid repeating BulkEditItemProcessor#process after skip.
-            .processorNonTransactional()
-            .skip(BulkEditException.class)
-            .listener(bulkEditSkipListener)
-            .writer(compositeItemWriter)
-            .listener(identifiersWriteListener)
-            .build();
+        .<ItemIdentifier, User>chunk(chunkSize, transactionManager)
+        .reader(csvItemIdentifierReader)
+        .processor(bulkEditUserProcessor)
+        .faultTolerant()
+        .skipLimit(1_000_000)
+        // Required to avoid repeating BulkEditItemProcessor#process after skip.
+        .processorNonTransactional()
+        .skip(BulkEditException.class)
+        .listener(bulkEditSkipListener)
+        .writer(compositeItemWriter)
+        .listener(identifiersWriteListener)
+        .build();
   }
 
   @Bean
   @StepScope
   @SneakyThrows
   public CompositeItemWriter<User> compositeItemWriter(
-          @Value("#{stepExecutionContext['" + TEMP_OUTPUT_CSV_PATH + "']}") String csvPath,
-          @Value("#{stepExecutionContext['" + TEMP_OUTPUT_JSON_PATH + "']}") String jsonPath,
-          @Value("#{jobParameters['" + BULK_OPERATION_ID + "']}") String bulkOperationId,
-          @Value("#{jobParameters['" + IDENTIFIER_TYPE + "']}") String identifierType) {
+      @Value("#{stepExecutionContext['" + TEMP_OUTPUT_CSV_PATH + "']}") String csvPath,
+      @Value("#{stepExecutionContext['" + TEMP_OUTPUT_JSON_PATH + "']}") String jsonPath,
+      @Value("#{jobParameters['" + BULK_OPERATION_ID + "']}") String bulkOperationId,
+      @Value("#{jobParameters['" + IDENTIFIER_TYPE + "']}") String identifierType) {
     var writer = new CompositeItemWriter<User>();
-    writer.setDelegates(Arrays.asList(
-        new CsvItemWriter<>(csvPath, User.class, bulkOperationId, identifierType),
-        new JsonFileWriter<>(new FileSystemResource(jsonPath))
-    ));
+    writer.setDelegates(
+        Arrays.asList(
+            new CsvItemWriter<>(csvPath, User.class, bulkOperationId, identifierType),
+            new JsonFileWriter<>(new FileSystemResource(jsonPath))));
     return writer;
   }
 }

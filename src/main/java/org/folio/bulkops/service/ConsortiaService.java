@@ -46,8 +46,9 @@ public class ConsortiaService {
     var consortia = consortiumClient.getConsortia();
     var consortiaList = consortia.getConsortia();
     if (!consortiaList.isEmpty()) {
-      var userTenants = consortiumClient.getConsortiaUserTenants(consortiaList.getFirst().getId(),
-              userId, Integer.MAX_VALUE);
+      var userTenants =
+          consortiumClient.getConsortiaUserTenants(
+              consortiaList.getFirst().getId(), userId, Integer.MAX_VALUE);
       return userTenants.getUserTenants().stream().map(UserTenant::getTenantId).toList();
     }
     return new ArrayList<>();
@@ -57,15 +58,17 @@ public class ConsortiaService {
   public Map<String, UserTenant> getUserTenantsPerId(String currentTenantId, String userId) {
     var centralTenantId = getCentralTenantId(currentTenantId);
     if (StringUtils.isNotEmpty(centralTenantId)) {
-      try (var ignored = new FolioExecutionContextSetter(prepareContextForTenant(centralTenantId,
-              folioModuleMetadata, context))) {
+      try (var ignored =
+          new FolioExecutionContextSetter(
+              prepareContextForTenant(centralTenantId, folioModuleMetadata, context))) {
         var consortia = consortiumClient.getConsortia();
         var consortiaList = consortia.getConsortia();
         if (!consortiaList.isEmpty()) {
-          var userTenants = consortiumClient.getConsortiaUserTenants(
+          var userTenants =
+              consortiumClient.getConsortiaUserTenants(
                   consortiaList.getFirst().getId(), userId, Integer.MAX_VALUE);
-          return userTenants.getUserTenants().stream().collect(
-                  Collectors.toMap(UserTenant::getTenantId, userTenant -> userTenant));
+          return userTenants.getUserTenants().stream()
+              .collect(Collectors.toMap(UserTenant::getTenantId, userTenant -> userTenant));
         }
       }
     }
@@ -79,7 +82,7 @@ public class ConsortiaService {
 
   @Cacheable(value = "isTenantMember")
   public boolean isTenantMember(String tenantId) {
-    return isTenantInConsortia(tenantId) &&  !isTenantCentral(tenantId);
+    return isTenantInConsortia(tenantId) && !isTenantCentral(tenantId);
   }
 
   @Cacheable(value = "isTenantInConsortia")

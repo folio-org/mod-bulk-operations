@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 @FeignClient(name = "perms/users", configuration = FeignClientConfiguration.class)
 public interface OkapiUserPermissionsClient {
 
-  @GetMapping(value = "/{userId}/permissions?expanded=true&indexField=userId",
-          produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetMapping(
+      value = "/{userId}/permissions?expanded=true&indexField=userId",
+      produces = MediaType.APPLICATION_JSON_VALUE)
   UserPermissions getPermissions(@PathVariable String userId);
 }

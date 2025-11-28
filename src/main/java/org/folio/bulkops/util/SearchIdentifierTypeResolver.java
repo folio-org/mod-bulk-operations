@@ -8,7 +8,7 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 public class SearchIdentifierTypeResolver {
 
   public static BatchIdsDto.IdentifierTypeEnum getSearchIdentifierType(
-          IdentifierType identifierType) {
+      IdentifierType identifierType) {
     return switch (identifierType) {
       case ID -> BatchIdsDto.IdentifierTypeEnum.ID;
       case HRID -> BatchIdsDto.IdentifierTypeEnum.HRID;

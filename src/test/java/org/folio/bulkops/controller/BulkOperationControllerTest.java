@@ -89,35 +89,27 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class BulkOperationControllerTest extends BaseTest {
 
-  @MockitoBean
-  private BulkOperationService bulkOperationService;
-  @MockitoBean
-  private ProfileService profileService;
-  @MockitoBean
-  private RemoteFileSystemClient remoteFileSystemClient;
-  @MockitoBean
-  private RuleService ruleService;
-  @MockitoBean
-  private ItemNoteProcessor itemNoteProcessor;
-  @MockitoBean
-  private HoldingsNotesProcessor holdingsNotesProcessor;
-  @MockitoBean
-  private ListUsersService listUsersService;
-  @MockitoBean
-  private LogFilesService logFilesService;
-  @MockitoBean
-  private ConsortiaService consortiaService;
-  @Autowired
-  private BulkOperationRepository bulkOperationRepository;
+  @MockitoBean private BulkOperationService bulkOperationService;
+  @MockitoBean private ProfileService profileService;
+  @MockitoBean private RemoteFileSystemClient remoteFileSystemClient;
+  @MockitoBean private RuleService ruleService;
+  @MockitoBean private ItemNoteProcessor itemNoteProcessor;
+  @MockitoBean private HoldingsNotesProcessor holdingsNotesProcessor;
+  @MockitoBean private ListUsersService listUsersService;
+  @MockitoBean private LogFilesService logFilesService;
+  @MockitoBean private ConsortiaService consortiaService;
+  @Autowired private BulkOperationRepository bulkOperationRepository;
 
   @Test
   @SneakyThrows
   void shouldChangeEntityTypeAndClearProcessingOnPostContentUpdates() {
-    var bulkOperation = BulkOperation.builder()
+    var bulkOperation =
+        BulkOperation.builder()
             .id(UUID.fromString("1910fae2-08c7-46e8-a73b-fc35d2639734"))
             .entityType(INSTANCE_MARC)
             .build();
-    var content = """
+    var content =
+        """
             {
                "bulkOperationRules" : [ {
                  "id" : "27749ff8-bffd-4344-853c-bc765c504631",
@@ -133,19 +125,23 @@ class BulkOperationControllerTest extends BaseTest {
              }
             """;
     when(bulkOperationService.getBulkOperationOrThrow(bulkOperation.getId()))
-            .thenReturn(bulkOperation);
+        .thenReturn(bulkOperation);
     when(ruleService.saveRules(eq(bulkOperation), any(BulkOperationRuleCollection.class)))
-            .thenReturn(new BulkOperationRuleCollection().bulkOperationRules(
-                    Collections.emptyList()).totalRecords(1));
+        .thenReturn(
+            new BulkOperationRuleCollection()
+                .bulkOperationRules(Collections.emptyList())
+                .totalRecords(1));
 
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       bulkOperationRepository.save(bulkOperation);
 
-      mockMvc.perform(post(format("/bulk-operations/%s/content-update", bulkOperation.getId()))
-                      .headers(defaultHeaders())
-                      .contentType(APPLICATION_JSON)
-                      .content(content))
-              .andExpect(status().isOk());
+      mockMvc
+          .perform(
+              post(format("/bulk-operations/%s/content-update", bulkOperation.getId()))
+                  .headers(defaultHeaders())
+                  .contentType(APPLICATION_JSON)
+                  .content(content))
+          .andExpect(status().isOk());
 
       var updatedBulkOperation = bulkOperationRepository.findById(bulkOperation.getId());
       assertThat(updatedBulkOperation).isPresent();
@@ -158,12 +154,11 @@ class BulkOperationControllerTest extends BaseTest {
   @ParameterizedTest
   @MethodSource("fileContentTypeToEntityTypeCollection")
   void shouldDownloadFileWithPreview(
-          FileContentType type, org.folio.bulkops.domain.dto.EntityType entityType)
-          throws Exception {
+      FileContentType type, org.folio.bulkops.domain.dto.EntityType entityType) throws Exception {
     var content = "content";
     when(consortiaService.isTenantCentral(any())).thenReturn(false);
     when(remoteFileSystemClient.get(any(String.class)))
-            .thenReturn(new ByteArrayInputStream(content.getBytes()));
+        .thenReturn(new ByteArrayInputStream(content.getBytes()));
     when(itemNoteProcessor.processCsvContent(any(), any())).thenReturn(content.getBytes());
     when(holdingsNotesProcessor.processCsvContent(any(), any())).thenReturn(content.getBytes());
 
@@ -172,10 +167,11 @@ class BulkOperationControllerTest extends BaseTest {
 
       mockData(entityType);
 
-      mockMvc.perform(get(format("/bulk-operations/%s/download?fileContentType=%s",
-                      operationId, type))
-          .headers(defaultHeaders())
-          .contentType(APPLICATION_JSON))
+      mockMvc
+          .perform(
+              get(format("/bulk-operations/%s/download?fileContentType=%s", operationId, type))
+                  .headers(defaultHeaders())
+                  .contentType(APPLICATION_JSON))
           .andExpect(status().isOk());
 
       if (PROPOSED_CHANGES_MARC_FILE.equals(type) && INSTANCE_MARC.equals(entityType)) {
@@ -188,9 +184,9 @@ class BulkOperationControllerTest extends BaseTest {
 
   @ParameterizedTest
   @MethodSource("fileContentTypeToEntityTypeCollection")
-  void shouldAddUtf8BomToDownloadedCsv(FileContentType fileContentType,
-                                       org.folio.bulkops.domain.dto.EntityType entityType)
-          throws Exception {
+  void shouldAddUtf8BomToDownloadedCsv(
+      FileContentType fileContentType, org.folio.bulkops.domain.dto.EntityType entityType)
+      throws Exception {
     var content = "content";
     var csvfileName = "csvFileName.csv";
     var mrcfileName = "mrcFileName.mrc";
@@ -198,31 +194,39 @@ class BulkOperationControllerTest extends BaseTest {
 
     when(consortiaService.isTenantCentral(any())).thenReturn(false);
     when(remoteFileSystemClient.get(any(String.class)))
-            .thenReturn(new ByteArrayInputStream(content.getBytes()));
-    when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(BulkOperation.builder()
-            .id(UUID.randomUUID())
-            .linkToTriggeringCsvFile(csvfileName)
-            .linkToMatchedRecordsCsvFile(csvfileName)
-            .linkToMatchedRecordsErrorsCsvFile(csvfileName)
-            .linkToModifiedRecordsCsvFile(csvfileName)
-            .linkToCommittedRecordsCsvFile(csvfileName)
-            .linkToCommittedRecordsErrorsCsvFile(csvfileName)
-            .linkToModifiedRecordsMarcFile(mrcfileName)
-            .linkToCommittedRecordsMarcFile(mrcfileName)
-            .entityType(entityType)
-            .build());
+        .thenReturn(new ByteArrayInputStream(content.getBytes()));
+    when(bulkOperationService.getOperationById(any(UUID.class)))
+        .thenReturn(
+            BulkOperation.builder()
+                .id(UUID.randomUUID())
+                .linkToTriggeringCsvFile(csvfileName)
+                .linkToMatchedRecordsCsvFile(csvfileName)
+                .linkToMatchedRecordsErrorsCsvFile(csvfileName)
+                .linkToModifiedRecordsCsvFile(csvfileName)
+                .linkToCommittedRecordsCsvFile(csvfileName)
+                .linkToCommittedRecordsErrorsCsvFile(csvfileName)
+                .linkToModifiedRecordsMarcFile(mrcfileName)
+                .linkToCommittedRecordsMarcFile(mrcfileName)
+                .entityType(entityType)
+                .build());
     when(itemNoteProcessor.processCsvContent(any(), any())).thenReturn(content.getBytes());
     when(holdingsNotesProcessor.processCsvContent(any(), any())).thenReturn(content.getBytes());
 
-    var result = mockMvc.perform(get(format("/bulk-operations/%s/download?fileContentType=%s",
-                    operationId, fileContentType))
-        .headers(defaultHeaders())
-        .contentType(APPLICATION_JSON)).andExpect(status().isOk()).andReturn();
+    var result =
+        mockMvc
+            .perform(
+                get(format(
+                        "/bulk-operations/%s/download?fileContentType=%s",
+                        operationId, fileContentType))
+                    .headers(defaultHeaders())
+                    .contentType(APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
     var actual = result.getResponse().getContentAsByteArray();
 
-    byte[] utf8bom = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+    byte[] utf8bom = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
     if (Set.of(PROPOSED_CHANGES_MARC_FILE, COMMITTED_RECORDS_MARC_FILE).contains(fileContentType)
-            && entityType == INSTANCE_MARC) {
+        && entityType == INSTANCE_MARC) {
       assertNotEquals(content.getBytes().length + utf8bom.length, actual.length);
     } else {
       assertEquals(content.getBytes().length + utf8bom.length, actual.length);
@@ -234,38 +238,46 @@ class BulkOperationControllerTest extends BaseTest {
   @ParameterizedTest
   @MethodSource("fileContentTypeToEntityTypeCollection")
   void shouldNotAddUtf8BomToDownloadedCsvIfAlreadyPresent(
-          FileContentType fileContentType, org.folio.bulkops.domain.dto.EntityType entityType)
-          throws Exception {
+      FileContentType fileContentType, org.folio.bulkops.domain.dto.EntityType entityType)
+      throws Exception {
     var content = "content";
     var csvfileName = "csvFileName.csv";
     var mrcfileName = "mrcFileName.mrc";
     var operationId = UUID.randomUUID();
-    byte[] utf8bom = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+    byte[] utf8bom = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 
     when(consortiaService.isTenantCentral(any())).thenReturn(false);
-    var stream = new SequenceInputStream(new ByteArrayInputStream(utf8bom),
-            new ByteArrayInputStream(content.getBytes()));
+    var stream =
+        new SequenceInputStream(
+            new ByteArrayInputStream(utf8bom), new ByteArrayInputStream(content.getBytes()));
     when(remoteFileSystemClient.get(any(String.class))).thenReturn(stream);
-    when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(BulkOperation.builder()
-            .id(UUID.randomUUID())
-            .linkToTriggeringCsvFile(csvfileName)
-            .linkToMatchedRecordsCsvFile(csvfileName)
-            .linkToMatchedRecordsErrorsCsvFile(csvfileName)
-            .linkToModifiedRecordsCsvFile(csvfileName)
-            .linkToCommittedRecordsCsvFile(csvfileName)
-            .linkToCommittedRecordsErrorsCsvFile(csvfileName)
-            .linkToModifiedRecordsMarcFile(mrcfileName)
-            .linkToCommittedRecordsMarcFile(mrcfileName)
-            .entityType(entityType)
-            .build());
+    when(bulkOperationService.getOperationById(any(UUID.class)))
+        .thenReturn(
+            BulkOperation.builder()
+                .id(UUID.randomUUID())
+                .linkToTriggeringCsvFile(csvfileName)
+                .linkToMatchedRecordsCsvFile(csvfileName)
+                .linkToMatchedRecordsErrorsCsvFile(csvfileName)
+                .linkToModifiedRecordsCsvFile(csvfileName)
+                .linkToCommittedRecordsCsvFile(csvfileName)
+                .linkToCommittedRecordsErrorsCsvFile(csvfileName)
+                .linkToModifiedRecordsMarcFile(mrcfileName)
+                .linkToCommittedRecordsMarcFile(mrcfileName)
+                .entityType(entityType)
+                .build());
     when(itemNoteProcessor.processCsvContent(any(), any())).thenReturn(content.getBytes());
     when(holdingsNotesProcessor.processCsvContent(any(), any())).thenReturn(content.getBytes());
 
-    var result = mockMvc.perform(get(format("/bulk-operations/%s/download?fileContentType=%s",
-                    operationId, fileContentType))
-        .headers(defaultHeaders())
-        .contentType(APPLICATION_JSON))
-        .andExpect(status().isOk()).andReturn();
+    var result =
+        mockMvc
+            .perform(
+                get(format(
+                        "/bulk-operations/%s/download?fileContentType=%s",
+                        operationId, fileContentType))
+                    .headers(defaultHeaders())
+                    .contentType(APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn();
     var actual = result.getResponse().getContentAsByteArray();
 
     assertEquals(content.getBytes().length + utf8bom.length, actual.length);
@@ -276,65 +288,85 @@ class BulkOperationControllerTest extends BaseTest {
   @Test
   void shouldHaveHrIdWhenGetBulkOperationCollection() throws Exception {
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
-      IntStream.range(0, 5).forEach(i -> bulkOperationRepository.save(BulkOperation.builder()
-              .id(UUID.randomUUID())
-              .userId(UUID.randomUUID())
-              .operationType(UPDATE)
-              .entityType(USER)
-              .identifierType(BARCODE)
-              .status(NEW)
-              .dataExportJobId(UUID.randomUUID())
-              .totalNumOfRecords(1)
-              .processedNumOfRecords(0)
-              .executionChunkSize(5)
-              .startTime(LocalDateTime.now())
-              .build()));
-      mockMvc.perform(get("/bulk-operations?query=(entityType==\"USER\") "
+      IntStream.range(0, 5)
+          .forEach(
+              i ->
+                  bulkOperationRepository.save(
+                      BulkOperation.builder()
+                          .id(UUID.randomUUID())
+                          .userId(UUID.randomUUID())
+                          .operationType(UPDATE)
+                          .entityType(USER)
+                          .identifierType(BARCODE)
+                          .status(NEW)
+                          .dataExportJobId(UUID.randomUUID())
+                          .totalNumOfRecords(1)
+                          .processedNumOfRecords(0)
+                          .executionChunkSize(5)
+                          .startTime(LocalDateTime.now())
+                          .build()));
+      mockMvc
+          .perform(
+              get("/bulk-operations?query=(entityType==\"USER\") "
                       + "sortby startTime/sort.descending&limit=50&offset=0")
-          .headers(defaultHeaders())
-          .contentType(APPLICATION_JSON))
+                  .headers(defaultHeaders())
+                  .contentType(APPLICATION_JSON))
           .andExpect(status().isOk())
-          .andExpect(result -> {
-            var bulkOperations = new JSONObject(result.getResponse().getContentAsString())
-                    .getJSONArray("bulkOperations");
-            for (int i = 0; i < bulkOperations.length(); i++) {
-              var bulkOperation = bulkOperations.getJSONObject(i);
-              assertThat(bulkOperation.getInt("hrId") > 0);
-            }
-          });
+          .andExpect(
+              result -> {
+                var bulkOperations =
+                    new JSONObject(result.getResponse().getContentAsString())
+                        .getJSONArray("bulkOperations");
+                for (int i = 0; i < bulkOperations.length(); i++) {
+                  var bulkOperation = bulkOperations.getJSONObject(i);
+                  assertThat(bulkOperation.getInt("hrId") > 0);
+                }
+              });
     }
   }
 
   @Test
   void shouldReturnListUsers() throws Exception {
-    var userIds = new UUID[]{UUID.randomUUID(), UUID.randomUUID()};
+    var userIds = new UUID[] {UUID.randomUUID(), UUID.randomUUID()};
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
-      IntStream.range(0, 2).forEach(i -> bulkOperationRepository.save(BulkOperation.builder()
-              .id(UUID.randomUUID())
-              .userId(userIds[i])
-              .build()));
+      IntStream.range(0, 2)
+          .forEach(
+              i ->
+                  bulkOperationRepository.save(
+                      BulkOperation.builder().id(UUID.randomUUID()).userId(userIds[i]).build()));
       when(userClient.getUserById(userIds[0].toString()))
-              .thenReturn(new User().withId(userIds[0].toString())
-                      .withPersonal(new Personal().withFirstName("Test")
-                      .withLastName("Test")));
+          .thenReturn(
+              new User()
+                  .withId(userIds[0].toString())
+                  .withPersonal(new Personal().withFirstName("Test").withLastName("Test")));
       when(userClient.getUserById(userIds[1].toString()))
-              .thenReturn(new User().withId(userIds[0].toString())
-                      .withPersonal(new Personal().withFirstName("Test")
-                      .withLastName("Test")));
+          .thenReturn(
+              new User()
+                  .withId(userIds[0].toString())
+                  .withPersonal(new Personal().withFirstName("Test").withLastName("Test")));
       when(listUsersService.getListUsers(anyString(), anyInt(), anyInt()))
-              .thenReturn(new org.folio.bulkops.domain.dto.Users().users(List.of(
-                              new org.folio.bulkops.domain.dto.User()
-                                      .id(UUID.randomUUID()).firstName("fname").lastName("lname"),
-                              new org.folio.bulkops.domain.dto.User()
-                                      .id(UUID.randomUUID()).firstName("fname 1")
-                                      .lastName("lname 1")))
-                      .totalRecords(2));
-      mockMvc.perform(get("/bulk-operations/list-users?query=(entityType==\"USER\") "
+          .thenReturn(
+              new org.folio.bulkops.domain.dto.Users()
+                  .users(
+                      List.of(
+                          new org.folio.bulkops.domain.dto.User()
+                              .id(UUID.randomUUID())
+                              .firstName("fname")
+                              .lastName("lname"),
+                          new org.folio.bulkops.domain.dto.User()
+                              .id(UUID.randomUUID())
+                              .firstName("fname 1")
+                              .lastName("lname 1")))
+                  .totalRecords(2));
+      mockMvc
+          .perform(
+              get("/bulk-operations/list-users?query=(entityType==\"USER\") "
                       + "sortby startTime/sort.descending&limit=50&offset=0")
-                      .headers(defaultHeaders())
-                      .contentType(APPLICATION_JSON))
-              .andExpect(status().isOk())
-              .andExpect(result -> {
+                  .headers(defaultHeaders())
+                  .contentType(APPLICATION_JSON))
+          .andExpect(status().isOk())
+          .andExpect(
+              result -> {
                 var listUsers = new JSONObject(result.getResponse().getContentAsString());
                 assertThat(listUsers.getInt("total_records") == 2);
                 assertThat(listUsers.getJSONArray("users").length() == 2);
@@ -347,9 +379,11 @@ class BulkOperationControllerTest extends BaseTest {
   void shouldReturnNoContentOnFileDeletionByOperationIdAndFileName() {
     doNothing().when(logFilesService).deleteFileByOperationIdAndName(any(UUID.class), anyString());
 
-    mockMvc.perform(delete(String.format("/bulk-operations/%s/files/file.csv", UUID.randomUUID()))
-        .headers(defaultHeaders())
-        .contentType(APPLICATION_JSON))
+    mockMvc
+        .perform(
+            delete(String.format("/bulk-operations/%s/files/file.csv", UUID.randomUUID()))
+                .headers(defaultHeaders())
+                .contentType(APPLICATION_JSON))
         .andExpect(status().isNoContent());
   }
 
@@ -357,7 +391,8 @@ class BulkOperationControllerTest extends BaseTest {
   @SneakyThrows
   void shouldPostBulkOperationMarcRules() {
     var bulkoperationId = UUID.fromString("1910fae2-08c7-46e8-a73b-fc35d2639734");
-    var content = """
+    var content =
+        """
             {
                "bulkOperationMarcRules" : [ {
                  "bulkOperationId" : "1910fae2-08c7-46e8-a73b-fc35d2639734",
@@ -391,20 +426,20 @@ class BulkOperationControllerTest extends BaseTest {
              }
             """;
 
-    var bulkOperation = BulkOperation.builder()
-            .id(bulkoperationId).build();
+    var bulkOperation = BulkOperation.builder().id(bulkoperationId).build();
 
-    when(bulkOperationService.getBulkOperationOrThrow(bulkoperationId))
-            .thenReturn(bulkOperation);
+    when(bulkOperationService.getBulkOperationOrThrow(bulkoperationId)).thenReturn(bulkOperation);
 
-    mockMvc.perform(post(String.format("/bulk-operations/%s/marc-content-update", bulkoperationId))
-                    .headers(defaultHeaders())
-                    .contentType(APPLICATION_JSON)
-                    .content(content))
-            .andExpect(status().isOk());
+    mockMvc
+        .perform(
+            post(String.format("/bulk-operations/%s/marc-content-update", bulkoperationId))
+                .headers(defaultHeaders())
+                .contentType(APPLICATION_JSON)
+                .content(content))
+        .andExpect(status().isOk());
 
-    verify(ruleService).saveMarcRules(eq(bulkOperation),
-            any(BulkOperationMarcRuleCollection.class));
+    verify(ruleService)
+        .saveMarcRules(eq(bulkOperation), any(BulkOperationMarcRuleCollection.class));
     verify(bulkOperationService).clearOperationProcessing(bulkOperation);
   }
 
@@ -413,14 +448,18 @@ class BulkOperationControllerTest extends BaseTest {
   void shouldGetUsedTenants() {
     var bulkoperationId = UUID.fromString("1910fae2-08c7-46e8-a73b-fc35d2639734");
 
-    var bulkOperation = BulkOperation.builder()
-            .id(bulkoperationId).usedTenants(List.of("member1", "member2")).build();
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(bulkoperationId)
+            .usedTenants(List.of("member1", "member2"))
+            .build();
 
-    when(bulkOperationService.getOperationById(bulkoperationId))
-            .thenReturn(bulkOperation);
+    when(bulkOperationService.getOperationById(bulkoperationId)).thenReturn(bulkOperation);
 
-    var res = mockMvc.perform(get(String.format("/bulk-operations/used-tenants/%s",
-                    bulkoperationId))
+    var res =
+        mockMvc
+            .perform(
+                get(String.format("/bulk-operations/used-tenants/%s", bulkoperationId))
                     .headers(defaultHeaders())
                     .contentType(APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -431,71 +470,74 @@ class BulkOperationControllerTest extends BaseTest {
 
   private static Stream<Arguments> fileContentTypeToEntityTypeCollection() {
     return Stream.of(
-      Arguments.of(TRIGGERING_FILE, ITEM),
-      Arguments.of(TRIGGERING_FILE, HOLDINGS_RECORD),
-      Arguments.of(TRIGGERING_FILE, USER),
-      Arguments.of(TRIGGERING_FILE, INSTANCE),
-      Arguments.of(MATCHED_RECORDS_FILE, ITEM),
-      Arguments.of(MATCHED_RECORDS_FILE, HOLDINGS_RECORD),
-      Arguments.of(MATCHED_RECORDS_FILE, USER),
-      Arguments.of(MATCHED_RECORDS_FILE, INSTANCE),
-      Arguments.of(RECORD_MATCHING_ERROR_FILE, ITEM),
-      Arguments.of(RECORD_MATCHING_ERROR_FILE, HOLDINGS_RECORD),
-      Arguments.of(RECORD_MATCHING_ERROR_FILE, USER),
-      Arguments.of(RECORD_MATCHING_ERROR_FILE, INSTANCE),
-      Arguments.of(PROPOSED_CHANGES_FILE, ITEM),
-      Arguments.of(PROPOSED_CHANGES_FILE, HOLDINGS_RECORD),
-      Arguments.of(PROPOSED_CHANGES_FILE, USER),
-      Arguments.of(PROPOSED_CHANGES_FILE, INSTANCE),
-      Arguments.of(PROPOSED_CHANGES_MARC_FILE, INSTANCE_MARC),
-      Arguments.of(COMMITTED_RECORDS_FILE, ITEM),
-      Arguments.of(COMMITTED_RECORDS_FILE, HOLDINGS_RECORD),
-      Arguments.of(COMMITTED_RECORDS_FILE, USER),
-      Arguments.of(COMMITTED_RECORDS_FILE, INSTANCE),
-      Arguments.of(COMMITTED_RECORDS_MARC_FILE, INSTANCE_MARC),
-      Arguments.of(COMMITTING_CHANGES_ERROR_FILE, ITEM),
-      Arguments.of(COMMITTING_CHANGES_ERROR_FILE, HOLDINGS_RECORD),
-      Arguments.of(COMMITTING_CHANGES_ERROR_FILE, USER),
-      Arguments.of(COMMITTING_CHANGES_ERROR_FILE, INSTANCE)
-    );
+        Arguments.of(TRIGGERING_FILE, ITEM),
+        Arguments.of(TRIGGERING_FILE, HOLDINGS_RECORD),
+        Arguments.of(TRIGGERING_FILE, USER),
+        Arguments.of(TRIGGERING_FILE, INSTANCE),
+        Arguments.of(MATCHED_RECORDS_FILE, ITEM),
+        Arguments.of(MATCHED_RECORDS_FILE, HOLDINGS_RECORD),
+        Arguments.of(MATCHED_RECORDS_FILE, USER),
+        Arguments.of(MATCHED_RECORDS_FILE, INSTANCE),
+        Arguments.of(RECORD_MATCHING_ERROR_FILE, ITEM),
+        Arguments.of(RECORD_MATCHING_ERROR_FILE, HOLDINGS_RECORD),
+        Arguments.of(RECORD_MATCHING_ERROR_FILE, USER),
+        Arguments.of(RECORD_MATCHING_ERROR_FILE, INSTANCE),
+        Arguments.of(PROPOSED_CHANGES_FILE, ITEM),
+        Arguments.of(PROPOSED_CHANGES_FILE, HOLDINGS_RECORD),
+        Arguments.of(PROPOSED_CHANGES_FILE, USER),
+        Arguments.of(PROPOSED_CHANGES_FILE, INSTANCE),
+        Arguments.of(PROPOSED_CHANGES_MARC_FILE, INSTANCE_MARC),
+        Arguments.of(COMMITTED_RECORDS_FILE, ITEM),
+        Arguments.of(COMMITTED_RECORDS_FILE, HOLDINGS_RECORD),
+        Arguments.of(COMMITTED_RECORDS_FILE, USER),
+        Arguments.of(COMMITTED_RECORDS_FILE, INSTANCE),
+        Arguments.of(COMMITTED_RECORDS_MARC_FILE, INSTANCE_MARC),
+        Arguments.of(COMMITTING_CHANGES_ERROR_FILE, ITEM),
+        Arguments.of(COMMITTING_CHANGES_ERROR_FILE, HOLDINGS_RECORD),
+        Arguments.of(COMMITTING_CHANGES_ERROR_FILE, USER),
+        Arguments.of(COMMITTING_CHANGES_ERROR_FILE, INSTANCE));
   }
 
   private void mockData(org.folio.bulkops.domain.dto.EntityType entityType) {
     when(remoteFileSystemClient.get(any(String.class))).thenReturn(InputStream.nullInputStream());
 
-    when(bulkOperationService.getOperationById(any(UUID.class))).thenReturn(BulkOperation.builder()
-            .id(UUID.randomUUID())
-            .linkToTriggeringCsvFile("A")
-            .linkToMatchedRecordsJsonFile("B")
-            .linkToMatchedRecordsCsvFile("C")
-            .linkToMatchedRecordsErrorsCsvFile("D")
-            .linkToModifiedRecordsJsonFile("E")
-            .linkToModifiedRecordsCsvFile("F")
-            .linkToModifiedRecordsMarcFile("G")
-            .linkToCommittedRecordsJsonFile("H")
-            .linkToCommittedRecordsCsvFile("I")
-            .linkToCommittedRecordsMarcFile("J")
-            .linkToCommittedRecordsErrorsCsvFile("K")
-            .entityType(entityType)
-            .build());
+    when(bulkOperationService.getOperationById(any(UUID.class)))
+        .thenReturn(
+            BulkOperation.builder()
+                .id(UUID.randomUUID())
+                .linkToTriggeringCsvFile("A")
+                .linkToMatchedRecordsJsonFile("B")
+                .linkToMatchedRecordsCsvFile("C")
+                .linkToMatchedRecordsErrorsCsvFile("D")
+                .linkToModifiedRecordsJsonFile("E")
+                .linkToModifiedRecordsCsvFile("F")
+                .linkToModifiedRecordsMarcFile("G")
+                .linkToCommittedRecordsJsonFile("H")
+                .linkToCommittedRecordsCsvFile("I")
+                .linkToCommittedRecordsMarcFile("J")
+                .linkToCommittedRecordsErrorsCsvFile("K")
+                .entityType(entityType)
+                .build());
 
     when(itemNoteTypeClient.getNoteTypes(any(Integer.class)))
-            .thenReturn(NoteTypeCollection.builder()
-            .itemNoteTypes(List.of(NoteType.builder().name("name_1").build()))
-            .build());
+        .thenReturn(
+            NoteTypeCollection.builder()
+                .itemNoteTypes(List.of(NoteType.builder().name("name_1").build()))
+                .build());
 
     when(holdingsNoteTypeClient.getNoteTypes(any(Integer.class)))
-            .thenReturn(HoldingsNoteTypeCollection.builder()
-            .holdingsNoteTypes(List.of(HoldingsNoteType.builder().name("name_1").build()))
-            .build());
+        .thenReturn(
+            HoldingsNoteTypeCollection.builder()
+                .holdingsNoteTypes(List.of(HoldingsNoteType.builder().name("name_1").build()))
+                .build());
   }
 
   @Test
   void shouldReturnProfileSummaries() throws Exception {
-    ProfileDto profile1 = buildProfileSummaryDto(UUID.randomUUID(),
-            "Test Profile 1", "Sample description 1",  false);
-    ProfileDto profile2 = buildProfileSummaryDto(UUID.randomUUID(),
-            "Test Profile 2", "Sample description 2", false);
+    ProfileDto profile1 =
+        buildProfileSummaryDto(UUID.randomUUID(), "Test Profile 1", "Sample description 1", false);
+    ProfileDto profile2 =
+        buildProfileSummaryDto(UUID.randomUUID(), "Test Profile 2", "Sample description 2", false);
 
     ProfilesDto summaryDto = new ProfilesDto();
     summaryDto.setTotalRecords(2L);
@@ -507,21 +549,20 @@ class BulkOperationControllerTest extends BaseTest {
 
     when(profileService.getProfiles(query, offset, limit)).thenReturn(summaryDto);
 
-    var requestBuilder = get("/bulk-operations/profiles")
-            .headers(defaultHeaders())
-            .contentType(APPLICATION_JSON);
+    var requestBuilder =
+        get("/bulk-operations/profiles").headers(defaultHeaders()).contentType(APPLICATION_JSON);
 
-    mockMvc.perform(requestBuilder)
-      .andExpect(status().isOk())
-      .andExpect(jsonPath("$.totalRecords", is(2)))
-      .andExpect(jsonPath("$.content[0].name", is(profile1.getName())))
-      .andExpect(jsonPath("$.content[0].description", is(profile1.getDescription())))
-      .andExpect(jsonPath("$.content[0].locked", is(profile1.getLocked())))
-      .andExpect(jsonPath("$.content[1].name", is(profile2.getName())))
-      .andExpect(jsonPath("$.content[1].description", is(profile2.getDescription())))
-            .andExpect(jsonPath("$.content[1].locked", is(profile2.getLocked())));
+    mockMvc
+        .perform(requestBuilder)
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalRecords", is(2)))
+        .andExpect(jsonPath("$.content[0].name", is(profile1.getName())))
+        .andExpect(jsonPath("$.content[0].description", is(profile1.getDescription())))
+        .andExpect(jsonPath("$.content[0].locked", is(profile1.getLocked())))
+        .andExpect(jsonPath("$.content[1].name", is(profile2.getName())))
+        .andExpect(jsonPath("$.content[1].description", is(profile2.getDescription())))
+        .andExpect(jsonPath("$.content[1].locked", is(profile2.getLocked())));
   }
-
 
   @Test
   void shouldCreateProfile() throws Exception {
@@ -532,25 +573,26 @@ class BulkOperationControllerTest extends BaseTest {
     request.setLocked(false);
     request.setEntityType(USER);
 
-    ProfileDto createdProfile = buildProfileDto(profileId, "Updated Name",
-            "Updated description", USER, false);
+    ProfileDto createdProfile =
+        buildProfileDto(profileId, "Updated Name", "Updated description", USER, false);
 
-    when(profileService.createProfile(any(ProfileRequest.class)))
-            .thenReturn(createdProfile);
+    when(profileService.createProfile(any(ProfileRequest.class))).thenReturn(createdProfile);
 
-    mockMvc.perform(post("/bulk-operations/profiles")
-        .headers(defaultHeaders())
-        .contentType(APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(request)))
-      .andExpect(status().isCreated())
-      .andExpect(jsonPath("$.id", is(createdProfile.getId().toString())))
-            .andExpect(jsonPath("$.name", is(createdProfile.getName())));
+    mockMvc
+        .perform(
+            post("/bulk-operations/profiles")
+                .headers(defaultHeaders())
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.id", is(createdProfile.getId().toString())))
+        .andExpect(jsonPath("$.name", is(createdProfile.getName())));
   }
 
   @Test
   void shouldReturnProfilesWithQueryAndPagination() throws Exception {
-    ProfileDto profile = buildProfileSummaryDto(UUID.randomUUID(), "Filtered Profile",
-            "Desc", false);
+    ProfileDto profile =
+        buildProfileSummaryDto(UUID.randomUUID(), "Filtered Profile", "Desc", false);
 
     ProfilesDto summaryDto = new ProfilesDto();
     summaryDto.setTotalRecords(1L);
@@ -558,15 +600,17 @@ class BulkOperationControllerTest extends BaseTest {
 
     when(profileService.getProfiles("name==\"Filtered Profile\"", 5, 10)).thenReturn(summaryDto);
 
-    mockMvc.perform(get("/bulk-operations/profiles")
-        .param("query", "name==\"Filtered Profile\"")
-        .param("offset", "5")
-        .param("limit", "10")
-        .headers(defaultHeaders())
-        .contentType(APPLICATION_JSON))
-      .andExpect(status().isOk())
-      .andExpect(jsonPath("$.totalRecords", is(1)))
-            .andExpect(jsonPath("$.content[0].name", is(profile.getName())));
+    mockMvc
+        .perform(
+            get("/bulk-operations/profiles")
+                .param("query", "name==\"Filtered Profile\"")
+                .param("offset", "5")
+                .param("limit", "10")
+                .headers(defaultHeaders())
+                .contentType(APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalRecords", is(1)))
+        .andExpect(jsonPath("$.content[0].name", is(profile.getName())));
   }
 
   @Test
@@ -577,12 +621,14 @@ class BulkOperationControllerTest extends BaseTest {
 
     when(profileService.getProfiles(any(), any(), any())).thenReturn(emptyDto);
 
-    mockMvc.perform(get("/bulk-operations/profiles")
-        .headers(defaultHeaders())
-        .contentType(APPLICATION_JSON))
-      .andExpect(status().isOk())
-      .andExpect(jsonPath("$.totalRecords", is(0)))
-            .andExpect(jsonPath("$.content", hasSize(0)));
+    mockMvc
+        .perform(
+            get("/bulk-operations/profiles")
+                .headers(defaultHeaders())
+                .contentType(APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.totalRecords", is(0)))
+        .andExpect(jsonPath("$.content", hasSize(0)));
   }
 
   @Test
@@ -590,96 +636,112 @@ class BulkOperationControllerTest extends BaseTest {
     var id = UUID.randomUUID();
     doNothing().when(profileService).deleteById(id);
 
-    mockMvc.perform(delete("/bulk-operations/profiles/{id}", id)
-        .headers(defaultHeaders())
-        .contentType(APPLICATION_JSON))
-            .andExpect(status().isNoContent());
+    mockMvc
+        .perform(
+            delete("/bulk-operations/profiles/{id}", id)
+                .headers(defaultHeaders())
+                .contentType(APPLICATION_JSON))
+        .andExpect(status().isNoContent());
   }
 
   @Test
   void shouldReturnNotFoundWhenDeletingNonExistentProfile() throws Exception {
     UUID id = UUID.randomUUID();
     doThrow(new NotFoundException("Profile not found with ID: " + id))
-      .when(profileService).deleteById(id);
+        .when(profileService)
+        .deleteById(id);
 
-    mockMvc.perform(delete("/bulk-operations/profiles/{id}", id)
-        .headers(defaultHeaders())
-        .contentType(APPLICATION_JSON))
-            .andExpect(status().isNotFound());
+    mockMvc
+        .perform(
+            delete("/bulk-operations/profiles/{id}", id)
+                .headers(defaultHeaders())
+                .contentType(APPLICATION_JSON))
+        .andExpect(status().isNotFound());
   }
 
   @Test
   void shouldUpdateProfile() throws Exception {
     UUID profileId = UUID.randomUUID();
-    ProfileRequest updateRequest = buildProfileRequest("Updated Name",
-            "Updated description", USER, false);
-    ProfileDto updatedProfile = buildProfileDto(profileId, "Updated Name",
-            "Updated description", USER, false);
+    ProfileRequest updateRequest =
+        buildProfileRequest("Updated Name", "Updated description", USER, false);
+    ProfileDto updatedProfile =
+        buildProfileDto(profileId, "Updated Name", "Updated description", USER, false);
 
     when(profileService.updateProfile(eq(profileId), any(ProfileRequest.class)))
-            .thenReturn(updatedProfile);
+        .thenReturn(updatedProfile);
 
-    mockMvc.perform(put("/bulk-operations/profiles/{id}", profileId)
-        .headers(defaultHeaders())
-        .contentType(APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(updateRequest)))
-      .andExpect(status().isOk())
-      .andExpect(jsonPath("$.id", is(updatedProfile.getId().toString())))
-      .andExpect(jsonPath("$.name", is(updatedProfile.getName())))
-      .andExpect(jsonPath("$.description", is(updatedProfile.getDescription())))
-      .andExpect(jsonPath("$.entityType", is(updatedProfile.getEntityType().toString())))
-            .andExpect(jsonPath("$.locked", is(updatedProfile.getLocked())));
+    mockMvc
+        .perform(
+            put("/bulk-operations/profiles/{id}", profileId)
+                .headers(defaultHeaders())
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id", is(updatedProfile.getId().toString())))
+        .andExpect(jsonPath("$.name", is(updatedProfile.getName())))
+        .andExpect(jsonPath("$.description", is(updatedProfile.getDescription())))
+        .andExpect(jsonPath("$.entityType", is(updatedProfile.getEntityType().toString())))
+        .andExpect(jsonPath("$.locked", is(updatedProfile.getLocked())));
   }
 
   @Test
   void shouldReturnNotFoundWhenUpdatingNonExistentProfile() throws Exception {
     UUID profileId = UUID.randomUUID();
 
-    ProfileRequest updateRequest = buildProfileRequest("Updated Name",
-            "Updated description", USER, false);
+    ProfileRequest updateRequest =
+        buildProfileRequest("Updated Name", "Updated description", USER, false);
 
     when(profileService.updateProfile(eq(profileId), any(ProfileRequest.class)))
-            .thenThrow(new NotFoundException("Profile not found with ID: " + profileId));
+        .thenThrow(new NotFoundException("Profile not found with ID: " + profileId));
 
-    mockMvc.perform(put("/bulk-operations/profiles/{id}", profileId)
-        .headers(defaultHeaders())
-        .contentType(APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(updateRequest)))
-            .andExpect(status().isNotFound());
+    mockMvc
+        .perform(
+            put("/bulk-operations/profiles/{id}", profileId)
+                .headers(defaultHeaders())
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+        .andExpect(status().isNotFound());
   }
 
   @Test
   void deleteLockedProfile_shouldReturnBadRequest() throws Exception {
     UUID profileId = UUID.randomUUID();
     doThrow(new ProfileLockedException("Cannot delete a locked profile " + profileId))
-      .when(profileService).deleteById(profileId);
+        .when(profileService)
+        .deleteById(profileId);
 
-    mockMvc.perform(delete("/bulk-operations/profiles/{id}", profileId)
-        .headers(defaultHeaders())
-        .contentType(APPLICATION_JSON))
-            .andExpect(status().isForbidden());
+    mockMvc
+        .perform(
+            delete("/bulk-operations/profiles/{id}", profileId)
+                .headers(defaultHeaders())
+                .contentType(APPLICATION_JSON))
+        .andExpect(status().isForbidden());
   }
 
   @Test
   void updateLockedProfile_shouldReturnBadRequest() throws Exception {
     UUID profileId = UUID.randomUUID();
-    ProfileRequest updateRequest = buildProfileRequest(
-            "Updated Name", "Updated description", USER, true
-    );
+    ProfileRequest updateRequest =
+        buildProfileRequest("Updated Name", "Updated description", USER, true);
 
     doThrow(new ProfileLockedException("Cannot update a locked profile"))
-      .when(profileService).updateProfile(eq(profileId), any(ProfileRequest.class));
+        .when(profileService)
+        .updateProfile(eq(profileId), any(ProfileRequest.class));
 
-    mockMvc.perform(put("/bulk-operations/profiles/{id}", profileId)
-        .headers(defaultHeaders())
-        .contentType(APPLICATION_JSON)
-        .content(objectMapper.writeValueAsString(updateRequest)))
-            .andExpect(status().isForbidden());
+    mockMvc
+        .perform(
+            put("/bulk-operations/profiles/{id}", profileId)
+                .headers(defaultHeaders())
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateRequest)))
+        .andExpect(status().isForbidden());
   }
 
-  private ProfileRequest buildProfileRequest(String name, String description,
-                                             org.folio.bulkops.domain.dto.EntityType entityType,
-                                             boolean locked) {
+  private ProfileRequest buildProfileRequest(
+      String name,
+      String description,
+      org.folio.bulkops.domain.dto.EntityType entityType,
+      boolean locked) {
     ProfileRequest request = new ProfileRequest();
     request.setName(name);
     request.setDescription(description);
@@ -688,8 +750,8 @@ class BulkOperationControllerTest extends BaseTest {
     return request;
   }
 
-  private ProfileDto buildProfileDto(UUID id, String name, String description,
-                                     EntityType entityType, boolean locked) {
+  private ProfileDto buildProfileDto(
+      UUID id, String name, String description, EntityType entityType, boolean locked) {
     ProfileDto dto = new ProfileDto();
     dto.setId(id);
     dto.setName(name);
@@ -699,8 +761,8 @@ class BulkOperationControllerTest extends BaseTest {
     return dto;
   }
 
-  private ProfileDto buildProfileSummaryDto(UUID id, String name, String description,
-                                            boolean locked) {
+  private ProfileDto buildProfileSummaryDto(
+      UUID id, String name, String description, boolean locked) {
     ProfileDto dto = new ProfileDto();
 
     dto.setId(id);

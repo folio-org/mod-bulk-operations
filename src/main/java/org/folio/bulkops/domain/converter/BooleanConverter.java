@@ -5,7 +5,7 @@ import static java.lang.String.format;
 public class BooleanConverter extends BaseConverter<Boolean> {
 
   @Override
-  public Boolean convertToObject(String value)  {
+  public Boolean convertToObject(String value) {
     if (value.matches("true") || value.matches("false")) {
       return Boolean.parseBoolean(value);
     }

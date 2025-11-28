@@ -14,10 +14,13 @@ public class CsvIdentifierContextHelper implements InitializingBean {
 
   private final ErrorService errorService;
 
-  public void saveError(UUID bulkOperationId, String identifier,
-                        ConverterException converterException) {
-    errorService.saveError(bulkOperationId, identifier, converterException.getMessage(),
-            converterException.getErrorType());
+  public void saveError(
+      UUID bulkOperationId, String identifier, ConverterException converterException) {
+    errorService.saveError(
+        bulkOperationId,
+        identifier,
+        converterException.getMessage(),
+        converterException.getErrorType());
   }
 
   private static CsvIdentifierContextHelper service;

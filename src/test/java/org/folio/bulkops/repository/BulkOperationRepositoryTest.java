@@ -18,12 +18,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 class BulkOperationRepositoryTest extends BaseTest {
-  @Autowired
-  private BulkOperationRepository repository;
+  @Autowired private BulkOperationRepository repository;
 
   @Test
   void shouldSaveEntity() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var saved = repository.save(createEntity());
       assertThat(saved.getId(), notNullValue());
       // check if default values were set
@@ -34,7 +33,7 @@ class BulkOperationRepositoryTest extends BaseTest {
 
   @Test
   void shouldFindEntityById() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       var retrieved = repository.findById(created.getId());
       assertTrue(retrieved.isPresent() && created.getId().equals(retrieved.get().getId()));
@@ -43,7 +42,7 @@ class BulkOperationRepositoryTest extends BaseTest {
 
   @Test
   void shouldUpdateEntity() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       var endTime = LocalDateTime.now();
       created.setEndTime(endTime);
@@ -54,7 +53,7 @@ class BulkOperationRepositoryTest extends BaseTest {
 
   @Test
   void shouldDeleteEntity() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       repository.deleteById(created.getId());
       assertTrue(repository.findById(created.getId()).isEmpty());
@@ -63,15 +62,15 @@ class BulkOperationRepositoryTest extends BaseTest {
 
   private BulkOperation createEntity() {
     return BulkOperation.builder()
-      .id(UUID.randomUUID())
-      .userId(UUID.randomUUID())
-      .operationType(UPDATE)
-      .entityType(USER)
-      .identifierType(BARCODE)
-      .status(NEW)
-      .dataExportJobId(UUID.randomUUID())
-      .executionChunkSize(5)
-      .startTime(LocalDateTime.now())
-      .build();
+        .id(UUID.randomUUID())
+        .userId(UUID.randomUUID())
+        .operationType(UPDATE)
+        .entityType(USER)
+        .identifierType(BARCODE)
+        .status(NEW)
+        .dataExportJobId(UUID.randomUUID())
+        .executionChunkSize(5)
+        .startTime(LocalDateTime.now())
+        .build();
   }
 }

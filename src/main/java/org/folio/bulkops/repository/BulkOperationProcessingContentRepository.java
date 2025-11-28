@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BulkOperationProcessingContentRepository
-        extends JpaRepository<BulkOperationProcessingContent, UUID> {
+    extends JpaRepository<BulkOperationProcessingContent, UUID> {
   Page<BulkOperationProcessingContent> findByBulkOperationIdAndErrorMessageIsNotNull(
-          UUID bulkOperationId, OffsetRequest offsetRequest);
+      UUID bulkOperationId, OffsetRequest offsetRequest);
 }

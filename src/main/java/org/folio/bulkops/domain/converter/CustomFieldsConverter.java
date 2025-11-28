@@ -35,9 +35,9 @@ public class CustomFieldsConverter extends BaseConverter<Map<String, Object>> {
   @Override
   public Map<String, Object> convertToObject(String value) {
     return Arrays.stream(value.split(ITEM_DELIMITER_PATTERN))
-      .map(this::restoreCustomFieldFromString)
-      .filter(pair -> isNotEmpty(pair.getKey()))
-      .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+        .map(this::restoreCustomFieldFromString)
+        .filter(pair -> isNotEmpty(pair.getKey()))
+        .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
   }
 
   @Override
@@ -58,8 +58,8 @@ public class CustomFieldsConverter extends BaseConverter<Map<String, Object>> {
             Pair.of(customField.getRefId(), value.replace(LINE_BREAK_REPLACEMENT, LINE_BREAK));
         case SINGLE_SELECT_DROPDOWN, RADIO_BUTTON ->
             Pair.of(customField.getRefId(), restoreValueId(customField, value));
-        case MULTI_SELECT_DROPDOWN -> Pair.of(customField.getRefId(), restoreValueIds(customField,
-                value));
+        case MULTI_SELECT_DROPDOWN ->
+            Pair.of(customField.getRefId(), restoreValueIds(customField, value));
       };
     }
     return Pair.of(EMPTY, new Object());
@@ -68,8 +68,8 @@ public class CustomFieldsConverter extends BaseConverter<Map<String, Object>> {
   private Pair<String, String> stringToPair(String value) {
     var tokens = value.split(KEY_VALUE_DELIMITER, -1);
     if (tokens.length == 2) {
-      return Pair.of(SpecialCharacterEscaper.restore(tokens[0]),
-              SpecialCharacterEscaper.restore(tokens[1]));
+      return Pair.of(
+          SpecialCharacterEscaper.restore(tokens[0]), SpecialCharacterEscaper.restore(tokens[1]));
     } else {
       var msg = "Invalid key/value pair for custom field: " + value;
       throw new EntityFormatException(msg);
@@ -78,14 +78,15 @@ public class CustomFieldsConverter extends BaseConverter<Map<String, Object>> {
 
   private List<String> restoreValueIds(CustomField customField, String values) {
     return isEmpty(values)
-            ? Collections.emptyList() :
-      Arrays.stream(values.split(TEMPORARY_DELIMITER))
-        .map(token -> restoreValueId(customField, token))
-        .toList();
+        ? Collections.emptyList()
+        : Arrays.stream(values.split(TEMPORARY_DELIMITER))
+            .map(token -> restoreValueId(customField, token))
+            .toList();
   }
 
   private String restoreValueId(CustomField customField, String value) {
-    var optionalValue = customField.getSelectField().getOptions().getValues().stream()
+    var optionalValue =
+        customField.getSelectField().getOptions().getValues().stream()
             .filter(selectFieldOption -> Objects.equals(value, selectFieldOption.getValue()))
             .findFirst();
     if (optionalValue.isPresent()) {
@@ -98,33 +99,40 @@ public class CustomFieldsConverter extends BaseConverter<Map<String, Object>> {
 
   private String convertCustomFieldsToString(Map<String, Object> map) {
     return map.entrySet().stream()
-      .map(this::customFieldToString)
-      .filter(StringUtils::isNotEmpty)
-      .collect(Collectors.joining(ITEM_DELIMITER));
+        .map(this::customFieldToString)
+        .filter(StringUtils::isNotEmpty)
+        .collect(Collectors.joining(ITEM_DELIMITER));
   }
 
   private String customFieldToString(Map.Entry<String, Object> entry) {
     var customField = UserReferenceHelper.service().getCustomFieldByRefId(entry.getKey());
     return switch (customField.getType()) {
       case DATE_PICKER, TEXTBOX_LONG, TEXTBOX_SHORT, SINGLE_CHECKBOX ->
-          customField.getName() + KEY_VALUE_DELIMITER + (isNull(entry.getValue())
-                  ? EMPTY : entry.getValue().toString());
+          customField.getName()
+              + KEY_VALUE_DELIMITER
+              + (isNull(entry.getValue()) ? EMPTY : entry.getValue().toString());
       case SINGLE_SELECT_DROPDOWN, RADIO_BUTTON ->
-          customField.getName() + KEY_VALUE_DELIMITER + (isNull(entry.getValue())
-                  ? EMPTY : extractValueById(customField, entry.getValue().toString()));
-      case MULTI_SELECT_DROPDOWN -> customField.getName() + KEY_VALUE_DELIMITER
+          customField.getName()
+              + KEY_VALUE_DELIMITER
+              + (isNull(entry.getValue())
+                  ? EMPTY
+                  : extractValueById(customField, entry.getValue().toString()));
+      case MULTI_SELECT_DROPDOWN ->
+          customField.getName()
+              + KEY_VALUE_DELIMITER
               + (entry.getValue() instanceof ArrayList<?> values
-              ? values.stream()
-                              .filter(Objects::nonNull)
-                              .map(v -> extractValueById(customField, v.toString()))
-                              .filter(ObjectUtils::isNotEmpty)
-                              .collect(Collectors.joining(ARRAY_DELIMITER)) :
-                      EMPTY);
+                  ? values.stream()
+                      .filter(Objects::nonNull)
+                      .map(v -> extractValueById(customField, v.toString()))
+                      .filter(ObjectUtils::isNotEmpty)
+                      .collect(Collectors.joining(ARRAY_DELIMITER))
+                  : EMPTY);
     };
   }
 
   private String extractValueById(CustomField customField, String id) {
-    var optionalValue = customField.getSelectField().getOptions().getValues().stream()
+    var optionalValue =
+        customField.getSelectField().getOptions().getValues().stream()
             .filter(selectFieldOption -> Objects.equals(id, selectFieldOption.getId()))
             .findFirst();
     return optionalValue.isPresent() ? optionalValue.get().getValue() : EMPTY;

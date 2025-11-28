@@ -20,8 +20,10 @@ public class MarcDateHelper {
 
   public static void updateDateTimeControlField(Record marcRecord, Date date) {
     marcRecord.getControlFields().stream()
-            .filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag())).findFirst()
-            .ifPresent(dateTimeControlField -> dateTimeControlField.setData(
-                    MarcDateHelper.getDateTimeForMarc(date)));
+        .filter(f -> DATE_TIME_CONTROL_FIELD.equals(f.getTag()))
+        .findFirst()
+        .ifPresent(
+            dateTimeControlField ->
+                dateTimeControlField.setData(MarcDateHelper.getDateTimeForMarc(date)));
   }
 }

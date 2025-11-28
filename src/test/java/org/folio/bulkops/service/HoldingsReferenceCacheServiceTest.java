@@ -19,14 +19,10 @@ import org.mockito.MockitoAnnotations;
 
 class HoldingsReferenceCacheServiceTest {
 
-  @Mock
-  private HoldingsStorageClient holdingsStorageClient;
-  @Mock
-  private LocationClient locationClient;
-  @Mock
-  private FolioExecutionContext folioExecutionContext;
-  @InjectMocks
-  private HoldingsReferenceCacheService holdingsReferenceCacheService;
+  @Mock private HoldingsStorageClient holdingsStorageClient;
+  @Mock private LocationClient locationClient;
+  @Mock private FolioExecutionContext folioExecutionContext;
+  @InjectMocks private HoldingsReferenceCacheService holdingsReferenceCacheService;
 
   @BeforeEach
   void setUp() {

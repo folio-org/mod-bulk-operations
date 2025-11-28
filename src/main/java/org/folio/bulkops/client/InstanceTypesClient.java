@@ -16,5 +16,4 @@ public interface InstanceTypesClient {
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   InstanceTypes getByQuery(@RequestParam String query, @RequestParam long limit);
-
 }

@@ -12,11 +12,10 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class BriefHoldingsRecord   {
+public class BriefHoldingsRecord {
   @JsonProperty("id")
   private String id;
 
   @JsonProperty("hrid")
   private String hrid;
 }
-

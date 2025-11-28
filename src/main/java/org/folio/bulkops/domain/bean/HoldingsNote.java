@@ -1,6 +1,5 @@
 package org.folio.bulkops.domain.bean;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,9 +24,10 @@ public class HoldingsNote {
 
   @JsonProperty("staffOnly")
   private Boolean staffOnly;
+
   @JsonProperty("tenantId")
   private String tenantId;
+
   @JsonProperty("holdingsNoteTypeName")
   private String holdingsNoteTypeName;
 }
-
