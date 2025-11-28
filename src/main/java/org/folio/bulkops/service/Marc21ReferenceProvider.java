@@ -48,13 +48,15 @@ public class Marc21ReferenceProvider {
 
   private final MappingRulesClient mappingRulesClient;
 
-  private final Set<String> noteTags = Set.of("255", "500", "501", "502", "504", "505", "506",
-          "507", "508", "510", "511", "513", "514", "515", "516", "518", "520", "521", "522",
-          "524", "525", "526", "530", "532", "533", "534", "535", "536", "538", "540", "541",
-          "542", "544", "545", "546", "547", "550", "552", "555", "556", "561", "562", "563",
-          "565", "567", "580", "581", "583", "584", "585", "586", "588", "590");
-  private final Set<String> localNoteTags = Set.of("591", "592", "593", "594", "595", "596",
-          "597", "598", "599");
+  private final Set<String> noteTags =
+      Set.of(
+          "255", "500", "501", "502", "504", "505", "506", "507", "508", "510", "511", "513", "514",
+          "515", "516", "518", "520", "521", "522", "524", "525", "526", "530", "532", "533", "534",
+          "535", "536", "538", "540", "541", "542", "544", "545", "546", "547", "550", "552", "555",
+          "556", "561", "562", "563", "565", "567", "580", "581", "583", "584", "585", "586", "588",
+          "590");
+  private final Set<String> localNoteTags =
+      Set.of("591", "592", "593", "594", "595", "596", "597", "598", "599");
   private Map<String, String> instanceNoteTypes = new HashMap<>();
   private Map<String, String> instanceNoteSubfields = new HashMap<>();
   private Set<String> staffOnlyNotes = new HashSet<>();
@@ -579,9 +581,9 @@ public class Marc21ReferenceProvider {
 
     mappedFields.put("041", INSTANCE_LANGUAGES);
     List.of("050", "060", "080", "082", "086", "090")
-            .forEach(tag -> mappedFields.put(tag, INSTANCE_CLASSIFICATION));
+        .forEach(tag -> mappedFields.put(tag, INSTANCE_CLASSIFICATION));
     List.of("100", "110", "111", "700", "710", "711", "720")
-            .forEach(tag -> mappedFields.put(tag, INSTANCE_CONTRIBUTORS));
+        .forEach(tag -> mappedFields.put(tag, INSTANCE_CONTRIBUTORS));
     mappedFields.put("245", INSTANCE_RESOURCE_TITLE);
     mappedFields.put("250", INSTANCE_EDITION);
     mappedFields.put("300", INSTANCE_PHYSICAL_DESCRIPTION);
@@ -589,11 +591,12 @@ public class Marc21ReferenceProvider {
     mappedFields.put("336", INSTANCE_RESOURCE_TYPE);
     mappedFields.put("338", INSTANCE_FORMATS);
     mappedFields.put("362", INSTANCE_PUBLICATION_RANGE);
-    List.of("600", "610", "611", "630", "647", "648", "650", "651", "653",
-        "654", "655", "656", "657", "658", "662", "688")
+    List.of(
+            "600", "610", "611", "630", "647", "648", "650", "651", "653", "654", "655", "656",
+            "657", "658", "662", "688")
         .forEach(tag -> mappedFields.put(tag, INSTANCE_SUBJECT));
     List.of("800", "810", "811", "830")
-            .forEach(tag -> mappedFields.put(tag, INSTANCE_SERIES_STATEMENTS));
+        .forEach(tag -> mappedFields.put(tag, INSTANCE_SERIES_STATEMENTS));
     mappedFields.put("856", INSTANCE_ELECTRONIC_ACCESS);
     List.of("260", "264").forEach(tag -> mappedFields.put(tag, INSTANCE_PUBLICATION));
 
@@ -613,24 +616,28 @@ public class Marc21ReferenceProvider {
 
     var documentContext = JsonPath.parse(mappingRulesClient.getMarcBibMappingRules());
 
-    noteTags.forEach(tag -> {
-      instanceNoteTypes.put(tag, fetchNoteType(documentContext, tag));
-      instanceNoteSubfields.put(tag, fetchSubfields(documentContext, tag));
-      if (isStaffOnly(documentContext, tag)) {
-        staffOnlyNotes.add(tag);
-      }
-    });
+    noteTags.forEach(
+        tag -> {
+          instanceNoteTypes.put(tag, fetchNoteType(documentContext, tag));
+          instanceNoteSubfields.put(tag, fetchSubfields(documentContext, tag));
+          if (isStaffOnly(documentContext, tag)) {
+            staffOnlyNotes.add(tag);
+          }
+        });
 
-    localNoteTags.forEach(tag -> {
-      instanceNoteTypes.put(tag, instanceNoteTypes.getOrDefault(tag, LOCAL_NOTES));
-      instanceNoteSubfields.put(tag, instanceNoteSubfields.getOrDefault(tag, "a"));
-    });
+    localNoteTags.forEach(
+        tag -> {
+          instanceNoteTypes.put(tag, instanceNoteTypes.getOrDefault(tag, LOCAL_NOTES));
+          instanceNoteSubfields.put(tag, instanceNoteSubfields.getOrDefault(tag, "a"));
+        });
   }
 
   private String fetchNoteType(DocumentContext context, String tag) {
-    var path = String.format(
+    var path =
+        String.format(
             "$..%s[*].entity[*].rules[*].conditions[?(@.type == 'set_note_type_id')]."
-                    + "parameter.name", tag);
+                + "parameter.name",
+            tag);
     var res = context.read(path, List.class);
     return res.isEmpty() ? EMPTY : res.getFirst().toString();
   }
@@ -639,12 +646,13 @@ public class Marc21ReferenceProvider {
     var path = String.format("$..%s[*].entity[?(@.target == 'notes.note')].subfield[*]", tag);
     var res = context.read(path, List.class);
     return IntStream.range(0, res.size())
-      .mapToObj(i -> res.get(i).toString())
-      .collect(Collectors.joining(EMPTY));
+        .mapToObj(i -> res.get(i).toString())
+        .collect(Collectors.joining(EMPTY));
   }
 
   private boolean isStaffOnly(DocumentContext context, String tag) {
-    var path = String.format(
+    var path =
+        String.format(
             "$..%s[*].entity[?(@.target == 'notes.staffOnly')].rules[*].conditions[*].type", tag);
     var res = context.read(path, List.class);
     return !res.isEmpty() && "set_note_staff_only_via_indicator".equals(res.getFirst());
@@ -675,8 +683,9 @@ public class Marc21ReferenceProvider {
   }
 
   public String getFieldNameByTag(String tag) {
-    return noteTags.contains(tag) ? instanceNoteTypes.getOrDefault(tag, GENERAL_NOTE)
-            : mappedFields.get(tag);
+    return noteTags.contains(tag)
+        ? instanceNoteTypes.getOrDefault(tag, GENERAL_NOTE)
+        : mappedFields.get(tag);
   }
 
   public String getFieldNameByTagForCsv(String tag) {
@@ -685,18 +694,18 @@ public class Marc21ReferenceProvider {
 
   public Set<String> getChangedOptionsSet(BulkOperationMarcRuleCollection rules) {
     return rules.getBulkOperationMarcRules().stream()
-      .map(BulkOperationMarcRule::getTag)
-      .filter(this::isMappedTag)
-      .map(this::getFieldNameByTag)
-      .collect(Collectors.toSet());
+        .map(BulkOperationMarcRule::getTag)
+        .filter(this::isMappedTag)
+        .map(this::getFieldNameByTag)
+        .collect(Collectors.toSet());
   }
 
   public Set<String> getChangedOptionsSetForCsv(BulkOperationMarcRuleCollection rules) {
     return rules.getBulkOperationMarcRules().stream()
-      .map(BulkOperationMarcRule::getTag)
-      .filter(this::isMappedTag)
-      .map(this::getFieldNameByTagForCsv)
-      .collect(Collectors.toSet());
+        .map(BulkOperationMarcRule::getTag)
+        .filter(this::isMappedTag)
+        .map(this::getFieldNameByTagForCsv)
+        .collect(Collectors.toSet());
   }
 
   public String getClassificationTypeByTag(String tag) {

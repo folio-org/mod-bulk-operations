@@ -34,8 +34,8 @@ public class BulkEditProcessorHelper {
   private static final String EXACT_MATCH_PATTERN = "%s==%s";
   private static final DateFormat dateFormat;
   private static final DateFormat dateWithoutTimeFormat;
-  private static final EnumMap<IdentifierType, String> identifiersMap
-          = new EnumMap<>(IdentifierType.class);
+  private static final EnumMap<IdentifierType, String> identifiersMap =
+      new EnumMap<>(IdentifierType.class);
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   static {
@@ -67,8 +67,9 @@ public class BulkEditProcessorHelper {
   }
 
   public static String getMatchPattern(String identifierType) {
-    return FORMER_IDS == IdentifierType.fromValue(identifierType) ? MATCH_PATTERN
-            : EXACT_MATCH_PATTERN;
+    return FORMER_IDS == IdentifierType.fromValue(identifierType)
+        ? MATCH_PATTERN
+        : EXACT_MATCH_PATTERN;
   }
 
   public static Optional<String> ofEmptyString(String string) {

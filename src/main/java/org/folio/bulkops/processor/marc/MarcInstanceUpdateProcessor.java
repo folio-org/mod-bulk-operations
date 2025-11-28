@@ -59,12 +59,12 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
         var jobProfile = createJobProfile();
         var uploadDefinition = uploadMarcFile(bulkOperation, content);
         dataImportClient.uploadFileDefinitionsProcessFiles(
-                UploadFileDefinitionProcessFiles.builder()
-                        .uploadFileDefinition(uploadDefinition)
-                        .jobProfileInfo(JobProfileInfo.builder().id(jobProfile.getId())
-                                .dataType(MARC).build())
-                        .build(),
-                uploadDefinition.getId());
+            UploadFileDefinitionProcessFiles.builder()
+                .uploadFileDefinition(uploadDefinition)
+                .jobProfileInfo(
+                    JobProfileInfo.builder().id(jobProfile.getId()).dataType(MARC).build())
+                .build(),
+            uploadDefinition.getId());
         bulkOperation.setDataImportJobProfileId(UUID.fromString(jobProfile.getId()));
         bulkOperationRepository.save(bulkOperation);
       } else {
@@ -79,49 +79,57 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
 
     var matchProfile = dataImportProfilesBuilder.getMatchProfile();
     matchProfile.setName(addPostfixToName(matchProfile.getName(), date));
-    var savedMatchProfile = dataImportProfilesClient.createMatchProfile(MatchProfilePost.builder()
-            .profile(matchProfile)
-            .build());
+    var savedMatchProfile =
+        dataImportProfilesClient.createMatchProfile(
+            MatchProfilePost.builder().profile(matchProfile).build());
 
-    var mappingProfileSrs = postMappingProfile(
-            dataImportProfilesBuilder.getMappingProfileToUpdateSrs(), date);
-    var actionProfileSrs = postActionProfile(
+    var mappingProfileSrs =
+        postMappingProfile(dataImportProfilesBuilder.getMappingProfileToUpdateSrs(), date);
+    var actionProfileSrs =
+        postActionProfile(
             dataImportProfilesBuilder.getActionProfilePostToUpdateSrs(mappingProfileSrs), date);
 
-    return postJobProfile(dataImportProfilesBuilder.getJobProfilePost(savedMatchProfile,
-            actionProfileSrs), date);
+    return postJobProfile(
+        dataImportProfilesBuilder.getJobProfilePost(savedMatchProfile, actionProfileSrs), date);
   }
 
   private MappingProfile postMappingProfile(MappingProfile mappingProfile, Date date) {
     mappingProfile.setName(addPostfixToName(mappingProfile.getName(), date));
-    return dataImportProfilesClient.createMappingProfile(MappingProfilePost.builder()
-      .profile(mappingProfile)
-      .build());
+    return dataImportProfilesClient.createMappingProfile(
+        MappingProfilePost.builder().profile(mappingProfile).build());
   }
 
   private ActionProfile postActionProfile(ActionProfilePost actionProfilePost, Date date) {
-    actionProfilePost.getProfile().setName(addPostfixToName(
-            actionProfilePost.getProfile().getName(), date));
+    actionProfilePost
+        .getProfile()
+        .setName(addPostfixToName(actionProfilePost.getProfile().getName(), date));
     return dataImportProfilesClient.createActionProfile(actionProfilePost);
   }
 
   private JobProfile postJobProfile(JobProfilePost jobProfilePost, Date date) {
-    jobProfilePost.getProfile().setName(addPostfixToName(
-            jobProfilePost.getProfile().getName(), date));
+    jobProfilePost
+        .getProfile()
+        .setName(addPostfixToName(jobProfilePost.getProfile().getName(), date));
     return dataImportProfilesClient.createJobProfile(jobProfilePost);
   }
 
   private String addPostfixToName(String name, Date date) {
-    return String.format(POSTFIX_PATTERN, isEmpty(name) ? EMPTY : name,
-            MarcDateHelper.getDateTimeForMarc(date));
+    return String.format(
+        POSTFIX_PATTERN, isEmpty(name) ? EMPTY : name, MarcDateHelper.getDateTimeForMarc(date));
   }
 
   private UploadFileDefinition uploadMarcFile(BulkOperation bulkOperation, byte[] content) {
-    var uploadDefinition = dataImportClient.postUploadDefinition(UploadFileDefinition.builder()
-            .fileDefinitions(List.of(FileDefinition.builder()
-                    .name(FilenameUtils.getName(bulkOperation.getLinkToCommittedRecordsMarcFile()))
-                    .build()))
-            .build());
+    var uploadDefinition =
+        dataImportClient.postUploadDefinition(
+            UploadFileDefinition.builder()
+                .fileDefinitions(
+                    List.of(
+                        FileDefinition.builder()
+                            .name(
+                                FilenameUtils.getName(
+                                    bulkOperation.getLinkToCommittedRecordsMarcFile()))
+                            .build()))
+                .build());
     var uploadDefinitionId = uploadDefinition.getId();
     var fileDefinitionId = uploadDefinition.getFileDefinitions().getFirst().getId();
 
@@ -129,17 +137,23 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
     log.info("Split status: {}", splitStatus.getSplitStatus());
 
     if (TRUE.equals(splitStatus.getSplitStatus())) {
-      var uploadUrlResponse = dataImportClient.getUploadUrl(uploadDefinition.getFileDefinitions()
-              .getFirst().getName());
-      var etag = dataImportRestS3UploadClient.uploadFile(uploadUrlResponse.getUrl(), content)
-              .getHeaders().getETag();
-      dataImportClient.assembleStorageFile(uploadDefinitionId, fileDefinitionId,
-              new AssembleStorageFileRequestBody(uploadUrlResponse.getUploadId(),
-                      uploadUrlResponse.getKey(), List.of(etag)));
+      var uploadUrlResponse =
+          dataImportClient.getUploadUrl(uploadDefinition.getFileDefinitions().getFirst().getName());
+      var etag =
+          dataImportRestS3UploadClient
+              .uploadFile(uploadUrlResponse.getUrl(), content)
+              .getHeaders()
+              .getETag();
+      dataImportClient.assembleStorageFile(
+          uploadDefinitionId,
+          fileDefinitionId,
+          new AssembleStorageFileRequestBody(
+              uploadUrlResponse.getUploadId(), uploadUrlResponse.getKey(), List.of(etag)));
       uploadDefinition = dataImportClient.getUploadDefinitionById(uploadDefinitionId);
     } else {
-      uploadDefinition = dataImportUploadClient.uploadFileDefinitionsFiles(uploadDefinitionId,
-              fileDefinitionId, content);
+      uploadDefinition =
+          dataImportUploadClient.uploadFileDefinitionsFiles(
+              uploadDefinitionId, fileDefinitionId, content);
     }
     return uploadDefinition;
   }

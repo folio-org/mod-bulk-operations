@@ -19,11 +19,9 @@ class RemoteFileSystemClientTest extends BaseTest {
   private static final String INITIAL_FILE = "initial.txt";
   private static final String WRONG_FILE = "wrong.txt";
 
-  @Autowired
-  private RemoteFileSystemClient remoteFileSystemClient;
+  @Autowired private RemoteFileSystemClient remoteFileSystemClient;
 
-  @Autowired
-  private RemoteRepositoryConfig remoteRepositoryConfig;
+  @Autowired private RemoteRepositoryConfig remoteRepositoryConfig;
 
   @SneakyThrows
   @Test
@@ -31,8 +29,8 @@ class RemoteFileSystemClientTest extends BaseTest {
     client.put(IOUtils.toInputStream("initial content", StandardCharsets.UTF_8), INITIAL_FILE);
     var content = client.get(INITIAL_FILE);
     assertEquals("initial content", IOUtils.toString(content, StandardCharsets.UTF_8).trim());
-    var uploaded = client.put(IOUtils.toInputStream("updated content",
-            StandardCharsets.UTF_8), INITIAL_FILE);
+    var uploaded =
+        client.put(IOUtils.toInputStream("updated content", StandardCharsets.UTF_8), INITIAL_FILE);
     assertEquals(INITIAL_FILE, uploaded);
     content = client.get(INITIAL_FILE);
     assertEquals("updated content", IOUtils.toString(content, StandardCharsets.UTF_8).trim());

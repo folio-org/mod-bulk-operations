@@ -15,10 +15,12 @@ public class ElectronicAccessListConverter extends BaseConverter<List<Electronic
 
   @Override
   public String convertToString(List<ElectronicAccess> object) {
-    return ObjectUtils.isEmpty(object) ? EMPTY : ELECTRONIC_ACCESS_HEADINGS
+    return ObjectUtils.isEmpty(object)
+        ? EMPTY
+        : ELECTRONIC_ACCESS_HEADINGS
             + object.stream()
-          .filter(Objects::nonNull)
-          .map(ElectronicAccessHelper.service()::electronicAccessToString)
-          .collect(Collectors.joining(SPECIAL_ITEM_DELIMITER));
+                .filter(Objects::nonNull)
+                .map(ElectronicAccessHelper.service()::electronicAccessToString)
+                .collect(Collectors.joining(SPECIAL_ITEM_DELIMITER));
   }
 }

@@ -1,6 +1,5 @@
 package org.folio.bulkops.exception;
 
-
 import org.folio.bulkops.domain.dto.ErrorType;
 
 public class BulkEditException extends RuntimeException {

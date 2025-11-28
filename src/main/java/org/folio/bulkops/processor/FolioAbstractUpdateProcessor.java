@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Log4j2
 public abstract class FolioAbstractUpdateProcessor<T extends BulkOperationsEntity>
-        implements FolioUpdateProcessor<T> {
+    implements FolioUpdateProcessor<T> {
   private ErrorService errorService;
 
   @Autowired
@@ -22,8 +22,11 @@ public abstract class FolioAbstractUpdateProcessor<T extends BulkOperationsEntit
   @Override
   public void updateAssociatedRecords(T t, BulkOperation operation, boolean notChanged) {
     if (notChanged) {
-      errorService.saveError(operation.getId(), t.getIdentifier(operation.getIdentifierType()),
-              MSG_NO_CHANGE_REQUIRED, ErrorType.WARNING);
+      errorService.saveError(
+          operation.getId(),
+          t.getIdentifier(operation.getIdentifierType()),
+          MSG_NO_CHANGE_REQUIRED,
+          ErrorType.WARNING);
     }
   }
 }

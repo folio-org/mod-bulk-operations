@@ -12,7 +12,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class SelectFieldOption   {
+public class SelectFieldOption {
   @JsonProperty("id")
   private String id;
 
@@ -22,4 +22,3 @@ public class SelectFieldOption   {
   @JsonProperty("default")
   private Boolean optionDefault;
 }
-

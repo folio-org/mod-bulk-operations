@@ -19,4 +19,3 @@ public class ModeOfIssuance {
   @JsonProperty("name")
   private String name;
 }
-

@@ -23,4 +23,3 @@ public class InstanceFormats {
   @JsonProperty("totalRecords")
   private Integer totalRecords;
 }
-

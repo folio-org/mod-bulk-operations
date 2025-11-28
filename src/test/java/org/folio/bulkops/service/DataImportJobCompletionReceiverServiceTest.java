@@ -27,17 +27,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class DataImportJobCompletionReceiverServiceTest extends BaseTest {
 
-  @Autowired
-  private DataImportJobCompletionReceiverService receiverService;
+  @Autowired private DataImportJobCompletionReceiverService receiverService;
 
-  @MockitoBean
-  private BulkOperationService bulkOperationService;
+  @MockitoBean private BulkOperationService bulkOperationService;
 
-  @MockitoBean
-  private SystemUserService systemUserService;
+  @MockitoBean private SystemUserService systemUserService;
 
-  @MockitoBean
-  private BulkOperationRepository bulkOperationRepository;
+  @MockitoBean private BulkOperationRepository bulkOperationRepository;
 
   @Test
   void testReceiveJobExecutionUpdate() throws IOException {
@@ -45,15 +41,16 @@ class DataImportJobCompletionReceiverServiceTest extends BaseTest {
     var bulkOperation = BulkOperation.builder().id(UUID.randomUUID()).build();
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       when(bulkOperationRepository.findByDataImportJobProfileId(jobProfileId))
-              .thenReturn(Optional.of(bulkOperation));
+          .thenReturn(Optional.of(bulkOperation));
       when(systemUserService.getAuthedSystemUser(any()))
-              .thenReturn(new SystemUser("mod-bulk-operation", "http://okapi:9130",
-                      "diku", null, ""));
-      var message = Files.readString(
+          .thenReturn(new SystemUser("mod-bulk-operation", "http://okapi:9130", "diku", null, ""));
+      var message =
+          Files.readString(
               Path.of("src/test/resources/files/kafka/data_import_job_completed_message.json"));
       var event = OBJECT_MAPPER.readValue(message, Event.class);
-      var payload = OBJECT_MAPPER.readValue(event.getEventPayload(),
-              org.folio.bulkops.domain.dto.DataImportJobExecution.class);
+      var payload =
+          OBJECT_MAPPER.readValue(
+              event.getEventPayload(), org.folio.bulkops.domain.dto.DataImportJobExecution.class);
       receiverService.receiveJobExecutionUpdate(payload, Map.of());
       verify(bulkOperationService).processDataImportResult(bulkOperation);
     }
@@ -63,16 +60,18 @@ class DataImportJobCompletionReceiverServiceTest extends BaseTest {
   void shouldIgnoreNonBulkOperationJobExecutionUpdate() throws IOException {
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       when(bulkOperationRepository.findByDataImportJobProfileId(any(UUID.class)))
-              .thenReturn(Optional.empty());
+          .thenReturn(Optional.empty());
       when(systemUserService.getAuthedSystemUser(any()))
-              .thenReturn(new SystemUser("mod-bulk-operation",
-                      "http://okapi:9130", "diku", null, ""));
-      var message = Files.readString(
-              Path.of("src/test/resources/files/kafka/data_import_job_completed_"
+          .thenReturn(new SystemUser("mod-bulk-operation", "http://okapi:9130", "diku", null, ""));
+      var message =
+          Files.readString(
+              Path.of(
+                  "src/test/resources/files/kafka/data_import_job_completed_"
                       + "non_bulk_edit_message.json"));
       var event = OBJECT_MAPPER.readValue(message, Event.class);
-      var payload = OBJECT_MAPPER.readValue(event.getEventPayload(),
-              org.folio.bulkops.domain.dto.DataImportJobExecution.class);
+      var payload =
+          OBJECT_MAPPER.readValue(
+              event.getEventPayload(), org.folio.bulkops.domain.dto.DataImportJobExecution.class);
 
       receiverService.receiveJobExecutionUpdate(payload, Map.of());
 
@@ -87,17 +86,19 @@ class DataImportJobCompletionReceiverServiceTest extends BaseTest {
     var bulkOperation = BulkOperation.builder().id(UUID.randomUUID()).build();
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       when(bulkOperationRepository.findByDataImportJobProfileId(jobProfileId))
-              .thenReturn(Optional.of(bulkOperation));
+          .thenReturn(Optional.of(bulkOperation));
       when(systemUserService.getAuthedSystemUser(any()))
-              .thenReturn(new SystemUser("mod-bulk-operation", "http://okapi:9130",
-                      "diku", null, ""));
+          .thenReturn(new SystemUser("mod-bulk-operation", "http://okapi:9130", "diku", null, ""));
       doThrow(new RuntimeException("Processing exception"))
-              .when(bulkOperationService).processDataImportResult(bulkOperation);
-      var message = Files.readString(Path.of(
-              "src/test/resources/files/kafka/data_import_job_completed_message.json"));
+          .when(bulkOperationService)
+          .processDataImportResult(bulkOperation);
+      var message =
+          Files.readString(
+              Path.of("src/test/resources/files/kafka/data_import_job_completed_message.json"));
       var event = OBJECT_MAPPER.readValue(message, Event.class);
-      var payload = OBJECT_MAPPER.readValue(event.getEventPayload(),
-              org.folio.bulkops.domain.dto.DataImportJobExecution.class);
+      var payload =
+          OBJECT_MAPPER.readValue(
+              event.getEventPayload(), org.folio.bulkops.domain.dto.DataImportJobExecution.class);
 
       assertDoesNotThrow(() -> receiverService.receiveJobExecutionUpdate(payload, Map.of()));
     }

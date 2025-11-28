@@ -22,4 +22,3 @@ public class CustomFieldCollection {
   @JsonProperty("totalRecords")
   private Integer totalRecords;
 }
-

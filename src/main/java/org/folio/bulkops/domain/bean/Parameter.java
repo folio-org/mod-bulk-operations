@@ -19,4 +19,3 @@ public class Parameter {
   @JsonProperty("value")
   private String value;
 }
-

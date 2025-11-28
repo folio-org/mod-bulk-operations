@@ -24,11 +24,11 @@ public class DepartmentsConverter extends BaseConverter<Set<UUID>> {
     String[] departmentNames = value.split(ARRAY_DELIMITER);
     if (departmentNames.length > 0) {
       return Arrays.stream(departmentNames)
-        .filter(StringUtils::isNotEmpty)
-        .map(SpecialCharacterEscaper::restore)
-        .map(name -> UserReferenceHelper.service().getDepartmentByName(name))
-        .map(d -> UUID.fromString(d.getId()))
-        .collect(Collectors.toSet());
+          .filter(StringUtils::isNotEmpty)
+          .map(SpecialCharacterEscaper::restore)
+          .map(name -> UserReferenceHelper.service().getDepartmentByName(name))
+          .map(d -> UUID.fromString(d.getId()))
+          .collect(Collectors.toSet());
     }
     return Collections.emptySet();
   }
@@ -38,11 +38,11 @@ public class DepartmentsConverter extends BaseConverter<Set<UUID>> {
     try {
       if (ObjectUtils.isNotEmpty(value)) {
         return value.stream()
-          .filter(Objects::nonNull)
-          .map(id -> UserReferenceHelper.service().getDepartmentById(id.toString()))
-          .filter(ObjectUtils::isNotEmpty)
-          .map(v -> SpecialCharacterEscaper.escape(v.getName()))
-          .collect(Collectors.joining(ARRAY_DELIMITER));
+            .filter(Objects::nonNull)
+            .map(id -> UserReferenceHelper.service().getDepartmentById(id.toString()))
+            .filter(ObjectUtils::isNotEmpty)
+            .map(v -> SpecialCharacterEscaper.escape(v.getName()))
+            .collect(Collectors.joining(ARRAY_DELIMITER));
       }
     } catch (ReferenceDataNotFoundException e) {
       throw new ConverterException(this.getField(), value, e.getMessage(), ErrorType.WARNING);

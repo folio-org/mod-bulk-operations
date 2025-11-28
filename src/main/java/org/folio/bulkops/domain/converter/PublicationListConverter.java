@@ -16,10 +16,11 @@ public class PublicationListConverter extends BaseConverter<List<Publication>> {
   public String convertToString(List<Publication> publications) {
 
     return ObjectUtils.isEmpty(publications)
-            ? EMPTY : PUBLICATION_HEADINGS + publications.stream()
-          .filter(Objects::nonNull)
-          .map(PublicationHelperService.service()::publicationToString)
-          .collect(Collectors.joining(SPECIAL_ITEM_DELIMITER));
+        ? EMPTY
+        : PUBLICATION_HEADINGS
+            + publications.stream()
+                .filter(Objects::nonNull)
+                .map(PublicationHelperService.service()::publicationToString)
+                .collect(Collectors.joining(SPECIAL_ITEM_DELIMITER));
   }
 }
-

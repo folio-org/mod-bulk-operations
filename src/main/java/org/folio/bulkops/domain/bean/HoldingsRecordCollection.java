@@ -25,4 +25,3 @@ public class HoldingsRecordCollection {
   @JsonProperty("resultInfo")
   private ResultInfo resultInfo;
 }
-

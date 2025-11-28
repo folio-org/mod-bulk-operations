@@ -24,46 +24,42 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class MarcCsvHelperOptionNotFoundTest extends BaseTest {
 
-  @Autowired
-  private MarcCsvHelper marcCsvHelper;
+  @Autowired private MarcCsvHelper marcCsvHelper;
 
-  @MockitoBean
-  private Marc21ReferenceProvider marc21ReferenceProvider;
-  @MockitoBean
-  private MappingRulesClient mappingRulesClient;
-  @MockitoBean
-  private RemoteFileSystemClient remoteFileSystemClient;
-  @MockitoBean
-  private RuleService ruleService;
+  @MockitoBean private Marc21ReferenceProvider marc21ReferenceProvider;
+  @MockitoBean private MappingRulesClient mappingRulesClient;
+  @MockitoBean private RemoteFileSystemClient remoteFileSystemClient;
+  @MockitoBean private RuleService ruleService;
 
   @Test
   @SneakyThrows
   void shouldEnrichCsvWithEmptyValueBecauseOfOptionNotFound() {
     var fileName = "file.csv";
     var operationId = UUID.randomUUID();
-    var operation = BulkOperation.builder()
-                .id(operationId)
-                .status(REVIEW_CHANGES)
-                .entityType(org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC)
-                .linkToModifiedRecordsMarcCsvFile(fileName)
-                .build();
+    var operation =
+        BulkOperation.builder()
+            .id(operationId)
+            .status(REVIEW_CHANGES)
+            .entityType(org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC)
+            .linkToModifiedRecordsMarcCsvFile(fileName)
+            .build();
 
     var content = new FileInputStream("src/test/resources/files/instance.csv").readAllBytes();
 
     when(mappingRulesClient.getMarcBibMappingRules())
-                .thenReturn(Files.readString(Path.of(
-                        "src/test/resources/files/mappingRulesResponse.json")));
+        .thenReturn(
+            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
     when(remoteFileSystemClient.get(fileName))
-                .thenReturn(new FileInputStream(
-                        "src/test/resources/files/marc_csv_empty_notes.csv"));
+        .thenReturn(new FileInputStream("src/test/resources/files/marc_csv_empty_notes.csv"));
     when(ruleService.getMarcRules(operationId))
-                .thenReturn(new org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection()
-                        .bulkOperationMarcRules(singletonList(
-                                new org.folio.bulkops.domain.dto.BulkOperationMarcRule()
-                                        .tag("500"))));
-    when(marc21ReferenceProvider.getChangedOptionsSetForCsv(any(
-            org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection.class)))
-                .thenReturn(Set.of("Not notes"));
+        .thenReturn(
+            new org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection()
+                .bulkOperationMarcRules(
+                    singletonList(
+                        new org.folio.bulkops.domain.dto.BulkOperationMarcRule().tag("500"))));
+    when(marc21ReferenceProvider.getChangedOptionsSetForCsv(
+            any(org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection.class)))
+        .thenReturn(Set.of("Not notes"));
 
     var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
 

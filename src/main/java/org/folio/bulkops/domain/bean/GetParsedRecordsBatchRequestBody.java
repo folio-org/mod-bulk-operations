@@ -15,8 +15,10 @@ import lombok.With;
 public class GetParsedRecordsBatchRequestBody {
   @JsonProperty("conditions")
   private GetParsedRecordsBatchConditions conditions;
+
   @JsonProperty("recordType")
   private String recordType;
+
   @JsonProperty("includeDeleted")
   private boolean includeDeleted;
 }

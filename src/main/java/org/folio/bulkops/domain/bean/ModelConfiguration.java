@@ -43,4 +43,3 @@ public class ModelConfiguration {
   @JsonProperty("metadata")
   private Metadata metadata;
 }
-

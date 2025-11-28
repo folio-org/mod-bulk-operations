@@ -22,4 +22,3 @@ class ItemPreviewProcessorTest {
     assertNotNull(row);
   }
 }
-

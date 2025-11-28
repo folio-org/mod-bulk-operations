@@ -55,4 +55,3 @@ public class CustomField {
   @JsonProperty("metadata")
   private Metadata metadata;
 }
-

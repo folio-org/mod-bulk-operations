@@ -86,9 +86,9 @@ public class Utils {
     return Objects.isNull(value) ? EMPTY : value.toString();
   }
 
-  public static String getIdentifierForManualApproach(String[] line,
-                                                      IdentifierType identifierType) {
-    return  switch (identifierType) {
+  public static String getIdentifierForManualApproach(
+      String[] line, IdentifierType identifierType) {
+    return switch (identifierType) {
       case BARCODE -> line[3];
       case EXTERNAL_SYSTEM_ID -> line[2];
       case USER_NAME -> line[0];
@@ -98,7 +98,8 @@ public class Utils {
 
   public static String getMessageFromFeignException(FeignException e) {
     try {
-      String[] matches = PATTERN
+      String[] matches =
+          PATTERN
               .matcher(e.getMessage())
               .results()
               .map(MatchResult::group)
@@ -107,13 +108,15 @@ public class Utils {
       if (matches.length == 2) {
         return format(MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING, matches[0], matches[1]);
       } else {
-        log.warn("Error extracting entity versions from: {}. Returning default message",
-                e.getMessage());
+        log.warn(
+            "Error extracting entity versions from: {}. Returning default message", e.getMessage());
         return MSG_ERROR_OPTIMISTIC_LOCKING_DEFAULT;
       }
     } catch (Exception ex) {
-      log.warn("Error parsing message with entity versions: {}. Returning default message",
-              e.getMessage(), ex);
+      log.warn(
+          "Error parsing message with entity versions: {}. Returning default message",
+          e.getMessage(),
+          ex);
       return MSG_ERROR_OPTIMISTIC_LOCKING_DEFAULT;
     }
   }
@@ -130,10 +133,18 @@ public class Utils {
     return new ByteArrayInputStream(content.getBytes());
   }
 
-  public static String getMatchedFileName(UUID operationId, String folder, String matched,
-                                          String linkToTriggering, String fileExtension) {
-    return MATCHED_RECORDS_FILE_TEMPLATE.formatted(operationId, folder, LocalDate.now(),
-            matched, FilenameUtils.getBaseName(linkToTriggering), fileExtension);
+  public static String getMatchedFileName(
+      UUID operationId,
+      String folder,
+      String matched,
+      String linkToTriggering,
+      String fileExtension) {
+    return MATCHED_RECORDS_FILE_TEMPLATE.formatted(
+        operationId,
+        folder,
+        LocalDate.now(),
+        matched,
+        FilenameUtils.getBaseName(linkToTriggering),
+        fileExtension);
   }
-
 }

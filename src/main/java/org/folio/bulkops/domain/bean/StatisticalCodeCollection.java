@@ -14,7 +14,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class StatisticalCodeCollection   {
+public class StatisticalCodeCollection {
   @JsonProperty("statisticalCodes")
   @Valid
   private List<StatisticalCode> statisticalCodes = null;
@@ -25,4 +25,3 @@ public class StatisticalCodeCollection   {
   @JsonProperty("resultInfo")
   private ResultInfo resultInfo;
 }
-

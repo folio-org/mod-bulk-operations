@@ -17,6 +17,7 @@ public class ExtendedInstance implements BulkOperationsEntity {
 
   @JsonProperty("tenantId")
   private String tenantId;
+
   @JsonProperty("entity")
   private Instance entity;
 

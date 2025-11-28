@@ -23,4 +23,3 @@ public class NatureOfContentTerms {
   @JsonProperty("totalRecords")
   private Integer totalRecords;
 }
-

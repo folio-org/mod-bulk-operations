@@ -74,46 +74,49 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
         .map(UUID::fromString)
         .map(bulkOperationRepository::findById)
         .flatMap(opt -> opt)
-        .ifPresent(bulkOperation -> {
-          if (after) {
-            var jobParameters = jobExecution.getJobParameters();
-            moveTemporaryFilesToStorage(jobParameters, bulkOperation);
-            handleProcessingMatchedErrors(bulkOperation);
-            if (nonNull(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
-              populateUsedTenants(bulkOperation);
-            }
+        .ifPresent(
+            bulkOperation -> {
+              if (after) {
+                var jobParameters = jobExecution.getJobParameters();
+                moveTemporaryFilesToStorage(jobParameters, bulkOperation);
+                handleProcessingMatchedErrors(bulkOperation);
+                if (nonNull(bulkOperation.getLinkToMatchedRecordsJsonFile())) {
+                  populateUsedTenants(bulkOperation);
+                }
 
-            log.info("-----------------------------JOB---ENDS-----------------------------");
-          }
+                log.info("-----------------------------JOB---ENDS-----------------------------");
+              }
 
-          var context = jobExecution.getExecutionContext();
+              var context = jobExecution.getExecutionContext();
 
-          int processed = context.containsKey(NUMBER_OF_PROCESSED_IDENTIFIERS)
-              ? context.getInt(NUMBER_OF_PROCESSED_IDENTIFIERS)
-              : 0;
-          bulkOperation.setProcessedNumOfRecords(processed);
+              int processed =
+                  context.containsKey(NUMBER_OF_PROCESSED_IDENTIFIERS)
+                      ? context.getInt(NUMBER_OF_PROCESSED_IDENTIFIERS)
+                      : 0;
+              bulkOperation.setProcessedNumOfRecords(processed);
 
-          int matched = context.containsKey(NUMBER_OF_MATCHED_RECORDS)
-              ? context.getInt(NUMBER_OF_MATCHED_RECORDS)
-              : 0;
-          bulkOperation.setMatchedNumOfRecords(matched);
+              int matched =
+                  context.containsKey(NUMBER_OF_MATCHED_RECORDS)
+                      ? context.getInt(NUMBER_OF_MATCHED_RECORDS)
+                      : 0;
+              bulkOperation.setMatchedNumOfRecords(matched);
 
-          if (COMPLETED.equals(jobExecution.getStatus())) {
-            bulkOperation.setStatus(OperationStatusType.DATA_MODIFICATION);
-            bulkOperation.setEndTime(LocalDateTime.now());
+              if (COMPLETED.equals(jobExecution.getStatus())) {
+                bulkOperation.setStatus(OperationStatusType.DATA_MODIFICATION);
+                bulkOperation.setEndTime(LocalDateTime.now());
 
-            if (nonNull(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile())
-                && isNull(bulkOperation.getLinkToMatchedRecordsCsvFile())) {
-              bulkOperation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);
-            }
-          } else if (Set.of(FAILED, ABANDONED).contains(jobExecution.getStatus())) {
-            bulkOperation.setStatus(OperationStatusType.FAILED);
-            bulkOperation.setErrorMessage(fetchFailureCause(jobExecution));
-            bulkOperation.setEndTime(LocalDateTime.now());
-          }
+                if (nonNull(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile())
+                    && isNull(bulkOperation.getLinkToMatchedRecordsCsvFile())) {
+                  bulkOperation.setStatus(OperationStatusType.COMPLETED_WITH_ERRORS);
+                }
+              } else if (Set.of(FAILED, ABANDONED).contains(jobExecution.getStatus())) {
+                bulkOperation.setStatus(OperationStatusType.FAILED);
+                bulkOperation.setErrorMessage(fetchFailureCause(jobExecution));
+                bulkOperation.setEndTime(LocalDateTime.now());
+              }
 
-          bulkOperationRepository.save(bulkOperation);
-        });
+              bulkOperationRepository.save(bulkOperation);
+            });
   }
 
   private void populateUsedTenants(BulkOperation bulkOperation) {
@@ -125,10 +128,11 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
         var parser = objectMapper.createParser(is);
         var iterator = objectMapper.readValues(parser, clazz);
         var spliterator = Spliterators.spliteratorUnknownSize(iterator, 0);
-        var tenants = StreamSupport.stream(spliterator, false)
-            .map(BulkOperationsEntity::getTenant)
-            .distinct()
-            .toList();
+        var tenants =
+            StreamSupport.stream(spliterator, false)
+                .map(BulkOperationsEntity::getTenant)
+                .distinct()
+                .toList();
         bulkOperation.setUsedTenants(tenants);
       } catch (Exception e) {
         var error = "Error getting tenants list";
@@ -136,11 +140,9 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
         bulkOperation.setStatus(OperationStatusType.FAILED);
         bulkOperation.setErrorMessage(error);
         var errorMessage = String.format("%s: %s", error, e.getMessage());
-        var linkToMatchingErrorsFile = errorService.uploadErrorsToStorage(
-            bulkOperation.getId(),
-            ERROR_MATCHING_FILE_NAME_PREFIX,
-            errorMessage
-        );
+        var linkToMatchingErrorsFile =
+            errorService.uploadErrorsToStorage(
+                bulkOperation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, errorMessage);
         bulkOperation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
         var serverErrorMessage = "Error getting tenants list: " + e.getMessage();
         throw new ServerErrorException(serverErrorMessage);
@@ -154,11 +156,12 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
     List<Throwable> errors = jobExecution.getAllFailureExceptions();
     if (CollectionUtils.isNotEmpty(errors)) {
       return errors.stream()
-          .map(t -> {
-            var root = getThrowableRootCause(t);
-            var className = root.getClass().getSimpleName();
-            return String.format("%s (%s)", root.getMessage(), className);
-          })
+          .map(
+              t -> {
+                var root = getThrowableRootCause(t);
+                var className = root.getClass().getSimpleName();
+                return String.format("%s (%s)", root.getMessage(), className);
+              })
           .collect(Collectors.joining("\n"));
     }
     return EMPTY;
@@ -174,8 +177,7 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
   }
 
   private void moveTemporaryFilesToStorage(
-      JobParameters jobParameters,
-      BulkOperation bulkOperation) {
+      JobParameters jobParameters, BulkOperation bulkOperation) {
     try {
       var tmpFileName = jobParameters.getString(TEMP_LOCAL_FILE_PATH);
       log.info("Moving temporary file: {}", tmpFileName);
@@ -230,17 +232,13 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
   }
 
   private void handleProcessingMatchedErrors(BulkOperation bulkOperation) {
-    var pathToErrors = errorService.uploadErrorsToStorage(
-        bulkOperation.getId(),
-        ERROR_MATCHING_FILE_NAME_PREFIX,
-        null
-    );
+    var pathToErrors =
+        errorService.uploadErrorsToStorage(
+            bulkOperation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, null);
     bulkOperation.setLinkToMatchedRecordsErrorsCsvFile(pathToErrors);
     bulkOperation.setMatchedNumOfErrors(
-        errorService.getCommittedNumOfErrors(bulkOperation.getId())
-    );
+        errorService.getCommittedNumOfErrors(bulkOperation.getId()));
     bulkOperation.setMatchedNumOfWarnings(
-        errorService.getCommittedNumOfWarnings(bulkOperation.getId())
-    );
+        errorService.getCommittedNumOfWarnings(bulkOperation.getId()));
   }
 }

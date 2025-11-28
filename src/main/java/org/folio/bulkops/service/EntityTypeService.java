@@ -18,8 +18,9 @@ public class EntityTypeService {
       case "composite_user_details" -> EntityType.USER;
       case "composite_holdings_record" -> EntityType.HOLDINGS_RECORD;
       case "composite_instances" -> EntityType.INSTANCE;
-      default -> throw new IllegalArgumentException(String.format(
-              "Entity type with name=%s is not supported", name));
+      default ->
+          throw new IllegalArgumentException(
+              String.format("Entity type with name=%s is not supported", name));
     };
   }
 }

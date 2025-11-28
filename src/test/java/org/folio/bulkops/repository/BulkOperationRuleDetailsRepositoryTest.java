@@ -22,18 +22,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 class BulkOperationRuleDetailsRepositoryTest extends BaseTest {
-  @Autowired
-  private BulkOperationRuleDetailsRepository repository;
+  @Autowired private BulkOperationRuleDetailsRepository repository;
 
-  @Autowired
-  private BulkOperationRuleRepository bulkOperationRuleRepository;
+  @Autowired private BulkOperationRuleRepository bulkOperationRuleRepository;
 
-  @Autowired
-  private BulkOperationRepository bulkOperationRepository;
+  @Autowired private BulkOperationRepository bulkOperationRepository;
 
   @Test
   void shouldSaveEntity() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var saved = repository.save(createEntity());
       assertThat(saved.getId(), notNullValue());
     }
@@ -41,7 +38,7 @@ class BulkOperationRuleDetailsRepositoryTest extends BaseTest {
 
   @Test
   void shouldFindEntityById() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       var retrieved = repository.findById(created.getId());
       assertTrue(retrieved.isPresent() && created.getId().equals(retrieved.get().getId()));
@@ -50,17 +47,17 @@ class BulkOperationRuleDetailsRepositoryTest extends BaseTest {
 
   @Test
   void shouldUpdateEntity() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       var updated = repository.save(created.withUpdateAction(CLEAR_FIELD));
-      assertTrue(created.getId().equals(updated.getId())
-              && CLEAR_FIELD.equals(updated.getUpdateAction()));
+      assertTrue(
+          created.getId().equals(updated.getId()) && CLEAR_FIELD.equals(updated.getUpdateAction()));
     }
   }
 
   @Test
   void shouldDeleteEntity() {
-    try (var context =  new FolioExecutionContextSetter(folioExecutionContext)) {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var created = repository.save(createEntity());
       repository.deleteById(created.getId());
       assertTrue(repository.findById(created.getId()).isEmpty());
@@ -68,30 +65,34 @@ class BulkOperationRuleDetailsRepositoryTest extends BaseTest {
   }
 
   private BulkOperationRuleDetails createEntity() {
-    var bulkOperation = bulkOperationRepository.save(BulkOperation.builder()
-            .id(UUID.randomUUID())
-            .userId(UUID.randomUUID())
-            .operationType(UPDATE)
-            .entityType(USER)
-            .identifierType(BARCODE)
-            .status(NEW)
-            .dataExportJobId(UUID.randomUUID())
-            .totalNumOfRecords(10)
-            .processedNumOfRecords(0)
-            .executionChunkSize(5)
-            .startTime(LocalDateTime.now())
-            .build());
+    var bulkOperation =
+        bulkOperationRepository.save(
+            BulkOperation.builder()
+                .id(UUID.randomUUID())
+                .userId(UUID.randomUUID())
+                .operationType(UPDATE)
+                .entityType(USER)
+                .identifierType(BARCODE)
+                .status(NEW)
+                .dataExportJobId(UUID.randomUUID())
+                .totalNumOfRecords(10)
+                .processedNumOfRecords(0)
+                .executionChunkSize(5)
+                .startTime(LocalDateTime.now())
+                .build());
 
-    var bulkOperationRule = bulkOperationRuleRepository.save(BulkOperationRule.builder()
-            .bulkOperationId(bulkOperation.getId())
-            .userId(UUID.randomUUID())
-            .updateOption(STATUS)
-            .build());
+    var bulkOperationRule =
+        bulkOperationRuleRepository.save(
+            BulkOperationRule.builder()
+                .bulkOperationId(bulkOperation.getId())
+                .userId(UUID.randomUUID())
+                .updateOption(STATUS)
+                .build());
 
     return BulkOperationRuleDetails.builder()
-            .ruleId(bulkOperationRule.getId())
-            .updateAction(REPLACE_WITH)
-            .updatedValue("new value")
-            .build();
+        .ruleId(bulkOperationRule.getId())
+        .updateAction(REPLACE_WITH)
+        .updatedValue("new value")
+        .build();
   }
 }

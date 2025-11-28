@@ -20,9 +20,7 @@ public class EholdingsExportConfig {
   @JsonProperty("recordId")
   private String recordId;
 
-  /**
-   * The record type.
-   */
+  /** The record type. */
   public enum RecordTypeEnum {
     PACKAGE("PACKAGE"),
 
@@ -69,4 +67,3 @@ public class EholdingsExportConfig {
   @Valid
   private List<String> titleFields = null;
 }
-

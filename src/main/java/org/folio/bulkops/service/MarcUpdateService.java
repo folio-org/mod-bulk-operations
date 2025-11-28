@@ -45,47 +45,46 @@ public class MarcUpdateService {
       bulkOperation.setStatus(APPLY_MARC_CHANGES);
       bulkOperationRepository.save(bulkOperation);
 
-      var execution = executionRepository.save(BulkOperationExecution.builder()
-              .bulkOperationId(bulkOperation.getId())
-              .startTime(LocalDateTime.now())
-              .processedRecords(0)
-              .status(StatusType.ACTIVE)
-              .build());
+      var execution =
+          executionRepository.save(
+              BulkOperationExecution.builder()
+                  .bulkOperationId(bulkOperation.getId())
+                  .startTime(LocalDateTime.now())
+                  .processedRecords(0)
+                  .status(StatusType.ACTIVE)
+                  .build());
 
       try {
-        bulkOperation.setLinkToCommittedRecordsMarcFile(prepareCommittedFile(bulkOperation,
-                failedHrids));
+        bulkOperation.setLinkToCommittedRecordsMarcFile(
+            prepareCommittedFile(bulkOperation, failedHrids));
         updateProcessor.updateMarcRecords(bulkOperation);
-        execution = execution
-          .withStatus(StatusType.COMPLETED)
-          .withEndTime(LocalDateTime.now());
+        execution = execution.withStatus(StatusType.COMPLETED).withEndTime(LocalDateTime.now());
       } catch (IOException e) {
         log.error("Error while updating marc file", e);
-        execution = execution
-          .withStatus(StatusType.FAILED)
-          .withEndTime(LocalDateTime.now());
+        execution = execution.withStatus(StatusType.FAILED).withEndTime(LocalDateTime.now());
         bulkOperationServiceHelper.failCommit(bulkOperation, e);
       }
       executionRepository.save(execution);
     } else {
       bulkOperation.setCommittedNumOfErrors(
-              errorService.getCommittedNumOfErrors(bulkOperation.getId()));
+          errorService.getCommittedNumOfErrors(bulkOperation.getId()));
       bulkOperation.setCommittedNumOfWarnings(
-              errorService.getCommittedNumOfWarnings(bulkOperation.getId()));
+          errorService.getCommittedNumOfWarnings(bulkOperation.getId()));
     }
   }
 
   private String prepareCommittedFile(BulkOperation bulkOperation, Set<String> failedHrids)
-          throws IOException {
+      throws IOException {
     var triggeringFileName = FilenameUtils.getBaseName(bulkOperation.getLinkToTriggeringCsvFile());
-    var resultMarcFileName = String.format(CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(),
-            LocalDate.now(), triggeringFileName);
+    var resultMarcFileName =
+        String.format(
+            CHANGED_MARC_PATH_TEMPLATE, bulkOperation.getId(), LocalDate.now(), triggeringFileName);
 
     try (var writerForResultMarcFile = remoteFileSystemClient.marcWriter(resultMarcFileName);
-         var matchedRecordsMarcFileStream = remoteFileSystemClient.get(
-                 bulkOperation.getLinkToMatchedRecordsMarcFile());
-         var modifiedRecordsMarcFileStream = remoteFileSystemClient.get(
-                 bulkOperation.getLinkToModifiedRecordsMarcFile())) {
+        var matchedRecordsMarcFileStream =
+            remoteFileSystemClient.get(bulkOperation.getLinkToMatchedRecordsMarcFile());
+        var modifiedRecordsMarcFileStream =
+            remoteFileSystemClient.get(bulkOperation.getLinkToModifiedRecordsMarcFile())) {
       var matchedRecordsReader = new MarcStreamReader(matchedRecordsMarcFileStream);
       var modifiedRecordsReader = new MarcStreamReader(modifiedRecordsMarcFileStream);
 
@@ -95,11 +94,12 @@ public class MarcUpdateService {
         var modifiedRecord = modifiedRecordsReader.next();
         if (!failedHrids.contains(originalRecord.getControlNumber())) {
           if (originalRecord.toString().equals(modifiedRecord.toString())) {
-            var identifier = HRID.equals(bulkOperation.getIdentifierType())
+            var identifier =
+                HRID.equals(bulkOperation.getIdentifierType())
                     ? originalRecord.getControlNumber()
                     : fetchInstanceUuidOrElseHrid(originalRecord);
-            errorService.saveError(bulkOperation.getId(), identifier, MSG_NO_MARC_CHANGE_REQUIRED,
-                    ErrorType.WARNING);
+            errorService.saveError(
+                bulkOperation.getId(), identifier, MSG_NO_MARC_CHANGE_REQUIRED, ErrorType.WARNING);
           } else {
             MarcDateHelper.updateDateTimeControlField(modifiedRecord, currentDate);
             writerForResultMarcFile.writeRecord(modifiedRecord);

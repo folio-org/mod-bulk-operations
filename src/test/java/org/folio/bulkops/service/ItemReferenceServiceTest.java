@@ -21,10 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @ExtendWith(MockitoExtension.class)
 class ItemReferenceServiceTest extends BaseTest {
-  @Autowired
-  private ItemReferenceService itemReferenceService;
-  @Autowired
-  private FolioModuleMetadata folioModuleMetadata;
+  @Autowired private ItemReferenceService itemReferenceService;
+  @Autowired private FolioModuleMetadata folioModuleMetadata;
 
   @Test
   @SneakyThrows
@@ -55,7 +53,8 @@ class ItemReferenceServiceTest extends BaseTest {
       when(locationClient.getLocationById("invalid_id"))
           .thenThrow(new ReferenceDataNotFoundException("Not found"));
 
-      assertThrows(ReferenceDataNotFoundException.class,
+      assertThrows(
+          ReferenceDataNotFoundException.class,
           () -> itemReferenceService.getLocationById("invalid_id", "tenant"));
     }
   }
@@ -89,7 +88,8 @@ class ItemReferenceServiceTest extends BaseTest {
       when(materialTypeClient.getById("invalid_id"))
           .thenThrow(new ReferenceDataNotFoundException("Not found"));
 
-      assertThrows(ReferenceDataNotFoundException.class,
+      assertThrows(
+          ReferenceDataNotFoundException.class,
           () -> itemReferenceService.getMaterialTypeById("invalid_id", "tenant"));
     }
   }
@@ -123,7 +123,8 @@ class ItemReferenceServiceTest extends BaseTest {
       when(loanTypeClient.getLoanTypeById("invalid_id"))
           .thenThrow(new ReferenceDataNotFoundException("Not found"));
 
-      assertThrows(ReferenceDataNotFoundException.class,
+      assertThrows(
+          ReferenceDataNotFoundException.class,
           () -> itemReferenceService.getLoanTypeById("invalid_id", "tenant"));
     }
   }
@@ -165,7 +166,8 @@ class ItemReferenceServiceTest extends BaseTest {
       when(statisticalCodeClient.getById("invalid_id"))
           .thenThrow(new ReferenceDataNotFoundException("Not found"));
 
-      assertThrows(ReferenceDataNotFoundException.class,
+      assertThrows(
+          ReferenceDataNotFoundException.class,
           () -> itemReferenceService.getStatisticalCodeById("invalid_id", "test"));
     }
   }

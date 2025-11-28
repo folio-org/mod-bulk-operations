@@ -36,22 +36,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
-  @MockitoBean
-  private InstanceReferenceService instanceReferenceService;
-  @MockitoBean
-  private MappingRulesClient mappingRulesClient;
-  @Autowired
-  private Marc21ReferenceProvider marc21ReferenceProvider;
-  @Autowired
-  private MarcToUnifiedTableRowMapperHelper mapperHelper;
+  @MockitoBean private InstanceReferenceService instanceReferenceService;
+  @MockitoBean private MappingRulesClient mappingRulesClient;
+  @Autowired private Marc21ReferenceProvider marc21ReferenceProvider;
+  @Autowired private MarcToUnifiedTableRowMapperHelper mapperHelper;
 
   @ParameterizedTest
-  @ValueSource(chars = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-      'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5',
-      '6', '7', '8', '9', '0'})
+  @ValueSource(
+      chars = {
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
+        's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'
+      })
   void shouldResolveModeOfIssuance(char character) {
     var leader = new LeaderImpl();
-    leader.setImplDefined1(new char[]{character});
+    leader.setImplDefined1(new char[] {character});
 
     var res = mapperHelper.resolveModeOfIssuance(leader);
 
@@ -86,8 +84,10 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @CsvSource(value = {"100,1,1", "110,1,1", "111,1,1", "700,1,1", "710,1,1", "711,1,1", "720,1,1",
-      "720,2,1"})
+  @CsvSource(
+      value = {
+        "100,1,1", "110,1,1", "111,1,1", "700,1,1", "710,1,1", "711,1,1", "720,1,1", "720,2,1"
+      })
   void shouldFetchContributorNameType(String tag, Character ind1, Character ind2) {
     var dataField = new DataFieldImpl(tag, ind1, ind2);
 
@@ -103,7 +103,9 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @CsvSource(textBlock = """
+  @CsvSource(
+      textBlock =
+          """
           100 | act | Actor
           100 | abc | Actor
           100 | abc | Text
@@ -126,30 +128,30 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
           720 | abc | Actor
           720 | abc | Text
           720 | http://abc/abc | TextEscaped
-          """, delimiter = '|')
+          """,
+      delimiter = '|')
   void shouldFetchContributorNameType(String tag, String s1, String s2) {
     var dataField = new DataFieldImpl(tag, ' ', ' ');
     dataField.addSubfield(new SubfieldImpl('4', s1));
     dataField.addSubfield(new SubfieldImpl("111".equals(tag) || "711".equals(tag) ? 'j' : 'e', s2));
 
     when(instanceReferenceService.getContributorTypesByCode("act"))
-            .thenReturn(new ContributorTypeCollection()
-                    .contributorTypes(Collections.singletonList(
-                            new ContributorType().name("Actor"))));
+        .thenReturn(
+            new ContributorTypeCollection()
+                .contributorTypes(Collections.singletonList(new ContributorType().name("Actor"))));
     when(instanceReferenceService.getContributorTypesByCode("abc"))
-            .thenReturn(new ContributorTypeCollection()
-                    .contributorTypes(Collections.emptyList()));
+        .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
     when(instanceReferenceService.getContributorTypesByName("Actor"))
-            .thenReturn(new ContributorTypeCollection()
-                    .contributorTypes(Collections.singletonList(
-                            new ContributorType().name("Actor"))));
+        .thenReturn(
+            new ContributorTypeCollection()
+                .contributorTypes(Collections.singletonList(new ContributorType().name("Actor"))));
     when(instanceReferenceService.getContributorTypesByName("Text"))
-            .thenReturn(new ContributorTypeCollection()
-                    .contributorTypes(Collections.emptyList()));
+        .thenReturn(new ContributorTypeCollection().contributorTypes(Collections.emptyList()));
     when(instanceReferenceService.getContributorTypesByCode("http://abc/abc"))
-            .thenReturn(new ContributorTypeCollection()
-                    .contributorTypes(Collections.singletonList(
-                            new ContributorType().name("TextEscaped"))));
+        .thenReturn(
+            new ContributorTypeCollection()
+                .contributorTypes(
+                    Collections.singletonList(new ContributorType().name("TextEscaped"))));
 
     var res = mapperHelper.fetchContributorType(dataField);
 
@@ -198,13 +200,16 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @CsvSource(textBlock = """
+  @CsvSource(
+      textBlock =
+          """
           notated movement  | ntv | notated movement  | ntv
                             | ntv | notated movement  | ntv
           notated movement  |     | notated movement  | ntv
           text              |     | unspecified       | zzz
                             | txt | unspecified       | zzz
-          """, delimiter = '|')
+          """,
+      delimiter = '|')
   void shouldFetchResourceType(String s1, String s2, String expectedName, String expectedCode) {
     var dataField = new DataFieldImpl("336", ' ', ' ');
     if (isNotEmpty(s1)) {
@@ -215,23 +220,31 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
     }
 
     when(instanceReferenceService.getInstanceTypesByName("notated movement"))
-            .thenReturn(InstanceTypes.builder()
-                    .types(Collections.singletonList(InstanceType.builder()
+        .thenReturn(
+            InstanceTypes.builder()
+                .types(
+                    Collections.singletonList(
+                        InstanceType.builder()
                             .name("notated movement")
                             .code("ntv")
-                            .source("rdacontent").build())).build());
+                            .source("rdacontent")
+                            .build()))
+                .build());
     when(instanceReferenceService.getInstanceTypesByCode("ntv"))
-            .thenReturn(InstanceTypes.builder()
-                    .types(Collections.singletonList(InstanceType.builder()
+        .thenReturn(
+            InstanceTypes.builder()
+                .types(
+                    Collections.singletonList(
+                        InstanceType.builder()
                             .name("notated movement")
                             .code("ntv")
-                            .source("rdacontent").build())).build());
+                            .source("rdacontent")
+                            .build()))
+                .build());
     when(instanceReferenceService.getInstanceTypesByName("text"))
-            .thenReturn(InstanceTypes.builder()
-                    .types(Collections.emptyList()).build());
+        .thenReturn(InstanceTypes.builder().types(Collections.emptyList()).build());
     when(instanceReferenceService.getInstanceTypesByCode("txt"))
-            .thenReturn(InstanceTypes.builder()
-                    .types(Collections.emptyList()).build());
+        .thenReturn(InstanceTypes.builder().types(Collections.emptyList()).build());
 
     var res = mapperHelper.fetchResourceType(dataField);
 
@@ -248,12 +261,14 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
     }
 
     when(instanceReferenceService.getInstanceFormatsByCode("cz"))
-            .thenReturn(InstanceFormats.builder()
-                    .formats(Collections.singletonList(InstanceFormat.builder()
-                            .name("computer -- other").build())).build());
+        .thenReturn(
+            InstanceFormats.builder()
+                .formats(
+                    Collections.singletonList(
+                        InstanceFormat.builder().name("computer -- other").build()))
+                .build());
     when(instanceReferenceService.getInstanceFormatsByCode(null))
-            .thenReturn(InstanceFormats.builder()
-                    .formats(Collections.emptyList()).build());
+        .thenReturn(InstanceFormats.builder().formats(Collections.emptyList()).build());
 
     var res = mapperHelper.fetchInstanceFormats(dataField);
 
@@ -322,8 +337,8 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
     dataField.addSubfield(new SubfieldImpl('b', "subfield b."));
 
     when(mappingRulesClient.getMarcBibMappingRules())
-            .thenReturn(Files.readString(Path.of(
-                    "src/test/resources/files/mappingRulesResponse.json")));
+        .thenReturn(
+            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
     marc21ReferenceProvider.updateMappingRules();
 
     var res = mapperHelper.fetchNotes(dataField, false);
@@ -332,8 +347,10 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @CsvSource(value = {"541,1", "542,1", "561,1", "583,1", "590,1", "541,0", "542,0", "561,0",
-      "583,0", "590,0"})
+  @CsvSource(
+      value = {
+        "541,1", "542,1", "561,1", "583,1", "590,1", "541,0", "542,0", "561,0", "583,0", "590,0"
+      })
   void shouldAddStaffOnlyPostfixIfIndicator1IsZero(String tag, Character ind1) {
     var dataField = new DataFieldImpl(tag, ind1, ' ');
     dataField.addSubfield(new SubfieldImpl('a', "subfield a."));
@@ -427,7 +444,9 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @CsvSource(textBlock = """
+  @CsvSource(
+      textBlock =
+          """
           a  | textA | b   | textB
           a  | textA | ' ' |
           a  |       | b   | textB
@@ -435,9 +454,10 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
           ' '|       | b   | textB
           a  | textA | ' ' |
           ' '|       | ' ' |
-          """, delimiter = '|')
-  void shouldFetchClassificationDataOrHyphenIfNotPresent(char codeA, String dataA,
-                                                         char codeB, String dataB) {
+          """,
+      delimiter = '|')
+  void shouldFetchClassificationDataOrHyphenIfNotPresent(
+      char codeA, String dataA, char codeB, String dataB) {
     var marcRecord = new RecordImpl();
     marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
 

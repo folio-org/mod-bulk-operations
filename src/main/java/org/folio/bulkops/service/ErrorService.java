@@ -52,7 +52,6 @@ import org.folio.spring.data.OffsetRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 @Service
@@ -70,14 +69,21 @@ public class ErrorService {
   private final BulkOperationExecutionContentRepository executionContentRepository;
   private final MetadataProviderClient metadataProviderClient;
 
-  public void saveError(UUID bulkOperationId, String identifier, String errorMessage,
-                        String uiErrorMessage, String link, ErrorType errorType) {
+  public void saveError(
+      UUID bulkOperationId,
+      String identifier,
+      String errorMessage,
+      String uiErrorMessage,
+      String link,
+      ErrorType errorType) {
     if (MSG_NO_CHANGE_REQUIRED.equals(errorMessage)
-            && executionContentRepository.findFirstByBulkOperationIdAndIdentifier(bulkOperationId,
-            identifier).isPresent()) {
+        && executionContentRepository
+            .findFirstByBulkOperationIdAndIdentifier(bulkOperationId, identifier)
+            .isPresent()) {
       return;
     }
-    executionContentRepository.save(BulkOperationExecutionContent.builder()
+    executionContentRepository.save(
+        BulkOperationExecutionContent.builder()
             .identifier(identifier)
             .bulkOperationId(bulkOperationId)
             .state(StateType.FAILED)
@@ -92,8 +98,8 @@ public class ErrorService {
     executionContentRepository.save(bulkOperationExecutionContent);
   }
 
-  public void saveError(UUID bulkOperationId, String identifier,  String errorMessage,
-                        ErrorType errorType) {
+  public void saveError(
+      UUID bulkOperationId, String identifier, String errorMessage, ErrorType errorType) {
     saveError(bulkOperationId, identifier, errorMessage, null, null, errorType);
   }
 
@@ -103,45 +109,57 @@ public class ErrorService {
     log.info("Errors deleted for bulk operation {}", bulkOperationId);
   }
 
-  public Errors getErrorsPreviewByBulkOperationId(UUID bulkOperationId, int limit, int offset,
-                                                  ErrorType errorType) {
-    var bulkOperation = operationRepository.findById(bulkOperationId)
-            .orElseThrow(() -> new NotFoundException("BulkOperation was not found by id="
-                    + bulkOperationId));
+  public Errors getErrorsPreviewByBulkOperationId(
+      UUID bulkOperationId, int limit, int offset, ErrorType errorType) {
+    var bulkOperation =
+        operationRepository
+            .findById(bulkOperationId)
+            .orElseThrow(
+                () ->
+                    new NotFoundException("BulkOperation was not found by id=" + bulkOperationId));
     if (Set.of(DATA_MODIFICATION, REVIEW_CHANGES, REVIEWED_NO_MARC_RECORDS)
             .contains(bulkOperation.getStatus())
-            || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()
+        || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()
             && noCommittedErrors(bulkOperation)
             && noCommittedWarnings(bulkOperation)) {
       var pathToMatchedRecordsErrorsCsvFile = bulkOperation.getLinkToMatchedRecordsErrorsCsvFile();
       if (StringUtils.isEmpty(pathToMatchedRecordsErrorsCsvFile)) {
-        return new Errors()
-          .errors(List.of())
-          .totalRecords(0);
+        return new Errors().errors(List.of()).totalRecords(0);
       }
       ArrayList<Error> errors = new ArrayList<>();
       AtomicInteger counter = new AtomicInteger();
-      try (var reader = new BufferedReader(new InputStreamReader(
-              remoteFileSystemClient.get(pathToMatchedRecordsErrorsCsvFile)))) {
-        reader.lines().forEach(line -> {
-          var message = line.split(Constants.COMMA_DELIMETER, 3);
-          if (isNull(errorType) || Objects.equals(errorType.getValue(), message[IDX_ERROR_TYPE])) {
-            counter.incrementAndGet();
-            if (offset < counter.get() && errors.size() < limit) {
-              errors.add(new Error().message(message[IDX_ERROR_MSG])
-                      .parameters(List.of(new Parameter().key(IDENTIFIER).value(
-                              message[IDX_ERROR_IDENTIFIER])))
-                      .type(ErrorType.fromValue(message[IDX_ERROR_TYPE])));
-            }
-          }
-        });
+      try (var reader =
+          new BufferedReader(
+              new InputStreamReader(
+                  remoteFileSystemClient.get(pathToMatchedRecordsErrorsCsvFile)))) {
+        reader
+            .lines()
+            .forEach(
+                line -> {
+                  var message = line.split(Constants.COMMA_DELIMETER, 3);
+                  if (isNull(errorType)
+                      || Objects.equals(errorType.getValue(), message[IDX_ERROR_TYPE])) {
+                    counter.incrementAndGet();
+                    if (offset < counter.get() && errors.size() < limit) {
+                      errors.add(
+                          new Error()
+                              .message(message[IDX_ERROR_MSG])
+                              .parameters(
+                                  List.of(
+                                      new Parameter()
+                                          .key(IDENTIFIER)
+                                          .value(message[IDX_ERROR_IDENTIFIER])))
+                              .type(ErrorType.fromValue(message[IDX_ERROR_TYPE])));
+                    }
+                  }
+                });
       } catch (IOException e) {
         log.error("Error reading errors from file", e);
         throw new NotFoundException("Cannot process matching errors");
       }
       return new Errors().errors(errors).totalRecords(counter.get());
     } else if (COMPLETED == bulkOperation.getStatus()
-            || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
+        || COMPLETED_WITH_ERRORS == bulkOperation.getStatus()) {
       return getExecutionErrors(bulkOperationId, limit, offset, errorType);
     } else {
       throw new NotFoundException("Errors preview is not available");
@@ -150,8 +168,9 @@ public class ErrorService {
 
   public void saveErrorsFromDataImport(List<JobLogEntry> logEntries, BulkOperation bulkOperation) {
     log.info("Saving errors from DataImport, total entries = {}", logEntries.size());
-    logEntries.stream().filter(entry -> nonNull(entry.getError())).forEach(
-              entry -> processDataImportErrorLogEntry(entry, bulkOperation));
+    logEntries.stream()
+        .filter(entry -> nonNull(entry.getError()))
+        .forEach(entry -> processDataImportErrorLogEntry(entry, bulkOperation));
   }
 
   private void processDataImportErrorLogEntry(JobLogEntry errorEntry, BulkOperation bulkOperation) {
@@ -162,10 +181,10 @@ public class ErrorService {
     } else if (IdentifierType.INSTANCE_HRID.equals(bulkOperation.getIdentifierType())) {
       identifierList = relatedInstanceInfo.getHridList();
     }
-    var identifier = (identifierList == null || identifierList.isEmpty()) ? null
-            : identifierList.getFirst();
+    var identifier =
+        (identifierList == null || identifierList.isEmpty()) ? null : identifierList.getFirst();
     if (errorEntry.getSourceRecordActionStatus() == JobLogEntry.ActionStatus.DISCARDED
-            && errorEntry.getError().isEmpty()) {
+        && errorEntry.getError().isEmpty()) {
       errorEntry.setError(DATA_IMPORT_ERROR_DISCARDED);
     }
     if (!errorEntry.getError().isEmpty()) {
@@ -181,50 +200,62 @@ public class ErrorService {
     return bulkOperation.getCommittedNumOfWarnings() == 0;
   }
 
-  public String getErrorsCsvByBulkOperationId(UUID bulkOperationId, int offset,
-                                              ErrorType errorType) {
+  public String getErrorsCsvByBulkOperationId(
+      UUID bulkOperationId, int offset, ErrorType errorType) {
     return getErrorsPreviewByBulkOperationId(bulkOperationId, Integer.MAX_VALUE, offset, errorType)
-            .getErrors().stream()
-      .map(error -> String.join(Constants.COMMA_DELIMETER, ObjectUtils.isEmpty(
-              error.getParameters()) ? EMPTY : Objects.requireNonNull(error.getType()).getValue(),
-              error.getParameters().getFirst().getValue(), error.getMessage()))
-      .collect(Collectors.joining(Constants.NEW_LINE_SEPARATOR));
+        .getErrors()
+        .stream()
+        .map(
+            error ->
+                String.join(
+                    Constants.COMMA_DELIMETER,
+                    ObjectUtils.isEmpty(error.getParameters())
+                        ? EMPTY
+                        : Objects.requireNonNull(error.getType()).getValue(),
+                    error.getParameters().getFirst().getValue(),
+                    error.getMessage()))
+        .collect(Collectors.joining(Constants.NEW_LINE_SEPARATOR));
   }
 
-  private Errors getExecutionErrors(UUID bulkOperationId, int limit, int offset,
-                                    ErrorType errorType) {
-    int totalRecords = ofNullable(errorType).map(
-            errType -> (int) executionContentRepository.countByBulkOperationIdAndErrorType(
-                    bulkOperationId, errType)).orElseGet(() -> (int) executionContentRepository
-            .countAllByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId));
+  private Errors getExecutionErrors(
+      UUID bulkOperationId, int limit, int offset, ErrorType errorType) {
+    int totalRecords =
+        ofNullable(errorType)
+            .map(
+                errType ->
+                    (int)
+                        executionContentRepository.countByBulkOperationIdAndErrorType(
+                            bulkOperationId, errType))
+            .orElseGet(
+                () ->
+                    (int)
+                        executionContentRepository
+                            .countAllByBulkOperationIdAndErrorMessageIsNotNull(bulkOperationId));
     if (limit == 0) {
-      return new Errors()
-        .errors(List.of())
-        .totalRecords(totalRecords);
+      return new Errors().errors(List.of()).totalRecords(totalRecords);
     }
     Page<BulkOperationExecutionContent> errorPage;
     if (isNull(errorType)) {
-      errorPage = executionContentRepository
-              .findByBulkOperationIdAndErrorMessageIsNotNullOrderByErrorType(bulkOperationId,
-                      OffsetRequest.of(offset, limit));
+      errorPage =
+          executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNullOrderByErrorType(
+              bulkOperationId, OffsetRequest.of(offset, limit));
     } else {
-      errorPage = executionContentRepository
+      errorPage =
+          executionContentRepository
               .findByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIsOrderByErrorType(
-                      bulkOperationId, OffsetRequest.of(offset, limit), errorType);
+                  bulkOperationId, OffsetRequest.of(offset, limit), errorType);
     }
     var errors = errorPage.toList().stream().map(this::executionContentToFolioError).toList();
-    return new Errors()
-      .errors(errors)
-      .totalRecords(totalRecords);
+    return new Errors().errors(errors).totalRecords(totalRecords);
   }
 
   /**
    * Convert BulkOperationExecutionContent to Error for preview on UI.
    *
    * @param content {@link BulkOperationExecutionContent}
-   * @return {@link Error} with message equals to specific UI representation (uiErrorMessage)
-   *         if it is not blank, otherwise - the same message as it is presented in csv file
-   *         with errors (csvErrorMessage)
+   * @return {@link Error} with message equals to specific UI representation (uiErrorMessage) if it
+   *     is not blank, otherwise - the same message as it is presented in csv file with errors
+   *     (csvErrorMessage)
    */
   private Error executionContentToFolioError(BulkOperationExecutionContent content) {
 
@@ -235,75 +266,89 @@ public class ErrorService {
     }
 
     return new Error()
-      .message(StringUtils.isNotBlank(content.getUiErrorMessage()) ? content.getUiErrorMessage()
-              : content.getErrorMessage())
-      .parameters(parameters)
-      .type(content.getErrorType());
+        .message(
+            StringUtils.isNotBlank(content.getUiErrorMessage())
+                ? content.getUiErrorMessage()
+                : content.getErrorMessage())
+        .parameters(parameters)
+        .type(content.getErrorType());
   }
 
-  public String uploadErrorsToStorage(UUID bulkOperationId, String fileNamePrefix,
-                                      String errorString) {
+  public String uploadErrorsToStorage(
+      UUID bulkOperationId, String fileNamePrefix, String errorString) {
     String errors;
     if (errorString != null) {
       errors = errorString;
     } else {
-      var contents = executionContentRepository
-              .findByBulkOperationIdAndErrorMessageIsNotNullOrderByErrorType(bulkOperationId,
-                      OffsetRequest.of(0, Integer.MAX_VALUE));
+      var contents =
+          executionContentRepository.findByBulkOperationIdAndErrorMessageIsNotNullOrderByErrorType(
+              bulkOperationId, OffsetRequest.of(0, Integer.MAX_VALUE));
       if (contents.isEmpty()) {
         return null;
       }
-      errors = contents.stream()
-        .map(content -> String.join(Constants.COMMA_DELIMETER,
-          content.getErrorType().getValue(),
-          content.getIdentifier(),
-          content.getErrorMessage()))
-        .collect(Collectors.joining(LF));
+      errors =
+          contents.stream()
+              .map(
+                  content ->
+                      String.join(
+                          Constants.COMMA_DELIMETER,
+                          content.getErrorType().getValue(),
+                          content.getIdentifier(),
+                          content.getErrorMessage()))
+              .collect(Collectors.joining(LF));
     }
-    var errorsFileName = LocalDate.now() + operationRepository.findById(bulkOperationId)
-            .map(BulkOperation::getLinkToTriggeringCsvFile)
-            .map(FilenameUtils::getName)
-            .map(fileName -> fileNamePrefix + fileName)
-            .orElse(ERROR_FILE_NAME_ENDING);
-    return remoteFileSystemClient.put(new ByteArrayInputStream(errors.getBytes()),
-            bulkOperationId + "/" + errorsFileName);
+    var errorsFileName =
+        LocalDate.now()
+            + operationRepository
+                .findById(bulkOperationId)
+                .map(BulkOperation::getLinkToTriggeringCsvFile)
+                .map(FilenameUtils::getName)
+                .map(fileName -> fileNamePrefix + fileName)
+                .orElse(ERROR_FILE_NAME_ENDING);
+    return remoteFileSystemClient.put(
+        new ByteArrayInputStream(errors.getBytes()), bulkOperationId + "/" + errorsFileName);
   }
 
   public void saveErrorsAfterQuery(
-          List<BulkOperationExecutionContent> bulkOperationExecutionContents,
-          BulkOperation operation) {
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents, BulkOperation operation) {
     StringBuilder sb = new StringBuilder();
-    bulkOperationExecutionContents.sort(Comparator.comparing(
-            BulkOperationExecutionContent::getErrorType));
-    bulkOperationExecutionContents.forEach(exCont -> {
-      if (exCont.getErrorType() == ErrorType.ERROR) {
-        operation.setMatchedNumOfErrors(operation.getMatchedNumOfErrors() + 1);
-      }
-      if (exCont.getErrorType() == ErrorType.WARNING) {
-        operation.setMatchedNumOfWarnings(operation.getMatchedNumOfWarnings() + 1);
-      }
-      var errorLine = "%s%s%s%s%s%s".formatted(exCont.getErrorType(), COMMA_DELIMETER,
-              StringUtils.strip(exCont.getIdentifier(), "\""), COMMA_DELIMETER,
-              exCont.getErrorMessage(), System.lineSeparator());
-      sb.append(errorLine);
-    });
+    bulkOperationExecutionContents.sort(
+        Comparator.comparing(BulkOperationExecutionContent::getErrorType));
+    bulkOperationExecutionContents.forEach(
+        exCont -> {
+          if (exCont.getErrorType() == ErrorType.ERROR) {
+            operation.setMatchedNumOfErrors(operation.getMatchedNumOfErrors() + 1);
+          }
+          if (exCont.getErrorType() == ErrorType.WARNING) {
+            operation.setMatchedNumOfWarnings(operation.getMatchedNumOfWarnings() + 1);
+          }
+          var errorLine =
+              "%s%s%s%s%s%s"
+                  .formatted(
+                      exCont.getErrorType(),
+                      COMMA_DELIMETER,
+                      StringUtils.strip(exCont.getIdentifier(), "\""),
+                      COMMA_DELIMETER,
+                      exCont.getErrorMessage(),
+                      System.lineSeparator());
+          sb.append(errorLine);
+        });
     if (!sb.isEmpty()) {
-      var linkToMatchingErrorsFile = uploadErrorsToStorage(operation.getId(),
-              ERROR_MATCHING_FILE_NAME_PREFIX, sb.toString());
+      var linkToMatchingErrorsFile =
+          uploadErrorsToStorage(operation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, sb.toString());
       operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
     }
   }
 
   public int getCommittedNumOfErrors(UUID bulkOperationId) {
     return executionContentRepository
-            .countAllByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIs(bulkOperationId,
-                    ErrorType.ERROR);
+        .countAllByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIs(
+            bulkOperationId, ErrorType.ERROR);
   }
 
   public int getCommittedNumOfWarnings(UUID bulkOperationId) {
     return executionContentRepository
-            .countAllByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIs(
+        .countAllByBulkOperationIdAndErrorMessageIsNotNullAndErrorTypeIs(
             bulkOperationId, ErrorType.WARNING);
   }
-
 }

@@ -33,13 +33,14 @@ public class SubjectService {
       var tokens = subject.split(delimiter, -1);
       if (NUMBER_OF_SUBJECT_COMPONENTS == tokens.length) {
         return Subject.builder()
-                .value(tokens[SUBJECT_HEADINGS_INDEX])
-                .sourceId(subjectReferenceService.getSubjectSourceIdByName(
-                        tokens[SUBJECT_SOURCE_INDEX]))
-                .typeId(subjectReferenceService.getSubjectTypeIdByName(tokens[SUBJECT_TYPE_INDEX]))
-                .build();
+            .value(tokens[SUBJECT_HEADINGS_INDEX])
+            .sourceId(
+                subjectReferenceService.getSubjectSourceIdByName(tokens[SUBJECT_SOURCE_INDEX]))
+            .typeId(subjectReferenceService.getSubjectTypeIdByName(tokens[SUBJECT_TYPE_INDEX]))
+            .build();
       }
-      throw new EntityFormatException(String.format(
+      throw new EntityFormatException(
+          String.format(
               "Illegal number of subject elements: %d, expected: %d",
               tokens.length, NUMBER_OF_SUBJECT_COMPONENTS));
     }
@@ -51,12 +52,14 @@ public class SubjectService {
   }
 
   private String subjectToString(Subject subject, String delimiter) {
-    return String.join(delimiter,
-      isEmpty(subject.getValue()) ? HYPHEN : subject.getValue(),
-      isEmpty(subject.getSourceId()) ? HYPHEN : subjectReferenceService.getSubjectSourceNameById(
-              subject.getSourceId(), null),
-      isEmpty(subject.getTypeId()) ? HYPHEN : subjectReferenceService.getSubjectTypeNameById(
-              subject.getTypeId(), null));
+    return String.join(
+        delimiter,
+        isEmpty(subject.getValue()) ? HYPHEN : subject.getValue(),
+        isEmpty(subject.getSourceId())
+            ? HYPHEN
+            : subjectReferenceService.getSubjectSourceNameById(subject.getSourceId(), null),
+        isEmpty(subject.getTypeId())
+            ? HYPHEN
+            : subjectReferenceService.getSubjectTypeNameById(subject.getTypeId(), null));
   }
-
 }

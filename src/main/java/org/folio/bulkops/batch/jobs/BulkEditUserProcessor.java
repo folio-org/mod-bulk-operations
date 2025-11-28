@@ -43,20 +43,21 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Log4j2
 @SuppressWarnings("unused")
-public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User>,
-    EntityExtractor {
+public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User>, EntityExtractor {
   private static final String USER_SEARCH_QUERY =
       "(cql.allRecords=1 NOT type=\"\" or type<>\"shadow\") and %s==\"%s\"";
   private static final String USER_SEARCH_QUERY_CENTRAL_TENANT =
-          "(cql.allRecords=1) and %s==\"%s\"";
+      "(cql.allRecords=1) and %s==\"%s\"";
 
   private final UserClient userClient;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
 
   @Value("#{jobParameters['identifierType']}")
   private String identifierType;
+
   @Value("#{stepExecution.jobExecution}")
   private JobExecution jobExecution;
+
   private final FolioExecutionContext folioExecutionContext;
   private final PermissionsValidator permissionsValidator;
   private final ConsortiaService consortiaService;
@@ -66,16 +67,17 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
     if (!permissionsValidator.isBulkEditReadPermissionExists(
         folioExecutionContext.getTenantId(), EntityType.USER)) {
       var user = userClient.getUserById(folioExecutionContext.getUserId().toString());
-      var message = NO_USER_VIEW_PERMISSIONS.formatted(
-          user.getUsername(),
-          resolveIdentifier(identifierType),
-          itemIdentifier.getItemId(),
-          folioExecutionContext.getTenantId()
-      );
+      var message =
+          NO_USER_VIEW_PERMISSIONS.formatted(
+              user.getUsername(),
+              resolveIdentifier(identifierType),
+              itemIdentifier.getItemId(),
+              folioExecutionContext.getTenantId());
       throw new BulkEditException(message, ErrorType.ERROR);
     }
 
-    if (!duplicationCheckerFactory.getIdentifiersToCheckDuplication(jobExecution)
+    if (!duplicationCheckerFactory
+        .getIdentifiersToCheckDuplication(jobExecution)
         .add(itemIdentifier)) {
       throw new BulkEditException("Duplicate entry", ErrorType.WARNING);
     }
@@ -86,10 +88,8 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
       if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
         userSearchQuery = USER_SEARCH_QUERY_CENTRAL_TENANT;
       }
-      var query = userSearchQuery.formatted(
-          resolveIdentifier(identifierType),
-          itemIdentifier.getItemId()
-      );
+      var query =
+          userSearchQuery.formatted(resolveIdentifier(identifierType), itemIdentifier.getItemId());
 
       var userCollection = userClient.getByQuery(query, limit);
 
@@ -102,8 +102,7 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
       }
 
       var user = userCollection.getUsers().getFirst();
-      if (SHADOW.equalsIgnoreCase(ofNullable(user.getType())
-              .map(Object::toString).orElse(EMPTY))) {
+      if (SHADOW.equalsIgnoreCase(ofNullable(user.getType()).map(Object::toString).orElse(EMPTY))) {
         log.error("Exception thrown for shadow user with id: {}", user.getId());
         throw new BulkEditException(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED, ErrorType.ERROR);
       }
@@ -117,13 +116,14 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
 
   private void validateBirthDate(Date birthDate) {
     if (nonNull(birthDate)) {
-      var year = LocalDateTime.ofInstant(Instant.ofEpochMilli(birthDate.getTime()),
-          ZoneOffset.UTC).getYear();
+      var year =
+          LocalDateTime.ofInstant(Instant.ofEpochMilli(birthDate.getTime()), ZoneOffset.UTC)
+              .getYear();
       if (year < MIN_YEAR_FOR_BIRTH_DATE) {
-        var msg = String.format(
-            "Failed to parse Date from value \"%s\" in users.personal.dateOfBirth",
-            dateToString(birthDate)
-        );
+        var msg =
+            String.format(
+                "Failed to parse Date from value \"%s\" in users.personal.dateOfBirth",
+                dateToString(birthDate));
         throw new BulkEditException(msg, ErrorType.ERROR);
       }
     }

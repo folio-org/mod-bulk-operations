@@ -22,4 +22,3 @@ public class ReceivingHistoryEntry {
   @JsonProperty("chronology")
   private String chronology;
 }
-

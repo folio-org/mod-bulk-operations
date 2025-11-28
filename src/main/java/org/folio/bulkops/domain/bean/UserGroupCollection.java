@@ -14,7 +14,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserGroupCollection   {
+public class UserGroupCollection {
   @JsonProperty("usergroups")
   @Valid
   private List<UserGroup> usergroups = null;
@@ -22,4 +22,3 @@ public class UserGroupCollection   {
   @JsonProperty("totalRecords")
   private Integer totalRecords;
 }
-

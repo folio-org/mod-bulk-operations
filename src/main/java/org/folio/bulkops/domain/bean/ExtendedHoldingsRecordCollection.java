@@ -23,4 +23,3 @@ public class ExtendedHoldingsRecordCollection {
   @JsonProperty("totalRecords")
   private Integer totalRecords;
 }
-

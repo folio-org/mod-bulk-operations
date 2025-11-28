@@ -16,4 +16,3 @@ public class CheckBoxField {
   @JsonProperty("default")
   private Boolean fieldDefault;
 }
-

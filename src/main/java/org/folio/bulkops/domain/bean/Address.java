@@ -12,7 +12,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class Address   {
+public class Address {
   @JsonProperty("id")
   private String id;
 
@@ -40,4 +40,3 @@ public class Address   {
   @JsonProperty("primaryAddress")
   private Boolean primaryAddress;
 }
-

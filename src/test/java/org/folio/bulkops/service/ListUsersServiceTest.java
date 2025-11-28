@@ -24,11 +24,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class ListUsersServiceTest extends BaseTest {
 
-  @MockitoBean
-  private JpaCqlRepository<BulkOperation, UUID> bulkOperationCqlRepository;
+  @MockitoBean private JpaCqlRepository<BulkOperation, UUID> bulkOperationCqlRepository;
 
-  @Autowired
-  private ListUsersService listUsersService;
+  @Autowired private ListUsersService listUsersService;
 
   @Test
   void shouldReturnListOfDistinctUsers() {
@@ -41,19 +39,31 @@ class ListUsersServiceTest extends BaseTest {
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
 
       when(userClient.getByQuery("id==(" + firstUserId + " or " + secondUserId + ")", 2))
-              .thenReturn(new UserCollection().withUsers(List.of(
-                      new User().withId(firstUserId.toString())
-                              .withPersonal(new Personal().withFirstName("Test unique")
+          .thenReturn(
+              new UserCollection()
+                  .withUsers(
+                      List.of(
+                          new User()
+                              .withId(firstUserId.toString())
+                              .withPersonal(
+                                  new Personal()
+                                      .withFirstName("Test unique")
                                       .withLastName("Test last name unique")
                                       .withPreferredFirstName("Test preferred first name unique")
                                       .withMiddleName("Test middle name unique")),
-                      new User().withId(secondUserId.toString())
-                              .withPersonal(new Personal().withFirstName("Test repeated")
-                              .withLastName("Test last name repeated")
+                          new User()
+                              .withId(secondUserId.toString())
+                              .withPersonal(
+                                  new Personal()
+                                      .withFirstName("Test repeated")
+                                      .withLastName("Test last name repeated")
                                       .withPreferredFirstName("Test preferred first name repeated")
-                              .withMiddleName("Test middle name repeated")))));
+                                      .withMiddleName("Test middle name repeated")))));
 
-      final Page<BulkOperation> page = new PageImpl<>(List.of(BulkOperation.builder()
+      final Page<BulkOperation> page =
+          new PageImpl<>(
+              List.of(
+                  BulkOperation.builder()
                       .id(firstUserOperationId)
                       .status(OperationStatusType.COMPLETED)
                       .totalNumOfRecords(10)
@@ -61,7 +71,7 @@ class ListUsersServiceTest extends BaseTest {
                       .entityType(EntityType.USER)
                       .userId(firstUserId)
                       .build(),
-              BulkOperation.builder()
+                  BulkOperation.builder()
                       .id(secondUserFirstOperationId)
                       .status(OperationStatusType.COMPLETED)
                       .totalNumOfRecords(10)
@@ -69,7 +79,7 @@ class ListUsersServiceTest extends BaseTest {
                       .entityType(EntityType.USER)
                       .userId(secondUserId)
                       .build(),
-              BulkOperation.builder()
+                  BulkOperation.builder()
                       .id(secondUserSecondOperationId)
                       .status(OperationStatusType.COMPLETED)
                       .totalNumOfRecords(10)
@@ -78,12 +88,11 @@ class ListUsersServiceTest extends BaseTest {
                       .userId(secondUserId)
                       .build()));
 
-      when(bulkOperationCqlRepository.findByCql("(entityType==\"USER\")",
-              OffsetRequest.of(0, 100)))
-              .thenReturn(page);
-      when(bulkOperationCqlRepository.findByCql("(entityType==\"USER\")",
-              OffsetRequest.of(0, Integer.MAX_VALUE)))
-              .thenReturn(page);
+      when(bulkOperationCqlRepository.findByCql("(entityType==\"USER\")", OffsetRequest.of(0, 100)))
+          .thenReturn(page);
+      when(bulkOperationCqlRepository.findByCql(
+              "(entityType==\"USER\")", OffsetRequest.of(0, Integer.MAX_VALUE)))
+          .thenReturn(page);
 
       var query = "(entityType==\"USER\")";
       Integer limit = 100;

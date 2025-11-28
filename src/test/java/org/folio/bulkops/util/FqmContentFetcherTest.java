@@ -57,23 +57,18 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 @ContextConfiguration(initializers = BaseTest.Initializer.class)
 class FqmContentFetcherTest {
 
-  @Autowired
-  private FqmContentFetcher fqmContentFetcher;
+  @Autowired private FqmContentFetcher fqmContentFetcher;
 
   @Value("${application.fqm-fetcher.max_chunk_size}")
   private int chunkSize;
 
-  @MockitoBean
-  private QueryClient queryClient;
+  @MockitoBean private QueryClient queryClient;
 
-  @MockitoBean
-  private FolioExecutionContext folioExecutionContext;
+  @MockitoBean private FolioExecutionContext folioExecutionContext;
 
-  @MockitoBean
-  private ConsortiaService consortiaService;
+  @MockitoBean private ConsortiaService consortiaService;
 
-  @Autowired
-  public ObjectMapper objectMapper;
+  @Autowired public ObjectMapper objectMapper;
 
   @Test
   void fetchShouldProcessMultipleChunksInParallel() throws IOException {
@@ -85,29 +80,35 @@ class FqmContentFetcherTest {
     final var operationId = UUID.randomUUID();
     List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
-    var expected = data.getContent().stream().map(json -> {
-      JsonNode instanceJsonb;
-      try {
-        instanceJsonb = objectMapper.readTree(json.get("instance.jsonb").toString());
-      } catch (JsonProcessingException e) {
-        throw new RuntimeException(e);
-      }
-      var record1 = objectMapper.createObjectNode();
-      record1.set("entity", instanceJsonb);
-      record1.put("tenantId", "test_tenant");
-      return record1.toString();
-    }).toList();
+    var expected =
+        data.getContent().stream()
+            .map(
+                json -> {
+                  JsonNode instanceJsonb;
+                  try {
+                    instanceJsonb = objectMapper.readTree(json.get("instance.jsonb").toString());
+                  } catch (JsonProcessingException e) {
+                    throw new RuntimeException(e);
+                  }
+                  var record1 = objectMapper.createObjectNode();
+                  record1.set("entity", instanceJsonb);
+                  record1.put("tenantId", "test_tenant");
+                  return record1.toString();
+                })
+            .toList();
 
-    IntStream.range(0, (total + chunkSize - 1) / chunkSize).forEach(chunk -> {
-      int offset = chunk * chunkSize;
-      int limit = Math.min(chunkSize, total - offset);
-      when(queryClient.getQuery(queryId, offset, limit))
-          .thenReturn(getMockedData(offset, limit));
-      when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
-    });
+    IntStream.range(0, (total + chunkSize - 1) / chunkSize)
+        .forEach(
+            chunk -> {
+              int offset = chunk * chunkSize;
+              int limit = Math.min(chunkSize, total - offset);
+              when(queryClient.getQuery(queryId, offset, limit))
+                  .thenReturn(getMockedData(offset, limit));
+              when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
+            });
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE,
-            total, contents, operationId)) {
+    try (var is =
+        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
       var actual = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(actual).contains(expected);
     }
@@ -123,38 +124,34 @@ class FqmContentFetcherTest {
     final var operationId = UUID.randomUUID();
     List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
-    IntStream.range(0, ((total + chunkSize - 1) / chunkSize) - 1).forEach(chunk -> {
-      int offset = chunk * chunkSize;
-      int limit = Math.min(chunkSize, total - offset);
-      when(queryClient.getQuery(queryId, offset, limit))
-          .thenReturn(getMockedData(offset, limit));
-      when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
-    });
+    IntStream.range(0, ((total + chunkSize - 1) / chunkSize) - 1)
+        .forEach(
+            chunk -> {
+              int offset = chunk * chunkSize;
+              int limit = Math.min(chunkSize, total - offset);
+              when(queryClient.getQuery(queryId, offset, limit))
+                  .thenReturn(getMockedData(offset, limit));
+              when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
+            });
 
     int offset = ((total + chunkSize - 1) / chunkSize - 1) * chunkSize;
     int limit = Math.min(chunkSize, total - offset);
 
-    var req = Request.create(
-        Request.HttpMethod.GET,
-        "",
-        Map.of(),
-        new byte[] {},
-        Charset.defaultCharset(),
-        null
-    );
+    var req =
+        Request.create(
+            Request.HttpMethod.GET, "", Map.of(), new byte[] {}, Charset.defaultCharset(), null);
 
-    var response = Response.builder()
-        .status(500)
-        .reason("GET-Error")
-        .request(req)
-        .build();
+    var response = Response.builder().status(500).reason("GET-Error").request(req).build();
     doThrow(FeignException.errorStatus("", response))
-        .when(queryClient).getQuery(queryId, offset, limit);
+        .when(queryClient)
+        .getQuery(queryId, offset, limit);
 
-    Exception exception = assertThrows(
-        FqmFetcherException.class,
-        () -> fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)
-    );
+    Exception exception =
+        assertThrows(
+            FqmFetcherException.class,
+            () ->
+                fqmContentFetcher.fetch(
+                    queryId, EntityType.INSTANCE, total, contents, operationId));
 
     assertThat(exception.getCause().getCause()).isInstanceOf(FeignException.class);
   }
@@ -164,17 +161,10 @@ class FqmContentFetcherTest {
     try {
       var mapper = new ObjectMapper();
       var is = getClass().getClassLoader().getResourceAsStream("fqmClient/fqmClientResponse.json");
-      var data = mapper.readValue(
-              is,
-              new TypeReference<QueryDetails>() {
-        });
+      var data = mapper.readValue(is, new TypeReference<QueryDetails>() {});
 
       Assertions.assertNotNull(data.getContent());
-      var content = data.getContent()
-              .stream()
-              .skip(offset)
-              .limit(limit)
-              .toList();
+      var content = data.getContent().stream().skip(offset).limit(limit).toList();
 
       return data.content(content);
     } catch (Exception e) {
@@ -215,8 +205,7 @@ class FqmContentFetcherTest {
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"item-tenant\"");
 
-      String expectedTitle = "\"title\":\"Instance Title 1. Olaf Ladousse,"
-          + " 1992-\"";
+      String expectedTitle = "\"title\":\"Instance Title 1. Olaf Ladousse," + " 1992-\"";
       assertThat(result).contains(expectedTitle);
     }
   }
@@ -231,8 +220,9 @@ class FqmContentFetcherTest {
     when(queryClient.getQuery(queryId, 0, total))
         .thenReturn(getMockedDataForEntityType(EntityType.HOLDINGS_RECORD, total));
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.HOLDINGS_RECORD, total,
-            contents, operationId)) {
+    try (var is =
+        fqmContentFetcher.fetch(
+            queryId, EntityType.HOLDINGS_RECORD, total, contents, operationId)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"holdings-tenant\"");
@@ -252,8 +242,8 @@ class FqmContentFetcherTest {
     when(queryClient.getQuery(queryId, 0, total))
         .thenReturn(getMockedDataForEntityType(EntityType.INSTANCE, total));
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total,
-            contents, operationId)) {
+    try (var is =
+        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"instance-tenant\"");
@@ -261,8 +251,10 @@ class FqmContentFetcherTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = EntityType.class, names = {"INSTANCE", "INSTANCE_MARC"},
-          mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(
+      value = EntityType.class,
+      names = {"INSTANCE", "INSTANCE_MARC"},
+      mode = EnumSource.Mode.INCLUDE)
   void fetchShouldReturnAnErrorForNonSharedInstancesInEcs(EntityType entityType) throws Exception {
     final var queryId = UUID.randomUUID();
     final int total = 2;
@@ -307,8 +299,8 @@ class FqmContentFetcherTest {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
-      assertThat(contents.getFirst().getErrorMessage()).isEqualTo(
-              MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
+      assertThat(contents.getFirst().getErrorMessage())
+          .isEqualTo(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
       assertThat(result).isEmpty();
     }
   }
@@ -323,8 +315,8 @@ class FqmContentFetcherTest {
     when(queryClient.getQuery(queryId, 0, total))
         .thenReturn(getMockedDataForEntityType(EntityType.INSTANCE_MARC, total));
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE_MARC, total,
-            contents, operationId)) {
+    try (var is =
+        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE_MARC, total, contents, operationId)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"instance-tenant\"");
@@ -338,17 +330,14 @@ class FqmContentFetcherTest {
     final var operationId = UUID.randomUUID();
     List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("central-tenant");
-    when(consortiaService.isTenantCentral("central-tenant"))
-        .thenReturn(true);
+    when(consortiaService.isTenantCentral("central-tenant")).thenReturn(true);
     var mockForInstanceWithoutTenant = getMockedDataForEntityType(EntityType.INSTANCE, total);
     Assertions.assertNotNull(mockForInstanceWithoutTenant.getContent());
-    mockForInstanceWithoutTenant.getContent().forEach(
-            map -> map.remove("instance.tenant_id"));
-    when(queryClient.getQuery(queryId, 0, total))
-        .thenReturn(mockForInstanceWithoutTenant);
+    mockForInstanceWithoutTenant.getContent().forEach(map -> map.remove("instance.tenant_id"));
+    when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockForInstanceWithoutTenant);
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total,
-            contents, operationId)) {
+    try (var is =
+        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
       is.readAllBytes();
     }
 
@@ -368,13 +357,12 @@ class FqmContentFetcherTest {
     final var operationId = UUID.randomUUID();
     List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
-    when(consortiaService.isTenantCentral("member-tenant"))
-        .thenReturn(false);
+    when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
     when(queryClient.getQuery(queryId, 0, total))
         .thenReturn(getMockedDataForEntityType(EntityType.INSTANCE, total));
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total,
-            contents, operationId)) {
+    try (var is =
+        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
       is.readAllBytes();
     }
 
@@ -388,8 +376,7 @@ class FqmContentFetcherTest {
     final var operationId = UUID.randomUUID();
     List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
-    when(consortiaService.isTenantCentral("member-tenant"))
-        .thenReturn(false);
+    when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
     when(queryClient.getQuery(queryId, 0, total))
         .thenReturn(getMockedDataForEntityType(EntityType.USER, total));
 
@@ -419,8 +406,7 @@ class FqmContentFetcherTest {
           map.put(
               FQM_INSTANCES_PUBLICATION_KEY,
               "[{\"place\": \"Madrid\", \"publisher\": \"Olaf Ladousse\", "
-                  + "\"dateOfPublication\": \"1992-\"}]"
-          );
+                  + "\"dateOfPublication\": \"1992-\"}]");
         }
         case HOLDINGS_RECORD -> {
           map.put("holdings.jsonb", "{\"id\":\"holdings-id-" + i + "\"}");
@@ -429,8 +415,7 @@ class FqmContentFetcherTest {
           map.put(
               FQM_INSTANCE_PUBLICATION_KEY,
               "[{\"place\": \"Madrid\", \"publisher\": \"Olaf Ladousse\", "
-                  + "\"dateOfPublication\": \"1992-\"}]"
-          );
+                  + "\"dateOfPublication\": \"1992-\"}]");
         }
         case INSTANCE, INSTANCE_MARC -> {
           map.put("instance.jsonb", "{\"id\":\"instance-id-" + i + "\"}");

@@ -16,9 +16,11 @@ public class ElectronicAccessListInstanceConverter extends ElectronicAccessListC
   @Override
   public String convertToString(List<ElectronicAccess> object) {
     return ObjectUtils.isEmpty(object)
-            ? EMPTY : ELECTRONIC_ACCESS_HEADINGS + object.stream()
-          .filter(Objects::nonNull)
-          .map(ElectronicAccessHelper.service()::electronicAccessInstanceToString)
-          .collect(Collectors.joining(SPECIAL_ITEM_DELIMITER));
+        ? EMPTY
+        : ELECTRONIC_ACCESS_HEADINGS
+            + object.stream()
+                .filter(Objects::nonNull)
+                .map(ElectronicAccessHelper.service()::electronicAccessInstanceToString)
+                .collect(Collectors.joining(SPECIAL_ITEM_DELIMITER));
   }
 }

@@ -16,11 +16,11 @@ class SearchIdentifierTypeResolverTest {
         .isEqualTo(BatchIdsDto.IdentifierTypeEnum.HRID);
     assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.BARCODE))
         .isEqualTo(BatchIdsDto.IdentifierTypeEnum.BARCODE);
-    assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(
-            IdentifierType.HOLDINGS_RECORD_ID))
+    assertThat(
+            SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.HOLDINGS_RECORD_ID))
         .isEqualTo(BatchIdsDto.IdentifierTypeEnum.HOLDINGSRECORDID);
-    assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(
-            IdentifierType.ACCESSION_NUMBER))
+    assertThat(
+            SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.ACCESSION_NUMBER))
         .isEqualTo(BatchIdsDto.IdentifierTypeEnum.ACCESSIONNUMBER);
     assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.FORMER_IDS))
         .isEqualTo(BatchIdsDto.IdentifierTypeEnum.FORMERIDS);

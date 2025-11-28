@@ -51,21 +51,20 @@ public class KafkaService {
 
     log.info("Creating topics for kafka [topics: {}]", newTopics);
     var configurableBeanFactory = (ConfigurableBeanFactory) beanFactory;
-    newTopics.forEach(newTopic -> {
-      var beanName = newTopic.name() + ".topic";
-      if (!configurableBeanFactory.containsBean(beanName)) {
-        configurableBeanFactory.registerSingleton(beanName, newTopic);
-      }
-    });
+    newTopics.forEach(
+        newTopic -> {
+          var beanName = newTopic.name() + ".topic";
+          if (!configurableBeanFactory.containsBean(beanName)) {
+            configurableBeanFactory.registerSingleton(beanName, newTopic);
+          }
+        });
     kafkaAdmin.initialize();
   }
 
-  /**
-   * Restarts kafka event listeners in mod-data-export-spring application.
-   */
+  /** Restarts kafka event listeners in mod-data-export-spring application. */
   public void restartEventListeners() {
-    log.info("Restarting kafka consumer to start listening created topics [id: {}]",
-            EVENT_LISTENER_ID);
+    log.info(
+        "Restarting kafka consumer to start listening created topics [id: {}]", EVENT_LISTENER_ID);
     var listenerContainer = kafkaListenerEndpointRegistry.getListenerContainer(EVENT_LISTENER_ID);
     if (Objects.nonNull(listenerContainer)) {
       listenerContainer.stop();
@@ -77,13 +76,13 @@ public class KafkaService {
 
   private List<NewTopic> tenantSpecificTopics(String tenant) {
     return Arrays.stream(Topic.values())
-      .map(topic -> toKafkaTopic(tenant, topic))
-      .collect(Collectors.toList());
+        .map(topic -> toKafkaTopic(tenant, topic))
+        .collect(Collectors.toList());
   }
 
   private NewTopic toKafkaTopic(String tenant, Topic topic) {
-    var envProperty = String.format("application.kafka.topic-configuration.%s.partitions",
-            topic.getTopicName());
+    var envProperty =
+        String.format("application.kafka.topic-configuration.%s.partitions", topic.getTopicName());
     var partitions = Integer.parseInt(springEnvironment.getProperty(envProperty, "50"));
     var tenantTopicName = getTenantTopicName(topic.getTopicName(), tenant);
     return TopicBuilder.name(tenantTopicName).partitions(partitions).build();

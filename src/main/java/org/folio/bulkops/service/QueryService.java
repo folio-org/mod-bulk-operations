@@ -72,34 +72,43 @@ public class QueryService {
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
   public BulkOperation retrieveRecordsAndCheckQueryExecutionStatus(BulkOperation bulkOperation) {
-    executor.execute(getRunnableWithCurrentFolioContext(() -> {
-      var queryResult = queryClient.getQuery(bulkOperation.getFqlQueryId(), true);
-      switch (queryResult.getStatus()) {
-        case IN_PROGRESS -> log.info("Retrieving records by FQM for operation {} in progress...",
-                bulkOperation.getId());
-        case SUCCESS -> {
-          if (queryResult.getTotalRecords() == 0) {
-            failBulkOperation(bulkOperation, "No records found for the query");
-          } else {
-            bulkOperation.setTotalNumOfRecords(queryResult.getTotalRecords());
-            List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
-            try (var is = fqmContentFetcher.fetch(bulkOperation.getFqlQueryId(),
-                    bulkOperation.getEntityType(),
-                    queryResult.getTotalRecords(), bulkOperationExecutionContents,
-                    bulkOperation.getId())) {
-              startQueryOperation(is, bulkOperation, bulkOperationExecutionContents);
-            } catch (Exception e) {
-              var errorMessage = "Failed to save identifiers, reason: " + e.getMessage();
-              log.error(errorMessage);
-              failBulkOperation(bulkOperation, errorMessage);
-            }
-          }
-        }
-        case FAILED -> failBulkOperation(bulkOperation, queryResult.getFailureReason());
-        case CANCELLED -> cancelBulkOperation((bulkOperation));
-        default -> throw new IllegalStateException("Unexpected value: " + queryResult.getStatus());
-      }
-    }));
+    executor.execute(
+        getRunnableWithCurrentFolioContext(
+            () -> {
+              var queryResult = queryClient.getQuery(bulkOperation.getFqlQueryId(), true);
+              switch (queryResult.getStatus()) {
+                case IN_PROGRESS ->
+                    log.info(
+                        "Retrieving records by FQM for operation {} in progress...",
+                        bulkOperation.getId());
+                case SUCCESS -> {
+                  if (queryResult.getTotalRecords() == 0) {
+                    failBulkOperation(bulkOperation, "No records found for the query");
+                  } else {
+                    bulkOperation.setTotalNumOfRecords(queryResult.getTotalRecords());
+                    List<BulkOperationExecutionContent> bulkOperationExecutionContents =
+                        new ArrayList<>();
+                    try (var is =
+                        fqmContentFetcher.fetch(
+                            bulkOperation.getFqlQueryId(),
+                            bulkOperation.getEntityType(),
+                            queryResult.getTotalRecords(),
+                            bulkOperationExecutionContents,
+                            bulkOperation.getId())) {
+                      startQueryOperation(is, bulkOperation, bulkOperationExecutionContents);
+                    } catch (Exception e) {
+                      var errorMessage = "Failed to save identifiers, reason: " + e.getMessage();
+                      log.error(errorMessage);
+                      failBulkOperation(bulkOperation, errorMessage);
+                    }
+                  }
+                }
+                case FAILED -> failBulkOperation(bulkOperation, queryResult.getFailureReason());
+                case CANCELLED -> cancelBulkOperation((bulkOperation));
+                default ->
+                    throw new IllegalStateException("Unexpected value: " + queryResult.getStatus());
+              }
+            }));
     bulkOperation.setStatus(RETRIEVING_RECORDS);
     bulkOperationRepository.save(bulkOperation);
     return bulkOperation;
@@ -107,8 +116,8 @@ public class QueryService {
 
   public void saveIdentifiers(BulkOperation bulkOperation) {
     try {
-      var identifiersString = queryClient.getSortedIds(bulkOperation.getFqlQueryId(), 0,
-                      Integer.MAX_VALUE).stream()
+      var identifiersString =
+          queryClient.getSortedIds(bulkOperation.getFqlQueryId(), 0, Integer.MAX_VALUE).stream()
               .map(List::getFirst)
               .distinct()
               .collect(Collectors.joining(NEW_LINE_SEPARATOR));
@@ -125,23 +134,32 @@ public class QueryService {
     }
   }
 
-  private void startQueryOperation(InputStream is, BulkOperation operation,
-                                   List<BulkOperationExecutionContent>
-                                           bulkOperationExecutionContents) {
+  private void startQueryOperation(
+      InputStream is,
+      BulkOperation operation,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents) {
     try {
       var triggeringCsvFileName = String.format(QUERY_FILENAME_TEMPLATE, operation.getId());
-      var matchedJsonFileName = getMatchedFileName(operation.getId(), "json/", "Matched",
-              triggeringCsvFileName, "json");
-      var matchedMrcFileName = getMatchedFileName(operation.getId(), StringUtils.EMPTY, "Marc",
-              triggeringCsvFileName, "mrc");
-      var matchedCsvFileName = getMatchedFileName(operation.getId(), StringUtils.EMPTY, "Matched",
-              triggeringCsvFileName, "csv");
+      var matchedJsonFileName =
+          getMatchedFileName(operation.getId(), "json/", "Matched", triggeringCsvFileName, "json");
+      var matchedMrcFileName =
+          getMatchedFileName(
+              operation.getId(), StringUtils.EMPTY, "Marc", triggeringCsvFileName, "mrc");
+      var matchedCsvFileName =
+          getMatchedFileName(
+              operation.getId(), StringUtils.EMPTY, "Matched", triggeringCsvFileName, "csv");
 
       operation.setStatus(RETRIEVING_RECORDS);
       bulkOperationRepository.save(operation);
 
-      processQueryResult(is, triggeringCsvFileName, matchedCsvFileName, matchedJsonFileName,
-              matchedMrcFileName, operation, bulkOperationExecutionContents);
+      processQueryResult(
+          is,
+          triggeringCsvFileName,
+          matchedCsvFileName,
+          matchedJsonFileName,
+          matchedMrcFileName,
+          operation,
+          bulkOperationExecutionContents);
 
       if (operation.getMatchedNumOfRecords() > 0) {
         operation.setLinkToTriggeringCsvFile(triggeringCsvFileName);
@@ -158,23 +176,26 @@ public class QueryService {
       operation.setStatus(FAILED);
       operation.setErrorMessage(e.getMessage());
       operation.setEndTime(LocalDateTime.now());
-      var linkToMatchingErrorsFile = errorService.uploadErrorsToStorage(operation.getId(),
-              ERROR_MATCHING_FILE_NAME_PREFIX, e.getMessage());
+      var linkToMatchingErrorsFile =
+          errorService.uploadErrorsToStorage(
+              operation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, e.getMessage());
       operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
     }
   }
 
-  private void processQueryResult(InputStream is, String triggeringCsvFileName,
-                                  String matchedCsvFileName,
-                                  String matchedJsonFileName,
-                                  String matchedMrcFileName, BulkOperation operation,
-                                  List<BulkOperationExecutionContent>
-                                          bulkOperationExecutionContents)
-          throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
+  private void processQueryResult(
+      InputStream is,
+      String triggeringCsvFileName,
+      String matchedCsvFileName,
+      String matchedJsonFileName,
+      String matchedMrcFileName,
+      BulkOperation operation,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents)
+      throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
     try (var writerForTriggeringCsvFile = remoteFileSystemClient.writer(triggeringCsvFileName);
-         var writerForResultCsvFile = remoteFileSystemClient.writer(matchedCsvFileName);
-         var writerForResultJsonFile = remoteFileSystemClient.writer(matchedJsonFileName);
-         var writerForResultMrcFile = remoteFileSystemClient.writer(matchedMrcFileName)) {
+        var writerForResultCsvFile = remoteFileSystemClient.writer(matchedCsvFileName);
+        var writerForResultJsonFile = remoteFileSystemClient.writer(matchedJsonFileName);
+        var writerForResultMrcFile = remoteFileSystemClient.writer(matchedMrcFileName)) {
       var entityClass = resolveEntityClass(operation.getEntityType());
       var extendedEntityClass = resolveExtendedEntityClass(operation.getEntityType());
       var csvWriter = new BulkOperationsEntityCsvWriter(writerForResultCsvFile, entityClass);
@@ -192,7 +213,7 @@ public class QueryService {
           localReferenceDataService.enrichWithTenant(item, extendedRecord.getTenant());
         }
         if (extendedRecord.getRecordBulkOperationEntity()
-                instanceof HoldingsRecord holdingsRecord) {
+            instanceof HoldingsRecord holdingsRecord) {
           localReferenceDataService.enrichWithTenant(holdingsRecord, extendedRecord.getTenant());
         }
 
@@ -202,22 +223,31 @@ public class QueryService {
           permissionsValidator.checkPermissions(operation, extendedRecord);
 
           if (extendedRecord.isMarcInstance()) {
-            processQueryResultForMarc(extendedRecord.getRecordBulkOperationEntity(),
-                    writerForResultMrcFile, operation, matchedMrcFileName);
+            processQueryResultForMarc(
+                extendedRecord.getRecordBulkOperationEntity(),
+                writerForResultMrcFile,
+                operation,
+                matchedMrcFileName);
           }
 
           var extendedRecordAsJsonString = objectMapper.writeValueAsString(extendedRecord);
 
           writerForResultJsonFile.append(extendedRecordAsJsonString);
-          CsvHelper.writeBeanToCsv(operation, csvWriter,
-                  extendedRecord.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
+          CsvHelper.writeBeanToCsv(
+              operation,
+              csvWriter,
+              extendedRecord.getRecordBulkOperationEntity(),
+              bulkOperationExecutionContents);
           numMatched++;
         } catch (UploadFromQueryException e) {
-          handleError(bulkOperationExecutionContents, e,
-                  extendedRecord.getRecordBulkOperationEntity(), operation);
+          handleError(
+              bulkOperationExecutionContents,
+              e,
+              extendedRecord.getRecordBulkOperationEntity(),
+              operation);
         } finally {
-          writerForTriggeringCsvFile.write(extendedRecord.getRecordBulkOperationEntity().getId()
-                  + NEW_LINE_SEPARATOR);
+          writerForTriggeringCsvFile.write(
+              extendedRecord.getRecordBulkOperationEntity().getId() + NEW_LINE_SEPARATOR);
         }
         ++numProcessed;
 
@@ -233,8 +263,8 @@ public class QueryService {
     }
   }
 
-  private void updateOperationExecutionStatus(BulkOperation operation, int numProcessed,
-                                              int numMatched) {
+  private void updateOperationExecutionStatus(
+      BulkOperation operation, int numProcessed, int numMatched) {
     operation.setProcessedNumOfRecords(numProcessed);
     operation.setMatchedNumOfRecords(numMatched);
     bulkOperationRepository.save(operation);
@@ -254,10 +284,12 @@ public class QueryService {
     bulkOperationRepository.save(bulkOperation);
   }
 
-  private void processQueryResultForMarc(BulkOperationsEntity entityRecord,
-                                         Writer writerForResultMrcFile,
-                                         BulkOperation operation, String matchedMrcFileName)
-          throws UploadFromQueryException {
+  private void processQueryResultForMarc(
+      BulkOperationsEntity entityRecord,
+      Writer writerForResultMrcFile,
+      BulkOperation operation,
+      String matchedMrcFileName)
+      throws UploadFromQueryException {
     try {
       var marcJsonString = srsService.getMarcJsonString(entityRecord.getId());
       writerForResultMrcFile.append(marcJsonString);
@@ -267,16 +299,19 @@ public class QueryService {
     } catch (MarcValidationException mve) {
       throw new UploadFromQueryException(mve.getMessage());
     } catch (IOException ioe) {
-      throw new UploadFromQueryException(NO_MARC_CONTENT.formatted(entityRecord.getId(),
-              ioe.getMessage()), entityRecord.getId());
+      throw new UploadFromQueryException(
+          NO_MARC_CONTENT.formatted(entityRecord.getId(), ioe.getMessage()), entityRecord.getId());
     }
   }
 
-  private void handleError(List<BulkOperationExecutionContent> bulkOperationExecutionContents,
-                           Exception e, BulkOperationsEntity entityRecord,
-                           BulkOperation operation) {
+  private void handleError(
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      Exception e,
+      BulkOperationsEntity entityRecord,
+      BulkOperation operation) {
     log.error(e);
-    bulkOperationExecutionContents.add(BulkOperationExecutionContent.builder()
+    bulkOperationExecutionContents.add(
+        BulkOperationExecutionContent.builder()
             .identifier(entityRecord.getId())
             .bulkOperationId(operation.getId())
             .state(StateType.FAILED)

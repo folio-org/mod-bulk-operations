@@ -14,8 +14,8 @@ import org.marc4j.marc.Record;
 
 @UtilityClass
 public class MarcValidator {
-  public static final String INVALID_MARC_MESSAGE
-          = "Underlying MARC record contains invalid data and the record cannot be updated.";
+  public static final String INVALID_MARC_MESSAGE =
+      "Underlying MARC record contains invalid data and the record cannot be updated.";
 
   public static void validate(String marcJsonString) throws MarcValidationException, IOException {
     try (var is = new ByteArrayInputStream(marcJsonString.getBytes(StandardCharsets.UTF_8))) {

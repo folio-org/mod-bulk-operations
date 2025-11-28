@@ -22,4 +22,3 @@ public class Facet {
   @JsonProperty("type")
   private String type;
 }
-

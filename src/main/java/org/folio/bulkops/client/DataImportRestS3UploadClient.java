@@ -10,7 +10,8 @@ import org.springframework.web.client.RestTemplate;
 @Component
 public class DataImportRestS3UploadClient {
   public ResponseEntity<String> uploadFile(String presignedUrl, byte[] fileContent) {
-    return new RestTemplate().exchange(URI.create(presignedUrl), HttpMethod.PUT,
-            new HttpEntity<>(fileContent), String.class);
+    return new RestTemplate()
+        .exchange(
+            URI.create(presignedUrl), HttpMethod.PUT, new HttpEntity<>(fileContent), String.class);
   }
 }

@@ -26,21 +26,14 @@ import org.springframework.cache.CacheManager;
 @ExtendWith(MockitoExtension.class)
 class HoldingsNotesProcessorTest {
 
-  @Mock
-  private HoldingsReferenceService holdingsReferenceService;
-  @Mock
-  private FolioExecutionContext folioExecutionContext;
-  @Mock
-  private ConsortiaService consortiaService;
-  @Mock
-  private CacheManager cacheManager;
-  @Mock
-  private Cache cache;
-  @Mock
-  private NoteTableUpdater noteTableUpdater;
+  @Mock private HoldingsReferenceService holdingsReferenceService;
+  @Mock private FolioExecutionContext folioExecutionContext;
+  @Mock private ConsortiaService consortiaService;
+  @Mock private CacheManager cacheManager;
+  @Mock private Cache cache;
+  @Mock private NoteTableUpdater noteTableUpdater;
 
-  @InjectMocks
-  private HoldingsNotesProcessor holdingsNotesProcessor;
+  @InjectMocks private HoldingsNotesProcessor holdingsNotesProcessor;
 
   @BeforeEach
   void setUp() {
@@ -57,7 +50,7 @@ class HoldingsNotesProcessorTest {
 
     when(folioExecutionContext.getTenantId()).thenReturn("central");
     when(holdingsReferenceService.getAllHoldingsNoteTypes("central"))
-            .thenReturn(List.of(noteType1));
+        .thenReturn(List.of(noteType1));
     when(holdingsReferenceService.getAllHoldingsNoteTypes("member")).thenReturn(List.of(noteType2));
 
     when(consortiaService.isTenantCentral(any())).thenReturn(true);

@@ -59,17 +59,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class FolioInstanceDataProcessorTest extends BaseTest {
-  @Autowired
-  DataProcessorFactory factory;
-  @MockitoBean
-  ErrorService errorService;
-  @MockitoBean
-  private ConsortiaService consortiaService;
+  @Autowired DataProcessorFactory factory;
+  @MockitoBean ErrorService errorService;
+  @MockitoBean private ConsortiaService consortiaService;
 
   private FolioDataProcessor<ExtendedInstance> processor;
 
   public static final String IDENTIFIER = "123";
-
 
   @BeforeEach
   void setUp() {
@@ -82,8 +78,9 @@ class FolioInstanceDataProcessorTest extends BaseTest {
   @Test
   void testSetStaffSuppressToTrue() {
     var extendedInstance = ExtendedInstance.builder().entity(new Instance()).build();
-    var actual = processor.process(IDENTIFIER, extendedInstance,
-            rules(rule(STAFF_SUPPRESS, SET_TO_TRUE, null)));
+    var actual =
+        processor.process(
+            IDENTIFIER, extendedInstance, rules(rule(STAFF_SUPPRESS, SET_TO_TRUE, null)));
     assertNotNull(actual.getUpdated());
     assertTrue(actual.getUpdated().getEntity().getStaffSuppress());
   }
@@ -91,29 +88,33 @@ class FolioInstanceDataProcessorTest extends BaseTest {
   @Test
   void testSetStaffSuppressToFalse() {
     var extendedInstance = ExtendedInstance.builder().entity(new Instance()).build();
-    var actual = processor.process(IDENTIFIER, extendedInstance,
-            rules(rule(STAFF_SUPPRESS, SET_TO_FALSE, null)));
+    var actual =
+        processor.process(
+            IDENTIFIER, extendedInstance, rules(rule(STAFF_SUPPRESS, SET_TO_FALSE, null)));
     assertNotNull(actual.getUpdated());
     assertFalse(actual.getUpdated().getEntity().getStaffSuppress());
   }
 
   @Test
   void shouldNotUpdateInstanceWhenActionIsInvalid() {
-    var extendedInstance = ExtendedInstance.builder().entity(new Instance()
-            .withDiscoverySuppress(true)).build();
-    var actual = processor.process(IDENTIFIER, extendedInstance,
-            rules(rule(STAFF_SUPPRESS, CLEAR_FIELD, null)));
+    var extendedInstance =
+        ExtendedInstance.builder().entity(new Instance().withDiscoverySuppress(true)).build();
+    var actual =
+        processor.process(
+            IDENTIFIER, extendedInstance, rules(rule(STAFF_SUPPRESS, CLEAR_FIELD, null)));
     assertTrue(actual.getUpdated().getEntity().getDiscoverySuppress());
-    verify(errorService).saveError(any(UUID.class), eq(IDENTIFIER), anyString(),
-            eq(ErrorType.ERROR));
+    verify(errorService)
+        .saveError(any(UUID.class), eq(IDENTIFIER), anyString(), eq(ErrorType.ERROR));
   }
 
   @Test
   void testClone() {
-    var folioInstanceDataProcessor = new FolioInstanceDataProcessor(
-            new InstanceNotesUpdaterFactory(new AdministrativeNotesUpdater(),
-            new StatisticalCodesUpdater()));
-    var instance = Instance.builder()
+    var folioInstanceDataProcessor =
+        new FolioInstanceDataProcessor(
+            new InstanceNotesUpdaterFactory(
+                new AdministrativeNotesUpdater(), new StatisticalCodesUpdater()));
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .title("Title")
             .discoverySuppress(false)
@@ -128,72 +129,96 @@ class FolioInstanceDataProcessorTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UpdateActionType.class,
-          names = {"MARK_AS_STAFF_ONLY", "REMOVE_MARK_AS_STAFF_ONLY"},
-          mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(
+      value = UpdateActionType.class,
+      names = {"MARK_AS_STAFF_ONLY", "REMOVE_MARK_AS_STAFF_ONLY"},
+      mode = EnumSource.Mode.INCLUDE)
   void shouldSetOrRemoveStaffOnlyForInstanceNotesByInstanceNoteTypeId(UpdateActionType actionType) {
 
     var typeId = UUID.randomUUID().toString();
     var staffOnly = REMOVE_MARK_AS_STAFF_ONLY.equals(actionType);
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("FOLIO")
             .title("Sample title")
-            .instanceNotes(List.of(InstanceNote.builder()
-                            .instanceNoteTypeId(typeId).staffOnly(staffOnly).build(),
+            .instanceNotes(
+                List.of(
+                    InstanceNote.builder().instanceNoteTypeId(typeId).staffOnly(staffOnly).build(),
                     InstanceNote.builder()
-                            .instanceNoteTypeId(UUID.randomUUID().toString())
-                            .staffOnly(staffOnly).build()))
+                        .instanceNoteTypeId(UUID.randomUUID().toString())
+                        .staffOnly(staffOnly)
+                        .build()))
             .build();
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
-    var rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(INSTANCE_NOTE)
-                    .actions(Collections.singletonList(new Action()
-                            .type(actionType)
-                            .parameters(Collections.singletonList(new Parameter()
-                                    .key(INSTANCE_NOTE_TYPE_ID_KEY)
-                                    .value(typeId)))))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(INSTANCE_NOTE)
+                        .actions(
+                            Collections.singletonList(
+                                new Action()
+                                    .type(actionType)
+                                    .parameters(
+                                        Collections.singletonList(
+                                            new Parameter()
+                                                .key(INSTANCE_NOTE_TYPE_ID_KEY)
+                                                .value(typeId)))))));
 
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
-    assertTrue(result.getUpdated().getEntity().getInstanceNotes().stream()
+    assertTrue(
+        result.getUpdated().getEntity().getInstanceNotes().stream()
             .filter(instanceNote -> typeId.equals(instanceNote.getInstanceNoteTypeId()))
             .map(InstanceNote::getStaffOnly)
             .allMatch(so -> so.equals(!staffOnly)));
-    assertTrue(result.getUpdated().getEntity().getInstanceNotes().stream()
+    assertTrue(
+        result.getUpdated().getEntity().getInstanceNotes().stream()
             .filter(instanceNote -> !typeId.equals(instanceNote.getInstanceNoteTypeId()))
             .map(InstanceNote::getStaffOnly)
             .noneMatch(so -> so.equals(!staffOnly)));
   }
 
   @ParameterizedTest
-  @EnumSource(value = UpdateOptionType.class,
-          names = {"ADMINISTRATIVE_NOTE", "INSTANCE_NOTE"},
-          mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(
+      value = UpdateOptionType.class,
+      names = {"ADMINISTRATIVE_NOTE", "INSTANCE_NOTE"},
+      mode = EnumSource.Mode.INCLUDE)
   void shouldRemoveAllAdministrativeNotesOrInstanceNotesByInstanceNoteTypeId(
-          UpdateOptionType optionType) {
+      UpdateOptionType optionType) {
     var typeId = UUID.randomUUID().toString();
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("FOLIO")
             .title("Sample title")
             .administrativeNotes(Collections.singletonList("Administrative note"))
-            .instanceNotes(List.of(InstanceNote.builder()
-                            .instanceNoteTypeId(typeId).build(),
+            .instanceNotes(
+                List.of(
+                    InstanceNote.builder().instanceNoteTypeId(typeId).build(),
                     InstanceNote.builder()
-                            .instanceNoteTypeId(UUID.randomUUID().toString()).build()))
+                        .instanceNoteTypeId(UUID.randomUUID().toString())
+                        .build()))
             .build();
 
-    var rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(optionType)
-                    .actions(Collections.singletonList(new Action()
-                            .type(REMOVE_ALL)
-                            .parameters(Collections.singletonList(new Parameter()
-                                    .key(INSTANCE_NOTE_TYPE_ID_KEY)
-                                    .value(typeId)))))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(optionType)
+                        .actions(
+                            Collections.singletonList(
+                                new Action()
+                                    .type(REMOVE_ALL)
+                                    .parameters(
+                                        Collections.singletonList(
+                                            new Parameter()
+                                                .key(INSTANCE_NOTE_TYPE_ID_KEY)
+                                                .value(typeId)))))));
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
@@ -204,39 +229,50 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     } else {
       assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(1);
       assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(1);
-      assertThat(result.getUpdated().getEntity().getInstanceNotes().getFirst()
-              .getInstanceNoteTypeId()).isNotEqualTo(typeId);
+      assertThat(
+              result.getUpdated().getEntity().getInstanceNotes().getFirst().getInstanceNoteTypeId())
+          .isNotEqualTo(typeId);
     }
   }
 
   @ParameterizedTest
-  @EnumSource(value = UpdateOptionType.class, names = {"ADMINISTRATIVE_NOTE", "INSTANCE_NOTE"},
-          mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(
+      value = UpdateOptionType.class,
+      names = {"ADMINISTRATIVE_NOTE", "INSTANCE_NOTE"},
+      mode = EnumSource.Mode.INCLUDE)
   void shouldAddAdministrativeOrInstanceNotesByInstanceNoteTypeId(UpdateOptionType optionType) {
     var typeId = UUID.randomUUID().toString();
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("FOLIO")
             .title("Sample title")
             .build();
 
-    var rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(optionType)
-                    .actions(Collections.singletonList(new Action()
-                            .type(ADD_TO_EXISTING)
-                            .updated("new note")
-                            .parameters(Collections.singletonList(new Parameter()
-                                    .key(INSTANCE_NOTE_TYPE_ID_KEY)
-                                    .value(typeId)))))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(optionType)
+                        .actions(
+                            Collections.singletonList(
+                                new Action()
+                                    .type(ADD_TO_EXISTING)
+                                    .updated("new note")
+                                    .parameters(
+                                        Collections.singletonList(
+                                            new Parameter()
+                                                .key(INSTANCE_NOTE_TYPE_ID_KEY)
+                                                .value(typeId)))))));
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
     if (ADMINISTRATIVE_NOTE.equals(optionType)) {
       assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(1);
-      assertThat(result.getUpdated().getEntity().getAdministrativeNotes()
-              .getFirst()).isEqualTo("new note");
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes().getFirst())
+          .isEqualTo("new note");
       assertThat(result.getUpdated().getEntity().getInstanceNotes()).isNull();
     } else {
       assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).isNull();
@@ -248,31 +284,41 @@ class FolioInstanceDataProcessorTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = UpdateOptionType.class,
-          names = {"ADMINISTRATIVE_NOTE", "INSTANCE_NOTE"}, mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(
+      value = UpdateOptionType.class,
+      names = {"ADMINISTRATIVE_NOTE", "INSTANCE_NOTE"},
+      mode = EnumSource.Mode.INCLUDE)
   void shouldFindAndRemoveAdministrativeOrInstanceNotesByInstanceNoteTypeId(
-          UpdateOptionType optionType) {
+      UpdateOptionType optionType) {
     var typeId = UUID.randomUUID().toString();
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("FOLIO")
             .title("Sample title")
             .administrativeNotes(List.of("first note", "First note"))
-            .instanceNotes(List.of(InstanceNote.builder()
-                            .instanceNoteTypeId(typeId).note("first note").build(),
-                    InstanceNote.builder()
-                            .instanceNoteTypeId(typeId).note("First note").build()))
+            .instanceNotes(
+                List.of(
+                    InstanceNote.builder().instanceNoteTypeId(typeId).note("first note").build(),
+                    InstanceNote.builder().instanceNoteTypeId(typeId).note("First note").build()))
             .build();
 
-    var rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(optionType)
-                    .actions(Collections.singletonList(new Action()
-                            .type(FIND_AND_REMOVE_THESE)
-                            .initial("first")
-                            .parameters(Collections.singletonList(new Parameter()
-                                    .key(INSTANCE_NOTE_TYPE_ID_KEY)
-                                    .value(typeId)))))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(optionType)
+                        .actions(
+                            Collections.singletonList(
+                                new Action()
+                                    .type(FIND_AND_REMOVE_THESE)
+                                    .initial("first")
+                                    .parameters(
+                                        Collections.singletonList(
+                                            new Parameter()
+                                                .key(INSTANCE_NOTE_TYPE_ID_KEY)
+                                                .value(typeId)))))));
 
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
@@ -281,48 +327,57 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     if (ADMINISTRATIVE_NOTE.equals(optionType)) {
       assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(2);
       assertThat(result.getUpdated().getEntity().getAdministrativeNotes().get(0))
-              .isEqualTo(" note");
+          .isEqualTo(" note");
       assertThat(result.getUpdated().getEntity().getAdministrativeNotes().get(1))
-              .isEqualTo("First note");
+          .isEqualTo("First note");
       assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
     } else {
       assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(2);
       assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
       assertThat(result.getUpdated().getEntity().getInstanceNotes().get(0).getNote())
-              .isEqualTo(" note");
+          .isEqualTo(" note");
       assertThat(result.getUpdated().getEntity().getInstanceNotes().get(1).getNote())
-              .isEqualTo("First note");
+          .isEqualTo("First note");
     }
   }
 
   @ParameterizedTest
-  @EnumSource(value = UpdateOptionType.class,
-          names = {"ADMINISTRATIVE_NOTE", "INSTANCE_NOTE"},
-          mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(
+      value = UpdateOptionType.class,
+      names = {"ADMINISTRATIVE_NOTE", "INSTANCE_NOTE"},
+      mode = EnumSource.Mode.INCLUDE)
   void shouldFindAndReplaceAdministrativeOrInstanceNotesByInstanceNoteTypeId(
-          UpdateOptionType optionType) {
+      UpdateOptionType optionType) {
     var typeId = UUID.randomUUID().toString();
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("FOLIO")
             .title("Sample title")
             .administrativeNotes(List.of("first note", "First note"))
-            .instanceNotes(List.of(InstanceNote.builder()
-                            .instanceNoteTypeId(typeId).note("first note").build(),
-                    InstanceNote.builder()
-                            .instanceNoteTypeId(typeId).note("First note").build()))
+            .instanceNotes(
+                List.of(
+                    InstanceNote.builder().instanceNoteTypeId(typeId).note("first note").build(),
+                    InstanceNote.builder().instanceNoteTypeId(typeId).note("First note").build()))
             .build();
 
-    var rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(optionType)
-                    .actions(Collections.singletonList(new Action()
-                            .type(FIND_AND_REPLACE)
-                            .initial("first")
-                            .updated("updated first")
-                            .parameters(Collections.singletonList(new Parameter()
-                                    .key(INSTANCE_NOTE_TYPE_ID_KEY)
-                                    .value(typeId)))))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(optionType)
+                        .actions(
+                            Collections.singletonList(
+                                new Action()
+                                    .type(FIND_AND_REPLACE)
+                                    .initial("first")
+                                    .updated("updated first")
+                                    .parameters(
+                                        Collections.singletonList(
+                                            new Parameter()
+                                                .key(INSTANCE_NOTE_TYPE_ID_KEY)
+                                                .value(typeId)))))));
 
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
@@ -330,14 +385,14 @@ class FolioInstanceDataProcessorTest extends BaseTest {
 
     if (ADMINISTRATIVE_NOTE.equals(optionType)) {
       assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(2);
-      assertThat(result.getUpdated().getEntity().getAdministrativeNotes()
-              .getFirst()).isEqualTo("updated first note");
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes().getFirst())
+          .isEqualTo("updated first note");
       assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
     } else {
       assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(2);
       assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
-      assertThat(result.getUpdated().getEntity().getInstanceNotes()
-              .getFirst().getNote()).isEqualTo("updated first note");
+      assertThat(result.getUpdated().getEntity().getInstanceNotes().getFirst().getNote())
+          .isEqualTo("updated first note");
     }
   }
 
@@ -345,26 +400,36 @@ class FolioInstanceDataProcessorTest extends BaseTest {
   @ValueSource(strings = {"5d47c42c-86ef-4390-a006-9c29cf7529be", "ADMINISTRATIVE_NOTE"})
   void shouldChangeNoteTypeForInstanceNotesByInstanceNoteTypeId(String newType) {
     var typeId = UUID.randomUUID().toString();
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("FOLIO")
             .title("Sample title")
-            .instanceNotes(List.of(InstanceNote.builder()
-                            .instanceNoteTypeId(typeId).note("first note").build(),
+            .instanceNotes(
+                List.of(
+                    InstanceNote.builder().instanceNoteTypeId(typeId).note("first note").build(),
                     InstanceNote.builder()
-                            .instanceNoteTypeId(UUID.randomUUID().toString())
-                            .note("second note").build()))
+                        .instanceNoteTypeId(UUID.randomUUID().toString())
+                        .note("second note")
+                        .build()))
             .build();
 
-    var rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(INSTANCE_NOTE)
-                    .actions(Collections.singletonList(new Action()
-                            .type(CHANGE_TYPE)
-                            .updated(newType)
-                            .parameters(Collections.singletonList(new Parameter()
-                                    .key(INSTANCE_NOTE_TYPE_ID_KEY)
-                                    .value(typeId)))))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(INSTANCE_NOTE)
+                        .actions(
+                            Collections.singletonList(
+                                new Action()
+                                    .type(CHANGE_TYPE)
+                                    .updated(newType)
+                                    .parameters(
+                                        Collections.singletonList(
+                                            new Parameter()
+                                                .key(INSTANCE_NOTE_TYPE_ID_KEY)
+                                                .value(typeId)))))));
 
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
@@ -372,11 +437,11 @@ class FolioInstanceDataProcessorTest extends BaseTest {
 
     if (ADMINISTRATIVE_NOTE.getValue().equals(newType)) {
       assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).hasSize(1);
-      assertThat(result.getUpdated().getEntity().getAdministrativeNotes()
-              .getFirst()).isEqualTo("first note");
+      assertThat(result.getUpdated().getEntity().getAdministrativeNotes().getFirst())
+          .isEqualTo("first note");
       assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(1);
-      assertThat(result.getUpdated().getEntity().getInstanceNotes()
-              .getFirst().getNote()).isEqualTo("second note");
+      assertThat(result.getUpdated().getEntity().getInstanceNotes().getFirst().getNote())
+          .isEqualTo("second note");
     } else {
       assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).isNull();
       assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
@@ -389,37 +454,45 @@ class FolioInstanceDataProcessorTest extends BaseTest {
   @Test
   void shouldChangeNoteTypeForAdministrativeNotes() {
     var typeId = UUID.randomUUID().toString();
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("FOLIO")
             .title("Sample title")
             .administrativeNotes(List.of("first note", "Second note"))
             .build();
 
-    var rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(ADMINISTRATIVE_NOTE)
-                    .actions(Collections.singletonList(new Action()
-                            .type(CHANGE_TYPE)
-                            .updated(typeId)))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(ADMINISTRATIVE_NOTE)
+                        .actions(
+                            Collections.singletonList(
+                                new Action().type(CHANGE_TYPE).updated(typeId)))));
 
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
     assertThat(result.getUpdated().getEntity().getAdministrativeNotes()).isEmpty();
     assertThat(result.getUpdated().getEntity().getInstanceNotes()).hasSize(2);
-    assertThat(result.getUpdated().getEntity().getInstanceNotes()).allMatch(
-            note -> typeId.equals(note.getInstanceNoteTypeId()));
+    assertThat(result.getUpdated().getEntity().getInstanceNotes())
+        .allMatch(note -> typeId.equals(note.getInstanceNoteTypeId()));
   }
 
   @ParameterizedTest
-  @EnumSource(value = UpdateActionType.class,
-          names = {"MARK_AS_STAFF_ONLY", "REMOVE_MARK_AS_STAFF_ONLY", "REMOVE_ALL",
-                   "ADD_TO_EXISTING", "FIND_AND_REMOVE_THESE", "FIND_AND_REPLACE",
-                   "CHANGE_TYPE"},
-          mode = EnumSource.Mode.INCLUDE)
+  @EnumSource(
+      value = UpdateActionType.class,
+      names = {
+        "MARK_AS_STAFF_ONLY", "REMOVE_MARK_AS_STAFF_ONLY", "REMOVE_ALL",
+        "ADD_TO_EXISTING", "FIND_AND_REMOVE_THESE", "FIND_AND_REPLACE",
+        "CHANGE_TYPE"
+      },
+      mode = EnumSource.Mode.INCLUDE)
   void shouldNotUpdateNotesIfSourceIsNotFolio(UpdateActionType actionType) {
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("MARC")
             .title("Sample title")
@@ -428,13 +501,17 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
     var validator = ((FolioInstanceDataProcessor) processor).validator(extendedInstance);
 
-    assertThrows(RuleValidationException.class, () -> validator.validate(INSTANCE_NOTE,
-            new Action().type(actionType), new BulkOperationRule()));
+    assertThrows(
+        RuleValidationException.class,
+        () ->
+            validator.validate(
+                INSTANCE_NOTE, new Action().type(actionType), new BulkOperationRule()));
   }
 
   @Test
   void shouldNotChangeTypeForAdministrativeNotesIfSourceIsNotFolio() {
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("MARC")
             .title("Sample title")
@@ -442,19 +519,28 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
     var validator = ((FolioInstanceDataProcessor) processor).validator(extendedInstance);
 
-    assertThrows(RuleValidationException.class, () -> validator.validate(ADMINISTRATIVE_NOTE,
-            new Action().type(CHANGE_TYPE), new BulkOperationRule()));
+    assertThrows(
+        RuleValidationException.class,
+        () ->
+            validator.validate(
+                ADMINISTRATIVE_NOTE, new Action().type(CHANGE_TYPE), new BulkOperationRule()));
   }
 
   @Test
   void shouldThrowExceptionIfStatisticalCodeRemoveAllCombinedWithOtherActions() {
     var validator = ((FolioInstanceDataProcessor) processor).validator();
     var rules = new BulkOperationRuleCollection();
-    rules.addBulkOperationRulesItem(new BulkOperationRule().ruleDetails(
-            new RuleDetails().actions(List.of(new Action().type(ADD_TO_EXISTING)))
+    rules.addBulkOperationRulesItem(
+        new BulkOperationRule()
+            .ruleDetails(
+                new RuleDetails()
+                    .actions(List.of(new Action().type(ADD_TO_EXISTING)))
                     .option(UpdateOptionType.STATISTICAL_CODE)));
-    rules.addBulkOperationRulesItem(new BulkOperationRule().ruleDetails(
-            new RuleDetails().actions(List.of(new Action().type(REMOVE_ALL)))
+    rules.addBulkOperationRulesItem(
+        new BulkOperationRule()
+            .ruleDetails(
+                new RuleDetails()
+                    .actions(List.of(new Action().type(REMOVE_ALL)))
                     .option(UpdateOptionType.STATISTICAL_CODE)));
 
     assertThrows(RuleValidationException.class, () -> validator.validate(rules));
@@ -464,104 +550,138 @@ class FolioInstanceDataProcessorTest extends BaseTest {
   void shouldAddToExistingMoreThanOneStatisticalCodes() {
     var statCode1 = UUID.randomUUID().toString();
     var statCode2 = UUID.randomUUID().toString();
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("FOLIO")
             .title("Sample title")
             .build();
 
-    var rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(UpdateOptionType.STATISTICAL_CODE)
-                    .actions(Collections.singletonList(new Action()
-                            .type(ADD_TO_EXISTING).updated(statCode1 + "," + statCode2)))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(UpdateOptionType.STATISTICAL_CODE)
+                        .actions(
+                            Collections.singletonList(
+                                new Action()
+                                    .type(ADD_TO_EXISTING)
+                                    .updated(statCode1 + "," + statCode2)))));
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
-    assertEquals("[" + statCode1 + ", " + statCode2 + "]",
-            result.getUpdated().getEntity().getStatisticalCodeIds().toString());
-    assertEquals("[" + statCode1 + ", " + statCode2 + "]",
-            result.getPreview().getEntity().getStatisticalCodeIds().toString());
+    assertEquals(
+        "[" + statCode1 + ", " + statCode2 + "]",
+        result.getUpdated().getEntity().getStatisticalCodeIds().toString());
+    assertEquals(
+        "[" + statCode1 + ", " + statCode2 + "]",
+        result.getPreview().getEntity().getStatisticalCodeIds().toString());
   }
 
   @Test
   void shouldAddToExistingIfAlreadyPresentStatisticalCodes() {
     var statCode1 = UUID.randomUUID().toString();
     var statCode2 = UUID.randomUUID().toString();
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("FOLIO")
             .title("Sample title")
             .statisticalCodeIds(List.of(statCode1))
             .build();
 
-    var rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(UpdateOptionType.STATISTICAL_CODE)
-                    .actions(Collections.singletonList(new Action()
-                            .type(ADD_TO_EXISTING).updated(statCode1 + "," + statCode2)))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(UpdateOptionType.STATISTICAL_CODE)
+                        .actions(
+                            Collections.singletonList(
+                                new Action()
+                                    .type(ADD_TO_EXISTING)
+                                    .updated(statCode1 + "," + statCode2)))));
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
-    assertEquals("[" + statCode1 + ", " + statCode1 + ", " + statCode2 + "]",
-            result.getPreview().getEntity().getStatisticalCodeIds().toString());
-    assertEquals("[" + statCode1 + ", " + statCode2 + "]",
-            result.getUpdated().getEntity().getStatisticalCodeIds().toString());
+    assertEquals(
+        "[" + statCode1 + ", " + statCode1 + ", " + statCode2 + "]",
+        result.getPreview().getEntity().getStatisticalCodeIds().toString());
+    assertEquals(
+        "[" + statCode1 + ", " + statCode2 + "]",
+        result.getUpdated().getEntity().getStatisticalCodeIds().toString());
   }
 
   @Test
   void shouldAddDuplicatesToExistingIfNotPresentStatisticalCodes() {
     var statCode1 = UUID.randomUUID().toString();
     var statCode2 = UUID.randomUUID().toString();
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("FOLIO")
             .title("Sample title")
             .build();
 
-    var rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(UpdateOptionType.STATISTICAL_CODE)
-                    .actions(Collections.singletonList(new Action()
-                            .type(ADD_TO_EXISTING).updated(statCode1
-                                    + "," + statCode2 + "," + statCode1)))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(UpdateOptionType.STATISTICAL_CODE)
+                        .actions(
+                            Collections.singletonList(
+                                new Action()
+                                    .type(ADD_TO_EXISTING)
+                                    .updated(statCode1 + "," + statCode2 + "," + statCode1)))));
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
-    assertEquals("[" + statCode1 + ", " + statCode2 + ", " + statCode1 + "]",
-            result.getPreview().getEntity().getStatisticalCodeIds().toString());
-    assertEquals("[" + statCode1 + ", " + statCode2 + "]",
-            result.getUpdated().getEntity().getStatisticalCodeIds().toString());
+    assertEquals(
+        "[" + statCode1 + ", " + statCode2 + ", " + statCode1 + "]",
+        result.getPreview().getEntity().getStatisticalCodeIds().toString());
+    assertEquals(
+        "[" + statCode1 + ", " + statCode2 + "]",
+        result.getUpdated().getEntity().getStatisticalCodeIds().toString());
   }
 
   @Test
   void shouldAddDuplicatesToExistingIfPresentStatisticalCodes() {
     var statCode1 = UUID.randomUUID().toString();
     var statCode2 = UUID.randomUUID().toString();
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("FOLIO")
             .statisticalCodeIds(List.of(statCode2))
             .title("Sample title")
             .build();
 
-    var rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(UpdateOptionType.STATISTICAL_CODE)
-                    .actions(Collections.singletonList(new Action()
-                            .type(ADD_TO_EXISTING).updated(statCode1 + ","
-                                    + statCode2 + "," + statCode1)))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(UpdateOptionType.STATISTICAL_CODE)
+                        .actions(
+                            Collections.singletonList(
+                                new Action()
+                                    .type(ADD_TO_EXISTING)
+                                    .updated(statCode1 + "," + statCode2 + "," + statCode1)))));
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
 
-    assertEquals("[" + statCode2 + ", " + statCode1 + ", " + statCode2 + ", " + statCode1 + "]",
-            result.getPreview().getEntity().getStatisticalCodeIds().toString());
-    assertEquals("[" + statCode2 + ", " + statCode1 + "]",
-            result.getUpdated().getEntity().getStatisticalCodeIds().toString());
+    assertEquals(
+        "[" + statCode2 + ", " + statCode1 + ", " + statCode2 + ", " + statCode1 + "]",
+        result.getPreview().getEntity().getStatisticalCodeIds().toString());
+    assertEquals(
+        "[" + statCode2 + ", " + statCode1 + "]",
+        result.getUpdated().getEntity().getStatisticalCodeIds().toString());
   }
 
   @Test
@@ -569,18 +689,25 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     var statCode1 = UUID.randomUUID().toString();
     var statCode2 = UUID.randomUUID().toString();
     var statCode3 = UUID.randomUUID().toString();
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("FOLIO")
             .title("Sample title")
             .statisticalCodeIds(List.of(statCode1, statCode2, statCode3))
             .build();
 
-    var rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(UpdateOptionType.STATISTICAL_CODE)
-                    .actions(Collections.singletonList(new Action()
-                            .type(REMOVE_SOME).updated(statCode1 + "," + statCode2)))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(UpdateOptionType.STATISTICAL_CODE)
+                        .actions(
+                            Collections.singletonList(
+                                new Action()
+                                    .type(REMOVE_SOME)
+                                    .updated(statCode1 + "," + statCode2)))));
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
@@ -594,17 +721,24 @@ class FolioInstanceDataProcessorTest extends BaseTest {
   void shouldRemoveNothingIfNoStatisticalCodes() {
     var statCode1 = UUID.randomUUID().toString();
     var statCode2 = UUID.randomUUID().toString();
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("FOLIO")
             .title("Sample title")
             .build();
 
-    var rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(UpdateOptionType.STATISTICAL_CODE)
-                    .actions(Collections.singletonList(new Action()
-                            .type(REMOVE_SOME).updated(statCode1 + "," + statCode2)))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(UpdateOptionType.STATISTICAL_CODE)
+                        .actions(
+                            Collections.singletonList(
+                                new Action()
+                                    .type(REMOVE_SOME)
+                                    .updated(statCode1 + "," + statCode2)))));
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
@@ -617,18 +751,21 @@ class FolioInstanceDataProcessorTest extends BaseTest {
   void shouldRemoveAllStatisticalCodes() {
     var statCode1 = UUID.randomUUID().toString();
     var statCode2 = UUID.randomUUID().toString();
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("FOLIO")
             .statisticalCodeIds(List.of(statCode1, statCode2))
             .title("Sample title")
             .build();
 
-    var rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(UpdateOptionType.STATISTICAL_CODE)
-                    .actions(Collections.singletonList(new Action()
-                            .type(REMOVE_ALL)))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(UpdateOptionType.STATISTICAL_CODE)
+                        .actions(Collections.singletonList(new Action().type(REMOVE_ALL)))));
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
     var result = processor.process(IDENTIFIER, extendedInstance, rules);
@@ -639,7 +776,8 @@ class FolioInstanceDataProcessorTest extends BaseTest {
 
   @Test
   void testSetRecordsForDelete() {
-    var instance = Instance.builder()
+    var instance =
+        Instance.builder()
             .id(UUID.randomUUID().toString())
             .source("FOLIO")
             .title("Sample title")
@@ -648,11 +786,15 @@ class FolioInstanceDataProcessorTest extends BaseTest {
             .deleted(false)
             .build();
 
-    var rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(UpdateOptionType.SET_RECORDS_FOR_DELETE)
-                    .actions(Collections.singletonList(new Action()
-                            .type(UpdateActionType.SET_TO_TRUE)))));
+    var rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(UpdateOptionType.SET_RECORDS_FOR_DELETE)
+                        .actions(
+                            Collections.singletonList(
+                                new Action().type(UpdateActionType.SET_TO_TRUE)))));
 
     var extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
 
@@ -663,11 +805,15 @@ class FolioInstanceDataProcessorTest extends BaseTest {
     assertTrue(result.getUpdated().getEntity().getDiscoverySuppress());
 
     // Test SET_TO_FALSE
-    rules = rules(new BulkOperationRule()
-            .ruleDetails(new RuleDetails()
-                    .option(UpdateOptionType.SET_RECORDS_FOR_DELETE)
-                    .actions(Collections.singletonList(new Action()
-                            .type(UpdateActionType.SET_TO_FALSE)))));
+    rules =
+        rules(
+            new BulkOperationRule()
+                .ruleDetails(
+                    new RuleDetails()
+                        .option(UpdateOptionType.SET_RECORDS_FOR_DELETE)
+                        .actions(
+                            Collections.singletonList(
+                                new Action().type(UpdateActionType.SET_TO_FALSE)))));
     instance.setDeleted(true);
     extendedInstance = ExtendedInstance.builder().entity(instance).tenantId("tenantId").build();
     result = processor.process(IDENTIFIER, extendedInstance, rules);

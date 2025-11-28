@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Log4j2
 public class BulkEditItemListProcessor
-        implements ItemProcessor<ExtendedItemCollection, List<ExtendedItem>>, EntityExtractor {
+    implements ItemProcessor<ExtendedItemCollection, List<ExtendedItem>>, EntityExtractor {
 
   @Override
   public List<ExtendedItem> process(ExtendedItemCollection extendedItemCollection) {

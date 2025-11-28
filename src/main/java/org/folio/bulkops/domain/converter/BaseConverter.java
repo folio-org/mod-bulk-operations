@@ -23,9 +23,9 @@ import org.folio.bulkops.service.CsvIdentifierContextHelper;
 
 /**
  * Base class for converters that convert between a string representation and an object of type T.
- * Subclasses should implement the {@link #convertToString(Object)} method to provide
- * the specific conversion logic. Subclasses should also override the
- * {@link #convertToObject(String)} method if they need.
+ * Subclasses should implement the {@link #convertToString(Object)} method to provide the specific
+ * conversion logic. Subclasses should also override the {@link #convertToObject(String)} method if
+ * they need.
  *
  * @param <T> the type of the object to be converted
  */
@@ -51,33 +51,35 @@ public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
     try {
       return convertToObject(value);
     } catch (Exception e) {
-      throw new CsvConstraintViolationException(format(FIELD_ERROR_MESSAGE_PATTERN,
-              this.getField().getName(), e.getMessage()));
+      throw new CsvConstraintViolationException(
+          format(FIELD_ERROR_MESSAGE_PATTERN, this.getField().getName(), e.getMessage()));
     }
   }
 
   @Override
   protected String convertToWrite(Object object) {
     if (ObjectUtils.isEmpty(object)
-            || (object.getClass() == Tags.class
-            && ObjectUtils.isEmpty(((Tags) object).getTagList()))) {
+        || (object.getClass() == Tags.class && ObjectUtils.isEmpty(((Tags) object).getTagList()))) {
       return EMPTY;
     }
     try {
       return convertToString((T) object);
     } catch (ReferenceDataNotFoundException e) {
       if (CsvRecordContext.getBulkOperationId() != null) {
-        CsvIdentifierContextHelper.service().saveError(CsvRecordContext.getBulkOperationId(),
+        CsvIdentifierContextHelper.service()
+            .saveError(
+                CsvRecordContext.getBulkOperationId(),
                 CsvRecordContext.getIdentifier(),
-                new ConverterException(this.getField(), object, e.getMessage(),
-                ErrorType.WARNING));
+                new ConverterException(this.getField(), object, e.getMessage(), ErrorType.WARNING));
       }
       return FAILED_FIELD_MARKER;
     } catch (Exception e) {
       if (CsvRecordContext.getBulkOperationId() != null) {
-        CsvIdentifierContextHelper.service().saveError(CsvRecordContext.getBulkOperationId(),
-            CsvRecordContext.getIdentifier(),
-          new ConverterException(this.getField(), object, e.getMessage(), ErrorType.ERROR));
+        CsvIdentifierContextHelper.service()
+            .saveError(
+                CsvRecordContext.getBulkOperationId(),
+                CsvRecordContext.getIdentifier(),
+                new ConverterException(this.getField(), object, e.getMessage(), ErrorType.ERROR));
       }
       return FAILED_FIELD_MARKER;
     }

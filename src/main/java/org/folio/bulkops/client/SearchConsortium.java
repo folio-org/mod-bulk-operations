@@ -18,14 +18,16 @@ public interface SearchConsortium {
   @GetMapping(
       value = "/holdings",
       produces = APPLICATION_JSON_VALUE,
-      consumes = APPLICATION_JSON_VALUE
-  )
+      consumes = APPLICATION_JSON_VALUE)
   ConsortiumHoldingCollection getHoldingsById(@RequestParam UUID instanceId);
 
-  @PostMapping(value = "/batch/holdings", headers = {"Accept=application/json"})
+  @PostMapping(
+      value = "/batch/holdings",
+      headers = {"Accept=application/json"})
   ConsortiumHoldingCollection getConsortiumHoldingCollection(@RequestBody BatchIdsDto batchIdsDto);
 
-  @PostMapping(value = "/batch/items", headers = {"Accept=application/json"})
+  @PostMapping(
+      value = "/batch/items",
+      headers = {"Accept=application/json"})
   ConsortiumItemCollection getConsortiumItemCollection(@RequestBody BatchIdsDto batchIdsDto);
-
 }

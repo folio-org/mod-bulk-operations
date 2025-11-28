@@ -19,4 +19,3 @@ public class NatureOfContentTerm {
   @JsonProperty("name")
   private String name;
 }
-

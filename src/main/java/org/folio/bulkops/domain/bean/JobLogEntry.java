@@ -29,5 +29,10 @@ public class JobLogEntry {
   @JsonProperty("relatedInstanceInfo")
   private RelatedInstanceInfo relatedInstanceInfo;
 
-  public enum ActionStatus { CREATED, UPDATED, MULTIPLE, DISCARDED }
+  public enum ActionStatus {
+    CREATED,
+    UPDATED,
+    MULTIPLE,
+    DISCARDED
+  }
 }

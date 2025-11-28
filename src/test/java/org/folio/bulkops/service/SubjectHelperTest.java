@@ -13,14 +13,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class SubjectHelperTest extends BaseTest {
 
-  @Autowired
-  private SubjectHelper subjectHelper;
+  @Autowired private SubjectHelper subjectHelper;
 
-  @MockitoBean
-  private SubjectService subjectService;
+  @MockitoBean private SubjectService subjectService;
 
-  @Captor
-  private ArgumentCaptor<BulkOperationExecution> executionArgumentCaptor;
+  @Captor private ArgumentCaptor<BulkOperationExecution> executionArgumentCaptor;
 
   @Test
   void restoreSubjectItemTest() {

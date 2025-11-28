@@ -10,5 +10,6 @@ import org.folio.bulkops.domain.dto.DataType;
 @Target(ElementType.FIELD)
 public @interface UnifiedTableCell {
   DataType dataType() default DataType.STRING;
+
   boolean visible() default true;
 }

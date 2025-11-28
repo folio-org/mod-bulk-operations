@@ -25,4 +25,3 @@ public class InstanceFormat {
   @JsonProperty("source")
   private String source;
 }
-

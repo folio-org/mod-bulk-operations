@@ -30,4 +30,3 @@ public class ResultInfo {
   @Valid
   private List<Diagnostic> diagnostics = null;
 }
-

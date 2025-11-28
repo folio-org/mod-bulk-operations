@@ -23,12 +23,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ClassificationReferenceServiceTest {
 
-  @Mock
-  private ClassificationTypesClient classificationTypesClient;
-  @Mock
-  private FolioExecutionContext folioExecutionContext;
-  @InjectMocks
-  private ClassificationReferenceService classificationReferenceService;
+  @Mock private ClassificationTypesClient classificationTypesClient;
+  @Mock private FolioExecutionContext folioExecutionContext;
+  @InjectMocks private ClassificationReferenceService classificationReferenceService;
 
   @Test
   void shouldReturnClassificationTypeNameById() {
@@ -39,10 +36,10 @@ class ClassificationReferenceServiceTest {
     when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     var classificationTypeId = UUID.randomUUID().toString();
     when(classificationTypesClient.getById(classificationTypeId))
-            .thenReturn(ClassificationType.builder().id(classificationTypeId).name("LC").build());
+        .thenReturn(ClassificationType.builder().id(classificationTypeId).name("LC").build());
 
-    var name = classificationReferenceService.getClassificationTypeNameById(classificationTypeId,
-            null);
+    var name =
+        classificationReferenceService.getClassificationTypeNameById(classificationTypeId, null);
 
     assertThat(name).isEqualTo("LC");
   }
@@ -53,11 +50,13 @@ class ClassificationReferenceServiceTest {
     var name = "LC";
 
     when(classificationTypesClient.getByQuery(QUERY_PATTERN_NAME.formatted(name)))
-            .thenReturn(ClassificationTypeCollection.builder()
-        .classificationTypes(Collections.singletonList(ClassificationType.builder()
-                .id(classificationTypeId).name("LC").build()))
-        .totalRecords(1)
-        .build());
+        .thenReturn(
+            ClassificationTypeCollection.builder()
+                .classificationTypes(
+                    Collections.singletonList(
+                        ClassificationType.builder().id(classificationTypeId).name("LC").build()))
+                .totalRecords(1)
+                .build());
 
     var id = classificationReferenceService.getClassificationTypeIdByName(name);
 

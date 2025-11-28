@@ -7,9 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
 
-/**
- * Kafka event specific format used for Data Import module.
- */
+/** Kafka event specific format used for Data Import module. */
 @Data
 @With
 @Builder(toBuilder = true)
@@ -18,8 +16,10 @@ import lombok.With;
 public class Event {
   @JsonProperty("id")
   private String id;
+
   @JsonProperty("eventType")
   private String eventType;
+
   @JsonProperty("eventPayload")
   private String eventPayload;
 }

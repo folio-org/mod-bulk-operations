@@ -16,12 +16,11 @@ public class ClassificationListConverter extends BaseConverter<List<Classificati
   @Override
   public String convertToString(List<Classification> object) {
     return ObjectUtils.isEmpty(object)
-            ? EMPTY :
-            CLASSIFICATION_HEADINGS
-                    + object.stream()
-                            .filter(Objects::nonNull)
-                            .map(ClassificationHelper.service()::classificationToString)
-                            .collect(Collectors.joining(SPECIAL_ITEM_DELIMITER));
+        ? EMPTY
+        : CLASSIFICATION_HEADINGS
+            + object.stream()
+                .filter(Objects::nonNull)
+                .map(ClassificationHelper.service()::classificationToString)
+                .collect(Collectors.joining(SPECIAL_ITEM_DELIMITER));
   }
-
 }

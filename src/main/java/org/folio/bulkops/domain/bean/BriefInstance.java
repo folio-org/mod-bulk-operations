@@ -12,7 +12,7 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class BriefInstance   {
+public class BriefInstance {
   @JsonProperty("id")
   private String id;
 
@@ -22,4 +22,3 @@ public class BriefInstance   {
   @JsonProperty("title")
   private String title;
 }
-

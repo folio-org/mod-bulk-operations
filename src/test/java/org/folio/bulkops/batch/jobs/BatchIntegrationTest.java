@@ -52,29 +52,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 class BatchIntegrationTest extends BaseTest {
-  @MockitoBean
-  private UserPermissionsService userPermissionsService;
-  @MockitoBean
-  private RemoteFileSystemClient remoteFileSystemClient;
-  @MockitoBean
-  private BulkOperationRepository bulkOperationRepository;
-  @MockitoBean
-  private SrsClient srsClient;
-  @MockitoBean
-  private ErrorService errorService;
-  @MockitoBean
-  private ConsortiaService consortiaService;
-  @MockitoBean
-  private SearchClient searchClient;
+  @MockitoBean private UserPermissionsService userPermissionsService;
+  @MockitoBean private RemoteFileSystemClient remoteFileSystemClient;
+  @MockitoBean private BulkOperationRepository bulkOperationRepository;
+  @MockitoBean private SrsClient srsClient;
+  @MockitoBean private ErrorService errorService;
+  @MockitoBean private ConsortiaService consortiaService;
+  @MockitoBean private SearchClient searchClient;
 
-  @Autowired
-  private JobLauncher jobLauncher;
-  @Autowired
-  private JobRepository jobRepository;
-  @Autowired
-  private Job bulkEditProcessInstanceIdentifiersJob;
-  @Autowired
-  private Job bulkEditProcessUserIdentifiersJob;
+  @Autowired private JobLauncher jobLauncher;
+  @Autowired private JobRepository jobRepository;
+  @Autowired private Job bulkEditProcessInstanceIdentifiersJob;
+  @Autowired private Job bulkEditProcessUserIdentifiersJob;
 
   private final IdentifierType identifierType = IdentifierType.ID;
   private final String identifier = "111";
@@ -90,36 +79,39 @@ class BatchIntegrationTest extends BaseTest {
   @Test
   @SneakyThrows
   void shouldFetchAndWriteFolioInstance() {
-    var bulkOperation = BulkOperation.builder()
+    var bulkOperation =
+        BulkOperation.builder()
             .id(bulkOperationId)
             .entityType(EntityType.INSTANCE)
             .identifierType(identifierType)
             .linkToTriggeringCsvFile(linkToTriggeringCsvFile)
             .build();
 
-    when(bulkOperationRepository.findById(bulkOperationId))
-            .thenReturn(Optional.of(bulkOperation));
-    when(bulkOperationRepository.save(any(BulkOperation.class)))
-            .thenReturn(bulkOperation);
+    when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
+    when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(bulkOperation);
     when(remoteFileSystemClient.get(linkToTriggeringCsvFile))
-            .thenReturn(new ByteArrayInputStream(identifier.getBytes()));
-    when(remoteFileSystemClient.getNumOfLines(linkToTriggeringCsvFile))
-            .thenReturn(1);
+        .thenReturn(new ByteArrayInputStream(identifier.getBytes()));
+    when(remoteFileSystemClient.getNumOfLines(linkToTriggeringCsvFile)).thenReturn(1);
     when(userPermissionsService.getPermissions())
-            .thenReturn(List.of(BULK_EDIT_INVENTORY_VIEW_PERMISSION.getValue(),
-                    INVENTORY_INSTANCES_ITEM_GET_PERMISSION.getValue()));
-    var instanceQuery = getMatchPattern(identifierType.getValue())
+        .thenReturn(
+            List.of(
+                BULK_EDIT_INVENTORY_VIEW_PERMISSION.getValue(),
+                INVENTORY_INSTANCES_ITEM_GET_PERMISSION.getValue()));
+    var instanceQuery =
+        getMatchPattern(identifierType.getValue())
             .formatted(resolveIdentifier(identifierType.getValue()), identifier);
     when(instanceClient.getInstanceByQuery(instanceQuery, 1))
-            .thenReturn(InstanceCollection.builder()
-                    .instances(Collections.singletonList(
-                            Instance.builder()
-                                    .id(UUID.randomUUID().toString())
-                                    .source("FOLIO")
-                                    .title("Sample title")
-                                    .build()))
-                    .totalRecords(1)
-                    .build());
+        .thenReturn(
+            InstanceCollection.builder()
+                .instances(
+                    Collections.singletonList(
+                        Instance.builder()
+                            .id(UUID.randomUUID().toString())
+                            .source("FOLIO")
+                            .title("Sample title")
+                            .build()))
+                .totalRecords(1)
+                .build());
 
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       JobLauncherTestUtils testLauncher = createTestLauncher(bulkEditProcessInstanceIdentifiersJob);
@@ -127,8 +119,7 @@ class BatchIntegrationTest extends BaseTest {
 
       JobExecution jobExecution = testLauncher.launchJob(jobParameters);
 
-      verify(remoteFileSystemClient, times(2))
-              .put(any(InputStream.class), any(String.class));
+      verify(remoteFileSystemClient, times(2)).put(any(InputStream.class), any(String.class));
 
       assertThat(jobExecution.getExitStatus()).isEqualTo(ExitStatus.COMPLETED);
     }
@@ -137,31 +128,34 @@ class BatchIntegrationTest extends BaseTest {
   @Test
   @SneakyThrows
   void shouldFetchAndWriteUser() {
-    var bulkOperation = BulkOperation.builder()
+    var bulkOperation =
+        BulkOperation.builder()
             .id(bulkOperationId)
             .entityType(EntityType.USER)
             .identifierType(identifierType)
             .linkToTriggeringCsvFile(linkToTriggeringCsvFile)
             .build();
 
-    when(bulkOperationRepository.findById(bulkOperationId))
-            .thenReturn(Optional.of(bulkOperation));
-    when(bulkOperationRepository.save(any(BulkOperation.class)))
-            .thenReturn(bulkOperation);
+    when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
+    when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(bulkOperation);
     when(remoteFileSystemClient.get(linkToTriggeringCsvFile))
-            .thenReturn(new ByteArrayInputStream(identifier.getBytes()));
-    when(remoteFileSystemClient.getNumOfLines(linkToTriggeringCsvFile))
-            .thenReturn(1);
+        .thenReturn(new ByteArrayInputStream(identifier.getBytes()));
+    when(remoteFileSystemClient.getNumOfLines(linkToTriggeringCsvFile)).thenReturn(1);
     when(userPermissionsService.getPermissions())
-            .thenReturn(List.of(USER_ITEM_GET_PERMISSION.getValue(),
-                    BULK_EDIT_USERS_VIEW_PERMISSION.getValue()));
+        .thenReturn(
+            List.of(
+                USER_ITEM_GET_PERMISSION.getValue(), BULK_EDIT_USERS_VIEW_PERMISSION.getValue()));
     when(userClient.getByQuery(anyString(), anyLong()))
-            .thenReturn(UserCollection.builder()
-                    .users(List.of(User.builder()
+        .thenReturn(
+            UserCollection.builder()
+                .users(
+                    List.of(
+                        User.builder()
                             .id(UUID.randomUUID().toString())
                             .personal(Personal.builder().dateOfBirth(new Date()).build())
                             .build()))
-                    .totalRecords(1).build());
+                .totalRecords(1)
+                .build());
 
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       JobLauncherTestUtils testLauncher = createTestLauncher(bulkEditProcessUserIdentifiersJob);

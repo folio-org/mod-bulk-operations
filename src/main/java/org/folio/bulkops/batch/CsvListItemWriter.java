@@ -10,11 +10,12 @@ import org.springframework.batch.item.ItemWriter;
 
 @Log4j2
 public class CsvListItemWriter<T extends BulkOperationsEntity>
-        implements ItemWriter<List<T>>, ItemStream {
+    implements ItemWriter<List<T>>, ItemStream {
   private final CsvItemWriter<T> delegate;
 
-  public CsvListItemWriter(String path, Class<T> clazz, String bulkOperationId,
-                           String identifierType) throws IOException {
+  public CsvListItemWriter(
+      String path, Class<T> clazz, String bulkOperationId, String identifierType)
+      throws IOException {
     delegate = new CsvItemWriter<>(path, clazz, bulkOperationId, identifierType);
   }
 

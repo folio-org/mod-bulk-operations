@@ -31,4 +31,3 @@ public class Progress {
   @JsonProperty("warnings")
   private Integer warnings = 0;
 }
-

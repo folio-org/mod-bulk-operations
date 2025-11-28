@@ -38,7 +38,6 @@ import static org.folio.bulkops.util.Constants.FOLIO;
 import static org.folio.bulkops.util.Constants.PUBLICATION_HEADINGS;
 import static org.folio.bulkops.util.Constants.SUBJECT_HEADINGS;
 import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
-import static org.folio.bulkops.util.Utils.encode;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 
@@ -119,65 +118,77 @@ public class PreviewService {
   private final PreviewProcessorFactory previewProcessorFactory;
 
   private static final Pattern UUID_REGEX =
-          Pattern.compile(
-                  "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
+      Pattern.compile(
+          "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
   private final Marc21ReferenceProvider marc21ReferenceProvider;
 
-  public UnifiedTable getPreview(BulkOperation operation, BulkOperationStep step, int offset,
-                                 int limit) {
+  public UnifiedTable getPreview(
+      BulkOperation operation, BulkOperationStep step, int offset, int limit) {
     var clazz = resolveEntityClass(operation.getEntityType());
     return switch (step) {
-      case UPLOAD -> buildPreviewFromJsonFile(operation.getLinkToMatchedRecordsJsonFile(), clazz,
-              offset, limit, operation);
+      case UPLOAD ->
+          buildPreviewFromJsonFile(
+              operation.getLinkToMatchedRecordsJsonFile(), clazz, offset, limit, operation);
       case EDIT -> {
         if (INSTANCE_MARC == operation.getEntityType()) {
           if (isFolioInstanceEditPreview(operation)) {
-            yield buildPreviewFromJsonWithChangedOptions(operation,
-                    operation.getLinkToModifiedRecordsJsonPreviewFile(), offset, limit);
+            yield buildPreviewFromJsonWithChangedOptions(
+                operation, operation.getLinkToModifiedRecordsJsonPreviewFile(), offset, limit);
           } else if (isMarcInstanceEditPreview(operation)) {
-            yield buildCompositePreview(operation, offset, limit,
-                    operation.getLinkToMatchedRecordsJsonFile(),
-                    operation.getLinkToModifiedRecordsMarcFile());
+            yield buildCompositePreview(
+                operation,
+                offset,
+                limit,
+                operation.getLinkToMatchedRecordsJsonFile(),
+                operation.getLinkToModifiedRecordsMarcFile());
           } else {
-            yield buildCompositePreview(operation, offset, limit,
-                    operation.getLinkToModifiedRecordsJsonPreviewFile(),
-                    operation.getLinkToModifiedRecordsMarcFile());
+            yield buildCompositePreview(
+                operation,
+                offset,
+                limit,
+                operation.getLinkToModifiedRecordsJsonPreviewFile(),
+                operation.getLinkToModifiedRecordsMarcFile());
           }
         } else {
-          yield buildPreviewFromJsonWithChangedOptions(operation,
-                  operation.getLinkToModifiedRecordsJsonPreviewFile(), offset, limit);
+          yield buildPreviewFromJsonWithChangedOptions(
+              operation, operation.getLinkToModifiedRecordsJsonPreviewFile(), offset, limit);
         }
       }
       case COMMIT -> {
         if (MANUAL == operation.getApproach()) {
-          yield buildPreviewFromJsonFile(operation.getLinkToCommittedRecordsJsonFile(),
-                  clazz, offset, limit, operation);
+          yield buildPreviewFromJsonFile(
+              operation.getLinkToCommittedRecordsJsonFile(), clazz, offset, limit, operation);
         } else {
           if (INSTANCE_MARC == operation.getEntityType()) {
             if (isFolioInstanceCommitPreview(operation)) {
-              yield buildPreviewFromJsonWithChangedOptions(operation,
-                      operation.getLinkToCommittedRecordsJsonPreviewFile(), offset, limit);
+              yield buildPreviewFromJsonWithChangedOptions(
+                  operation, operation.getLinkToCommittedRecordsJsonPreviewFile(), offset, limit);
             } else if (isMarcInstanceCommitPreview(operation)) {
-              yield buildCompositePreview(operation, offset, limit,
-                      operation.getLinkToModifiedRecordsJsonPreviewFile(),
-                      operation.getLinkToCommittedRecordsMarcFile());
+              yield buildCompositePreview(
+                  operation,
+                  offset,
+                  limit,
+                  operation.getLinkToModifiedRecordsJsonPreviewFile(),
+                  operation.getLinkToCommittedRecordsMarcFile());
             } else {
-              yield buildCompositePreview(operation, offset, limit,
-                      operation.getLinkToCommittedRecordsJsonPreviewFile(),
-                      operation.getLinkToCommittedRecordsMarcFile());
+              yield buildCompositePreview(
+                  operation,
+                  offset,
+                  limit,
+                  operation.getLinkToCommittedRecordsJsonPreviewFile(),
+                  operation.getLinkToCommittedRecordsMarcFile());
             }
           } else {
-            yield buildPreviewFromJsonWithChangedOptions(operation,
-                    operation.getLinkToCommittedRecordsJsonPreviewFile(), offset, limit);
+            yield buildPreviewFromJsonWithChangedOptions(
+                operation, operation.getLinkToCommittedRecordsJsonPreviewFile(), offset, limit);
           }
         }
       }
     };
   }
 
-  private UnifiedTable buildPreviewFromJsonWithChangedOptions(BulkOperation operation,
-                                                           String linkToJsonFile,
-                                                           int offset, int limit) {
+  private UnifiedTable buildPreviewFromJsonWithChangedOptions(
+      BulkOperation operation, String linkToJsonFile, int offset, int limit) {
     var clazz = resolveEntityClass(operation.getEntityType());
     var rules = ruleService.getRules(operation.getId());
     var options = getChangedOptionsSet(operation.getId(), operation.getEntityType(), rules, clazz);
@@ -186,28 +197,37 @@ public class PreviewService {
 
   private boolean isFolioInstanceEditPreview(BulkOperation operation) {
     return StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsJsonPreviewFile())
-            && StringUtils.isEmpty(operation.getLinkToModifiedRecordsMarcFile());
+        && StringUtils.isEmpty(operation.getLinkToModifiedRecordsMarcFile());
   }
 
   private boolean isMarcInstanceEditPreview(BulkOperation operation) {
     return StringUtils.isNotEmpty(operation.getLinkToModifiedRecordsMarcFile())
-            && StringUtils.isEmpty(operation.getLinkToModifiedRecordsJsonPreviewFile());
+        && StringUtils.isEmpty(operation.getLinkToModifiedRecordsJsonPreviewFile());
   }
 
   private boolean isFolioInstanceCommitPreview(BulkOperation operation) {
     return StringUtils.isNotEmpty(operation.getLinkToCommittedRecordsJsonPreviewFile())
-            && StringUtils.isEmpty(operation.getLinkToCommittedRecordsMarcFile());
+        && StringUtils.isEmpty(operation.getLinkToCommittedRecordsMarcFile());
   }
 
   private boolean isMarcInstanceCommitPreview(BulkOperation operation) {
     return StringUtils.isNotEmpty(operation.getLinkToCommittedRecordsMarcFile())
-            && StringUtils.isEmpty(operation.getLinkToCommittedRecordsJsonPreviewFile());
+        && StringUtils.isEmpty(operation.getLinkToCommittedRecordsJsonPreviewFile());
   }
 
-  private UnifiedTable buildCompositePreview(BulkOperation bulkOperation, int offset, int limit,
-                                             String linkToJsonFile, String linkToMarcFile) {
-    var inventoryTable = buildPreviewFromJsonFile(linkToJsonFile, resolveEntityClass(
-            bulkOperation.getEntityType()), offset, limit, bulkOperation);
+  private UnifiedTable buildCompositePreview(
+      BulkOperation bulkOperation,
+      int offset,
+      int limit,
+      String linkToJsonFile,
+      String linkToMarcFile) {
+    var inventoryTable =
+        buildPreviewFromJsonFile(
+            linkToJsonFile,
+            resolveEntityClass(bulkOperation.getEntityType()),
+            offset,
+            limit,
+            bulkOperation);
     if (isNotEmpty(linkToMarcFile)) {
       referenceProvider.updateMappingRules();
       var marcRules = ruleService.getMarcRules(bulkOperation.getId());
@@ -217,26 +237,29 @@ public class PreviewService {
       noteTableUpdater.extendTableWithInstanceNotesTypes(compositeTable, changedOptionsSet);
       var sourcePosition = getCellPositionByName(INSTANCE_SOURCE);
       var hridPosition = getCellPositionByName(INSTANCE_HRID);
-      var headers = compositeTable.getHeader().stream()
-              .map(Cell::getValue)
-              .toList();
-      var hrids = inventoryTable.getRows().stream()
-              .map(row -> row.getRow().get(hridPosition))
-              .toList();
+      var headers = compositeTable.getHeader().stream().map(Cell::getValue).toList();
+      var hrids =
+          inventoryTable.getRows().stream().map(row -> row.getRow().get(hridPosition)).toList();
       var marcRecords = findMarcRecordsByHrids(linkToMarcFile, hrids);
-      inventoryTable.getRows().forEach(inventoryRow -> {
-        if (FOLIO.equals(inventoryRow.getRow().get(sourcePosition))) {
-          compositeTable.addRowsItem(inventoryRow);
-        } else {
-          var hrid = inventoryRow.getRow().get(hridPosition);
-          if (marcRecords.containsKey(hrid)) {
-            var marcRow = new Row().row(marcToUnifiedTableRowMapper.processRecord(
-                    marcRecords.get(hrid), headers, false));
-            enrichRowWithAdministrativeData(marcRow, inventoryRow);
-            compositeTable.addRowsItem(marcRow);
-          }
-        }
-      });
+      inventoryTable
+          .getRows()
+          .forEach(
+              inventoryRow -> {
+                if (FOLIO.equals(inventoryRow.getRow().get(sourcePosition))) {
+                  compositeTable.addRowsItem(inventoryRow);
+                } else {
+                  var hrid = inventoryRow.getRow().get(hridPosition);
+                  if (marcRecords.containsKey(hrid)) {
+                    var marcRow =
+                        new Row()
+                            .row(
+                                marcToUnifiedTableRowMapper.processRecord(
+                                    marcRecords.get(hrid), headers, false));
+                    enrichRowWithAdministrativeData(marcRow, inventoryRow);
+                    compositeTable.addRowsItem(marcRow);
+                  }
+                }
+              });
       forceVisibleAdministrativeDataHeaders(compositeTable, bulkOperation);
       return compositeTable;
     }
@@ -244,79 +267,118 @@ public class PreviewService {
     return inventoryTable;
   }
 
-  private void forceVisibleAdministrativeDataHeaders(UnifiedTable unifiedTable,
-                                                     BulkOperation bulkOperation) {
+  private void forceVisibleAdministrativeDataHeaders(
+      UnifiedTable unifiedTable, BulkOperation bulkOperation) {
     var rules = ruleService.getRules(bulkOperation.getId());
-    var forceVisibleFieldNames = rules.getBulkOperationRules().stream()
+    var forceVisibleFieldNames =
+        rules.getBulkOperationRules().stream()
             .map(BulkOperationRule::getRuleDetails)
             .map(RuleDetails::getOption)
-            .map(option -> UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                    option, INSTANCE))
+            .map(
+                option ->
+                    UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(option, INSTANCE))
             .collect(Collectors.toSet());
-    unifiedTable.getHeader().forEach(header -> {
-      if (forceVisibleFieldNames.contains(header.getValue())) {
-        header.setForceVisible(true);
-      }
-    });
+    unifiedTable
+        .getHeader()
+        .forEach(
+            header -> {
+              if (forceVisibleFieldNames.contains(header.getValue())) {
+                header.setForceVisible(true);
+              }
+            });
     if (isSetForDeletionForceVisible(unifiedTable)) {
-      unifiedTable.getHeader().stream().filter(header -> header.getValue().equals("Staff suppress")
+      unifiedTable.getHeader().stream()
+          .filter(
+              header ->
+                  header.getValue().equals("Staff suppress")
                       || header.getValue().equals("Suppress from discovery"))
-              .forEach(header -> header.setForceVisible(true));
+          .forEach(header -> header.setForceVisible(true));
     }
   }
 
   private boolean isSetForDeletionForceVisible(UnifiedTable unifiedTable) {
     return unifiedTable.getHeader().stream()
-            .anyMatch(header -> header.getValue().equals("Set for deletion")
-                    && header.getForceVisible());
+        .anyMatch(
+            header -> header.getValue().equals("Set for deletion") && header.getForceVisible());
   }
 
   private void forceVisibleMarcFields(UnifiedTable unifiedTable, Set<String> changedOptionsSet) {
-    unifiedTable.getHeader().forEach(cell -> {
-      if (changedOptionsSet.contains(cell.getValue())) {
-        cell.setForceVisible(true);
-      }
-    });
+    unifiedTable
+        .getHeader()
+        .forEach(
+            cell -> {
+              if (changedOptionsSet.contains(cell.getValue())) {
+                cell.setForceVisible(true);
+              }
+            });
   }
 
   private void enrichRowWithAdministrativeData(Row marcRow, Row inventoryRow) {
     var positions = getAdministrativeDataFieldPositions();
-    marcRow.getRow().set(positions.get(INSTANCE_STAFF_SUPPRESS), inventoryRow.getRow()
-            .get(positions.get(INSTANCE_STAFF_SUPPRESS)));
-    marcRow.getRow().set(positions.get(INSTANCE_ADMINISTRATIVE_NOTE), inventoryRow.getRow()
-            .get(positions.get(INSTANCE_ADMINISTRATIVE_NOTE)));
-    marcRow.getRow().set(positions.get(INSTANCE_SUPPRESS_FROM_DISCOVERY), inventoryRow.getRow()
-            .get(positions.get(INSTANCE_SUPPRESS_FROM_DISCOVERY)));
-    marcRow.getRow().set(positions.get(INSTANCE_PREVIOUSLY_HELD), inventoryRow.getRow()
-            .get(positions.get(INSTANCE_PREVIOUSLY_HELD)));
-    marcRow.getRow().set(positions.get(INSTANCE_STATUS_TERM), inventoryRow.getRow()
-            .get(positions.get(INSTANCE_STATUS_TERM)));
-    marcRow.getRow().set(positions.get(INSTANCE_NATURE_OF_CONTENT), inventoryRow.getRow()
-            .get(positions.get(INSTANCE_NATURE_OF_CONTENT)));
-    marcRow.getRow().set(positions.get(INSTANCE_CATALOGED_DATE), inventoryRow.getRow()
-            .get(positions.get(INSTANCE_CATALOGED_DATE)));
-    marcRow.getRow().set(positions.get(INSTANCE_STATISTICAL_CODES), inventoryRow.getRow()
-            .get(positions.get(INSTANCE_STATISTICAL_CODES)));
-    marcRow.getRow().set(positions.get(INSTANCE_SET_FOR_DELETION), inventoryRow.getRow()
-            .get(positions.get(INSTANCE_SET_FOR_DELETION)));
+    marcRow
+        .getRow()
+        .set(
+            positions.get(INSTANCE_STAFF_SUPPRESS),
+            inventoryRow.getRow().get(positions.get(INSTANCE_STAFF_SUPPRESS)));
+    marcRow
+        .getRow()
+        .set(
+            positions.get(INSTANCE_ADMINISTRATIVE_NOTE),
+            inventoryRow.getRow().get(positions.get(INSTANCE_ADMINISTRATIVE_NOTE)));
+    marcRow
+        .getRow()
+        .set(
+            positions.get(INSTANCE_SUPPRESS_FROM_DISCOVERY),
+            inventoryRow.getRow().get(positions.get(INSTANCE_SUPPRESS_FROM_DISCOVERY)));
+    marcRow
+        .getRow()
+        .set(
+            positions.get(INSTANCE_PREVIOUSLY_HELD),
+            inventoryRow.getRow().get(positions.get(INSTANCE_PREVIOUSLY_HELD)));
+    marcRow
+        .getRow()
+        .set(
+            positions.get(INSTANCE_STATUS_TERM),
+            inventoryRow.getRow().get(positions.get(INSTANCE_STATUS_TERM)));
+    marcRow
+        .getRow()
+        .set(
+            positions.get(INSTANCE_NATURE_OF_CONTENT),
+            inventoryRow.getRow().get(positions.get(INSTANCE_NATURE_OF_CONTENT)));
+    marcRow
+        .getRow()
+        .set(
+            positions.get(INSTANCE_CATALOGED_DATE),
+            inventoryRow.getRow().get(positions.get(INSTANCE_CATALOGED_DATE)));
+    marcRow
+        .getRow()
+        .set(
+            positions.get(INSTANCE_STATISTICAL_CODES),
+            inventoryRow.getRow().get(positions.get(INSTANCE_STATISTICAL_CODES)));
+    marcRow
+        .getRow()
+        .set(
+            positions.get(INSTANCE_SET_FOR_DELETION),
+            inventoryRow.getRow().get(positions.get(INSTANCE_SET_FOR_DELETION)));
   }
 
   private Map<String, Integer> getAdministrativeDataFieldPositions() {
     var positions = new HashMap<String, Integer>();
-    List.of(INSTANCE_STAFF_SUPPRESS,
-        INSTANCE_ADMINISTRATIVE_NOTE,
-        INSTANCE_SUPPRESS_FROM_DISCOVERY,
-        INSTANCE_PREVIOUSLY_HELD,
-        INSTANCE_CATALOGED_DATE,
-        INSTANCE_STATUS_TERM,
-        INSTANCE_NATURE_OF_CONTENT,
-        INSTANCE_FORMATS,
-        INSTANCE_CONTRIBUTORS,
-        INSTANCE_RESOURCE_TYPE,
-        INSTANCE_LANGUAGES,
-        INSTANCE_STATISTICAL_CODES,
-        INSTANCE_SET_FOR_DELETION)
-            .forEach(name -> positions.put(name, getCellPositionByName(name)));
+    List.of(
+            INSTANCE_STAFF_SUPPRESS,
+            INSTANCE_ADMINISTRATIVE_NOTE,
+            INSTANCE_SUPPRESS_FROM_DISCOVERY,
+            INSTANCE_PREVIOUSLY_HELD,
+            INSTANCE_CATALOGED_DATE,
+            INSTANCE_STATUS_TERM,
+            INSTANCE_NATURE_OF_CONTENT,
+            INSTANCE_FORMATS,
+            INSTANCE_CONTRIBUTORS,
+            INSTANCE_RESOURCE_TYPE,
+            INSTANCE_LANGUAGES,
+            INSTANCE_STATISTICAL_CODES,
+            INSTANCE_SET_FOR_DELETION)
+        .forEach(name -> positions.put(name, getCellPositionByName(name)));
     return positions;
   }
 
@@ -340,72 +402,94 @@ public class PreviewService {
   }
 
   private int getCellPositionByName(String name) {
-    return FieldUtils.getFieldsListWithAnnotation(Instance.class,
-                    CsvCustomBindByName.class).stream()
-      .filter(field -> name.equals(field.getAnnotation(CsvCustomBindByName.class).column()))
-      .map(field -> field.getAnnotation(CsvCustomBindByPosition.class).position())
-      .findFirst().orElseThrow(() -> new IllegalArgumentException(
-              "Field position was not found by name=" + name));
+    return FieldUtils.getFieldsListWithAnnotation(Instance.class, CsvCustomBindByName.class)
+        .stream()
+        .filter(field -> name.equals(field.getAnnotation(CsvCustomBindByName.class).column()))
+        .map(field -> field.getAnnotation(CsvCustomBindByPosition.class).position())
+        .findFirst()
+        .orElseThrow(
+            () -> new IllegalArgumentException("Field position was not found by name=" + name));
   }
 
-  private Set<String> getChangedOptionsSet(UUID bulkOperationId, EntityType entityType,
-                                           BulkOperationRuleCollection rules,
-                                           Class<? extends BulkOperationsEntity> clazz) {
+  private Set<String> getChangedOptionsSet(
+      UUID bulkOperationId,
+      EntityType entityType,
+      BulkOperationRuleCollection rules,
+      Class<? extends BulkOperationsEntity> clazz) {
     Set<String> forceVisibleOptions = new HashSet<>();
     var bulkOperation = bulkOperationService.getOperationById(bulkOperationId);
-    rules.getBulkOperationRules().forEach(rule -> {
-      var option = rule.getRuleDetails().getOption();
-      if (SET_RECORDS_FOR_DELETE == option && entityType == INSTANCE) {
-        forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                STAFF_SUPPRESS, entityType));
-        forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                SUPPRESS_FROM_DISCOVERY, entityType));
-      }
-      rule.getRuleDetails().getActions().forEach(action -> {
+    rules
+        .getBulkOperationRules()
+        .forEach(
+            rule -> {
+              var option = rule.getRuleDetails().getOption();
+              if (SET_RECORDS_FOR_DELETE == option && entityType == INSTANCE) {
+                forceVisibleOptions.add(
+                    UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
+                        STAFF_SUPPRESS, entityType));
+                forceVisibleOptions.add(
+                    UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
+                        SUPPRESS_FROM_DISCOVERY, entityType));
+              }
+              rule.getRuleDetails()
+                  .getActions()
+                  .forEach(
+                      action -> {
+                        if (action.getType() == UpdateActionType.CHANGE_TYPE) {
 
-        if (action.getType() == UpdateActionType.CHANGE_TYPE) {
+                          Optional<String> initial = getInitialNoteTypeId(entityType, action);
 
-          Optional<String> initial = getInitialNoteTypeId(entityType, action);
+                          if (initial.isPresent()) {
+                            processInitialNoteType(
+                                bulkOperation, forceVisibleOptions, initial.get(), clazz);
+                          } else {
+                            forceVisibleOptions.add(
+                                UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
+                                    option, entityType));
+                          }
 
-          if (initial.isPresent()) {
-            processInitialNoteType(bulkOperation, forceVisibleOptions, initial.get(), clazz);
-          } else {
-            forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                    option, entityType));
-          }
-
-          var updated = action.getUpdated();
-          if (UUID_REGEX.matcher(updated).matches()) {
-            processUpdatedNoteType(bulkOperation, forceVisibleOptions, updated, clazz);
-          } else {
-            forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                    UpdateOptionType.fromValue(updated), entityType));
-          }
-        } else if (action.getType() == UpdateActionType.DUPLICATE) {
-          forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                  option, entityType));
-          forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                  UpdateOptionType.fromValue(action.getUpdated()), entityType));
-        } else if (ITEM_NOTE == option) {
-          pricessInitialForItemNote(bulkOperation, forceVisibleOptions, action, clazz);
-        } else if (HOLDINGS_NOTE == option) {
-          processInitialHoldingsNote(bulkOperation, forceVisibleOptions, action, clazz);
-        } else if (INSTANCE_NOTE == option) {
-          processInitialInstanceNote(forceVisibleOptions, action, clazz);
-        } else {
-          // Default common case - the only this case should be processed in right approach
-          forceVisibleOptions.add(UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
-                  option, entityType));
-        }
-      });
-    });
-    log.info("Bulk Operation ID: {}, forced to visible fields: {}", bulkOperationId.toString(),
-            String.join(",", forceVisibleOptions));
+                          var updated = action.getUpdated();
+                          if (UUID_REGEX.matcher(updated).matches()) {
+                            processUpdatedNoteType(
+                                bulkOperation, forceVisibleOptions, updated, clazz);
+                          } else {
+                            forceVisibleOptions.add(
+                                UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
+                                    UpdateOptionType.fromValue(updated), entityType));
+                          }
+                        } else if (action.getType() == UpdateActionType.DUPLICATE) {
+                          forceVisibleOptions.add(
+                              UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
+                                  option, entityType));
+                          forceVisibleOptions.add(
+                              UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
+                                  UpdateOptionType.fromValue(action.getUpdated()), entityType));
+                        } else if (ITEM_NOTE == option) {
+                          pricessInitialForItemNote(
+                              bulkOperation, forceVisibleOptions, action, clazz);
+                        } else if (HOLDINGS_NOTE == option) {
+                          processInitialHoldingsNote(
+                              bulkOperation, forceVisibleOptions, action, clazz);
+                        } else if (INSTANCE_NOTE == option) {
+                          processInitialInstanceNote(forceVisibleOptions, action, clazz);
+                        } else {
+                          // Default common case - the only this case should be processed in right
+                          // approach
+                          forceVisibleOptions.add(
+                              UpdateOptionTypeToFieldResolver.getFieldByUpdateOptionType(
+                                  option, entityType));
+                        }
+                      });
+            });
+    log.info(
+        "Bulk Operation ID: {}, forced to visible fields: {}",
+        bulkOperationId.toString(),
+        String.join(",", forceVisibleOptions));
     return forceVisibleOptions;
   }
 
-  private String resolveAndGetItemTypeById(Class<? extends BulkOperationsEntity> clazz,
-                                           String value) {
+  private String resolveAndGetItemTypeById(
+      Class<? extends BulkOperationsEntity> clazz, String value) {
     if (clazz == HoldingsRecord.class) {
       return holdingsNoteTypeClient.getNoteTypeById(value).getName();
     } else if (clazz == Item.class) {
@@ -417,27 +501,35 @@ public class PreviewService {
     }
   }
 
-  private UnifiedTable buildPreviewFromJsonFile(String pathToFile,
-                                               Class<? extends BulkOperationsEntity> clazz,
-                                               int offset,
-                                               int limit, Set<String> forceVisible,
-                                               BulkOperation bulkOperation) {
+  private UnifiedTable buildPreviewFromJsonFile(
+      String pathToFile,
+      Class<? extends BulkOperationsEntity> clazz,
+      int offset,
+      int limit,
+      Set<String> forceVisible,
+      BulkOperation bulkOperation) {
     var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz, forceVisible);
     return populatePreview(pathToFile, clazz, offset, limit, table, forceVisible, bulkOperation);
   }
 
-  private UnifiedTable buildPreviewFromJsonFile(String pathToFile,
-                                               Class<? extends BulkOperationsEntity> clazz,
-                                               int offset, int limit, BulkOperation bulkOperation) {
-    var table =  UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
+  private UnifiedTable buildPreviewFromJsonFile(
+      String pathToFile,
+      Class<? extends BulkOperationsEntity> clazz,
+      int offset,
+      int limit,
+      BulkOperation bulkOperation) {
+    var table = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(clazz);
     return populatePreview(pathToFile, clazz, offset, limit, table, emptySet(), bulkOperation);
   }
 
-  private UnifiedTable populatePreview(String pathToFile,
-                                       Class<? extends BulkOperationsEntity> clazz,
-                                       int offset, int limit,
-                                       UnifiedTable table, Set<String> forceVisible,
-                                       BulkOperation bulkOperation) {
+  private UnifiedTable populatePreview(
+      String pathToFile,
+      Class<? extends BulkOperationsEntity> clazz,
+      int offset,
+      int limit,
+      UnifiedTable table,
+      Set<String> forceVisible,
+      BulkOperation bulkOperation) {
     try (var is = remoteFileSystemClient.get(pathToFile);
         var jsonParser = new JsonFactory().createParser(is)) {
       var processor = previewProcessorFactory.getProcessorFromFactory(clazz);
@@ -446,24 +538,30 @@ public class PreviewService {
       StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false)
           .skip(offset)
           .limit(limit)
-          .forEach(entity -> {
-            if (!consortiaService.isTenantCentral(folioExecutionContext.getTenantId())
-                || clazz == User.class) {
-              var ent = clazz == User.class ? entity : entity.getRecordBulkOperationEntity();
-              table.addRowsItem(processor.transformToRow(ent));
-            } else {
-              try (var ignored = new FolioExecutionContextSetter(
-                  prepareContextForTenant(entity.getTenant(), folioModuleMetadata,
-                  folioExecutionContext))) {
-                table.addRowsItem(processor.transformToRow(entity.getRecordBulkOperationEntity()));
-              }
-            }
-          });
+          .forEach(
+              entity -> {
+                if (!consortiaService.isTenantCentral(folioExecutionContext.getTenantId())
+                    || clazz == User.class) {
+                  var ent = clazz == User.class ? entity : entity.getRecordBulkOperationEntity();
+                  table.addRowsItem(processor.transformToRow(ent));
+                } else {
+                  try (var ignored =
+                      new FolioExecutionContextSetter(
+                          prepareContextForTenant(
+                              entity.getTenant(), folioModuleMetadata, folioExecutionContext))) {
+                    table.addRowsItem(
+                        processor.transformToRow(entity.getRecordBulkOperationEntity()));
+                  }
+                }
+              });
       processNoteFields(table, clazz, forceVisible, bulkOperation);
-      table.getRows().forEach(row -> {
-        var rowData = removeSubColumnsAndGetRowForPreview(row);
-        row.setRow(SpecialCharacterEscaper.restore(rowData));
-      });
+      table
+          .getRows()
+          .forEach(
+              row -> {
+                var rowData = removeSubColumnsAndGetRowForPreview(row);
+                row.setRow(SpecialCharacterEscaper.restore(rowData));
+              });
       tenantTableUpdater.updateTenantInHeadersAndRows(table, clazz);
       return table;
     } catch (Exception e) {
@@ -482,8 +580,11 @@ public class PreviewService {
         .toList();
   }
 
-  private void processNoteFields(UnifiedTable table, Class<? extends BulkOperationsEntity> clazz,
-                                 Set<String> forceVisible, BulkOperation bulkOperation) {
+  private void processNoteFields(
+      UnifiedTable table,
+      Class<? extends BulkOperationsEntity> clazz,
+      Set<String> forceVisible,
+      BulkOperation bulkOperation) {
     if (clazz == Item.class) {
       noteTableUpdater.extendTableWithItemNotesTypes(table, forceVisible, bulkOperation);
     } else if (clazz == HoldingsRecord.class) {
@@ -494,41 +595,55 @@ public class PreviewService {
   }
 
   private Optional<String> getNoteTypeNameById(BulkOperation bulkOperation, String noteTypeId) {
-    return ofNullable(bulkOperation.getTenantNotePairs()).flatMap(
-            pairs -> pairs.stream().filter(
-                    pair -> pair.getNoteTypeId().equals(noteTypeId))
-      .map(TenantNotePair::getNoteTypeName).findFirst());
+    return ofNullable(bulkOperation.getTenantNotePairs())
+        .flatMap(
+            pairs ->
+                pairs.stream()
+                    .filter(pair -> pair.getNoteTypeId().equals(noteTypeId))
+                    .map(TenantNotePair::getNoteTypeName)
+                    .findFirst());
   }
 
-  private Optional<String> getInitialNoteTypeId(EntityType entityType,
-                                                org.folio.bulkops.domain.dto.Action action) {
+  private Optional<String> getInitialNoteTypeId(
+      EntityType entityType, org.folio.bulkops.domain.dto.Action action) {
     Optional<String> initial = Optional.empty();
     if (EntityType.ITEM == entityType) {
-      initial = CollectionUtils.isNotEmpty(action.getParameters())
+      initial =
+          CollectionUtils.isNotEmpty(action.getParameters())
               ? action.getParameters().stream()
-              .filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey()))
-              .map(Parameter::getValue).findFirst() : Optional.empty();
+                  .filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey()))
+                  .map(Parameter::getValue)
+                  .findFirst()
+              : Optional.empty();
     }
 
     if (EntityType.HOLDINGS_RECORD == entityType) {
-      initial = CollectionUtils.isNotEmpty(action.getParameters())
+      initial =
+          CollectionUtils.isNotEmpty(action.getParameters())
               ? action.getParameters().stream()
-              .filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey()))
-              .map(Parameter::getValue).findFirst() : Optional.empty();
+                  .filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey()))
+                  .map(Parameter::getValue)
+                  .findFirst()
+              : Optional.empty();
     }
 
     if (EntityType.INSTANCE == entityType) {
-      initial = CollectionUtils.isNotEmpty(action.getParameters())
+      initial =
+          CollectionUtils.isNotEmpty(action.getParameters())
               ? action.getParameters().stream()
-              .filter(p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey()))
-              .map(Parameter::getValue).findFirst() : Optional.empty();
+                  .filter(p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey()))
+                  .map(Parameter::getValue)
+                  .findFirst()
+              : Optional.empty();
     }
     return initial;
   }
 
-  private void processInitialNoteType(BulkOperation bulkOperation, Set<String> forceVisibleOptions,
-                                      String initial,
-                                      Class<? extends BulkOperationsEntity> clazz) {
+  private void processInitialNoteType(
+      BulkOperation bulkOperation,
+      Set<String> forceVisibleOptions,
+      String initial,
+      Class<? extends BulkOperationsEntity> clazz) {
     var noteTypeName = getNoteTypeNameById(bulkOperation, initial);
     if (noteTypeName.isPresent()) {
       forceVisibleOptions.add(noteTypeName.get());
@@ -538,13 +653,14 @@ public class PreviewService {
         forceVisibleOptions.add(type);
       }
     }
-    log.info("initial.isPresent() {},{}", folioExecutionContext.getTenantId(),
-            initial);
+    log.info("initial.isPresent() {},{}", folioExecutionContext.getTenantId(), initial);
   }
 
-  private void processUpdatedNoteType(BulkOperation bulkOperation, Set<String> forceVisibleOptions,
-                                     String updated,
-                                     Class<? extends BulkOperationsEntity> clazz) {
+  private void processUpdatedNoteType(
+      BulkOperation bulkOperation,
+      Set<String> forceVisibleOptions,
+      String updated,
+      Class<? extends BulkOperationsEntity> clazz) {
     var noteTypeName = getNoteTypeNameById(bulkOperation, updated);
     if (noteTypeName.isPresent()) {
       forceVisibleOptions.add(noteTypeName.get());
@@ -554,61 +670,76 @@ public class PreviewService {
         forceVisibleOptions.add(type);
       }
     }
-    log.info("UUID_REGEX.matcher(updated) {}, {}, {}", noteTypeName, updated,
-            folioExecutionContext.getTenantId());
+    log.info(
+        "UUID_REGEX.matcher(updated) {}, {}, {}",
+        noteTypeName,
+        updated,
+        folioExecutionContext.getTenantId());
   }
 
-  private void processInitialHoldingsNote(BulkOperation bulkOperation,
-                                          Set<String> forceVisibleOptions,
-                                          org.folio.bulkops.domain.dto.Action action,
-                                          Class<? extends BulkOperationsEntity> clazz) {
-    var initial = action.getParameters().stream().filter(
-                    p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue)
+  private void processInitialHoldingsNote(
+      BulkOperation bulkOperation,
+      Set<String> forceVisibleOptions,
+      org.folio.bulkops.domain.dto.Action action,
+      Class<? extends BulkOperationsEntity> clazz) {
+    var initial =
+        action.getParameters().stream()
+            .filter(p -> HOLDINGS_NOTE_TYPE_ID_KEY.equals(p.getKey()))
+            .map(Parameter::getValue)
             .findFirst();
-    initial.ifPresent(id -> {
-      var noteTypeName = getNoteTypeNameById(bulkOperation, id);
-      if (noteTypeName.isPresent()) {
-        forceVisibleOptions.add(noteTypeName.get());
-      } else {
-        var type = resolveAndGetItemTypeById(clazz, id);
-        if (StringUtils.isNotEmpty(type)) {
-          forceVisibleOptions.add(type);
-        }
-      }
-    });
+    initial.ifPresent(
+        id -> {
+          var noteTypeName = getNoteTypeNameById(bulkOperation, id);
+          if (noteTypeName.isPresent()) {
+            forceVisibleOptions.add(noteTypeName.get());
+          } else {
+            var type = resolveAndGetItemTypeById(clazz, id);
+            if (StringUtils.isNotEmpty(type)) {
+              forceVisibleOptions.add(type);
+            }
+          }
+        });
   }
 
-  private void processInitialInstanceNote(Set<String> forceVisibleOptions,
-                                          org.folio.bulkops.domain.dto.Action action,
-                                          Class<? extends BulkOperationsEntity> clazz) {
-    var initial = action.getParameters().stream().filter(
-                    p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue)
+  private void processInitialInstanceNote(
+      Set<String> forceVisibleOptions,
+      org.folio.bulkops.domain.dto.Action action,
+      Class<? extends BulkOperationsEntity> clazz) {
+    var initial =
+        action.getParameters().stream()
+            .filter(p -> INSTANCE_NOTE_TYPE_ID_KEY.equals(p.getKey()))
+            .map(Parameter::getValue)
             .findFirst();
-    initial.ifPresent(id -> {
-      var type = resolveAndGetItemTypeById(clazz, id);
-      if (StringUtils.isNotEmpty(type)) {
-        forceVisibleOptions.add(type);
-      }
-    });
+    initial.ifPresent(
+        id -> {
+          var type = resolveAndGetItemTypeById(clazz, id);
+          if (StringUtils.isNotEmpty(type)) {
+            forceVisibleOptions.add(type);
+          }
+        });
   }
 
-  private void pricessInitialForItemNote(BulkOperation bulkOperation,
-                                      Set<String> forceVisibleOptions,
-                                      org.folio.bulkops.domain.dto.Action action,
-                                      Class<? extends BulkOperationsEntity> clazz) {
-    var initial = action.getParameters().stream().filter(
-                    p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey())).map(Parameter::getValue)
+  private void pricessInitialForItemNote(
+      BulkOperation bulkOperation,
+      Set<String> forceVisibleOptions,
+      org.folio.bulkops.domain.dto.Action action,
+      Class<? extends BulkOperationsEntity> clazz) {
+    var initial =
+        action.getParameters().stream()
+            .filter(p -> ITEM_NOTE_TYPE_ID_KEY.equals(p.getKey()))
+            .map(Parameter::getValue)
             .findFirst();
-    initial.ifPresent(id -> {
-      var noteTypeName = getNoteTypeNameById(bulkOperation, id);
-      if (noteTypeName.isPresent()) {
-        forceVisibleOptions.add(noteTypeName.get());
-      } else {
-        var type = resolveAndGetItemTypeById(clazz, id);
-        if (StringUtils.isNotEmpty(type)) {
-          forceVisibleOptions.add(type);
-        }
-      }
-    });
+    initial.ifPresent(
+        id -> {
+          var noteTypeName = getNoteTypeNameById(bulkOperation, id);
+          if (noteTypeName.isPresent()) {
+            forceVisibleOptions.add(noteTypeName.get());
+          } else {
+            var type = resolveAndGetItemTypeById(clazz, id);
+            if (StringUtils.isNotEmpty(type)) {
+              forceVisibleOptions.add(type);
+            }
+          }
+        });
   }
 }

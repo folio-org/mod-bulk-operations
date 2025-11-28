@@ -36,7 +36,7 @@ public class KafkaConfiguration {
 
   @Bean
   public <V> ConcurrentKafkaListenerContainerFactory<String, V> kafkaListenerContainerFactoryDi(
-          @Qualifier("consumerFactoryDi") ConsumerFactory<String, V> cf) {
+      @Qualifier("consumerFactoryDi") ConsumerFactory<String, V> cf) {
     var factory = new ConcurrentKafkaListenerContainerFactory<String, V>();
     factory.setConsumerFactory(cf);
     if (kafkaProperties.getListener().getAckMode() != null) {
@@ -46,13 +46,16 @@ public class KafkaConfiguration {
   }
 
   @Bean
-  public <V> ConsumerFactory<String, V> consumerFactoryDi(ObjectMapper objectMapper,
-                                                          FolioModuleMetadata folioModuleMetadata) {
+  public <V> ConsumerFactory<String, V> consumerFactoryDi(
+      ObjectMapper objectMapper, FolioModuleMetadata folioModuleMetadata) {
     Map<String, Object> props = new HashMap<>(kafkaProperties.buildConsumerProperties(null));
-    try (var deserializer = new DataImportEventPayloadDeserializer<V>(
-            TypeFactory.defaultInstance().constructType(
-                    TypeFactory.rawClass(DataImportJobExecution.class)),
-            objectMapper, false).trustedPackages(STAR)) {
+    try (var deserializer =
+        new DataImportEventPayloadDeserializer<V>(
+                TypeFactory.defaultInstance()
+                    .constructType(TypeFactory.rawClass(DataImportJobExecution.class)),
+                objectMapper,
+                false)
+            .trustedPackages(STAR)) {
       props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
       props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
       props.put(JsonDeserializer.TRUSTED_PACKAGES, STAR);

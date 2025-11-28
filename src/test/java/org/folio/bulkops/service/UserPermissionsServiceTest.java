@@ -21,21 +21,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class UserPermissionsServiceTest {
 
-  @Mock
-  private FolioExecutionContext folioExecutionContext;
-  @Mock
-  private OkapiUserPermissionsClient okapiUserPermissionsClient;
-  @Mock
-  private EurekaUserPermissionsClient eurekaUserPermissionsClient;
+  @Mock private FolioExecutionContext folioExecutionContext;
+  @Mock private OkapiUserPermissionsClient okapiUserPermissionsClient;
+  @Mock private EurekaUserPermissionsClient eurekaUserPermissionsClient;
 
-  @InjectMocks
-  private UserPermissionsService userPermissionsService;
+  @InjectMocks private UserPermissionsService userPermissionsService;
 
   @Test
   void getPermissionsTest() {
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
     when(okapiUserPermissionsClient.getPermissions(isA(String.class)))
-            .thenReturn(new UserPermissions());
+        .thenReturn(new UserPermissions());
 
     userPermissionsService.setPlatform(OKAPI_PLATFORM);
     userPermissionsService.getPermissions();
@@ -45,10 +41,8 @@ class UserPermissionsServiceTest {
   @Test
   void getPermissionsIfEurekaTest() {
     when(folioExecutionContext.getUserId()).thenReturn(UUID.randomUUID());
-    when(eurekaUserPermissionsClient.getPermissions(
-        isA(String.class),
-        anyList()
-    )).thenReturn(new UserPermissions());
+    when(eurekaUserPermissionsClient.getPermissions(isA(String.class), anyList()))
+        .thenReturn(new UserPermissions());
 
     userPermissionsService.setPlatform(EUREKA_PLATFORM);
     userPermissionsService.getPermissions();

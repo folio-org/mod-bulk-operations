@@ -16,5 +16,4 @@ public interface ServicePointClient {
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   ServicePoints getByQuery(@RequestParam String query, @RequestParam long limit);
-
 }

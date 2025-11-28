@@ -19,4 +19,3 @@ public class Series {
   @JsonProperty("authorityId")
   private String authorityId;
 }
-

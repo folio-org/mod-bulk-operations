@@ -28,33 +28,39 @@ public class AdministrativeNotesUpdater {
     return new ArrayList<>();
   }
 
-  public List<String> addToAdministrativeNotes(String administrativeNote,
-                                               List<String> administrativeNotes) {
-    List<String> notes = isNull(administrativeNotes) ? new ArrayList<>()
-            : new ArrayList<>(administrativeNotes);
+  public List<String> addToAdministrativeNotes(
+      String administrativeNote, List<String> administrativeNotes) {
+    List<String> notes =
+        isNull(administrativeNotes) ? new ArrayList<>() : new ArrayList<>(administrativeNotes);
     notes.add(administrativeNote);
     return notes;
   }
 
-  public List<String> findAndRemoveAdministrativeNote(String valueToRemove,
-                                                      List<String> administrativeNotes) {
+  public List<String> findAndRemoveAdministrativeNote(
+      String valueToRemove, List<String> administrativeNotes) {
     if (administrativeNotes != null) {
-      administrativeNotes = administrativeNotes.stream()
-        .map(note -> note.replace(valueToRemove, EMPTY))
-        .collect(toCollection(ArrayList::new));
+      administrativeNotes =
+          administrativeNotes.stream()
+              .map(note -> note.replace(valueToRemove, EMPTY))
+              .collect(toCollection(ArrayList::new));
     }
     return administrativeNotes;
   }
 
-  public List<String> findAndReplaceAdministrativeNote(Action action,
-                                                       List<String> administrativeNotes) {
+  public List<String> findAndReplaceAdministrativeNote(
+      Action action, List<String> administrativeNotes) {
     if (administrativeNotes != null) {
-      administrativeNotes = administrativeNotes.stream().map(administrativeNote -> {
-        if (StringUtils.contains(administrativeNote, action.getInitial())) {
-          return StringUtils.replace(administrativeNote, action.getInitial(), action.getUpdated());
-        }
-        return administrativeNote;
-      }).collect(toCollection(ArrayList::new));
+      administrativeNotes =
+          administrativeNotes.stream()
+              .map(
+                  administrativeNote -> {
+                    if (StringUtils.contains(administrativeNote, action.getInitial())) {
+                      return StringUtils.replace(
+                          administrativeNote, action.getInitial(), action.getUpdated());
+                    }
+                    return administrativeNote;
+                  })
+              .collect(toCollection(ArrayList::new));
     }
     return administrativeNotes;
   }
@@ -64,9 +70,17 @@ public class AdministrativeNotesUpdater {
       if (holding.getNotes() == null) {
         holding.setNotes(new ArrayList<>());
       }
-      holding.getAdministrativeNotes().forEach(administrativeNote ->
-              holding.getNotes().add(new HoldingsNote().withHoldingsNoteTypeId(
-                      action.getUpdated()).withNote(administrativeNote).withStaffOnly(false)));
+      holding
+          .getAdministrativeNotes()
+          .forEach(
+              administrativeNote ->
+                  holding
+                      .getNotes()
+                      .add(
+                          new HoldingsNote()
+                              .withHoldingsNoteTypeId(action.getUpdated())
+                              .withNote(administrativeNote)
+                              .withStaffOnly(false)));
       holding.setAdministrativeNotes(new ArrayList<>());
     }
   }
@@ -80,36 +94,53 @@ public class AdministrativeNotesUpdater {
         item.setNotes(new ArrayList<>());
       }
       var noteTypeToUse = action.getUpdated();
-      item.getAdministrativeNotes().forEach(administrativeNote -> {
-        if (NOTES_TYPES_TO_UPDATE.contains(noteTypeToUse)) {
-          if (CHECK_IN_NOTE_TYPE.equals(noteTypeToUse)) {
-            item.getCirculationNotes().add(new CirculationNote()
-                    .withNoteType(CirculationNote.NoteTypeEnum.IN)
-                    .withNote(administrativeNote).withStaffOnly(false));
-          }
-          if (CHECK_OUT_NOTE_TYPE.equals(noteTypeToUse)) {
-            item.getCirculationNotes().add(new CirculationNote()
-                    .withNoteType(CirculationNote.NoteTypeEnum.OUT)
-                    .withNote(administrativeNote).withStaffOnly(false));
-          }
-        } else {
-          item.getNotes().add(new ItemNote().withItemNoteTypeId(noteTypeToUse)
-                  .withNote(administrativeNote));
-        }
-      });
+      item.getAdministrativeNotes()
+          .forEach(
+              administrativeNote -> {
+                if (NOTES_TYPES_TO_UPDATE.contains(noteTypeToUse)) {
+                  if (CHECK_IN_NOTE_TYPE.equals(noteTypeToUse)) {
+                    item.getCirculationNotes()
+                        .add(
+                            new CirculationNote()
+                                .withNoteType(CirculationNote.NoteTypeEnum.IN)
+                                .withNote(administrativeNote)
+                                .withStaffOnly(false));
+                  }
+                  if (CHECK_OUT_NOTE_TYPE.equals(noteTypeToUse)) {
+                    item.getCirculationNotes()
+                        .add(
+                            new CirculationNote()
+                                .withNoteType(CirculationNote.NoteTypeEnum.OUT)
+                                .withNote(administrativeNote)
+                                .withStaffOnly(false));
+                  }
+                } else {
+                  item.getNotes()
+                      .add(
+                          new ItemNote()
+                              .withItemNoteTypeId(noteTypeToUse)
+                              .withNote(administrativeNote));
+                }
+              });
       item.setAdministrativeNotes(new ArrayList<>());
     }
   }
 
   public void changeNoteTypeForAdministrativeNotes(Instance instance, Action action) {
     if (nonNull(instance.getAdministrativeNotes())) {
-      List<InstanceNote> instanceNotes = isNull(instance.getInstanceNotes())
-              ? new ArrayList<>() : new ArrayList<>(instance.getInstanceNotes());
-      var notes = instance.getAdministrativeNotes().stream()
-              .map(administrativeNote -> InstanceNote.builder()
-                      .instanceNoteTypeId(action.getUpdated())
-                      .note(administrativeNote)
-                      .staffOnly(false).build())
+      List<InstanceNote> instanceNotes =
+          isNull(instance.getInstanceNotes())
+              ? new ArrayList<>()
+              : new ArrayList<>(instance.getInstanceNotes());
+      var notes =
+          instance.getAdministrativeNotes().stream()
+              .map(
+                  administrativeNote ->
+                      InstanceNote.builder()
+                          .instanceNoteTypeId(action.getUpdated())
+                          .note(administrativeNote)
+                          .staffOnly(false)
+                          .build())
               .toList();
       instanceNotes.addAll(notes);
       instance.setInstanceNotes(instanceNotes);

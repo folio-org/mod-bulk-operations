@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public enum PreferredContactType {
-
   EMAIL("002", "Email"),
   MAIL("001", "Mail (Primary Address)"),
   TEXT_MESSAGE("003", "Text Message");

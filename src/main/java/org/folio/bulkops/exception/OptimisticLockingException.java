@@ -12,7 +12,7 @@ public class OptimisticLockingException extends RuntimeException {
   private final String linkToFailedEntity;
 
   /**
-    * This method is unsupported and should not be used.
+   * This method is unsupported and should not be used.
    *
    * @deprecated Use {@link #getCsvErrorMessage()} and {@link #getUiErrorMessage()} instead.
    */

@@ -12,13 +12,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-class SubjectServiceTest  extends BaseTest {
+class SubjectServiceTest extends BaseTest {
 
-  @Autowired
-  private SubjectService subjectService;
+  @Autowired private SubjectService subjectService;
 
-  @MockitoBean
-  private SubjectReferenceService subjectReferenceService;
+  @MockitoBean private SubjectReferenceService subjectReferenceService;
 
   @Test
   void subjectToStringTest() {

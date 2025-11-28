@@ -3,9 +3,7 @@ package org.folio.bulkops.domain.bean;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-
 public enum JobStatus {
-
   SCHEDULED("SCHEDULED"),
 
   IN_PROGRESS("IN_PROGRESS"),
@@ -40,4 +38,3 @@ public enum JobStatus {
     throw new IllegalArgumentException("Unexpected value '" + value + "'");
   }
 }
-

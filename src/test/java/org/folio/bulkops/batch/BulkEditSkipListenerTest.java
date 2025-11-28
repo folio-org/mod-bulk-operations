@@ -58,7 +58,7 @@ class BulkEditSkipListenerTest {
 
     verify(errorService).saveError(eq(bulkOperationId), eq("item-1"), eq("error"), isNull());
     assertThat(jobExecution.getExecutionContext().getInt(NUMBER_OF_PROCESSED_IDENTIFIERS))
-            .isEqualTo(1);
+        .isEqualTo(1);
   }
 
   @Test
@@ -90,6 +90,6 @@ class BulkEditSkipListenerTest {
 
     verify(errorService, never()).saveError(any(), any(), any(), any());
     assertThat(jobExecution.getExecutionContext().getInt(NUMBER_OF_PROCESSED_IDENTIFIERS))
-            .isEqualTo(1);
+        .isEqualTo(1);
   }
 }

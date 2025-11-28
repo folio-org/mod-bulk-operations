@@ -23,4 +23,3 @@ public class ModesOfIssuance {
   @JsonProperty("totalRecords")
   private Integer totalRecords;
 }
-

@@ -15,19 +15,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @FeignClient(
     name = "holdings-storage/holdings",
-    configuration = {
-        FeignClientConfiguration.class,
-        FeignEncoderConfiguration.class
-    }
-)
+    configuration = {FeignClientConfiguration.class, FeignEncoderConfiguration.class})
 public interface HoldingsStorageClient {
 
   @GetMapping(value = "/{holdingsRecordId}", produces = MediaType.APPLICATION_JSON_VALUE)
   HoldingsRecord getHoldingById(@PathVariable String holdingsRecordId);
 
   @PutMapping(value = "/{holdingsId}")
-  void updateHoldingsRecord(@RequestBody HoldingsRecord holdingsRecord,
-                            @PathVariable String holdingsId);
+  void updateHoldingsRecord(
+      @RequestBody HoldingsRecord holdingsRecord, @PathVariable String holdingsId);
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   HoldingsRecordCollection getByQuery(@RequestParam String query, @RequestParam long limit);

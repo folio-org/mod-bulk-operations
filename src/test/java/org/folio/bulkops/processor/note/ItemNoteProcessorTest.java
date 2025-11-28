@@ -26,21 +26,14 @@ import org.springframework.cache.CacheManager;
 @ExtendWith(MockitoExtension.class)
 class ItemNoteProcessorTest {
 
-  @Mock
-  private ItemReferenceService itemReferenceService;
-  @Mock
-  private FolioExecutionContext folioExecutionContext;
-  @Mock
-  private ConsortiaService consortiaService;
-  @Mock
-  private CacheManager cacheManager;
-  @Mock
-  private Cache cache;
-  @Mock
-  private NoteTableUpdater noteTableUpdater;
+  @Mock private ItemReferenceService itemReferenceService;
+  @Mock private FolioExecutionContext folioExecutionContext;
+  @Mock private ConsortiaService consortiaService;
+  @Mock private CacheManager cacheManager;
+  @Mock private Cache cache;
+  @Mock private NoteTableUpdater noteTableUpdater;
 
-  @InjectMocks
-  private ItemNoteProcessor itemNoteProcessor;
+  @InjectMocks private ItemNoteProcessor itemNoteProcessor;
 
   @BeforeEach
   void setUp() {

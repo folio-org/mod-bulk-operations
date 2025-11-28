@@ -23,32 +23,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 @ExtendWith(MockitoExtension.class)
 class UserReferenceHelperTest extends BaseTest {
 
-  @Autowired
-  private UserReferenceHelper userReferenceHelper;
+  @Autowired private UserReferenceHelper userReferenceHelper;
 
   @Test
   void testGetAddressType() {
     when(addressTypeClient.getAddressTypeById("id_1"))
-        .thenReturn(AddressType.builder()
-            .desc("desc")
-            .addressType("addressType")
-            .build());
+        .thenReturn(AddressType.builder().desc("desc").addressType("addressType").build());
     var actual = userReferenceHelper.getAddressTypeById("id_1");
     assertEquals("desc", actual.getDesc());
     assertEquals("addressType", actual.getAddressType());
 
     when(addressTypeClient.getAddressTypeById("id_2"))
         .thenThrow(new NotFoundException("not found"));
-    assertThrows(ReferenceDataNotFoundException.class,
-        () -> userReferenceHelper.getAddressTypeById("id_2"));
+    assertThrows(
+        ReferenceDataNotFoundException.class, () -> userReferenceHelper.getAddressTypeById("id_2"));
 
     when(addressTypeClient.getByQuery("addressType==\"at_1\""))
-        .thenReturn(AddressTypeCollection.builder()
-            .addressTypes(singletonList(AddressType.builder().id("id_3").build()))
-            .build());
+        .thenReturn(
+            AddressTypeCollection.builder()
+                .addressTypes(singletonList(AddressType.builder().id("id_3").build()))
+                .build());
     actual = userReferenceHelper.getAddressTypeByAddressTypeValue("at_1");
     assertEquals("id_3", actual.getId());
-
   }
 
   @Test
@@ -58,21 +54,22 @@ class UserReferenceHelperTest extends BaseTest {
     var actual = userReferenceHelper.getDepartmentById("id_1");
     assertEquals("name_1", actual.getName());
 
-    when(departmentClient.getDepartmentById("id_2"))
-        .thenThrow(new NotFoundException("not found"));
-    assertThrows(ReferenceDataNotFoundException.class,
-        () -> userReferenceHelper.getDepartmentById("id_2"));
+    when(departmentClient.getDepartmentById("id_2")).thenThrow(new NotFoundException("not found"));
+    assertThrows(
+        ReferenceDataNotFoundException.class, () -> userReferenceHelper.getDepartmentById("id_2"));
 
     when(departmentClient.getByQuery("name==\"name_2\""))
-        .thenReturn(DepartmentCollection.builder()
-            .departments(singletonList(Department.builder().id("id_3").build()))
-            .build());
+        .thenReturn(
+            DepartmentCollection.builder()
+                .departments(singletonList(Department.builder().id("id_3").build()))
+                .build());
     actual = userReferenceHelper.getDepartmentByName("name_2");
     assertEquals("id_3", actual.getId());
 
     when(departmentClient.getByQuery("name==\"name_3\""))
         .thenReturn(DepartmentCollection.builder().departments(emptyList()).build());
-    assertThrows(ReferenceDataNotFoundException.class,
+    assertThrows(
+        ReferenceDataNotFoundException.class,
         () -> userReferenceHelper.getDepartmentByName("name_3"));
   }
 
@@ -83,11 +80,14 @@ class UserReferenceHelperTest extends BaseTest {
     assertEquals("name_1", actual.getGroup());
 
     when(groupClient.getGroupById("id_2")).thenThrow(new NotFoundException("not found"));
-    assertThrows(ReferenceDataNotFoundException.class,
-            () -> userReferenceHelper.getPatronGroupById("id_2"));
+    assertThrows(
+        ReferenceDataNotFoundException.class, () -> userReferenceHelper.getPatronGroupById("id_2"));
 
-    when(groupClient.getByQuery("group==\"name_2\"")).thenReturn(UserGroupCollection.builder()
-            .usergroups(singletonList(UserGroup.builder().id("id_3").build())).build());
+    when(groupClient.getByQuery("group==\"name_2\""))
+        .thenReturn(
+            UserGroupCollection.builder()
+                .usergroups(singletonList(UserGroup.builder().id("id_3").build()))
+                .build());
     actual = userReferenceHelper.getPatronGroupByName("name_2");
     assertEquals("id_3", actual.getId());
   }

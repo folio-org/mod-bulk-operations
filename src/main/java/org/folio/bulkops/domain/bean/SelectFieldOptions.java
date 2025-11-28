@@ -16,14 +16,12 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class SelectFieldOptions   {
+public class SelectFieldOptions {
   @JsonProperty("values")
   @Valid
   private List<SelectFieldOption> values = null;
 
-  /**
-   * Defines sorting order for the custom field.
-   */
+  /** Defines sorting order for the custom field. */
   public enum SortingOrderEnum {
     ASC("ASC"),
 
@@ -61,4 +59,3 @@ public class SelectFieldOptions   {
   @JsonProperty("sortingOrder")
   private SortingOrderEnum sortingOrder;
 }
-

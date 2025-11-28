@@ -19,4 +19,3 @@ public class Title {
   @JsonProperty("briefInstance")
   private BriefInstance briefInstance;
 }
-

@@ -17,7 +17,7 @@ import lombok.With;
 public class Metadata {
   @JsonProperty("createdDate")
   @org.springframework.format.annotation.DateTimeFormat(
-          iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
+      iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
   private Date createdDate;
 
   @JsonProperty("createdByUserId")
@@ -28,7 +28,7 @@ public class Metadata {
 
   @JsonProperty("updatedDate")
   @org.springframework.format.annotation.DateTimeFormat(
-          iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
+      iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
   private Date updatedDate;
 
   @JsonProperty("updatedByUserId")
@@ -37,4 +37,3 @@ public class Metadata {
   @JsonProperty("updatedByUsername")
   private String updatedByUsername;
 }
-

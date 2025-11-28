@@ -6,9 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
 
-/**
- * Marker interface for entities for which bulk operations is applicable.
- */
+/** Marker interface for entities for which bulk operations is applicable. */
 public interface BulkOperationsEntity {
   String getIdentifier(IdentifierType identifierType);
 
@@ -40,10 +38,8 @@ public interface BulkOperationsEntity {
   }
 
   @JsonIgnore
-  default void setTenantToNotes(List<TenantNotePair> tenantNotePairs) {
-  }
+  default void setTenantToNotes(List<TenantNotePair> tenantNotePairs) {}
 
   @JsonIgnore
-  default void setTenant(String tenantId) {
-  }
+  default void setTenant(String tenantId) {}
 }

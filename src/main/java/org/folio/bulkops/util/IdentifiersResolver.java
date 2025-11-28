@@ -19,8 +19,8 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 
 @UtilityClass
 public class IdentifiersResolver {
-  private static final EnumMap<IdentifierType, String> identifiersMap
-          = new EnumMap<>(IdentifierType.class);
+  private static final EnumMap<IdentifierType, String> identifiersMap =
+      new EnumMap<>(IdentifierType.class);
 
   static {
     identifiersMap.put(ID, "id");

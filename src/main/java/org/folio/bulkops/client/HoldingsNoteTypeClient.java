@@ -15,8 +15,8 @@ public interface HoldingsNoteTypeClient {
   HoldingsNoteType getNoteTypeById(@PathVariable String id);
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  HoldingsNoteTypeCollection getNoteTypesByQuery(@RequestParam String query,
-                                                 @RequestParam("limit") int limit);
+  HoldingsNoteTypeCollection getNoteTypesByQuery(
+      @RequestParam String query, @RequestParam("limit") int limit);
 
   @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
   HoldingsNoteTypeCollection getNoteTypes(@RequestParam("limit") int limit);

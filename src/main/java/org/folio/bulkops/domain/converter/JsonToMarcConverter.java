@@ -15,13 +15,14 @@ import org.springframework.stereotype.Component;
 public class JsonToMarcConverter {
 
   public String convertJsonRecordToMarcRecord(String jsonRecord) throws IOException {
-    var byteArrayInputStream = new ByteArrayInputStream(
-            jsonRecord.getBytes(StandardCharsets.UTF_8));
+    var byteArrayInputStream =
+        new ByteArrayInputStream(jsonRecord.getBytes(StandardCharsets.UTF_8));
     var byteArrayOutputStream = new ByteArrayOutputStream();
-    try (byteArrayInputStream; byteArrayOutputStream) {
+    try (byteArrayInputStream;
+        byteArrayOutputStream) {
       var marcJsonReader = new MarcJsonReader(byteArrayInputStream);
-      var marcStreamWriter = new MarcStreamWriter(byteArrayOutputStream,
-              StandardCharsets.UTF_8.name());
+      var marcStreamWriter =
+          new MarcStreamWriter(byteArrayOutputStream, StandardCharsets.UTF_8.name());
       writeMarc(marcJsonReader, marcStreamWriter);
       return byteArrayOutputStream.toString();
     } catch (IOException e) {

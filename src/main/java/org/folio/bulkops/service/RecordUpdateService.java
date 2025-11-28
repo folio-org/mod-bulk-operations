@@ -24,14 +24,15 @@ public class RecordUpdateService {
   private final BulkOperationExecutionContentRepository executionContentRepository;
   private final EntityPathResolver entityPathResolver;
 
-  public BulkOperationsEntity updateEntity(BulkOperationsEntity original,
-                                           BulkOperationsEntity modified, BulkOperation operation) {
+  public BulkOperationsEntity updateEntity(
+      BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation) {
     var entity = modified.getRecordBulkOperationEntity();
     if (Objects.nonNull(entity)) {
       entity.setTenant(null);
     }
     var isEqual = original.hashCode() == modified.hashCode() && original.equals(modified);
-    var updater = updateProcessorFactory.getProcessorFromFactory(
+    var updater =
+        updateProcessorFactory.getProcessorFromFactory(
             resolveExtendedEntityClass(operation.getEntityType()));
     if (!isEqual) {
       try {
@@ -44,7 +45,8 @@ public class RecordUpdateService {
         }
         throw e;
       }
-      executionContentRepository.save(BulkOperationExecutionContent.builder()
+      executionContentRepository.save(
+          BulkOperationExecutionContent.builder()
               .bulkOperationId(operation.getId())
               .identifier(modified.getIdentifier(operation.getIdentifierType()))
               .state(StateType.PROCESSED)

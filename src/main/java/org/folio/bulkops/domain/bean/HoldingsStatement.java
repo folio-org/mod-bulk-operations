@@ -22,4 +22,3 @@ public class HoldingsStatement {
   @JsonProperty("staffNote")
   private String staffNote;
 }
-

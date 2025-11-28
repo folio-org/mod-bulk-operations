@@ -10,30 +10,22 @@ class ExceptionHelperTest {
 
   @Test
   void fetchMessage_returnsRootCauseMessageForNormalException() {
-    Exception ex = new RuntimeException(
-        "Top",
-        new IllegalArgumentException(
-            "Root cause\n"
-                + "with line break"
-        )
-    );
+    Exception ex =
+        new RuntimeException(
+            "Top", new IllegalArgumentException("Root cause\n" + "with line break"));
     String message = ExceptionHelper.fetchMessage(ex);
     assertThat(message).isEqualTo("IllegalArgumentException: Root cause with line break");
   }
 
   @Test
   void fetchMessage_returnsFormattedMessageForInvalidFormatException() {
-    JsonMappingException.Reference ref1 = new JsonMappingException.Reference(
-            Object.class, "field1");
-    JsonMappingException.Reference ref2 = new JsonMappingException.Reference(
-            Object.class, "field2");
+    JsonMappingException.Reference ref1 =
+        new JsonMappingException.Reference(Object.class, "field1");
+    JsonMappingException.Reference ref2 =
+        new JsonMappingException.Reference(Object.class, "field2");
 
-    InvalidFormatException ife = InvalidFormatException.from(
-        null,
-        "bad",
-        "badValue",
-        Integer.class
-    );
+    InvalidFormatException ife =
+        InvalidFormatException.from(null, "bad", "badValue", Integer.class);
     ife.prependPath(ref1);
     ife.prependPath(ref2);
 

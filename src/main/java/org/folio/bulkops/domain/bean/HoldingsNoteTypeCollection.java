@@ -23,4 +23,3 @@ public class HoldingsNoteTypeCollection {
   @JsonProperty("totalRecords")
   private Integer totalRecords;
 }
-

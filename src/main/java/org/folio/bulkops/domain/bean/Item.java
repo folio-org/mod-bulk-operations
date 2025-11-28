@@ -46,8 +46,14 @@ import org.folio.bulkops.service.ItemReferenceHelper;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonTypeName("item")
-@EqualsAndHashCode(exclude = {"effectiveCallNumberComponents", "effectiveLocation",
-    "boundWithTitles", "holdingsData", "tenantId"})
+@EqualsAndHashCode(
+    exclude = {
+      "effectiveCallNumberComponents",
+      "effectiveLocation",
+      "boundWithTitles",
+      "holdingsData",
+      "tenantId"
+    })
 public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   public Item(@JsonProperty("tenantId") String tenantId) {
@@ -61,15 +67,17 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   private String id;
 
   @JsonProperty("title")
-  @CsvCustomBindByName(column = "Instance (Title, Publisher, Publication date)",
-          converter = StringConverter.class)
+  @CsvCustomBindByName(
+      column = "Instance (Title, Publisher, Publication date)",
+      converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 1, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String title;
 
   @JsonProperty("holdingsData")
-  @CsvCustomBindByName(column = "Holdings (Location, Call number)",
-          converter = StringConverter.class)
+  @CsvCustomBindByName(
+      column = "Holdings (Location, Call number)",
+      converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 2, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String holdingsData;
@@ -83,7 +91,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @JsonProperty("effectiveLocationId")
   public void setEffectiveLocationId(String id) {
     if (nonNull(id)) {
-      this.effectiveLocation = new ItemLocation().withId(id)
+      this.effectiveLocation =
+          new ItemLocation()
+              .withId(id)
               .withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
     }
   }
@@ -99,8 +109,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   }
 
   @JsonProperty("effectiveCallNumberComponents")
-  @CsvCustomBindByName(column = "Effective call number",
-          converter = EffectiveCallNumberComponentsConverter.class)
+  @CsvCustomBindByName(
+      column = "Effective call number",
+      converter = EffectiveCallNumberComponentsConverter.class)
   @CsvCustomBindByPosition(position = 4, converter = EffectiveCallNumberComponentsConverter.class)
   @UnifiedTableCell
   private EffectiveCallNumberComponents effectiveCallNumberComponents;
@@ -144,8 +155,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("statisticalCodeIds")
   @Valid
-  @CsvCustomBindByName(column = "Statistical codes",
-          converter = ItemStatisticalCodeListConverter.class)
+  @CsvCustomBindByName(
+      column = "Statistical codes",
+      converter = ItemStatisticalCodeListConverter.class)
   @CsvCustomBindByPosition(position = 11, converter = ItemStatisticalCodeListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> statisticalCodes;
@@ -166,7 +178,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @JsonProperty("materialTypeId")
   public void setMaterialTypeId(String id) {
     if (nonNull(id)) {
-      this.materialType = new MaterialType().withId(id)
+      this.materialType =
+          new MaterialType()
+              .withId(id)
               .withName(ItemReferenceHelper.service().getMaterialTypeById(id, tenantId).getName());
     }
   }
@@ -194,8 +208,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   private String effectiveShelvingOrder;
 
   @JsonProperty("itemLevelCallNumberTypeId")
-  @CsvCustomBindByName(column = "Item level call number type",
-          converter = CallNumberTypeConverter.class)
+  @CsvCustomBindByName(
+      column = "Item level call number type",
+      converter = CallNumberTypeConverter.class)
   @CsvCustomBindByPosition(position = 16, converter = CallNumberTypeConverter.class)
   @UnifiedTableCell(visible = false)
   private String itemLevelCallNumberType;
@@ -312,7 +327,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @JsonProperty("permanentLoanTypeId")
   public void setPermanentLoanTypeId(String id) {
     if (nonNull(id)) {
-      this.permanentLoanType = new LoanType().withId(id)
+      this.permanentLoanType =
+          new LoanType()
+              .withId(id)
               .withName(ItemReferenceHelper.service().getLoanTypeById(id, tenantId).getName());
     }
   }
@@ -336,7 +353,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @JsonProperty("temporaryLoanTypeId")
   public void setTemporaryLoanTypeId(String id) {
     if (nonNull(id)) {
-      this.temporaryLoanType = new LoanType().withId(id)
+      this.temporaryLoanType =
+          new LoanType()
+              .withId(id)
               .withName(ItemReferenceHelper.service().getLoanTypeById(id, tenantId).getName());
     }
   }
@@ -378,7 +397,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @JsonProperty("permanentLocationId")
   public void setPermanentLocationId(String id) {
     if (nonNull(id)) {
-      this.permanentLocation = new ItemLocation().withId(id)
+      this.permanentLocation =
+          new ItemLocation()
+              .withId(id)
               .withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
     }
   }
@@ -402,7 +423,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @JsonProperty("temporaryLocationId")
   public void setTemporaryLocationId(String id) {
     if (nonNull(id)) {
-      this.temporaryLocation = new ItemLocation().withId(id)
+      this.temporaryLocation =
+          new ItemLocation()
+              .withId(id)
               .withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
     }
   }
@@ -419,8 +442,9 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @JsonProperty("electronicAccess")
   @Valid
-  @CsvCustomBindByName(column = "Electronic access",
-          converter = ItemElectronicAccessListConverter.class)
+  @CsvCustomBindByName(
+      column = "Electronic access",
+      converter = ItemElectronicAccessListConverter.class)
   @CsvCustomBindByPosition(position = 39, converter = ItemElectronicAccessListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<ElectronicAccess> electronicAccess;
@@ -504,11 +528,15 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
 
   @Override
   public void setTenantToNotes(List<TenantNotePair> tenantNotePairs) {
-    getNotes().forEach(note -> note.setTenantId(
-            tenantNotePairs.stream()
-                    .filter(pair -> pair.getNoteTypeId().equals(note.getItemNoteTypeId()))
-                    .map(TenantNotePair::getTenantId).findFirst().orElseGet(() -> tenantId)
-    ));
+    getNotes()
+        .forEach(
+            note ->
+                note.setTenantId(
+                    tenantNotePairs.stream()
+                        .filter(pair -> pair.getNoteTypeId().equals(note.getItemNoteTypeId()))
+                        .map(TenantNotePair::getTenantId)
+                        .findFirst()
+                        .orElseGet(() -> tenantId)));
   }
 
   @Override

@@ -5,10 +5,8 @@ import org.folio.bulkops.domain.dto.ErrorType;
 
 public class UploadFromQueryException extends Exception {
 
-  @Getter
-  private final ErrorType errorType;
-  @Getter
-  private final String identifier;
+  @Getter private final ErrorType errorType;
+  @Getter private final String identifier;
 
   public UploadFromQueryException(String message) {
     super(message);

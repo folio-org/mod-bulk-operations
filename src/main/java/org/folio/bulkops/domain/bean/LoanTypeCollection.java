@@ -25,4 +25,3 @@ public class LoanTypeCollection {
   @JsonProperty("resultInfo")
   private ResultInfo resultInfo;
 }
-

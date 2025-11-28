@@ -82,8 +82,9 @@ public class Personal {
   private List<Address> addresses;
 
   @JsonProperty("preferredContactTypeId")
-  @CsvCustomBindByName(column = "Preferred contact type id",
-          converter = PreferredContactTypeIdConverter.class)
+  @CsvCustomBindByName(
+      column = "Preferred contact type id",
+      converter = PreferredContactTypeIdConverter.class)
   @CsvCustomBindByPosition(position = 18, converter = PreferredContactTypeIdConverter.class)
   @UnifiedTableCell(visible = false)
   private String preferredContactTypeId;

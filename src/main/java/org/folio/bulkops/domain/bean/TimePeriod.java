@@ -38,7 +38,8 @@ public class TimePeriod {
   public boolean isLongTermPeriod() {
     final ChronoUnit chronoUnit = getInterval();
 
-    return chronoUnit == ChronoUnit.DAYS || chronoUnit == ChronoUnit.WEEKS
-            || chronoUnit == ChronoUnit.MONTHS;
+    return chronoUnit == ChronoUnit.DAYS
+        || chronoUnit == ChronoUnit.WEEKS
+        || chronoUnit == ChronoUnit.MONTHS;
   }
 }

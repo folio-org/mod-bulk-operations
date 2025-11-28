@@ -19,4 +19,3 @@ public class InstanceStatus {
   @JsonProperty("name")
   private String name;
 }
-

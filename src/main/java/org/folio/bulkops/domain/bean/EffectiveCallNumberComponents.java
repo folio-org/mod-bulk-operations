@@ -25,4 +25,3 @@ public class EffectiveCallNumberComponents {
   @JsonProperty("typeId")
   private String typeId;
 }
-

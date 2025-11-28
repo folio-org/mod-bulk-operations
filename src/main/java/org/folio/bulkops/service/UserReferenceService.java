@@ -42,11 +42,12 @@ public class UserReferenceService {
 
   @Cacheable(cacheNames = "addressTypeIds")
   public AddressType getAddressTypeByAddressTypeValue(String addressTypeValue) {
-    var response = addressTypeClient.getByQuery(String.format(QUERY_PATTERN_ADDRESS_TYPE,
-            encode(addressTypeValue)));
+    var response =
+        addressTypeClient.getByQuery(
+            String.format(QUERY_PATTERN_ADDRESS_TYPE, encode(addressTypeValue)));
     if (response.getAddressTypes().isEmpty()) {
-      throw new ReferenceDataNotFoundException(format("Address type=%s not found",
-              addressTypeValue));
+      throw new ReferenceDataNotFoundException(
+          format("Address type=%s not found", addressTypeValue));
     }
     return response.getAddressTypes().getFirst();
   }
@@ -96,25 +97,32 @@ public class UserReferenceService {
     return response.getUsergroups().getFirst();
   }
 
-
   @Cacheable(cacheNames = "customFields")
-  public CustomField getCustomFieldByName(String name)  {
-    return customFieldsClient.getByQuery(getModuleId(MOD_USERS),
-                    format(QUERY_PATTERN_NAME, encode(name)))
-      .getCustomFields().stream().filter(customField -> customField.getName().equals(name))
-      .findFirst()
-      .orElseThrow(() -> new ReferenceDataNotFoundException(
-              format("Custom field with name=%s not found", name)));
+  public CustomField getCustomFieldByName(String name) {
+    return customFieldsClient
+        .getByQuery(getModuleId(MOD_USERS), format(QUERY_PATTERN_NAME, encode(name)))
+        .getCustomFields()
+        .stream()
+        .filter(customField -> customField.getName().equals(name))
+        .findFirst()
+        .orElseThrow(
+            () ->
+                new ReferenceDataNotFoundException(
+                    format("Custom field with name=%s not found", name)));
   }
 
   @Cacheable(cacheNames = "customFields")
   public CustomField getCustomFieldByRefId(String refId) {
-    return customFieldsClient.getByQuery(getModuleId(MOD_USERS),
-                    format(QUERY_PATTERN_REF_ID, encode(refId)))
-      .getCustomFields().stream().filter(
-              customField -> customField.getRefId().equals(refId)).findFirst()
-      .orElseThrow(() -> new ReferenceDataNotFoundException(
-              format("Custom field with refId=%s not found", refId)));
+    return customFieldsClient
+        .getByQuery(getModuleId(MOD_USERS), format(QUERY_PATTERN_REF_ID, encode(refId)))
+        .getCustomFields()
+        .stream()
+        .filter(customField -> customField.getRefId().equals(refId))
+        .findFirst()
+        .orElseThrow(
+            () ->
+                new ReferenceDataNotFoundException(
+                    format("Custom field with refId=%s not found", refId)));
   }
 
   @Cacheable(cacheNames = "moduleIds")
@@ -124,8 +132,8 @@ public class UserReferenceService {
     if (!moduleNamesJson.isEmpty()) {
       return moduleNamesJson.get(0).get("id").asText();
     }
-    throw new ReferenceDataNotFoundException(format("Module id not found for name: %s",
-            moduleName));
+    throw new ReferenceDataNotFoundException(
+        format("Module id not found for name: %s", moduleName));
   }
 
   public PreferredContactType getPreferredContactTypeById(String id) {

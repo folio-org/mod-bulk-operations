@@ -11,29 +11,32 @@ import org.springframework.stereotype.Component;
 @Component
 public class StatisticalCodesUpdater {
 
-  public List<String> addToStatisticalCodeIds(String statisticalCodeIdsFromAction,
-                                              List<String> existingStatisticalCodeIds,
-                                              boolean forPreview) {
-    var newStatisticalCodeIds = new ArrayList<>(Arrays.asList(
-            statisticalCodeIdsFromAction.split(",")));
+  public List<String> addToStatisticalCodeIds(
+      String statisticalCodeIdsFromAction,
+      List<String> existingStatisticalCodeIds,
+      boolean forPreview) {
+    var newStatisticalCodeIds =
+        new ArrayList<>(Arrays.asList(statisticalCodeIdsFromAction.split(",")));
     if (isNull(existingStatisticalCodeIds)) {
-      return forPreview ? newStatisticalCodeIds : newStatisticalCodeIds.stream().distinct()
-              .toList();
+      return forPreview
+          ? newStatisticalCodeIds
+          : newStatisticalCodeIds.stream().distinct().toList();
     }
     if (forPreview) {
       existingStatisticalCodeIds.addAll(newStatisticalCodeIds);
     } else {
-      newStatisticalCodeIds.stream().distinct().filter(
-              newCode -> !existingStatisticalCodeIds.contains(newCode))
-        .forEach(existingStatisticalCodeIds::add);
+      newStatisticalCodeIds.stream()
+          .distinct()
+          .filter(newCode -> !existingStatisticalCodeIds.contains(newCode))
+          .forEach(existingStatisticalCodeIds::add);
     }
     return existingStatisticalCodeIds;
   }
 
-  public List<String> removeSomeStatisticalCodeIds(String statisticalCodeIdsFromAction,
-                                                   List<String> existingStatisticalCodeIds) {
-    var statisticalCodeIdsToRemove = new ArrayList<>(Arrays.asList(
-            statisticalCodeIdsFromAction.split(",")));
+  public List<String> removeSomeStatisticalCodeIds(
+      String statisticalCodeIdsFromAction, List<String> existingStatisticalCodeIds) {
+    var statisticalCodeIdsToRemove =
+        new ArrayList<>(Arrays.asList(statisticalCodeIdsFromAction.split(",")));
     if (isNull(existingStatisticalCodeIds)) {
       return Collections.emptyList();
     }

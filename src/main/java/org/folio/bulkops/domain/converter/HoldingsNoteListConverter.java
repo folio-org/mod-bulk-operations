@@ -20,25 +20,31 @@ public class HoldingsNoteListConverter extends BaseConverter<List<HoldingsNote>>
   @Override
   public String convertToString(List<HoldingsNote> object) {
     return object.stream()
-      .filter(Objects::nonNull)
-      .map(note -> {
-        var noteTypeName = note.getHoldingsNoteTypeName();
-        if (isNull(noteTypeName)) {
-          noteTypeName = "";
-          try {
-            noteTypeName = HoldingsReferenceHelper.service()
-                    .getNoteTypeNameById(note.getHoldingsNoteTypeId(), note.getTenantId());
-          } catch (NotFoundException e) {
-            log.error("Holding note type with id = {} not found : {}",
-                    note.getHoldingsNoteTypeId(), e.getMessage());
-          }
-        }
-        return String.join(ARRAY_DELIMITER,
-          escape(noteTypeName),
-          escape(note.getNote()),
-          booleanToStringNullSafe(note.getStaffOnly()),
-          note.getTenantId(),
-          note.getHoldingsNoteTypeId());
-      }).collect(Collectors.joining(ITEM_DELIMITER));
+        .filter(Objects::nonNull)
+        .map(
+            note -> {
+              var noteTypeName = note.getHoldingsNoteTypeName();
+              if (isNull(noteTypeName)) {
+                noteTypeName = "";
+                try {
+                  noteTypeName =
+                      HoldingsReferenceHelper.service()
+                          .getNoteTypeNameById(note.getHoldingsNoteTypeId(), note.getTenantId());
+                } catch (NotFoundException e) {
+                  log.error(
+                      "Holding note type with id = {} not found : {}",
+                      note.getHoldingsNoteTypeId(),
+                      e.getMessage());
+                }
+              }
+              return String.join(
+                  ARRAY_DELIMITER,
+                  escape(noteTypeName),
+                  escape(note.getNote()),
+                  booleanToStringNullSafe(note.getStaffOnly()),
+                  note.getTenantId(),
+                  note.getHoldingsNoteTypeId());
+            })
+        .collect(Collectors.joining(ITEM_DELIMITER));
   }
 }

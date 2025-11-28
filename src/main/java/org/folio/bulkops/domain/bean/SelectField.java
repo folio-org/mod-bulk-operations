@@ -12,11 +12,10 @@ import lombok.With;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class SelectField   {
+public class SelectField {
   @JsonProperty("multiSelect")
   private Boolean multiSelect;
 
   @JsonProperty("options")
   private SelectFieldOptions options;
 }
-

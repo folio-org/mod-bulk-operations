@@ -15,8 +15,10 @@ public class DateWithTimeConverter extends BaseConverter<Date> {
 
   @Override
   public Date convertToObject(String value) {
-    return Date.from(ZonedDateTime.parse(value, DATE_WITH_TIME_FORMATTER)
-            .withZoneSameInstant(UTC_ZONE).toInstant());
+    return Date.from(
+        ZonedDateTime.parse(value, DATE_WITH_TIME_FORMATTER)
+            .withZoneSameInstant(UTC_ZONE)
+            .toInstant());
   }
 
   @Override
