@@ -2,6 +2,7 @@ package org.folio.bulkops.util;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -61,7 +62,7 @@ class MarcCsvHelperOptionNotFoundTest extends BaseTest {
             any(org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection.class)))
         .thenReturn(Set.of("Not notes"));
 
-    var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
+    var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation, PROPOSED_CHANGES_FILE);
 
     var expectedInstanceNotes = "";
     assertThat(new String(res)).contains(expectedInstanceNotes);

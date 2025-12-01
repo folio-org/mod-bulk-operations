@@ -2,7 +2,10 @@ package org.folio.bulkops.util;
 
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.folio.bulkops.domain.dto.FileContentType.COMMITTED_RECORDS_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
+import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.mockito.Mockito.when;
 
@@ -17,6 +20,7 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.dto.InstanceNoteType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -64,17 +68,17 @@ class MarcCsvHelperTest extends BaseTest {
 
   @ParameterizedTest
   @EnumSource(
-      value = OperationStatusType.class,
-      names = {"REVIEW_CHANGES", "COMPLETED", "COMPLETED_WITH_ERRORS", "APPLY_CHANGES"},
+      value = FileContentType.class,
+      names = {"PROPOSED_CHANGES_FILE", "COMMITTED_RECORDS_FILE"},
       mode = EnumSource.Mode.INCLUDE)
   @SneakyThrows
-  void shouldEnrichCsvWithMarcChanges(OperationStatusType statusType) {
+  void shouldEnrichCsvWithMarcChanges(FileContentType fileContentType) {
     var fileName = "file.csv";
     var operationId = UUID.randomUUID();
     var operation =
         BulkOperation.builder()
             .id(operationId)
-            .status(statusType)
+            .status(COMPLETED)
             .entityType(EntityType.INSTANCE_MARC)
             .linkToModifiedRecordsMarcCsvFile(fileName)
             .linkToCommittedRecordsMarcCsvFile(fileName)
@@ -94,16 +98,16 @@ class MarcCsvHelperTest extends BaseTest {
             new BulkOperationMarcRuleCollection()
                 .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag("500"))));
 
-    var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
+    var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation, fileContentType);
 
     var expectedInstanceNotes =
-        APPLY_CHANGES.equals(statusType)
+        PROPOSED_CHANGES_FILE.equals(fileContentType)
             ? "General note;General note text;false"
             : "General note;Changed general note;false";
 
     assertThat(new String(res)).contains(expectedInstanceNotes);
 
-    if (!APPLY_CHANGES.equals(statusType)) {
+    if (!PROPOSED_CHANGES_FILE.equals(fileContentType)) {
       assertThat(new String(res)).contains("\"Sample\n note\"");
       assertThat(new String(res)).contains("Index \"\"title");
       assertThat(new String(res)).contains("\"Sample, contributor\"");
@@ -135,7 +139,7 @@ class MarcCsvHelperTest extends BaseTest {
             new BulkOperationMarcRuleCollection()
                 .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag("500"))));
 
-    var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
+    var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation, PROPOSED_CHANGES_FILE);
 
     var expectedInstanceNotes = "General note;General note text;false";
 
@@ -168,7 +172,7 @@ class MarcCsvHelperTest extends BaseTest {
             new BulkOperationMarcRuleCollection()
                 .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag("500"))));
 
-    var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
+    var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation, PROPOSED_CHANGES_FILE);
 
     var expectedInstanceNotes = "General note;General note text;false";
 
@@ -201,7 +205,7 @@ class MarcCsvHelperTest extends BaseTest {
             new BulkOperationMarcRuleCollection()
                 .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag("500"))));
 
-    var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
+    var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation, COMMITTED_RECORDS_FILE);
 
     var expectedInstanceNotes = "General note;General note text;false";
     assertThat(new String(res)).contains(expectedInstanceNotes);
@@ -232,7 +236,7 @@ class MarcCsvHelperTest extends BaseTest {
             new BulkOperationMarcRuleCollection()
                 .bulkOperationMarcRules(singletonList(new BulkOperationMarcRule().tag("500"))));
 
-    var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation);
+    var res = marcCsvHelper.enrichCsvWithMarcChanges(content, operation, PROPOSED_CHANGES_FILE);
 
     var expectedInstanceNotes = "";
     assertThat(new String(res)).contains(expectedInstanceNotes);

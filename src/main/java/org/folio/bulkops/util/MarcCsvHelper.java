@@ -29,6 +29,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.dto.Cell;
+import org.folio.bulkops.domain.dto.FileContentType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.service.Marc21ReferenceProvider;
 import org.folio.bulkops.service.MarcToUnifiedTableRowMapper;
@@ -72,12 +73,14 @@ public class MarcCsvHelper {
     return csvData.toArray(String[]::new);
   }
 
-  public byte[] enrichCsvWithMarcChanges(byte[] content, BulkOperation bulkOperation) {
+  public byte[] enrichCsvWithMarcChanges(byte[] content, BulkOperation bulkOperation,
+      FileContentType fileContentType) {
     var instanceHeaderNames =
         UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class).getHeader().stream()
             .map(Cell::getValue)
             .toList();
-    var changedMarcData = getChangedMarcData(bulkOperation);
+    var fileName = getMarcCsvFileName(bulkOperation, fileContentType);
+    var changedMarcData = getChangedMarcData(bulkOperation, fileName);
     if (!changedMarcData.isEmpty()) {
       try (var reader =
               new CSVReaderBuilder(new InputStreamReader(new ByteArrayInputStream(content)))
@@ -104,13 +107,13 @@ public class MarcCsvHelper {
     return content;
   }
 
-  private Map<String, Map<String, String>> getChangedMarcData(BulkOperation bulkOperation) {
+  private Map<String, Map<String, String>> getChangedMarcData(BulkOperation bulkOperation,
+      String fileName) {
     var instanceHeaderNames =
         UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class).getHeader().stream()
             .map(Cell::getValue)
             .toList();
     Map<String, Map<String, String>> result = new HashMap<>();
-    var fileName = getCsvFileName(bulkOperation);
     if (nonNull(fileName)) {
       try (var reader =
           new CSVReaderBuilder(new InputStreamReader(remoteFileSystemClient.get(fileName)))
@@ -143,10 +146,10 @@ public class MarcCsvHelper {
     return result;
   }
 
-  private String getCsvFileName(BulkOperation bulkOperation) {
-    return switch (bulkOperation.getStatus()) {
-      case REVIEW_CHANGES -> bulkOperation.getLinkToModifiedRecordsMarcCsvFile();
-      case COMPLETED, COMPLETED_WITH_ERRORS -> bulkOperation.getLinkToCommittedRecordsMarcCsvFile();
+  private String getMarcCsvFileName(BulkOperation bulkOperation, FileContentType fileContentType) {
+    return switch (fileContentType) {
+      case PROPOSED_CHANGES_FILE -> bulkOperation.getLinkToModifiedRecordsMarcCsvFile();
+      case COMMITTED_RECORDS_FILE -> bulkOperation.getLinkToCommittedRecordsMarcCsvFile();
       default -> null;
     };
   }
