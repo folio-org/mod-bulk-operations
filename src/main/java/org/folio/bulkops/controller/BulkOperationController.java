@@ -234,7 +234,8 @@ public class BulkOperationController implements BulkOperationsApi {
 
         if (INSTANCE_MARC.equals(bulkOperation.getEntityType())
             && Set.of(PROPOSED_CHANGES_FILE, COMMITTED_RECORDS_FILE).contains(fileContentType)) {
-          content = marcCsvHelper.enrichCsvWithMarcChanges(content, bulkOperation);
+          content = marcCsvHelper.enrichCsvWithMarcChanges(content, bulkOperation,
+              fileContentType);
         }
 
         if (CSV_EXTENSION.equalsIgnoreCase(FilenameUtils.getExtension(path))) {
