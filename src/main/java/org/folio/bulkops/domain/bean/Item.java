@@ -88,22 +88,6 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell
   private ItemLocation effectiveLocation;
 
-  @JsonProperty("effectiveLocationId")
-  public void setEffectiveLocationId(String id) {
-    if (nonNull(id)) {
-      this.effectiveLocation =
-          new ItemLocation()
-              .withId(id)
-              .withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
-    }
-  }
-
-  @JsonProperty("effectiveLocationId")
-  public String getEffectiveLocationId() {
-    return effectiveLocation != null ? effectiveLocation.getId() : null;
-  }
-
-  @JsonProperty("effectiveLocation")
   public ItemLocation getEffectiveLocation() {
     return effectiveLocation;
   }
