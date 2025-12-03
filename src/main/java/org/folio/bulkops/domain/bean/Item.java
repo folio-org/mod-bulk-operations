@@ -88,22 +88,6 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell
   private ItemLocation effectiveLocation;
 
-  @JsonProperty("effectiveLocationId")
-  public void setEffectiveLocationId(String id) {
-    if (nonNull(id)) {
-      this.effectiveLocation =
-          new ItemLocation()
-              .withId(id)
-              .withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
-    }
-  }
-
-  @JsonProperty("effectiveLocationId")
-  public String getEffectiveLocationId() {
-    return effectiveLocation != null ? effectiveLocation.getId() : null;
-  }
-
-  @JsonProperty("effectiveLocation")
   public ItemLocation getEffectiveLocation() {
     return effectiveLocation;
   }
@@ -324,22 +308,6 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell
   private LoanType permanentLoanType;
 
-  @JsonProperty("permanentLoanTypeId")
-  public void setPermanentLoanTypeId(String id) {
-    if (nonNull(id)) {
-      this.permanentLoanType =
-          new LoanType()
-              .withId(id)
-              .withName(ItemReferenceHelper.service().getLoanTypeById(id, tenantId).getName());
-    }
-  }
-
-  @JsonProperty("permanentLoanTypeId")
-  public String getPermanentLoanTypeId() {
-    return permanentLoanType != null ? permanentLoanType.getId() : null;
-  }
-
-  @JsonProperty("permanentLoanType")
   public LoanType getPermanentLoanType() {
     return permanentLoanType;
   }
@@ -350,22 +318,6 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell
   private LoanType temporaryLoanType;
 
-  @JsonProperty("temporaryLoanTypeId")
-  public void setTemporaryLoanTypeId(String id) {
-    if (nonNull(id)) {
-      this.temporaryLoanType =
-          new LoanType()
-              .withId(id)
-              .withName(ItemReferenceHelper.service().getLoanTypeById(id, tenantId).getName());
-    }
-  }
-
-  @JsonProperty("temporaryLoanTypeId")
-  public String getTemporaryLoanTypeId() {
-    return temporaryLoanType != null ? temporaryLoanType.getId() : null;
-  }
-
-  @JsonProperty("temporaryLoanType")
   public LoanType getTemporaryLoanType() {
     return temporaryLoanType;
   }
@@ -394,22 +346,6 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private ItemLocation permanentLocation;
 
-  @JsonProperty("permanentLocationId")
-  public void setPermanentLocationId(String id) {
-    if (nonNull(id)) {
-      this.permanentLocation =
-          new ItemLocation()
-              .withId(id)
-              .withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
-    }
-  }
-
-  @JsonProperty("permanentLocationId")
-  public String getPermanentLocationId() {
-    return permanentLocation != null ? permanentLocation.getId() : null;
-  }
-
-  @JsonProperty("permanentLocation")
   public ItemLocation getPermanentLocation() {
     return permanentLocation;
   }
@@ -420,22 +356,6 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private ItemLocation temporaryLocation;
 
-  @JsonProperty("temporaryLocationId")
-  public void setTemporaryLocationId(String id) {
-    if (nonNull(id)) {
-      this.temporaryLocation =
-          new ItemLocation()
-              .withId(id)
-              .withName(ItemReferenceHelper.service().getLocationById(id, tenantId).getName());
-    }
-  }
-
-  @JsonProperty("temporaryLocationId")
-  public String getTemporaryLocationId() {
-    return temporaryLocation != null ? temporaryLocation.getId() : null;
-  }
-
-  @JsonProperty("temporaryLocation")
   public ItemLocation getTemporaryLocation() {
     return temporaryLocation;
   }
