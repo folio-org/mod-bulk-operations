@@ -10,6 +10,7 @@ import static org.folio.bulkops.util.Constants.BULK_EDIT_IDENTIFIERS;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.IDENTIFIERS_FILE_NAME;
 
+import java.net.SocketException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -114,7 +115,9 @@ public class BulkEditHoldingsIdentifiersJobConfig {
         .reader(csvItemIdentifierReader)
         .processor(bulkEditHoldingsProcessor)
         .faultTolerant()
-        .skipLimit(1_000_000)
+        .retry(SocketException.class)
+        .retryLimit(3)
+        .skipLimit(10)
         // Required to avoid repeating BulkEditHoldingsProcessor#process after skip.
         .processorNonTransactional()
         .skip(BulkEditException.class)
