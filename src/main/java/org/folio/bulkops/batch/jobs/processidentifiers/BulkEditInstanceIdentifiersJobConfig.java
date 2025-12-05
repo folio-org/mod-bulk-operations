@@ -130,7 +130,8 @@ public class BulkEditInstanceIdentifiersJobConfig {
         .faultTolerant()
         .retry(SocketException.class)
         .retryLimit(3)
-        .skipLimit(10)
+        .skip(BulkEditException.class)
+        .skipLimit(1_000_000)
         // Required to avoid repeating BulkEditItemProcessor#process after skip.
         .processorNonTransactional()
         .skip(BulkEditException.class)

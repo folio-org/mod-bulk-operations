@@ -117,7 +117,8 @@ public class BulkEditHoldingsIdentifiersJobConfig {
         .faultTolerant()
         .retry(SocketException.class)
         .retryLimit(3)
-        .skipLimit(10)
+        .skip(BulkEditException.class)
+        .skipLimit(1_000_000)
         // Required to avoid repeating BulkEditHoldingsProcessor#process after skip.
         .processorNonTransactional()
         .skip(BulkEditException.class)
