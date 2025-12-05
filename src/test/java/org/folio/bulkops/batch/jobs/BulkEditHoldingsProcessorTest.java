@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.folio.spring.integration.XOkapiHeaders.TENANT;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -41,6 +42,9 @@ import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -326,8 +330,11 @@ class BulkEditHoldingsProcessorTest {
     assertThat(enriched.getTenantId()).isEqualTo(tenantId);
   }
 
-  @Test
-  void shouldReturnHoldingsForLocalTenant() {
+  @ParameterizedTest
+  @EnumSource(value = IdentifierType.class,
+      names = { "ID", "HRID", "INSTANCE_HRID", "ITEM_BARCODE" },
+      mode = Mode.INCLUDE)
+  void shouldReturnHoldingsForLocalTenant(IdentifierType identifierType) {
     // Arrange
     String tenantId = "tenantX";
     String instanceId = "instanceId";
@@ -362,6 +369,7 @@ class BulkEditHoldingsProcessorTest {
         .totalRecords(1)
         .build();
 
+    ReflectionTestUtils.setField(processor, "identifierType", identifierType.getValue());
     ConsortiumHolding consortiumHolding = new ConsortiumHolding().id(holdingsId).tenantId(tenantId);
     ConsortiumHoldingCollection consortiumHoldingCollection =
       new ConsortiumHoldingCollection().holdings(List.of(consortiumHolding)).totalRecords(1);
@@ -376,6 +384,7 @@ class BulkEditHoldingsProcessorTest {
     when(tenantResolver.getAffiliatedPermittedTenantIds(any(), any(), anyString(), anySet(), any()))
       .thenReturn(Set.of(tenantId));
     when(holdingsStorageClient.getByQuery(anyString())).thenReturn(holdingsRecordCollection);
+    when(holdingsStorageClient.getByQuery(anyString(), anyLong())).thenReturn(holdingsRecordCollection);
     when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString()))
       .thenReturn("Instance Title");
     when(cacheManager.getCache(anyString())).thenReturn(cache);
