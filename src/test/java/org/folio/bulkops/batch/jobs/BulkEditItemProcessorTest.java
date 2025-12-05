@@ -44,6 +44,9 @@ import org.folio.spring.FolioModuleMetadata;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -111,6 +114,33 @@ class BulkEditItemProcessorTest {
     assertThat(result.getExtendedItems()).hasSize(1);
     assertThat(result.getExtendedItems().getFirst().getEntity().getId()).isEqualTo("itemId");
     assertThat(result.getExtendedItems().getFirst().getTenantId()).isEqualTo("tenant1");
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = IdentifierType.class, names = { "BARCODE", "ID" }, mode = Mode.INCLUDE)
+  void returnsExtendedItemCollectionForLocalTenant(IdentifierType identifierType) {
+    ReflectionTestUtils.setField(processor, "identifierType", identifierType.getValue());
+    when(folioExecutionContext.getTenantId()).thenReturn("localTenant");
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(true);
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+      .thenReturn(new HashSet<>());
+    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
+    when(tenantResolver.getAffiliatedPermittedTenantIds(
+      eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
+      .thenReturn(Set.of("tenant1"));
+    Item item = new Item().withId("itemId").withHoldingsRecordId("holdingsId");
+    ItemCollection itemCollection =
+      ItemCollection.builder().items(List.of(item)).totalRecords(1).build();
+    when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString()))
+      .thenReturn("Instance Title");
+    when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
+
+    ExtendedItemCollection result = processor.process(itemIdentifier);
+
+    Assertions.assertNotNull(result);
+    assertThat(result.getExtendedItems()).hasSize(1);
+    assertThat(result.getExtendedItems().getFirst().getEntity().getId()).isEqualTo("itemId");
   }
 
   @Test

@@ -1,11 +1,9 @@
 package org.folio.bulkops.batch.jobs;
 
 import static java.lang.String.format;
-import static org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum.INSTANCEHRID;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.IdentifierType.ID;
-import static org.folio.bulkops.domain.dto.IdentifierType.INSTANCE_HRID;
 import static org.folio.bulkops.domain.dto.IdentifierType.ITEM_BARCODE;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getMatchPattern;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getResponseAsString;
@@ -33,6 +31,7 @@ import org.folio.bulkops.domain.bean.ExtendedHoldingsRecordCollection;
 import org.folio.bulkops.domain.bean.HoldingsRecordCollection;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.dto.BatchIdsDto;
+import org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum;
 import org.folio.bulkops.domain.dto.ConsortiumHolding;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
@@ -121,7 +120,8 @@ public class BulkEditHoldingsProcessor
     var type = IdentifierType.fromValue(identifierType);
     var identifier = itemIdentifier.getItemId();
 
-    var instanceHrid = INSTANCE_HRID.equals(type) ? itemIdentifier.getItemId() : null;
+    var instanceHrid =
+        IdentifierType.INSTANCE_HRID.equals(type) ? itemIdentifier.getItemId() : null;
     var itemBarcode = ITEM_BARCODE.equals(type) ? itemIdentifier.getItemId() : null;
 
     var centralTenantId = consortiaService.getCentralTenantId(folioExecutionContext.getTenantId());
@@ -147,7 +147,7 @@ public class BulkEditHoldingsProcessor
                 .map(ConsortiumHolding::getTenantId)
                 .collect(Collectors.toSet());
 
-        if (INSTANCEHRID != identifierTypeEnum && tenantIds.size() > 1) {
+        if (IdentifierTypeEnum.INSTANCE_HRID != identifierTypeEnum && tenantIds.size() > 1) {
           throw new BulkEditException(DUPLICATES_ACROSS_TENANTS, ErrorType.ERROR);
         }
 
@@ -268,7 +268,7 @@ public class BulkEditHoldingsProcessor
         throw new BulkEditException(MULTIPLE_MATCHES_MESSAGE, ErrorType.ERROR);
       }
       return holdingsRecordCollection;
-    } else if (INSTANCE_HRID == type) {
+    } else if (IdentifierType.INSTANCE_HRID == type) {
       return holdingsStorageClient.getByQuery(
           "instanceId==" + holdingsReferenceService.getInstanceIdByHrid(itemIdentifier.getItemId()),
           Integer.MAX_VALUE);
