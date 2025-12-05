@@ -65,6 +65,7 @@ application:
     minutes-for-merge: ${MINUTES_FOR_MERGE:10}
     core-pool-size: ${CORE_POOL_SIZE:10}
     max-pool-size: ${MAX_POOL_SIZE:10}
+    max-retries-on-connection-reset: ${MAX_RETRIES_ON_CONNECTION_RESET:10}
   fqm-fetcher:
     max_chunk_size: 3
     max_parallel_chunks: 3

@@ -54,6 +54,9 @@ public class BulkEditHoldingsIdentifiersJobConfig {
   @Value("${application.batch.num-partitions}")
   private int numPartitions;
 
+  @Value("${application.batch.max-retries-on-connection-reset}")
+  private int maxRetriesOnConnectionReset;
+
   @Bean
   public Job bulkEditProcessHoldingsIdentifiersJob(
       JobCompletionNotificationListener listener,
@@ -116,8 +119,9 @@ public class BulkEditHoldingsIdentifiersJobConfig {
         .processor(bulkEditHoldingsProcessor)
         .faultTolerant()
         .retry(SocketException.class)
-        .retryLimit(3)
-        .skipLimit(10)
+        .retryLimit(maxRetriesOnConnectionReset)
+        .skip(BulkEditException.class)
+        .skipLimit(1_000_000)
         // Required to avoid repeating BulkEditHoldingsProcessor#process after skip.
         .processorNonTransactional()
         .skip(BulkEditException.class)
