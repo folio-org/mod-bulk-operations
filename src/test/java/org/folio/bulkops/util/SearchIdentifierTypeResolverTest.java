@@ -3,6 +3,7 @@ package org.folio.bulkops.util;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.folio.bulkops.domain.dto.BatchIdsDto;
+import org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.junit.jupiter.api.Test;
 
@@ -18,15 +19,15 @@ class SearchIdentifierTypeResolverTest {
         .isEqualTo(BatchIdsDto.IdentifierTypeEnum.BARCODE);
     assertThat(
             SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.HOLDINGS_RECORD_ID))
-        .isEqualTo(BatchIdsDto.IdentifierTypeEnum.HOLDINGSRECORDID);
+        .isEqualTo(IdentifierTypeEnum.HOLDINGS_RECORD_ID);
     assertThat(
             SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.ACCESSION_NUMBER))
-        .isEqualTo(BatchIdsDto.IdentifierTypeEnum.ACCESSIONNUMBER);
+        .isEqualTo(IdentifierTypeEnum.ACCESSION_NUMBER);
     assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.FORMER_IDS))
-        .isEqualTo(BatchIdsDto.IdentifierTypeEnum.FORMERIDS);
+        .isEqualTo(IdentifierTypeEnum.FORMER_IDS);
     assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.INSTANCE_HRID))
-        .isEqualTo(BatchIdsDto.IdentifierTypeEnum.INSTANCEHRID);
+        .isEqualTo(IdentifierTypeEnum.INSTANCE_HRID);
     assertThat(SearchIdentifierTypeResolver.getSearchIdentifierType(IdentifierType.ITEM_BARCODE))
-        .isEqualTo(BatchIdsDto.IdentifierTypeEnum.ITEMBARCODE);
+        .isEqualTo(IdentifierTypeEnum.ITEM_BARCODE);
   }
 }
