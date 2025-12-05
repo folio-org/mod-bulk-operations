@@ -374,6 +374,8 @@ class BulkEditHoldingsProcessorTest {
     ConsortiumHoldingCollection consortiumHoldingCollection =
       new ConsortiumHoldingCollection().holdings(List.of(consortiumHolding)).totalRecords(1);
 
+    when(holdingsStorageClient.getByQuery(anyString())).thenReturn(holdingsRecordCollection);
+    when(holdingsStorageClient.getByQuery(anyString(), anyLong())).thenReturn(holdingsRecordCollection);
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(true);
     when(folioExecutionContext.getTenantId()).thenReturn(tenantId);
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
@@ -383,8 +385,6 @@ class BulkEditHoldingsProcessorTest {
       .thenReturn(consortiumHoldingCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(any(), any(), anyString(), anySet(), any()))
       .thenReturn(Set.of(tenantId));
-    when(holdingsStorageClient.getByQuery(anyString())).thenReturn(holdingsRecordCollection);
-    when(holdingsStorageClient.getByQuery(anyString(), anyLong())).thenReturn(holdingsRecordCollection);
     when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString()))
       .thenReturn("Instance Title");
     when(cacheManager.getCache(anyString())).thenReturn(cache);
