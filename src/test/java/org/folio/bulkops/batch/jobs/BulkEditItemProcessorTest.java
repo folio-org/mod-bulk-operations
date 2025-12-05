@@ -114,6 +114,31 @@ class BulkEditItemProcessorTest {
   }
 
   @Test
+  void returnsExtendedItemCollectionForLocalTenant() {
+    when(folioExecutionContext.getTenantId()).thenReturn("localTenant");
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(true);
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+      .thenReturn(new HashSet<>());
+    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
+    when(tenantResolver.getAffiliatedPermittedTenantIds(
+      eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
+      .thenReturn(Set.of("tenant1"));
+    Item item = new Item().withId("itemId").withHoldingsRecordId("holdingsId");
+    ItemCollection itemCollection =
+      ItemCollection.builder().items(List.of(item)).totalRecords(1).build();
+    when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
+    when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString()))
+      .thenReturn("Instance Title");
+    when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
+
+    ExtendedItemCollection result = processor.process(itemIdentifier);
+
+    Assertions.assertNotNull(result);
+    assertThat(result.getExtendedItems()).hasSize(1);
+    assertThat(result.getExtendedItems().getFirst().getEntity().getId()).isEqualTo("itemId");
+  }
+
+  @Test
   void throwsWhenDuplicateIdentifier() {
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("dupId");
     Set<ItemIdentifier> set = Mockito.mock(Set.class);
