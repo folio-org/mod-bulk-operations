@@ -44,6 +44,9 @@ import org.folio.spring.FolioModuleMetadata;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -113,8 +116,10 @@ class BulkEditItemProcessorTest {
     assertThat(result.getExtendedItems().getFirst().getTenantId()).isEqualTo("tenant1");
   }
 
-  @Test
-  void returnsExtendedItemCollectionForLocalTenant() {
+  @ParameterizedTest
+  @EnumSource(value = IdentifierType.class, names = { "BARCODE", "ID" }, mode = Mode.INCLUDE)
+  void returnsExtendedItemCollectionForLocalTenant(IdentifierType identifierType) {
+    ReflectionTestUtils.setField(processor, "identifierType", identifierType.getValue());
     when(folioExecutionContext.getTenantId()).thenReturn("localTenant");
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(true);
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
