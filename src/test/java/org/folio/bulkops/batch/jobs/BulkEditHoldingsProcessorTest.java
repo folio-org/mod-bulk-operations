@@ -325,4 +325,78 @@ class BulkEditHoldingsProcessorTest {
     assertThat(enriched.getTemporaryLocationId()).isEqualTo(temporaryLocationId);
     assertThat(enriched.getTenantId()).isEqualTo(tenantId);
   }
+
+  @Test
+  void shouldReturnHoldingsForLocalTenant() {
+    // Arrange
+    String tenantId = "tenantX";
+    String instanceId = "instanceId";
+    String holdingsId = "holdingsId";
+    ElectronicAccess electronicAccess = new ElectronicAccess();
+    HoldingsNote note = new HoldingsNote();
+    List<String> statisticalCodeIds = List.of("code1", "code2");
+    String illPolicyId = "illId";
+    String effectiveLocationId = "locId";
+    String permanentLocationId = "permLoc";
+    String sourceId = "srcId";
+    String holdingsTypeId = "typeId";
+    String temporaryLocationId = "tmpLoc";
+
+    HoldingsRecord holdingsRecord =
+      new HoldingsRecord()
+        .withId(holdingsId)
+        .withInstanceId(instanceId)
+        .withElectronicAccess(List.of(electronicAccess))
+        .withNotes(List.of(note))
+        .withStatisticalCodeIds(statisticalCodeIds)
+        .withIllPolicyId(illPolicyId)
+        .withEffectiveLocationId(effectiveLocationId)
+        .withPermanentLocationId(permanentLocationId)
+        .withSourceId(sourceId)
+        .withHoldingsTypeId(holdingsTypeId)
+        .withTemporaryLocationId(temporaryLocationId);
+
+    HoldingsRecordCollection holdingsRecordCollection =
+      HoldingsRecordCollection.builder()
+        .holdingsRecords(List.of(holdingsRecord))
+        .totalRecords(1)
+        .build();
+
+    ConsortiumHolding consortiumHolding = new ConsortiumHolding().id(holdingsId).tenantId(tenantId);
+    ConsortiumHoldingCollection consortiumHoldingCollection =
+      new ConsortiumHoldingCollection().holdings(List.of(consortiumHolding)).totalRecords(1);
+
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(true);
+    when(folioExecutionContext.getTenantId()).thenReturn(tenantId);
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+      .thenReturn(new HashSet<>());
+    when(duplicationCheckerFactory.getFetchedIds(any())).thenReturn(new HashSet<>());
+    when(searchClient.getConsortiumHoldingCollection(any()))
+      .thenReturn(consortiumHoldingCollection);
+    when(tenantResolver.getAffiliatedPermittedTenantIds(any(), any(), anyString(), anySet(), any()))
+      .thenReturn(Set.of(tenantId));
+    when(holdingsStorageClient.getByQuery(anyString())).thenReturn(holdingsRecordCollection);
+    when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString()))
+      .thenReturn("Instance Title");
+    when(cacheManager.getCache(anyString())).thenReturn(cache);
+    doCallRealMethod()
+      .when(localReferenceDataService)
+      .enrichWithTenant(any(HoldingsRecord.class), anyString());
+
+    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId(holdingsId);
+
+    // Act
+    List<ExtendedHoldingsRecord> result = processor.process(itemIdentifier);
+
+    // Assert
+    assertThat(result).hasSize(1);
+    HoldingsRecord enriched = result.getFirst().getEntity();
+    assertThat(enriched.getStatisticalCodeIds()).containsExactly("code1", "code2");
+    assertThat(enriched.getIllPolicyId()).isEqualTo(illPolicyId);
+    assertThat(enriched.getEffectiveLocationId()).isEqualTo(effectiveLocationId);
+    assertThat(enriched.getPermanentLocationId()).isEqualTo(permanentLocationId);
+    assertThat(enriched.getSourceId()).isEqualTo(sourceId);
+    assertThat(enriched.getHoldingsTypeId()).isEqualTo(holdingsTypeId);
+    assertThat(enriched.getTemporaryLocationId()).isEqualTo(temporaryLocationId);
+  }
 }
