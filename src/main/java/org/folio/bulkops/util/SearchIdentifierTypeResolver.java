@@ -2,6 +2,7 @@ package org.folio.bulkops.util;
 
 import lombok.experimental.UtilityClass;
 import org.folio.bulkops.domain.dto.BatchIdsDto;
+import org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum;
 import org.folio.bulkops.domain.dto.IdentifierType;
 
 @UtilityClass
@@ -13,11 +14,11 @@ public class SearchIdentifierTypeResolver {
       case ID -> BatchIdsDto.IdentifierTypeEnum.ID;
       case HRID -> BatchIdsDto.IdentifierTypeEnum.HRID;
       case BARCODE -> BatchIdsDto.IdentifierTypeEnum.BARCODE;
-      case HOLDINGS_RECORD_ID -> BatchIdsDto.IdentifierTypeEnum.HOLDINGSRECORDID;
-      case ACCESSION_NUMBER -> BatchIdsDto.IdentifierTypeEnum.ACCESSIONNUMBER;
-      case FORMER_IDS -> BatchIdsDto.IdentifierTypeEnum.FORMERIDS;
-      case INSTANCE_HRID -> BatchIdsDto.IdentifierTypeEnum.INSTANCEHRID;
-      case ITEM_BARCODE -> BatchIdsDto.IdentifierTypeEnum.ITEMBARCODE;
+      case HOLDINGS_RECORD_ID -> IdentifierTypeEnum.HOLDINGS_RECORD_ID;
+      case ACCESSION_NUMBER -> IdentifierTypeEnum.ACCESSION_NUMBER;
+      case FORMER_IDS -> IdentifierTypeEnum.FORMER_IDS;
+      case INSTANCE_HRID -> IdentifierTypeEnum.INSTANCE_HRID;
+      case ITEM_BARCODE -> IdentifierTypeEnum.ITEM_BARCODE;
       default -> throw new IllegalArgumentException("Identifier type doesn't supported");
     };
   }

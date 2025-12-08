@@ -1,7 +1,6 @@
 package org.folio.bulkops.batch.jobs;
 
-import static org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum.HOLDINGSRECORDID;
-import static org.folio.bulkops.domain.dto.IdentifierType.HOLDINGS_RECORD_ID;
+import static org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum.HOLDINGS_RECORD_ID;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getMatchPattern;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getResponseAsString;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.resolveIdentifier;
@@ -85,7 +84,7 @@ public class BulkEditItemProcessor
       throw new BulkEditException("Duplicate entry", ErrorType.WARNING);
     }
     var type = IdentifierType.fromValue(identifierType);
-    var limit = HOLDINGS_RECORD_ID.equals(type) ? Integer.MAX_VALUE : 1;
+    var limit = IdentifierType.HOLDINGS_RECORD_ID.equals(type) ? Integer.MAX_VALUE : 1;
     var idType = resolveIdentifier(identifierType);
     var identifier =
         "barcode".equals(idType) ? encode(itemIdentifier.getItemId()) : itemIdentifier.getItemId();
@@ -113,7 +112,7 @@ public class BulkEditItemProcessor
                     .map(ConsortiumItem::getTenantId)
                     .collect(Collectors.toSet());
 
-            if (HOLDINGSRECORDID != identifierTypeEnum && tenantIds.size() > 1) {
+            if (HOLDINGS_RECORD_ID != identifierTypeEnum && tenantIds.size() > 1) {
               throw new BulkEditException(DUPLICATES_ACROSS_TENANTS, ErrorType.ERROR);
             }
 
