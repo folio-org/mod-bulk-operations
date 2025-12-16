@@ -101,9 +101,9 @@ public class BulkEditInstanceProcessor
         throw new BulkEditException(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED, ErrorType.ERROR);
       }
 
-      if ("CONSORTIUM_MARC".equals(instance.getSource())) {
-        var holdingsCollection = holdingsStorageClient.getByQuery(
-              "instanceId==" + instance.getId(), Integer.MAX_VALUE);
+      if ("CONSORTIUM-MARC".equals(instance.getSource())) {
+        var holdingsCollection =
+            holdingsStorageClient.getByQuery("instanceId==" + instance.getId(), Integer.MAX_VALUE);
         if (holdingsCollection.getTotalRecords() == 0) {
           throw new BulkEditException(NO_MATCH_FOUND_MESSAGE);
         }
