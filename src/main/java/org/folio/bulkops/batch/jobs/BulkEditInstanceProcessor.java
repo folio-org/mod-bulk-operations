@@ -17,6 +17,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
+import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
@@ -51,6 +52,7 @@ public class BulkEditInstanceProcessor
   private final UserClient userClient;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
   private final SrsService srsService;
+  private final HoldingsStorageClient holdingsStorageClient;
 
   @SuppressWarnings("unused")
   @Value("#{jobParameters['identifierType']}")
@@ -97,6 +99,14 @@ public class BulkEditInstanceProcessor
 
       if (LINKED_DATA_SOURCE.equals(instance.getSource())) {
         throw new BulkEditException(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED, ErrorType.ERROR);
+      }
+
+      if ("CONSORTIUM_MARC".equals(instance.getSource())) {
+        var holdingsCollection = holdingsStorageClient.getByQuery(
+              "instanceId==" + instance.getId(), Integer.MAX_VALUE);
+        if (holdingsCollection.getTotalRecords() == 0) {
+          throw new BulkEditException(NO_MATCH_FOUND_MESSAGE);
+        }
       }
 
       if (duplicationCheckerFactory.getFetchedIds(jobExecution).add(instance.getId())) {
