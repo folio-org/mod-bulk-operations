@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
+import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.client.UserClient;
@@ -52,6 +53,7 @@ class BulkEditInstanceProcessorTest {
   @Mock private DuplicationCheckerFactory duplicationCheckerFactory;
   @Mock private JobExecution jobExecution;
   @Mock private JsonToMarcConverter jsonToMarcConverter;
+  @Mock private HoldingsStorageClient holdingsStorageClient;
   @InjectMocks private SrsService srsService;
 
   private BulkEditInstanceProcessor processor;
@@ -67,7 +69,8 @@ class BulkEditInstanceProcessorTest {
             permissionsValidator,
             userClient,
             duplicationCheckerFactory,
-            srsService);
+            srsService,
+            holdingsStorageClient);
     ReflectionTestUtils.setField(processor, "identifierType", IdentifierType.ID.getValue());
     ReflectionTestUtils.setField(processor, "jobExecution", jobExecution);
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
