@@ -30,6 +30,7 @@ import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.exception.MarcValidationException;
 import org.folio.bulkops.processor.EntityExtractor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.SrsService;
 import org.folio.spring.FolioExecutionContext;
 import org.jetbrains.annotations.NotNull;
@@ -53,6 +54,7 @@ public class BulkEditInstanceProcessor
   private final DuplicationCheckerFactory duplicationCheckerFactory;
   private final SrsService srsService;
   private final HoldingsStorageClient holdingsStorageClient;
+  private final ConsortiaService consortiaService;
 
   @SuppressWarnings("unused")
   @Value("#{jobParameters['identifierType']}")
@@ -101,7 +103,8 @@ public class BulkEditInstanceProcessor
         throw new BulkEditException(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED, ErrorType.ERROR);
       }
 
-      if ("CONSORTIUM-MARC".equals(instance.getSource())) {
+      if (consortiaService.isTenantMember(folioExecutionContext.getTenantId()) &&
+            "CONSORTIUM-MARC".equals(instance.getSource())) {
         var holdingsCollection =
             holdingsStorageClient.getByQuery("instanceId==" + instance.getId(), Integer.MAX_VALUE);
         if (holdingsCollection.getTotalRecords() == 0) {

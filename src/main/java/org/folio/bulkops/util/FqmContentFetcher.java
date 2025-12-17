@@ -116,6 +116,8 @@ public class FqmContentFetcher {
 
       boolean isCentralTenant =
           consortiaService.isTenantCentral(folioExecutionContext.getTenantId());
+      boolean isMemberTenant =
+          consortiaService.isTenantMember(folioExecutionContext.getTenantId());
 
       List<CompletableFuture<InputStream>> tasks =
           IntStream.range(0, chunks)
@@ -130,7 +132,8 @@ public class FqmContentFetcher {
                                   total,
                                   bulkOperationExecutionContents,
                                   operationId,
-                                  isCentralTenant),
+                                  isCentralTenant,
+                                  isMemberTenant),
                           executor))
               .toList();
 
@@ -154,7 +157,8 @@ public class FqmContentFetcher {
       int total,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents,
       UUID operationId,
-      boolean isCentralTenant) {
+      boolean isCentralTenant,
+      boolean isMemberTenant) {
     int offset = chunk * chunkSize;
     int limit = Math.min(chunkSize, total - offset);
     var response = queryClient.getQuery(queryId, offset, limit).getContent();
@@ -187,6 +191,15 @@ public class FqmContentFetcher {
                       return jsonb.toString();
                     }
                     var jsonNode = (ObjectNode) objectMapper.readTree(jsonb.toString());
+                    if (isMemberTenant) {
+                      if (entityType == EntityType.INSTANCE_MARC
+                            && SHARED.equalsIgnoreCase(
+                          ofNullable(json.get(FQM_INSTANCE_SHARED_KEY))
+                              .map(Object::toString)
+                              .orElse(EMPTY))) {
+                        var withHoldings = jsonNode.get("with_holdings").;
+                      }
+                    }
                     var tenant = json.get(getContentTenantKey(entityType));
                     if (tenant == null) {
                       checkForTenantFieldExistenceInEcs(
