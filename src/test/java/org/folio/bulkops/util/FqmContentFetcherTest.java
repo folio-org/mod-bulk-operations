@@ -387,6 +387,227 @@ class FqmContentFetcherTest {
     assertThat(contents).isEmpty();
   }
 
+  @Test
+  void fetchShouldFilterSharedInstanceMarcWithoutHoldingsInMemberTenant() throws Exception {
+    final var queryId = UUID.randomUUID();
+    final int total = 1;
+    final var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
+    when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
+    when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
+    when(consortiaService.isTenantMember("member-tenant")).thenReturn(true);
+
+    final var details = new QueryDetails();
+    Map<String, Object> map = new HashMap<>();
+    map.put("instance.jsonb", "{\"id\":\"instance-id-1\",\"instances.withHoldings\":false}");
+    map.put("instance.tenant_id", "member-tenant");
+    map.put("instance.shared", "Shared");
+    details.setContent(Collections.singletonList(map));
+    when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
+
+    try (var is =
+        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE_MARC, total, contents, operationId)) {
+      var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(contents).hasSize(1);
+      assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
+      assertThat(contents.getFirst().getErrorMessage()).isEqualTo(NO_MATCH_FOUND_MESSAGE);
+      assertThat(result).isEmpty();
+    }
+  }
+
+  @Test
+  void fetchShouldNotFilterSharedInstanceMarcWithHoldingsInMemberTenant() throws Exception {
+    final var queryId = UUID.randomUUID();
+    final int total = 1;
+    final var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
+    when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
+    when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
+    when(consortiaService.isTenantMember("member-tenant")).thenReturn(true);
+
+    final var details = new QueryDetails();
+    Map<String, Object> map = new HashMap<>();
+    map.put("instance.jsonb", "{\"id\":\"instance-id-1\",\"instances.withHoldings\":true}");
+    map.put("instance.tenant_id", "member-tenant");
+    map.put("instance.shared", "Shared");
+    details.setContent(Collections.singletonList(map));
+    when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
+
+    try (var is =
+        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE_MARC, total, contents, operationId)) {
+      var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(contents).isEmpty();
+      assertThat(result).isNotEmpty();
+      assertThat(result).contains("\"id\":\"instance-id-1\"");
+    }
+  }
+
+  @Test
+  void fetchShouldFilterSharedInstanceMarcWithNullHoldingsInMemberTenant() throws Exception {
+    final var queryId = UUID.randomUUID();
+    final int total = 1;
+    final var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
+    when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
+    when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
+    when(consortiaService.isTenantMember("member-tenant")).thenReturn(true);
+
+    final var details = new QueryDetails();
+    Map<String, Object> map = new HashMap<>();
+    map.put("instance.jsonb", "{\"id\":\"instance-id-1\"}");
+    map.put("instance.tenant_id", "member-tenant");
+    map.put("instance.shared", "Shared");
+    // withHoldings is not in the JSON, so it will be null and default to false
+    details.setContent(Collections.singletonList(map));
+    when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
+
+    try (var is =
+        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE_MARC, total, contents, operationId)) {
+      var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(contents).hasSize(1);
+      assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
+      assertThat(contents.getFirst().getErrorMessage()).isEqualTo(NO_MATCH_FOUND_MESSAGE);
+      assertThat(result).isEmpty();
+    }
+  }
+
+  @Test
+  void fetchShouldNotFilterLocalInstanceMarcInMemberTenant() throws Exception {
+    final var queryId = UUID.randomUUID();
+    final int total = 1;
+    final var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
+    when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
+    when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
+    when(consortiaService.isTenantMember("member-tenant")).thenReturn(true);
+
+    final var details = new QueryDetails();
+    Map<String, Object> map = new HashMap<>();
+    map.put("instance.jsonb", "{\"id\":\"instance-id-1\"}");
+    map.put("instance.tenant_id", "member-tenant");
+    map.put("instance.shared", "Local");
+    details.setContent(Collections.singletonList(map));
+    when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
+
+    try (var is =
+        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE_MARC, total, contents, operationId)) {
+      var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(contents).isEmpty();
+      assertThat(result).isNotEmpty();
+      assertThat(result).contains("\"id\":\"instance-id-1\"");
+    }
+  }
+
+  @Test
+  void fetchShouldNotFilterInstanceMarcWithMissingSharedFieldInMemberTenant() throws Exception {
+    final var queryId = UUID.randomUUID();
+    final int total = 1;
+    final var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
+    when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
+    when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
+    when(consortiaService.isTenantMember("member-tenant")).thenReturn(true);
+
+    final var details = new QueryDetails();
+    Map<String, Object> map = new HashMap<>();
+    map.put("instance.jsonb", "{\"id\":\"instance-id-1\"}");
+    map.put("instance.tenant_id", "member-tenant");
+    // instance.shared is missing
+    details.setContent(Collections.singletonList(map));
+    when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
+
+    try (var is =
+        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE_MARC, total, contents, operationId)) {
+      var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(contents).isEmpty();
+      assertThat(result).isNotEmpty();
+      assertThat(result).contains("\"id\":\"instance-id-1\"");
+    }
+  }
+
+  @Test
+  void fetchShouldNotFilterInstanceEntityTypeInMemberTenant() throws Exception {
+    final var queryId = UUID.randomUUID();
+    final int total = 1;
+    final var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
+    when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
+    when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
+    when(consortiaService.isTenantMember("member-tenant")).thenReturn(true);
+
+    final var details = new QueryDetails();
+    Map<String, Object> map = new HashMap<>();
+    map.put("instance.jsonb", "{\"id\":\"instance-id-1\"}");
+    map.put("instance.tenant_id", "member-tenant");
+    map.put("instance.shared", "Shared");
+    details.setContent(Collections.singletonList(map));
+    when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
+
+    try (var is =
+        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
+      var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(contents).isEmpty();
+      assertThat(result).isNotEmpty();
+      assertThat(result).contains("\"id\":\"instance-id-1\"");
+    }
+  }
+
+  @Test
+  void fetchShouldNotFilterItemEntityTypeInMemberTenant() throws Exception {
+    final var queryId = UUID.randomUUID();
+    final int total = 1;
+    final var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
+    when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
+    when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
+    when(consortiaService.isTenantMember("member-tenant")).thenReturn(true);
+
+    final var details = new QueryDetails();
+    Map<String, Object> map = new HashMap<>();
+    map.put("items.jsonb", "{\"id\":\"item-id-1\"}");
+    map.put("items.tenant_id", "member-tenant");
+    map.put(FQM_INSTANCES_TITLE_KEY, "Instance Title");
+    map.put(FQM_HOLDINGS_CALL_NUMBER_KEY, "CN_1");
+    map.put(FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY, "Main");
+    map.put(FQM_INSTANCES_PUBLICATION_KEY, "[]");
+    details.setContent(Collections.singletonList(map));
+    when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
+
+    try (var is = fqmContentFetcher.fetch(queryId, EntityType.ITEM, total, contents, operationId)) {
+      var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(contents).isEmpty();
+      assertThat(result).isNotEmpty();
+      assertThat(result).contains("\"id\":\"item-id-1\"");
+    }
+  }
+
+  @Test
+  void fetchShouldNotApplyMemberTenantLogicInNonMemberTenant() throws Exception {
+    final var queryId = UUID.randomUUID();
+    final int total = 1;
+    final var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
+    when(folioExecutionContext.getTenantId()).thenReturn("non-member-tenant");
+    when(consortiaService.isTenantCentral("non-member-tenant")).thenReturn(false);
+    when(consortiaService.isTenantMember("non-member-tenant")).thenReturn(false);
+
+    final var details = new QueryDetails();
+    Map<String, Object> map = new HashMap<>();
+    map.put("instance.jsonb", "{\"id\":\"instance-id-1\"}");
+    map.put("instance.tenant_id", "non-member-tenant");
+    map.put("instance.shared", "Shared");
+    details.setContent(Collections.singletonList(map));
+    when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
+
+    try (var is =
+        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE_MARC, total, contents, operationId)) {
+      var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(contents).isEmpty();
+      assertThat(result).isNotEmpty();
+      assertThat(result).contains("\"id\":\"instance-id-1\"");
+    }
+  }
+
   // Helper for mocking QueryDetails for each EntityType
   private QueryDetails getMockedDataForEntityType(EntityType entityType, int total) {
     var details = new QueryDetails();

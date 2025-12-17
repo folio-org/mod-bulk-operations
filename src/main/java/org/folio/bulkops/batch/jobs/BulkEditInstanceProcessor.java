@@ -4,6 +4,7 @@ import static java.util.Collections.emptyList;
 import static org.folio.bulkops.domain.bean.JobParameterNames.AT_LEAST_ONE_MARC_EXISTS;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getMatchPattern;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.resolveIdentifier;
+import static org.folio.bulkops.util.Constants.CONSORTIUM_MARC;
 import static org.folio.bulkops.util.Constants.DUPLICATE_ENTRY;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
@@ -103,14 +104,7 @@ public class BulkEditInstanceProcessor
         throw new BulkEditException(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED, ErrorType.ERROR);
       }
 
-      if (consortiaService.isTenantMember(folioExecutionContext.getTenantId()) &&
-            "CONSORTIUM-MARC".equals(instance.getSource())) {
-        var holdingsCollection =
-            holdingsStorageClient.getByQuery("instanceId==" + instance.getId(), Integer.MAX_VALUE);
-        if (holdingsCollection.getTotalRecords() == 0) {
-          throw new BulkEditException(NO_MATCH_FOUND_MESSAGE);
-        }
-      }
+      checkIfSharedMarcFromMemberHasHoldingsAndThrowExceptionIfNo(instance);
 
       if (duplicationCheckerFactory.getFetchedIds(jobExecution).add(instance.getId())) {
         checkSrsInstance(instance);
@@ -171,6 +165,17 @@ public class BulkEditInstanceProcessor
         srsService.getMarcJsonString(instance.getId());
       } catch (MarcValidationException mve) {
         throw new BulkEditException(mve.getMessage());
+      }
+    }
+  }
+
+  private void checkIfSharedMarcFromMemberHasHoldingsAndThrowExceptionIfNo(Instance instance) {
+    if (consortiaService.isTenantMember(folioExecutionContext.getTenantId())
+        && CONSORTIUM_MARC.equals(instance.getSource())) {
+      var holdingsCollection =
+          holdingsStorageClient.getByQuery("instanceId==" + instance.getId(), Integer.MAX_VALUE);
+      if (holdingsCollection.getTotalRecords() == 0) {
+        throw new BulkEditException(NO_MATCH_FOUND_MESSAGE);
       }
     }
   }

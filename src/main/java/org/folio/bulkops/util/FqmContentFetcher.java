@@ -23,6 +23,7 @@ import static org.folio.bulkops.util.Constants.TITLE;
 import static org.folio.bulkops.util.FqmKeys.FQM_DATE_OF_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_WITH_HOLDINGS_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_CHILD_INSTANCES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PARENT_INSTANCES_KEY;
@@ -116,8 +117,7 @@ public class FqmContentFetcher {
 
       boolean isCentralTenant =
           consortiaService.isTenantCentral(folioExecutionContext.getTenantId());
-      boolean isMemberTenant =
-          consortiaService.isTenantMember(folioExecutionContext.getTenantId());
+      boolean isMemberTenant = consortiaService.isTenantMember(folioExecutionContext.getTenantId());
 
       List<CompletableFuture<InputStream>> tasks =
           IntStream.range(0, chunks)
@@ -191,14 +191,10 @@ public class FqmContentFetcher {
                       return jsonb.toString();
                     }
                     var jsonNode = (ObjectNode) objectMapper.readTree(jsonb.toString());
-                    if (isMemberTenant) {
-                      if (entityType == EntityType.INSTANCE_MARC
-                            && SHARED.equalsIgnoreCase(
-                          ofNullable(json.get(FQM_INSTANCE_SHARED_KEY))
-                              .map(Object::toString)
-                              .orElse(EMPTY))) {
-                        var withHoldings = jsonNode.get("with_holdings").;
-                      }
+                    if (sharedMarcFromMemberHasNoHoldings(
+                        json, entityType, isMemberTenant, jsonNode)) {
+                      addInstanceNoMatchFound(json, bulkOperationExecutionContents, operationId);
+                      return EMPTY;
                     }
                     var tenant = json.get(getContentTenantKey(entityType));
                     if (tenant == null) {
@@ -389,5 +385,21 @@ public class FqmContentFetcher {
     var succeedingTitles =
         nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
     jsonNode.putIfAbsent(SUCCEEDING_TITLES, succeedingTitles);
+  }
+
+  private boolean sharedMarcFromMemberHasNoHoldings(
+      Map<String, Object> json, EntityType entityType, boolean isMemberTenant, JsonNode jsonNode) {
+    if (isMemberTenant) {
+      if (entityType == EntityType.INSTANCE_MARC
+          && SHARED.equalsIgnoreCase(
+              ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY))) {
+        var withHoldings =
+            ofNullable(jsonNode.get(FQM_INSTANCES_WITH_HOLDINGS_KEY))
+                .map(JsonNode::asBoolean)
+                .orElse(false);
+        return !withHoldings;
+      }
+    }
+    return false;
   }
 }

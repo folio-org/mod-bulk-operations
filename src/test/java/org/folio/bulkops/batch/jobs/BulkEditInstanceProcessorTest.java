@@ -2,6 +2,7 @@ package org.folio.bulkops.batch.jobs;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.folio.bulkops.util.Constants.CONSORTIUM_MARC;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
 import static org.folio.bulkops.util.Constants.SRS_MISSING;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,6 +34,7 @@ import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.SrsService;
 import org.folio.spring.FolioExecutionContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,6 +56,7 @@ class BulkEditInstanceProcessorTest {
   @Mock private JobExecution jobExecution;
   @Mock private JsonToMarcConverter jsonToMarcConverter;
   @Mock private HoldingsStorageClient holdingsStorageClient;
+  @Mock private ConsortiaService consortiaService;
   @InjectMocks private SrsService srsService;
 
   private BulkEditInstanceProcessor processor;
@@ -70,7 +73,8 @@ class BulkEditInstanceProcessorTest {
             userClient,
             duplicationCheckerFactory,
             srsService,
-            holdingsStorageClient);
+            holdingsStorageClient,
+            consortiaService);
     ReflectionTestUtils.setField(processor, "identifierType", IdentifierType.ID.getValue());
     ReflectionTestUtils.setField(processor, "jobExecution", jobExecution);
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
@@ -248,5 +252,147 @@ class BulkEditInstanceProcessorTest {
     assertThatThrownBy(() -> processor.process(identifier))
         .isInstanceOf(BulkEditException.class)
         .hasMessageContaining("No match found");
+  }
+
+  @Test
+  void shouldThrowWhenMemberTenantWithConsortiumMarcAndNoHoldings() {
+    ItemIdentifier identifier = new ItemIdentifier().withItemId("1001");
+    String instanceId = "consortium-instance-1";
+    Instance instance =
+        Instance.builder().id(instanceId).source(CONSORTIUM_MARC).title("Consortium title").build();
+
+    when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
+        .thenReturn(
+            InstanceCollection.builder().instances(List.of(instance)).totalRecords(1).build());
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
+        .thenReturn(true);
+    when(consortiaService.isTenantMember("tenant")).thenReturn(true);
+    when(holdingsStorageClient.getByQuery(anyString(), anyLong()))
+        .thenReturn(
+            org.folio.bulkops.domain.bean.HoldingsRecordCollection.builder()
+                .totalRecords(0)
+                .holdingsRecords(Collections.emptyList())
+                .build());
+
+    assertThatThrownBy(() -> processor.process(identifier))
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("No match found");
+  }
+
+  @Test
+  void shouldNotThrowWhenMemberTenantWithConsortiumMarcAndHasHoldings() {
+    ItemIdentifier identifier = new ItemIdentifier().withItemId("1002");
+    String instanceId = "consortium-instance-2";
+    Instance instance =
+        Instance.builder().id(instanceId).source(CONSORTIUM_MARC).title("Consortium title").build();
+
+    when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
+        .thenReturn(
+            InstanceCollection.builder().instances(List.of(instance)).totalRecords(1).build());
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
+        .thenReturn(true);
+    when(consortiaService.isTenantMember("tenant")).thenReturn(true);
+    when(holdingsStorageClient.getByQuery(anyString(), anyLong()))
+        .thenReturn(
+            org.folio.bulkops.domain.bean.HoldingsRecordCollection.builder()
+                .totalRecords(1)
+                .holdingsRecords(
+                    List.of(
+                        org.folio.bulkops.domain.bean.HoldingsRecord.builder()
+                            .id("holding-1")
+                            .build()))
+                .build());
+
+    List<ExtendedInstance> result = processor.process(identifier);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst().getEntity().getSource()).isEqualTo(CONSORTIUM_MARC);
+  }
+
+  @Test
+  void shouldNotApplyConsortiumLogicWhenMemberTenantWithFolioSource() {
+    ItemIdentifier identifier = new ItemIdentifier().withItemId("1003");
+    String instanceId = "folio-instance-1";
+    Instance instance =
+        Instance.builder().id(instanceId).source("FOLIO").title("Folio title").build();
+
+    when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
+        .thenReturn(
+            InstanceCollection.builder().instances(List.of(instance)).totalRecords(1).build());
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
+        .thenReturn(true);
+    when(consortiaService.isTenantMember("tenant")).thenReturn(true);
+
+    List<ExtendedInstance> result = processor.process(identifier);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst().getEntity().getSource()).isEqualTo("FOLIO");
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldNotApplyConsortiumLogicWhenMemberTenantWithMarcSource() {
+    ItemIdentifier identifier = new ItemIdentifier().withItemId("1004");
+    String instanceId = "marc-instance-1";
+    Instance instance =
+        Instance.builder().id(instanceId).source("MARC").title("Marc title").build();
+
+    when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
+        .thenReturn(
+            InstanceCollection.builder().instances(List.of(instance)).totalRecords(1).build());
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
+        .thenReturn(true);
+    when(consortiaService.isTenantMember("tenant")).thenReturn(true);
+
+    var srsJson =
+        objectMapper.readTree(new File("src/test/resources/files/srs_response_for_validator.json"));
+    when(srsClient.getMarc(instanceId, "INSTANCE", true)).thenReturn(srsJson);
+    when(jobExecution.getExecutionContext())
+        .thenReturn(new org.springframework.batch.item.ExecutionContext());
+
+    List<ExtendedInstance> result = processor.process(identifier);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst().getEntity().getSource()).isEqualTo("MARC");
+  }
+
+  @Test
+  void shouldNotApplyConsortiumLogicWhenNonMemberTenantWithConsortiumMarc() {
+    ItemIdentifier identifier = new ItemIdentifier().withItemId("1005");
+    String instanceId = "consortium-instance-3";
+    Instance instance =
+        Instance.builder().id(instanceId).source(CONSORTIUM_MARC).title("Consortium title").build();
+
+    when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
+        .thenReturn(
+            InstanceCollection.builder().instances(List.of(instance)).totalRecords(1).build());
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
+        .thenReturn(true);
+    when(consortiaService.isTenantMember("tenant")).thenReturn(false);
+
+    List<ExtendedInstance> result = processor.process(identifier);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst().getEntity().getSource()).isEqualTo(CONSORTIUM_MARC);
+  }
+
+  @Test
+  void shouldNotApplyConsortiumLogicWhenNonMemberTenantWithFolioSource() {
+    ItemIdentifier identifier = new ItemIdentifier().withItemId("1006");
+    String instanceId = "folio-instance-2";
+    Instance instance =
+        Instance.builder().id(instanceId).source("FOLIO").title("Folio title").build();
+
+    when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
+        .thenReturn(
+            InstanceCollection.builder().instances(List.of(instance)).totalRecords(1).build());
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
+        .thenReturn(true);
+    when(consortiaService.isTenantMember("tenant")).thenReturn(false);
+
+    List<ExtendedInstance> result = processor.process(identifier);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst().getEntity().getSource()).isEqualTo("FOLIO");
   }
 }
