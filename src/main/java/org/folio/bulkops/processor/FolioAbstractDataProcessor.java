@@ -90,7 +90,7 @@ public abstract class FolioAbstractDataProcessor<T extends BulkOperationsEntity>
             errorService.saveError(
                 rule.getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
           } catch (RuleValidationTenantsException e) {
-            log.info("current tenant: {}", folioExecutionContext.getTenantId());
+            log.error("current tenant: {}", folioExecutionContext.getTenantId());
             errorService.saveError(
                 rule.getBulkOperationId(), identifier, e.getMessage(), ErrorType.ERROR);
             log.error(e.getMessage());
