@@ -117,23 +117,26 @@ class BulkEditItemProcessorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = IdentifierType.class, names = { "BARCODE", "ID" }, mode = Mode.INCLUDE)
+  @EnumSource(
+      value = IdentifierType.class,
+      names = {"BARCODE", "ID"},
+      mode = Mode.INCLUDE)
   void returnsExtendedItemCollectionForLocalTenant(IdentifierType identifierType) {
     ReflectionTestUtils.setField(processor, "identifierType", identifierType.getValue());
     when(folioExecutionContext.getTenantId()).thenReturn("localTenant");
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(true);
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
-      .thenReturn(new HashSet<>());
+        .thenReturn(new HashSet<>());
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("itemId");
     when(tenantResolver.getAffiliatedPermittedTenantIds(
-      eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
-      .thenReturn(Set.of("tenant1"));
+            eq(EntityType.ITEM), any(), anyString(), anySet(), eq(itemIdentifier)))
+        .thenReturn(Set.of("tenant1"));
     Item item = new Item().withId("itemId").withHoldingsRecordId("holdingsId");
     ItemCollection itemCollection =
-      ItemCollection.builder().items(List.of(item)).totalRecords(1).build();
+        ItemCollection.builder().items(List.of(item)).totalRecords(1).build();
     when(itemClient.getByQuery(anyString(), anyInt())).thenReturn(itemCollection);
     when(holdingsReferenceService.getInstanceTitleByHoldingsRecordId(any(), anyString()))
-      .thenReturn("Instance Title");
+        .thenReturn("Instance Title");
     when(holdingsReferenceService.getHoldingsData(anyString(), anyString())).thenReturn(EMPTY);
 
     ExtendedItemCollection result = processor.process(itemIdentifier);

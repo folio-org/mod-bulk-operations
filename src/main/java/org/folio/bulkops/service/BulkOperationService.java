@@ -31,10 +31,10 @@ import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
 import static org.folio.bulkops.util.ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE;
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
+import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.MappingIterator;
@@ -564,17 +564,21 @@ public class BulkOperationService {
                   .setTenantToNotes(operation.getTenantNotePairs());
             }
             if (result != original) {
-              try (var ignored = useCurrentContext
-                  ? null
-                  : new FolioExecutionContextSetter(
-                      prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata,
-                          folioExecutionContext))) {
-                writerForResultJsonFile.write(objectMapper.writeValueAsString(result)
-                    + getEndOfLineSymbol(hasNextRecord));
-                writerForJsonPreviewFile.write(objectMapper.writeValueAsString(result)
-                    + getEndOfLineSymbol(hasNextRecord));
-                CsvHelper.writeBeanToCsv(operation, csvWriter,
-                    result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
+              try (var ignored =
+                  useCurrentContext
+                      ? null
+                      : new FolioExecutionContextSetter(
+                          prepareContextForTenant(
+                              tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
+                writerForResultJsonFile.write(
+                    objectMapper.writeValueAsString(result) + getEndOfLineSymbol(hasNextRecord));
+                writerForJsonPreviewFile.write(
+                    objectMapper.writeValueAsString(result) + getEndOfLineSymbol(hasNextRecord));
+                CsvHelper.writeBeanToCsv(
+                    operation,
+                    csvWriter,
+                    result.getRecordBulkOperationEntity(),
+                    bulkOperationExecutionContents);
               }
               bulkOperationExecutionContents.forEach(errorService::saveError);
             } else if (original instanceof ExtendedInstance extendedInstance

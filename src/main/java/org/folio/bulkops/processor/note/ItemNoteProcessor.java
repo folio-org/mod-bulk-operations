@@ -2,7 +2,7 @@ package org.folio.bulkops.processor.note;
 
 import static java.util.Optional.ofNullable;
 import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
+import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
 import java.util.ArrayList;
 import java.util.HashSet;
