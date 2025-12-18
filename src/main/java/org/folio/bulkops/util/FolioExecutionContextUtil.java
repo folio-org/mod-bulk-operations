@@ -19,7 +19,7 @@ public class FolioExecutionContextUtil {
     if (MapUtils.isNotEmpty(context.getOkapiHeaders())) {
       var headersCopy = new HashMap<>(context.getAllHeaders());
       headersCopy.put(XOkapiHeaders.TENANT, List.of(tenantId));
-      log.info("FOLIO context initialized with tenant {}", tenantId);
+      log.debug("FOLIO context initialized with tenant {}", tenantId);
       return new DefaultFolioExecutionContext(folioModuleMetadata, headersCopy);
     }
     throw new IllegalStateException("Okapi headers not provided");
