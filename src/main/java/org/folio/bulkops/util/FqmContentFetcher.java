@@ -20,21 +20,7 @@ import static org.folio.bulkops.util.Constants.PRECEDING_TITLES;
 import static org.folio.bulkops.util.Constants.SUCCEEDING_TITLES;
 import static org.folio.bulkops.util.Constants.TENANT_ID;
 import static org.folio.bulkops.util.Constants.TITLE;
-import static org.folio.bulkops.util.FqmKeys.FQM_DATE_OF_PUBLICATION_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_PUBLICATION_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_WITH_HOLDINGS_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_CHILD_INSTANCES_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_ID_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PARENT_INSTANCES_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PRECEDING_TITLES_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PUBLICATION_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SHARED_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SUCCEEDING_TITLES_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_PUBLISHER_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_USERS_ID_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_USERS_TYPE_KEY;
+import static org.folio.bulkops.util.FqmKeys.*;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -76,6 +62,7 @@ public class FqmContentFetcher {
 
   public static final String SHARED = "Shared";
   public static final String SHADOW = "shadow";
+  public static final String MARC = "MARC";
   public static final String TITLE_PATTERN = "%s. %s, %s";
 
   @Value("${application.fqm-fetcher.max_parallel_chunks}")
@@ -393,9 +380,11 @@ public class FqmContentFetcher {
     log.info("isMemberTenant: {}", isMemberTenant);
     log.info("shared: {}, {}", json.get(FQM_INSTANCE_SHARED_KEY), SHARED.equalsIgnoreCase(
       ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY)));
-    if (isMemberTenant && entityType == EntityType.INSTANCE_MARC
+    if (isMemberTenant && isInstance(entityType)
+      && MARC.equalsIgnoreCase(
+        ofNullable(json.get(FQM_INSTANCES_SOURCE_KEY)).map(Object::toString).orElse(EMPTY))
       && SHARED.equalsIgnoreCase(
-      ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY))) {
+        ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY))) {
       var withHoldings =
         ofNullable(json.get(FQM_INSTANCES_WITH_HOLDINGS_KEY))
           .map(Object::toString).map(Boolean::parseBoolean)

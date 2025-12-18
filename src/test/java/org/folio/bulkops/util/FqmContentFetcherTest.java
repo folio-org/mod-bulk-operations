@@ -402,7 +402,8 @@ class FqmContentFetcherTest {
     map.put("instance.jsonb", "{\"id\":\"instance-id-1\"}");
     map.put("instance.tenant_id", "member-tenant");
     map.put("instance.shared", "Shared");
-    map.put("instance.withHoldings", Boolean.FALSE);
+    map.put("instance.source", "MARC");
+    map.put("instance.withHoldings", "false");
     details.setContent(Collections.singletonList(map));
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
 
@@ -431,7 +432,8 @@ class FqmContentFetcherTest {
     map.put("instance.jsonb", "{\"id\":\"instance-id-1\"}");
     map.put("instance.tenant_id", "member-tenant");
     map.put("instance.shared", "Shared");
-    map.put("instance.withHoldings", Boolean.TRUE);
+    map.put("instance.source", "MARC");
+    map.put("instance.withHoldings", "true");
     details.setContent(Collections.singletonList(map));
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
 
@@ -459,7 +461,8 @@ class FqmContentFetcherTest {
     map.put("instance.jsonb", "{\"id\":\"instance-id-1\"}");
     map.put("instance.tenant_id", "member-tenant");
     map.put("instance.shared", "Shared");
-    // withHoldings is not in the JSON, so it will be null and default to false
+    map.put("instance.source", "MARC");
+    // withHoldings is not present, so it will be null and default to false
     details.setContent(Collections.singletonList(map));
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
 
@@ -528,7 +531,7 @@ class FqmContentFetcherTest {
   }
 
   @Test
-  void fetchShouldNotFilterInstanceEntityTypeInMemberTenant() throws Exception {
+  void fetchShouldNotFilterInstanceEntityTypeWithNonMarcSourceInMemberTenant() throws Exception {
     final var queryId = UUID.randomUUID();
     final int total = 1;
     final var operationId = UUID.randomUUID();
@@ -542,6 +545,7 @@ class FqmContentFetcherTest {
     map.put("instance.jsonb", "{\"id\":\"instance-id-1\"}");
     map.put("instance.tenant_id", "member-tenant");
     map.put("instance.shared", "Shared");
+    map.put("instance.source", "FOLIO");  // Non-MARC source should not be filtered
     details.setContent(Collections.singletonList(map));
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
 
@@ -551,6 +555,36 @@ class FqmContentFetcherTest {
       assertThat(contents).isEmpty();
       assertThat(result).isNotEmpty();
       assertThat(result).contains("\"id\":\"instance-id-1\"");
+    }
+  }
+
+  @Test
+  void fetchShouldFilterInstanceEntityTypeWithMarcSourceWithoutHoldingsInMemberTenant() throws Exception {
+    final var queryId = UUID.randomUUID();
+    final int total = 1;
+    final var operationId = UUID.randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
+    when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
+    when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
+    when(consortiaService.isTenantMember("member-tenant")).thenReturn(true);
+
+    final var details = new QueryDetails();
+    Map<String, Object> map = new HashMap<>();
+    map.put("instance.jsonb", "{\"id\":\"instance-id-1\"}");
+    map.put("instance.tenant_id", "member-tenant");
+    map.put("instance.shared", "Shared");
+    map.put("instance.source", "MARC");
+    map.put("instance.withHoldings", "false");
+    details.setContent(Collections.singletonList(map));
+    when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
+
+    try (var is =
+        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
+      var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(contents).hasSize(1);
+      assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
+      assertThat(contents.getFirst().getErrorMessage()).isEqualTo(NO_MATCH_FOUND_MESSAGE);
+      assertThat(result).isEmpty();
     }
   }
 
