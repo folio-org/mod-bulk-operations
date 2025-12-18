@@ -399,7 +399,7 @@ class FqmContentFetcherTest {
 
     final var details = new QueryDetails();
     Map<String, Object> map = new HashMap<>();
-    map.put("instance.jsonb", "{\"id\":\"instance-id-1\",\"instances.withHoldings\":false}");
+    map.put("instance.jsonb", "{\"id\":\"instance-id-1\",\"instance.withHoldings\":false}");
     map.put("instance.tenant_id", "member-tenant");
     map.put("instance.shared", "Shared");
     details.setContent(Collections.singletonList(map));
@@ -427,7 +427,7 @@ class FqmContentFetcherTest {
 
     final var details = new QueryDetails();
     Map<String, Object> map = new HashMap<>();
-    map.put("instance.jsonb", "{\"id\":\"instance-id-1\",\"instances.withHoldings\":true}");
+    map.put("instance.jsonb", "{\"id\":\"instance-id-1\",\"instance.withHoldings\":true}");
     map.put("instance.tenant_id", "member-tenant");
     map.put("instance.shared", "Shared");
     details.setContent(Collections.singletonList(map));

@@ -26,7 +26,7 @@ public class FqmKeys {
   public static final String FQM_INSTANCE_TITLE_KEY = "instance.title";
   public static final String FQM_INSTANCES_PUBLICATION_KEY = "instances.publication";
   public static final String FQM_INSTANCES_TITLE_KEY = "instances.title";
-  public static final String FQM_INSTANCES_WITH_HOLDINGS_KEY = "instances.withHoldings";
+  public static final String FQM_INSTANCES_WITH_HOLDINGS_KEY = "instance.withHoldings";
 
   public static final String FQM_ITEMS_JSONB_KEY = "items.jsonb";
 
