@@ -386,17 +386,14 @@ public class FqmContentFetcher {
 
   private boolean sharedMarcFromMemberHasNoHoldings(
     Map<String, Object> json, EntityType entityType, JsonNode jsonNode) {
-    log.info("JsonNode: {}", jsonNode.toString());
     boolean isMemberTenant = consortiaService.isTenantMember(folioExecutionContext.getTenantId());
-    log.info("isMemberTenant: {}", isMemberTenant);
     if (isMemberTenant && entityType == EntityType.INSTANCE_MARC
       && SHARED.equalsIgnoreCase(
       ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY))) {
       var withHoldings =
-        ofNullable(jsonNode.get(FQM_INSTANCES_WITH_HOLDINGS_KEY))
-          .map(JsonNode::asBoolean)
+        ofNullable(json.get(FQM_INSTANCES_WITH_HOLDINGS_KEY))
+          .filter(Boolean.class::isInstance).map(Boolean.class::cast)
           .orElse(false);
-      log.info("withHoldings: {}", withHoldings);
       return !withHoldings;
     }
     return false;
