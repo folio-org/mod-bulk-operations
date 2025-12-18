@@ -73,8 +73,8 @@ public class MarcCsvHelper {
     return csvData.toArray(String[]::new);
   }
 
-  public byte[] enrichCsvWithMarcChanges(byte[] content, BulkOperation bulkOperation,
-      FileContentType fileContentType) {
+  public byte[] enrichCsvWithMarcChanges(
+      byte[] content, BulkOperation bulkOperation, FileContentType fileContentType) {
     var instanceHeaderNames =
         UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class).getHeader().stream()
             .map(Cell::getValue)
@@ -107,8 +107,8 @@ public class MarcCsvHelper {
     return content;
   }
 
-  private Map<String, Map<String, String>> getChangedMarcData(BulkOperation bulkOperation,
-      String fileName) {
+  private Map<String, Map<String, String>> getChangedMarcData(
+      BulkOperation bulkOperation, String fileName) {
     var instanceHeaderNames =
         UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class).getHeader().stream()
             .map(Cell::getValue)
