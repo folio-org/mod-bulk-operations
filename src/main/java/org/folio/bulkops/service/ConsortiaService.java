@@ -1,6 +1,6 @@
 package org.folio.bulkops.service;
 
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
+import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
 import java.util.ArrayList;
 import java.util.HashMap;

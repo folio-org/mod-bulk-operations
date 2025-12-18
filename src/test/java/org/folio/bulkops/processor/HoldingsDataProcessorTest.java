@@ -67,10 +67,10 @@ import org.folio.bulkops.service.ElectronicAccessReferenceService;
 import org.folio.bulkops.service.ElectronicAccessService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.LocalReferenceDataService;
-import org.folio.bulkops.util.FolioExecutionContextUtil;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.integration.XOkapiHeaders;
+import org.folio.spring.utils.FolioExecutionContextUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -1250,8 +1250,8 @@ class HoldingsDataProcessorTest extends BaseTest {
     when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
 
-    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
-      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any()))
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtils.class)) {
+      when(FolioExecutionContextUtils.prepareContextForTenant(any(), any(), any()))
           .thenReturn(folioExecutionContext);
 
       var permLocationFromMemberB = UUID.randomUUID().toString();
@@ -1298,8 +1298,8 @@ class HoldingsDataProcessorTest extends BaseTest {
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
     when(consortiaService.isTenantCentral("central")).thenReturn(true);
 
-    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
-      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any()))
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtils.class)) {
+      when(FolioExecutionContextUtils.prepareContextForTenant(any(), any(), any()))
           .thenReturn(folioExecutionContext);
 
       var electronicAccessFromMemberB = UUID.randomUUID().toString();
@@ -1351,8 +1351,8 @@ class HoldingsDataProcessorTest extends BaseTest {
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
     when(consortiaService.isTenantCentral("central")).thenReturn(true);
 
-    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
-      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any()))
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtils.class)) {
+      when(FolioExecutionContextUtils.prepareContextForTenant(any(), any(), any()))
           .thenReturn(folioExecutionContext);
 
       var electronicAccessFromMemberB = UUID.randomUUID().toString();
@@ -1397,8 +1397,8 @@ class HoldingsDataProcessorTest extends BaseTest {
     when(consortiaService.getCentralTenantId("diku")).thenReturn("");
     when(consortiaService.isTenantInConsortia("diku")).thenReturn(false);
 
-    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
-      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any()))
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtils.class)) {
+      when(FolioExecutionContextUtils.prepareContextForTenant(any(), any(), any()))
           .thenReturn(folioExecutionContext);
 
       var initElectronicAccForRecord = UUID.randomUUID().toString();
@@ -1669,8 +1669,8 @@ class HoldingsDataProcessorTest extends BaseTest {
     when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
 
-    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
-      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any()))
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtils.class)) {
+      when(FolioExecutionContextUtils.prepareContextForTenant(any(), any(), any()))
           .thenReturn(folioExecutionContext);
 
       var permLocationFromMemberB = UUID.randomUUID().toString();
@@ -1719,8 +1719,8 @@ class HoldingsDataProcessorTest extends BaseTest {
     when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
 
-    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
-      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any()))
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtils.class)) {
+      when(FolioExecutionContextUtils.prepareContextForTenant(any(), any(), any()))
           .thenReturn(folioExecutionContext);
 
       var adminNoteFromMemberB = UUID.randomUUID().toString();

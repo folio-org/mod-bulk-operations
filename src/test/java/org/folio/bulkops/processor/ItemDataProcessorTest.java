@@ -74,9 +74,9 @@ import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.ItemReferenceService;
-import org.folio.bulkops.util.FolioExecutionContextUtil;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.integration.XOkapiHeaders;
+import org.folio.spring.utils.FolioExecutionContextUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -1466,8 +1466,8 @@ class ItemDataProcessorTest extends BaseTest {
     when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
 
-    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
-      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any()))
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtils.class)) {
+      when(FolioExecutionContextUtils.prepareContextForTenant(any(), any(), any()))
           .thenReturn(folioExecutionContext);
 
       var loanTypeFromMemberB = UUID.randomUUID().toString();
@@ -1517,8 +1517,8 @@ class ItemDataProcessorTest extends BaseTest {
     when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
 
-    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
-      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any()))
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtils.class)) {
+      when(FolioExecutionContextUtils.prepareContextForTenant(any(), any(), any()))
           .thenReturn(folioExecutionContext);
 
       var adminNoteFromMemberB = UUID.randomUUID().toString();
@@ -1624,8 +1624,8 @@ class ItemDataProcessorTest extends BaseTest {
     when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
 
-    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtil.class)) {
-      when(FolioExecutionContextUtil.prepareContextForTenant(any(), any(), any()))
+    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtils.class)) {
+      when(FolioExecutionContextUtils.prepareContextForTenant(any(), any(), any()))
           .thenReturn(folioExecutionContext);
 
       var permLocationFromMemberB = UUID.randomUUID().toString();

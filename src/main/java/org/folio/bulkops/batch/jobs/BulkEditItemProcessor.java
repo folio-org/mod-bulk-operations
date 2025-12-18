@@ -10,6 +10,7 @@ import static org.folio.bulkops.util.Constants.NO_ITEM_VIEW_PERMISSIONS;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.SearchIdentifierTypeResolver.getSearchIdentifierType;
 import static org.folio.bulkops.util.Utils.encode;
+import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
 import feign.codec.DecodeException;
 import java.util.ArrayList;
@@ -39,7 +40,6 @@ import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.HoldingsReferenceService;
 import org.folio.bulkops.service.LocalReferenceDataService;
 import org.folio.bulkops.util.ExceptionHelper;
-import org.folio.bulkops.util.FolioExecutionContextUtil;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
@@ -190,8 +190,7 @@ public class BulkEditItemProcessor
     try (@SuppressWarnings("unused")
         var context =
             new FolioExecutionContextSetter(
-                FolioExecutionContextUtil.prepareContextForTenant(
-                    tenantId, folioModuleMetadata, folioExecutionContext))) {
+                prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
       var url = getMatchPattern(identifierType).formatted(idType, identifier);
       var itemCollection = itemClient.getByQuery(url, Integer.MAX_VALUE);
 

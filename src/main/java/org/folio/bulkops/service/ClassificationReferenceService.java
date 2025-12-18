@@ -2,7 +2,7 @@ package org.folio.bulkops.service;
 
 import static java.util.Objects.isNull;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
+import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
