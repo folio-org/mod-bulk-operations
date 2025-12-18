@@ -1,6 +1,6 @@
 package org.folio.bulkops.processor.permissions.check;
 
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
+import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
 import java.util.List;
 import java.util.UUID;

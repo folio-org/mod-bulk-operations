@@ -5,8 +5,8 @@ import static java.util.Optional.ofNullable;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_CODE;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.encode;
+import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

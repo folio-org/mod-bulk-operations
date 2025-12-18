@@ -1,6 +1,6 @@
 package org.folio.bulkops.processor.folio;
 
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
+import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.client.ItemClient;

@@ -18,8 +18,8 @@ import static org.folio.bulkops.util.Constants.PERMANENT_LOCATION_ID;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_BARCODE;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_HRID;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.encode;
+import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;

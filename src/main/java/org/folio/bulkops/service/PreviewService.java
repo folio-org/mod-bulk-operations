@@ -37,9 +37,9 @@ import static org.folio.bulkops.util.Constants.ELECTRONIC_ACCESS_HEADINGS;
 import static org.folio.bulkops.util.Constants.FOLIO;
 import static org.folio.bulkops.util.Constants.PUBLICATION_HEADINGS;
 import static org.folio.bulkops.util.Constants.SUBJECT_HEADINGS;
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
+import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
