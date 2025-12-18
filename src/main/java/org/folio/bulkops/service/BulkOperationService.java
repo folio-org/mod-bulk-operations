@@ -242,10 +242,8 @@ public class BulkOperationService {
   public BulkOperation triggerByQuery(UUID userId, QueryRequest queryRequest) {
     var operation = saveQueryBulkOperation(userId, queryRequest);
     if (fqmQueryApproach) {
-      log.info("FQM query approach is enabled, starting FQM query operation");
       operation = queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
     } else {
-      log.info("FQM query approach is disabled, starting identifiers query operation");
       queryService.saveIdentifiers(operation);
       operation =
           startBulkOperation(operation.getId(), userId, new BulkOperationStart().step(UPLOAD));
