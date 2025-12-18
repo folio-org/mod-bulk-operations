@@ -160,6 +160,7 @@ public class FqmContentFetcher {
       boolean isCentralTenant) {
     int offset = chunk * chunkSize;
     int limit = Math.min(chunkSize, total - offset);
+    log.info("tenant current: {}", folioExecutionContext.getTenantId());
     var response = queryClient.getQuery(queryId, offset, limit).getContent();
     return new ByteArrayInputStream(
         response.stream()
@@ -388,13 +389,7 @@ public class FqmContentFetcher {
 
   private boolean sharedMarcFromMemberHasNoHoldings(
     Map<String, Object> json, EntityType entityType, JsonNode jsonNode) {
-    log.info("json: {}", json);
-    log.info("entityType: {}", entityType);
-    log.info("jsonNode: {}", jsonNode);
     boolean isMemberTenant = consortiaService.isTenantMember(folioExecutionContext.getTenantId());
-    log.info("isMemberTenant: {}", isMemberTenant);
-    log.info("shared: {}, {}", json.get(FQM_INSTANCE_SHARED_KEY), SHARED.equalsIgnoreCase(
-      ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY)));
     if (isMemberTenant && isInstance(entityType)
       && MARC.equalsIgnoreCase(
         ofNullable(json.get(FQM_INSTANCES_SOURCE_KEY)).map(Object::toString).orElse(EMPTY))
@@ -404,7 +399,6 @@ public class FqmContentFetcher {
         ofNullable(json.get(FQM_INSTANCES_WITH_HOLDINGS_KEY))
           .map(Object::toString).map(Boolean::parseBoolean)
           .orElse(false);
-      log.info("withHoldings: {}", withHoldings);
       return !withHoldings;
     }
     return false;
