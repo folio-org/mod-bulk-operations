@@ -2,7 +2,6 @@ package org.folio.bulkops.batch.jobs;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.folio.bulkops.util.Constants.CONSORTIUM_MARC;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
 import static org.folio.bulkops.util.Constants.SRS_MISSING;
 import static org.mockito.ArgumentMatchers.any;
@@ -252,11 +251,30 @@ class BulkEditInstanceProcessorTest {
   }
 
   @Test
-  void shouldThrowWhenMemberTenantWithConsortiumMarcAndNoHoldings() {
+  void shouldThrowWhenMemberTenantWithConsortiumMarc() {
     ItemIdentifier identifier = new ItemIdentifier().withItemId("1001");
     String instanceId = "consortium-instance-1";
     Instance instance =
-        Instance.builder().id(instanceId).source(CONSORTIUM_MARC).title("Consortium title").build();
+        Instance.builder().id(instanceId).source("CONSORTIUM-MARC").title("Consortium title").build();
+
+    when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
+        .thenReturn(
+            InstanceCollection.builder().instances(List.of(instance)).totalRecords(1).build());
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
+        .thenReturn(true);
+    when(consortiaService.isTenantMember("tenant")).thenReturn(true);
+
+    assertThatThrownBy(() -> processor.process(identifier))
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining("No match found");
+  }
+
+  @Test
+  void shouldThrowWhenMemberTenantWithConsortiumFolio() {
+    ItemIdentifier identifier = new ItemIdentifier().withItemId("1006");
+    String instanceId = "consortium-instance-3";
+    Instance instance =
+        Instance.builder().id(instanceId).source("CONSORTIUM-FOLIO").title("Consortium title").build();
 
     when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
         .thenReturn(
@@ -322,7 +340,7 @@ class BulkEditInstanceProcessorTest {
     ItemIdentifier identifier = new ItemIdentifier().withItemId("1004");
     String instanceId = "consortium-instance-2";
     Instance instance =
-        Instance.builder().id(instanceId).source(CONSORTIUM_MARC).title("Consortium title").build();
+        Instance.builder().id(instanceId).source("CONSORTIUM-MARC").title("Consortium title").build();
 
     when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
         .thenReturn(
@@ -334,7 +352,27 @@ class BulkEditInstanceProcessorTest {
     List<ExtendedInstance> result = processor.process(identifier);
 
     assertThat(result).hasSize(1);
-    assertThat(result.getFirst().getEntity().getSource()).isEqualTo(CONSORTIUM_MARC);
+    assertThat(result.getFirst().getEntity().getSource()).isEqualTo("CONSORTIUM-MARC");
+  }
+
+  @Test
+  void shouldNotThrowWhenNonMemberTenantWithConsortiumFolio() {
+    ItemIdentifier identifier = new ItemIdentifier().withItemId("1007");
+    String instanceId = "consortium-instance-4";
+    Instance instance =
+        Instance.builder().id(instanceId).source("CONSORTIUM-FOLIO").title("Consortium title").build();
+
+    when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
+        .thenReturn(
+            InstanceCollection.builder().instances(List.of(instance)).totalRecords(1).build());
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
+        .thenReturn(true);
+    when(consortiaService.isTenantMember("tenant")).thenReturn(false);
+
+    List<ExtendedInstance> result = processor.process(identifier);
+
+    assertThat(result).hasSize(1);
+    assertThat(result.getFirst().getEntity().getSource()).isEqualTo("CONSORTIUM-FOLIO");
   }
 
   @Test

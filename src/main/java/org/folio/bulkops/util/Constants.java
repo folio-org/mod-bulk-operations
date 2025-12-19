@@ -146,6 +146,7 @@ public class Constants {
   public static final String MARC = "MARC";
   public static final String FOLIO = "FOLIO";
   public static final String CONSORTIUM_MARC = "CONSORTIUM-MARC";
+  public static final String CONSORTIUM_FOLIO = "CONSORTIUM-FOLIO";
   public static final String ERROR_COMMITTING_FILE_NAME_PREFIX = "-Committing-changes-Errors-";
   public static final String ERROR_MATCHING_FILE_NAME_PREFIX = "-Matching-Records-Errors-";
   public static final String ERROR_FILE_NAME_ENDING = "-Errors.csv";

@@ -4,6 +4,7 @@ import static java.util.Collections.emptyList;
 import static org.folio.bulkops.domain.bean.JobParameterNames.AT_LEAST_ONE_MARC_EXISTS;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getMatchPattern;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.resolveIdentifier;
+import static org.folio.bulkops.util.Constants.CONSORTIUM_FOLIO;
 import static org.folio.bulkops.util.Constants.CONSORTIUM_MARC;
 import static org.folio.bulkops.util.Constants.DUPLICATE_ENTRY;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE;
@@ -170,7 +171,8 @@ public class BulkEditInstanceProcessor
   private void checkIfInstanceIsSharedAndCurrentTenantIsMemberAndThrowExceptionIfYes(
       Instance instance) {
     if (consortiaService.isTenantMember(folioExecutionContext.getTenantId())
-        && CONSORTIUM_MARC.equals(instance.getSource())) {
+        && (CONSORTIUM_MARC.equals(instance.getSource())
+      || CONSORTIUM_FOLIO.equals(instance.getSource()))) {
       throw new BulkEditException(NO_MATCH_FOUND_MESSAGE);
     }
   }
