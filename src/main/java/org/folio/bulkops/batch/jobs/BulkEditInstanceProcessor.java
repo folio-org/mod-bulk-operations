@@ -18,7 +18,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
-import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
@@ -54,7 +53,6 @@ public class BulkEditInstanceProcessor
   private final UserClient userClient;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
   private final SrsService srsService;
-  private final HoldingsStorageClient holdingsStorageClient;
   private final ConsortiaService consortiaService;
 
   @SuppressWarnings("unused")

@@ -21,7 +21,6 @@ import java.util.Set;
 import java.util.UUID;
 import lombok.SneakyThrows;
 import org.folio.bulkops.batch.jobs.processidentifiers.DuplicationCheckerFactory;
-import org.folio.bulkops.client.HoldingsStorageClient;
 import org.folio.bulkops.client.InstanceClient;
 import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.client.UserClient;
@@ -29,7 +28,6 @@ import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.InstanceCollection;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
-import org.folio.bulkops.domain.converter.JsonToMarcConverter;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.exception.BulkEditException;
@@ -54,8 +52,6 @@ class BulkEditInstanceProcessorTest {
   @Mock private SrsClient srsClient;
   @Mock private DuplicationCheckerFactory duplicationCheckerFactory;
   @Mock private JobExecution jobExecution;
-  @Mock private JsonToMarcConverter jsonToMarcConverter;
-  @Mock private HoldingsStorageClient holdingsStorageClient;
   @Mock private ConsortiaService consortiaService;
   @InjectMocks private SrsService srsService;
 
@@ -73,7 +69,6 @@ class BulkEditInstanceProcessorTest {
             userClient,
             duplicationCheckerFactory,
             srsService,
-            holdingsStorageClient,
             consortiaService);
     ReflectionTestUtils.setField(processor, "identifierType", IdentifierType.ID.getValue());
     ReflectionTestUtils.setField(processor, "jobExecution", jobExecution);
