@@ -104,7 +104,7 @@ public class BulkEditInstanceProcessor
         throw new BulkEditException(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED, ErrorType.ERROR);
       }
 
-      checkIfSharedMarcFromMemberHasHoldingsAndThrowExceptionIfNo(instance);
+      checkIfInstanceIsSharedAndCurrentTenantIsMemberAndThrowExceptionIfYes(instance);
 
       if (duplicationCheckerFactory.getFetchedIds(jobExecution).add(instance.getId())) {
         checkSrsInstance(instance);
@@ -169,14 +169,11 @@ public class BulkEditInstanceProcessor
     }
   }
 
-  private void checkIfSharedMarcFromMemberHasHoldingsAndThrowExceptionIfNo(Instance instance) {
+  private void checkIfInstanceIsSharedAndCurrentTenantIsMemberAndThrowExceptionIfYes(
+      Instance instance) {
     if (consortiaService.isTenantMember(folioExecutionContext.getTenantId())
         && CONSORTIUM_MARC.equals(instance.getSource())) {
-      var holdingsCollection =
-          holdingsStorageClient.getByQuery("instanceId==" + instance.getId(), Integer.MAX_VALUE);
-      if (holdingsCollection.getTotalRecords() == 0) {
-        throw new BulkEditException(NO_MATCH_FOUND_MESSAGE);
-      }
+      throw new BulkEditException(NO_MATCH_FOUND_MESSAGE);
     }
   }
 }

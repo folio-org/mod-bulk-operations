@@ -267,12 +267,6 @@ class BulkEditInstanceProcessorTest {
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
         .thenReturn(true);
     when(consortiaService.isTenantMember("tenant")).thenReturn(true);
-    when(holdingsStorageClient.getByQuery(anyString(), anyLong()))
-        .thenReturn(
-            org.folio.bulkops.domain.bean.HoldingsRecordCollection.builder()
-                .totalRecords(0)
-                .holdingsRecords(Collections.emptyList())
-                .build());
 
     assertThatThrownBy(() -> processor.process(identifier))
         .isInstanceOf(BulkEditException.class)
@@ -280,38 +274,8 @@ class BulkEditInstanceProcessorTest {
   }
 
   @Test
-  void shouldNotThrowWhenMemberTenantWithConsortiumMarcAndHasHoldings() {
+  void shouldNotThrowWhenMemberTenantWithFolioSource() {
     ItemIdentifier identifier = new ItemIdentifier().withItemId("1002");
-    String instanceId = "consortium-instance-2";
-    Instance instance =
-        Instance.builder().id(instanceId).source(CONSORTIUM_MARC).title("Consortium title").build();
-
-    when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
-        .thenReturn(
-            InstanceCollection.builder().instances(List.of(instance)).totalRecords(1).build());
-    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.INSTANCE)))
-        .thenReturn(true);
-    when(consortiaService.isTenantMember("tenant")).thenReturn(true);
-    when(holdingsStorageClient.getByQuery(anyString(), anyLong()))
-        .thenReturn(
-            org.folio.bulkops.domain.bean.HoldingsRecordCollection.builder()
-                .totalRecords(1)
-                .holdingsRecords(
-                    List.of(
-                        org.folio.bulkops.domain.bean.HoldingsRecord.builder()
-                            .id("holding-1")
-                            .build()))
-                .build());
-
-    List<ExtendedInstance> result = processor.process(identifier);
-
-    assertThat(result).hasSize(1);
-    assertThat(result.getFirst().getEntity().getSource()).isEqualTo(CONSORTIUM_MARC);
-  }
-
-  @Test
-  void shouldNotApplyConsortiumLogicWhenMemberTenantWithFolioSource() {
-    ItemIdentifier identifier = new ItemIdentifier().withItemId("1003");
     String instanceId = "folio-instance-1";
     Instance instance =
         Instance.builder().id(instanceId).source("FOLIO").title("Folio title").build();
@@ -331,8 +295,8 @@ class BulkEditInstanceProcessorTest {
 
   @Test
   @SneakyThrows
-  void shouldNotApplyConsortiumLogicWhenMemberTenantWithMarcSource() {
-    ItemIdentifier identifier = new ItemIdentifier().withItemId("1004");
+  void shouldNotThrowWhenMemberTenantWithMarcSource() {
+    ItemIdentifier identifier = new ItemIdentifier().withItemId("1003");
     String instanceId = "marc-instance-1";
     Instance instance =
         Instance.builder().id(instanceId).source("MARC").title("Marc title").build();
@@ -357,9 +321,9 @@ class BulkEditInstanceProcessorTest {
   }
 
   @Test
-  void shouldNotApplyConsortiumLogicWhenNonMemberTenantWithConsortiumMarc() {
-    ItemIdentifier identifier = new ItemIdentifier().withItemId("1005");
-    String instanceId = "consortium-instance-3";
+  void shouldNotThrowWhenNonMemberTenantWithConsortiumMarc() {
+    ItemIdentifier identifier = new ItemIdentifier().withItemId("1004");
+    String instanceId = "consortium-instance-2";
     Instance instance =
         Instance.builder().id(instanceId).source(CONSORTIUM_MARC).title("Consortium title").build();
 
@@ -377,8 +341,8 @@ class BulkEditInstanceProcessorTest {
   }
 
   @Test
-  void shouldNotApplyConsortiumLogicWhenNonMemberTenantWithFolioSource() {
-    ItemIdentifier identifier = new ItemIdentifier().withItemId("1006");
+  void shouldNotThrowWhenNonMemberTenantWithFolioSource() {
+    ItemIdentifier identifier = new ItemIdentifier().withItemId("1005");
     String instanceId = "folio-instance-2";
     Instance instance =
         Instance.builder().id(instanceId).source("FOLIO").title("Folio title").build();

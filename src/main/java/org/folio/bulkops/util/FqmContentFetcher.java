@@ -22,9 +22,7 @@ import static org.folio.bulkops.util.Constants.TENANT_ID;
 import static org.folio.bulkops.util.Constants.TITLE;
 import static org.folio.bulkops.util.FqmKeys.FQM_DATE_OF_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_PUBLICATION_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_SOURCE_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
-import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_WITH_HOLDINGS_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_CHILD_INSTANCES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PARENT_INSTANCES_KEY;
@@ -186,16 +184,16 @@ public class FqmContentFetcher {
                       }
                     }
 
+                    if (isSharedInstanceAndCurrentTenantIsMember(json, entityType)) {
+                      addInstanceNoMatchFound(json, bulkOperationExecutionContents, operationId);
+                      return EMPTY;
+                    }
+
                     var jsonb = json.get(getEntityJsonKey(entityType));
                     if (entityType == EntityType.USER) {
                       return jsonb.toString();
                     }
                     var jsonNode = (ObjectNode) objectMapper.readTree(jsonb.toString());
-                    if (sharedMarcFromMemberHasNoHoldings(
-                        json, entityType, jsonNode)) {
-                      addInstanceNoMatchFound(json, bulkOperationExecutionContents, operationId);
-                      return EMPTY;
-                    }
                     var tenant = json.get(getContentTenantKey(entityType));
                     if (tenant == null) {
                       checkForTenantFieldExistenceInEcs(
@@ -387,20 +385,12 @@ public class FqmContentFetcher {
     jsonNode.putIfAbsent(SUCCEEDING_TITLES, succeedingTitles);
   }
 
-  private boolean sharedMarcFromMemberHasNoHoldings(
-    Map<String, Object> json, EntityType entityType, JsonNode jsonNode) {
+  private boolean isSharedInstanceAndCurrentTenantIsMember(
+      Map<String, Object> json, EntityType entityType) {
     boolean isMemberTenant = consortiaService.isTenantMember(folioExecutionContext.getTenantId());
-    if (isMemberTenant && isInstance(entityType)
-      && MARC.equalsIgnoreCase(
-        ofNullable(json.get(FQM_INSTANCES_SOURCE_KEY)).map(Object::toString).orElse(EMPTY))
-      && SHARED.equalsIgnoreCase(
-        ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY))) {
-      var withHoldings =
-        ofNullable(json.get(FQM_INSTANCES_WITH_HOLDINGS_KEY))
-          .map(Object::toString).map(Boolean::parseBoolean)
-          .orElse(false);
-      return !withHoldings;
-    }
-    return false;
+    return isMemberTenant
+        && isInstance(entityType)
+        && SHARED.equalsIgnoreCase(
+            ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY));
   }
 }
