@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
+import static java.util.UUID.fromString;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.awaitility.Awaitility.await;
@@ -16,6 +17,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.service.BulkOperationService.MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY;
 import static org.folio.bulkops.service.BulkOperationService.TMP_MATCHED_JSON_PATH_TEMPLATE;
@@ -1617,7 +1619,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(metadataProviderService.calculateProgress(anyList()))
         .thenReturn(new DataImportProgress().total(10).current(5));
 
-    when(queryService.retrieveRecordsAndCheckQueryExecutionStatus(any(BulkOperation.class)))
+    when(queryService.retrieveRecordsQueryFlowAsync(any(BulkOperation.class)))
         .thenReturn(experctedBulkOperation);
 
     var operation = bulkOperationService.getOperationById(operationId);
@@ -2093,9 +2095,11 @@ class BulkOperationServiceTest extends BaseTest {
             .id(bulkOperationId)
             .linkToTriggeringCsvFile(filename)
             .entityType(INSTANCE)
+            .approach(ApproachType.IN_APP)
             .identifierType(IdentifierType.ID)
             .build();
 
+    ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", false);
     when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
     when(remoteFileSystemClient.getNumOfLines(filename)).thenReturn(1);
 
@@ -2105,6 +2109,116 @@ class BulkOperationServiceTest extends BaseTest {
 
       await()
           .untilAsserted(() -> verify(exportJobManagerSync).launchJob(any(JobLaunchRequest.class)));
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldLaunchQueryJobOnUploadStep() {
+    var bulkOperationId = UUID.randomUUID();
+    var filename = "file.csv";
+    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(bulkOperationId)
+            .linkToTriggeringCsvFile(filename)
+            .entityType(INSTANCE)
+            .approach(ApproachType.IN_APP)
+            .identifierType(IdentifierType.ID)
+            .build();
+
+    ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", true);
+
+    when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
+    when(remoteFileSystemClient.getNumOfLines(filename)).thenReturn(5);
+
+    var ids =
+        List.of(
+            fromString("1b74ab75-9f41-4837-8662-a1d99118008d"),
+            fromString("69640328-788e-43fc-9c3c-af39e243f3b7"),
+            fromString("549fad9e-7f8e-4d8e-9a71-00d251817866"),
+            fromString("00f10ab9-d845-4334-92d2-ff55862bf4f9"),
+            fromString("8be05cf5-fb4f-4752-8094-8e179d08fb99"));
+
+    when(remoteFileSystemClient.get(filename))
+        .thenReturn(
+            new ByteArrayInputStream(
+                format(
+                        "\"%s\"%n\"%s\"%n\"%s\"%n\"%s\"%n\"%s\"",
+                        ids.get(0), ids.get(1), ids.get(2), ids.get(3), ids.get(4))
+                    .getBytes()));
+
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      bulkOperationService.startBulkOperation(
+          bulkOperationId, UUID.randomUUID(), bulkOperationStart);
+
+      verify(queryService, times(1))
+          .retrieveRecordsIdentifiersFlowAsync(ids, bulkOperation, List.of());
+    }
+  }
+
+  @Test
+  void shouldFailJobOnUploadStepWhenStorageFails() {
+    var bulkOperationId = UUID.randomUUID();
+    var filename = "file.csv";
+    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(bulkOperationId)
+            .linkToTriggeringCsvFile(filename)
+            .entityType(INSTANCE)
+            .approach(ApproachType.IN_APP)
+            .identifierType(IdentifierType.ID)
+            .build();
+
+    ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", true);
+
+    when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
+    when(remoteFileSystemClient.getNumOfLines(filename)).thenReturn(5);
+    when(remoteFileSystemClient.get(filename)).thenThrow(new S3ClientException("Storage error"));
+
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      bulkOperationService.startBulkOperation(
+          bulkOperationId, UUID.randomUUID(), bulkOperationStart);
+
+      assertThat(bulkOperation.getStatus(), is(FAILED));
+      verify(bulkOperationRepository, times(1)).save(bulkOperation);
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldLaunchQueryJobOnUploadStepWhenIdIsInvalid() {
+    var bulkOperationId = UUID.randomUUID();
+    var filename = "file.csv";
+    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(bulkOperationId)
+            .linkToTriggeringCsvFile(filename)
+            .entityType(INSTANCE)
+            .approach(ApproachType.IN_APP)
+            .identifierType(IdentifierType.ID)
+            .build();
+
+    ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", true);
+
+    when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
+    when(remoteFileSystemClient.getNumOfLines(filename)).thenReturn(5);
+    when(remoteFileSystemClient.get(filename))
+        .thenReturn(
+            new ByteArrayInputStream(
+                ("\"xxXXXyy-zzZZZ\"\n" + "\"309df74e-5bdb-4707-b29a-3de0bd6ca3f6\"").getBytes()));
+
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      bulkOperationService.startBulkOperation(
+          bulkOperationId, UUID.randomUUID(), bulkOperationStart);
+
+      verify(queryService, times(1))
+          .retrieveRecordsIdentifiersFlowAsync(
+              eq(List.of(fromString("309df74e-5bdb-4707-b29a-3de0bd6ca3f6"))),
+              eq(bulkOperation),
+              anyList());
     }
   }
 
@@ -2251,13 +2365,17 @@ class BulkOperationServiceTest extends BaseTest {
     try (var ignored = new FolioExecutionContextSetter(folioExecutionContext)) {
       // Arrange
       var operation =
-          BulkOperation.builder().id(UUID.randomUUID()).status(OperationStatusType.NEW).build();
+          BulkOperation.builder()
+              .id(UUID.randomUUID())
+              .status(OperationStatusType.NEW)
+              .approach(ApproachType.IN_APP)
+              .build();
 
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
       doNothing().when(queryService).saveIdentifiers(operation);
       when(bulkOperationRepository.findById(operation.getId())).thenReturn(Optional.of(operation));
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
-      when(entityTypeService.getEntityTypeById(any()))
+      when(entityTypeService.getBulkOpsEntityTypeByFqmEntityTypeId(any()))
           .thenReturn(mock(org.folio.bulkops.domain.dto.EntityType.class));
 
       // Set fqmQueryApproach to false
@@ -2281,7 +2399,7 @@ class BulkOperationServiceTest extends BaseTest {
         BulkOperation.builder().id(UUID.randomUUID()).status(OperationStatusType.NEW).build();
 
     when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
-    when(queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation)).thenReturn(operation);
+    when(queryService.retrieveRecordsQueryFlowAsync(operation)).thenReturn(operation);
 
     // Set fqmQueryApproach to true
     ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", true);
