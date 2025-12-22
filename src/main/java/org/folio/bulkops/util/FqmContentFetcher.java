@@ -75,6 +75,7 @@ public class FqmContentFetcher {
 
   public static final String SHARED = "Shared";
   public static final String SHADOW = "shadow";
+  public static final String MARC = "MARC";
   public static final String TITLE_PATTERN = "%s. %s, %s";
 
   @Value("${application.fqm-fetcher.max_parallel_chunks}")
@@ -157,6 +158,7 @@ public class FqmContentFetcher {
       boolean isCentralTenant) {
     int offset = chunk * chunkSize;
     int limit = Math.min(chunkSize, total - offset);
+    log.info("tenant current: {}", folioExecutionContext.getTenantId());
     var response = queryClient.getQuery(queryId, offset, limit).getContent();
     return new ByteArrayInputStream(
         response.stream()
@@ -180,6 +182,11 @@ public class FqmContentFetcher {
                             json, bulkOperationExecutionContents, operationId);
                         return EMPTY;
                       }
+                    }
+
+                    if (isSharedInstanceAndCurrentTenantIsMember(json, entityType)) {
+                      addInstanceNoMatchFound(json, bulkOperationExecutionContents, operationId);
+                      return EMPTY;
                     }
 
                     var jsonb = json.get(getEntityJsonKey(entityType));
@@ -376,5 +383,14 @@ public class FqmContentFetcher {
     var succeedingTitles =
         nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
     jsonNode.putIfAbsent(SUCCEEDING_TITLES, succeedingTitles);
+  }
+
+  private boolean isSharedInstanceAndCurrentTenantIsMember(
+      Map<String, Object> json, EntityType entityType) {
+    boolean isMemberTenant = consortiaService.isTenantMember(folioExecutionContext.getTenantId());
+    return isMemberTenant
+        && isInstance(entityType)
+        && SHARED.equalsIgnoreCase(
+            ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY));
   }
 }
