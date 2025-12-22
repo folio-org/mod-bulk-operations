@@ -64,6 +64,8 @@ import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.FqmFetcherException;
 import org.folio.bulkops.service.ConsortiaService;
+import org.folio.bulkops.service.EntityTypeService;
+import org.folio.querytool.domain.dto.ContentsRequest;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -87,6 +89,7 @@ public class FqmContentFetcher {
   private final ObjectMapper objectMapper;
   private final FolioExecutionContext folioExecutionContext;
   private final ConsortiaService consortiaService;
+  private final EntityTypeService entityTypeService;
 
   @PostConstruct
   private void logStartup() {
@@ -95,6 +98,37 @@ public class FqmContentFetcher {
             + "max_chunk_size: {}",
         maxParallelChunks,
         chunkSize);
+  }
+
+  /**
+   * Fetches content of FQM entities for the given UUIDs.
+   *
+   * @param uuids the list of UUIDs to fetch
+   * @param entityType the type of entity to fetch
+   * @param bulkOperationExecutionContents the list to record execution content for errors or
+   *     warnings (technical errors holder)
+   * @param operationId the bulk operation ID for which the content is fetched
+   * @return an InputStream containing the fetched content
+   */
+  public InputStream contents(
+      List<UUID> uuids,
+      EntityType entityType,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      UUID operationId) {
+
+    var contentsRequest =
+        new ContentsRequest()
+            .entityTypeId(
+                UUID.fromString(
+                    entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(entityType).toString()))
+            .fields(List.of(getEntityJsonKey(entityType)))
+            .ids(uuids.stream().map(UUID::toString).map(List::of).toList());
+
+    boolean isCentralTenant = consortiaService.isTenantCentral(folioExecutionContext.getTenantId());
+
+    var response = queryClient.getContents(contentsRequest);
+    return getFqmResponseAsInputStream(
+        entityType, bulkOperationExecutionContents, operationId, isCentralTenant, response);
   }
 
   /**
@@ -158,67 +192,87 @@ public class FqmContentFetcher {
     int offset = chunk * chunkSize;
     int limit = Math.min(chunkSize, total - offset);
     var response = queryClient.getQuery(queryId, offset, limit).getContent();
+    return getFqmResponseAsInputStream(
+        entityType, bulkOperationExecutionContents, operationId, isCentralTenant, response);
+  }
+
+  private InputStream getFqmResponseAsInputStream(
+      EntityType entityType,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      UUID operationId,
+      boolean isCentralTenant,
+      List<Map<String, Object>> response) {
     return new ByteArrayInputStream(
         response.stream()
             .map(
-                json -> {
-                  try {
-                    if (isCentralTenant) {
-                      if (isInstance(entityType)
-                          && !SHARED.equalsIgnoreCase(
-                              ofNullable(json.get(FQM_INSTANCE_SHARED_KEY))
-                                  .map(Object::toString)
-                                  .orElse(EMPTY))) {
-                        addInstanceNoMatchFound(json, bulkOperationExecutionContents, operationId);
-                        return EMPTY;
-                      } else if (EntityType.USER.equals(entityType)
-                          && SHADOW.equalsIgnoreCase(
-                              ofNullable(json.get(FQM_USERS_TYPE_KEY))
-                                  .map(Object::toString)
-                                  .orElse(EMPTY))) {
-                        addShadowUserErrorContent(
-                            json, bulkOperationExecutionContents, operationId);
-                        return EMPTY;
-                      }
-                    }
-
-                    var jsonb = json.get(getEntityJsonKey(entityType));
-                    if (entityType == EntityType.USER) {
-                      return jsonb.toString();
-                    }
-                    var jsonNode = (ObjectNode) objectMapper.readTree(jsonb.toString());
-                    var tenant = json.get(getContentTenantKey(entityType));
-                    if (tenant == null) {
-                      checkForTenantFieldExistenceInEcs(
-                          jsonNode.get(ID).asText(), operationId, bulkOperationExecutionContents);
-                      tenant = folioExecutionContext.getTenantId();
-                    }
-                    jsonNode.put(TENANT_ID, tenant.toString());
-
-                    if (entityType == EntityType.ITEM) {
-                      processForItem(json, jsonNode);
-                    }
-
-                    if (entityType == EntityType.HOLDINGS_RECORD) {
-                      processForHoldingsRecord(json, jsonNode);
-                    }
-
-                    if (isInstance(entityType)) {
-                      processInstanceEntity(json, jsonNode);
-                    }
-
-                    ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
-                    extendedRecordWrapper.set(ENTITY, jsonNode);
-                    extendedRecordWrapper.put(TENANT_ID, tenant.toString());
-                    return objectMapper.writeValueAsString(extendedRecordWrapper);
-                  } catch (Exception e) {
-                    log.error("Error processing JSON content: {}", json, e);
-                    return EMPTY;
-                  }
-                })
+                json ->
+                    processFqmJson(
+                        entityType,
+                        bulkOperationExecutionContents,
+                        operationId,
+                        isCentralTenant,
+                        json))
             .filter(StringUtils::isNotEmpty)
             .collect(Collectors.joining(LINE_BREAK))
             .getBytes(StandardCharsets.UTF_8));
+  }
+
+  private String processFqmJson(
+      EntityType entityType,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      UUID operationId,
+      boolean isCentralTenant,
+      Map<String, Object> json) {
+    try {
+      if (isCentralTenant) {
+        if (isInstance(entityType)
+            && !SHARED.equalsIgnoreCase(
+                ofNullable(json.get(FQM_INSTANCE_SHARED_KEY))
+                    .map(Object::toString)
+                    .orElse(EMPTY))) {
+          addInstanceNoMatchFound(json, bulkOperationExecutionContents, operationId);
+          return EMPTY;
+        } else if (EntityType.USER.equals(entityType)
+            && SHADOW.equalsIgnoreCase(
+                ofNullable(json.get(FQM_USERS_TYPE_KEY)).map(Object::toString).orElse(EMPTY))) {
+          addShadowUserErrorContent(json, bulkOperationExecutionContents, operationId);
+          return EMPTY;
+        }
+      }
+
+      var jsonb = json.get(getEntityJsonKey(entityType));
+      if (entityType == EntityType.USER) {
+        return jsonb.toString();
+      }
+      var jsonNode = (ObjectNode) objectMapper.readTree(jsonb.toString());
+      var tenant = json.get(getContentTenantKey(entityType));
+      if (tenant == null) {
+        checkForTenantFieldExistenceInEcs(
+            jsonNode.get(ID).asText(), operationId, bulkOperationExecutionContents);
+        tenant = folioExecutionContext.getTenantId();
+      }
+      jsonNode.put(TENANT_ID, tenant.toString());
+
+      if (entityType == EntityType.ITEM) {
+        processForItem(json, jsonNode);
+      }
+
+      if (entityType == EntityType.HOLDINGS_RECORD) {
+        processForHoldingsRecord(json, jsonNode);
+      }
+
+      if (isInstance(entityType)) {
+        processInstanceEntity(json, jsonNode);
+      }
+
+      ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
+      extendedRecordWrapper.set(ENTITY, jsonNode);
+      extendedRecordWrapper.put(TENANT_ID, tenant.toString());
+      return objectMapper.writeValueAsString(extendedRecordWrapper);
+    } catch (Exception e) {
+      log.error("Error processing JSON content: {}", json, e);
+      return EMPTY;
+    }
   }
 
   private String getEntityJsonKey(EntityType entityType) {

@@ -100,7 +100,7 @@ class QueryServiceTest extends BaseTest {
       when(queryClient.executeQuery(any(SubmitQuery.class)))
           .thenReturn(new QueryIdentifier().queryId(fqlQueryId));
 
-      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      queryService.retrieveRecordsQueryFlowAsync(operation);
 
       var expectedPath = String.format(QUERY_FILENAME_TEMPLATE, operationId);
 
@@ -127,7 +127,7 @@ class QueryServiceTest extends BaseTest {
       when(queryClient.executeQuery(any(SubmitQuery.class)))
           .thenReturn(new QueryIdentifier().queryId(fqlQueryId));
 
-      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      queryService.retrieveRecordsQueryFlowAsync(operation);
 
       var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
       await()
@@ -172,7 +172,7 @@ class QueryServiceTest extends BaseTest {
       when(queryClient.executeQuery(any(SubmitQuery.class)))
           .thenReturn(new QueryIdentifier().queryId(fqlQueryId));
 
-      var result = queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      var result = queryService.retrieveRecordsQueryFlowAsync(operation);
 
       assertThat(result.getStatus()).isEqualTo(RETRIEVING_RECORDS);
       assertThat(result.getLinkToTriggeringCsvFile()).isNull();
@@ -181,7 +181,7 @@ class QueryServiceTest extends BaseTest {
 
   @Test
   @SneakyThrows
-  void shouldStartQueryOperation() {
+  void shouldCompleteBulkOperation() {
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       var queryId = UUID.randomUUID();
       var instanceJsonb = Files.readString(Path.of(INSTANCE_JSON_PATH));
@@ -259,12 +259,12 @@ class QueryServiceTest extends BaseTest {
       when(modesOfIssuanceClient.getById("068b5344-e2a6-40df-9186-1829e13cd344"))
           .thenReturn(modeOfIssuance);
 
-      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      queryService.retrieveRecordsQueryFlowAsync(operation);
 
       var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
       await()
           .untilAsserted(
-              () -> verify(bulkOperationRepository, times(4)).save(operationCaptor.capture()));
+              () -> verify(bulkOperationRepository, times(3)).save(operationCaptor.capture()));
       assertThat(operationCaptor.getValue().getStatus())
           .isEqualTo(OperationStatusType.DATA_MODIFICATION);
 
@@ -329,7 +329,7 @@ class QueryServiceTest extends BaseTest {
           .when(permissionsValidator)
           .checkPermissions(any(BulkOperation.class), any(BulkOperationsEntity.class));
 
-      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      queryService.retrieveRecordsQueryFlowAsync(operation);
 
       var operationCaptor = ArgumentCaptor.forClass(BulkOperation.class);
       var executionContentsCaptor = ArgumentCaptor.forClass(List.class);
@@ -405,7 +405,7 @@ class QueryServiceTest extends BaseTest {
       when(srsClient.getMarc(anyString(), anyString(), anyBoolean())).thenReturn(srsRecordsNode);
       when(remoteFileSystemClient.writer(any(String.class))).thenReturn(writer);
 
-      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      queryService.retrieveRecordsQueryFlowAsync(operation);
 
       await()
           .untilAsserted(
@@ -489,7 +489,7 @@ class QueryServiceTest extends BaseTest {
       when(srsClient.getMarc(anyString(), anyString(), anyBoolean())).thenReturn(srsRecordsNode);
       when(remoteFileSystemClient.writer(any(String.class))).thenReturn(writer);
 
-      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      queryService.retrieveRecordsQueryFlowAsync(operation);
 
       await()
           .untilAsserted(
@@ -569,7 +569,7 @@ class QueryServiceTest extends BaseTest {
       when(srsClient.getMarc(anyString(), anyString(), anyBoolean())).thenReturn(srsJson);
       when(remoteFileSystemClient.writer(any(String.class))).thenReturn(writer);
 
-      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      queryService.retrieveRecordsQueryFlowAsync(operation);
 
       await()
           .untilAsserted(
@@ -652,7 +652,7 @@ class QueryServiceTest extends BaseTest {
       when(readPermissionsValidator.isBulkEditReadPermissionExists(anyString(), any()))
           .thenReturn(true);
 
-      queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      queryService.retrieveRecordsQueryFlowAsync(operation);
 
       await()
           .untilAsserted(
@@ -692,7 +692,7 @@ class QueryServiceTest extends BaseTest {
   }
 
   @Test
-  void shouldFailBulkOperationOnException() {
+  void shouldFailAndSaveBulkOperationOnException() {
     var operationId = UUID.randomUUID();
     var fqlQueryId = UUID.randomUUID();
     var bulkOperation = BulkOperation.builder().id(operationId).fqlQueryId(fqlQueryId).build();

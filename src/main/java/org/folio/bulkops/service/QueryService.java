@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -71,7 +72,33 @@ public class QueryService {
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
-  public BulkOperation retrieveRecordsAndCheckQueryExecutionStatus(BulkOperation bulkOperation) {
+  public void retrieveAndStoreRecordsForIdentifiersFlowAsync(
+      List<UUID> uuids, BulkOperation bulkOperation) {
+    executor.execute(
+        getRunnableWithCurrentFolioContext(
+            () -> {
+              List<BulkOperationExecutionContent> bulkOperationExecutionContents =
+                  new ArrayList<>();
+              try (var is =
+                  fqmContentFetcher.contents(
+                      uuids,
+                      bulkOperation.getEntityType(),
+                      bulkOperationExecutionContents,
+                      bulkOperation.getId())) {
+                completeBulkOperation(is, bulkOperation, bulkOperationExecutionContents);
+              } catch (Exception e) {
+                var errorMessage =
+                    "Failed to save identifiers (FQM-based Identifiers Flow), reason: "
+                        + e.getMessage();
+                log.error(errorMessage);
+                failAndSaveBulkOperation(bulkOperation, errorMessage);
+              }
+            }));
+    bulkOperation.setStatus(RETRIEVING_RECORDS);
+    bulkOperationRepository.save(bulkOperation);
+  }
+
+  public BulkOperation retrieveRecordsQueryFlowAsync(BulkOperation bulkOperation) {
     executor.execute(
         getRunnableWithCurrentFolioContext(
             () -> {
@@ -83,7 +110,7 @@ public class QueryService {
                         bulkOperation.getId());
                 case SUCCESS -> {
                   if (queryResult.getTotalRecords() == 0) {
-                    failBulkOperation(bulkOperation, "No records found for the query");
+                    failAndSaveBulkOperation(bulkOperation, "No records found for the query");
                   } else {
                     bulkOperation.setTotalNumOfRecords(queryResult.getTotalRecords());
                     List<BulkOperationExecutionContent> bulkOperationExecutionContents =
@@ -95,16 +122,20 @@ public class QueryService {
                             queryResult.getTotalRecords(),
                             bulkOperationExecutionContents,
                             bulkOperation.getId())) {
-                      startQueryOperation(is, bulkOperation, bulkOperationExecutionContents);
+                      completeBulkOperation(is, bulkOperation, bulkOperationExecutionContents);
                     } catch (Exception e) {
-                      var errorMessage = "Failed to save identifiers, reason: " + e.getMessage();
+                      var errorMessage =
+                          "Failed to save identifiers (FQM-based Query Flow), "
+                              + "reason: "
+                              + e.getMessage();
                       log.error(errorMessage);
-                      failBulkOperation(bulkOperation, errorMessage);
+                      failAndSaveBulkOperation(bulkOperation, errorMessage);
                     }
                   }
                 }
-                case FAILED -> failBulkOperation(bulkOperation, queryResult.getFailureReason());
-                case CANCELLED -> cancelBulkOperation((bulkOperation));
+                case FAILED ->
+                    failAndSaveBulkOperation(bulkOperation, queryResult.getFailureReason());
+                case CANCELLED -> cancelAndSaveBulkOperation(bulkOperation);
                 default ->
                     throw new IllegalStateException("Unexpected value: " + queryResult.getStatus());
               }
@@ -130,11 +161,11 @@ public class QueryService {
     } catch (Exception e) {
       var errorMessage = "Failed to save identifiers, reason: " + e.getMessage();
       log.error(errorMessage);
-      failBulkOperation(bulkOperation, errorMessage);
+      failAndSaveBulkOperation(bulkOperation, errorMessage);
     }
   }
 
-  private void startQueryOperation(
+  private void completeBulkOperation(
       InputStream is,
       BulkOperation operation,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents) {
@@ -148,9 +179,6 @@ public class QueryService {
       var matchedCsvFileName =
           getMatchedFileName(
               operation.getId(), StringUtils.EMPTY, "Matched", triggeringCsvFileName, "csv");
-
-      operation.setStatus(RETRIEVING_RECORDS);
-      bulkOperationRepository.save(operation);
 
       processQueryResult(
           is,
@@ -180,6 +208,7 @@ public class QueryService {
           errorService.uploadErrorsToStorage(
               operation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, e.getMessage());
       operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
+      bulkOperationRepository.save(operation);
     }
   }
 
@@ -270,14 +299,14 @@ public class QueryService {
     bulkOperationRepository.save(operation);
   }
 
-  private void failBulkOperation(BulkOperation bulkOperation, String errorMessage) {
+  private void failAndSaveBulkOperation(BulkOperation bulkOperation, String errorMessage) {
     bulkOperation.setStatus(FAILED);
     bulkOperation.setErrorMessage(errorMessage);
     bulkOperation.setEndTime(LocalDateTime.now());
     bulkOperationRepository.save(bulkOperation);
   }
 
-  private void cancelBulkOperation(BulkOperation bulkOperation) {
+  private void cancelAndSaveBulkOperation(BulkOperation bulkOperation) {
     bulkOperation.setStatus(CANCELLED);
     bulkOperation.setErrorMessage("Query execution was cancelled");
     bulkOperation.setEndTime(LocalDateTime.now());

@@ -53,6 +53,7 @@ import org.folio.bulkops.processor.note.NoteProcessorFactory;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.rest.resource.BulkOperationsApi;
 import org.folio.bulkops.service.BulkOperationService;
+import org.folio.bulkops.service.EntityTypeService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.ListUsersService;
 import org.folio.bulkops.service.LogFilesService;
