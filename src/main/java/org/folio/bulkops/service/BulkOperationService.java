@@ -43,9 +43,13 @@ import com.opencsv.CSVWriterBuilder;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -188,6 +192,7 @@ public class BulkOperationService {
               .findById(operationId)
               .orElseThrow(
                   () -> new NotFoundException("Bulk operation was not found by id=" + operationId));
+      operation.setApproach(MANUAL);
     } else {
       operation =
           bulkOperationRepository.save(
@@ -196,6 +201,7 @@ public class BulkOperationService {
                   .entityType(entityType)
                   .identifierType(identifierType)
                   .status(NEW)
+                  .approach(IN_APP)
                   .startTime(LocalDateTime.now())
                   .build());
       if (multipartFile.isEmpty()) {
@@ -243,21 +249,21 @@ public class BulkOperationService {
     var operation = saveQueryBulkOperation(userId, queryRequest);
     if (fqmQueryApproach) {
       log.info("FQM query approach is enabled, starting FQM query operation");
-      operation = queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      return queryService.retrieveRecordsQueryFlowAsync(operation);
     } else {
       log.info("FQM query approach is disabled, starting identifiers query operation");
       queryService.saveIdentifiers(operation);
-      operation =
-          startBulkOperation(operation.getId(), userId, new BulkOperationStart().step(UPLOAD));
+      return startBulkOperation(operation.getId(), userId, new BulkOperationStart().step(UPLOAD));
     }
-    return operation;
   }
 
   private BulkOperation saveQueryBulkOperation(UUID userId, QueryRequest queryRequest) {
     return bulkOperationRepository.save(
         BulkOperation.builder()
             .id(UUID.randomUUID())
-            .entityType(entityTypeService.getEntityTypeById(queryRequest.getEntityTypeId()))
+            .entityType(
+                entityTypeService.getBulkOpsEntityTypeByFqmEntityTypeId(
+                    queryRequest.getEntityTypeId()))
             .approach(QUERY)
             .identifierType(IdentifierType.ID)
             .status(EXECUTING_QUERY)
@@ -671,7 +677,7 @@ public class BulkOperationService {
   public BulkOperation startBulkOperation(
       UUID bulkOperationId, UUID xokapiUserId, BulkOperationStart bulkOperationStart) {
     var step = bulkOperationStart.getStep();
-    var approach = bulkOperationStart.getApproach();
+    var bulkOperationApproach = bulkOperationStart.getApproach();
     BulkOperation operation =
         bulkOperationRepository
             .findById(bulkOperationId)
@@ -681,27 +687,57 @@ public class BulkOperationService {
     operation.setUserId(xokapiUserId);
 
     if (UPLOAD == step) {
+
       var numOfLines = remoteFileSystemClient.getNumOfLines(operation.getLinkToTriggeringCsvFile());
-      operation.setTotalNumOfRecords(numOfLines);
-      operation.setStatus(RETRIEVING_RECORDS);
-      executor.execute(
-          getRunnableWithCurrentFolioContext(
-              () -> {
-                try {
-                  log.info("Launching batch job");
-                  var jobLaunchRequest =
-                      new JobLaunchRequest(
-                          getBatchJob(operation), prepareJobParameters(operation, numOfLines));
-                  exportJobManagerSync.launchJob(jobLaunchRequest);
-                } catch (JobExecutionException e) {
-                  log.error(ERROR_STARTING_BULK_OPERATION, e);
-                  operation.setStatus(FAILED);
-                  operation.setErrorMessage(e.getMessage());
-                  operation.setEndTime(LocalDateTime.now());
-                  bulkOperationRepository.save(operation);
-                }
-              }));
-      return bulkOperationRepository.save(operation);
+
+      if (fqmQueryApproach) {
+
+        operation.setTotalNumOfRecords(numOfLines);
+
+        try (InputStream is = remoteFileSystemClient.get(operation.getLinkToTriggeringCsvFile());
+            BufferedReader reader =
+                new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+
+          var ids =
+              reader
+                  .lines()
+                  .map(id -> StringUtils.replace(id, "\"", ""))
+                  .map(UUID::fromString)
+                  .toList();
+
+          queryService.retrieveRecordsIdentifiersFlowAsync(ids, operation);
+
+        } catch (IOException e) {
+          log.error(ERROR_STARTING_BULK_OPERATION, e);
+          operation.setStatus(FAILED);
+          operation.setErrorMessage(e.getMessage());
+          operation.setEndTime(LocalDateTime.now());
+          bulkOperationRepository.save(operation);
+        }
+        return operation;
+
+      } else {
+        operation.setTotalNumOfRecords(numOfLines);
+        operation.setStatus(RETRIEVING_RECORDS);
+        executor.execute(
+            getRunnableWithCurrentFolioContext(
+                () -> {
+                  try {
+                    log.info("Launching batch job");
+                    var jobLaunchRequest =
+                        new JobLaunchRequest(
+                            getBatchJob(operation), prepareJobParameters(operation, numOfLines));
+                    exportJobManagerSync.launchJob(jobLaunchRequest);
+                  } catch (JobExecutionException e) {
+                    log.error(ERROR_STARTING_BULK_OPERATION, e);
+                    operation.setStatus(FAILED);
+                    operation.setErrorMessage(e.getMessage());
+                    operation.setEndTime(LocalDateTime.now());
+                    bulkOperationRepository.save(operation);
+                  }
+                }));
+        return bulkOperationRepository.save(operation);
+      }
     } else if (BulkOperationStep.EDIT == step) {
       errorService.deleteErrorsByBulkOperationId(bulkOperationId);
       operation.setCommittedNumOfErrors(0);
@@ -709,7 +745,7 @@ public class BulkOperationService {
       bulkOperationRepository.save(operation);
       if (DATA_MODIFICATION.equals(operation.getStatus())
           || REVIEW_CHANGES.equals(operation.getStatus())) {
-        if (MANUAL == approach) {
+        if (MANUAL == bulkOperationApproach) {
           executor.execute(getRunnableWithCurrentFolioContext(() -> apply(operation)));
         } else {
           logFilesService.removeModifiedFiles(operation);

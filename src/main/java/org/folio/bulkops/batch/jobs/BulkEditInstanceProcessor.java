@@ -172,7 +172,7 @@ public class BulkEditInstanceProcessor
       Instance instance) {
     if (consortiaService.isTenantMember(folioExecutionContext.getTenantId())
         && (CONSORTIUM_MARC.equals(instance.getSource())
-      || CONSORTIUM_FOLIO.equals(instance.getSource()))) {
+            || CONSORTIUM_FOLIO.equals(instance.getSource()))) {
       throw new BulkEditException(NO_MATCH_FOUND_MESSAGE);
     }
   }

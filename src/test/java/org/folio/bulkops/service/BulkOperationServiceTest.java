@@ -1617,7 +1617,7 @@ class BulkOperationServiceTest extends BaseTest {
     when(metadataProviderService.calculateProgress(anyList()))
         .thenReturn(new DataImportProgress().total(10).current(5));
 
-    when(queryService.retrieveRecordsAndCheckQueryExecutionStatus(any(BulkOperation.class)))
+    when(queryService.retrieveRecordsQueryFlowAsync(any(BulkOperation.class)))
         .thenReturn(experctedBulkOperation);
 
     var operation = bulkOperationService.getOperationById(operationId);
@@ -2093,9 +2093,11 @@ class BulkOperationServiceTest extends BaseTest {
             .id(bulkOperationId)
             .linkToTriggeringCsvFile(filename)
             .entityType(INSTANCE)
+            .approach(ApproachType.IN_APP)
             .identifierType(IdentifierType.ID)
             .build();
 
+    ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", false);
     when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
     when(remoteFileSystemClient.getNumOfLines(filename)).thenReturn(1);
 
@@ -2107,6 +2109,45 @@ class BulkOperationServiceTest extends BaseTest {
           .untilAsserted(() -> verify(exportJobManagerSync).launchJob(any(JobLaunchRequest.class)));
     }
   }
+
+  //  @Test
+  //  @SneakyThrows
+  //  void shouldLaunchQueryJobOnUploadStep() {
+  //    var bulkOperationId = UUID.randomUUID();
+  //    var filename = "file.csv";
+  //    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
+  //    var bulkOperation =
+  //        BulkOperation.builder()
+  //            .id(bulkOperationId)
+  //            .linkToTriggeringCsvFile(filename)
+  //            .entityType(INSTANCE)
+  //            .approach(ApproachType.IN_APP)
+  //            .identifierType(IdentifierType.ID)
+  //            .build();
+  //
+  //    ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", true);
+  //
+  // when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
+  //    when(remoteFileSystemClient.getNumOfLines(filename)).thenReturn(5);
+  //    when(remoteFileSystemClient.get(filename))
+  //        .thenReturn(
+  //            new ByteArrayInputStream(
+  //                ("\"1b74ab75-9f41-4837-8662-a1d99118008d\"\n"
+  //                        + "\"69640328-788e-43fc-9c3c-af39e243f3b7\"\n"
+  //                        + "\"549fad9e-7f8e-4d8e-9a71-00d251817866\"\n"
+  //                        + "\"00f10ab9-d845-4334-92d2-ff55862bf4f9\"\n"
+  //                        + "\"8be05cf5-fb4f-4752-8094-8e179d08fb99\"")
+  //                    .getBytes()));
+  //
+  //    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+  //      bulkOperationService.startBulkOperation(
+  //          bulkOperationId, UUID.randomUUID(), bulkOperationStart);
+  //
+  ////      await()
+  ////          .untilAsserted(() ->
+  // verify(exportJobManagerSync).launchJob(any(JobLaunchRequest.class)));
+  //    }
+  //  }
 
   @SneakyThrows
   @Test
@@ -2251,13 +2292,17 @@ class BulkOperationServiceTest extends BaseTest {
     try (var ignored = new FolioExecutionContextSetter(folioExecutionContext)) {
       // Arrange
       var operation =
-          BulkOperation.builder().id(UUID.randomUUID()).status(OperationStatusType.NEW).build();
+          BulkOperation.builder()
+              .id(UUID.randomUUID())
+              .status(OperationStatusType.NEW)
+              .approach(ApproachType.IN_APP)
+              .build();
 
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
       doNothing().when(queryService).saveIdentifiers(operation);
       when(bulkOperationRepository.findById(operation.getId())).thenReturn(Optional.of(operation));
       when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
-      when(entityTypeService.getEntityTypeById(any()))
+      when(entityTypeService.getBulkOpsEntityTypeByFqmEntityTypeId(any()))
           .thenReturn(mock(org.folio.bulkops.domain.dto.EntityType.class));
 
       // Set fqmQueryApproach to false
@@ -2281,7 +2326,7 @@ class BulkOperationServiceTest extends BaseTest {
         BulkOperation.builder().id(UUID.randomUUID()).status(OperationStatusType.NEW).build();
 
     when(bulkOperationRepository.save(any(BulkOperation.class))).thenReturn(operation);
-    when(queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation)).thenReturn(operation);
+    when(queryService.retrieveRecordsQueryFlowAsync(operation)).thenReturn(operation);
 
     // Set fqmQueryApproach to true
     ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", true);
