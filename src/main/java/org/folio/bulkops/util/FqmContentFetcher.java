@@ -242,6 +242,11 @@ public class FqmContentFetcher {
         }
       }
 
+      if (isSharedInstanceAndCurrentTenantIsMember(json, entityType)) {
+        addInstanceNoMatchFound(json, bulkOperationExecutionContents, operationId);
+        return EMPTY;
+      }
+
       var jsonb = json.get(getEntityJsonKey(entityType));
       if (entityType == EntityType.USER) {
         return jsonb.toString();
