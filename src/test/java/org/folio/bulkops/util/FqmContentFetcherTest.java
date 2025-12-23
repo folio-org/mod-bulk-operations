@@ -845,6 +845,22 @@ class FqmContentFetcherTest {
     }
   }
 
+  private QueryDetails getMockedData(int offset, int limit) {
+
+    try {
+      var mapper = new ObjectMapper();
+      var is = getClass().getClassLoader().getResourceAsStream("fqmClient/fqmClientResponse.json");
+      var data = mapper.readValue(is, new TypeReference<QueryDetails>() {});
+
+      Assertions.assertNotNull(data.getContent());
+      var content = data.getContent().stream().skip(offset).limit(limit).toList();
+
+      return data.content(content);
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to load FQM response data for testing", e);
+    }
+  }
+
   // Helper for mocking QueryDetails for each EntityType
   private QueryDetails getMockedDataForEntityType(EntityType entityType, int total) {
     var details = new QueryDetails();
