@@ -705,7 +705,7 @@ public class BulkOperationService {
                   .map(UUID::fromString)
                   .toList();
 
-          queryService.retrieveAndStoreRecordsForIdentifiersFlowAsync(ids, operation);
+          queryService.retrieveRecordsIdentifiersFlowAsync(ids, operation);
 
         } catch (IOException e) {
           log.error(ERROR_STARTING_BULK_OPERATION, e);

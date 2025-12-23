@@ -51,6 +51,7 @@ import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.util.CsvHelper;
 import org.folio.bulkops.util.FqmContentFetcher;
+import org.folio.querytool.domain.dto.QueryDetails;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -72,8 +73,7 @@ public class QueryService {
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
 
-  public void retrieveAndStoreRecordsForIdentifiersFlowAsync(
-      List<UUID> uuids, BulkOperation bulkOperation) {
+  public void retrieveRecordsIdentifiersFlowAsync(List<UUID> uuids, BulkOperation bulkOperation) {
     executor.execute(
         getRunnableWithCurrentFolioContext(
             () -> {
@@ -102,7 +102,7 @@ public class QueryService {
     executor.execute(
         getRunnableWithCurrentFolioContext(
             () -> {
-              var queryResult = queryClient.getQuery(bulkOperation.getFqlQueryId(), true);
+              var queryResult = getQueryResult(bulkOperation);
               switch (queryResult.getStatus()) {
                 case IN_PROGRESS ->
                     log.info(
@@ -112,6 +112,7 @@ public class QueryService {
                   if (queryResult.getTotalRecords() == 0) {
                     failAndSaveBulkOperation(bulkOperation, "No records found for the query");
                   } else {
+                    bulkOperation.setStatus(RETRIEVING_RECORDS);
                     bulkOperation.setTotalNumOfRecords(queryResult.getTotalRecords());
                     List<BulkOperationExecutionContent> bulkOperationExecutionContents =
                         new ArrayList<>();
@@ -140,9 +141,12 @@ public class QueryService {
                     throw new IllegalStateException("Unexpected value: " + queryResult.getStatus());
               }
             }));
-    bulkOperation.setStatus(RETRIEVING_RECORDS);
     bulkOperationRepository.save(bulkOperation);
     return bulkOperation;
+  }
+
+  protected QueryDetails getQueryResult(BulkOperation bulkOperation) {
+    return queryClient.getQuery(bulkOperation.getFqlQueryId(), true);
   }
 
   public void saveIdentifiers(BulkOperation bulkOperation) {
@@ -165,7 +169,7 @@ public class QueryService {
     }
   }
 
-  private void completeBulkOperation(
+  protected void completeBulkOperation(
       InputStream is,
       BulkOperation operation,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents) {
@@ -212,7 +216,7 @@ public class QueryService {
     }
   }
 
-  private void processQueryResult(
+  protected void processQueryResult(
       InputStream is,
       String triggeringCsvFileName,
       String matchedCsvFileName,
