@@ -1,6 +1,7 @@
 package org.folio.bulkops.util;
 
 import static java.lang.String.join;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
@@ -282,7 +283,7 @@ public class FqmContentFetcher {
       throw ie;
     } catch (Exception ex) {
       fail(error, executor, ex, false);
-      return null;
+      return emptyList();
     }
   }
 

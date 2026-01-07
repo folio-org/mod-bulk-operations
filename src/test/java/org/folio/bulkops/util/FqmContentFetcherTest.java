@@ -760,22 +760,6 @@ class FqmContentFetcherTest {
     assertThat(contents).isEmpty();
   }
 
-  private QueryDetails getMockedData(int offset, int limit) {
-
-    try {
-      var mapper = new ObjectMapper();
-      var is = getClass().getClassLoader().getResourceAsStream("fqmClient/fqmClientResponse.json");
-      var data = mapper.readValue(is, new TypeReference<QueryDetails>() {});
-
-      Assertions.assertNotNull(data.getContent());
-      var content = data.getContent().stream().skip(offset).limit(limit).toList();
-
-      return data.content(content);
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to load FQM response data for testing", e);
-    }
-  }
-
   @Test
   void fetchShouldFilterSharedInstanceWhenMemberTenantWithInstanceType() throws Exception {
     final var queryId = UUID.randomUUID();
