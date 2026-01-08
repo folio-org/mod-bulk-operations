@@ -255,7 +255,11 @@ class BulkEditInstanceProcessorTest {
     ItemIdentifier identifier = new ItemIdentifier().withItemId("1001");
     String instanceId = "consortium-instance-1";
     Instance instance =
-        Instance.builder().id(instanceId).source("CONSORTIUM-MARC").title("Consortium title").build();
+        Instance.builder()
+            .id(instanceId)
+            .source("CONSORTIUM-MARC")
+            .title("Consortium title")
+            .build();
 
     when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
         .thenReturn(
@@ -274,7 +278,11 @@ class BulkEditInstanceProcessorTest {
     ItemIdentifier identifier = new ItemIdentifier().withItemId("1006");
     String instanceId = "consortium-instance-3";
     Instance instance =
-        Instance.builder().id(instanceId).source("CONSORTIUM-FOLIO").title("Consortium title").build();
+        Instance.builder()
+            .id(instanceId)
+            .source("CONSORTIUM-FOLIO")
+            .title("Consortium title")
+            .build();
 
     when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
         .thenReturn(
@@ -340,7 +348,11 @@ class BulkEditInstanceProcessorTest {
     ItemIdentifier identifier = new ItemIdentifier().withItemId("1004");
     String instanceId = "consortium-instance-2";
     Instance instance =
-        Instance.builder().id(instanceId).source("CONSORTIUM-MARC").title("Consortium title").build();
+        Instance.builder()
+            .id(instanceId)
+            .source("CONSORTIUM-MARC")
+            .title("Consortium title")
+            .build();
 
     when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
         .thenReturn(
@@ -360,7 +372,11 @@ class BulkEditInstanceProcessorTest {
     ItemIdentifier identifier = new ItemIdentifier().withItemId("1007");
     String instanceId = "consortium-instance-4";
     Instance instance =
-        Instance.builder().id(instanceId).source("CONSORTIUM-FOLIO").title("Consortium title").build();
+        Instance.builder()
+            .id(instanceId)
+            .source("CONSORTIUM-FOLIO")
+            .title("Consortium title")
+            .build();
 
     when(instanceClient.getInstanceByQuery(anyString(), anyLong()))
         .thenReturn(
