@@ -428,10 +428,9 @@ class QueryServiceTest {
 
   @ParameterizedTest
   @EnumSource(
-      value = org.folio.bulkops.domain.dto.ApproachType.class,
+      value = ApproachType.class,
       names = {"QUERY", "IN_APP"})
-  void shouldCompleteBulkOperationWithMatchedRecords(
-      org.folio.bulkops.domain.dto.ApproachType approachType) throws Exception {
+  void shouldCompleteBulkOperationWithMatchedRecords(ApproachType approachType) throws Exception {
     var bulkOperationId = UUID.fromString("915f86ba-4536-4f67-a6a4-59aa96a3d823");
     var bulkOperation =
         BulkOperation.builder()
