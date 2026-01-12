@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.3.6</version>
+    <version>3.3.13</version>
     <relativePath /> <!-- lookup parent from repository -->
   </parent>
 
@@ -282,6 +282,19 @@
       <groupId>org.folio</groupId>
       <artifactId>folio-s3-client</artifactId>
       <version>${folio-s3-client.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.minio</groupId>
+      <artifactId>minio</artifactId>
+      <version>8.6.0</version>
+      <exclusions>
+        <exclusion>
+          <!-- exclude incompatible okhttp 5 -->
+          <groupId>com.squareup.okhttp3</groupId>
+          <artifactId>okhttp</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>
