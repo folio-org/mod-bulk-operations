@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static java.util.Objects.isNull;
 import static java.util.UUID.fromString;
+import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.domain.dto.OperationStatusType.CANCELLED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
@@ -183,7 +184,10 @@ public class QueryService {
       Set<UUID> uuids,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents) {
     try {
-      var triggeringCsvFileName = String.format(QUERY_FILENAME_TEMPLATE, operation.getId());
+      var triggeringCsvFileName =
+          QUERY == operation.getApproach()
+              ? String.format(QUERY_FILENAME_TEMPLATE, operation.getId())
+              : operation.getLinkToTriggeringCsvFile();
       var matchedJsonFileName =
           getMatchedFileName(operation.getId(), "json/", "Matched", triggeringCsvFileName, "json");
       var matchedMrcFileName =

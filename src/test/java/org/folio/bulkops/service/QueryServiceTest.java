@@ -4,6 +4,7 @@ import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
@@ -41,10 +42,12 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.dto.ApproachType;
+import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
@@ -56,6 +59,8 @@ import org.folio.spring.scope.FolioExecutionScopeExecutionContextManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -123,7 +128,7 @@ class QueryServiceTest {
 
     assertThat(bulkOperation.getLinkToTriggeringCsvFile()).isEqualTo(expectedPath);
     assertThat(bulkOperation.getStatus()).isEqualTo(SAVED_IDENTIFIERS);
-    assertThat(bulkOperation.getApproach()).isEqualTo(ApproachType.QUERY);
+    assertThat(bulkOperation.getApproach()).isEqualTo(QUERY);
   }
 
   @Test
@@ -148,7 +153,8 @@ class QueryServiceTest {
     var bulkOperation =
         BulkOperation.builder()
             .id(randomUUID())
-            .entityType(org.folio.bulkops.domain.dto.EntityType.INSTANCE)
+            .entityType(EntityType.INSTANCE)
+            .approach(QUERY)
             .build();
 
     var contents = new ArrayList<BulkOperationExecutionContent>();
@@ -189,7 +195,8 @@ class QueryServiceTest {
     var bulkOperation =
         BulkOperation.builder()
             .id(randomUUID())
-            .entityType(org.folio.bulkops.domain.dto.EntityType.INSTANCE)
+            .entityType(EntityType.INSTANCE)
+            .approach(ApproachType.QUERY)
             .build();
 
     var contents = new ArrayList<BulkOperationExecutionContent>();
@@ -226,7 +233,8 @@ class QueryServiceTest {
     var bulkOperation =
         BulkOperation.builder()
             .id(randomUUID())
-            .entityType(org.folio.bulkops.domain.dto.EntityType.INSTANCE)
+            .entityType(EntityType.INSTANCE)
+            .approach(ApproachType.QUERY)
             .build();
 
     var contents = new ArrayList<BulkOperationExecutionContent>();
@@ -264,7 +272,7 @@ class QueryServiceTest {
   void shouldInvokeCompleteBulkOperation_whenContentsProvided() {
     var bulkOperation = new BulkOperation();
     bulkOperation.setId(randomUUID());
-    bulkOperation.setEntityType(org.folio.bulkops.domain.dto.EntityType.ITEM);
+    bulkOperation.setEntityType(EntityType.ITEM);
 
     var uuids = List.of(randomUUID(), randomUUID(), randomUUID());
 
@@ -296,7 +304,7 @@ class QueryServiceTest {
   void shouldFailAndNotInvokeCompleteBulkOperation_whenContentsThrows() {
     var bulkOperation = new BulkOperation();
     bulkOperation.setId(randomUUID());
-    bulkOperation.setEntityType(org.folio.bulkops.domain.dto.EntityType.ITEM);
+    bulkOperation.setEntityType(EntityType.ITEM);
     var uuids = List.of(randomUUID());
 
     QueryService queryServiceSpy = spy(service);
@@ -418,11 +426,76 @@ class QueryServiceTest {
     verify(queryServiceSpy, never()).completeBulkOperation(any(), any(), anySet(), anyList());
   }
 
+  @ParameterizedTest
+  @EnumSource(
+      value = ApproachType.class,
+      names = {"QUERY", "IN_APP"})
+  void shouldCompleteBulkOperationWithMatchedRecords(ApproachType approachType) throws Exception {
+    var bulkOperationId = UUID.fromString("915f86ba-4536-4f67-a6a4-59aa96a3d823");
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(bulkOperationId)
+            .approach(approachType)
+            .linkToTriggeringCsvFile(
+                approachType != QUERY ? bulkOperationId + "/some-link.csv" : null)
+            .build();
+    var uuids = Set.of(randomUUID(), randomUUID());
+    var contents = new ArrayList<BulkOperationExecutionContent>();
+    InputStream is = new ByteArrayInputStream("[]".getBytes());
+
+    var queryServiceSpy = spy(service);
+
+    doAnswer(
+            invocation -> {
+              BulkOperation operation = invocation.getArgument(5);
+              operation.setMatchedNumOfRecords(2);
+              return null;
+            })
+        .when(queryServiceSpy)
+        .processAsyncQueryResult(
+            same(is),
+            anyString(),
+            anyString(),
+            anyString(),
+            anyString(),
+            same(bulkOperation),
+            same(uuids),
+            same(contents));
+
+    queryServiceSpy.completeBulkOperation(is, bulkOperation, uuids, contents);
+
+    assertThat(bulkOperation.getStatus()).isEqualTo(DATA_MODIFICATION);
+
+    if (approachType == QUERY) {
+      assertThat(bulkOperation.getLinkToTriggeringCsvFile())
+          .isEqualTo(
+              "915f86ba-4536-4f67-a6a4-59aa96a3d823/"
+                  + "Query-915f86ba-4536-4f67-a6a4-59aa96a3d823.csv");
+      assertThat(bulkOperation.getLinkToMatchedRecordsCsvFile())
+          .isEqualTo(
+              "915f86ba-4536-4f67-a6a4-59aa96a3d823/"
+                  + "2026-01-12-Matched-Records-Query-915f86ba-4536-4f67-a6a4-59aa96a3d823.csv");
+    } else {
+      assertThat(bulkOperation.getLinkToTriggeringCsvFile())
+          .isEqualTo("915f86ba-4536-4f67-a6a4-59aa96a3d823/some-link.csv");
+      assertThat(bulkOperation.getLinkToMatchedRecordsCsvFile())
+          .isEqualTo(
+              "915f86ba-4536-4f67-a6a4-59aa96a3d823/" + "2026-01-12-Matched-Records-some-link.csv");
+      assertThat(bulkOperation.getLinkToMatchedRecordsJsonFile())
+          .isEqualTo(
+              "915f86ba-4536-4f67-a6a4-59aa96a3d823/"
+                  + "json/2026-01-12-Matched-Records-some-link.json");
+    }
+
+    assertThat(bulkOperation.getEndTime()).isNotNull();
+    verify(bulkOperationRepository).save(bulkOperation);
+  }
+
   private BulkOperation baseBulkOperation() {
     var bulkOperation = new BulkOperation();
     bulkOperation.setId(randomUUID());
     bulkOperation.setFqlQueryId(randomUUID());
-    bulkOperation.setEntityType(org.folio.bulkops.domain.dto.EntityType.ITEM);
+    bulkOperation.setEntityType(EntityType.ITEM);
     return bulkOperation;
   }
 

@@ -74,7 +74,6 @@ import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.Instance;
-import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -708,14 +707,7 @@ public class BulkOperationService {
                       id = removeStart(removeEnd(id, "\""), "\"");
                       ids.add(UUID.fromString(id));
                     } catch (Exception e) {
-                      bulkOperationExecutionContents.add(
-                          BulkOperationExecutionContent.builder()
-                              .identifier(id)
-                              .bulkOperationId(operation.getId())
-                              .state(StateType.FAILED)
-                              .errorType(ErrorType.ERROR)
-                              .errorMessage("Invalid identifier format")
-                              .build());
+                      // ignore invalid uuid - it will be processed later as "No match found"
                     }
                   });
 
