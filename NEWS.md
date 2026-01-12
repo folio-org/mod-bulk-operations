@@ -1,3 +1,10 @@
+## v2.1.17 - Release 2026-01-12
+
+This release contains security bug fixes.
+
+### Bugs
+* [MODBULKOPS-611](https://folio-org.atlassian.net/browse/MODBULKOPS-611) Spring Boot 3.3.13, MinIO 8.6.0 fixing vulns
+
 ## v2.1.16 - Released 2025/09/24
 
 This release contains bug fix.
