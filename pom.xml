@@ -53,7 +53,7 @@
     <jsonPath.version>2.9.0</jsonPath.version>
 
     <!-- Test dependencies versions -->
-    <testcontainer.version>1.21.3</testcontainer.version>
+    <testcontainer.version>1.21.4</testcontainer.version>
     <wiremock.version>2.35.2</wiremock.version>
     <awaitility.version>4.3.0</awaitility.version>
 
