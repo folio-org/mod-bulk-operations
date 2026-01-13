@@ -30,6 +30,7 @@ import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.FILE_UPLOAD_ERROR;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.MARC;
+import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
 import static org.folio.bulkops.util.ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE;
@@ -74,6 +75,7 @@ import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.Instance;
+import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -707,7 +709,15 @@ public class BulkOperationService {
                       id = removeStart(removeEnd(id, "\""), "\"");
                       ids.add(UUID.fromString(id));
                     } catch (Exception e) {
-                      // ignore invalid uuid - it will be processed later as "No match found"
+                      // saving invalid UUID identifiers as "No match found"
+                      bulkOperationExecutionContents.add(
+                          BulkOperationExecutionContent.builder()
+                              .identifier(id)
+                              .bulkOperationId(operation.getId())
+                              .state(StateType.FAILED)
+                              .errorType(ErrorType.ERROR)
+                              .errorMessage(NO_MATCH_FOUND_MESSAGE)
+                              .build());
                     }
                   });
 
