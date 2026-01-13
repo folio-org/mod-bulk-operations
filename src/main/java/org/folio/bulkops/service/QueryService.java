@@ -197,7 +197,7 @@ public class QueryService {
           getMatchedFileName(
               operation.getId(), StringUtils.EMPTY, "Matched", triggeringCsvFileName, "csv");
 
-      processAsyncQueryResult(
+      processFqmResults(
           is,
           triggeringCsvFileName,
           matchedCsvFileName,
@@ -243,7 +243,7 @@ public class QueryService {
    *     empty for the Query Flow)
    * @param bulkOperationExecutionContents - the list of bulk operation execution contents
    */
-  protected void processAsyncQueryResult(
+  protected void processFqmResults(
       InputStream is,
       String triggeringCsvFileName,
       String matchedCsvFileName,
@@ -253,94 +253,104 @@ public class QueryService {
       Set<UUID> uuids,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents)
       throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
-    try (var writerForTriggeringCsvFile = remoteFileSystemClient.writer(triggeringCsvFileName);
-        var writerForResultCsvFile = remoteFileSystemClient.writer(matchedCsvFileName);
-        var writerForResultJsonFile = remoteFileSystemClient.writer(matchedJsonFileName);
-        var writerForResultMrcFile = remoteFileSystemClient.writer(matchedMrcFileName)) {
-      var entityClass = resolveEntityClass(operation.getEntityType());
-      var extendedEntityClass = resolveExtendedEntityClass(operation.getEntityType());
-      var csvWriter = new BulkOperationsEntityCsvWriter(writerForResultCsvFile, entityClass);
+    Writer writerForTriggeringCsvFile = null;
+    try {
+      if (ApproachType.QUERY == operation.getApproach()) {
+        writerForTriggeringCsvFile = remoteFileSystemClient.writer(triggeringCsvFileName);
+      }
+      try (var writerForResultCsvFile = remoteFileSystemClient.writer(matchedCsvFileName);
+          var writerForResultJsonFile = remoteFileSystemClient.writer(matchedJsonFileName);
+          var writerForResultMrcFile = remoteFileSystemClient.writer(matchedMrcFileName)) {
+        var entityClass = resolveEntityClass(operation.getEntityType());
+        var extendedEntityClass = resolveExtendedEntityClass(operation.getEntityType());
+        var csvWriter = new BulkOperationsEntityCsvWriter(writerForResultCsvFile, entityClass);
 
-      int numMatched = 0;
-      int numProcessed = 0;
-      var factory = objectMapper.getFactory();
-      var parser = factory.createParser(is);
-      var iterator = objectMapper.readValues(parser, extendedEntityClass);
-      Set<String> usedTenants = new HashSet<>();
-      Set<UUID> processedRecordUuids = new HashSet<>();
-      while (iterator.hasNext()) {
+        int numMatched = 0;
+        int numProcessed = 0;
+        var factory = objectMapper.getFactory();
+        var parser = factory.createParser(is);
+        var iterator = objectMapper.readValues(parser, extendedEntityClass);
+        Set<String> usedTenants = new HashSet<>();
+        Set<UUID> processedRecordUuids = new HashSet<>();
+        while (iterator.hasNext()) {
 
-        var extendedRecord = iterator.next();
-        if (extendedRecord.getRecordBulkOperationEntity() instanceof Item item) {
-          localReferenceDataService.enrichWithTenant(item, extendedRecord.getTenant());
-        }
-        if (extendedRecord.getRecordBulkOperationEntity()
-            instanceof HoldingsRecord holdingsRecord) {
-          localReferenceDataService.enrichWithTenant(holdingsRecord, extendedRecord.getTenant());
-        }
+          var extendedRecord = iterator.next();
+          if (extendedRecord.getRecordBulkOperationEntity() instanceof Item item) {
+            localReferenceDataService.enrichWithTenant(item, extendedRecord.getTenant());
+          }
+          if (extendedRecord.getRecordBulkOperationEntity()
+              instanceof HoldingsRecord holdingsRecord) {
+            localReferenceDataService.enrichWithTenant(holdingsRecord, extendedRecord.getTenant());
+          }
 
-        usedTenants.add(extendedRecord.getTenant());
+          usedTenants.add(extendedRecord.getTenant());
 
-        try {
-          permissionsValidator.checkPermissions(operation, extendedRecord);
+          try {
+            permissionsValidator.checkPermissions(operation, extendedRecord);
 
-          if (extendedRecord.isMarcInstance()) {
-            processQueryResultForMarc(
-                extendedRecord.getRecordBulkOperationEntity(),
-                writerForResultMrcFile,
+            if (extendedRecord.isMarcInstance()) {
+              processQueryResultForMarc(
+                  extendedRecord.getRecordBulkOperationEntity(),
+                  writerForResultMrcFile,
+                  operation,
+                  matchedMrcFileName);
+            }
+
+            var extendedRecordAsJsonString = objectMapper.writeValueAsString(extendedRecord);
+
+            writerForResultJsonFile.append(extendedRecordAsJsonString);
+            CsvHelper.writeBeanToCsv(
                 operation,
-                matchedMrcFileName);
+                csvWriter,
+                extendedRecord.getRecordBulkOperationEntity(),
+                bulkOperationExecutionContents);
+            numMatched++;
+          } catch (UploadFromQueryException e) {
+            handleError(
+                bulkOperationExecutionContents,
+                e,
+                extendedRecord.getRecordBulkOperationEntity(),
+                operation);
+          } finally {
+            if (writerForTriggeringCsvFile != null) {
+              writerForTriggeringCsvFile.write(
+                  extendedRecord.getRecordBulkOperationEntity().getId() + NEW_LINE_SEPARATOR);
+            }
           }
+          ++numProcessed;
 
-          var extendedRecordAsJsonString = objectMapper.writeValueAsString(extendedRecord);
+          processedRecordUuids.add(
+              fromString(extendedRecord.getRecordBulkOperationEntity().getId()));
 
-          writerForResultJsonFile.append(extendedRecordAsJsonString);
-          CsvHelper.writeBeanToCsv(
-              operation,
-              csvWriter,
-              extendedRecord.getRecordBulkOperationEntity(),
-              bulkOperationExecutionContents);
-          numMatched++;
-        } catch (UploadFromQueryException e) {
-          handleError(
-              bulkOperationExecutionContents,
-              e,
-              extendedRecord.getRecordBulkOperationEntity(),
-              operation);
-        } finally {
-          if (ApproachType.QUERY == operation.getApproach()) {
-            writerForTriggeringCsvFile.write(
-                extendedRecord.getRecordBulkOperationEntity().getId() + NEW_LINE_SEPARATOR);
+          if (numProcessed % STATISTICS_UPDATING_STEP == 0) {
+            updateOperationExecutionStatus(operation, numProcessed, numMatched);
           }
         }
-        ++numProcessed;
 
-        processedRecordUuids.add(fromString(extendedRecord.getRecordBulkOperationEntity().getId()));
+        if (CollectionUtils.isNotEmpty(uuids)) {
+          SetUtils.difference(uuids, processedRecordUuids)
+              .forEach(
+                  missingId ->
+                      bulkOperationExecutionContents.add(
+                          BulkOperationExecutionContent.builder()
+                              .identifier(missingId.toString())
+                              .bulkOperationId(operation.getId())
+                              .state(StateType.FAILED)
+                              .errorType(ErrorType.ERROR)
+                              .errorMessage(NO_MATCH_FOUND_MESSAGE)
+                              .build()));
+        }
 
-        if (numProcessed % STATISTICS_UPDATING_STEP == 0) {
+        operation.setUsedTenants(new ArrayList<>(usedTenants));
+        if (numProcessed % STATISTICS_UPDATING_STEP != 0) {
           updateOperationExecutionStatus(operation, numProcessed, numMatched);
         }
+        errorService.saveErrorsAfterQuery(bulkOperationExecutionContents, operation);
       }
-
-      if (CollectionUtils.isNotEmpty(uuids)) {
-        SetUtils.difference(uuids, processedRecordUuids)
-            .forEach(
-                missingId ->
-                    bulkOperationExecutionContents.add(
-                        BulkOperationExecutionContent.builder()
-                            .identifier(missingId.toString())
-                            .bulkOperationId(operation.getId())
-                            .state(StateType.FAILED)
-                            .errorType(ErrorType.ERROR)
-                            .errorMessage(NO_MATCH_FOUND_MESSAGE)
-                            .build()));
+    } finally {
+      if (writerForTriggeringCsvFile != null) {
+        writerForTriggeringCsvFile.close();
       }
-
-      operation.setUsedTenants(new ArrayList<>(usedTenants));
-      if (numProcessed % STATISTICS_UPDATING_STEP != 0) {
-        updateOperationExecutionStatus(operation, numProcessed, numMatched);
-      }
-      errorService.saveErrorsAfterQuery(bulkOperationExecutionContents, operation);
     }
   }
 
