@@ -169,7 +169,7 @@ class QueryServiceTest {
               return null;
             })
         .when(queryServiceSpy)
-        .processFqmResults(
+        .processAsyncQueryResult(
             any(),
             anyString(),
             anyString(),
@@ -211,7 +211,7 @@ class QueryServiceTest {
               return null;
             })
         .when(queryServiceSpy)
-        .processFqmResults(
+        .processAsyncQueryResult(
             any(),
             anyString(),
             anyString(),
@@ -244,7 +244,7 @@ class QueryServiceTest {
     QueryService queryServiceSpy = spy(service);
     doThrow(new RuntimeException("kaboom"))
         .when(queryServiceSpy)
-        .processFqmResults(
+        .processAsyncQueryResult(
             any(),
             anyString(),
             anyString(),
@@ -453,7 +453,7 @@ class QueryServiceTest {
               return null;
             })
         .when(queryServiceSpy)
-        .processFqmResults(
+        .processAsyncQueryResult(
             same(is),
             anyString(),
             anyString(),

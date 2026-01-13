@@ -197,7 +197,7 @@ public class QueryService {
           getMatchedFileName(
               operation.getId(), StringUtils.EMPTY, "Matched", triggeringCsvFileName, "csv");
 
-      processFqmResults(
+      processAsyncQueryResult(
           is,
           triggeringCsvFileName,
           matchedCsvFileName,
@@ -243,7 +243,7 @@ public class QueryService {
    *     empty for the Query Flow)
    * @param bulkOperationExecutionContents - the list of bulk operation execution contents
    */
-  protected void processFqmResults(
+  protected void processAsyncQueryResult(
       InputStream is,
       String triggeringCsvFileName,
       String matchedCsvFileName,
