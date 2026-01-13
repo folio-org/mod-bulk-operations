@@ -39,6 +39,7 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -474,17 +475,22 @@ class QueryServiceTest {
       assertThat(bulkOperation.getLinkToMatchedRecordsCsvFile())
           .isEqualTo(
               "915f86ba-4536-4f67-a6a4-59aa96a3d823/"
-                  + "2026-01-12-Matched-Records-Query-915f86ba-4536-4f67-a6a4-59aa96a3d823.csv");
+                  + LocalDate.now()
+                  + "-Matched-Records-Query-915f86ba-4536-4f67-a6a4-59aa96a3d823.csv");
     } else {
       assertThat(bulkOperation.getLinkToTriggeringCsvFile())
           .isEqualTo("915f86ba-4536-4f67-a6a4-59aa96a3d823/some-link.csv");
       assertThat(bulkOperation.getLinkToMatchedRecordsCsvFile())
           .isEqualTo(
-              "915f86ba-4536-4f67-a6a4-59aa96a3d823/" + "2026-01-12-Matched-Records-some-link.csv");
+              "915f86ba-4536-4f67-a6a4-59aa96a3d823/"
+                  + LocalDate.now()
+                  + "-Matched-Records-some-link.csv");
       assertThat(bulkOperation.getLinkToMatchedRecordsJsonFile())
           .isEqualTo(
               "915f86ba-4536-4f67-a6a4-59aa96a3d823/"
-                  + "json/2026-01-12-Matched-Records-some-link.json");
+                  + "json/"
+                  + LocalDate.now()
+                  + "-Matched-Records-some-link.json");
     }
 
     assertThat(bulkOperation.getEndTime()).isNotNull();
