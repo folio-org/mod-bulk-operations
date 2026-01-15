@@ -2,7 +2,6 @@ package org.folio.bulkops;
 
 import static java.lang.String.format;
 import static org.folio.bulkops.processor.folio.UserDataProcessor.DATE_TIME_FORMAT;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -93,28 +92,15 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest(
-    webEnvironment = RANDOM_PORT,
-    properties = {
-        "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
-        "spring.kafka.listener.auto-startup=false"
-    }
-)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ContextConfiguration(initializers = BaseTest.Initializer.class)
 @Testcontainers
 @AutoConfigureMockMvc
 @Log4j2
 @DirtiesContext(classMode= DirtiesContext.ClassMode.AFTER_CLASS)
-@EmbeddedKafka(
-    topics = { "folio.Default.diku.DI_JOB_COMPLETED" },
-    partitions = 1,
-    brokerProperties = {
-        "listeners=PLAINTEXT://localhost:0",
-        "auto.create.topics.enable=true",
-        "controlled.shutdown.enable=false"
-    }
-)
+@EmbeddedKafka(topics = { "folio.Default.diku.DI_JOB_COMPLETED" })
+@EnableKafka
 public abstract class BaseTest {
   public static final String S3_ACCESS_KEY = "minio-access-key";
   public static final String S3_SECRET_KEY = "minio-secret-key";
