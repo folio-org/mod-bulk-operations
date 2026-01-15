@@ -1,3 +1,7 @@
+## v2.2.9 - Released 2026/01/15
+
+This release contains dependency updates to address security vulnerabilities.
+
 ## v2.2.8 - Released 2025/11/20
 
 This release contains new schema update for instances.
