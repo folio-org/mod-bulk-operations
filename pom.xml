@@ -69,6 +69,20 @@
   </properties>
 
   <dependencies>
+
+    <dependency>
+      <groupId>io.minio</groupId>
+      <artifactId>minio</artifactId>
+      <version>8.6.0</version>
+      <exclusions>
+        <exclusion>
+          <!-- exclude incompatible okhttp 5 -->
+          <groupId>com.squareup.okhttp3</groupId>
+          <artifactId>okhttp</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
     <dependency>
       <groupId>org.folio</groupId>
       <artifactId>folio-spring-base</artifactId>
