@@ -1,3 +1,9 @@
+## v2.2.9 - Release 2026-01-16
+
+This release contains bug fixs.
+
+* [MODBULKOPS-612](https://folio-org.atlassian.net/browse/MODBULKOPS-612) Spring Boot 3.4.13 + folio-s3-client 2.3.1 fixing vulns
+
 ## v2.2.8 - Released 2025/11/20
 
 This release contains new schema update for instances.
