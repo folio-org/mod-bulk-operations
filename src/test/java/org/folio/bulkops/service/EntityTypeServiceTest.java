@@ -6,11 +6,11 @@ import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 import org.folio.bulkops.client.EntityTypeClient;
 import org.folio.bulkops.domain.bean.EntityTypeSummaries;
 import org.folio.bulkops.domain.bean.EntityTypeSummary;
+import org.folio.bulkops.exception.NotFoundException;
 import org.folio.querytool.domain.dto.EntityType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -85,7 +85,41 @@ class EntityTypeServiceTest {
         .thenReturn(new EntityTypeSummaries().withEntityTypes(Collections.emptyList()));
 
     assertThrows(
-        NoSuchElementException.class,
+        NotFoundException.class,
+        () ->
+            entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(
+                org.folio.bulkops.domain.dto.EntityType.ITEM));
+  }
+
+  @Test
+  void getBulkOpsEntityTypeByFqmEntityTypeIdThrowsNotFoundExceptionOnFeignException() {
+    UUID entityTypeId = UUID.randomUUID();
+    when(entityTypeClient.getEntityType(entityTypeId))
+        .thenThrow(new RuntimeException("Service unavailable"));
+
+    assertThrows(
+        NotFoundException.class,
+        () -> entityTypeService.getBulkOpsEntityTypeByFqmEntityTypeId(entityTypeId));
+  }
+
+  @Test
+  void getBulkOpsEntityTypeByFqmEntityTypeIdRethrowsNotFoundExceptionWhenCaught() {
+    UUID entityTypeId = UUID.randomUUID();
+    when(entityTypeClient.getEntityType(entityTypeId))
+        .thenThrow(new NotFoundException("Entity type not found"));
+
+    assertThrows(
+        NotFoundException.class,
+        () -> entityTypeService.getBulkOpsEntityTypeByFqmEntityTypeId(entityTypeId));
+  }
+
+  @Test
+  void getFqmEntityTypeIdByBulkOpsEntityTypeThrowsNotFoundExceptionOnFeignException() {
+    when(entityTypeClient.getEntityTypeSummaries())
+        .thenThrow(new RuntimeException("Service unavailable"));
+
+    assertThrows(
+        NotFoundException.class,
         () ->
             entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(
                 org.folio.bulkops.domain.dto.EntityType.ITEM));
