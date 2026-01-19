@@ -53,19 +53,19 @@
     <jsonPath.version>2.9.0</jsonPath.version>
 
     <!-- Test dependencies versions -->
-    <testcontainer.version>1.21.3</testcontainer.version>
+    <testcontainer.version>1.21.4</testcontainer.version>
     <wiremock.version>2.35.2</wiremock.version>
     <awaitility.version>4.3.0</awaitility.version>
 
     <!-- Plugins versions -->
-    <maven-openapi-generator-plugin.version>7.15.0</maven-openapi-generator-plugin.version>
+    <maven-openapi-generator-plugin.version>7.18.0</maven-openapi-generator-plugin.version>
     <maven-copy-rename-plugin.version>1.0.1</maven-copy-rename-plugin.version>
     <maven-build-helper-plugin.version>3.6.1</maven-build-helper-plugin.version>
-    <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
-    <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+    <maven-resources-plugin.version>3.4.0</maven-resources-plugin.version>
+    <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
     <maven-failsafe-plugin.version>3.5.4</maven-failsafe-plugin.version>
-    <maven-release-plugin.version>3.1.1</maven-release-plugin.version>
+    <maven-release-plugin.version>3.3.1</maven-release-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
     <maven-spotless-plugin.version>3.1.0</maven-spotless-plugin.version>
   </properties>
@@ -347,7 +347,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
-        <version>2.19.0</version>
+        <version>2.21.0</version>
         <configuration>
           <generateBackupPoms>false</generateBackupPoms>
         </configuration>
