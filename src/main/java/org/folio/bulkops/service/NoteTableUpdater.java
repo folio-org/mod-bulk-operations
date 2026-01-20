@@ -14,7 +14,7 @@ import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_PATTERN;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 import static org.folio.bulkops.util.Constants.ITEM_NOTE_POSITION;
 import static org.folio.bulkops.util.Constants.STAFF_ONLY;
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
+import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
 import java.util.ArrayList;
 import java.util.Arrays;

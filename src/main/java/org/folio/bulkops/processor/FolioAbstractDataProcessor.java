@@ -2,7 +2,7 @@ package org.folio.bulkops.processor;
 
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATISTICAL_CODE;
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
+import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
 import java.io.Closeable;
 import lombok.extern.log4j.Log4j2;

@@ -1,6 +1,7 @@
 package org.folio.bulkops.util;
 
 import static java.lang.String.join;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
@@ -40,8 +41,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.annotation.PostConstruct;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.Closeable;
+import java.io.FilterInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -50,7 +58,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -64,6 +78,8 @@ import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.FqmFetcherException;
 import org.folio.bulkops.service.ConsortiaService;
+import org.folio.bulkops.service.EntityTypeService;
+import org.folio.querytool.domain.dto.ContentsRequest;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -75,7 +91,9 @@ public class FqmContentFetcher {
 
   public static final String SHARED = "Shared";
   public static final String SHADOW = "shadow";
-  public static final String TITLE_PATTERN = "%s. %s, %s";
+  public static final String MARC = "MARC";
+
+  private static final int BUFFER_SIZE = 64 * 1024;
 
   @Value("${application.fqm-fetcher.max_parallel_chunks}")
   private int maxParallelChunks;
@@ -87,6 +105,7 @@ public class FqmContentFetcher {
   private final ObjectMapper objectMapper;
   private final FolioExecutionContext folioExecutionContext;
   private final ConsortiaService consortiaService;
+  private final EntityTypeService entityTypeService;
 
   @PostConstruct
   private void logStartup() {
@@ -95,6 +114,229 @@ public class FqmContentFetcher {
             + "max_chunk_size: {}",
         maxParallelChunks,
         chunkSize);
+  }
+
+  /**
+   * Fetches content of FQM entities for the given UUIDs.
+   *
+   * @param uuids the list of UUIDs to fetch
+   * @param entityType the type of entity to fetch
+   * @param bulkOperationExecutionContents the list to record execution content for errors or
+   *     warnings (technical errors holder)
+   * @param operationId the bulk operation ID for which the content is fetched
+   * @return an InputStream containing the fetched content
+   */
+  public InputStream contents(
+      List<UUID> uuids,
+      EntityType entityType,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      UUID operationId) {
+
+    UUID entityTypeId =
+        UUID.fromString(
+            entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(entityType).toString());
+
+    String entityJsonKey = getEntityJsonKey(entityType);
+
+    boolean isCentralTenant = consortiaService.isTenantCentral(folioExecutionContext.getTenantId());
+
+    List<List<UUID>> chunks =
+        IntStream.range(0, uuids.size())
+            .filter(i -> i % chunkSize == 0)
+            .mapToObj(i -> uuids.subList(i, Math.min(i + chunkSize, uuids.size())))
+            .toList();
+
+    ExecutorService pool = Executors.newFixedThreadPool(maxParallelChunks);
+    CompletionService<List<Map<String, Object>>> completion = new ExecutorCompletionService<>(pool);
+
+    for (List<UUID> chunk : chunks) {
+      completion.submit(
+          () -> {
+            ContentsRequest req =
+                new ContentsRequest()
+                    .entityTypeId(entityTypeId)
+                    .fields(List.of(entityJsonKey))
+                    .ids(chunk.stream().map(UUID::toString).map(List::of).toList());
+            return queryClient.getContents(req);
+          });
+    }
+
+    return pipeStreamingResponse(
+        entityType,
+        bulkOperationExecutionContents,
+        operationId,
+        isCentralTenant,
+        chunks.size(),
+        completion,
+        pool);
+  }
+
+  private InputStream pipeStreamingResponse(
+      EntityType entityType,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      UUID operationId,
+      boolean isCentralTenant,
+      int submittedTasks,
+      CompletionService<List<Map<String, Object>>> completion,
+      ExecutorService executor) {
+
+    final PipedOutputStream pos = new PipedOutputStream();
+    final PipedInputStream pis;
+    try {
+      pis = new PipedInputStream(pos, BUFFER_SIZE);
+    } catch (IOException e) {
+      executor.shutdownNow();
+      throw new FqmFetcherException("Error creating piped streams for FQM contents", e);
+    }
+
+    final AtomicReference<Throwable> error = new AtomicReference<>(null);
+
+    var writer =
+        new Thread(
+            () -> {
+              try (BufferedWriter bw =
+                  new BufferedWriter(
+                      new OutputStreamWriter(pos, StandardCharsets.UTF_8), BUFFER_SIZE)) {
+
+                for (int i = 0; i < submittedTasks; i++) {
+                  List<Map<String, Object>> part = next(completion, error, executor);
+
+                  if (part == null || part.isEmpty()) {
+                    continue;
+                  }
+
+                  part(
+                      bw,
+                      part,
+                      entityType,
+                      bulkOperationExecutionContents,
+                      operationId,
+                      isCentralTenant);
+                }
+
+              } catch (InterruptedException ie) {
+                log.error("Error streaming FQM response", ie);
+                fail(error, executor, ie, true);
+              } catch (Exception ex) {
+                log.error("Error streaming FQM response", ex);
+                fail(error, executor, ex, false);
+              } finally {
+                closeQuietly(pos);
+                executor.shutdownNow();
+              }
+            });
+
+    writer.setDaemon(true);
+    writer.start();
+
+    return new FilterInputStream(pis) {
+
+      @Override
+      public int read() throws IOException {
+        checkError();
+        int result = super.read();
+        if (result == -1) {
+          checkError();
+        }
+        return result;
+      }
+
+      @Override
+      public int read(byte[] b, int off, int len) throws IOException {
+        checkError();
+        int result = super.read(b, off, len);
+        if (result == -1) {
+          checkError();
+        }
+        return result;
+      }
+
+      @Override
+      public void close() throws IOException {
+        try {
+          super.close();
+        } finally {
+          executor.shutdownNow();
+          checkError();
+        }
+      }
+
+      private void checkError() throws IOException {
+        Throwable t = unwrap(error.get());
+        if (t != null) {
+          throw new IOException(new FqmFetcherException("Error retrieving contents from FQM", t));
+        }
+      }
+    };
+  }
+
+  private List<Map<String, Object>> next(
+      CompletionService<List<Map<String, Object>>> completion,
+      AtomicReference<Throwable> error,
+      ExecutorService executor)
+      throws InterruptedException {
+
+    try {
+      return completion.take().get();
+    } catch (InterruptedException ie) {
+      fail(error, executor, ie, true);
+      throw ie;
+    } catch (Exception ex) {
+      fail(error, executor, ex, false);
+      return emptyList();
+    }
+  }
+
+  private void part(
+      BufferedWriter bw,
+      List<Map<String, Object>> part,
+      EntityType entityType,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      UUID operationId,
+      boolean isCentralTenant)
+      throws IOException {
+
+    for (Map<String, Object> json : part) {
+      String line =
+          processFqmJson(
+              entityType, bulkOperationExecutionContents, operationId, isCentralTenant, json);
+
+      if (StringUtils.isNotEmpty(line)) {
+        bw.write(line);
+        bw.write(LINE_BREAK);
+      }
+    }
+    bw.flush();
+  }
+
+  private void fail(
+      AtomicReference<Throwable> error, ExecutorService executor, Throwable t, boolean interrupt) {
+
+    error.compareAndSet(null, t);
+
+    if (interrupt) {
+      Thread.currentThread().interrupt();
+    }
+
+    executor.shutdownNow();
+  }
+
+  private Throwable unwrap(Throwable throwable) {
+    if (throwable instanceof ExecutionException ee && ee.getCause() != null) {
+      return ee.getCause();
+    }
+    if (throwable instanceof CompletionException ce && ce.getCause() != null) {
+      return ce.getCause();
+    }
+    return throwable;
+  }
+
+  private void closeQuietly(Closeable closeable) {
+    try {
+      closeable.close();
+    } catch (IOException ignore) {
+      // ignore
+    }
   }
 
   /**
@@ -142,8 +384,8 @@ public class FqmContentFetcher {
 
       return new SequenceInputStream(Collections.enumeration(futures));
     } catch (Exception e) {
-      log.error("Error fetching content", e);
-      throw new FqmFetcherException("Error fetching content", e);
+      log.error("Error fetching data from FQM", e);
+      throw new FqmFetcherException("Error fetching data from FQM", e);
     }
   }
 
@@ -157,68 +399,99 @@ public class FqmContentFetcher {
       boolean isCentralTenant) {
     int offset = chunk * chunkSize;
     int limit = Math.min(chunkSize, total - offset);
+    log.info("tenant current: {}", folioExecutionContext.getTenantId());
     var response = queryClient.getQuery(queryId, offset, limit).getContent();
+    return getFqmResponseAsInputStream(
+        entityType, bulkOperationExecutionContents, operationId, isCentralTenant, response);
+  }
+
+  protected InputStream getFqmResponseAsInputStream(
+      EntityType entityType,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      UUID operationId,
+      boolean isCentralTenant,
+      List<Map<String, Object>> response) {
     return new ByteArrayInputStream(
         response.stream()
             .map(
-                json -> {
-                  try {
-                    if (isCentralTenant) {
-                      if (isInstance(entityType)
-                          && !SHARED.equalsIgnoreCase(
-                              ofNullable(json.get(FQM_INSTANCE_SHARED_KEY))
-                                  .map(Object::toString)
-                                  .orElse(EMPTY))) {
-                        addInstanceNoMatchFound(json, bulkOperationExecutionContents, operationId);
-                        return EMPTY;
-                      } else if (EntityType.USER.equals(entityType)
-                          && SHADOW.equalsIgnoreCase(
-                              ofNullable(json.get(FQM_USERS_TYPE_KEY))
-                                  .map(Object::toString)
-                                  .orElse(EMPTY))) {
-                        addShadowUserErrorContent(
-                            json, bulkOperationExecutionContents, operationId);
-                        return EMPTY;
-                      }
-                    }
-
-                    var jsonb = json.get(getEntityJsonKey(entityType));
-                    if (entityType == EntityType.USER) {
-                      return jsonb.toString();
-                    }
-                    var jsonNode = (ObjectNode) objectMapper.readTree(jsonb.toString());
-                    var tenant = json.get(getContentTenantKey(entityType));
-                    if (tenant == null) {
-                      checkForTenantFieldExistenceInEcs(
-                          jsonNode.get(ID).asText(), operationId, bulkOperationExecutionContents);
-                      tenant = folioExecutionContext.getTenantId();
-                    }
-                    jsonNode.put(TENANT_ID, tenant.toString());
-
-                    if (entityType == EntityType.ITEM) {
-                      processForItem(json, jsonNode);
-                    }
-
-                    if (entityType == EntityType.HOLDINGS_RECORD) {
-                      processForHoldingsRecord(json, jsonNode);
-                    }
-
-                    if (isInstance(entityType)) {
-                      processInstanceEntity(json, jsonNode);
-                    }
-
-                    ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
-                    extendedRecordWrapper.set(ENTITY, jsonNode);
-                    extendedRecordWrapper.put(TENANT_ID, tenant.toString());
-                    return objectMapper.writeValueAsString(extendedRecordWrapper);
-                  } catch (Exception e) {
-                    log.error("Error processing JSON content: {}", json, e);
-                    return EMPTY;
-                  }
-                })
+                json ->
+                    processFqmJson(
+                        entityType,
+                        bulkOperationExecutionContents,
+                        operationId,
+                        isCentralTenant,
+                        json))
             .filter(StringUtils::isNotEmpty)
             .collect(Collectors.joining(LINE_BREAK))
             .getBytes(StandardCharsets.UTF_8));
+  }
+
+  private String processFqmJson(
+      EntityType entityType,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      UUID operationId,
+      boolean isCentralTenant,
+      Map<String, Object> json) {
+    try {
+      if (isCentralTenant) {
+        if (isInstance(entityType)
+            && !SHARED.equalsIgnoreCase(
+                ofNullable(json.get(FQM_INSTANCE_SHARED_KEY))
+                    .map(Object::toString)
+                    .orElse(EMPTY))) {
+          addInstanceNoMatchFound(json, bulkOperationExecutionContents, operationId);
+          return EMPTY;
+        } else if (EntityType.USER.equals(entityType)
+            && SHADOW.equalsIgnoreCase(
+                ofNullable(json.get(FQM_USERS_TYPE_KEY)).map(Object::toString).orElse(EMPTY))) {
+          addShadowUserErrorContent(json, bulkOperationExecutionContents, operationId);
+          return EMPTY;
+        }
+      }
+
+      if (isSharedInstanceAndCurrentTenantIsMember(json, entityType)) {
+        addInstanceNoMatchFound(json, bulkOperationExecutionContents, operationId);
+        return EMPTY;
+      }
+
+      var jsonb = json.get(getEntityJsonKey(entityType));
+
+      if (Objects.nonNull(jsonb)) {
+        if (entityType == EntityType.USER) {
+          return jsonb.toString();
+        }
+        var jsonNode = (ObjectNode) objectMapper.readTree(jsonb.toString());
+        var tenant = json.get(getContentTenantKey(entityType));
+        if (tenant == null) {
+          checkForTenantFieldExistenceInEcs(
+              jsonNode.get(ID).asText(), operationId, bulkOperationExecutionContents);
+          tenant = folioExecutionContext.getTenantId();
+        }
+        jsonNode.put(TENANT_ID, tenant.toString());
+
+        if (entityType == EntityType.ITEM) {
+          processForItem(json, jsonNode);
+        }
+
+        if (entityType == EntityType.HOLDINGS_RECORD) {
+          processForHoldingsRecord(json, jsonNode);
+        }
+
+        if (isInstance(entityType)) {
+          processInstanceEntity(json, jsonNode);
+        }
+
+        ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
+        extendedRecordWrapper.set(ENTITY, jsonNode);
+        extendedRecordWrapper.put(TENANT_ID, tenant.toString());
+        return objectMapper.writeValueAsString(extendedRecordWrapper);
+      } else {
+        return EMPTY;
+      }
+    } catch (Exception e) {
+      log.error("Error processing JSON content: {}", json, e);
+      return EMPTY;
+    }
   }
 
   private String getEntityJsonKey(EntityType entityType) {
@@ -376,5 +649,14 @@ public class FqmContentFetcher {
     var succeedingTitles =
         nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();
     jsonNode.putIfAbsent(SUCCEEDING_TITLES, succeedingTitles);
+  }
+
+  private boolean isSharedInstanceAndCurrentTenantIsMember(
+      Map<String, Object> json, EntityType entityType) {
+    boolean isMemberTenant = consortiaService.isTenantMember(folioExecutionContext.getTenantId());
+    return isMemberTenant
+        && isInstance(entityType)
+        && SHARED.equalsIgnoreCase(
+            ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY));
   }
 }

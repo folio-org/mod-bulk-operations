@@ -4,7 +4,7 @@
   "provides": [
     {
       "id": "bulk-operations",
-      "version": "1.7",
+      "version": "1.8",
       "handlers": [
         {
           "methods": [ "POST" ],
@@ -19,7 +19,9 @@
           "permissionsRequired": [ "bulk-operations.item.query.post" ],
           "modulePermissions": [
             "fqm.entityTypes.item.get",
-            "fqm.query.async.post"
+            "fqm.query.async.post",
+            "fqm.query.async.results.post",
+            "fqm.entityTypes.collection.get"
           ]
         },
         {
@@ -213,7 +215,9 @@
             "inventory-storage.subject-sources.collection.get",
             "inventory-storage.subject-types.collection.get",
             "inventory-storage.classification-types.collection.get",
-            "inventory-storage.classification-types.item.get"
+            "inventory-storage.classification-types.item.get",
+            "fqm.query.async.results.post",
+            "fqm.entityTypes.collection.get"
           ]
         },
         {

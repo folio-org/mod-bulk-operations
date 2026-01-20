@@ -5,6 +5,8 @@ import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
+import static org.apache.commons.lang3.StringUtils.removeEnd;
+import static org.apache.commons.lang3.StringUtils.removeStart;
 import static org.folio.bulkops.batch.JobCommandHelper.prepareJobParameters;
 import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
@@ -28,13 +30,14 @@ import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.FILE_UPLOAD_ERROR;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.MARC;
+import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
 import static org.folio.bulkops.util.ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE;
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
+import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.MappingIterator;
@@ -43,12 +46,16 @@ import com.opencsv.CSVWriterBuilder;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -68,6 +75,7 @@ import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.bean.Instance;
+import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -188,6 +196,7 @@ public class BulkOperationService {
               .findById(operationId)
               .orElseThrow(
                   () -> new NotFoundException("Bulk operation was not found by id=" + operationId));
+      operation.setApproach(MANUAL);
     } else {
       operation =
           bulkOperationRepository.save(
@@ -196,6 +205,7 @@ public class BulkOperationService {
                   .entityType(entityType)
                   .identifierType(identifierType)
                   .status(NEW)
+                  .approach(IN_APP)
                   .startTime(LocalDateTime.now())
                   .build());
       if (multipartFile.isEmpty()) {
@@ -242,22 +252,22 @@ public class BulkOperationService {
   public BulkOperation triggerByQuery(UUID userId, QueryRequest queryRequest) {
     var operation = saveQueryBulkOperation(userId, queryRequest);
     if (fqmQueryApproach) {
-      log.info("FQM query approach is enabled, starting FQM query operation");
-      operation = queryService.retrieveRecordsAndCheckQueryExecutionStatus(operation);
+      log.info("Starting QUERY, FQM is used for data retrieving: true");
+      return queryService.retrieveRecordsQueryFlowAsync(operation);
     } else {
-      log.info("FQM query approach is disabled, starting identifiers query operation");
+      log.info("Starting QUERY, FQM is used for data retrieving: false");
       queryService.saveIdentifiers(operation);
-      operation =
-          startBulkOperation(operation.getId(), userId, new BulkOperationStart().step(UPLOAD));
+      return startBulkOperation(operation.getId(), userId, new BulkOperationStart().step(UPLOAD));
     }
-    return operation;
   }
 
   private BulkOperation saveQueryBulkOperation(UUID userId, QueryRequest queryRequest) {
     return bulkOperationRepository.save(
         BulkOperation.builder()
             .id(UUID.randomUUID())
-            .entityType(entityTypeService.getEntityTypeById(queryRequest.getEntityTypeId()))
+            .entityType(
+                entityTypeService.getBulkOpsEntityTypeByFqmEntityTypeId(
+                    queryRequest.getEntityTypeId()))
             .approach(QUERY)
             .identifierType(IdentifierType.ID)
             .status(EXECUTING_QUERY)
@@ -564,17 +574,21 @@ public class BulkOperationService {
                   .setTenantToNotes(operation.getTenantNotePairs());
             }
             if (result != original) {
-              try (var ignored = useCurrentContext
-                  ? null
-                  : new FolioExecutionContextSetter(
-                      prepareContextForTenant(tenantIdOfEntity, folioModuleMetadata,
-                          folioExecutionContext))) {
-                writerForResultJsonFile.write(objectMapper.writeValueAsString(result)
-                    + getEndOfLineSymbol(hasNextRecord));
-                writerForJsonPreviewFile.write(objectMapper.writeValueAsString(result)
-                    + getEndOfLineSymbol(hasNextRecord));
-                CsvHelper.writeBeanToCsv(operation, csvWriter,
-                    result.getRecordBulkOperationEntity(), bulkOperationExecutionContents);
+              try (var ignored =
+                  useCurrentContext
+                      ? null
+                      : new FolioExecutionContextSetter(
+                          prepareContextForTenant(
+                              tenantIdOfEntity, folioModuleMetadata, folioExecutionContext))) {
+                writerForResultJsonFile.write(
+                    objectMapper.writeValueAsString(result) + getEndOfLineSymbol(hasNextRecord));
+                writerForJsonPreviewFile.write(
+                    objectMapper.writeValueAsString(result) + getEndOfLineSymbol(hasNextRecord));
+                CsvHelper.writeBeanToCsv(
+                    operation,
+                    csvWriter,
+                    result.getRecordBulkOperationEntity(),
+                    bulkOperationExecutionContents);
               }
               bulkOperationExecutionContents.forEach(errorService::saveError);
             } else if (original instanceof ExtendedInstance extendedInstance
@@ -667,7 +681,7 @@ public class BulkOperationService {
   public BulkOperation startBulkOperation(
       UUID bulkOperationId, UUID xokapiUserId, BulkOperationStart bulkOperationStart) {
     var step = bulkOperationStart.getStep();
-    var approach = bulkOperationStart.getApproach();
+    var bulkOperationApproach = bulkOperationStart.getApproach();
     BulkOperation operation =
         bulkOperationRepository
             .findById(bulkOperationId)
@@ -678,26 +692,69 @@ public class BulkOperationService {
 
     if (UPLOAD == step) {
       var numOfLines = remoteFileSystemClient.getNumOfLines(operation.getLinkToTriggeringCsvFile());
-      operation.setTotalNumOfRecords(numOfLines);
-      operation.setStatus(RETRIEVING_RECORDS);
-      executor.execute(
-          getRunnableWithCurrentFolioContext(
-              () -> {
-                try {
-                  log.info("Launching batch job");
-                  var jobLaunchRequest =
-                      new JobLaunchRequest(
-                          getBatchJob(operation), prepareJobParameters(operation, numOfLines));
-                  exportJobManagerSync.launchJob(jobLaunchRequest);
-                } catch (JobExecutionException e) {
-                  log.error(ERROR_STARTING_BULK_OPERATION, e);
-                  operation.setStatus(FAILED);
-                  operation.setErrorMessage(e.getMessage());
-                  operation.setEndTime(LocalDateTime.now());
-                  bulkOperationRepository.save(operation);
-                }
-              }));
-      return bulkOperationRepository.save(operation);
+      if (fqmQueryApproach && operation.getIdentifierType() == IdentifierType.ID) {
+        log.info("Starting UPLOAD, bulk operation id={}, FQM is used: true", bulkOperationId);
+        operation.setTotalNumOfRecords(numOfLines);
+        try (InputStream is = remoteFileSystemClient.get(operation.getLinkToTriggeringCsvFile());
+            BufferedReader reader =
+                new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+          List<UUID> ids = new ArrayList<>();
+          List<BulkOperationExecutionContent> bulkOperationExecutionContents =
+              Collections.synchronizedList(new ArrayList<>());
+          reader
+              .lines()
+              .forEach(
+                  id -> {
+                    try {
+                      id = removeStart(removeEnd(id, "\""), "\"");
+                      ids.add(UUID.fromString(id));
+                    } catch (Exception e) {
+                      // saving invalid UUID identifiers as "No match found"
+                      bulkOperationExecutionContents.add(
+                          BulkOperationExecutionContent.builder()
+                              .identifier(id)
+                              .bulkOperationId(operation.getId())
+                              .state(StateType.FAILED)
+                              .errorType(ErrorType.ERROR)
+                              .errorMessage(NO_MATCH_FOUND_MESSAGE)
+                              .build());
+                    }
+                  });
+
+          queryService.retrieveRecordsIdentifiersFlowAsync(
+              ids, operation, bulkOperationExecutionContents);
+
+        } catch (Exception e) {
+          log.error(ERROR_STARTING_BULK_OPERATION, e);
+          operation.setStatus(FAILED);
+          operation.setErrorMessage(e.getMessage());
+          operation.setEndTime(LocalDateTime.now());
+          bulkOperationRepository.save(operation);
+        }
+        return operation;
+      } else {
+        log.info("Starting UPLOAD, bulk operation id={}, FQM is used: false", bulkOperationId);
+        operation.setTotalNumOfRecords(numOfLines);
+        operation.setStatus(RETRIEVING_RECORDS);
+        executor.execute(
+            getRunnableWithCurrentFolioContext(
+                () -> {
+                  try {
+                    log.info("Launching batch job");
+                    var jobLaunchRequest =
+                        new JobLaunchRequest(
+                            getBatchJob(operation), prepareJobParameters(operation, numOfLines));
+                    exportJobManagerSync.launchJob(jobLaunchRequest);
+                  } catch (JobExecutionException e) {
+                    log.error(ERROR_STARTING_BULK_OPERATION, e);
+                    operation.setStatus(FAILED);
+                    operation.setErrorMessage(e.getMessage());
+                    operation.setEndTime(LocalDateTime.now());
+                    bulkOperationRepository.save(operation);
+                  }
+                }));
+        return bulkOperationRepository.save(operation);
+      }
     } else if (BulkOperationStep.EDIT == step) {
       errorService.deleteErrorsByBulkOperationId(bulkOperationId);
       operation.setCommittedNumOfErrors(0);
@@ -705,7 +762,7 @@ public class BulkOperationService {
       bulkOperationRepository.save(operation);
       if (DATA_MODIFICATION.equals(operation.getStatus())
           || REVIEW_CHANGES.equals(operation.getStatus())) {
-        if (MANUAL == approach) {
+        if (MANUAL == bulkOperationApproach) {
           executor.execute(getRunnableWithCurrentFolioContext(() -> apply(operation)));
         } else {
           logFilesService.removeModifiedFiles(operation);

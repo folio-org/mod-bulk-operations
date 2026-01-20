@@ -2,7 +2,7 @@ package org.folio.bulkops.util;
 
 import static java.lang.String.format;
 import static org.folio.bulkops.domain.dto.IdentifierType.ID;
-import static org.folio.bulkops.util.FolioExecutionContextUtil.prepareContextForTenant;
+import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
 import lombok.AllArgsConstructor;
 import org.folio.bulkops.client.HoldingsStorageClient;

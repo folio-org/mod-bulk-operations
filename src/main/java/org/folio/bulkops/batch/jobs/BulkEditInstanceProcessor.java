@@ -4,6 +4,8 @@ import static java.util.Collections.emptyList;
 import static org.folio.bulkops.domain.bean.JobParameterNames.AT_LEAST_ONE_MARC_EXISTS;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getMatchPattern;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.resolveIdentifier;
+import static org.folio.bulkops.util.Constants.CONSORTIUM_FOLIO;
+import static org.folio.bulkops.util.Constants.CONSORTIUM_MARC;
 import static org.folio.bulkops.util.Constants.DUPLICATE_ENTRY;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
@@ -29,6 +31,7 @@ import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.exception.MarcValidationException;
 import org.folio.bulkops.processor.EntityExtractor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
+import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.SrsService;
 import org.folio.spring.FolioExecutionContext;
 import org.jetbrains.annotations.NotNull;
@@ -51,6 +54,7 @@ public class BulkEditInstanceProcessor
   private final UserClient userClient;
   private final DuplicationCheckerFactory duplicationCheckerFactory;
   private final SrsService srsService;
+  private final ConsortiaService consortiaService;
 
   @SuppressWarnings("unused")
   @Value("#{jobParameters['identifierType']}")
@@ -98,6 +102,8 @@ public class BulkEditInstanceProcessor
       if (LINKED_DATA_SOURCE.equals(instance.getSource())) {
         throw new BulkEditException(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED, ErrorType.ERROR);
       }
+
+      checkIfInstanceIsSharedAndCurrentTenantIsMemberAndThrowExceptionIfYes(instance);
 
       if (duplicationCheckerFactory.getFetchedIds(jobExecution).add(instance.getId())) {
         checkSrsInstance(instance);
@@ -159,6 +165,15 @@ public class BulkEditInstanceProcessor
       } catch (MarcValidationException mve) {
         throw new BulkEditException(mve.getMessage());
       }
+    }
+  }
+
+  private void checkIfInstanceIsSharedAndCurrentTenantIsMemberAndThrowExceptionIfYes(
+      Instance instance) {
+    if (consortiaService.isTenantMember(folioExecutionContext.getTenantId())
+        && (CONSORTIUM_MARC.equals(instance.getSource())
+            || CONSORTIUM_FOLIO.equals(instance.getSource()))) {
+      throw new BulkEditException(NO_MATCH_FOUND_MESSAGE);
     }
   }
 }

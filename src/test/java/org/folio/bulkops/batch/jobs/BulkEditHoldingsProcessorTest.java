@@ -331,8 +331,9 @@ class BulkEditHoldingsProcessorTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = IdentifierType.class,
-      names = { "ID", "HRID", "INSTANCE_HRID", "ITEM_BARCODE" },
+  @EnumSource(
+      value = IdentifierType.class,
+      names = {"ID", "HRID", "INSTANCE_HRID", "ITEM_BARCODE"},
       mode = Mode.INCLUDE)
   void shouldReturnHoldingsForLocalTenant(IdentifierType identifierType) {
     // Arrange
@@ -350,47 +351,48 @@ class BulkEditHoldingsProcessorTest {
     String temporaryLocationId = "tmpLoc";
 
     HoldingsRecord holdingsRecord =
-      new HoldingsRecord()
-        .withId(holdingsId)
-        .withInstanceId(instanceId)
-        .withElectronicAccess(List.of(electronicAccess))
-        .withNotes(List.of(note))
-        .withStatisticalCodeIds(statisticalCodeIds)
-        .withIllPolicyId(illPolicyId)
-        .withEffectiveLocationId(effectiveLocationId)
-        .withPermanentLocationId(permanentLocationId)
-        .withSourceId(sourceId)
-        .withHoldingsTypeId(holdingsTypeId)
-        .withTemporaryLocationId(temporaryLocationId);
+        new HoldingsRecord()
+            .withId(holdingsId)
+            .withInstanceId(instanceId)
+            .withElectronicAccess(List.of(electronicAccess))
+            .withNotes(List.of(note))
+            .withStatisticalCodeIds(statisticalCodeIds)
+            .withIllPolicyId(illPolicyId)
+            .withEffectiveLocationId(effectiveLocationId)
+            .withPermanentLocationId(permanentLocationId)
+            .withSourceId(sourceId)
+            .withHoldingsTypeId(holdingsTypeId)
+            .withTemporaryLocationId(temporaryLocationId);
 
     HoldingsRecordCollection holdingsRecordCollection =
-      HoldingsRecordCollection.builder()
-        .holdingsRecords(List.of(holdingsRecord))
-        .totalRecords(1)
-        .build();
+        HoldingsRecordCollection.builder()
+            .holdingsRecords(List.of(holdingsRecord))
+            .totalRecords(1)
+            .build();
 
     ReflectionTestUtils.setField(processor, "identifierType", identifierType.getValue());
     ConsortiumHolding consortiumHolding = new ConsortiumHolding().id(holdingsId).tenantId(tenantId);
     ConsortiumHoldingCollection consortiumHoldingCollection =
-      new ConsortiumHoldingCollection().holdings(List.of(consortiumHolding)).totalRecords(1);
+        new ConsortiumHoldingCollection().holdings(List.of(consortiumHolding)).totalRecords(1);
 
     when(holdingsStorageClient.getByQuery(anyString())).thenReturn(holdingsRecordCollection);
-    when(holdingsStorageClient.getByQuery(anyString(), anyLong())).thenReturn(holdingsRecordCollection);
+    when(holdingsStorageClient.getByQuery(anyString(), anyLong()))
+        .thenReturn(holdingsRecordCollection);
     when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), any())).thenReturn(true);
     when(folioExecutionContext.getTenantId()).thenReturn(tenantId);
     when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
-      .thenReturn(new HashSet<>());
+        .thenReturn(new HashSet<>());
     when(duplicationCheckerFactory.getFetchedIds(any())).thenReturn(new HashSet<>());
     when(searchClient.getConsortiumHoldingCollection(any()))
-      .thenReturn(consortiumHoldingCollection);
+        .thenReturn(consortiumHoldingCollection);
     when(tenantResolver.getAffiliatedPermittedTenantIds(any(), any(), anyString(), anySet(), any()))
-      .thenReturn(Set.of(tenantId));
+        .thenReturn(Set.of(tenantId));
     when(holdingsReferenceService.getInstanceTitleById(anyString(), anyString()))
-      .thenReturn("Instance Title");
+        .thenReturn("Instance Title");
     when(cacheManager.getCache(anyString())).thenReturn(cache);
     doCallRealMethod()
-      .when(localReferenceDataService)
-      .enrichWithTenant(any(HoldingsRecord.class), anyString());
+        .when(localReferenceDataService)
+        .enrichWithTenant(any(HoldingsRecord.class), anyString());
 
     ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId(holdingsId);
 
