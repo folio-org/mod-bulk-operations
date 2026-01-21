@@ -1,3 +1,7 @@
+## v2.1.17 - Released 2026/01/21
+
+This release contains spring-boot-starter-parent and folio-s3-client upgrade to fix security vulnerabilities.
+
 ## v2.1.16 - Released 2025/09/24
 
 This release contains bug fix.
