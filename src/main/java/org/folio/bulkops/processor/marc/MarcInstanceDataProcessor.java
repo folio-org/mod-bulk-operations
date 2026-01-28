@@ -153,17 +153,30 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     char subfieldCode = rule.getSubfield().charAt(0);
     var findValue = fetchActionDataValue(VALUE, rule.getActions().get(0).getData());
     var newValue = fetchActionDataValue(VALUE, rule.getActions().get(1).getData());
+    var fieldsToRemove = new java.util.ArrayList<DataField>();
     findFields(rule, marcRecord)
         .forEach(
-            dataField ->
-                dataField
-                    .getSubfields(subfieldCode)
-                    .forEach(
-                        subfield -> {
-                          if (contains(subfield.getData(), findValue)) {
-                            subfield.setData(replace(subfield.getData(), findValue, newValue));
+            dataField -> {
+              var subfieldsToRemove = new java.util.ArrayList<Subfield>();
+              dataField
+                  .getSubfields(subfieldCode)
+                  .forEach(
+                      subfield -> {
+                        if (contains(subfield.getData(), findValue)) {
+                          var replacedValue = replace(subfield.getData(), findValue, newValue);
+                          if (StringUtils.isEmpty(replacedValue)) {
+                            subfieldsToRemove.add(subfield);
+                          } else {
+                            subfield.setData(replacedValue);
                           }
-                        }));
+                        }
+                      });
+              subfieldsToRemove.forEach(dataField::removeSubfield);
+              if (dataField.getSubfields().isEmpty()) {
+                fieldsToRemove.add(dataField);
+              }
+            });
+    fieldsToRemove.forEach(marcRecord::removeVariableField);
   }
 
   private void processFindAndRemoveField(BulkOperationMarcRule rule, Record marcRecord)
@@ -182,12 +195,18 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
       throws BulkOperationException {
     char subfieldCode = rule.getSubfield().charAt(0);
     var findValue = fetchActionDataValue(VALUE, rule.getActions().getFirst().getData());
+    var fieldsToRemove = new java.util.ArrayList<DataField>();
     findFields(rule, marcRecord)
         .forEach(
-            df ->
-                df.getSubfields(subfieldCode).stream()
-                    .filter(sf -> contains(sf.getData(), findValue))
-                    .forEach(df::removeSubfield));
+            df -> {
+              df.getSubfields(subfieldCode).stream()
+                  .filter(sf -> contains(sf.getData(), findValue))
+                  .forEach(df::removeSubfield);
+              if (df.getSubfields().isEmpty()) {
+                fieldsToRemove.add(df);
+              }
+            });
+    fieldsToRemove.forEach(marcRecord::removeVariableField);
   }
 
   private List<DataField> findFields(BulkOperationMarcRule rule, Record marcRecord) {

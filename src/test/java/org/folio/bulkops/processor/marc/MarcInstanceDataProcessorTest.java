@@ -950,4 +950,189 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     assertThat(df.getSubfields().getFirst().getCode()).isEqualTo('a');
     assertThat(df.getSubfields().getFirst().getData()).isEqualTo(value);
   }
+
+  @Test
+  @SneakyThrows
+  void shouldRemoveSubfieldWhenFindAndReplaceResultsInEmptyValue() {
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    // Field with two subfields - only one will be emptied
+    var dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "test"));
+    dataField.addSubfield(new SubfieldImpl('b', "keep this"));
+    marcRecord.addVariableField(dataField);
+
+    // Field with one subfield that will be emptied - entire field should be removed
+    dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "test"));
+    marcRecord.addVariableField(dataField);
+
+    // Field that won't match
+    dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "different"));
+    marcRecord.addVariableField(dataField);
+
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
+    var bulkOperationId = UUID.randomUUID();
+    var operation =
+        BulkOperation.builder().id(bulkOperationId).identifierType(IdentifierType.ID).build();
+    var findAndReplaceRule =
+        new BulkOperationMarcRule()
+            .bulkOperationId(bulkOperationId)
+            .tag("500")
+            .ind1("1")
+            .ind2("\\")
+            .subfield("a")
+            .actions(
+                List.of(
+                    new MarcAction()
+                        .name(FIND)
+                        .data(
+                            Collections.singletonList(
+                                new MarcActionDataInner().key(MarcDataType.VALUE).value("test"))),
+                    new MarcAction()
+                        .name(UpdateActionType.REPLACE_WITH)
+                        .data(
+                            List.of(new MarcActionDataInner().key(MarcDataType.VALUE).value("")))));
+    var rules =
+        new BulkOperationMarcRuleCollection()
+            .bulkOperationMarcRules(Collections.singletonList(findAndReplaceRule))
+            .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules, date);
+
+    var dataFields = marcRecord.getDataFields();
+    // Should have 2 fields: one with only subfield b, and one with "different"
+    assertThat(dataFields).hasSize(2);
+
+    // First field should only have subfield 'b'
+    assertThat(dataFields.get(0)).hasToString("500 1 $bkeep this");
+
+    // Second field should be unchanged
+    assertThat(dataFields.get(1)).hasToString("500 1 $adifferent");
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldRemoveFieldWhenFindAndRemoveSubfieldLeavesNoSubfields() {
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    // Field with only one subfield that matches - entire field should be removed
+    var dataField = new DataFieldImpl("500", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "text a"));
+    marcRecord.addVariableField(dataField);
+
+    // Field with two subfields where only one matches - field should remain with one subfield
+    dataField = new DataFieldImpl("500", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "text a"));
+    dataField.addSubfield(new SubfieldImpl('b', "text b"));
+    marcRecord.addVariableField(dataField);
+
+    // Field that doesn't match
+    dataField = new DataFieldImpl("500", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "different"));
+    marcRecord.addVariableField(dataField);
+
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
+    var bulkOperationId = UUID.randomUUID();
+    var operation =
+        BulkOperation.builder().id(bulkOperationId).identifierType(IdentifierType.ID).build();
+    var findAndRemoveRule =
+        new BulkOperationMarcRule()
+            .bulkOperationId(bulkOperationId)
+            .tag("500")
+            .ind1("1")
+            .ind2("1")
+            .subfield("a")
+            .actions(
+                List.of(
+                    new MarcAction()
+                        .name(FIND)
+                        .data(
+                            Collections.singletonList(
+                                new MarcActionDataInner().key(MarcDataType.VALUE).value("text"))),
+                    new MarcAction()
+                        .name(UpdateActionType.REMOVE_SUBFIELD)
+                        .data(Collections.emptyList())));
+    var rules =
+        new BulkOperationMarcRuleCollection()
+            .bulkOperationMarcRules(Collections.singletonList(findAndRemoveRule))
+            .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules, date);
+
+    var dataFields = marcRecord.getDataFields();
+    // Should have 2 fields remaining
+    assertThat(dataFields).hasSize(2);
+
+    // First field should only have subfield 'b' (subfield 'a' was removed)
+    assertThat(dataFields.get(0)).hasToString("500 11$btext b");
+
+    // Second field should be unchanged
+    assertThat(dataFields.get(1)).hasToString("500 11$adifferent");
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldHandlePartialReplacementCorrectly() {
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    // Field where only part of the value will be replaced - subfield should remain
+    var dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "test value"));
+    marcRecord.addVariableField(dataField);
+
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
+    var bulkOperationId = UUID.randomUUID();
+    var operation =
+        BulkOperation.builder().id(bulkOperationId).identifierType(IdentifierType.ID).build();
+    var findAndReplaceRule =
+        new BulkOperationMarcRule()
+            .bulkOperationId(bulkOperationId)
+            .tag("500")
+            .ind1("1")
+            .ind2("\\")
+            .subfield("a")
+            .actions(
+                List.of(
+                    new MarcAction()
+                        .name(FIND)
+                        .data(
+                            Collections.singletonList(
+                                new MarcActionDataInner().key(MarcDataType.VALUE).value("test"))),
+                    new MarcAction()
+                        .name(UpdateActionType.REPLACE_WITH)
+                        .data(
+                            List.of(
+                                new MarcActionDataInner().key(MarcDataType.VALUE).value("new")))));
+    var rules =
+        new BulkOperationMarcRuleCollection()
+            .bulkOperationMarcRules(Collections.singletonList(findAndReplaceRule))
+            .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules, date);
+
+    var dataFields = marcRecord.getDataFields();
+    // Field should remain with updated value
+    assertThat(dataFields).hasSize(1);
+    assertThat(dataFields.get(0)).hasToString("500 1 $anew value");
+  }
 }
