@@ -1135,4 +1135,218 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     assertThat(dataFields).hasSize(1);
     assertThat(dataFields.get(0)).hasToString("500 1 $anew value");
   }
+
+  @Test
+  @SneakyThrows
+  void shouldCleanupDelimitersWhenReplacingMiddleValue() {
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    // Field with delimiter-separated values where middle value will be removed
+    var dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "test 1| test 2| test 3"));
+    marcRecord.addVariableField(dataField);
+
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
+    var bulkOperationId = UUID.randomUUID();
+    var operation =
+        BulkOperation.builder().id(bulkOperationId).identifierType(IdentifierType.ID).build();
+    var findAndReplaceRule =
+        new BulkOperationMarcRule()
+            .bulkOperationId(bulkOperationId)
+            .tag("500")
+            .ind1("1")
+            .ind2("\\")
+            .subfield("a")
+            .actions(
+                List.of(
+                    new MarcAction()
+                        .name(FIND)
+                        .data(
+                            Collections.singletonList(
+                                new MarcActionDataInner()
+                                    .key(MarcDataType.VALUE)
+                                    .value(" test 2"))),
+                    new MarcAction()
+                        .name(UpdateActionType.REPLACE_WITH)
+                        .data(
+                            List.of(new MarcActionDataInner().key(MarcDataType.VALUE).value("")))));
+    var rules =
+        new BulkOperationMarcRuleCollection()
+            .bulkOperationMarcRules(Collections.singletonList(findAndReplaceRule))
+            .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules, date);
+
+    var dataFields = marcRecord.getDataFields();
+    // Field should remain with cleaned up delimiters
+    assertThat(dataFields).hasSize(1);
+    // Should be "test 1| test 3" not "test 1|| test 3"
+    assertThat(dataFields.get(0).getSubfields().get(0).getData()).isEqualTo("test 1| test 3");
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldCleanupDelimitersWhenReplacingFirstValue() {
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    // Field with delimiter-separated values where first value will be removed
+    var dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "test 1| test 2| test 3"));
+    marcRecord.addVariableField(dataField);
+
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
+    var bulkOperationId = UUID.randomUUID();
+    var operation =
+        BulkOperation.builder().id(bulkOperationId).identifierType(IdentifierType.ID).build();
+    var findAndReplaceRule =
+        new BulkOperationMarcRule()
+            .bulkOperationId(bulkOperationId)
+            .tag("500")
+            .ind1("1")
+            .ind2("\\")
+            .subfield("a")
+            .actions(
+                List.of(
+                    new MarcAction()
+                        .name(FIND)
+                        .data(
+                            Collections.singletonList(
+                                new MarcActionDataInner()
+                                    .key(MarcDataType.VALUE)
+                                    .value("test 1|"))),
+                    new MarcAction()
+                        .name(UpdateActionType.REPLACE_WITH)
+                        .data(
+                            List.of(new MarcActionDataInner().key(MarcDataType.VALUE).value("")))));
+    var rules =
+        new BulkOperationMarcRuleCollection()
+            .bulkOperationMarcRules(Collections.singletonList(findAndReplaceRule))
+            .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules, date);
+
+    var dataFields = marcRecord.getDataFields();
+    // Field should remain with cleaned up delimiters
+    assertThat(dataFields).hasSize(1);
+    // Should be "test 2| test 3" not "| test 2| test 3"
+    assertThat(dataFields.get(0).getSubfields().get(0).getData()).isEqualTo("test 2| test 3");
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldCleanupDelimitersWhenReplacingLastValue() {
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    // Field with delimiter-separated values where last value will be removed
+    var dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "test 1| test 2| test 3"));
+    marcRecord.addVariableField(dataField);
+
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
+    var bulkOperationId = UUID.randomUUID();
+    var operation =
+        BulkOperation.builder().id(bulkOperationId).identifierType(IdentifierType.ID).build();
+    var findAndReplaceRule =
+        new BulkOperationMarcRule()
+            .bulkOperationId(bulkOperationId)
+            .tag("500")
+            .ind1("1")
+            .ind2("\\")
+            .subfield("a")
+            .actions(
+                List.of(
+                    new MarcAction()
+                        .name(FIND)
+                        .data(
+                            Collections.singletonList(
+                                new MarcActionDataInner()
+                                    .key(MarcDataType.VALUE)
+                                    .value("| test 3"))),
+                    new MarcAction()
+                        .name(UpdateActionType.REPLACE_WITH)
+                        .data(
+                            List.of(new MarcActionDataInner().key(MarcDataType.VALUE).value("")))));
+    var rules =
+        new BulkOperationMarcRuleCollection()
+            .bulkOperationMarcRules(Collections.singletonList(findAndReplaceRule))
+            .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules, date);
+
+    var dataFields = marcRecord.getDataFields();
+    // Field should remain with cleaned up delimiters
+    assertThat(dataFields).hasSize(1);
+    // Should be "test 1| test 2" not "test 1| test 2|"
+    assertThat(dataFields.get(0).getSubfields().get(0).getData()).isEqualTo("test 1| test 2");
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldRemoveSubfieldWhenAllDelimiterSeparatedValuesAreRemoved() {
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    // Field with only delimiters after replacement should be removed
+    var dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "test| test| test"));
+    dataField.addSubfield(new SubfieldImpl('b', "keep this"));
+    marcRecord.addVariableField(dataField);
+
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
+    var bulkOperationId = UUID.randomUUID();
+    var operation =
+        BulkOperation.builder().id(bulkOperationId).identifierType(IdentifierType.ID).build();
+    var findAndReplaceRule =
+        new BulkOperationMarcRule()
+            .bulkOperationId(bulkOperationId)
+            .tag("500")
+            .ind1("1")
+            .ind2("\\")
+            .subfield("a")
+            .actions(
+                List.of(
+                    new MarcAction()
+                        .name(FIND)
+                        .data(
+                            Collections.singletonList(
+                                new MarcActionDataInner().key(MarcDataType.VALUE).value("test"))),
+                    new MarcAction()
+                        .name(UpdateActionType.REPLACE_WITH)
+                        .data(
+                            List.of(new MarcActionDataInner().key(MarcDataType.VALUE).value("")))));
+    var rules =
+        new BulkOperationMarcRuleCollection()
+            .bulkOperationMarcRules(Collections.singletonList(findAndReplaceRule))
+            .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules, date);
+
+    var dataFields = marcRecord.getDataFields();
+    // Field should remain but subfield 'a' should be removed (only delimiters left)
+    assertThat(dataFields).hasSize(1);
+    assertThat(dataFields.get(0)).hasToString("500 1 $bkeep this");
+  }
 }

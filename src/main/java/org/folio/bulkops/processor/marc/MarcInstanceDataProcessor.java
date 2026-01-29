@@ -167,7 +167,13 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
                           if (StringUtils.isEmpty(replacedValue)) {
                             subfieldsToRemove.add(subfield);
                           } else {
-                            subfield.setData(replacedValue);
+                            // Clean up delimiters after replacement
+                            replacedValue = cleanupDelimiters(replacedValue);
+                            if (StringUtils.isEmpty(replacedValue)) {
+                              subfieldsToRemove.add(subfield);
+                            } else {
+                              subfield.setData(replacedValue);
+                            }
                           }
                         }
                       });
@@ -263,6 +269,28 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
 
   private char fetchIndicatorValue(String s) {
     return "\\".equals(s) ? SPACE_CHAR : s.charAt(0);
+  }
+
+  /**
+   * Cleans up delimiters in a string after value removal. Handles cases like "test 1||test 3" ->
+   * "test 1| test 3" and removes leading/trailing delimiters.
+   */
+  private String cleanupDelimiters(String value) {
+    if (StringUtils.isEmpty(value)) {
+      return value;
+    }
+
+    // Replace multiple consecutive delimiters (with optional spaces) with a single delimiter
+    String cleaned = value.replaceAll("\\|\\s*\\|+", "|");
+
+    // Remove leading delimiter
+    cleaned = cleaned.replaceAll("^\\|\\s*", "");
+
+    // Remove trailing delimiter
+    cleaned = cleaned.replaceAll("\\s*\\|$", "");
+
+    // Trim the result
+    return cleaned.trim();
   }
 
   private String fetchActionDataValue(MarcDataType dataType, List<MarcActionDataInner> actionData)
