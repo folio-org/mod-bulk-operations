@@ -1349,4 +1349,67 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     assertThat(dataFields).hasSize(1);
     assertThat(dataFields.get(0)).hasToString("500 1 $bkeep this");
   }
+
+  @Test
+  @SneakyThrows
+  void shouldCleanupDelimitersWhenUsingFindAndRemoveSubfield() {
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    // Field with delimiter-separated values where middle value will be removed using REMOVE_SUBFIELD
+    var dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "test 1| test 2| test 3"));
+    marcRecord.addVariableField(dataField);
+
+    // Another field to test removing first value
+    dataField = new DataFieldImpl("500", '1', ' ');
+    dataField.addSubfield(new SubfieldImpl('a', "test 2| test 3| test 4"));
+    marcRecord.addVariableField(dataField);
+
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
+    var bulkOperationId = UUID.randomUUID();
+    var operation =
+        BulkOperation.builder().id(bulkOperationId).identifierType(IdentifierType.ID).build();
+    var findAndRemoveRule =
+        new BulkOperationMarcRule()
+            .bulkOperationId(bulkOperationId)
+            .tag("500")
+            .ind1("1")
+            .ind2("\\")
+            .subfield("a")
+            .actions(
+                List.of(
+                    new MarcAction()
+                        .name(FIND)
+                        .data(
+                            Collections.singletonList(
+                                new MarcActionDataInner()
+                                    .key(MarcDataType.VALUE)
+                                    .value(" test 2"))),
+                    new MarcAction()
+                        .name(UpdateActionType.REMOVE_SUBFIELD)
+                        .data(Collections.emptyList())));
+    var rules =
+        new BulkOperationMarcRuleCollection()
+            .bulkOperationMarcRules(Collections.singletonList(findAndRemoveRule))
+            .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules, date);
+
+    var dataFields = marcRecord.getDataFields();
+    // Both fields should remain with cleaned up values
+    assertThat(dataFields).hasSize(2);
+
+    // First field: "test 1| test 2| test 3" with " test 2" removed -> "test 1| test 3"
+    assertThat(dataFields.get(0).getSubfields().get(0).getData()).isEqualTo("test 1| test 3");
+
+    // Second field: "test 2| test 3| test 4" with " test 2" removed -> "test 3| test 4"
+    // Note: This removes " test 2" which leaves "|" at the start, should be cleaned to "test 3| test 4"
+    assertThat(dataFields.get(1).getSubfields().get(0).getData()).isEqualTo("test 3| test 4");
+  }
 }

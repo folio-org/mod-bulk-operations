@@ -205,9 +205,28 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
     findFields(rule, marcRecord)
         .forEach(
             df -> {
+              var subfieldsToRemove = new java.util.ArrayList<Subfield>();
               df.getSubfields(subfieldCode).stream()
                   .filter(sf -> contains(sf.getData(), findValue))
-                  .forEach(df::removeSubfield);
+                  .forEach(subfield -> {
+                    // Remove the found value from the subfield data
+                    var updatedValue = replace(subfield.getData(), findValue, "");
+                    // Clean up delimiters after removal
+                    updatedValue = cleanupDelimiters(updatedValue);
+                    
+                    if (StringUtils.isEmpty(updatedValue)) {
+                      // If the subfield is now empty, mark it for removal
+                      subfieldsToRemove.add(subfield);
+                    } else {
+                      // Update the subfield with cleaned value
+                      subfield.setData(updatedValue);
+                    }
+                  });
+              
+              // Remove empty subfields
+              subfieldsToRemove.forEach(df::removeSubfield);
+              
+              // If the field has no subfields left, mark it for removal
               if (df.getSubfields().isEmpty()) {
                 fieldsToRemove.add(df);
               }
