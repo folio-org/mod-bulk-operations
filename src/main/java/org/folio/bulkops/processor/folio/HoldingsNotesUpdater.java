@@ -118,9 +118,13 @@ public class HoldingsNotesUpdater {
                             action, extendedHoldingsRecord.getEntity().getAdministrativeNotes())));
       } else if (option == HOLDINGS_NOTE) {
         return Optional.of(
-            extendedHoldingsRecord ->
-                findAndReplaceNoteByValueAndTypeId(
-                    action, extendedHoldingsRecord.getEntity().getNotes()));
+            extendedHoldingsRecord -> {
+              if (extendedHoldingsRecord.getEntity().getNotes() != null) {
+                var notes = new ArrayList<>(extendedHoldingsRecord.getEntity().getNotes());
+                findAndReplaceNoteByValueAndTypeId(action, notes);
+                extendedHoldingsRecord.getEntity().setNotes(notes);
+              }
+            });
       }
     } else if (CHANGE_TYPE == action.getType()) {
       if (option == ADMINISTRATIVE_NOTE) {
@@ -206,6 +210,7 @@ public class HoldingsNotesUpdater {
       String valueToRemove, List<HoldingsNote> notes, List<Parameter> parameters) {
     var typeIdParameterOptional = getTypeIdParameterOptional(parameters);
     if (typeIdParameterOptional.isPresent() && notes != null) {
+      notes = new ArrayList<>(notes);
       var notesToRemove = new ArrayList<HoldingsNote>();
       notes.stream()
           .filter(

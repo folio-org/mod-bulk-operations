@@ -300,8 +300,9 @@ public class ItemsNotesUpdater {
         yield Optional.of(
             extendedItem -> {
               if (extendedItem.getEntity().getCirculationNotes() != null) {
+                var circulationNotes = new ArrayList<>(extendedItem.getEntity().getCirculationNotes());
                 var notesToRemove = new ArrayList<CirculationNote>();
-                extendedItem.getEntity().getCirculationNotes().stream()
+                circulationNotes.stream()
                     .filter(circulationNote -> circulationNote.getNoteType() == type)
                     .forEach(
                         note -> {
@@ -312,7 +313,8 @@ public class ItemsNotesUpdater {
                             note.setNote(updatedNote);
                           }
                         });
-                extendedItem.getEntity().getCirculationNotes().removeAll(notesToRemove);
+                circulationNotes.removeAll(notesToRemove);
+                extendedItem.getEntity().setCirculationNotes(circulationNotes);
               }
             });
       }
@@ -327,8 +329,9 @@ public class ItemsNotesUpdater {
                       .ifPresent(
                           parameter -> {
                             if (extendedItem.getEntity().getNotes() != null) {
+                              var notes = new ArrayList<>(extendedItem.getEntity().getNotes());
                               var notesToRemove = new ArrayList<ItemNote>();
-                              extendedItem.getEntity().getNotes().stream()
+                              notes.stream()
                                   .filter(
                                       note ->
                                           StringUtils.equals(
@@ -343,7 +346,8 @@ public class ItemsNotesUpdater {
                                           note.setNote(updatedNote);
                                         }
                                       });
-                              extendedItem.getEntity().getNotes().removeAll(notesToRemove);
+                              notes.removeAll(notesToRemove);
+                              extendedItem.getEntity().setNotes(notes);
                             }
                           }));
       default -> Optional.empty();
@@ -368,10 +372,9 @@ public class ItemsNotesUpdater {
         yield Optional.of(
             extendedItem -> {
               if (extendedItem.getEntity().getCirculationNotes() != null) {
+                var circulationNotes = new ArrayList<>(extendedItem.getEntity().getCirculationNotes());
                 var notesToRemove = new ArrayList<CirculationNote>();
-                extendedItem
-                    .getEntity()
-                    .getCirculationNotes()
+                circulationNotes
                     .forEach(
                         circulationNote -> {
                           if (contains(circulationNote.getNote(), action.getInitial())
@@ -388,7 +391,8 @@ public class ItemsNotesUpdater {
                             }
                           }
                         });
-                extendedItem.getEntity().getCirculationNotes().removeAll(notesToRemove);
+                circulationNotes.removeAll(notesToRemove);
+                extendedItem.getEntity().setCirculationNotes(circulationNotes);
               }
             });
       }
@@ -403,10 +407,9 @@ public class ItemsNotesUpdater {
                       .ifPresent(
                           parameter -> {
                             if (extendedItem.getEntity().getNotes() != null) {
+                              var notes = new ArrayList<>(extendedItem.getEntity().getNotes());
                               var notesToRemove = new ArrayList<ItemNote>();
-                              extendedItem
-                                  .getEntity()
-                                  .getNotes()
+                              notes
                                   .forEach(
                                       itemNote -> {
                                         if (StringUtils.equals(
@@ -424,7 +427,8 @@ public class ItemsNotesUpdater {
                                           }
                                         }
                                       });
-                              extendedItem.getEntity().getNotes().removeAll(notesToRemove);
+                              notes.removeAll(notesToRemove);
+                              extendedItem.getEntity().setNotes(notes);
                             }
                           }));
       default -> Optional.empty();

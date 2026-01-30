@@ -129,7 +129,11 @@ public class InstanceNotesUpdaterFactory {
           administrativeNotesUpdater.findAndReplaceAdministrativeNote(
               action, instance.getAdministrativeNotes()));
     } else if (INSTANCE_NOTE.equals(option)) {
-      findAndReplaceNoteByValueAndTypeId(action, instance.getInstanceNotes());
+      if (instance.getInstanceNotes() != null) {
+        var notes = new ArrayList<>(instance.getInstanceNotes());
+        findAndReplaceNoteByValueAndTypeId(action, notes);
+        instance.setInstanceNotes(notes);
+      }
     }
   }
 
@@ -217,6 +221,7 @@ public class InstanceNotesUpdaterFactory {
       String valueToRemove, List<InstanceNote> notes, List<Parameter> parameters) {
     var typeIdOptional = getTypeIdOptional(parameters);
     if (typeIdOptional.isPresent() && notes != null) {
+      notes = new ArrayList<>(notes);
       var notesToRemove = new ArrayList<InstanceNote>();
       notes.stream()
           .filter(note -> StringUtils.equals(note.getInstanceNoteTypeId(), typeIdOptional.get()))
