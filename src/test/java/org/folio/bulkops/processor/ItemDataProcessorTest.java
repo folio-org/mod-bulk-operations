@@ -448,7 +448,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(0).getNoteType());
 
-    item.setCirculationNotes(List.of(checkInNote, checkOutNote));
+    item.setCirculationNotes(new ArrayList<>(List.of(checkInNote, checkOutNote)));
     processor.updater(CHECK_OUT_NOTE, new Action().type(REMOVE_ALL), extendedItem, false).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
@@ -608,7 +608,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(1).getNoteType());
 
-    item.setCirculationNotes(List.of(checkInNote, checkOutNote));
+    item.setCirculationNotes(new ArrayList<>(List.of(checkInNote, checkOutNote)));
     processor.updater(CHECK_IN_NOTE, new Action().type(FIND_AND_REMOVE_THESE).initial("note"), extendedItem, false).apply(extendedItem);
     assertEquals(2, item.getCirculationNotes().size());
     assertEquals("circ ", item.getCirculationNotes().get(0).getNote());
@@ -846,7 +846,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals("note", item.getAdministrativeNotes().get(0));
 
     item.setAdministrativeNotes(null);
-    item.setCirculationNotes(List.of(checkInNote, checkOutNote));
+    item.setCirculationNotes(new ArrayList<>(List.of(checkInNote, checkOutNote)));
 
     processor.updater(CHECK_IN_NOTE, new Action().type(CHANGE_TYPE)
       .updated("typeId"), extendedItem, false).apply(extendedItem);
@@ -878,7 +878,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals("itemNote2", item.getNotes().get(0).getNote());
 
     item.setAdministrativeNotes(null);
-    item.setNotes(List.of(itemNote1, itemNote2));
+    item.setNotes(new ArrayList<>(List.of(itemNote1, itemNote2)));
 
     processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(CHECK_IN_NOTE_TYPE).parameters(List.of(parameter)), extendedItem, false).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
@@ -889,7 +889,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals("itemNote2", item.getNotes().get(0).getNote());
 
     item.setCirculationNotes(null);
-    item.setNotes(List.of(itemNote1, itemNote2));
+    item.setNotes(new ArrayList<>(List.of(itemNote1, itemNote2)));
 
     processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated(CHECK_OUT_NOTE_TYPE).parameters(List.of(parameter)), extendedItem, false).apply(extendedItem);
     assertEquals(1, item.getCirculationNotes().size());
@@ -900,7 +900,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals("itemNote2", item.getNotes().get(0).getNote());
 
     item.setCirculationNotes(null);
-    item.setNotes(List.of(itemNote1, itemNote2));
+    item.setNotes(new ArrayList<>(List.of(itemNote1, itemNote2)));
 
     processor.updater(ITEM_NOTE, new Action().type(CHANGE_TYPE).updated("typeId3").parameters(List.of(parameter)), extendedItem, false).apply(extendedItem);
     assertEquals(2, item.getNotes().size());

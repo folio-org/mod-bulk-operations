@@ -39,6 +39,7 @@ public class AdministrativeNotesUpdater {
     if (administrativeNotes != null) {
       administrativeNotes = administrativeNotes.stream()
         .map(note -> note.replace(valueToRemove, EMPTY))
+        .filter(note -> !note.isBlank())
         .collect(toCollection(ArrayList::new));
     }
     return administrativeNotes;
@@ -51,7 +52,9 @@ public class AdministrativeNotesUpdater {
           return StringUtils.replace(administrativeNote, action.getInitial(), action.getUpdated());
         }
         return administrativeNote;
-      }).collect(toCollection(ArrayList::new));
+      })
+      .filter(note -> !note.trim().isEmpty())
+      .collect(toCollection(ArrayList::new));
     }
     return administrativeNotes;
   }
