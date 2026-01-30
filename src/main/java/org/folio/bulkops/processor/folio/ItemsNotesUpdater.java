@@ -516,10 +516,6 @@ public class ItemsNotesUpdater {
               .toList();
       if (NOTES_TYPES_TO_UPDATE.contains(noteTypeToUse)) {
         if (!notesWithTypeForChange.isEmpty()) {
-          var notesWithoutTypeForChange =
-              item.getNotes().stream()
-                  .filter(note -> !StringUtils.equals(note.getItemNoteTypeId(), noteTypeId))
-                  .collect(toCollection(ArrayList::new));
           if (item.getAdministrativeNotes() == null) {
             item.setAdministrativeNotes(new ArrayList<>());
           }
@@ -548,6 +544,10 @@ public class ItemsNotesUpdater {
                   item.getAdministrativeNotes().add(note.getNote());
                 }
               });
+          var notesWithoutTypeForChange =
+              item.getNotes().stream()
+                  .filter(note -> !StringUtils.equals(note.getItemNoteTypeId(), noteTypeId))
+                  .collect(toCollection(ArrayList::new));
           item.setNotes(notesWithoutTypeForChange);
         }
       } else {
