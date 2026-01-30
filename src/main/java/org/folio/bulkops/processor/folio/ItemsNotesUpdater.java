@@ -300,7 +300,8 @@ public class ItemsNotesUpdater {
         yield Optional.of(
             extendedItem -> {
               if (extendedItem.getEntity().getCirculationNotes() != null) {
-                var circulationNotes = new ArrayList<>(extendedItem.getEntity().getCirculationNotes());
+                var circulationNotes =
+                    new ArrayList<>(extendedItem.getEntity().getCirculationNotes());
                 var notesToRemove = new ArrayList<CirculationNote>();
                 circulationNotes.stream()
                     .filter(circulationNote -> circulationNote.getNoteType() == type)
@@ -372,25 +373,25 @@ public class ItemsNotesUpdater {
         yield Optional.of(
             extendedItem -> {
               if (extendedItem.getEntity().getCirculationNotes() != null) {
-                var circulationNotes = new ArrayList<>(extendedItem.getEntity().getCirculationNotes());
+                var circulationNotes =
+                    new ArrayList<>(extendedItem.getEntity().getCirculationNotes());
                 var notesToRemove = new ArrayList<CirculationNote>();
-                circulationNotes
-                    .forEach(
-                        circulationNote -> {
-                          if (contains(circulationNote.getNote(), action.getInitial())
-                              && type == circulationNote.getNoteType()) {
-                            String replacedNote =
-                                replace(
-                                    circulationNote.getNote(),
-                                    action.getInitial(),
-                                    action.getUpdated());
-                            if (replacedNote.trim().isEmpty()) {
-                              notesToRemove.add(circulationNote);
-                            } else {
-                              circulationNote.setNote(replacedNote);
-                            }
-                          }
-                        });
+                circulationNotes.forEach(
+                    circulationNote -> {
+                      if (contains(circulationNote.getNote(), action.getInitial())
+                          && type == circulationNote.getNoteType()) {
+                        String replacedNote =
+                            replace(
+                                circulationNote.getNote(),
+                                action.getInitial(),
+                                action.getUpdated());
+                        if (replacedNote.trim().isEmpty()) {
+                          notesToRemove.add(circulationNote);
+                        } else {
+                          circulationNote.setNote(replacedNote);
+                        }
+                      }
+                    });
                 circulationNotes.removeAll(notesToRemove);
                 extendedItem.getEntity().setCirculationNotes(circulationNotes);
               }
@@ -409,24 +410,23 @@ public class ItemsNotesUpdater {
                             if (extendedItem.getEntity().getNotes() != null) {
                               var notes = new ArrayList<>(extendedItem.getEntity().getNotes());
                               var notesToRemove = new ArrayList<ItemNote>();
-                              notes
-                                  .forEach(
-                                      itemNote -> {
-                                        if (StringUtils.equals(
-                                                itemNote.getItemNoteTypeId(), parameter.getValue())
-                                            && contains(itemNote.getNote(), action.getInitial())) {
-                                          String replacedNote =
-                                              replace(
-                                                  itemNote.getNote(),
-                                                  action.getInitial(),
-                                                  action.getUpdated());
-                                          if (replacedNote.trim().isEmpty()) {
-                                            notesToRemove.add(itemNote);
-                                          } else {
-                                            itemNote.setNote(replacedNote);
-                                          }
-                                        }
-                                      });
+                              notes.forEach(
+                                  itemNote -> {
+                                    if (StringUtils.equals(
+                                            itemNote.getItemNoteTypeId(), parameter.getValue())
+                                        && contains(itemNote.getNote(), action.getInitial())) {
+                                      String replacedNote =
+                                          replace(
+                                              itemNote.getNote(),
+                                              action.getInitial(),
+                                              action.getUpdated());
+                                      if (replacedNote.trim().isEmpty()) {
+                                        notesToRemove.add(itemNote);
+                                      } else {
+                                        itemNote.setNote(replacedNote);
+                                      }
+                                    }
+                                  });
                               notes.removeAll(notesToRemove);
                               extendedItem.getEntity().setNotes(notes);
                             }
