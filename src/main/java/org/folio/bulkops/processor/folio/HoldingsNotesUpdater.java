@@ -206,12 +206,22 @@ public class HoldingsNotesUpdater {
       String valueToRemove, List<HoldingsNote> notes, List<Parameter> parameters) {
     var typeIdParameterOptional = getTypeIdParameterOptional(parameters);
     if (typeIdParameterOptional.isPresent() && notes != null) {
+      var notesToRemove = new ArrayList<HoldingsNote>();
       notes.stream()
           .filter(
               note ->
                   StringUtils.equals(
                       note.getHoldingsNoteTypeId(), typeIdParameterOptional.get().getValue()))
-          .forEach(note -> note.setNote(note.getNote().replace(valueToRemove, StringUtils.EMPTY)));
+          .forEach(
+              note -> {
+                String updatedNote = note.getNote().replace(valueToRemove, StringUtils.EMPTY);
+                if (updatedNote.trim().isEmpty()) {
+                  notesToRemove.add(note);
+                } else {
+                  note.setNote(updatedNote);
+                }
+              });
+      notes.removeAll(notesToRemove);
     }
     return notes;
   }
@@ -219,14 +229,22 @@ public class HoldingsNotesUpdater {
   private void findAndReplaceNoteByValueAndTypeId(Action action, List<HoldingsNote> notes) {
     var typeIdParameterOptional = getTypeIdParameterOptional(action.getParameters());
     if (typeIdParameterOptional.isPresent() && notes != null) {
+      var notesToRemove = new ArrayList<HoldingsNote>();
       notes.forEach(
           note -> {
             if (StringUtils.equals(
                     note.getHoldingsNoteTypeId(), typeIdParameterOptional.get().getValue())
                 && contains(note.getNote(), action.getInitial())) {
-              note.setNote(replace(note.getNote(), action.getInitial(), action.getUpdated()));
+              String replacedNote =
+                  replace(note.getNote(), action.getInitial(), action.getUpdated());
+              if (replacedNote.trim().isEmpty()) {
+                notesToRemove.add(note);
+              } else {
+                note.setNote(replacedNote);
+              }
             }
           });
+      notes.removeAll(notesToRemove);
     }
   }
 

@@ -42,6 +42,7 @@ public class AdministrativeNotesUpdater {
       administrativeNotes =
           administrativeNotes.stream()
               .map(note -> note.replace(valueToRemove, EMPTY))
+              .filter(note -> !note.trim().isEmpty())
               .collect(toCollection(ArrayList::new));
     }
     return administrativeNotes;
@@ -60,6 +61,7 @@ public class AdministrativeNotesUpdater {
                     }
                     return administrativeNote;
                   })
+              .filter(note -> !note.trim().isEmpty())
               .collect(toCollection(ArrayList::new));
     }
     return administrativeNotes;
