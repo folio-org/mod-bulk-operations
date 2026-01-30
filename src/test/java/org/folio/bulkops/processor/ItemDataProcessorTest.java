@@ -588,7 +588,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(
         CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().getFirst().getNoteType());
 
-    item.setCirculationNotes(List.of(checkInNote, checkOutNote));
+    item.setCirculationNotes(new ArrayList<>(List.of(checkInNote, checkOutNote)));
     dataProcessor
         .updater(CHECK_OUT_NOTE, new Action().type(REMOVE_ALL), extendedItem, false)
         .apply(extendedItem);
@@ -850,7 +850,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals(CirculationNote.NoteTypeEnum.IN, item.getCirculationNotes().get(0).getNoteType());
     assertEquals(CirculationNote.NoteTypeEnum.OUT, item.getCirculationNotes().get(1).getNoteType());
 
-    item.setCirculationNotes(List.of(checkInNote, checkOutNote));
+    item.setCirculationNotes(new ArrayList<>(List.of(checkInNote, checkOutNote)));
     dataProcessor
         .updater(
             CHECK_IN_NOTE,
@@ -1221,7 +1221,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals("note", item.getAdministrativeNotes().getFirst());
 
     item.setAdministrativeNotes(null);
-    item.setCirculationNotes(List.of(checkInNote, checkOutNote));
+    item.setCirculationNotes(new ArrayList<>(List.of(checkInNote, checkOutNote)));
 
     dataProcessor
         .updater(
@@ -1268,7 +1268,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals("itemNote2", item.getNotes().getFirst().getNote());
 
     item.setAdministrativeNotes(null);
-    item.setNotes(List.of(itemNote1, itemNote2));
+    item.setNotes(new ArrayList<>(List.of(itemNote1, itemNote2)));
 
     dataProcessor
         .updater(
@@ -1289,7 +1289,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals("itemNote2", item.getNotes().getFirst().getNote());
 
     item.setCirculationNotes(null);
-    item.setNotes(List.of(itemNote1, itemNote2));
+    item.setNotes(new ArrayList<>(List.of(itemNote1, itemNote2)));
 
     dataProcessor
         .updater(
@@ -1310,7 +1310,7 @@ class ItemDataProcessorTest extends BaseTest {
     assertEquals("itemNote2", item.getNotes().getFirst().getNote());
 
     item.setCirculationNotes(null);
-    item.setNotes(List.of(itemNote1, itemNote2));
+    item.setNotes(new ArrayList<>(List.of(itemNote1, itemNote2)));
 
     dataProcessor
         .updater(
