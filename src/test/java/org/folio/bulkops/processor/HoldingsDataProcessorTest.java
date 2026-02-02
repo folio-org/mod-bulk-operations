@@ -852,7 +852,7 @@ class HoldingsDataProcessorTest extends BaseTest {
     assertEquals("note2", holding.getNotes().getFirst().getNote());
 
     holding.setAdministrativeNotes(null);
-    holding.setNotes(List.of(note1, note2));
+    holding.setNotes(new ArrayList<>(List.of(note1, note2)));
 
     dataProcessor
         .updater(
