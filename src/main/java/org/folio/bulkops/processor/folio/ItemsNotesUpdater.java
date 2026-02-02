@@ -308,7 +308,7 @@ public class ItemsNotesUpdater {
                     .forEach(
                         note -> {
                           String updatedNote = note.getNote().replace(action.getInitial(), EMPTY);
-                          if (updatedNote.trim().isEmpty()) {
+                          if (updatedNote.isBlank()) {
                             notesToRemove.add(note);
                           } else {
                             note.setNote(updatedNote);
@@ -341,7 +341,7 @@ public class ItemsNotesUpdater {
                                       note -> {
                                         String updatedNote =
                                             note.getNote().replace(action.getInitial(), EMPTY);
-                                        if (updatedNote.trim().isEmpty()) {
+                                        if (updatedNote.isBlank()) {
                                           notesToRemove.add(note);
                                         } else {
                                           note.setNote(updatedNote);
@@ -385,7 +385,7 @@ public class ItemsNotesUpdater {
                                 circulationNote.getNote(),
                                 action.getInitial(),
                                 action.getUpdated());
-                        if (replacedNote.trim().isEmpty()) {
+                        if (replacedNote.isBlank()) {
                           notesToRemove.add(circulationNote);
                         } else {
                           circulationNote.setNote(replacedNote);

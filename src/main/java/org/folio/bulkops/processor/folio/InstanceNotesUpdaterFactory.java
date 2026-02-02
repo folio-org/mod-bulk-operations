@@ -228,7 +228,7 @@ public class InstanceNotesUpdaterFactory {
           .forEach(
               note -> {
                 String updatedNote = note.getNote().replace(valueToRemove, EMPTY);
-                if (updatedNote.trim().isEmpty()) {
+                if (updatedNote.isBlank()) {
                   notesToRemove.add(note);
                 } else {
                   note.setNote(updatedNote);
@@ -249,7 +249,7 @@ public class InstanceNotesUpdaterFactory {
                 && contains(note.getNote(), action.getInitial())) {
               String replacedNote =
                   replace(note.getNote(), action.getInitial(), action.getUpdated());
-              if (replacedNote.trim().isEmpty()) {
+              if (replacedNote.isBlank()) {
                 notesToRemove.add(note);
               } else {
                 note.setNote(replacedNote);
