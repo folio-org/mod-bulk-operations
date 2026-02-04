@@ -32,7 +32,7 @@ public class DataImportJobCompletionReceiverService {
     try (var context = new FolioExecutionContextSetter(defaultFolioExecutionContext)) {
       // reference context to avoid 'variable is never used' warning
       Objects.requireNonNull(context);
-
+      log.info("Obtained DI event: {}", dataImportJobExecution);
       var jobProfileInfo = dataImportJobExecution.getJobProfileInfo();
       if (jobProfileInfo == null) {
         log.warn("Received DI event without jobProfileInfo: {}", dataImportJobExecution);
