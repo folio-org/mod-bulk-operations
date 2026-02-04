@@ -197,4 +197,7 @@ public class Constants {
   public static final String PARENT_INSTANCES = "parentInstances";
   public static final String PRECEDING_TITLES = "precedingTitles";
   public static final String SUCCEEDING_TITLES = "succeedingTitles";
+  public static final String PERMANENT_LOAN_TYPE = "permanentLoanType";
+  public static final String TEMPORARY_LOAN_TYPE = "temporaryLoanType";
+  public static final String EFFECTIVE_LOCATION = "effectiveLocation";
 }
