@@ -12,6 +12,8 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.BooleanNode;
+import com.fasterxml.jackson.databind.node.IntNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Objects;
 import lombok.experimental.UtilityClass;
@@ -27,7 +29,7 @@ public class InstancePatchUtils {
     var result = mapper.createObjectNode();
 
     result.put(INSTANCE_JSON_ID, instance.getId());
-    result.put(INSTANCE_JSON_VERSION, instance.getVersion());
+    result.set(INSTANCE_JSON_VERSION, IntNode.valueOf(instance.getVersion()));
 
     var details =
         rules.getBulkOperationRules().stream()
@@ -39,13 +41,19 @@ public class InstancePatchUtils {
       if (ruleDetails.getOption() != null) {
         switch (ruleDetails.getOption()) {
           case STAFF_SUPPRESS ->
-              result.put(INSTANCE_JSON_STAFF_SUPPRESS, instance.getStaffSuppress());
+              result.set(
+                  INSTANCE_JSON_STAFF_SUPPRESS, BooleanNode.valueOf(instance.getStaffSuppress()));
           case SUPPRESS_FROM_DISCOVERY ->
-              result.put(INSTANCE_JSON_DISCOVERY_SUPPRESS, instance.getDiscoverySuppress());
+              result.set(
+                  INSTANCE_JSON_DISCOVERY_SUPPRESS,
+                  BooleanNode.valueOf(instance.getDiscoverySuppress()));
           case SET_RECORDS_FOR_DELETE -> {
-            result.put(INSTANCE_JSON_STAFF_SUPPRESS, instance.getStaffSuppress());
-            result.put(INSTANCE_JSON_DISCOVERY_SUPPRESS, instance.getDiscoverySuppress());
-            result.put(INSTANCE_JSON_DELETED, instance.getDeleted());
+            result.set(
+                INSTANCE_JSON_STAFF_SUPPRESS, BooleanNode.valueOf(instance.getStaffSuppress()));
+            result.set(
+                INSTANCE_JSON_DISCOVERY_SUPPRESS,
+                BooleanNode.valueOf(instance.getDiscoverySuppress()));
+            result.set(INSTANCE_JSON_DELETED, BooleanNode.valueOf(instance.getDeleted()));
           }
           case STATISTICAL_CODE ->
               result.set(
