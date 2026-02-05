@@ -43,54 +43,23 @@ public class InstancePatchUtils {
     for (var ruleDetails : details) {
       if (ruleDetails.getOption() != null) {
         switch (ruleDetails.getOption()) {
-          case STAFF_SUPPRESS ->
-              result.set(
-                  INSTANCE_JSON_STAFF_SUPPRESS,
-                  isNull(instance.getStaffSuppress())
-                      ? mapper.nullNode()
-                      : BooleanNode.valueOf(instance.getStaffSuppress()));
-          case SUPPRESS_FROM_DISCOVERY ->
-              result.set(
-                  INSTANCE_JSON_DISCOVERY_SUPPRESS,
-                  isNull(instance.getDiscoverySuppress())
-                      ? mapper.nullNode()
-                      : BooleanNode.valueOf(instance.getDiscoverySuppress()));
-          case SET_RECORDS_FOR_DELETE -> {
-            result.set(
-                INSTANCE_JSON_STAFF_SUPPRESS,
-                isNull(instance.getStaffSuppress())
-                    ? mapper.nullNode()
-                    : BooleanNode.valueOf(instance.getStaffSuppress()));
-            result.set(
-                INSTANCE_JSON_DISCOVERY_SUPPRESS,
-                isNull(instance.getDiscoverySuppress())
-                    ? mapper.nullNode()
-                    : BooleanNode.valueOf(instance.getDiscoverySuppress()));
-            result.set(
-                INSTANCE_JSON_DELETED,
-                isNull(instance.getDeleted())
-                    ? mapper.nullNode()
-                    : BooleanNode.valueOf(instance.getDeleted()));
-          }
-          case STATISTICAL_CODE ->
-              result.set(
-                  INSTANCE_JSON_STATISTICAL_CODES,
-                  mapper.valueToTree(instance.getStatisticalCodeIds()));
+          case STAFF_SUPPRESS -> addStaffSuppress(result, instance);
+          case SUPPRESS_FROM_DISCOVERY -> addDiscoverySuppress(result, instance);
+          case SET_RECORDS_FOR_DELETE -> addSetForDeletion(result, instance);
+          case STATISTICAL_CODE -> addStatisticalCode(result, instance);
           case ADMINISTRATIVE_NOTE -> {
-            result.set(
-                INSTANCE_JSON_ADM_NOTES, mapper.valueToTree(instance.getAdministrativeNotes()));
+            addAdministrativeNotes(result, instance);
             if (CHANGE_TYPE.equals(ruleDetails.getActions().getFirst().getType())) {
-              result.set(INSTANCE_JSON_NOTES, mapper.valueToTree(instance.getInstanceNotes()));
+              addInstanceNotes(result, instance);
             }
           }
           case INSTANCE_NOTE -> {
-            result.set(INSTANCE_JSON_NOTES, mapper.valueToTree(instance.getInstanceNotes()));
-            if (ruleDetails.getActions().getFirst().getType().equals(CHANGE_TYPE)
+            addInstanceNotes(result, instance);
+            if (CHANGE_TYPE.equals(ruleDetails.getActions().getFirst().getType())
                 && ADMINISTRATIVE_NOTE
                     .getValue()
                     .equals(ruleDetails.getActions().getFirst().getUpdated())) {
-              result.set(
-                  INSTANCE_JSON_ADM_NOTES, mapper.valueToTree(instance.getAdministrativeNotes()));
+              addAdministrativeNotes(result, instance);
             }
           }
           default ->
@@ -100,5 +69,43 @@ public class InstancePatchUtils {
       }
     }
     return result;
+  }
+
+  private static void addStaffSuppress(ObjectNode node, Instance instance) {
+    node.set(
+        INSTANCE_JSON_STAFF_SUPPRESS,
+        isNull(instance.getStaffSuppress())
+            ? mapper.nullNode()
+            : BooleanNode.valueOf(instance.getStaffSuppress()));
+  }
+
+  private static void addDiscoverySuppress(ObjectNode node, Instance instance) {
+    node.set(
+        INSTANCE_JSON_DISCOVERY_SUPPRESS,
+        isNull(instance.getDiscoverySuppress())
+            ? mapper.nullNode()
+            : BooleanNode.valueOf(instance.getDiscoverySuppress()));
+  }
+
+  private static void addSetForDeletion(ObjectNode node, Instance instance) {
+    node.set(
+        INSTANCE_JSON_DELETED,
+        isNull(instance.getDeleted())
+            ? mapper.nullNode()
+            : BooleanNode.valueOf(instance.getDeleted()));
+    addStaffSuppress(node, instance);
+    addDiscoverySuppress(node, instance);
+  }
+
+  private static void addStatisticalCode(ObjectNode node, Instance instance) {
+    node.set(INSTANCE_JSON_STATISTICAL_CODES, mapper.valueToTree(instance.getStatisticalCodeIds()));
+  }
+
+  private static void addAdministrativeNotes(ObjectNode node, Instance instance) {
+    node.set(INSTANCE_JSON_ADM_NOTES, mapper.valueToTree(instance.getAdministrativeNotes()));
+  }
+
+  private static void addInstanceNotes(ObjectNode node, Instance instance) {
+    node.set(INSTANCE_JSON_NOTES, mapper.valueToTree(instance.getInstanceNotes()));
   }
 }
