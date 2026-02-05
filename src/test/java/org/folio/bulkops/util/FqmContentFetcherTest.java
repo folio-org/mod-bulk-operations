@@ -175,7 +175,6 @@ class FqmContentFetcherTest {
             .toList();
 
     var entityTypeId = randomUUID();
-    var entityJsonKey = "instance.jsonb";
     when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(any())).thenReturn(entityTypeId);
 
     when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
