@@ -16,6 +16,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
@@ -32,10 +33,13 @@ import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
+import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.dto.RuleDetails;
+import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.OptimisticLockingException;
 import org.folio.bulkops.processor.folio.ItemUpdateProcessor;
@@ -89,7 +93,7 @@ class RecordUpdateServiceTest extends BaseTest {
         recordUpdateService.updateEntity(extendedOriginalItem, extendedModifiedItem, operation);
 
     assertEquals(extendedModifiedItem, result);
-    verify(itemUpdateProcessor).updateRecord(any(ExtendedItem.class));
+    verify(itemUpdateProcessor).updateRecord(any(ExtendedItem.class), eq(null));
     verify(errorService, times(0))
         .saveError(any(UUID.class), anyString(), anyString(), eq(ErrorType.WARNING));
   }
@@ -111,7 +115,8 @@ class RecordUpdateServiceTest extends BaseTest {
         recordUpdateService.updateEntity(extendedOriginalItem, extendedModifiedItem, operation);
 
     assertEquals(extendedOriginalItem, result);
-    verify(itemUpdateProcessor, times(0)).updateRecord(any(ExtendedItem.class));
+    verify(itemUpdateProcessor, times(0))
+        .updateRecord(any(ExtendedItem.class), any(BulkOperationRuleCollection.class));
     verify(errorService)
         .saveError(
             operation.getId(),
@@ -247,6 +252,12 @@ class RecordUpdateServiceTest extends BaseTest {
 
   @Test
   void testUpdateModifiedEntityWithOtherError() {
+    var operation =
+        BulkOperation.builder()
+            .id(UUID.randomUUID())
+            .identifierType(IdentifierType.ID)
+            .entityType(INSTANCE)
+            .build();
     var feignException =
         FeignException.errorStatus(
             "",
@@ -264,17 +275,21 @@ class RecordUpdateServiceTest extends BaseTest {
                 .build());
     doThrow(feignException)
         .when(instanceClient)
-        .updateInstance(any(Instance.class), any(String.class));
+        .patchInstance(any(ObjectNode.class), any(String.class));
+    when(ruleService.getRules(operation.getId()))
+        .thenReturn(
+            new BulkOperationRuleCollection()
+                .bulkOperationRules(
+                    List.of(
+                        new BulkOperationRule()
+                            .ruleDetails(
+                                new RuleDetails().option(UpdateOptionType.STAFF_SUPPRESS))))
+                .totalRecords(1));
     var original = Instance.builder().id(UUID.randomUUID().toString()).build();
     var extendedOriginal = ExtendedInstance.builder().entity(original).build();
-    var modified = Instance.builder().id(UUID.randomUUID().toString()).version(1).build();
+    var modified =
+        Instance.builder().id(UUID.randomUUID().toString()).version(1).staffSuppress(true).build();
     var extendedModified = ExtendedInstance.builder().entity(modified).build();
-    var operation =
-        BulkOperation.builder()
-            .id(UUID.randomUUID())
-            .identifierType(IdentifierType.ID)
-            .entityType(INSTANCE)
-            .build();
 
     assertThrows(
         FeignException.class,

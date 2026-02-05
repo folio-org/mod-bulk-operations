@@ -23,6 +23,7 @@ public class RecordUpdateService {
   private final FolioUpdateProcessorFactory updateProcessorFactory;
   private final BulkOperationExecutionContentRepository executionContentRepository;
   private final EntityPathResolver entityPathResolver;
+  private final RuleService ruleService;
 
   public BulkOperationsEntity updateEntity(
       BulkOperationsEntity original, BulkOperationsEntity modified, BulkOperation operation) {
@@ -36,7 +37,7 @@ public class RecordUpdateService {
             resolveExtendedEntityClass(operation.getEntityType()));
     if (!isEqual) {
       try {
-        updater.updateRecord(modified);
+        updater.updateRecord(modified, ruleService.getRules(operation.getId()));
       } catch (FeignException e) {
         if (e.status() == 409 && e.getMessage().contains("optimistic locking")) {
           var message = Utils.getMessageFromFeignException(e);

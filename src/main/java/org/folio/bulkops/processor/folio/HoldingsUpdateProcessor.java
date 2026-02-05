@@ -21,6 +21,7 @@ import org.folio.bulkops.domain.bean.HoldingsNote;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
+import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -54,7 +55,8 @@ public class HoldingsUpdateProcessor extends FolioAbstractUpdateProcessor<Extend
   private final PermissionsValidator permissionsValidator;
 
   @Override
-  public void updateRecord(ExtendedHoldingsRecord extendedHoldingsRecord) {
+  public void updateRecord(
+      ExtendedHoldingsRecord extendedHoldingsRecord, BulkOperationRuleCollection rules) {
     var holdingsRecord = extendedHoldingsRecord.getEntity();
     if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
       var tenantId = extendedHoldingsRecord.getTenantId();
