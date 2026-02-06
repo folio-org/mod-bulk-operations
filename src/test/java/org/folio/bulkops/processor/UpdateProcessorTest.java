@@ -100,7 +100,7 @@ class UpdateProcessorTest extends BaseTest {
         .checkIfBulkEditWritePermissionExists(anyString(), any(), anyString());
     when(ruleService.getRules(isA(UUID.class))).thenReturn(new BulkOperationRuleCollection());
 
-    holdingsUpdateProcessor.updateRecord(extendedHoldingsRecord);
+    holdingsUpdateProcessor.updateRecord(extendedHoldingsRecord, new BulkOperationRuleCollection());
 
     verify(holdingsStorageClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
   }
@@ -124,7 +124,7 @@ class UpdateProcessorTest extends BaseTest {
             .withInstanceId(UUID.randomUUID().toString());
     var extendedHoldingsRecord =
         ExtendedHoldingsRecord.builder().tenantId("tenantId").entity(holdingsRecord).build();
-    holdingsUpdateProcessor.updateRecord(extendedHoldingsRecord);
+    holdingsUpdateProcessor.updateRecord(extendedHoldingsRecord, new BulkOperationRuleCollection());
 
     verify(holdingsStorageClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
   }
@@ -270,7 +270,7 @@ class UpdateProcessorTest extends BaseTest {
     doNothing()
         .when(permissionsValidator)
         .checkIfBulkEditWritePermissionExists(anyString(), eq(EntityType.ITEM), anyString());
-    itemUpdateProcessor.updateRecord(extendedItem);
+    itemUpdateProcessor.updateRecord(extendedItem, new BulkOperationRuleCollection());
 
     verify(itemClient).updateItem(item, item.getId());
   }
@@ -291,7 +291,7 @@ class UpdateProcessorTest extends BaseTest {
             .withId(UUID.randomUUID().toString())
             .withHoldingsRecordId(UUID.randomUUID().toString());
     var extendedItem = ExtendedItem.builder().tenantId("tenantId").entity(item).build();
-    itemUpdateProcessor.updateRecord(extendedItem);
+    itemUpdateProcessor.updateRecord(extendedItem, new BulkOperationRuleCollection());
 
     verify(itemClient).updateItem(item, item.getId());
   }
@@ -308,22 +308,38 @@ class UpdateProcessorTest extends BaseTest {
         .when(permissionsValidator)
         .checkIfBulkEditWritePermissionExists(anyString(), eq(EntityType.USER), anyString());
 
-    userUpdateProcessor.updateRecord(user);
+    userUpdateProcessor.updateRecord(user, new BulkOperationRuleCollection());
 
     verify(userClient).updateUser(user, user.getId());
   }
 
   @Test
   void shouldUpdateInstance() {
-    var instance = Instance.builder().id(UUID.randomUUID().toString()).title("Title").build();
+    var instanceId = UUID.randomUUID().toString();
+    var instance =
+        Instance.builder().id(instanceId).version(1).title("Title").staffSuppress(true).build();
     var extendedInstance = ExtendedInstance.builder().entity(instance).build();
     doNothing()
         .when(permissionsValidator)
         .checkIfBulkEditWritePermissionExists(anyString(), eq(EntityType.INSTANCE), anyString());
 
-    folioInstanceUpdateProcessor.updateRecord(extendedInstance);
+    var expectedBody =
+        objectMapper
+            .createObjectNode()
+            .put("id", instanceId)
+            .put("_version", 1)
+            .put("staffSuppress", true);
+    var rules =
+        new BulkOperationRuleCollection()
+            .bulkOperationRules(
+                List.of(
+                    new BulkOperationRule()
+                        .ruleDetails(new RuleDetails().option(UpdateOptionType.STAFF_SUPPRESS))))
+            .totalRecords(1);
 
-    verify(instanceClient).updateInstance(instance, instance.getId());
+    folioInstanceUpdateProcessor.updateRecord(extendedInstance, rules);
+
+    verify(instanceClient).patchInstance(expectedBody, instance.getId());
   }
 
   @ParameterizedTest

@@ -40,6 +40,14 @@ import org.folio.bulkops.domain.dto.IdentifierType;
 @JsonTypeName("instance")
 @EqualsAndHashCode(exclude = "version")
 public class Instance implements BulkOperationsEntity {
+  public static final String INSTANCE_JSON_ID = "id";
+  public static final String INSTANCE_JSON_VERSION = "_version";
+  public static final String INSTANCE_JSON_DISCOVERY_SUPPRESS = "discoverySuppress";
+  public static final String INSTANCE_JSON_STAFF_SUPPRESS = "staffSuppress";
+  public static final String INSTANCE_JSON_DELETED = "deleted";
+  public static final String INSTANCE_JSON_ADM_NOTES = "administrativeNotes";
+  public static final String INSTANCE_JSON_NOTES = "notes";
+  public static final String INSTANCE_JSON_STATISTICAL_CODES = "statisticalCodeIds";
   public static final String INSTANCE_UUID = "Instance UUID";
   public static final String INSTANCE_HRID = "Instance HRID";
   public static final String INSTANCE_SOURCE = "Source";
@@ -70,16 +78,16 @@ public class Instance implements BulkOperationsEntity {
   public static final String INSTANCE_PUBLICATION = "Publication";
   public static final String INSTANCE_SET_FOR_DELETION = "Set for deletion";
 
-  @JsonProperty("id")
+  @JsonProperty(INSTANCE_JSON_ID)
   @CsvCustomBindByName(column = INSTANCE_UUID, converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 0, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String id;
 
-  @JsonProperty("_version")
+  @JsonProperty(INSTANCE_JSON_VERSION)
   private Integer version;
 
-  @JsonProperty("discoverySuppress")
+  @JsonProperty(INSTANCE_JSON_DISCOVERY_SUPPRESS)
   @CsvCustomBindByName(
       column = INSTANCE_SUPPRESS_FROM_DISCOVERY,
       converter = BooleanConverter.class)
@@ -87,7 +95,7 @@ public class Instance implements BulkOperationsEntity {
   @UnifiedTableCell
   private Boolean discoverySuppress;
 
-  @JsonProperty("staffSuppress")
+  @JsonProperty(INSTANCE_JSON_STAFF_SUPPRESS)
   @CsvCustomBindByName(column = INSTANCE_STAFF_SUPPRESS, converter = BooleanConverter.class)
   @CsvCustomBindByPosition(position = 2, converter = BooleanConverter.class)
   @UnifiedTableCell(visible = false)
@@ -99,7 +107,7 @@ public class Instance implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private Boolean previouslyHeld;
 
-  @JsonProperty("deleted")
+  @JsonProperty(INSTANCE_JSON_DELETED)
   @Valid
   @CsvCustomBindByName(column = INSTANCE_SET_FOR_DELETION, converter = BooleanConverter.class)
   @CsvCustomBindByPosition(position = 4, converter = BooleanConverter.class)
@@ -138,7 +146,7 @@ public class Instance implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private String modeOfIssuanceId;
 
-  @JsonProperty("statisticalCodeIds")
+  @JsonProperty(INSTANCE_JSON_STATISTICAL_CODES)
   @CsvCustomBindByName(
       column = INSTANCE_STATISTICAL_CODES,
       converter = InstanceStatisticalCodeListConverter.class)
@@ -146,7 +154,7 @@ public class Instance implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private List<String> statisticalCodeIds;
 
-  @JsonProperty("administrativeNotes")
+  @JsonProperty(INSTANCE_JSON_ADM_NOTES)
   @CsvCustomBindByName(
       column = INSTANCE_ADMINISTRATIVE_NOTE,
       converter = StringListPipedConverter.class)
@@ -242,7 +250,7 @@ public class Instance implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private List<String> publicationRange;
 
-  @JsonProperty("notes")
+  @JsonProperty(INSTANCE_JSON_NOTES)
   @CsvCustomBindByName(column = INSTANCE_NOTES, converter = InstanceNoteListConverter.class)
   @CsvCustomBindByPosition(position = 25, converter = InstanceNoteListConverter.class)
   @UnifiedTableCell(visible = false)

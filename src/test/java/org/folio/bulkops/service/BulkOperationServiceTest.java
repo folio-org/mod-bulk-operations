@@ -60,6 +60,7 @@ import static org.testcontainers.shaded.org.hamcrest.Matchers.hasSize;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.is;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.notNullValue;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -2558,8 +2559,9 @@ class BulkOperationServiceTest extends BaseTest {
               return null;
             })
         .when(instanceClient)
-        .updateInstance(any(Instance.class), anyString());
+        .patchInstance(any(ObjectNode.class), anyString());
     when(ruleService.hasAdministrativeUpdates(operation)).thenReturn(true);
+    when(ruleService.getRules(any(UUID.class))).thenReturn(new BulkOperationRuleCollection());
 
     // Commit step
     bulkOperationService.commit(operation);
