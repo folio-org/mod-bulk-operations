@@ -9,11 +9,24 @@ import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_JSONB_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_TENANT_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_JSONB_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PUBLICATION_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SHARED_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TENANT_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEMS_JSONB_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEMS_TENANT_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_EFFECTIVE_LOCATION_NAME_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOAN_TYPE_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOAN_TYPE_NAME_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOAN_TYPE_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOAN_TYPE_NAME_KEY;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -162,7 +175,6 @@ class FqmContentFetcherTest {
             .toList();
 
     var entityTypeId = randomUUID();
-    var entityJsonKey = "instance.jsonb";
     when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(any())).thenReturn(entityTypeId);
 
     when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
@@ -170,7 +182,7 @@ class FqmContentFetcherTest {
     when(queryClient.getContents(
             new ContentsRequest()
                 .entityTypeId(entityTypeId)
-                .fields(List.of(entityJsonKey))
+                .fields(List.of("instance.jsonb", "instance.shared", "instance.tenant_id"))
                 .localize(false)
                 .ids(uuids.subList(0, 3).stream().map(UUID::toString).map(List::of).toList())))
         .thenReturn(getMockedContents(uuids.subList(0, 3)));
@@ -178,7 +190,7 @@ class FqmContentFetcherTest {
     when(queryClient.getContents(
             new ContentsRequest()
                 .entityTypeId(entityTypeId)
-                .fields(List.of(entityJsonKey))
+                .fields(List.of("instance.jsonb", "instance.shared", "instance.tenant_id"))
                 .localize(false)
                 .ids(uuids.subList(3, 5).stream().map(UUID::toString).map(List::of).toList())))
         .thenReturn(getMockedContents(uuids.subList(3, 5)));
@@ -241,7 +253,7 @@ class FqmContentFetcherTest {
         .getContents(
             new ContentsRequest()
                 .entityTypeId(entityTypeId)
-                .fields(List.of(entityJsonKey))
+                .fields(List.of("instance.jsonb", "instance.shared", "instance.tenant_id"))
                 .localize(false)
                 .ids(uuids.subList(0, 3).stream().map(UUID::toString).map(List::of).toList()));
 
@@ -385,6 +397,14 @@ class FqmContentFetcherTest {
 
       String expectedTitle = "\"title\":\"Instance Title 1. Olaf Ladousse," + " 1992-\"";
       assertThat(result).contains(expectedTitle);
+      assertThat(result)
+          .contains(
+              "\"effectiveLocation\":{\"id\":\"e25a4840-f74b-4d34-a58b-0f9238710d79\","
+                  + "\"name\":\"Main location\"}");
+      assertThat(result)
+          .contains(
+              "\"permanentLoanType\":{\"id\":\"6293b0ef-38d8-4e2d-af4a-be7ad8c41317\","
+                  + "\"name\":\"Can circulate\"}");
 
       uuids.forEach(uuid -> assertThat(result).contains("\"id\":\"" + uuid.toString() + "\""));
     }
@@ -1019,8 +1039,8 @@ class FqmContentFetcherTest {
       switch (entityType) {
         case USER -> map.put("users.jsonb", "{\"id\":\"" + randomUUID() + "\"}");
         case ITEM -> {
-          map.put("items.jsonb", "{\"id\":\"" + randomUUID() + "\"}");
-          map.put("items.tenant_id", "item-tenant");
+          map.put(FQM_ITEMS_JSONB_KEY, "{\"id\":\"" + randomUUID() + "\"}");
+          map.put(FQM_ITEMS_TENANT_ID_KEY, "item-tenant");
           map.put(FQM_INSTANCES_TITLE_KEY, "Instance Title " + i);
           map.put(FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY, "Call/Number:Prefix " + i);
           map.put(FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY, "Call Number-Suffix " + i);
@@ -1030,10 +1050,16 @@ class FqmContentFetcherTest {
               FQM_INSTANCES_PUBLICATION_KEY,
               "[{\"place\": \"Madrid\", \"publisher\": \"Olaf Ladousse\", "
                   + "\"dateOfPublication\": \"1992-\"}]");
+          map.put(FQM_ITEM_PERMANENT_LOAN_TYPE_ID_KEY, "6293b0ef-38d8-4e2d-af4a-be7ad8c41317");
+          map.put(FQM_ITEM_PERMANENT_LOAN_TYPE_NAME_KEY, "Can circulate");
+          map.put(FQM_ITEM_TEMPORARY_LOAN_TYPE_ID_KEY, null);
+          map.put(FQM_ITEM_TEMPORARY_LOAN_TYPE_NAME_KEY, null);
+          map.put(FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY, "e25a4840-f74b-4d34-a58b-0f9238710d79");
+          map.put(FQM_ITEM_EFFECTIVE_LOCATION_NAME_KEY, "Main location");
         }
         case HOLDINGS_RECORD -> {
-          map.put("holdings.jsonb", "{\"id\":\"" + randomUUID() + "\"}");
-          map.put("holdings.tenant_id", "holdings-tenant");
+          map.put(FQM_HOLDINGS_JSONB_KEY, "{\"id\":\"" + randomUUID() + "\"}");
+          map.put(FQM_HOLDINGS_TENANT_ID_KEY, "holdings-tenant");
           map.put(FQM_INSTANCE_TITLE_KEY, "Instance Title " + i);
           map.put(
               FQM_INSTANCE_PUBLICATION_KEY,
@@ -1041,9 +1067,9 @@ class FqmContentFetcherTest {
                   + "\"dateOfPublication\": \"1992-\"}]");
         }
         case INSTANCE, INSTANCE_MARC -> {
-          map.put("instance.jsonb", "{\"id\":\"" + randomUUID() + "\"}");
-          map.put("instance.tenant_id", "instance-tenant");
-          map.put("instance.shared", "Shared");
+          map.put(FQM_INSTANCE_JSONB_KEY, "{\"id\":\"" + randomUUID() + "\"}");
+          map.put(FQM_INSTANCE_TENANT_ID_KEY, "instance-tenant");
+          map.put(FQM_INSTANCE_SHARED_KEY, "Shared");
         }
         default -> throw new IllegalArgumentException("Unexpected entity type: " + entityType);
       }

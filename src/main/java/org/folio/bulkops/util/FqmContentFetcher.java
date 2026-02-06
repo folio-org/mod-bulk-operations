@@ -8,32 +8,51 @@ import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.folio.bulkops.util.Constants.CHILD_INSTANCES;
+import static org.folio.bulkops.util.Constants.EFFECTIVE_LOCATION;
 import static org.folio.bulkops.util.Constants.ENTITY;
 import static org.folio.bulkops.util.Constants.HOLDINGS_DATA;
 import static org.folio.bulkops.util.Constants.HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER;
-import static org.folio.bulkops.util.Constants.ID;
 import static org.folio.bulkops.util.Constants.INSTANCE_TITLE;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
 import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.Constants.PARENT_INSTANCES;
+import static org.folio.bulkops.util.Constants.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.util.Constants.PRECEDING_TITLES;
 import static org.folio.bulkops.util.Constants.SUCCEEDING_TITLES;
+import static org.folio.bulkops.util.Constants.TEMPORARY_LOAN_TYPE;
 import static org.folio.bulkops.util.Constants.TENANT_ID;
 import static org.folio.bulkops.util.Constants.TITLE;
 import static org.folio.bulkops.util.FqmKeys.FQM_DATE_OF_PUBLICATION_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_JSONB_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_TENANT_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_CHILD_INSTANCES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_JSONB_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PARENT_INSTANCES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PRECEDING_TITLES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SHARED_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SUCCEEDING_TITLES_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TENANT_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEMS_JSONB_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEMS_TENANT_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_EFFECTIVE_LOCATION_NAME_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOAN_TYPE_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOAN_TYPE_NAME_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOAN_TYPE_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOAN_TYPE_NAME_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_PUBLISHER_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_USERS_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_USERS_JSONB_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_USERS_TYPE_KEY;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -94,6 +113,8 @@ public class FqmContentFetcher {
   public static final String MARC = "MARC";
 
   private static final int BUFFER_SIZE = 64 * 1024;
+  public static final String ID = "id";
+  public static final String NAME = "name";
 
   @Value("${application.fqm-fetcher.max_parallel_chunks}")
   private int maxParallelChunks;
@@ -136,7 +157,7 @@ public class FqmContentFetcher {
         UUID.fromString(
             entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(entityType).toString());
 
-    String entityJsonKey = getEntityJsonKey(entityType);
+    List<String> entityJsonKeys = getEntityJsonKeys(entityType);
 
     boolean isCentralTenant = consortiaService.isTenantCentral(folioExecutionContext.getTenantId());
 
@@ -155,7 +176,7 @@ public class FqmContentFetcher {
             ContentsRequest req =
                 new ContentsRequest()
                     .entityTypeId(entityTypeId)
-                    .fields(List.of(entityJsonKey))
+                    .fields(entityJsonKeys)
                     .ids(chunk.stream().map(UUID::toString).map(List::of).toList());
             return queryClient.getContents(req);
           });
@@ -464,7 +485,7 @@ public class FqmContentFetcher {
         var tenant = json.get(getContentTenantKey(entityType));
         if (tenant == null) {
           checkForTenantFieldExistenceInEcs(
-              jsonNode.get(ID).asText(), operationId, bulkOperationExecutionContents);
+              jsonNode.get(Constants.ID).asText(), operationId, bulkOperationExecutionContents);
           tenant = folioExecutionContext.getTenantId();
         }
         jsonNode.put(TENANT_ID, tenant.toString());
@@ -496,19 +517,49 @@ public class FqmContentFetcher {
 
   private String getEntityJsonKey(EntityType entityType) {
     return switch (entityType) {
-      case USER -> FqmKeys.FQM_USERS_JSONB_KEY;
-      case ITEM -> FqmKeys.FQM_ITEMS_JSONB_KEY;
-      case HOLDINGS_RECORD -> "holdings.jsonb";
-      case INSTANCE, INSTANCE_MARC -> "instance.jsonb";
+      case USER -> FQM_USERS_JSONB_KEY;
+      case ITEM -> FQM_ITEMS_JSONB_KEY;
+      case HOLDINGS_RECORD -> FQM_HOLDINGS_JSONB_KEY;
+      case INSTANCE, INSTANCE_MARC -> FQM_INSTANCE_JSONB_KEY;
+    };
+  }
+
+  private List<String> getEntityJsonKeys(EntityType entityType) {
+    return switch (entityType) {
+      case USER -> List.of(FQM_USERS_JSONB_KEY);
+      case ITEM ->
+          List.of(
+              FQM_ITEMS_JSONB_KEY,
+              FQM_INSTANCES_TITLE_KEY,
+              FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY,
+              FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY,
+              FQM_HOLDINGS_CALL_NUMBER_KEY,
+              FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY,
+              FQM_INSTANCES_PUBLICATION_KEY,
+              FQM_ITEM_PERMANENT_LOAN_TYPE_ID_KEY,
+              FQM_ITEM_PERMANENT_LOAN_TYPE_NAME_KEY,
+              FQM_ITEM_TEMPORARY_LOAN_TYPE_ID_KEY,
+              FQM_ITEM_TEMPORARY_LOAN_TYPE_NAME_KEY,
+              FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY,
+              FQM_ITEM_TEMPORARY_LOAN_TYPE_NAME_KEY,
+              FQM_ITEMS_TENANT_ID_KEY);
+      case HOLDINGS_RECORD ->
+          List.of(
+              FQM_HOLDINGS_JSONB_KEY,
+              FQM_INSTANCE_TITLE_KEY,
+              FQM_INSTANCE_PUBLICATION_KEY,
+              FQM_HOLDINGS_TENANT_ID_KEY);
+      case INSTANCE, INSTANCE_MARC ->
+          List.of(FQM_INSTANCE_JSONB_KEY, FQM_INSTANCE_SHARED_KEY, FQM_INSTANCE_TENANT_ID_KEY);
     };
   }
 
   private String getContentTenantKey(EntityType entityType) {
     return switch (entityType) {
       case USER -> StringUtils.EMPTY;
-      case ITEM -> "items.tenant_id";
-      case HOLDINGS_RECORD -> "holdings.tenant_id";
-      case INSTANCE, INSTANCE_MARC -> "instance.tenant_id";
+      case ITEM -> FQM_ITEMS_TENANT_ID_KEY;
+      case HOLDINGS_RECORD -> FQM_HOLDINGS_TENANT_ID_KEY;
+      case INSTANCE, INSTANCE_MARC -> FQM_INSTANCE_TENANT_ID_KEY;
     };
   }
 
@@ -599,20 +650,57 @@ public class FqmContentFetcher {
     var callNumber =
         Stream.of(
                 json.get(FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY),
-                json.get(FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY),
-                json.get(FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY))
+                json.get(FQM_HOLDINGS_CALL_NUMBER_KEY),
+                json.get(FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY))
             .filter(Objects::nonNull)
             .map(Object::toString)
             .collect(Collectors.joining(SPACE));
 
     var permanentLocationName =
-        ofNullable(json.get(FqmKeys.FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY))
-            .orElse(EMPTY)
-            .toString();
+        ofNullable(json.get(FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY)).orElse(EMPTY).toString();
 
     jsonNode.put(
         HOLDINGS_DATA,
         join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER, permanentLocationName, callNumber));
+
+    if (nonNull(json.get(FQM_ITEM_PERMANENT_LOAN_TYPE_ID_KEY))) {
+      jsonNode.putIfAbsent(
+          PERMANENT_LOAN_TYPE,
+          objectMapper
+              .createObjectNode()
+              .put(ID, json.get(FQM_ITEM_PERMANENT_LOAN_TYPE_ID_KEY).toString())
+              .put(
+                  NAME,
+                  ofNullable(json.get(FQM_ITEM_PERMANENT_LOAN_TYPE_NAME_KEY))
+                      .orElse(EMPTY)
+                      .toString()));
+    }
+
+    if (nonNull(json.get(FQM_ITEM_TEMPORARY_LOAN_TYPE_ID_KEY))) {
+      jsonNode.putIfAbsent(
+          TEMPORARY_LOAN_TYPE,
+          objectMapper
+              .createObjectNode()
+              .put(ID, json.get(FQM_ITEM_TEMPORARY_LOAN_TYPE_ID_KEY).toString())
+              .put(
+                  NAME,
+                  ofNullable(json.get(FQM_ITEM_TEMPORARY_LOAN_TYPE_NAME_KEY))
+                      .orElse(EMPTY)
+                      .toString()));
+    }
+
+    if (nonNull(json.get(FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY))) {
+      jsonNode.putIfAbsent(
+          EFFECTIVE_LOCATION,
+          objectMapper
+              .createObjectNode()
+              .put(ID, json.get(FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY).toString())
+              .put(
+                  NAME,
+                  ofNullable(json.get(FQM_ITEM_EFFECTIVE_LOCATION_NAME_KEY))
+                      .orElse(EMPTY)
+                      .toString()));
+    }
   }
 
   private void processForHoldingsRecord(Map<String, Object> json, ObjectNode jsonNode)
