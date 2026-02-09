@@ -67,6 +67,7 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
             uploadDefinition.getId());
         bulkOperation.setDataImportJobProfileId(UUID.fromString(jobProfile.getId()));
         bulkOperationRepository.save(bulkOperation);
+        log.info("updateMarcRecords last");
       } else {
         bulkOperation.setLinkToCommittedRecordsMarcFile(null);
         bulkOperationServiceHelper.completeBulkOperation(bulkOperation);
