@@ -1,7 +1,6 @@
 package org.folio.bulkops.domain.bean;
 
 import static java.lang.Boolean.FALSE;
-import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -21,7 +20,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.With;
 import org.folio.bulkops.domain.converter.BooleanConverter;
-import org.folio.bulkops.domain.converter.BoundWithTitlesConverter;
 import org.folio.bulkops.domain.converter.CallNumberTypeConverter;
 import org.folio.bulkops.domain.converter.CirculationNoteListConverter;
 import org.folio.bulkops.domain.converter.DamagedStatusConverter;
@@ -369,34 +367,21 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private List<ElectronicAccess> electronicAccess;
 
-  @JsonProperty("isBoundWith")
-  @CsvCustomBindByName(column = "Is bound with", converter = BooleanConverter.class)
-  @CsvCustomBindByPosition(position = 40, converter = BooleanConverter.class)
-  @UnifiedTableCell(visible = false)
-  private Boolean isBoundWith;
-
-  @JsonProperty("boundWithTitles")
-  @Valid
-  @CsvCustomBindByName(column = "Bound with titles", converter = BoundWithTitlesConverter.class)
-  @CsvCustomBindByPosition(position = 41, converter = BoundWithTitlesConverter.class)
-  @UnifiedTableCell(visible = false)
-  private List<Title> boundWithTitles = emptyList();
-
   @JsonProperty("tags")
   @CsvCustomBindByName(column = "Tags", converter = TagsConverter.class)
-  @CsvCustomBindByPosition(position = 42, converter = TagsConverter.class)
+  @CsvCustomBindByPosition(position = 40, converter = TagsConverter.class)
   @UnifiedTableCell(visible = false)
   private Tags tags;
 
   @JsonProperty("holdingsRecordId")
   @CsvCustomBindByName(column = "Holdings UUID", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 43, converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 41, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String holdingsRecordId;
 
   @JsonProperty("tenantId")
   @CsvCustomBindByName(column = "Tenant", converter = StringConverter.class)
-  @CsvCustomBindByPosition(position = 44, converter = StringConverter.class)
+  @CsvCustomBindByPosition(position = 42, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
   private String tenantId;
 

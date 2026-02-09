@@ -181,7 +181,7 @@
             "inventory-storage.nature-of-content-terms.item.get",
             "inventory-storage.instance-formats.collection.get",
             "inventory-storage.instance-formats.item.get",
-            "inventory.instances.item.put",
+            "inventory.instances.item.patch",
             "inventory-storage.instance-note-types.item.get",
             "inventory-storage.instance-note-types.collection.get",
             "consortia.consortium.item.get",
@@ -556,7 +556,7 @@
     },
     {
       "id": "inventory",
-      "version": "12.0 13.0 14.0"
+      "version": "14.4"
     },
     {
       "id": "locations",
