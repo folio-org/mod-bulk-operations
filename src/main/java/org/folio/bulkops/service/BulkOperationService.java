@@ -921,6 +921,7 @@ public class BulkOperationService {
               () -> {
                 var logEntries =
                     metadataProviderService.getJobLogEntries(bulkOperation, executions);
+                log.info("logEntries: {}", logEntries);
                 errorService.saveErrorsFromDataImport(logEntries, bulkOperation);
                 var updatedIds = metadataProviderService.fetchUpdatedInstanceIds(logEntries);
                 srsService.retrieveMarcInstancesFromSrs(updatedIds, bulkOperation);
