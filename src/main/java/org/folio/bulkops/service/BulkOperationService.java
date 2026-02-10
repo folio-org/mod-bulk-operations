@@ -915,7 +915,7 @@ public class BulkOperationService {
     var executions =
         metadataProviderService.getJobExecutions(bulkOperation.getDataImportJobProfileId());
     updateBulkOperationBasedOnDataImportState(executions, bulkOperation);
-    if (metadataProviderService.isDataImportJobCompleted(executions)) {
+//    if (metadataProviderService.isDataImportJobCompleted(executions)) {
       executor.execute(
           getRunnableWithCurrentFolioContext(
               () -> {
@@ -926,7 +926,7 @@ public class BulkOperationService {
                 var updatedIds = metadataProviderService.fetchUpdatedInstanceIds(logEntries);
                 srsService.retrieveMarcInstancesFromSrs(updatedIds, bulkOperation);
               }));
-    }
+//    }
   }
 
   private void updateBulkOperationBasedOnDataImportState(
