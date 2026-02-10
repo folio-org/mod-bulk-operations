@@ -29,7 +29,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 @SpringBootTest
 @ContextConfiguration(initializers = BaseTest.Initializer.class)
-public class FqmContentFetcherEcsTest {
+class FqmContentFetcherEcsTest {
 
   @MockitoBean private ConsortiaService consortiaService;
   @MockitoBean private EntityTypeService entityTypeService;
