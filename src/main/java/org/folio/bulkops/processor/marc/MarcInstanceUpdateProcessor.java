@@ -36,6 +36,8 @@ import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.BulkOperationService;
 import org.folio.bulkops.service.BulkOperationServiceHelper;
 import org.folio.bulkops.util.MarcDateHelper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -52,7 +54,8 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
   private final BulkOperationRepository bulkOperationRepository;
   private final DataImportRestS3UploadClient dataImportRestS3UploadClient;
   private final BulkOperationServiceHelper bulkOperationServiceHelper;
-  private final BulkOperationService bulkOperationService;
+
+  private BulkOperationService bulkOperationService;
 
   public void updateMarcRecords(BulkOperation bulkOperation) throws IOException {
     try (var is = remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
@@ -81,6 +84,11 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
         bulkOperationServiceHelper.completeBulkOperation(bulkOperation);
       }
     }
+  }
+
+  @Autowired
+  public void setBulkOperationService(@Lazy BulkOperationService bulkOperationService) {
+    this.bulkOperationService = bulkOperationService;
   }
 
   private JobProfile createJobProfile() throws IOException {
