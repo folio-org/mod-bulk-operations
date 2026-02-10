@@ -84,6 +84,7 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -159,7 +160,7 @@ public class FqmContentFetcher {
 
     List<String> entityJsonKeys = getEntityJsonKeys(entityType);
 
-    boolean isCentralTenant = consortiaService.isTenantCentral(folioExecutionContext.getTenantId());
+    var tenantId = folioExecutionContext.getTenantId();
 
     List<List<UUID>> chunks =
         IntStream.range(0, uuids.size())
@@ -170,6 +171,13 @@ public class FqmContentFetcher {
     ExecutorService pool = Executors.newFixedThreadPool(maxParallelChunks);
     CompletionService<List<Map<String, Object>>> completion = new ExecutorCompletionService<>(pool);
 
+    String centralTenantId = consortiaService.getCentralTenantId(tenantId);
+    boolean isTenantInConsortia = StringUtils.isNotEmpty(centralTenantId);
+    boolean isCentralTenant = tenantId.equals(centralTenantId);
+
+    Function<String, List<String>> idMapper =
+        isTenantInConsortia ? id -> List.of(id, tenantId) : List::of;
+
     for (List<UUID> chunk : chunks) {
       completion.submit(
           () -> {
@@ -177,7 +185,7 @@ public class FqmContentFetcher {
                 new ContentsRequest()
                     .entityTypeId(entityTypeId)
                     .fields(entityJsonKeys)
-                    .ids(chunk.stream().map(UUID::toString).map(List::of).toList());
+                    .ids(chunk.stream().map(UUID::toString).map(idMapper).toList());
             return queryClient.getContents(req);
           });
     }
