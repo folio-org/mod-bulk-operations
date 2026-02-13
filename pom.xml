@@ -52,7 +52,7 @@
     <jsonPath.version>2.9.0</jsonPath.version>
 
     <!-- Test dependencies versions -->
-    <testcontainer.version>1.21.3</testcontainer.version>
+    <testcontainer.version>2.0.3</testcontainer.version>
     <wiremock.version>2.35.2</wiremock.version>
     <awaitility.version>4.3.0</awaitility.version>
 
@@ -247,21 +247,21 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>junit-jupiter</artifactId>
-      <version>${testcontainer.version}</version>
+      <version>1.21.4</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>kafka</artifactId>
-      <version>${testcontainer.version}</version>
+      <version>1.21.4</version>
       <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>postgresql</artifactId>
-      <version>${testcontainer.version}</version>
+      <version>1.21.4</version>
       <scope>test</scope>
     </dependency>
 
