@@ -200,4 +200,6 @@ public class Constants {
   public static final String PERMANENT_LOAN_TYPE = "permanentLoanType";
   public static final String TEMPORARY_LOAN_TYPE = "temporaryLoanType";
   public static final String EFFECTIVE_LOCATION = "effectiveLocation";
+  public static final String PERMANENT_LOCATION = "permanentLocation";
+  public static final String TEMPORARY_LOCATION = "temporaryLocation";
 }

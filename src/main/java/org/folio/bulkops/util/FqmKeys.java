@@ -40,6 +40,10 @@ public class FqmKeys {
   public static final String FQM_ITEM_TEMPORARY_LOAN_TYPE_NAME_KEY = "temporary_loan_type.name";
   public static final String FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY = "effective_location.id";
   public static final String FQM_ITEM_EFFECTIVE_LOCATION_NAME_KEY = "effective_location.name";
+  public static final String FQM_ITEM_PERMANENT_LOCATION_ID_KEY = "permanent_location.id";
+  public static final String FQM_ITEM_PERMANENT_LOCATION_NAME_KEY = "permanent_location.name";
+  public static final String FQM_ITEM_TEMPORARY_LOCATION_ID_KEY = "temporary_location.id";
+  public static final String FQM_ITEM_TEMPORARY_LOCATION_NAME_KEY = "temporary_location.name";
 
   public static final String FQM_ITEMS_TENANT_ID_KEY = "items.tenant_id";
   public static final String FQM_HOLDINGS_TENANT_ID_KEY = "holdings.tenant_id";
