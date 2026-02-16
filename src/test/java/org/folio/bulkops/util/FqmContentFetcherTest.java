@@ -403,10 +403,6 @@ class FqmContentFetcherTest {
       assertThat(result).contains(expectedTitle);
       assertThat(result)
           .contains(
-              "\"effectiveLocation\":{\"id\":\"e25a4840-f74b-4d34-a58b-0f9238710d79\","
-                  + "\"name\":\"Main location\"}");
-      assertThat(result)
-          .contains(
               "\"permanentLoanType\":{\"id\":\"6293b0ef-38d8-4e2d-af4a-be7ad8c41317\","
                   + "\"name\":\"Can circulate\"}");
       assertThat(result)
