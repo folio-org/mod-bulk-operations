@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import org.apache.commons.io.IOUtils;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -20,7 +21,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 
 class LogFilesServiceTest extends BaseTest {
 

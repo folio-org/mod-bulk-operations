@@ -19,9 +19,7 @@
           "permissionsRequired": [ "bulk-operations.item.query.post" ],
           "modulePermissions": [
             "fqm.entityTypes.item.get",
-            "fqm.query.async.post",
-            "fqm.query.async.results.post",
-            "fqm.entityTypes.collection.get"
+            "fqm.query.async.post"
           ]
         },
         {
@@ -217,7 +215,10 @@
             "inventory-storage.classification-types.collection.get",
             "inventory-storage.classification-types.item.get",
             "fqm.query.async.results.post",
-            "fqm.entityTypes.collection.get"
+            "fqm.entityTypes.collection.get",
+            "fqm.query.async.post",
+            "fqm.query.async.results.get",
+            "fqm.entityTypes.item.get"
           ]
         },
         {
