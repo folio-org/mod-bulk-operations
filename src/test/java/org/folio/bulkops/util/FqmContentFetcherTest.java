@@ -407,11 +407,11 @@ class FqmContentFetcherTest {
                   + "\"name\":\"Can circulate\"}");
       assertThat(result)
           .contains(
-              "\"temporaryLocation\":{\"id\":\"e25a4840-f74b-4d34-a58b-0f9238710d77\","
+              "\"temporaryLocation\":{\"id\":\"2067c29a-de83-42a4-9a51-b288f17d9d0f\","
                   + "\"name\":\"Temporary location\"}");
       assertThat(result)
           .contains(
-              "\"permanentLocation\":{\"id\":\"e25a4840-f74b-4d34-a58b-0f9238710d78\","
+              "\"permanentLocation\":{\"id\":\"9e55690a-ac4b-4969-9c83-e4dca008c32c\","
                   + "\"name\":\"Permanent location\"}");
       assertThat(result)
           .contains(
