@@ -25,8 +25,12 @@ import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_EFFECTIVE_LOCATION_NAME_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOAN_TYPE_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOAN_TYPE_NAME_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOCATION_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOCATION_NAME_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOAN_TYPE_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOAN_TYPE_NAME_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOCATION_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOCATION_NAME_KEY;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -399,12 +403,20 @@ class FqmContentFetcherTest {
       assertThat(result).contains(expectedTitle);
       assertThat(result)
           .contains(
-              "\"effectiveLocation\":{\"id\":\"e25a4840-f74b-4d34-a58b-0f9238710d79\","
-                  + "\"name\":\"Main location\"}");
-      assertThat(result)
-          .contains(
               "\"permanentLoanType\":{\"id\":\"6293b0ef-38d8-4e2d-af4a-be7ad8c41317\","
                   + "\"name\":\"Can circulate\"}");
+      assertThat(result)
+          .contains(
+              "\"temporaryLocation\":{\"id\":\"2067c29a-de83-42a4-9a51-b288f17d9d0f\","
+                  + "\"name\":\"Temporary location\"}");
+      assertThat(result)
+          .contains(
+              "\"permanentLocation\":{\"id\":\"9e55690a-ac4b-4969-9c83-e4dca008c32c\","
+                  + "\"name\":\"Permanent location\"}");
+      assertThat(result)
+          .contains(
+              "\"effectiveLocation\":{\"id\":\"e25a4840-f74b-4d34-a58b-0f9238710d79\","
+                  + "\"name\":\"Effective location\"}");
 
       uuids.forEach(uuid -> assertThat(result).contains("\"id\":\"" + uuid.toString() + "\""));
     }
@@ -1057,7 +1069,11 @@ class FqmContentFetcherTest {
           map.put(FQM_ITEM_TEMPORARY_LOAN_TYPE_ID_KEY, null);
           map.put(FQM_ITEM_TEMPORARY_LOAN_TYPE_NAME_KEY, null);
           map.put(FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY, "e25a4840-f74b-4d34-a58b-0f9238710d79");
-          map.put(FQM_ITEM_EFFECTIVE_LOCATION_NAME_KEY, "Main location");
+          map.put(FQM_ITEM_EFFECTIVE_LOCATION_NAME_KEY, "Effective location");
+          map.put(FQM_ITEM_TEMPORARY_LOCATION_ID_KEY, "2067c29a-de83-42a4-9a51-b288f17d9d0f");
+          map.put(FQM_ITEM_TEMPORARY_LOCATION_NAME_KEY, "Temporary location");
+          map.put(FQM_ITEM_PERMANENT_LOCATION_ID_KEY, "9e55690a-ac4b-4969-9c83-e4dca008c32c");
+          map.put(FQM_ITEM_PERMANENT_LOCATION_NAME_KEY, "Permanent location");
         }
         case HOLDINGS_RECORD -> {
           map.put(FQM_HOLDINGS_JSONB_KEY, "{\"id\":\"" + randomUUID() + "\"}");

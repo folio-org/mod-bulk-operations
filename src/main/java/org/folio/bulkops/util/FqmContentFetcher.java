@@ -18,9 +18,11 @@ import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDIT
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.Constants.PARENT_INSTANCES;
 import static org.folio.bulkops.util.Constants.PERMANENT_LOAN_TYPE;
+import static org.folio.bulkops.util.Constants.PERMANENT_LOCATION;
 import static org.folio.bulkops.util.Constants.PRECEDING_TITLES;
 import static org.folio.bulkops.util.Constants.SUCCEEDING_TITLES;
 import static org.folio.bulkops.util.Constants.TEMPORARY_LOAN_TYPE;
+import static org.folio.bulkops.util.Constants.TEMPORARY_LOCATION;
 import static org.folio.bulkops.util.Constants.TENANT_ID;
 import static org.folio.bulkops.util.Constants.TITLE;
 import static org.folio.bulkops.util.FqmKeys.FQM_DATE_OF_PUBLICATION_KEY;
@@ -48,8 +50,12 @@ import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_EFFECTIVE_LOCATION_NAME_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOAN_TYPE_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOAN_TYPE_NAME_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOCATION_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOCATION_NAME_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOAN_TYPE_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOAN_TYPE_NAME_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOCATION_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOCATION_NAME_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_PUBLISHER_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_USERS_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_USERS_JSONB_KEY;
@@ -548,8 +554,13 @@ public class FqmContentFetcher {
               FQM_ITEM_PERMANENT_LOAN_TYPE_NAME_KEY,
               FQM_ITEM_TEMPORARY_LOAN_TYPE_ID_KEY,
               FQM_ITEM_TEMPORARY_LOAN_TYPE_NAME_KEY,
-              FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY,
               FQM_ITEM_TEMPORARY_LOAN_TYPE_NAME_KEY,
+              FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY,
+              FQM_ITEM_EFFECTIVE_LOCATION_NAME_KEY,
+              FQM_ITEM_PERMANENT_LOCATION_ID_KEY,
+              FQM_ITEM_PERMANENT_LOCATION_NAME_KEY,
+              FQM_ITEM_TEMPORARY_LOCATION_ID_KEY,
+              FQM_ITEM_TEMPORARY_LOCATION_NAME_KEY,
               FQM_ITEMS_TENANT_ID_KEY);
       case HOLDINGS_RECORD ->
           List.of(
@@ -706,6 +717,32 @@ public class FqmContentFetcher {
               .put(
                   NAME,
                   ofNullable(json.get(FQM_ITEM_EFFECTIVE_LOCATION_NAME_KEY))
+                      .orElse(EMPTY)
+                      .toString()));
+    }
+
+    if (nonNull(json.get(FQM_ITEM_PERMANENT_LOCATION_ID_KEY))) {
+      jsonNode.putIfAbsent(
+          PERMANENT_LOCATION,
+          objectMapper
+              .createObjectNode()
+              .put(ID, json.get(FQM_ITEM_PERMANENT_LOCATION_ID_KEY).toString())
+              .put(
+                  NAME,
+                  ofNullable(json.get(FQM_ITEM_PERMANENT_LOCATION_NAME_KEY))
+                      .orElse(EMPTY)
+                      .toString()));
+    }
+
+    if (nonNull(json.get(FQM_ITEM_TEMPORARY_LOCATION_ID_KEY))) {
+      jsonNode.putIfAbsent(
+          TEMPORARY_LOCATION,
+          objectMapper
+              .createObjectNode()
+              .put(ID, json.get(FQM_ITEM_TEMPORARY_LOCATION_ID_KEY).toString())
+              .put(
+                  NAME,
+                  ofNullable(json.get(FQM_ITEM_TEMPORARY_LOCATION_NAME_KEY))
                       .orElse(EMPTY)
                       .toString()));
     }
