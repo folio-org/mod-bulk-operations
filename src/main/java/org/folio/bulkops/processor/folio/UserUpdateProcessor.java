@@ -3,6 +3,7 @@ package org.folio.bulkops.processor.folio;
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.User;
+import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.processor.FolioAbstractUpdateProcessor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
@@ -22,7 +23,7 @@ public class UserUpdateProcessor extends FolioAbstractUpdateProcessor<User> {
   private final FolioExecutionContext folioExecutionContext;
 
   @Override
-  public void updateRecord(User user) {
+  public void updateRecord(User user, BulkOperationRuleCollection rules) {
     permissionsValidator.checkIfBulkEditWritePermissionExists(
         folioExecutionContext.getTenantId(),
         EntityType.USER,

@@ -519,6 +519,7 @@ class FqmContentFetcherTest {
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(consortiaService.isTenantCentral(anyString())).thenReturn(true);
+    when(consortiaService.getCentralTenantId(anyString())).thenReturn("tenant");
     when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(entityType))
         .thenReturn(randomUUID());
 
@@ -555,6 +556,7 @@ class FqmContentFetcherTest {
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(consortiaService.isTenantCentral(anyString())).thenReturn(true);
+    when(consortiaService.getCentralTenantId(anyString())).thenReturn("tenant");
     when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(EntityType.USER))
         .thenReturn(randomUUID());
 

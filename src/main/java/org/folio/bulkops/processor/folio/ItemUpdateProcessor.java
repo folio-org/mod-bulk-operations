@@ -5,6 +5,7 @@ import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextFo
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
+import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.processor.FolioAbstractUpdateProcessor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
@@ -29,7 +30,7 @@ public class ItemUpdateProcessor extends FolioAbstractUpdateProcessor<ExtendedIt
   private final PermissionsValidator permissionsValidator;
 
   @Override
-  public void updateRecord(ExtendedItem extendedItem) {
+  public void updateRecord(ExtendedItem extendedItem, BulkOperationRuleCollection rules) {
     var item = extendedItem.getEntity();
     if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
       var tenantId = extendedItem.getTenantId();
