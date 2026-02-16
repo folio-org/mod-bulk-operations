@@ -218,9 +218,7 @@
             "fqm.entityTypes.collection.get",
             "fqm.query.async.post",
             "fqm.query.async.results.get",
-            "fqm.entityTypes.item.get",
-            "consortium-search.holdings.batch.collection.get",
-            "consortium-search.items.batch.collection.get"
+            "fqm.entityTypes.item.get"
           ]
         },
         {
