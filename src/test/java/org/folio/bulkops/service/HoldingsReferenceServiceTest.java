@@ -15,11 +15,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.List;
 import java.util.Map;
 import org.folio.bulkops.client.HoldingsStorageClient;
@@ -44,6 +39,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 
 class HoldingsReferenceServiceTest {
 
@@ -276,7 +276,7 @@ class HoldingsReferenceServiceTest {
   }
 
   @Test
-  void getInstanceTitle_returnsTitle_whenHoldingsAndInstanceExist() throws JsonProcessingException {
+  void getInstanceTitle_returnsTitle_whenHoldingsAndInstanceExist() throws JacksonException {
     Item item = new Item().withHoldingsRecordId("holdingsId");
     HoldingsRecord holdingsRecord = new HoldingsRecord().withInstanceId("instanceId");
 

@@ -10,6 +10,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @SpringBootApplication
 @EnableFeignClients
 @EnableConfigurationProperties(RemoteRepositoryConfig.class)
+@EnableBatchProcessing
 public class ModBulkOperationsApplication {
 
   public static void main(String[] args) {

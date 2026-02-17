@@ -1,6 +1,5 @@
 package org.folio.bulkops.client;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.folio.bulkops.configs.FeignClientConfiguration;
 import org.folio.bulkops.domain.bean.GetParsedRecordsBatchRequestBody;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -9,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import tools.jackson.databind.JsonNode;
 
 @FeignClient(name = "source-storage", configuration = FeignClientConfiguration.class)
 public interface SrsClient {

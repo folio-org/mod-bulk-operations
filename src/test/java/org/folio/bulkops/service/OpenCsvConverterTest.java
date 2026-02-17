@@ -12,7 +12,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.StatefulBeanToCsv;
@@ -94,6 +93,7 @@ import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.util.CustomMappingStrategy;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.integration.XOkapiHeaders;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -105,6 +105,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import tools.jackson.databind.node.JsonNodeFactory;
 
 @Log4j2
 @ExtendWith(MockitoExtension.class)
@@ -115,7 +116,8 @@ class OpenCsvConverterTest extends BaseTest {
 
   private static class BulkOperationEntityClassProvider implements ArgumentsProvider {
     @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+    public @NonNull Stream<? extends Arguments> provideArguments(
+        @NonNull ExtensionContext context) {
       return Stream.of(Arguments.of(User.class));
     }
   }

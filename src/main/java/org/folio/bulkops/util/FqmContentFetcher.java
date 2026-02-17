@@ -64,10 +64,6 @@ import static org.folio.bulkops.util.FqmKeys.FQM_USERS_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_USERS_JSONB_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_USERS_TYPE_KEY;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.annotation.PostConstruct;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -118,6 +114,10 @@ import org.folio.querytool.domain.dto.ContentsRequest;
 import org.folio.spring.FolioExecutionContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 @Service
 @Log4j2
@@ -540,7 +540,7 @@ public class FqmContentFetcher {
         var tenant = json.get(getContentTenantKey(entityType));
         if (tenant == null) {
           checkForTenantFieldExistenceInEcs(
-              jsonNode.get(Constants.ID).asText(), operationId, bulkOperationExecutionContents);
+              jsonNode.get(Constants.ID).asString(), operationId, bulkOperationExecutionContents);
           tenant = folioExecutionContext.getTenantId();
         }
         jsonNode.put(TENANT_ID, tenant.toString());
@@ -650,11 +650,11 @@ public class FqmContentFetcher {
       if (isNull(date) || date.isNull()) {
         return isNull(publisher) || publisher.isNull()
             ? EMPTY
-            : String.format(". %s", publisher.asText());
+            : String.format(". %s", publisher.asString());
       }
       return String.format(
           ". %s, %s",
-          isNull(publisher) || publisher.isNull() ? EMPTY : publisher.asText(), date.asText());
+          isNull(publisher) || publisher.isNull() ? EMPTY : publisher.asString(), date.asString());
     }
     return EMPTY;
   }
@@ -694,7 +694,7 @@ public class FqmContentFetcher {
   }
 
   private void processForItem(Map<String, Object> json, ObjectNode jsonNode)
-      throws JsonProcessingException {
+      throws JacksonException {
     var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
     var value = json.get(FQM_INSTANCES_PUBLICATION_KEY);
 
@@ -790,7 +790,7 @@ public class FqmContentFetcher {
   }
 
   private void processForHoldingsRecord(Map<String, Object> json, ObjectNode jsonNode)
-      throws JsonProcessingException {
+      throws JacksonException {
     var title = ofNullable(json.get(FQM_INSTANCE_TITLE_KEY)).orElse(EMPTY).toString();
 
     var value = json.get(FQM_INSTANCE_PUBLICATION_KEY);
@@ -806,7 +806,7 @@ public class FqmContentFetcher {
   }
 
   private void processInstanceEntity(Map<String, Object> json, ObjectNode jsonNode)
-      throws JsonProcessingException {
+      throws JacksonException {
     var value = json.get(FQM_INSTANCE_CHILD_INSTANCES_KEY);
     var childInstances =
         nonNull(value) ? objectMapper.readTree(value.toString()) : objectMapper.createArrayNode();

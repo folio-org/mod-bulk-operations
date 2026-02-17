@@ -1,9 +1,11 @@
 package org.folio.bulkops.configs;
 
 import org.folio.spring.scope.FolioExecutionScopeExecutionContextManager;
+import org.springframework.batch.core.configuration.JobRegistry;
 import org.springframework.batch.core.configuration.annotation.JobScope;
-import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.batch.core.launch.support.TaskExecutorJobLauncher;
+import org.springframework.batch.core.configuration.support.MapJobRegistry;
+import org.springframework.batch.core.launch.JobOperator;
+import org.springframework.batch.core.launch.support.TaskExecutorJobOperator;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,11 +29,13 @@ public class AsyncConfig {
   private int maxPoolSize;
 
   @Bean(name = "asyncJobLauncher")
-  public JobLauncher getAsyncJobLauncher(
-      JobRepository jobRepository, @Qualifier("asyncTaskExecutor") TaskExecutor taskExecutor) {
-    var jobLauncher = new TaskExecutorJobLauncher();
+  public JobOperator getAsyncJobLauncher(
+    JobRepository jobRepository, JobRegistry jobRegistry,
+    @Qualifier("asyncTaskExecutor") TaskExecutor taskExecutor) {
+    var jobLauncher = new TaskExecutorJobOperator();
     jobLauncher.setJobRepository(jobRepository);
     jobLauncher.setTaskExecutor(taskExecutor);
+    jobLauncher.setJobRegistry(jobRegistry);
     return jobLauncher;
   }
 
@@ -55,4 +59,10 @@ public class AsyncConfig {
         FolioExecutionScopeExecutionContextManager::getRunnableWithCurrentFolioContext);
     return threadPoolTaskExecutor;
   }
+
+  @Bean
+  public JobRegistry jobRegistry() {
+    return new MapJobRegistry();
+  }
+
 }

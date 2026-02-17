@@ -17,7 +17,6 @@ import static org.springframework.batch.core.BatchStatus.ABANDONED;
 import static org.springframework.batch.core.BatchStatus.COMPLETED;
 import static org.springframework.batch.core.BatchStatus.FAILED;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -42,10 +41,11 @@ import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.util.Utils;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobExecutionListener;
-import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.listener.JobExecutionListener;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 @Log4j2

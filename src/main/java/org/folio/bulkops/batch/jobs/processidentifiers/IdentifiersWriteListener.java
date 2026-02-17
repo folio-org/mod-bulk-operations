@@ -11,12 +11,12 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.springframework.batch.core.ItemWriteListener;
-import org.springframework.batch.core.JobExecution;
+import org.jspecify.annotations.NonNull;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.item.Chunk;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.listener.ItemWriteListener;
+import org.springframework.batch.infrastructure.item.Chunk;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -36,7 +36,7 @@ public class IdentifiersWriteListener<T> implements ItemWriteListener<T> {
   }
 
   @Override
-  public void afterWrite(@NonNull Chunk<? extends T> list) {
+  public void afterWrite(Chunk<? extends T> list) {
     var totalCsvLines = jobExecution.getJobParameters().getLong(TOTAL_CSV_LINES);
     int processed = list.size();
     int matched = list.size();

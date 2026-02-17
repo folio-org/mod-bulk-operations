@@ -41,7 +41,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -87,6 +86,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import tools.jackson.databind.ObjectMapper;
 
 class ItemDataProcessorTest extends BaseTest {
 

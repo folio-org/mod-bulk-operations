@@ -2,9 +2,9 @@ package org.folio.bulkops.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.exc.InvalidFormatException;
 
 class ExceptionHelperTest {
 
@@ -19,10 +19,10 @@ class ExceptionHelperTest {
 
   @Test
   void fetchMessage_returnsFormattedMessageForInvalidFormatException() {
-    JsonMappingException.Reference ref1 =
-        new JsonMappingException.Reference(Object.class, "field1");
-    JsonMappingException.Reference ref2 =
-        new JsonMappingException.Reference(Object.class, "field2");
+    JacksonException.Reference ref1 =
+        new JacksonException.Reference(Object.class, "field1");
+    JacksonException.Reference ref2 =
+        new JacksonException.Reference(Object.class, "field2");
 
     InvalidFormatException ife =
         InvalidFormatException.from(null, "bad", "badValue", Integer.class);

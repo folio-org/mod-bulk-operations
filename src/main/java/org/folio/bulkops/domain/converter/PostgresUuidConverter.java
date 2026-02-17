@@ -3,6 +3,7 @@ package org.folio.bulkops.domain.converter;
 import jakarta.persistence.AttributeConverter;
 import java.util.UUID;
 
+@Deprecated
 public class PostgresUuidConverter implements AttributeConverter<UUID, String> {
 
   @Override

@@ -16,7 +16,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import feign.FeignException;
 import feign.Request;
 import feign.Response;
@@ -58,6 +57,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import tools.jackson.databind.node.ObjectNode;
 
 class RecordUpdateServiceTest extends BaseTest {
   @Autowired private RecordUpdateService recordUpdateService;

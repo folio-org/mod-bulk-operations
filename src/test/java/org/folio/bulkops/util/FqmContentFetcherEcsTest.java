@@ -21,6 +21,10 @@ import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.EntityTypeService;
 import org.folio.querytool.domain.dto.ContentsRequest;
 import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.client.AuthnClient;
+import org.folio.spring.client.PermissionsClient;
+import org.folio.spring.client.UsersClient;
+import org.folio.spring.service.SystemUserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -38,6 +42,10 @@ class FqmContentFetcherEcsTest {
   @MockitoBean private EntityTypeService entityTypeService;
   @MockitoBean private FolioExecutionContext folioExecutionContext;
   @MockitoBean private QueryClient queryClient;
+  @MockitoBean public SystemUserService systemUserService;
+  @MockitoBean public AuthnClient authnClient;
+  @MockitoBean public UsersClient usersClient;
+  @MockitoBean public PermissionsClient permissionsClient;
   @MockitoBean private SearchClient searchClient;
 
   @Value("${application.fqm-fetcher.max_chunk_size}")

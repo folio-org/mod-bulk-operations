@@ -5,9 +5,9 @@ import static org.folio.bulkops.util.Constants.LINE_BREAK;
 
 import lombok.SneakyThrows;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
-import org.springframework.batch.item.Chunk;
-import org.springframework.batch.item.json.JacksonJsonObjectMarshaller;
-import org.springframework.batch.item.json.JsonFileItemWriter;
+import org.springframework.batch.infrastructure.item.Chunk;
+import org.springframework.batch.infrastructure.item.json.JacksonJsonObjectMarshaller;
+import org.springframework.batch.infrastructure.item.json.JsonFileItemWriter;
 import org.springframework.core.io.WritableResource;
 import org.springframework.lang.NonNull;
 

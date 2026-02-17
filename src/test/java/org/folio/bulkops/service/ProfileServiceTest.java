@@ -43,7 +43,7 @@ class ProfileServiceTest extends BaseTest {
 
   @MockitoBean private PermissionsValidator permissionsValidator;
 
-  @Mock private FolioExecutionContext ec;
+  @MockitoBean private FolioExecutionContext ec;
 
   @MockitoBean private JpaCqlRepository<Profile, UUID> profileUuidJpaCqlRepository;
 

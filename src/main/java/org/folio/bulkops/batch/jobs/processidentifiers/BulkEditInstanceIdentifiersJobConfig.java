@@ -30,16 +30,17 @@ import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.converter.JsonToMarcConverter;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.exception.BulkEditException;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.core.partition.support.Partitioner;
+import org.springframework.batch.core.job.parameters.RunIdIncrementer;
+import org.springframework.batch.core.partition.Partitioner;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.support.CompositeItemWriter;
+import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
+import org.springframework.batch.infrastructure.item.support.CompositeItemWriter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -162,8 +163,7 @@ public class BulkEditInstanceIdentifiersJobConfig {
     var marcWriter =
         new MarcAsListStringsWriter<ExtendedInstance>(marcPath, srsClient, jsonToMarcConverter);
 
-    List<org.springframework.batch.item.ItemWriter<? super List<ExtendedInstance>>> delegates =
-        new ArrayList<>();
+    List<ItemWriter<? super List<ExtendedInstance>>> delegates = new ArrayList<>();
     delegates.add(csvWriter);
     delegates.add(jsonWriter);
     delegates.add(marcWriter);

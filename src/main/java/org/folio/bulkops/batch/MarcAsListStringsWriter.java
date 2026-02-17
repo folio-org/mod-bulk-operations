@@ -15,11 +15,12 @@ import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.converter.JsonToMarcConverter;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.exception.BulkEditException;
+import org.jspecify.annotations.NonNull;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.item.Chunk;
-import org.springframework.batch.item.ExecutionContext;
-import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.lang.NonNull;
+import org.springframework.batch.infrastructure.item.Chunk;
+import org.springframework.batch.infrastructure.item.ExecutionContext;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemWriter;
+import org.springframework.batch.infrastructure.item.file.transform.PassThroughLineAggregator;
 import org.springframework.util.Assert;
 
 @Log4j2
@@ -33,14 +34,14 @@ public class MarcAsListStringsWriter<T extends BulkOperationsEntity>
 
   public MarcAsListStringsWriter(
       String outputFileName, SrsClient srsClient, JsonToMarcConverter jsonToMarcConverter) {
-    super();
+    super(new PassThroughLineAggregator<>());
     this.srsClient = srsClient;
     this.jsonToMarcConverter = jsonToMarcConverter;
     delegateToStringWriter = new MarcAsStringWriter<>(outputFileName);
   }
 
   @Override
-  public void write(@NonNull Chunk<? extends List<T>> entities) throws Exception {
+  public void write(Chunk<? extends List<T>> entities) throws Exception {
     var items =
         entities.getItems().stream()
             .flatMap(List::stream)
@@ -103,8 +104,7 @@ public class MarcAsListStringsWriter<T extends BulkOperationsEntity>
       log.warn("No SRS records found by instanceId = {}", id);
       return mrcRecords;
     }
-    for (var jsonNodeIterator = srsRecords.elements(); jsonNodeIterator.hasNext(); ) {
-      var srsRec = jsonNodeIterator.next();
+    for (tools.jackson.databind.JsonNode srsRec : srsRecords.values()) {
       var parsedRec = srsRec.get("parsedRecord");
       var content = parsedRec.get("content").toString();
       mrcRecords.add(jsonToMarcConverter.convertJsonRecordToMarcRecord(content));
