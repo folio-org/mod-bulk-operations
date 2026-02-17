@@ -93,7 +93,6 @@ import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.marc4j.MarcStreamReader;
 import org.marc4j.marc.Record;
 import org.springframework.stereotype.Service;
-import tools.jackson.core.json.JsonFactory;
 import tools.jackson.databind.ObjectMapper;
 
 @Service

@@ -30,8 +30,9 @@ public class AsyncConfig {
 
   @Bean(name = "asyncJobLauncher")
   public JobOperator getAsyncJobLauncher(
-    JobRepository jobRepository, JobRegistry jobRegistry,
-    @Qualifier("asyncTaskExecutor") TaskExecutor taskExecutor) {
+      JobRepository jobRepository,
+      JobRegistry jobRegistry,
+      @Qualifier("asyncTaskExecutor") TaskExecutor taskExecutor) {
     var jobLauncher = new TaskExecutorJobOperator();
     jobLauncher.setJobRepository(jobRepository);
     jobLauncher.setTaskExecutor(taskExecutor);
@@ -64,5 +65,4 @@ public class AsyncConfig {
   public JobRegistry jobRegistry() {
     return new MapJobRegistry();
   }
-
 }

@@ -19,10 +19,8 @@ class ExceptionHelperTest {
 
   @Test
   void fetchMessage_returnsFormattedMessageForInvalidFormatException() {
-    JacksonException.Reference ref1 =
-        new JacksonException.Reference(Object.class, "field1");
-    JacksonException.Reference ref2 =
-        new JacksonException.Reference(Object.class, "field2");
+    JacksonException.Reference ref1 = new JacksonException.Reference(Object.class, "field1");
+    JacksonException.Reference ref2 = new JacksonException.Reference(Object.class, "field2");
 
     InvalidFormatException ife =
         InvalidFormatException.from(null, "bad", "badValue", Integer.class);
