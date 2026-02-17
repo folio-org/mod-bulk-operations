@@ -172,7 +172,7 @@ public class FqmContentFetcher {
 
     UUID entityTypeId =
         UUID.fromString(
-            entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(entityType).toString());
+            entityTypeService.getEntityTypeIdByBulkOpsEntityType(entityType).toString());
 
     List<String> entityJsonKeys = getEntityJsonKeys(entityType);
 
