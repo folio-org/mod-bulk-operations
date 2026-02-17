@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.UUID;
@@ -55,7 +56,7 @@ class EntityTypeServiceTest {
         .thenThrow(new RuntimeException("Service unavailable"));
 
     assertThrows(
-        NotFoundException.class,
+        RuntimeException.class,
         () -> entityTypeService.getBulkOpsEntityTypeByFqmEntityTypeId(entityTypeId));
   }
 
@@ -68,5 +69,23 @@ class EntityTypeServiceTest {
     assertThrows(
         NotFoundException.class,
         () -> entityTypeService.getBulkOpsEntityTypeByFqmEntityTypeId(entityTypeId));
+  }
+
+  @Test
+  void shouldThrowIllegalArgumentExceptionWhenEntityTypeNameIsNotSupported() {
+
+    UUID entityTypeId = UUID.randomUUID();
+    EntityType entityTypeDto = mock(EntityType.class);
+
+    when(entityTypeClient.getEntityType(entityTypeId)).thenReturn(entityTypeDto);
+    when(entityTypeDto.getName()).thenReturn("unsupported_entity_type");
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> entityTypeService.getBulkOpsEntityTypeByFqmEntityTypeId(entityTypeId));
+    assertEquals(
+        String.format("Entity type with name=%s is not supported", "unsupported_entity_type"),
+        exception.getMessage());
   }
 }

@@ -42,8 +42,7 @@ public class EntityTypeService {
       throw e;
     } catch (Exception e) {
       log.error("Error fetching entity type for entityTypeId: {}", entityTypeId, e);
-      throw new NotFoundException(
-          format("Unable to retrieve entity type for id: %s", entityTypeId));
+      throw e;
     }
   }
 

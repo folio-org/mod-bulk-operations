@@ -170,9 +170,7 @@ public class FqmContentFetcher {
       List<BulkOperationExecutionContent> bulkOperationExecutionContents,
       UUID operationId) {
 
-    UUID entityTypeId =
-        UUID.fromString(
-            entityTypeService.getEntityTypeIdByBulkOpsEntityType(entityType).toString());
+    UUID entityTypeId = entityTypeService.getEntityTypeIdByBulkOpsEntityType(entityType);
 
     List<String> entityJsonKeys = getEntityJsonKeys(entityType);
 
