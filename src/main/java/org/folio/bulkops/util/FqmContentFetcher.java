@@ -7,6 +7,9 @@ import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
+import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
+import static org.folio.bulkops.domain.dto.EntityType.ITEM;
+import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.util.Constants.CHILD_INSTANCES;
 import static org.folio.bulkops.util.Constants.EFFECTIVE_LOCATION;
 import static org.folio.bulkops.util.Constants.ENTITY;
@@ -81,6 +84,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -98,7 +102,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.QueryClient;
+import org.folio.bulkops.client.SearchClient;
 import org.folio.bulkops.domain.bean.StateType;
+import org.folio.bulkops.domain.dto.BatchIdsDto;
+import org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum;
+import org.folio.bulkops.domain.dto.ConsortiumHolding;
+import org.folio.bulkops.domain.dto.ConsortiumItem;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
@@ -134,6 +143,7 @@ public class FqmContentFetcher {
   private final FolioExecutionContext folioExecutionContext;
   private final ConsortiaService consortiaService;
   private final EntityTypeService entityTypeService;
+  private final SearchClient searchClient;
 
   @PostConstruct
   private void logStartup() {
@@ -181,10 +191,41 @@ public class FqmContentFetcher {
     boolean isTenantInConsortia = StringUtils.isNotEmpty(centralTenantId);
     boolean isCentralTenant = tenantId.equals(centralTenantId);
 
-    Function<String, List<String>> idMapper =
-        isTenantInConsortia ? id -> List.of(id, tenantId) : List::of;
-
     for (List<UUID> chunk : chunks) {
+
+      Function<String, List<String>> idMapper;
+
+      if (isTenantInConsortia && entityType != USER) {
+        if (isCentralTenant && (ITEM == entityType || HOLDINGS_RECORD == entityType)) {
+          var batchIdsDto =
+              new BatchIdsDto()
+                  .identifierType(IdentifierTypeEnum.ID)
+                  .identifierValues(chunk.stream().map(UUID::toString).toList());
+
+          Map<String, String> idTenantMap =
+              switch (entityType) {
+                case ITEM ->
+                    searchClient.getConsortiumItemCollection(batchIdsDto).getItems().stream()
+                        .collect(
+                            Collectors.toMap(
+                                ConsortiumItem::getId,
+                                v -> Optional.ofNullable(v.getTenantId()).orElse(EMPTY)));
+                case HOLDINGS_RECORD ->
+                    searchClient.getConsortiumHoldingCollection(batchIdsDto).getHoldings().stream()
+                        .collect(
+                            Collectors.toMap(
+                                ConsortiumHolding::getId,
+                                v -> Optional.ofNullable(v.getTenantId()).orElse(EMPTY)));
+                default -> Map.of();
+              };
+          idMapper = id -> List.of(id, idTenantMap.getOrDefault(id, EMPTY));
+        } else {
+          idMapper = id -> List.of(id, tenantId);
+        }
+      } else {
+        idMapper = List::of;
+      }
+
       completion.submit(
           () -> {
             ContentsRequest req =
@@ -504,7 +545,7 @@ public class FqmContentFetcher {
         }
         jsonNode.put(TENANT_ID, tenant.toString());
 
-        if (entityType == EntityType.ITEM) {
+        if (entityType == ITEM) {
           processForItem(json, jsonNode);
         }
 

@@ -13,6 +13,9 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.QueryClient;
+import org.folio.bulkops.client.SearchClient;
+import org.folio.bulkops.domain.dto.ConsortiumItem;
+import org.folio.bulkops.domain.dto.ConsortiumItemCollection;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.EntityTypeService;
@@ -35,6 +38,7 @@ class FqmContentFetcherEcsTest {
   @MockitoBean private EntityTypeService entityTypeService;
   @MockitoBean private FolioExecutionContext folioExecutionContext;
   @MockitoBean private QueryClient queryClient;
+  @MockitoBean private SearchClient searchClient;
 
   @Value("${application.fqm-fetcher.max_chunk_size}")
   private int chunkSize;
@@ -42,7 +46,32 @@ class FqmContentFetcherEcsTest {
   @Autowired private FqmContentFetcher fqmContentFetcher;
 
   @Test
-  void testCentralTenantBehavior() {
+  void testLocalInstanceInLocalTenant() {
+    String tenantId = "local";
+    String centralTenantId = "";
+    mockCommon(tenantId, centralTenantId);
+
+    UUID uuid = UUID.randomUUID();
+
+    try (var is =
+        fqmContentFetcher.contents(
+            List.of(uuid), EntityType.INSTANCE, List.of(), UUID.randomUUID())) {
+      ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
+      await()
+          .atMost(2, TimeUnit.SECONDS)
+          .untilAsserted(() -> verify(queryClient, atLeastOnce()).getContents(captor.capture()));
+
+      ContentsRequest req = captor.getValue();
+      List<List<String>> ids = req.getIds();
+      Assertions.assertEquals(1, ids.size());
+      Assertions.assertEquals(List.of(uuid.toString()), ids.getFirst());
+    } catch (IOException e) {
+      Assertions.fail("Fail reading content");
+    }
+  }
+
+  @Test
+  void testSharedInstanceInCentralTenant() {
     String tenantId = "central";
     String centralTenantId = "central";
     mockCommon(tenantId, centralTenantId);
@@ -68,7 +97,42 @@ class FqmContentFetcherEcsTest {
   }
 
   @Test
-  void testConsortiumMemberTenantBehavior() {
+  void testMemberItemInCentralTenant() {
+    String tenantId = "central";
+    String centralTenantId = "central";
+    String itemTenant1 = "member_A";
+    UUID uuid1 = UUID.randomUUID();
+    String itemTenant2 = "member_B";
+    UUID uuid2 = UUID.randomUUID();
+    mockCommon(tenantId, centralTenantId);
+
+    when(searchClient.getConsortiumItemCollection(any()))
+        .thenReturn(
+            new ConsortiumItemCollection()
+                .addItemsItem(new ConsortiumItem().id(uuid1.toString()).tenantId(itemTenant1))
+                .addItemsItem(new ConsortiumItem().id(uuid2.toString()).tenantId(itemTenant2)));
+
+    try (var is =
+        fqmContentFetcher.contents(
+            List.of(uuid1, uuid2), EntityType.ITEM, List.of(), UUID.randomUUID())) {
+      ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
+
+      await()
+          .atMost(2, TimeUnit.SECONDS)
+          .untilAsserted(() -> verify(queryClient, atLeastOnce()).getContents(captor.capture()));
+
+      ContentsRequest req = captor.getValue();
+      List<List<String>> ids = req.getIds();
+      Assertions.assertEquals(2, ids.size());
+      Assertions.assertEquals(List.of(uuid1.toString(), itemTenant1), ids.getFirst());
+      Assertions.assertEquals(List.of(uuid2.toString(), itemTenant2), ids.getLast());
+    } catch (IOException e) {
+      Assertions.fail("Fail reading content");
+    }
+  }
+
+  @Test
+  void testMemberInstanceInCentralTenant() {
     String tenantId = "member";
     String centralTenantId = "central";
     mockCommon(tenantId, centralTenantId);
@@ -94,16 +158,15 @@ class FqmContentFetcherEcsTest {
   }
 
   @Test
-  void testNonConsortiaTenantBehavior() {
-    String tenantId = "regular";
-    String centralTenantId = "";
+  void testUserCentralTenant() {
+    String tenantId = "central";
+    String centralTenantId = "central";
     mockCommon(tenantId, centralTenantId);
 
     UUID uuid = UUID.randomUUID();
 
     try (var is =
-        fqmContentFetcher.contents(
-            List.of(uuid), EntityType.INSTANCE, List.of(), UUID.randomUUID())) {
+        fqmContentFetcher.contents(List.of(uuid), EntityType.USER, List.of(), UUID.randomUUID())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
       await()
           .atMost(2, TimeUnit.SECONDS)
