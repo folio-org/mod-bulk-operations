@@ -32,10 +32,6 @@ spring:
     deserialization:
       fail-on-unknown-properties: false
       accept-single-value-as-array: true
-  cloud:
-    openfeign:
-      okhttp:
-        enabled: true
   mustache:
     check-template-location: false
   kafka:
