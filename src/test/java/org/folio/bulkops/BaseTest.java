@@ -65,7 +65,6 @@ import org.folio.spring.client.AuthnClient;
 import org.folio.spring.client.PermissionsClient;
 import org.folio.spring.client.UsersClient;
 import org.folio.spring.integration.XOkapiHeaders;
-import org.folio.spring.liquibase.FolioSpringLiquibase;
 import org.folio.spring.service.PrepareSystemUserService;
 import org.folio.spring.service.SystemUserService;
 import org.folio.tenant.domain.dto.TenantAttributes;
@@ -96,7 +95,7 @@ import tools.jackson.databind.ext.javatime.deser.LocalDateTimeDeserializer;
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     properties = {
       "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
-      "spring.liquibase.enabled=false"
+      "spring.liquibase.enabled=true"
     })
 @ContextConfiguration(initializers = BaseTest.Initializer.class)
 @Testcontainers
@@ -189,7 +188,6 @@ public abstract class BaseTest {
   @MockitoBean public InstanceClient instanceClient;
   @MockitoBean public InstanceNoteTypesClient instanceNoteTypesClient;
   @MockitoBean public PrepareSystemUserService prepareSystemUserService;
-  @MockitoBean public FolioSpringLiquibase folioSpringLiquibase;
   @MockitoBean public SubjectSourcesClient subjectSourcesClient;
   @MockitoBean public SystemUserService systemUserService;
   @MockitoBean public AuthnClient authnClient;
