@@ -59,6 +59,7 @@ import org.folio.bulkops.util.FqmContentFetcher;
 import org.folio.querytool.domain.dto.QueryDetails;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @Service
 @Log4j2
@@ -95,6 +96,7 @@ public class QueryService {
                 completeBulkOperation(
                     is, bulkOperation, new HashSet<>(uuids), bulkOperationExecutionContents);
               } catch (Exception e) {
+                e.printStackTrace();
                 var errorMessage =
                     "Failed to save identifiers (FQM-based Identifiers Flow), reason: "
                         + e.getMessage();
