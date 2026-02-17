@@ -4,6 +4,7 @@ import static java.util.UUID.fromString;
 import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.bean.StateType.FAILED;
+import static org.folio.bulkops.service.EntityTypeService.FQM_INSTANCES_ET_ID;
 import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY;
@@ -83,6 +84,7 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 @SpringBootTest
 @ContextConfiguration(initializers = BaseTest.Initializer.class)
@@ -99,7 +101,7 @@ class FqmContentFetcherTest {
 
   @MockitoBean private ConsortiaService consortiaService;
 
-  @MockitoBean private EntityTypeService entityTypeService;
+  @MockitoSpyBean private EntityTypeService entityTypeService;
 
   @MockitoBean public SystemUserService systemUserService;
   @MockitoBean public AuthnClient authnClient;
@@ -187,14 +189,11 @@ class FqmContentFetcherTest {
             .filter(Objects::nonNull)
             .toList();
 
-    var entityTypeId = randomUUID();
-    when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(any())).thenReturn(entityTypeId);
-
     when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
 
     when(queryClient.getContents(
             new ContentsRequest()
-                .entityTypeId(entityTypeId)
+                .entityTypeId(FQM_INSTANCES_ET_ID)
                 .fields(List.of("instance.jsonb", "instance.shared", "instance.tenant_id"))
                 .localize(false)
                 .ids(uuids.subList(0, 3).stream().map(UUID::toString).map(List::of).toList())))
@@ -202,7 +201,7 @@ class FqmContentFetcherTest {
 
     when(queryClient.getContents(
             new ContentsRequest()
-                .entityTypeId(entityTypeId)
+                .entityTypeId(FQM_INSTANCES_ET_ID)
                 .fields(List.of("instance.jsonb", "instance.shared", "instance.tenant_id"))
                 .localize(false)
                 .ids(uuids.subList(3, 5).stream().map(UUID::toString).map(List::of).toList())))
@@ -242,15 +241,13 @@ class FqmContentFetcherTest {
             fromString("0009fabd-a241-4b51-a72c-dd3be79b3832"),
             fromString("000a7ba2-fd14-4605-b737-fbff50e089c6"));
 
-    var entityTypeId = randomUUID();
     var entityJsonKey = "instance.jsonb";
-    when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(any())).thenReturn(entityTypeId);
 
     when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
 
     when(queryClient.getContents(
             new ContentsRequest()
-                .entityTypeId(entityTypeId)
+                .entityTypeId(FQM_INSTANCES_ET_ID)
                 .fields(List.of(entityJsonKey))
                 .localize(false)
                 .ids(uuids.subList(0, 3).stream().map(UUID::toString).map(List::of).toList())))
@@ -265,7 +262,7 @@ class FqmContentFetcherTest {
         .when(queryClient)
         .getContents(
             new ContentsRequest()
-                .entityTypeId(entityTypeId)
+                .entityTypeId(FQM_INSTANCES_ET_ID)
                 .fields(List.of("instance.jsonb", "instance.shared", "instance.tenant_id"))
                 .localize(false)
                 .ids(uuids.subList(0, 3).stream().map(UUID::toString).map(List::of).toList()));
@@ -346,8 +343,6 @@ class FqmContentFetcherTest {
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockedQueryData);
     when(queryClient.getContents(any())).thenReturn(mockedQueryData.getContent());
-    when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(EntityType.USER))
-        .thenReturn(randomUUID());
 
     try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total, contents, operationId)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -389,8 +384,6 @@ class FqmContentFetcherTest {
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockedQueryData);
-    when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(EntityType.ITEM))
-        .thenReturn(randomUUID());
     when(queryClient.getContents(any())).thenReturn(mockedQueryData.getContent());
 
     try (var is = fqmContentFetcher.fetch(queryId, EntityType.ITEM, total, contents, operationId)) {
@@ -457,8 +450,6 @@ class FqmContentFetcherTest {
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(queryClient.getQuery(queryId, 0, total))
         .thenReturn(getMockedDataForEntityType(EntityType.HOLDINGS_RECORD, total));
-    when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(EntityType.HOLDINGS_RECORD))
-        .thenReturn(randomUUID());
     when(queryClient.getContents(any())).thenReturn(mockedQueryData.getContent());
 
     try (var is =
@@ -509,8 +500,6 @@ class FqmContentFetcherTest {
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(queryClient.getQuery(queryId, 0, total))
         .thenReturn(getMockedDataForEntityType(EntityType.INSTANCE, total));
-    when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(EntityType.INSTANCE))
-        .thenReturn(randomUUID());
     when(queryClient.getContents(any())).thenReturn(mockedQueryData.getContent());
 
     try (var is =
@@ -541,8 +530,6 @@ class FqmContentFetcherTest {
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(consortiaService.isTenantCentral(anyString())).thenReturn(true);
     when(consortiaService.getCentralTenantId(anyString())).thenReturn("tenant");
-    when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(entityType))
-        .thenReturn(randomUUID());
 
     var details = new QueryDetails();
     Map<String, Object> map = new HashMap<>();
@@ -578,8 +565,6 @@ class FqmContentFetcherTest {
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(consortiaService.isTenantCentral(anyString())).thenReturn(true);
     when(consortiaService.getCentralTenantId(anyString())).thenReturn("tenant");
-    when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(EntityType.USER))
-        .thenReturn(randomUUID());
 
     var userId = randomUUID();
     var details = new QueryDetails();
@@ -639,8 +624,6 @@ class FqmContentFetcherTest {
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockedQueryData);
-    when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(EntityType.INSTANCE_MARC))
-        .thenReturn(randomUUID());
     when(queryClient.getContents(any())).thenReturn(mockedQueryData.getContent());
 
     try (var is =
@@ -666,8 +649,6 @@ class FqmContentFetcherTest {
     List<BulkOperationExecutionContent> contents = new ArrayList<>();
     when(folioExecutionContext.getTenantId()).thenReturn("central-tenant");
     when(consortiaService.isTenantCentral("central-tenant")).thenReturn(true);
-    when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(EntityType.INSTANCE))
-        .thenReturn(randomUUID());
 
     var mockForInstanceWithoutTenant = getMockedDataForEntityType(EntityType.INSTANCE, total);
 
@@ -746,8 +727,6 @@ class FqmContentFetcherTest {
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
     when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockedQueryData);
-    when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(EntityType.INSTANCE))
-        .thenReturn(randomUUID());
     when(queryClient.getContents(any())).thenReturn(mockedQueryData.getContent());
 
     try (var is =
@@ -788,8 +767,6 @@ class FqmContentFetcherTest {
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
     when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockedQueryData);
-    when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(EntityType.USER))
-        .thenReturn(randomUUID());
     when(queryClient.getContents(any())).thenReturn(mockedQueryData.getContent());
 
     try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total, contents, operationId)) {

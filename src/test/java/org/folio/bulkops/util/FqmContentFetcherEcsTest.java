@@ -18,7 +18,6 @@ import org.folio.bulkops.domain.dto.ConsortiumItem;
 import org.folio.bulkops.domain.dto.ConsortiumItemCollection;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.service.ConsortiaService;
-import org.folio.bulkops.service.EntityTypeService;
 import org.folio.querytool.domain.dto.ContentsRequest;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.client.AuthnClient;
@@ -39,7 +38,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 class FqmContentFetcherEcsTest {
 
   @MockitoBean private ConsortiaService consortiaService;
-  @MockitoBean private EntityTypeService entityTypeService;
   @MockitoBean private FolioExecutionContext folioExecutionContext;
   @MockitoBean private QueryClient queryClient;
   @MockitoBean public SystemUserService systemUserService;
@@ -192,8 +190,6 @@ class FqmContentFetcherEcsTest {
   private void mockCommon(String tenantId, String centralTenantId) {
     when(folioExecutionContext.getTenantId()).thenReturn(tenantId);
     when(consortiaService.getCentralTenantId(tenantId)).thenReturn(centralTenantId);
-    when(entityTypeService.getFqmEntityTypeIdByBulkOpsEntityType(any()))
-        .thenReturn(UUID.randomUUID());
     when(queryClient.getContents(any())).thenReturn(List.of(Map.of()));
   }
 }
