@@ -17,6 +17,8 @@ import static org.folio.bulkops.util.Constants.HOLDINGS_DATA;
 import static org.folio.bulkops.util.Constants.HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER;
 import static org.folio.bulkops.util.Constants.INSTANCE_TITLE;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
+import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE;
+import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
 import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.Constants.PARENT_INSTANCES;
@@ -44,6 +46,7 @@ import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PARENT_INSTANCES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PRECEDING_TITLES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SHARED_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SOURCE_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SUCCEEDING_TITLES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TENANT_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
@@ -507,6 +510,12 @@ public class FqmContentFetcher {
       boolean isCentralTenant,
       Map<String, Object> json) {
     try {
+      if (isInstance(entityType)
+          && LINKED_DATA_SOURCE.equalsIgnoreCase(
+              ofNullable(json.get(FQM_INSTANCE_SOURCE_KEY)).map(Object::toString).orElse(EMPTY))) {
+        addInstanceLinkedDataNotSupported(json, bulkOperationExecutionContents, operationId);
+        return EMPTY;
+      }
       if (isCentralTenant) {
         if (isInstance(entityType)
             && !SHARED.equalsIgnoreCase(
@@ -608,7 +617,11 @@ public class FqmContentFetcher {
               FQM_INSTANCE_PUBLICATION_KEY,
               FQM_HOLDINGS_TENANT_ID_KEY);
       case INSTANCE, INSTANCE_MARC ->
-          List.of(FQM_INSTANCE_JSONB_KEY, FQM_INSTANCE_SHARED_KEY, FQM_INSTANCE_TENANT_ID_KEY);
+          List.of(
+              FQM_INSTANCE_JSONB_KEY,
+              FQM_INSTANCE_SHARED_KEY,
+              FQM_INSTANCE_SOURCE_KEY,
+              FQM_INSTANCE_TENANT_ID_KEY);
     };
   }
 
@@ -688,6 +701,21 @@ public class FqmContentFetcher {
             .state(StateType.FAILED)
             .errorType(ErrorType.ERROR)
             .errorMessage(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED)
+            .build());
+  }
+
+  private void addInstanceLinkedDataNotSupported(
+      Map<String, Object> json,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      UUID operationId) {
+    var userId = ofNullable(json.get(FQM_USERS_ID_KEY)).map(Object::toString).orElse(EMPTY);
+    bulkOperationExecutionContents.add(
+        BulkOperationExecutionContent.builder()
+            .identifier(userId)
+            .bulkOperationId(operationId)
+            .state(StateType.FAILED)
+            .errorType(ErrorType.ERROR)
+            .errorMessage(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED)
             .build());
   }
 

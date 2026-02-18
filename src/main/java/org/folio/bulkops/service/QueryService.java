@@ -11,8 +11,6 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORD
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_STARTING_BULK_OPERATION;
-import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE;
-import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
 import static org.folio.bulkops.util.Constants.NEW_LINE_SEPARATOR;
 import static org.folio.bulkops.util.Constants.NO_MARC_CONTENT;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
@@ -46,7 +44,6 @@ import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
-import org.folio.bulkops.domain.bean.Instance;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.dto.ApproachType;
@@ -282,19 +279,6 @@ public class QueryService {
           processedRecordUuids.add(
               fromString(extendedRecord.getRecordBulkOperationEntity().getId()));
 
-          if (extendedRecord.getRecordBulkOperationEntity() instanceof Instance
-              && LINKED_DATA_SOURCE.equals(
-                  extendedRecord.getRecordBulkOperationEntity().getSource())) {
-            bulkOperationExecutionContents.add(
-                BulkOperationExecutionContent.builder()
-                    .identifier(extendedRecord.getId())
-                    .bulkOperationId(operation.getId())
-                    .state(StateType.FAILED)
-                    .errorType(ErrorType.ERROR)
-                    .errorMessage(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED)
-                    .build());
-            continue;
-          }
           if (extendedRecord.getRecordBulkOperationEntity() instanceof Item item) {
             localReferenceDataService.enrichWithTenant(item, extendedRecord.getTenant());
           }

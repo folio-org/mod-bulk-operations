@@ -22,6 +22,7 @@ public class FqmKeys {
   public static final String FQM_INSTANCE_PRECEDING_TITLES_KEY = "instance.precedingTitles";
   public static final String FQM_INSTANCE_PUBLICATION_KEY = "instance.publication";
   public static final String FQM_INSTANCE_SHARED_KEY = "instance.shared";
+  public static final String FQM_INSTANCE_SOURCE_KEY = "instance.source";
   public static final String FQM_INSTANCE_SUCCEEDING_TITLES_KEY = "instance.succeedingTitles";
   public static final String FQM_INSTANCE_TITLE_KEY = "instance.title";
   public static final String FQM_INSTANCES_PUBLICATION_KEY = "instances.publication";

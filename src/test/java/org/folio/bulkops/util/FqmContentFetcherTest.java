@@ -185,7 +185,12 @@ class FqmContentFetcherTest {
     when(queryClient.getContents(
             new ContentsRequest()
                 .entityTypeId(FQM_INSTANCES_ET_ID)
-                .fields(List.of("instance.jsonb", "instance.shared", "instance.tenant_id"))
+                .fields(
+                    List.of(
+                        "instance.jsonb",
+                        "instance.shared",
+                        "instance.source",
+                        "instance.tenant_id"))
                 .localize(false)
                 .ids(uuids.subList(0, 3).stream().map(UUID::toString).map(List::of).toList())))
         .thenReturn(getMockedContents(uuids.subList(0, 3)));
@@ -193,7 +198,12 @@ class FqmContentFetcherTest {
     when(queryClient.getContents(
             new ContentsRequest()
                 .entityTypeId(FQM_INSTANCES_ET_ID)
-                .fields(List.of("instance.jsonb", "instance.shared", "instance.tenant_id"))
+                .fields(
+                    List.of(
+                        "instance.jsonb",
+                        "instance.shared",
+                        "instance.source",
+                        "instance.tenant_id"))
                 .localize(false)
                 .ids(uuids.subList(3, 5).stream().map(UUID::toString).map(List::of).toList())))
         .thenReturn(getMockedContents(uuids.subList(3, 5)));
@@ -202,6 +212,8 @@ class FqmContentFetcherTest {
       String actual = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       var expectedIds =
           expected.stream()
+              .filter(
+                  node -> !"\"LINKED_DATA\"".equals(node.get("entity").get("source").toString()))
               .map(node -> node.get("entity").get("id").toString())
               .toArray(String[]::new);
       var nonExpectedIds =
@@ -254,7 +266,12 @@ class FqmContentFetcherTest {
         .getContents(
             new ContentsRequest()
                 .entityTypeId(FQM_INSTANCES_ET_ID)
-                .fields(List.of("instance.jsonb", "instance.shared", "instance.tenant_id"))
+                .fields(
+                    List.of(
+                        "instance.jsonb",
+                        "instance.shared",
+                        "instance.source",
+                        "instance.tenant_id"))
                 .localize(false)
                 .ids(uuids.subList(0, 3).stream().map(UUID::toString).map(List::of).toList()));
 

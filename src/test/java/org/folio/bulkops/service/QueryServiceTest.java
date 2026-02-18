@@ -4,7 +4,6 @@ import static java.util.UUID.randomUUID;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
@@ -12,10 +11,6 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.service.QueryService.QUERY_FILENAME_TEMPLATE;
-import static org.folio.bulkops.util.Constants.FOLIO;
-import static org.folio.bulkops.util.Constants.LINE_BREAK;
-import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE;
-import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -44,19 +39,14 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
-import org.folio.bulkops.domain.bean.ExtendedInstance;
-import org.folio.bulkops.domain.bean.Instance;
-import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -66,7 +56,6 @@ import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.FqmContentFetcher;
 import org.folio.querytool.domain.dto.QueryDetails;
 import org.folio.querytool.domain.dto.QueryDetails.StatusEnum;
-import org.folio.s3.client.RemoteStorageWriter;
 import org.folio.spring.scope.FolioExecutionScopeExecutionContextManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -506,68 +495,6 @@ class QueryServiceTest {
 
     assertThat(bulkOperation.getEndTime()).isNotNull();
     verify(bulkOperationRepository).save(bulkOperation);
-  }
-
-  @Test
-  void shouldAddFailedContentForInstanceWithLinkedDataSource() throws Exception {
-    // Arrange
-    var operationId = randomUUID();
-    var bulkOperation =
-        BulkOperation.builder()
-            .id(operationId)
-            .entityType(EntityType.INSTANCE)
-            .approach(IN_APP)
-            .build();
-
-    var writer = mock(RemoteStorageWriter.class);
-    when(remoteFileSystemClient.writer(any())).thenReturn(writer);
-
-    var linkedDataInstanceId = "b48d7711-b41c-432b-ab81-90d36ea15523";
-    var folioInstanceId = "b48d7711-b41c-432b-ab81-90d36ea15523";
-
-    ObjectMapper objectMapper = new ObjectMapper();
-
-    String linkedDataInstance =
-        objectMapper.writeValueAsString(
-            new ExtendedInstance()
-                .withTenantId("tenant")
-                .withEntity(
-                    new Instance().withId(linkedDataInstanceId).withSource(LINKED_DATA_SOURCE)));
-
-    String folioInstance =
-        objectMapper.writeValueAsString(
-            new ExtendedInstance()
-                .withTenantId("tenant")
-                .withEntity(new Instance().withId(folioInstanceId).withSource(FOLIO)));
-
-    String response = linkedDataInstance + LINE_BREAK + folioInstance;
-
-    InputStream is = new ByteArrayInputStream(response.getBytes(StandardCharsets.UTF_8));
-    List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
-
-    service.processAsyncQueryResult(
-        is,
-        "triggering.csv",
-        "matched.csv",
-        "matched.json",
-        "matched.mrc",
-        bulkOperation,
-        new HashSet<>(),
-        bulkOperationExecutionContents);
-
-    // Assert
-    assertThat(bulkOperationExecutionContents).hasSize(1);
-    BulkOperationExecutionContent content = bulkOperationExecutionContents.getFirst();
-    assertThat(content.getIdentifier()).isEqualTo(linkedDataInstanceId);
-    assertThat(content.getBulkOperationId()).isEqualTo(operationId);
-    assertThat(content.getState()).isEqualTo(StateType.FAILED);
-    assertThat(content.getErrorType()).isEqualTo(org.folio.bulkops.domain.dto.ErrorType.ERROR);
-    assertThat(content.getErrorMessage()).isEqualTo(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED);
-
-    // bulkOperation.getMatchedNumOfErrors() is not checked due to ErrorService mocking - skipping
-    // bulk operation updating
-    assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(2);
-    assertThat(bulkOperation.getMatchedNumOfRecords()).isEqualTo(1);
   }
 
   private BulkOperation baseBulkOperation() {
