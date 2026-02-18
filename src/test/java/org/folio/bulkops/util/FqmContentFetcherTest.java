@@ -1028,7 +1028,10 @@ class FqmContentFetcherTest {
     for (int i = 0; i < total; i++) {
       var map = new HashMap<String, Object>();
       switch (entityType) {
-        case USER -> map.put("users.jsonb", "{\"id\":\"" + randomUUID() + "\"}");
+        case USER -> {
+          map.put("users.jsonb", "{\"id\":\"" + randomUUID() + "\"}");
+          map.put("users.type", "staff");
+        }
         case ITEM -> {
           map.put(FQM_ITEMS_JSONB_KEY, "{\"id\":\"" + randomUUID() + "\"}");
           map.put(FQM_ITEMS_TENANT_ID_KEY, "item-tenant");

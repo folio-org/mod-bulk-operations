@@ -579,7 +579,7 @@ public class FqmContentFetcher {
 
   private List<String> getEntityJsonKeys(EntityType entityType) {
     return switch (entityType) {
-      case USER -> List.of(FQM_USERS_JSONB_KEY);
+      case USER -> List.of(FQM_USERS_JSONB_KEY, FQM_USERS_TYPE_KEY);
       case ITEM ->
           List.of(
               FQM_ITEMS_JSONB_KEY,
