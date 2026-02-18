@@ -109,6 +109,7 @@ public abstract class BaseTest {
   public static final int S3_PORT = 9000;
   public static final String BUCKET = "test-bucket";
   public static final String REGION = "us-west-2";
+  public static final String SUB_PATH = "mod-bulk-operations";
   private static final String MINIO_ENDPOINT;
   private static final String OKAPI_URL = "http://okapi:9130";
   public static final int ASYNC_OPERATION_TIMEOUT_IN_SECONDS = 10;
@@ -143,6 +144,7 @@ public abstract class BaseTest {
                     .bucket(BUCKET)
                     .awsSdk(false)
                     .region(REGION)
+                    .subPath(SUB_PATH)
                     .build()));
   }
 
@@ -217,7 +219,8 @@ public abstract class BaseTest {
           "application.remote-files-storage.bucket=" + BUCKET,
           "application.remote-files-storage.accessKey=" + S3_ACCESS_KEY,
           "application.remote-files-storage.secretKey=" + S3_SECRET_KEY,
-          "application.remote-files-storage.awsSdk=false");
+          "application.remote-files-storage.awsSdk=false",
+          "application.remote-files-storage.subPath=" + SUB_PATH);
     }
   }
 
