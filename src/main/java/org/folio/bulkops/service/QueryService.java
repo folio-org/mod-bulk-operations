@@ -1,7 +1,6 @@
 package org.folio.bulkops.service;
 
 import static java.util.Objects.isNull;
-import static java.util.UUID.fromString;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.domain.dto.OperationStatusType.CANCELLED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
@@ -13,7 +12,6 @@ import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_STARTING_BULK_OPERATION;
 import static org.folio.bulkops.util.Constants.NEW_LINE_SEPARATOR;
 import static org.folio.bulkops.util.Constants.NO_MARC_CONTENT;
-import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.Utils.getMatchedFileName;
 import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
@@ -37,8 +35,6 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
@@ -47,7 +43,6 @@ import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.dto.ApproachType;
-import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.MarcValidationException;
@@ -271,13 +266,11 @@ public class QueryService {
         var parser = factory.createParser(is);
         var iterator = objectMapper.readValues(parser, extendedEntityClass);
         Set<String> usedTenants = new HashSet<>();
-        Set<UUID> processedRecordUuids = new HashSet<>();
+
         while (iterator.hasNext()) {
 
           var extendedRecord = iterator.next();
           ++numProcessed;
-          processedRecordUuids.add(
-              fromString(extendedRecord.getRecordBulkOperationEntity().getId()));
 
           if (extendedRecord.getRecordBulkOperationEntity() instanceof Item item) {
             localReferenceDataService.enrichWithTenant(item, extendedRecord.getTenant());
@@ -325,20 +318,6 @@ public class QueryService {
           if (numProcessed % STATISTICS_UPDATING_STEP == 0) {
             updateOperationExecutionStatus(operation, numProcessed, numMatched);
           }
-        }
-
-        if (CollectionUtils.isNotEmpty(uuids)) {
-          SetUtils.difference(uuids, processedRecordUuids)
-              .forEach(
-                  missingId ->
-                      bulkOperationExecutionContents.add(
-                          BulkOperationExecutionContent.builder()
-                              .identifier(missingId.toString())
-                              .bulkOperationId(operation.getId())
-                              .state(StateType.FAILED)
-                              .errorType(ErrorType.ERROR)
-                              .errorMessage(NO_MATCH_FOUND_MESSAGE)
-                              .build()));
         }
 
         operation.setUsedTenants(new ArrayList<>(usedTenants));
