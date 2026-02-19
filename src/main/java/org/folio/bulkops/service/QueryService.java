@@ -58,6 +58,7 @@ import org.folio.bulkops.util.CsvHelper;
 import org.folio.bulkops.util.FqmContentFetcher;
 import org.folio.querytool.domain.dto.QueryDetails;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.MappingIterator;
 import tools.jackson.databind.ObjectMapper;
 
 @Service
@@ -268,13 +269,13 @@ public class QueryService {
 
         int numMatched = 0;
         int numProcessed = 0;
-        var parser = objectMapper.createParser(is);
-        var iterator = objectMapper.readValues(parser, extendedEntityClass);
+        var iterator = isNull(is) ? MappingIterator.emptyIterator()
+          : objectMapper.readValues(objectMapper.createParser(is), extendedEntityClass);
         Set<String> usedTenants = new HashSet<>();
         Set<UUID> processedRecordUuids = new HashSet<>();
         while (iterator.hasNext()) {
 
-          var extendedRecord = iterator.next();
+          var extendedRecord = (BulkOperationsEntity) iterator.next();
           if (extendedRecord.getRecordBulkOperationEntity() instanceof Item item) {
             localReferenceDataService.enrichWithTenant(item, extendedRecord.getTenant());
           }

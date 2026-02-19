@@ -1,7 +1,6 @@
 package org.folio.bulkops.domain.bean;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Date;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +17,7 @@ public class Metadata {
   @JsonProperty("createdDate")
   @org.springframework.format.annotation.DateTimeFormat(
       iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
-  private Date createdDate;
+  private String createdDate;
 
   @JsonProperty("createdByUserId")
   private UUID createdByUserId;
@@ -29,7 +28,7 @@ public class Metadata {
   @JsonProperty("updatedDate")
   @org.springframework.format.annotation.DateTimeFormat(
       iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
-  private Date updatedDate;
+  private String updatedDate;
 
   @JsonProperty("updatedByUserId")
   private UUID updatedByUserId;

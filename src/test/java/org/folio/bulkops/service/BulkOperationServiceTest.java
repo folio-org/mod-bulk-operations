@@ -1279,8 +1279,8 @@ class BulkOperationServiceTest extends BaseTest {
                   verify(remoteFolioS3Client, times(1))
                       .write(pathCaptor.capture(), streamCaptor.capture()));
       assertEquals(
-          new String(streamCaptor.getAllValues().getFirst().readAllBytes()),
-          Files.readString(Path.of(pathToModifiedUserJson)).trim());
+          Files.readString(Path.of(pathToModifiedUserJson)).trim(),
+          new String(streamCaptor.getAllValues().getFirst().readAllBytes()));
       assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().getFirst());
 
       var executionContentCaptor = ArgumentCaptor.forClass(BulkOperationExecutionContent.class);
