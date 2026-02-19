@@ -9,10 +9,11 @@ import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.ValueSerializer;
 
 public class CustomDateSerializer extends ValueSerializer<Date> {
-  private static final SimpleDateFormat formatter =
+  private final SimpleDateFormat formatter =
       new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
-  static {
+  public CustomDateSerializer() {
+    super();
     formatter.setTimeZone(TimeZone.getTimeZone("UTC"));
   }
 
