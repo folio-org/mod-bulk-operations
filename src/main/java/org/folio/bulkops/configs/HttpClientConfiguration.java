@@ -1,5 +1,6 @@
 package org.folio.bulkops.configs;
 
+import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.CallNumberTypeClient;
@@ -55,6 +56,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 @Configuration
+@Log4j2
 public class HttpClientConfiguration {
 
   @Bean
@@ -79,6 +81,7 @@ public class HttpClientConfiguration {
 
   @Bean
   public ConsortiaClient consortiaClient(HttpServiceProxyFactory factory) {
+    log.info("Creating ConsortiaClient instance for consortiaClient");
     return factory.createClient(ConsortiaClient.class);
   }
 
