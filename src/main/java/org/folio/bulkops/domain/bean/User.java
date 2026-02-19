@@ -33,7 +33,9 @@ import org.folio.bulkops.domain.converter.ProxyForConverter;
 import org.folio.bulkops.domain.converter.StringConverter;
 import org.folio.bulkops.domain.converter.TagsConverter;
 import org.folio.bulkops.domain.dto.IdentifierType;
+import org.folio.bulkops.domain.format.CustomDateSerializer;
 import org.springframework.format.annotation.DateTimeFormat;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 @Getter
 @Setter
@@ -112,7 +114,8 @@ public class User implements BulkOperationsEntity {
   @CsvCustomBindByName(column = "Enrollment date", converter = DateWithoutTimeConverter.class)
   @CsvCustomBindByPosition(position = 20, converter = DateWithoutTimeConverter.class)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
-  private String enrollmentDate;
+  @JsonSerialize(using = CustomDateSerializer.class)
+  private Date enrollmentDate;
 
   @JsonProperty("expirationDate")
   @CsvCustomBindByName(column = "Expiration date", converter = DateWithoutTimeConverter.class)
