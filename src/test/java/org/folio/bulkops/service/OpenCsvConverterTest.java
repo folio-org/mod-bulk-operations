@@ -90,7 +90,6 @@ import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.util.CustomMappingStrategy;
 import org.folio.spring.scope.FolioExecutionContextSetter;
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -112,8 +111,8 @@ class OpenCsvConverterTest extends BaseTest {
 
   private static class BulkOperationEntityClassProvider implements ArgumentsProvider {
     @Override
-    public @NonNull Stream<? extends Arguments> provideArguments(
-        @NonNull ExtensionContext context) {
+    public Stream<? extends Arguments> provideArguments(
+        ExtensionContext context) {
       return Stream.of(Arguments.of(User.class));
     }
   }

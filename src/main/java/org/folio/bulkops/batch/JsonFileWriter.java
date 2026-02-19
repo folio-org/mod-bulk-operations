@@ -9,7 +9,6 @@ import org.springframework.batch.infrastructure.item.Chunk;
 import org.springframework.batch.infrastructure.item.json.JacksonJsonObjectMarshaller;
 import org.springframework.batch.infrastructure.item.json.JsonFileItemWriter;
 import org.springframework.core.io.WritableResource;
-import org.springframework.lang.NonNull;
 
 public class JsonFileWriter<T extends BulkOperationsEntity> extends JsonFileItemWriter<T> {
   protected final JacksonJsonObjectMarshaller<T> marshaller;
@@ -24,7 +23,7 @@ public class JsonFileWriter<T extends BulkOperationsEntity> extends JsonFileItem
 
   @SneakyThrows
   @Override
-  public @NonNull String doWrite(@NonNull Chunk<? extends T> entities) {
+  public String doWrite(Chunk<? extends T> entities) {
     var lines = new StringBuilder();
     for (T entity : entities) {
       lines.append(marshaller.marshal(entity)).append(LINE_BREAK);

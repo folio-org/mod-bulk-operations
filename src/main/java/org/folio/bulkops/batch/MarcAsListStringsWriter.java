@@ -15,7 +15,6 @@ import org.folio.bulkops.domain.bean.ExtendedInstance;
 import org.folio.bulkops.domain.converter.JsonToMarcConverter;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.exception.BulkEditException;
-import org.jspecify.annotations.NonNull;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.infrastructure.item.Chunk;
 import org.springframework.batch.infrastructure.item.ExecutionContext;
@@ -77,14 +76,14 @@ public class MarcAsListStringsWriter<T extends BulkOperationsEntity>
   }
 
   @Override
-  public void open(@NonNull ExecutionContext executionContext) {
+  public void open(ExecutionContext executionContext) {
     if (nonNull(delegateToStringWriter)) {
       delegateToStringWriter.open(executionContext);
     }
   }
 
   @Override
-  public void update(@NonNull ExecutionContext executionContext) {
+  public void update(ExecutionContext executionContext) {
     if (nonNull(delegateToStringWriter)) {
       delegateToStringWriter.update(executionContext);
     }

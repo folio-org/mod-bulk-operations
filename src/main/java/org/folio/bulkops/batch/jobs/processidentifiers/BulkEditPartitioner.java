@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.JobParameterNames;
-import org.jspecify.annotations.NonNull;
 import org.springframework.batch.core.partition.Partitioner;
 import org.springframework.batch.infrastructure.item.ExecutionContext;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,7 +35,7 @@ public class BulkEditPartitioner implements Partitioner {
   }
 
   @Override
-  public @NonNull Map<String, ExecutionContext> partition(int gridSize) {
+  public Map<String, ExecutionContext> partition(int gridSize) {
 
     Map<String, ExecutionContext> result = new HashMap<>();
 

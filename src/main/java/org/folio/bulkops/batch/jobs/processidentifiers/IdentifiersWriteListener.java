@@ -11,7 +11,6 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.repository.BulkOperationRepository;
-import org.jspecify.annotations.NonNull;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.JobExecution;
 import org.springframework.batch.core.listener.ItemWriteListener;
@@ -31,7 +30,7 @@ public class IdentifiersWriteListener<T> implements ItemWriteListener<T> {
   private JobExecution jobExecution;
 
   @Override
-  public void beforeWrite(@NonNull Chunk<? extends T> list) {
+  public void beforeWrite(Chunk<? extends T> list) {
     // do nothing
   }
 

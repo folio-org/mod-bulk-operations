@@ -96,6 +96,7 @@ public class QueryService {
                 completeBulkOperation(
                     is, bulkOperation, new HashSet<>(uuids), bulkOperationExecutionContents);
               } catch (Exception e) {
+                e.printStackTrace();
                 var errorMessage =
                     "Failed to save identifiers (FQM-based Identifiers Flow), reason: "
                         + e.getMessage();

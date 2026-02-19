@@ -3,7 +3,6 @@ package org.folio.bulkops.configs.kafka;
 import java.nio.charset.StandardCharsets;
 import org.apache.kafka.common.header.Headers;
 import org.folio.bulkops.configs.kafka.dto.Event;
-import org.jspecify.annotations.NonNull;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import tools.jackson.databind.JavaType;
 import tools.jackson.databind.ObjectMapper;
@@ -19,7 +18,7 @@ public class DataImportEventPayloadDeserializer<T> extends JacksonJsonDeserializ
   }
 
   @Override
-  public T deserialize(@NonNull String topic, @NonNull Headers headers, byte[] data) {
+  public T deserialize(String topic, Headers headers, byte[] data) {
     var event = objectMapper.readValue(data, Event.class);
     return super.deserialize(
         topic, headers, event.getEventPayload().getBytes(StandardCharsets.UTF_8));
