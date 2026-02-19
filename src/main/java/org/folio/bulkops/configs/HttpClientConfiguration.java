@@ -53,6 +53,8 @@ import org.folio.bulkops.client.SubjectTypesClient;
 import org.folio.bulkops.client.UserClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 @Configuration
@@ -310,4 +312,22 @@ public class HttpClientConfiguration {
   public UserClient userClient(HttpServiceProxyFactory factory) {
     return factory.createClient(UserClient.class);
   }
+
+  @Bean
+  public RestClient restClient(RestClient.Builder builder) {
+    return builder
+      .requestInterceptor((request, body, execution) -> {
+        log.info("Request URL: {}", request.getURI());
+        return execution.execute(request, body);
+      })
+      .build();
+  }
+
+  @Bean
+  public HttpServiceProxyFactory httpServiceProxyFactory(RestClient restClient) {
+    return HttpServiceProxyFactory
+      .builderFor(RestClientAdapter.create(restClient))
+      .build();
+  }
+
 }
