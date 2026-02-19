@@ -82,6 +82,7 @@ application:
     accessKey: ${S3_ACCESS_KEY_ID:}
     secretKey: ${S3_SECRET_ACCESS_KEY:}
     awsSdk: ${S3_IS_AWS:false}
+    sub-path: ${S3_SUB_PATH:mod-bulk-operations}
   kafka:
     topic-pattern-di: ${ENV:folio}.(.*\.)?DI_JOB_COMPLETED
     group-id: ${ENV:folio}-mod-bulk-operations-events-group
