@@ -1,7 +1,6 @@
 package org.folio.bulkops.client;
 
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import org.folio.bulkops.configs.FeignClientConfiguration;
 import org.folio.bulkops.domain.bean.ActionProfile;
 import org.folio.bulkops.domain.bean.ActionProfilePost;
 import org.folio.bulkops.domain.bean.JobProfile;
@@ -10,21 +9,21 @@ import org.folio.bulkops.domain.bean.MappingProfile;
 import org.folio.bulkops.domain.bean.MappingProfilePost;
 import org.folio.bulkops.domain.bean.MatchProfile;
 import org.folio.bulkops.domain.bean.MatchProfilePost;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PostExchange;
 
-@FeignClient(name = "data-import-profiles", configuration = FeignClientConfiguration.class)
+@HttpExchange(url = "data-import-profiles")
 public interface DataImportProfilesClient {
 
-  @PostMapping(value = "/jobProfiles")
+  @PostExchange(value = "/jobProfiles")
   JobProfile createJobProfile(@RequestBody JobProfilePost jobProfilePost);
 
-  @PostMapping(value = "/matchProfiles")
+  @PostExchange(value = "/matchProfiles")
   MatchProfile createMatchProfile(@RequestBody MatchProfilePost matchProfilePost);
 
-  @PostMapping(value = "/actionProfiles")
+  @PostExchange(value = "/actionProfiles")
   ActionProfile createActionProfile(@RequestBody ActionProfilePost actionProfilePost);
 
-  @PostMapping(value = "/mappingProfiles")
+  @PostExchange(value = "/mappingProfiles")
   MappingProfile createMappingProfile(@RequestBody MappingProfilePost mappingProfilePost);
 }

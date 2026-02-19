@@ -116,7 +116,6 @@ class BatchIntegrationTest extends BaseTest {
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       JobOperatorTestUtils testLauncher = createTestLauncher(bulkEditProcessInstanceIdentifiersJob);
       var jobParameters = JobCommandHelper.prepareJobParameters(bulkOperation, 1);
-
       JobExecution jobExecution = testLauncher.startJob(jobParameters);
 
       verify(remoteFileSystemClient, times(2)).put(any(InputStream.class), any(String.class));

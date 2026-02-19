@@ -38,11 +38,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-import feign.FeignException;
-import feign.Request;
-import feign.Response;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -77,14 +73,16 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.web.client.HttpServerErrorException;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 @SpringBootTest
 @ContextConfiguration(initializers = BaseTest.Initializer.class)
@@ -253,12 +251,9 @@ class FqmContentFetcherTest {
                 .ids(uuids.subList(0, 3).stream().map(UUID::toString).map(List::of).toList())))
         .thenReturn(getMockedContents(uuids.subList(0, 3)));
 
-    var request =
-        Request.create(
-            Request.HttpMethod.GET, "", Map.of(), new byte[] {}, Charset.defaultCharset(), null);
-
-    var response = Response.builder().status(500).reason("GET-Error").request(request).build();
-    doThrow(FeignException.errorStatus("", response))
+    doThrow(
+            HttpServerErrorException.create(
+                HttpStatusCode.valueOf(500), "GET-Error", null, null, null))
         .when(queryClient)
         .getContents(
             new ContentsRequest()
@@ -272,7 +267,7 @@ class FqmContentFetcherTest {
 
     assertThat(exception.getCause()).isInstanceOf(FqmFetcherException.class);
     assertThat(exception.getCause().getCause())
-        .isInstanceOf(FeignException.InternalServerError.class);
+        .isInstanceOf(HttpServerErrorException.InternalServerError.class);
   }
 
   @Test
@@ -298,12 +293,9 @@ class FqmContentFetcherTest {
     int offset = ((total + chunkSize - 1) / chunkSize - 1) * chunkSize;
     int limit = Math.min(chunkSize, total - offset);
 
-    var req =
-        Request.create(
-            Request.HttpMethod.GET, "", Map.of(), new byte[] {}, Charset.defaultCharset(), null);
-
-    var response = Response.builder().status(500).reason("GET-Error").request(req).build();
-    doThrow(FeignException.errorStatus("", response))
+    doThrow(
+            HttpServerErrorException.create(
+                HttpStatusCode.valueOf(500), "GET-Error", null, null, null))
         .when(queryClient)
         .getQuery(queryId, offset, limit);
 
@@ -314,7 +306,7 @@ class FqmContentFetcherTest {
                 fqmContentFetcher.fetch(
                     queryId, EntityType.INSTANCE, total, contents, operationId));
 
-    assertThat(exception.getCause().getCause()).isInstanceOf(FeignException.class);
+    assertThat(exception.getCause().getCause()).isInstanceOf(HttpServerErrorException.class);
   }
 
   @Test

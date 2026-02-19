@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ExportJobManagerSync extends ExportJobManager {
-  public ExportJobManagerSync(@Qualifier("asyncJobLauncher") JobOperator jobLauncher) {
-    super(jobLauncher);
+  public ExportJobManagerSync(@Qualifier("asyncJobLauncher") JobOperator jobOperator) {
+    super(jobOperator);
   }
 }

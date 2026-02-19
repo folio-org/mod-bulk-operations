@@ -45,7 +45,6 @@
     <folio-s3-client.version>3.0.0-SNAPSHOT</folio-s3-client.version>
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
     <opencsv.version>5.12.0</opencsv.version>
-    <feign-jackson.version>13.6</feign-jackson.version>
     <lib-fqm-query-processor.version>4.1.0-SNAPSHOT</lib-fqm-query-processor.version>
     <marc4j.version>2.9.2</marc4j.version>
     <jsonPath.version>2.9.0</jsonPath.version>
@@ -112,13 +111,6 @@
           <artifactId>logback-classic</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-starter-openfeign</artifactId>
-      <version>5.0.1</version>
-      <scope>compile</scope>
     </dependency>
 
     <dependency>

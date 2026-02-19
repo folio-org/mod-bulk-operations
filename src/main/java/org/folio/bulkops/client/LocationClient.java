@@ -1,24 +1,23 @@
 package org.folio.bulkops.client;
 
-import org.folio.bulkops.configs.FeignClientConfiguration;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.ItemLocationCollection;
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
 import tools.jackson.databind.JsonNode;
 
-@FeignClient(name = "locations", configuration = FeignClientConfiguration.class)
+@HttpExchange(url = "locations", accept = MediaType.APPLICATION_JSON_VALUE)
 public interface LocationClient {
 
-  @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetExchange
   ItemLocationCollection getByQuery(@RequestParam String query);
 
-  @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetExchange(value = "/{id}")
   ItemLocation getLocationById(@PathVariable String id);
 
-  @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetExchange(value = "/{id}")
   JsonNode getLocationJsonById(@PathVariable String id);
 }

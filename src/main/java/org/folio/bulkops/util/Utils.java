@@ -7,7 +7,6 @@ import static org.folio.bulkops.util.Constants.MSG_ERROR_OPTIMISTIC_LOCKING_DEFA
 import static org.folio.bulkops.util.Constants.MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING;
 import static org.folio.bulkops.util.Constants.NEW_LINE_SEPARATOR;
 
-import feign.FeignException;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -36,6 +35,7 @@ import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
+import org.springframework.web.client.HttpClientErrorException;
 
 @UtilityClass
 @Log4j2
@@ -96,7 +96,7 @@ public class Utils {
     };
   }
 
-  public static String getMessageFromFeignException(FeignException e) {
+  public static String getMessageFromFeignException(HttpClientErrorException e) {
     try {
       String[] matches =
           PATTERN

@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
@@ -307,8 +308,10 @@ public class BulkOperationService {
       var csvWriter = new BulkOperationsEntityCsvWriter(writerForModifiedPreviewCsvFile, clazz);
 
       var iterator =
-          objectMapper.readValues(
-              objectMapper.createParser(readerForMatchedJsonFile), extendedClazz);
+          isNull(readerForMatchedJsonFile)
+              ? MappingIterator.emptyIterator()
+              : objectMapper.readValues(
+                  objectMapper.createParser(readerForMatchedJsonFile), extendedClazz);
 
       var processedNumOfRecords = 0;
 
@@ -327,7 +330,9 @@ public class BulkOperationService {
               ErrorType.ERROR);
           continue;
         }
-        var modified = processUpdate(original, operation, ruleCollection, extendedClazz);
+        var modified =
+            processUpdate(
+                (BulkOperationsEntity) original, operation, ruleCollection, extendedClazz);
         List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
         if (Objects.nonNull(modified)) {
           // Prepare CSV for download and JSON for preview

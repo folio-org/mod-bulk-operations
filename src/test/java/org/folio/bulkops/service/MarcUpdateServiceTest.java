@@ -29,12 +29,15 @@ import org.folio.bulkops.processor.marc.MarcInstanceUpdateProcessor;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.marc4j.marc.Record;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+@ExtendWith(MockitoExtension.class)
 class MarcUpdateServiceTest extends BaseTest {
   @MockitoBean private BulkOperationExecutionRepository executionRepository;
   @MockitoBean private RemoteFileSystemClient remoteFileSystemClient;

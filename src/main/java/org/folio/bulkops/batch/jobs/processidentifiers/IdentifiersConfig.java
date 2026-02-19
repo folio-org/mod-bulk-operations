@@ -3,6 +3,7 @@ package org.folio.bulkops.batch.jobs.processidentifiers;
 import static org.folio.bulkops.util.Constants.IDENTIFIERS_FILE_NAME;
 
 import java.io.IOException;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
@@ -27,6 +28,7 @@ public class IdentifiersConfig {
   @Bean
   @StepScope
   public FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader(
+      @Value("#{jobParameters}") Map<String, Object> jobParameters,
       @Value("#{jobParameters['" + IDENTIFIERS_FILE_NAME + "']}") String uploadedFileName,
       @Value("#{stepExecutionContext['offset']}") Long offset,
       @Value("#{stepExecutionContext['limit']}") Long limit)

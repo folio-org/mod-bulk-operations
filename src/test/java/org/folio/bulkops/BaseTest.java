@@ -333,4 +333,21 @@ public abstract class BaseTest {
               .build();
     };
   }
+
+  public FolioExecutionContext prepareFolioExecutionContextForTenant(String tenant) {
+    Map<String, String> okapiHeaders = new HashMap<>();
+    okapiHeaders.put(XOkapiHeaders.TENANT, tenant);
+    okapiHeaders.put(XOkapiHeaders.TOKEN, TOKEN);
+    okapiHeaders.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    var localHeaders =
+        okapiHeaders.entrySet().stream()
+            .filter(e -> e.getKey().startsWith(XOkapiHeaders.OKAPI_HEADERS_PREFIX))
+            .collect(
+                Collectors.toMap(
+                    Map.Entry::getKey,
+                    e -> (Collection<String>) List.of(String.valueOf(e.getValue()))));
+
+    return new DefaultFolioExecutionContext(folioModuleMetadata, localHeaders);
+  }
 }

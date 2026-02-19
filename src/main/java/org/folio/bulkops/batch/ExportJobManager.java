@@ -17,8 +17,8 @@ public class ExportJobManager {
   private final JobLaunchingMessageHandler jobLaunchingMessageHandler;
 
   @Autowired
-  public ExportJobManager(@Qualifier("asyncJobLauncher") JobOperator jobLauncher) {
-    jobLaunchingMessageHandler = new JobLaunchingMessageHandler(jobLauncher);
+  public ExportJobManager(@Qualifier("asyncJobLauncher") JobOperator jobOperator) {
+    jobLaunchingMessageHandler = new JobLaunchingMessageHandler(jobOperator);
   }
 
   public JobExecution launchJob(JobLaunchRequest jobLaunchRequest) throws JobExecutionException {

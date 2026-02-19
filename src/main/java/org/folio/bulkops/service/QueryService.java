@@ -59,7 +59,6 @@ import org.folio.bulkops.util.FqmContentFetcher;
 import org.folio.querytool.domain.dto.QueryDetails;
 import org.springframework.stereotype.Service;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
 
 @Service
 @Log4j2

@@ -23,9 +23,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Stream;
 import lombok.SneakyThrows;
@@ -91,8 +89,7 @@ import org.folio.bulkops.exception.ConverterException;
 import org.folio.bulkops.exception.NotFoundException;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.util.CustomMappingStrategy;
-import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.integration.XOkapiHeaders;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -104,7 +101,6 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import tools.jackson.databind.node.JsonNodeFactory;
 
 @Log4j2
@@ -122,104 +118,99 @@ class OpenCsvConverterTest extends BaseTest {
     }
   }
 
-  @MockitoSpyBean private FolioExecutionContext folioExecutionContext;
-
   @ParameterizedTest
   @ArgumentsSource(BulkOperationEntityClassProvider.class)
   void shouldConvertEntity(Class<BulkOperationsEntity> clazz) throws IOException {
     initMocks();
-    HashMap<String, Collection<String>> headers = new HashMap<>();
-    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
-    when(folioExecutionContext.getTenantId()).thenReturn("diku");
-    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
 
-    /* JSON -> Object */
-    var bean = objectMapper.readValue(new FileInputStream(getPathToSample(clazz)), clazz);
-    if (bean instanceof Item item) {
-      mockItemData();
-      bean = buildItem(item);
-    }
+      /* JSON -> Object */
+      var bean = objectMapper.readValue(new FileInputStream(getPathToSample(clazz)), clazz);
+      if (bean instanceof Item item) {
+        mockItemData();
+        bean = buildItem(item);
+      }
 
-    /* Object -> CSV */
-    var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
-    String csv = null;
-    strategy.setType(clazz);
-    try (Writer writer = new StringWriter()) {
-      StatefulBeanToCsv<BulkOperationsEntity> sbc =
-          new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writer)
-              .withSeparator(DEFAULT_SEPARATOR)
-              .withApplyQuotesToAll(false)
-              .withMappingStrategy(strategy)
-              .build();
-      sbc.write(bean);
-      csv = writer.toString();
-    } catch (Exception e) {
-      Assertions.fail("Error parsing bean to CSV", e);
-    }
+      /* Object -> CSV */
+      var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
+      String csv = null;
+      strategy.setType(clazz);
+      try (Writer writer = new StringWriter()) {
+        StatefulBeanToCsv<BulkOperationsEntity> sbc =
+            new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writer)
+                .withSeparator(DEFAULT_SEPARATOR)
+                .withApplyQuotesToAll(false)
+                .withMappingStrategy(strategy)
+                .build();
+        sbc.write(bean);
+        csv = writer.toString();
+      } catch (Exception e) {
+        Assertions.fail("Error parsing bean to CSV", e);
+      }
 
-    /* CSV -> Object */
-    List<BulkOperationsEntity> list = new ArrayList<>();
-    try (Reader reader = new StringReader(csv)) {
-      CsvToBean<BulkOperationsEntity> cb =
-          new CsvToBeanBuilder<BulkOperationsEntity>(reader)
-              .withType(clazz)
-              .withSkipLines(1)
-              .build();
-      list = cb.parse().stream().toList();
-    } catch (IOException e) {
-      Assertions.fail("Error parsing CSV to bean", e);
-    }
+      /* CSV -> Object */
+      List<BulkOperationsEntity> list = new ArrayList<>();
+      try (Reader reader = new StringReader(csv)) {
+        CsvToBean<BulkOperationsEntity> cb =
+            new CsvToBeanBuilder<BulkOperationsEntity>(reader)
+                .withType(clazz)
+                .withSkipLines(1)
+                .build();
+        list = cb.parse().stream().toList();
+      } catch (IOException e) {
+        Assertions.fail("Error parsing CSV to bean", e);
+      }
 
-    assertThat(list).hasSize(1);
-    /* compare original and restored beans */
-    var result = list.getFirst();
+      assertThat(list).hasSize(1);
+      /* compare original and restored beans */
+      var result = list.getFirst();
 
-    if (result instanceof Item item) {
-      assertThat(item)
-          .usingRecursiveComparison()
-          .ignoringFields(
-              "circulationNotes", "effectiveCallNumberComponents", "metadata", "status.date")
-          .isEqualTo(bean);
-    } else if (result instanceof Instance instance) {
-      assertThat(instance)
-          .usingRecursiveComparison()
-          .ignoringFields(
-              "version",
-              "contributors.contributorTypeId",
-              "contributors.contributorTypeText",
-              "contributors.contributorNameTypeId",
-              "contributors.authorityId",
-              "contributors.primary",
-              "matchKey",
-              "alternativeTitles",
-              "identifiers",
-              "subjects",
-              "classifications",
-              "publications",
-              "electronicAccesses",
-              "instanceNotes",
-              "statisticalCodeIds",
-              "sourceRecordFormat",
-              "statusUpdatedDate",
-              "tags",
-              "precedingTitles",
-              "succeedingTitles",
-              "parentInstances",
-              "childInstances")
-          .isEqualTo(bean);
-    } else if (result instanceof HoldingsRecord holdingsRecord) {
-      assertThat(holdingsRecord)
-          .usingRecursiveComparison()
-          .ignoringFields(
-              "discoverySuppress",
-              "notes",
-              "version",
-              "instanceId",
-              "effectiveLocationId",
-              "receivingHistory",
-              "metadata")
-          .isEqualTo(bean);
+      if (result instanceof Item item) {
+        assertThat(item)
+            .usingRecursiveComparison()
+            .ignoringFields(
+                "circulationNotes", "effectiveCallNumberComponents", "metadata", "status.date")
+            .isEqualTo(bean);
+      } else if (result instanceof Instance instance) {
+        assertThat(instance)
+            .usingRecursiveComparison()
+            .ignoringFields(
+                "version",
+                "contributors.contributorTypeId",
+                "contributors.contributorTypeText",
+                "contributors.contributorNameTypeId",
+                "contributors.authorityId",
+                "contributors.primary",
+                "matchKey",
+                "alternativeTitles",
+                "identifiers",
+                "subjects",
+                "classifications",
+                "publications",
+                "electronicAccesses",
+                "instanceNotes",
+                "statisticalCodeIds",
+                "sourceRecordFormat",
+                "statusUpdatedDate",
+                "tags",
+                "precedingTitles",
+                "succeedingTitles",
+                "parentInstances",
+                "childInstances")
+            .isEqualTo(bean);
+      } else if (result instanceof HoldingsRecord holdingsRecord) {
+        assertThat(holdingsRecord)
+            .usingRecursiveComparison()
+            .ignoringFields(
+                "discoverySuppress",
+                "notes",
+                "version",
+                "instanceId",
+                "effectiveLocationId",
+                "receivingHistory",
+                "metadata")
+            .isEqualTo(bean);
+      }
     }
   }
 
@@ -299,49 +290,50 @@ class OpenCsvConverterTest extends BaseTest {
   @ParameterizedTest
   @ArgumentsSource(BulkOperationEntityClassProvider.class)
   void shouldConvertBadDataEntity(Class<BulkOperationsEntity> clazz) throws IOException {
-
     initMocks();
-    when(bulkOperationExecutionContentRepository.save(any()))
-        .thenReturn(eq(BulkOperationExecutionContent.class));
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      when(bulkOperationExecutionContentRepository.save(any()))
+          .thenReturn(eq(BulkOperationExecutionContent.class));
 
-    /* JSON -> Bean */
-    var bean = objectMapper.readValue(new FileInputStream(getPathToBadData(clazz)), clazz);
+      /* JSON -> Bean */
+      var bean = objectMapper.readValue(new FileInputStream(getPathToBadData(clazz)), clazz);
 
-    /* Bean -> CSV */
-    var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
-    String csv = null;
-    strategy.setType(clazz);
-    try (Writer writer = new StringWriter()) {
-      StatefulBeanToCsv<BulkOperationsEntity> sbc =
-          new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writer)
-              .withSeparator(DEFAULT_SEPARATOR)
-              .withApplyQuotesToAll(false)
-              .withThrowExceptions(true)
-              .withMappingStrategy(strategy)
-              .build();
+      /* Bean -> CSV */
+      var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
+      String csv = null;
+      strategy.setType(clazz);
+      try (Writer writer = new StringWriter()) {
+        StatefulBeanToCsv<BulkOperationsEntity> sbc =
+            new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writer)
+                .withSeparator(DEFAULT_SEPARATOR)
+                .withApplyQuotesToAll(false)
+                .withThrowExceptions(true)
+                .withMappingStrategy(strategy)
+                .build();
 
-      csv = process(sbc, writer, bean);
-    } catch (Exception e) {
-      Assertions.fail("Error parsing bean to CSV", e);
+        csv = process(sbc, writer, bean);
+      } catch (Exception e) {
+        Assertions.fail("Error parsing bean to CSV", e);
+      }
+
+      /* CSV -> Bean */
+      List<BulkOperationsEntity> list = new ArrayList<>();
+      try (Reader reader = new StringReader(csv)) {
+        CsvToBean<BulkOperationsEntity> cb =
+            new CsvToBeanBuilder<BulkOperationsEntity>(reader)
+                .withType(clazz)
+                .withThrowExceptions(false)
+                .withSkipLines(1)
+                .build();
+        list = cb.parse().stream().toList();
+        assertThat(cb.getCapturedExceptions()).hasSize(1);
+      } catch (IOException e) {
+        Assertions.fail("Error parsing CSV to bean", e);
+      }
+
+      /* no NPE expected */
+      assertThat(list).isEmpty();
     }
-
-    /* CSV -> Bean */
-    List<BulkOperationsEntity> list = new ArrayList<>();
-    try (Reader reader = new StringReader(csv)) {
-      CsvToBean<BulkOperationsEntity> cb =
-          new CsvToBeanBuilder<BulkOperationsEntity>(reader)
-              .withType(clazz)
-              .withThrowExceptions(false)
-              .withSkipLines(1)
-              .build();
-      list = cb.parse().stream().toList();
-      assertThat(cb.getCapturedExceptions()).hasSize(1);
-    } catch (IOException e) {
-      Assertions.fail("Error parsing CSV to bean", e);
-    }
-
-    /* no NPE expected */
-    assertThat(list).isEmpty();
   }
 
   @SneakyThrows
@@ -359,42 +351,45 @@ class OpenCsvConverterTest extends BaseTest {
   @ArgumentsSource(BulkOperationEntityClassProvider.class)
   void shouldConvertEmptyEntity(Class<BulkOperationsEntity> clazz) {
 
-    BulkOperationsEntity bean = getEmptyBean(clazz);
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
 
-    var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
-    String csv = null;
+      BulkOperationsEntity bean = getEmptyBean(clazz);
 
-    strategy.setType(clazz);
+      var strategy = new CustomMappingStrategy<BulkOperationsEntity>();
+      String csv = null;
 
-    try (Writer writer = new StringWriter()) {
+      strategy.setType(clazz);
 
-      StatefulBeanToCsv<BulkOperationsEntity> sbc =
-          new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writer)
-              .withSeparator(DEFAULT_SEPARATOR)
-              .withApplyQuotesToAll(false)
-              .withMappingStrategy(strategy)
-              .build();
+      try (Writer writer = new StringWriter()) {
 
-      sbc.write(bean);
-      csv = writer.toString();
-    } catch (Exception e) {
-      Assertions.fail("Error parsing bean to CSV");
+        StatefulBeanToCsv<BulkOperationsEntity> sbc =
+            new StatefulBeanToCsvBuilder<BulkOperationsEntity>(writer)
+                .withSeparator(DEFAULT_SEPARATOR)
+                .withApplyQuotesToAll(false)
+                .withMappingStrategy(strategy)
+                .build();
+
+        sbc.write(bean);
+        csv = writer.toString();
+      } catch (Exception e) {
+        Assertions.fail("Error parsing bean to CSV");
+      }
+
+      List<BulkOperationsEntity> list = new ArrayList<>();
+
+      try (Reader reader = new StringReader(csv)) {
+        CsvToBean<BulkOperationsEntity> cb =
+            new CsvToBeanBuilder<BulkOperationsEntity>(reader)
+                .withType(clazz)
+                .withSkipLines(1)
+                .build();
+        list = cb.parse().stream().toList();
+      } catch (IOException e) {
+        Assertions.fail("Error parsing CSV to bean");
+      }
+
+      assertThat(list).hasSize(1);
     }
-
-    List<BulkOperationsEntity> list = new ArrayList<>();
-
-    try (Reader reader = new StringReader(csv)) {
-      CsvToBean<BulkOperationsEntity> cb =
-          new CsvToBeanBuilder<BulkOperationsEntity>(reader)
-              .withType(clazz)
-              .withSkipLines(1)
-              .build();
-      list = cb.parse().stream().toList();
-    } catch (IOException e) {
-      Assertions.fail("Error parsing CSV to bean");
-    }
-
-    assertThat(list).hasSize(1);
   }
 
   private static BulkOperationsEntity getEmptyBean(Class<BulkOperationsEntity> clazz) {

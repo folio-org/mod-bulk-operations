@@ -1,13 +1,13 @@
 package org.folio.bulkops.client;
 
 import org.folio.bulkops.domain.bean.UserTenantCollection;
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
 
-@FeignClient(name = "user-tenants")
+@HttpExchange(url = "user-tenants", accept = MediaType.APPLICATION_JSON_VALUE)
 public interface ConsortiaClient {
 
-  @GetMapping(value = "?limit=1", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetExchange(value = "?limit=1")
   UserTenantCollection getUserTenantCollection();
 }
