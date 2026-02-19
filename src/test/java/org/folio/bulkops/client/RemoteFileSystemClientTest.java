@@ -49,5 +49,6 @@ class RemoteFileSystemClientTest extends BaseTest {
     assertEquals(REGION, remoteRepositoryConfig.getRegion());
     assertEquals(S3_ACCESS_KEY, remoteRepositoryConfig.getAccessKey());
     assertEquals(S3_SECRET_KEY, remoteRepositoryConfig.getSecretKey());
+    assertEquals(SUB_PATH, remoteRepositoryConfig.getSubPath());
   }
 }
