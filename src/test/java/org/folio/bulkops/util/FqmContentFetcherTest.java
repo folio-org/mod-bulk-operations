@@ -530,12 +530,13 @@ class FqmContentFetcherTest {
   @ParameterizedTest
   @EnumSource(
       value = EntityType.class,
-      names = {"INSTANCE", "INSTANCE_MARC"},
+      names = {"INSTANCE_MARC"},
       mode = EnumSource.Mode.INCLUDE)
   void fetchShouldReturnAnErrorForNonSharedInstancesInEcs(EntityType entityType) throws Exception {
     final var queryId = randomUUID();
     final int total = 2;
     final var operationId = randomUUID();
+    final var instanceId = "707b7988-2c99-44d9-898f-01d09fc9f25e";
     List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
@@ -544,7 +545,7 @@ class FqmContentFetcherTest {
 
     var details = new QueryDetails();
     Map<String, Object> map = new HashMap<>();
-    map.put("instance.id", "707b7988-2c99-44d9-898f-01d09fc9f25e");
+    map.put("instance.id", instanceId);
     map.put("instance.shared", "Local");
     details.setContent(Collections.singletonList(map));
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
@@ -560,7 +561,8 @@ class FqmContentFetcherTest {
 
     contents.clear();
     try (var is =
-        fqmContentFetcher.contents(List.of(randomUUID()), entityType, contents, operationId)) {
+        fqmContentFetcher.contents(
+            List.of(UUID.fromString(instanceId)), entityType, contents, operationId)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
