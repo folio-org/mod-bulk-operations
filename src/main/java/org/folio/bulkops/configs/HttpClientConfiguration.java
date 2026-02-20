@@ -352,7 +352,7 @@ public class HttpClientConfiguration {
                     throw new BadRequestException("Bad request: " + request.getURI());
                   }
                 })
-          .defaultStatusHandler(status -> status == HttpStatusCode.valueOf(500),
+          .defaultStatusHandler(HttpStatusCode::isError,
                 (request, response) -> {
                   try (var bodyIs = response.getBody()) {
                     var msg = new String(bodyIs.readAllBytes());
@@ -363,10 +363,6 @@ public class HttpClientConfiguration {
                   } catch (IOException e) {
                     throw new BulkEditException("Unable to get reason for error: " + e.getMessage());
                   }
-                })
-          .defaultStatusHandler(HttpStatusCode::isError,
-                (request, response) -> {
-
                 })
         .build();
   }
