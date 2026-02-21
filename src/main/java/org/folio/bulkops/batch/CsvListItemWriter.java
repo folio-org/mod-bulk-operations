@@ -4,9 +4,9 @@ import java.io.IOException;
 import java.util.List;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
-import org.springframework.batch.item.Chunk;
-import org.springframework.batch.item.ItemStream;
-import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.Chunk;
+import org.springframework.batch.infrastructure.item.ItemStream;
+import org.springframework.batch.infrastructure.item.ItemWriter;
 
 @Log4j2
 public class CsvListItemWriter<T extends BulkOperationsEntity>

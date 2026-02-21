@@ -17,7 +17,6 @@ import static org.folio.bulkops.domain.dto.IdentifierType.USER_NAME;
 import static org.folio.bulkops.util.Constants.DATE_TIME_PATTERN;
 import static org.folio.bulkops.util.Constants.DATE_WITHOUT_TIME_PATTERN;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -27,6 +26,7 @@ import java.util.TimeZone;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.dto.IdentifierType;
+import tools.jackson.databind.ObjectMapper;
 
 @UtilityClass
 public class BulkEditProcessorHelper {

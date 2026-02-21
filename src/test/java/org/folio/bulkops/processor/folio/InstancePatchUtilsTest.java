@@ -40,7 +40,7 @@ class InstancePatchUtilsTest {
 
     assertTrue(changed.has(INSTANCE_JSON_STAFF_SUPPRESS));
     assertTrue(changed.get(INSTANCE_JSON_STAFF_SUPPRESS).asBoolean());
-    assertEquals(id, changed.get(INSTANCE_JSON_ID).asText());
+    assertEquals(id, changed.get(INSTANCE_JSON_ID).asString());
     assertEquals(version, changed.get(INSTANCE_JSON_VERSION).asInt());
     assertEquals(3, changed.size());
   }
@@ -88,8 +88,8 @@ class InstancePatchUtilsTest {
     assertEquals(
         List.of("sc1", "sc2"),
         List.of(
-            changed.get(INSTANCE_JSON_STATISTICAL_CODES).get(0).asText(),
-            changed.get(INSTANCE_JSON_STATISTICAL_CODES).get(1).asText()));
+            changed.get(INSTANCE_JSON_STATISTICAL_CODES).get(0).asString(),
+            changed.get(INSTANCE_JSON_STATISTICAL_CODES).get(1).asString()));
     assertEquals(3, changed.size());
   }
 

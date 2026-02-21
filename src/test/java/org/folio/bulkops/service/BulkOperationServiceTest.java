@@ -60,7 +60,6 @@ import static org.testcontainers.shaded.org.hamcrest.Matchers.hasSize;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.is;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.notNullValue;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -150,13 +149,14 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.marc4j.marc.Record;
 import org.mockito.ArgumentCaptor;
-import org.springframework.batch.core.Job;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.integration.launch.JobLaunchRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
+import tools.jackson.databind.node.ObjectNode;
 
 class BulkOperationServiceTest extends BaseTest {
   @Autowired private BulkOperationService bulkOperationService;
@@ -461,7 +461,7 @@ class BulkOperationServiceTest extends BaseTest {
                       .write(pathCaptor.capture(), streamCaptor.capture()));
 
       assertThat(
-          new String(streamCaptor.getAllValues().get(0).readAllBytes()),
+          new String(streamCaptor.getAllValues().getFirst().readAllBytes()),
           containsString(newPatronGroupId));
       assertEquals(expectedPathToModifiedCsvFile, pathCaptor.getAllValues().get(2));
 
@@ -1279,8 +1279,8 @@ class BulkOperationServiceTest extends BaseTest {
                   verify(remoteFolioS3Client, times(1))
                       .write(pathCaptor.capture(), streamCaptor.capture()));
       assertEquals(
-          new String(streamCaptor.getAllValues().getFirst().readAllBytes()),
-          Files.readString(Path.of(pathToModifiedUserJson)).trim());
+          Files.readString(Path.of(pathToModifiedUserJson)).trim(),
+          new String(streamCaptor.getAllValues().getFirst().readAllBytes()));
       assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().getFirst());
 
       var executionContentCaptor = ArgumentCaptor.forClass(BulkOperationExecutionContent.class);

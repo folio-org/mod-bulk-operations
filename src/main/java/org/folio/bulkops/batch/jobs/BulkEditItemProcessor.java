@@ -12,7 +12,6 @@ import static org.folio.bulkops.util.SearchIdentifierTypeResolver.getSearchIdent
 import static org.folio.bulkops.util.Utils.encode;
 import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
-import feign.codec.DecodeException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -44,10 +43,11 @@ import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -175,7 +175,7 @@ public class BulkEditItemProcessor
         }
       }
       return extendedItemCollection;
-    } catch (DecodeException e) {
+    } catch (HttpMessageConversionException e) {
       throw new BulkEditException(ExceptionHelper.fetchMessage(e), ErrorType.ERROR);
     }
   }

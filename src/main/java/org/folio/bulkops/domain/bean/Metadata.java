@@ -1,13 +1,17 @@
 package org.folio.bulkops.domain.bean;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Date;
 import java.util.UUID;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.With;
+import org.folio.bulkops.domain.format.CustomDateSerializer;
+import tools.jackson.databind.annotation.JsonSerialize;
 
 @Data
 @With
@@ -16,8 +20,7 @@ import lombok.With;
 @AllArgsConstructor
 public class Metadata {
   @JsonProperty("createdDate")
-  @org.springframework.format.annotation.DateTimeFormat(
-      iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
+  @JsonSerialize(using = CustomDateSerializer.class)
   private Date createdDate;
 
   @JsonProperty("createdByUserId")
@@ -27,8 +30,7 @@ public class Metadata {
   private String createdByUsername;
 
   @JsonProperty("updatedDate")
-  @org.springframework.format.annotation.DateTimeFormat(
-      iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME)
+  @JsonSerialize(using = CustomDateSerializer.class)
   private Date updatedDate;
 
   @JsonProperty("updatedByUserId")

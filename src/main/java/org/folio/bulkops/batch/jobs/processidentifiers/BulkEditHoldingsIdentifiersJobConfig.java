@@ -23,23 +23,22 @@ import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.exception.BulkEditException;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.core.partition.support.Partitioner;
+import org.springframework.batch.core.partition.Partitioner;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.support.CompositeItemWriter;
+import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
+import org.springframework.batch.infrastructure.item.support.CompositeItemWriter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @RequiredArgsConstructor
@@ -63,7 +62,6 @@ public class BulkEditHoldingsIdentifiersJobConfig {
       JobRepository jobRepository,
       Step holdingsPartitionStep) {
     return new JobBuilder(BULK_EDIT_IDENTIFIERS + HYPHEN + HOLDINGS_RECORD, jobRepository)
-        .incrementer(new RunIdIncrementer())
         .listener(listener)
         .flow(holdingsPartitionStep)
         .end()
@@ -76,7 +74,6 @@ public class BulkEditHoldingsIdentifiersJobConfig {
       CompositeItemWriter<List<ExtendedHoldingsRecord>> writer,
       ListIdentifiersWriteListener<ExtendedHoldingsRecord> listIdentifiersWriteListener,
       JobRepository jobRepository,
-      PlatformTransactionManager transactionManager,
       @Qualifier("asyncTaskExecutorBulkEdit") TaskExecutor taskExecutor,
       Partitioner bulkEditHoldingsPartitioner,
       BulkEditFileAssembler bulkEditFileAssembler) {
@@ -86,11 +83,7 @@ public class BulkEditHoldingsIdentifiersJobConfig {
         .gridSize(numPartitions)
         .step(
             bulkEditHoldingsStep(
-                csvItemIdentifierReader,
-                writer,
-                listIdentifiersWriteListener,
-                jobRepository,
-                transactionManager))
+                csvItemIdentifierReader, writer, listIdentifiersWriteListener, jobRepository))
         .taskExecutor(taskExecutor)
         .aggregator(bulkEditFileAssembler)
         .build();
@@ -110,11 +103,10 @@ public class BulkEditHoldingsIdentifiersJobConfig {
       FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader,
       CompositeItemWriter<List<ExtendedHoldingsRecord>> writer,
       ListIdentifiersWriteListener<ExtendedHoldingsRecord> listIdentifiersWriteListener,
-      JobRepository jobRepository,
-      PlatformTransactionManager transactionManager) {
+      JobRepository jobRepository) {
 
     return new StepBuilder("bulkEditHoldingsStep", jobRepository)
-        .<ItemIdentifier, List<ExtendedHoldingsRecord>>chunk(chunkSize, transactionManager)
+        .<ItemIdentifier, List<ExtendedHoldingsRecord>>chunk(chunkSize)
         .reader(csvItemIdentifierReader)
         .processor(bulkEditHoldingsProcessor)
         .faultTolerant()
@@ -123,7 +115,7 @@ public class BulkEditHoldingsIdentifiersJobConfig {
         .skip(BulkEditException.class)
         .skipLimit(1_000_000)
         // Required to avoid repeating BulkEditHoldingsProcessor#process after skip.
-        .processorNonTransactional()
+        //        .processorNonTransactional()
         .skip(BulkEditException.class)
         .listener(bulkEditSkipListener)
         .writer(writer)
@@ -147,8 +139,7 @@ public class BulkEditHoldingsIdentifiersJobConfig {
     var jsonWriter =
         new JsonListFileWriter<ExtendedHoldingsRecord>(new FileSystemResource(jsonPath));
 
-    List<org.springframework.batch.item.ItemWriter<? super List<ExtendedHoldingsRecord>>>
-        delegates = new java.util.ArrayList<>();
+    List<ItemWriter<? super List<ExtendedHoldingsRecord>>> delegates = new java.util.ArrayList<>();
     delegates.add(csvWriter);
     delegates.add(jsonWriter);
     writer.setDelegates(delegates);

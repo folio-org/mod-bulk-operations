@@ -35,11 +35,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import feign.FeignException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import lombok.SneakyThrows;
@@ -67,9 +64,7 @@ import org.folio.bulkops.service.ElectronicAccessReferenceService;
 import org.folio.bulkops.service.ElectronicAccessService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.bulkops.service.LocalReferenceDataService;
-import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.FolioModuleMetadata;
-import org.folio.spring.integration.XOkapiHeaders;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.folio.spring.utils.FolioExecutionContextUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -80,6 +75,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.web.client.HttpClientErrorException;
 
 class HoldingsDataProcessorTest extends BaseTest {
 
@@ -90,16 +86,13 @@ class HoldingsDataProcessorTest extends BaseTest {
   @MockitoBean ErrorService errorService;
   @MockitoBean ElectronicAccessService electronicAccessService;
   @MockitoBean private ConsortiaService consortiaService;
-  @MockitoBean private ElectronicAccessReferenceService electronicAccessReferenceService;
-  @MockitoSpyBean private FolioExecutionContext folioExecutionContext;
+  @MockitoSpyBean private ElectronicAccessReferenceService electronicAccessReferenceService;
   @MockitoBean private LocalReferenceDataService localReferenceDataService;
 
   private FolioDataProcessor<ExtendedHoldingsRecord> processor;
 
   @MockitoBean
   private BulkOperationExecutionContentRepository bulkOperationExecutionContentRepository;
-
-  @Autowired private FolioModuleMetadata folioModuleMetadata;
 
   @BeforeEach
   void setUp() {
@@ -120,59 +113,54 @@ class HoldingsDataProcessorTest extends BaseTest {
 
   @Test
   void testReplaceTemporaryLocation() {
-    var updatedLocationId = "dc3868f6-6169-47b2-88a7-71c2e9e4e924";
-    var updatedLocation = new ItemLocation().withId(updatedLocationId).withName("New location");
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      var updatedLocationId = "dc3868f6-6169-47b2-88a7-71c2e9e4e924";
+      var updatedLocation = new ItemLocation().withId(updatedLocationId).withName("New location");
 
-    when(holdingsSourceClient.getById(FOLIO_SOURCE_ID))
-        .thenReturn(
-            new HoldingsRecordsSource()
-                .withName("FOLIO")
-                .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
+      when(holdingsSourceClient.getById(FOLIO_SOURCE_ID))
+          .thenReturn(
+              new HoldingsRecordsSource()
+                  .withName("FOLIO")
+                  .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
+      when(locationClient.getLocationById(updatedLocationId)).thenReturn(updatedLocation);
+      var permanentLocationId = "2508a0cb-e43a-404d-bd78-2e847dfca229";
+      var temporaryLocationId = "c8d27cb7-a86b-45f7-b6f4-1604fb467660";
+      var holding =
+          new HoldingsRecord()
+              .withSourceId(FOLIO_SOURCE_ID)
+              .withPermanentLocationId(permanentLocationId)
+              .withTemporaryLocationId(temporaryLocationId)
+              .withEffectiveLocationId(temporaryLocationId);
+      var extendedHoldingsRecord =
+          ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
+      var temporaryLocationUpdatingResult =
+          processor.process(
+              IDENTIFIER,
+              extendedHoldingsRecord,
+              rules(rule(TEMPORARY_LOCATION, REPLACE_WITH, updatedLocationId)));
 
-    HashMap<String, Collection<String>> headers = new HashMap<>();
-    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
-    when(locationClient.getLocationById(updatedLocationId)).thenReturn(updatedLocation);
-    when(folioExecutionContext.getTenantId()).thenReturn("diku");
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
-    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
-    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
-    var permanentLocationId = "2508a0cb-e43a-404d-bd78-2e847dfca229";
-    var temporaryLocationId = "c8d27cb7-a86b-45f7-b6f4-1604fb467660";
-    var holding =
-        new HoldingsRecord()
-            .withSourceId(FOLIO_SOURCE_ID)
-            .withPermanentLocationId(permanentLocationId)
-            .withTemporaryLocationId(temporaryLocationId)
-            .withEffectiveLocationId(temporaryLocationId);
-    var extendedHoldingsRecord =
-        ExtendedHoldingsRecord.builder().entity(holding).tenantId("tenant").build();
-    var temporaryLocationUpdatingResult =
-        processor.process(
-            IDENTIFIER,
-            extendedHoldingsRecord,
-            rules(rule(TEMPORARY_LOCATION, REPLACE_WITH, updatedLocationId)));
+      assertNotNull(temporaryLocationUpdatingResult);
+      assertEquals(
+          updatedLocationId,
+          temporaryLocationUpdatingResult.getUpdated().getEntity().getTemporaryLocationId());
+      assertEquals(
+          updatedLocationId,
+          temporaryLocationUpdatingResult.getUpdated().getEntity().getEffectiveLocationId());
 
-    assertNotNull(temporaryLocationUpdatingResult);
-    assertEquals(
-        updatedLocationId,
-        temporaryLocationUpdatingResult.getUpdated().getEntity().getTemporaryLocationId());
-    assertEquals(
-        updatedLocationId,
-        temporaryLocationUpdatingResult.getUpdated().getEntity().getEffectiveLocationId());
+      var permanentLocationUpdatingResult =
+          processor.process(
+              IDENTIFIER,
+              extendedHoldingsRecord,
+              rules(rule(PERMANENT_LOCATION, REPLACE_WITH, updatedLocationId)));
 
-    var permanentLocationUpdatingResult =
-        processor.process(
-            IDENTIFIER,
-            extendedHoldingsRecord,
-            rules(rule(PERMANENT_LOCATION, REPLACE_WITH, updatedLocationId)));
-
-    assertNotNull(permanentLocationUpdatingResult);
-    assertEquals(
-        updatedLocationId,
-        permanentLocationUpdatingResult.getUpdated().getEntity().getPermanentLocationId());
-    assertEquals(
-        temporaryLocationId,
-        permanentLocationUpdatingResult.getUpdated().getEntity().getEffectiveLocationId());
+      assertNotNull(permanentLocationUpdatingResult);
+      assertEquals(
+          updatedLocationId,
+          permanentLocationUpdatingResult.getUpdated().getEntity().getPermanentLocationId());
+      assertEquals(
+          temporaryLocationId,
+          permanentLocationUpdatingResult.getUpdated().getEntity().getEffectiveLocationId());
+    }
   }
 
   @Test
@@ -314,7 +302,7 @@ class HoldingsDataProcessorTest extends BaseTest {
                 .withSource(HoldingsRecordsSource.SourceEnum.FOLIO));
 
     when(locationClient.getLocationById(nonExistedLocationId))
-        .thenThrow(FeignException.FeignClientException.class);
+        .thenThrow(HttpClientErrorException.class);
 
     var actual =
         processor.process(
@@ -1247,9 +1235,6 @@ class HoldingsDataProcessorTest extends BaseTest {
 
   @Test
   void shouldNotUpdateHoldingWithPermanentLocation_whenLocationFromOtherTenantThanActionTenants() {
-    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
-    when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
-
     try (var ignored = Mockito.mockStatic(FolioExecutionContextUtils.class)) {
       when(FolioExecutionContextUtils.prepareContextForTenant(any(), any(), any()))
           .thenReturn(folioExecutionContext);
@@ -1294,13 +1279,11 @@ class HoldingsDataProcessorTest extends BaseTest {
 
   @Test
   void testShouldNotUpdateHoldingWithElectronicAccess_whenBothOfRuleAndActionTenantsAreEmpty() {
-    when(folioExecutionContext.getTenantId()).thenReturn("central");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
     when(consortiaService.isTenantCentral("central")).thenReturn(true);
 
-    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtils.class)) {
-      when(FolioExecutionContextUtils.prepareContextForTenant(any(), any(), any()))
-          .thenReturn(folioExecutionContext);
+    try (var context =
+        new FolioExecutionContextSetter(prepareFolioExecutionContextForTenant("central"))) {
 
       var electronicAccessFromMemberB = UUID.randomUUID().toString();
       var holdId = UUID.randomUUID().toString();
@@ -1347,13 +1330,11 @@ class HoldingsDataProcessorTest extends BaseTest {
 
   @Test
   void testShouldNotUpdateHoldingWithElectronicAccess_whenElectronicAccessIsNotSet() {
-    when(folioExecutionContext.getTenantId()).thenReturn("central");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
     when(consortiaService.isTenantCentral("central")).thenReturn(true);
 
-    try (var ignored = Mockito.mockStatic(FolioExecutionContextUtils.class)) {
-      when(FolioExecutionContextUtils.prepareContextForTenant(any(), any(), any()))
-          .thenReturn(folioExecutionContext);
+    try (var context =
+        new FolioExecutionContextSetter(prepareFolioExecutionContextForTenant("central"))) {
 
       var electronicAccessFromMemberB = UUID.randomUUID().toString();
       var holdId = UUID.randomUUID().toString();
@@ -1393,7 +1374,6 @@ class HoldingsDataProcessorTest extends BaseTest {
 
   @Test
   void testShouldNotUpdateHoldingWithElectronicAccess_whenElectronicAccessIsNotSetAndNonEcs() {
-    when(folioExecutionContext.getTenantId()).thenReturn("diku");
     when(consortiaService.getCentralTenantId("diku")).thenReturn("");
     when(consortiaService.isTenantInConsortia("diku")).thenReturn(false);
 
@@ -1436,57 +1416,48 @@ class HoldingsDataProcessorTest extends BaseTest {
 
   @Test
   void testShouldUpdateHoldingWithElectronicAccess_whenElectronicAccessIsSetAndNonEcs() {
-    when(folioExecutionContext.getTenantId()).thenReturn("diku");
-    when(consortiaService.getCentralTenantId("diku")).thenReturn("");
-    when(consortiaService.isTenantInConsortia("diku")).thenReturn(false);
-    HashMap<String, Collection<String>> headers = new HashMap<>();
-    headers.put(XOkapiHeaders.TENANT, List.of("diku"));
-    when(folioExecutionContext.getTenantId()).thenReturn("diku");
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
-    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
-    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      when(consortiaService.getCentralTenantId("diku")).thenReturn("");
+      when(consortiaService.isTenantInConsortia("diku")).thenReturn(false);
 
-    var initElectronicAccForRecord = UUID.randomUUID().toString();
-    var electronicAccessObj = new ElectronicAccess().withRelationshipId(initElectronicAccForRecord);
-    var holdId = UUID.randomUUID().toString();
-    var extendedHolding =
-        ExtendedHoldingsRecord.builder()
-            .entity(
-                new HoldingsRecord()
-                    .withId(holdId)
-                    .withElectronicAccess(List.of(electronicAccessObj)))
-            .tenantId("diku")
-            .build();
-    var updatedElectronicAccess = UUID.randomUUID().toString();
+      var initElectronicAccForRecord = UUID.randomUUID().toString();
+      var electronicAccessObj =
+          new ElectronicAccess().withRelationshipId(initElectronicAccForRecord);
+      var holdId = UUID.randomUUID().toString();
+      var extendedHolding =
+          ExtendedHoldingsRecord.builder()
+              .entity(
+                  new HoldingsRecord()
+                      .withId(holdId)
+                      .withElectronicAccess(List.of(electronicAccessObj)))
+              .tenantId("diku")
+              .build();
+      var updatedElectronicAccess = UUID.randomUUID().toString();
 
-    when(relationshipClient.getById(updatedElectronicAccess))
-        .thenReturn(new ElectronicAccessRelationship().withId(updatedElectronicAccess));
-    when(electronicAccessReferenceService.getRelationshipNameById(updatedElectronicAccess))
-        .thenReturn("el acc name");
+      when(relationshipClient.getById(updatedElectronicAccess))
+          .thenReturn(new ElectronicAccessRelationship().withId(updatedElectronicAccess));
+      when(localReferenceDataService.getTenantByUrlRelationshipId(any())).thenReturn("diku");
+      when(electronicAccessReferenceService.getRelationshipNameById(updatedElectronicAccess))
+          .thenReturn("el acc name");
 
-    var rules =
-        rules(rule(ELECTRONIC_ACCESS_URL_RELATIONSHIP, REPLACE_WITH, "", updatedElectronicAccess));
+      var rules =
+          rules(
+              rule(ELECTRONIC_ACCESS_URL_RELATIONSHIP, REPLACE_WITH, "", updatedElectronicAccess));
 
-    var result = processor.process(IDENTIFIER, extendedHolding, rules);
+      var result = processor.process(IDENTIFIER, extendedHolding, rules);
 
-    assertNotNull(result);
-    verifyNoInteractions(errorService);
-    assertEquals(
-        updatedElectronicAccess,
-        result.getUpdated().getEntity().getElectronicAccess().getFirst().getRelationshipId());
+      assertNotNull(result);
+      verifyNoInteractions(errorService);
+      assertEquals(
+          updatedElectronicAccess,
+          result.getUpdated().getEntity().getElectronicAccess().getFirst().getRelationshipId());
+    }
   }
 
   @Test
   void testShouldRemoveHoldingWithElectronicAccess_whenElectronicAccessIsSetAndEcs() {
-    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
     when(consortiaService.isTenantInConsortia("memberB")).thenReturn(true);
-    HashMap<String, Collection<String>> headers = new HashMap<>();
-    headers.put(XOkapiHeaders.TENANT, List.of("memberB"));
-    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
-    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
-    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
 
     var initElectronicAccForRecord = UUID.randomUUID().toString();
     var electronicAccessObj = new ElectronicAccess().withRelationshipId(initElectronicAccForRecord);
@@ -1525,67 +1496,62 @@ class HoldingsDataProcessorTest extends BaseTest {
 
   @Test
   void shouldNotRemoveHoldingWithElectronicAccess_whenNoTenantsProvidedAndHoldFromDiffTenant() {
-    when(folioExecutionContext.getTenantId()).thenReturn("central");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
     when(consortiaService.isTenantCentral("central")).thenReturn(true);
+    try (var context =
+        new FolioExecutionContextSetter(prepareFolioExecutionContextForTenant("central"))) {
+      var initElectronicAccForRecord = UUID.randomUUID().toString();
+      var electronicAccessObj =
+          new ElectronicAccess().withRelationshipId(initElectronicAccForRecord);
+      var holdId = UUID.randomUUID().toString();
+      var extendedHolding =
+          ExtendedHoldingsRecord.builder()
+              .entity(
+                  new HoldingsRecord()
+                      .withId(holdId)
+                      .withElectronicAccess(List.of(electronicAccessObj)))
+              .tenantId("memberA")
+              .build();
 
-    var initElectronicAccForRecord = UUID.randomUUID().toString();
-    var electronicAccessObj = new ElectronicAccess().withRelationshipId(initElectronicAccForRecord);
-    var holdId = UUID.randomUUID().toString();
-    var extendedHolding =
-        ExtendedHoldingsRecord.builder()
-            .entity(
-                new HoldingsRecord()
-                    .withId(holdId)
-                    .withElectronicAccess(List.of(electronicAccessObj)))
-            .tenantId("memberA")
-            .build();
+      var rules =
+          rules(
+              new org.folio.bulkops.domain.dto.BulkOperationRule()
+                  .ruleDetails(
+                      new org.folio.bulkops.domain.dto.RuleDetails()
+                          .option(ELECTRONIC_ACCESS_URL_RELATIONSHIP)
+                          .actions(
+                              Collections.singletonList(
+                                  new Action()
+                                      .type(FIND_AND_REMOVE_THESE)
+                                      .initial(initElectronicAccForRecord)
+                                      .updated("")
+                                      .tenants(List.of())))
+                          .tenants(List.of())));
+      var operationId = rules.getBulkOperationRules().getFirst().getBulkOperationId();
 
-    var rules =
-        rules(
-            new org.folio.bulkops.domain.dto.BulkOperationRule()
-                .ruleDetails(
-                    new org.folio.bulkops.domain.dto.RuleDetails()
-                        .option(ELECTRONIC_ACCESS_URL_RELATIONSHIP)
-                        .actions(
-                            Collections.singletonList(
-                                new Action()
-                                    .type(FIND_AND_REMOVE_THESE)
-                                    .initial(initElectronicAccForRecord)
-                                    .updated("")
-                                    .tenants(List.of())))
-                        .tenants(List.of())));
-    var operationId = rules.getBulkOperationRules().getFirst().getBulkOperationId();
+      var result = processor.process(IDENTIFIER, extendedHolding, rules);
 
-    var result = processor.process(IDENTIFIER, extendedHolding, rules);
-
-    assertNotNull(result);
-    verify(errorService, times(1))
-        .saveError(
-            operationId,
-            IDENTIFIER,
-            String.format(
-                    "%s cannot be updated because the record is associated with %s and "
-                        + "%s is not associated with this tenant.",
-                    holdId, "memberA", "URL relationship")
-                .trim(),
-            ErrorType.ERROR);
-    assertEquals(
-        initElectronicAccForRecord,
-        result.getUpdated().getEntity().getElectronicAccess().getFirst().getRelationshipId());
+      assertNotNull(result);
+      verify(errorService, times(1))
+          .saveError(
+              operationId,
+              IDENTIFIER,
+              String.format(
+                      "%s cannot be updated because the record is associated with %s and "
+                          + "%s is not associated with this tenant.",
+                      holdId, "memberA", "URL relationship")
+                  .trim(),
+              ErrorType.ERROR);
+      assertEquals(
+          initElectronicAccForRecord,
+          result.getUpdated().getEntity().getElectronicAccess().getFirst().getRelationshipId());
+    }
   }
 
   @Test
   void testShouldUpdateHoldingWithElectronicAccess_whenElectronicAccessIsSetAndEcs() {
-    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
     when(consortiaService.isTenantInConsortia("memberB")).thenReturn(true);
-    HashMap<String, Collection<String>> headers = new HashMap<>();
-    headers.put(XOkapiHeaders.TENANT, List.of("memberB"));
-    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
-    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
-    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
 
     var initElectronicAccForRecord = UUID.randomUUID().toString();
     var electronicAccessObj = new ElectronicAccess().withRelationshipId(initElectronicAccForRecord);
@@ -1626,47 +1592,50 @@ class HoldingsDataProcessorTest extends BaseTest {
 
   @Test
   void testShouldNotUpdateHoldingWithElectronicAccess_whenUpdatedNotExists() {
-    when(folioExecutionContext.getTenantId()).thenReturn("diku");
     when(consortiaService.getCentralTenantId("diku")).thenReturn("");
     when(consortiaService.isTenantInConsortia("diku")).thenReturn(false);
+    when(localReferenceDataService.getTenantByUrlRelationshipId(any())).thenReturn("otherTenant");
+    try (var context =
+        new FolioExecutionContextSetter(prepareFolioExecutionContextForTenant("diku"))) {
+      var initElectronicAccForRecord = UUID.randomUUID().toString();
+      var electronicAccessObj =
+          new ElectronicAccess().withRelationshipId(initElectronicAccForRecord);
+      var holdId = UUID.randomUUID().toString();
+      var extendedHolding =
+          ExtendedHoldingsRecord.builder()
+              .entity(
+                  new HoldingsRecord()
+                      .withId(holdId)
+                      .withElectronicAccess(List.of(electronicAccessObj)))
+              .tenantId("diku")
+              .build();
+      var updatedElectronicAccess = UUID.randomUUID().toString();
 
-    var initElectronicAccForRecord = UUID.randomUUID().toString();
-    var electronicAccessObj = new ElectronicAccess().withRelationshipId(initElectronicAccForRecord);
-    var holdId = UUID.randomUUID().toString();
-    var extendedHolding =
-        ExtendedHoldingsRecord.builder()
-            .entity(
-                new HoldingsRecord()
-                    .withId(holdId)
-                    .withElectronicAccess(List.of(electronicAccessObj)))
-            .tenantId("diku")
-            .build();
-    var updatedElectronicAccess = UUID.randomUUID().toString();
+      var rules =
+          rules(
+              rule(ELECTRONIC_ACCESS_URL_RELATIONSHIP, REPLACE_WITH, "", updatedElectronicAccess));
+      var operationId = rules.getBulkOperationRules().getFirst().getBulkOperationId();
 
-    var rules =
-        rules(rule(ELECTRONIC_ACCESS_URL_RELATIONSHIP, REPLACE_WITH, "", updatedElectronicAccess));
-    var operationId = rules.getBulkOperationRules().getFirst().getBulkOperationId();
+      var result = processor.process(IDENTIFIER, extendedHolding, rules);
 
-    var result = processor.process(IDENTIFIER, extendedHolding, rules);
-
-    assertNotNull(result);
-    verify(errorService, times(1))
-        .saveError(
-            operationId,
-            IDENTIFIER,
-            String.format(
-                    "URL relationship %s doesn't exist in tenant %s",
-                    updatedElectronicAccess, "diku")
-                .trim(),
-            ErrorType.ERROR);
-    assertEquals(
-        initElectronicAccForRecord,
-        result.getUpdated().getEntity().getElectronicAccess().getFirst().getRelationshipId());
+      assertNotNull(result);
+      verify(errorService, times(1))
+          .saveError(
+              operationId,
+              IDENTIFIER,
+              String.format(
+                      "URL relationship %s doesn't exist in tenant %s",
+                      updatedElectronicAccess, "diku")
+                  .trim(),
+              ErrorType.ERROR);
+      assertEquals(
+          initElectronicAccForRecord,
+          result.getUpdated().getEntity().getElectronicAccess().getFirst().getRelationshipId());
+    }
   }
 
   @Test
   void shouldNotUpdateHoldingWithPermLocation_whenIntersectionRuleAndActionTenantsGivesNothing() {
-    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
 
     try (var ignored = Mockito.mockStatic(FolioExecutionContextUtils.class)) {
@@ -1716,7 +1685,6 @@ class HoldingsDataProcessorTest extends BaseTest {
 
   @Test
   void shouldNotUpdateHoldingWithPermanentLocation_whenLocationFromOtherTenantThanRuleTenants() {
-    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
     when(consortiaService.getCentralTenantId("memberB")).thenReturn("central");
 
     try (var ignored = Mockito.mockStatic(FolioExecutionContextUtils.class)) {
@@ -1758,32 +1726,31 @@ class HoldingsDataProcessorTest extends BaseTest {
 
   @Test
   void testShouldUpdateHoldingWithLocation_whenLocationFromTenantAmongActionTenants() {
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      var locationIdFromMemberB = UUID.randomUUID().toString();
+      var actionTenants = List.of("memberB");
+      var holdId = UUID.randomUUID().toString();
+      var initPermLocation = UUID.randomUUID().toString();
+      var extendedHold =
+          ExtendedHoldingsRecord.builder()
+              .entity(new HoldingsRecord().withId(holdId).withPermanentLocationId(initPermLocation))
+              .tenantId("memberB")
+              .build();
+      var rules =
+          rules(
+              rule(
+                  PERMANENT_LOCATION,
+                  REPLACE_WITH,
+                  locationIdFromMemberB,
+                  actionTenants,
+                  List.of()));
+      var result = processor.process(IDENTIFIER, extendedHold, rules);
 
-    HashMap<String, Collection<String>> headers = new HashMap<>();
-    headers.put(XOkapiHeaders.TENANT, List.of("memberB"));
-    when(folioExecutionContext.getTenantId()).thenReturn("memberB");
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
-    when(folioExecutionContext.getFolioModuleMetadata()).thenReturn(folioModuleMetadata);
-    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
-    var locationIdFromMemberB = UUID.randomUUID().toString();
-    var actionTenants = List.of("memberB");
-    var holdId = UUID.randomUUID().toString();
-    var initPermLocation = UUID.randomUUID().toString();
-    var extendedHold =
-        ExtendedHoldingsRecord.builder()
-            .entity(new HoldingsRecord().withId(holdId).withPermanentLocationId(initPermLocation))
-            .tenantId("memberB")
-            .build();
-    var rules =
-        rules(
-            rule(
-                PERMANENT_LOCATION, REPLACE_WITH, locationIdFromMemberB, actionTenants, List.of()));
-    var result = processor.process(IDENTIFIER, extendedHold, rules);
+      assertNotNull(result);
+      assertEquals(locationIdFromMemberB, result.getUpdated().getEntity().getPermanentLocationId());
 
-    assertNotNull(result);
-    assertEquals(locationIdFromMemberB, result.getUpdated().getEntity().getPermanentLocationId());
-
-    verifyNoInteractions(errorService);
+      verifyNoInteractions(errorService);
+    }
   }
 
   private HoldingsRecord buildHoldingsWithElectronicAccess() {

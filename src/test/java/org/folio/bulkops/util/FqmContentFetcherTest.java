@@ -38,16 +38,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import feign.FeignException;
-import feign.Request;
-import feign.Response;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -71,6 +62,10 @@ import org.folio.bulkops.service.EntityTypeService;
 import org.folio.querytool.domain.dto.ContentsRequest;
 import org.folio.querytool.domain.dto.QueryDetails;
 import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.client.AuthnClient;
+import org.folio.spring.client.PermissionsClient;
+import org.folio.spring.client.UsersClient;
+import org.folio.spring.service.SystemUserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -78,9 +73,16 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.web.client.HttpServerErrorException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 @SpringBootTest
 @ContextConfiguration(initializers = BaseTest.Initializer.class)
@@ -98,6 +100,11 @@ class FqmContentFetcherTest {
   @MockitoBean private ConsortiaService consortiaService;
 
   @MockitoSpyBean private EntityTypeService entityTypeService;
+
+  @MockitoBean public SystemUserService systemUserService;
+  @MockitoBean public AuthnClient authnClient;
+  @MockitoBean public UsersClient usersClient;
+  @MockitoBean public PermissionsClient permissionsClient;
 
   @Autowired public ObjectMapper objectMapper;
 
@@ -118,7 +125,7 @@ class FqmContentFetcherTest {
                   JsonNode instanceJsonb;
                   try {
                     instanceJsonb = objectMapper.readTree(json.get("instance.jsonb").toString());
-                  } catch (JsonProcessingException e) {
+                  } catch (JacksonException e) {
                     throw new RuntimeException(e);
                   }
                   var rec = objectMapper.createObjectNode();
@@ -172,7 +179,7 @@ class FqmContentFetcherTest {
                       rec.set("entity", instanceJsonb);
                       rec.put("tenantId", "test_tenant");
                     }
-                  } catch (JsonProcessingException e) {
+                  } catch (JacksonException e) {
                     throw new RuntimeException(e);
                   }
                   return rec;
@@ -244,12 +251,9 @@ class FqmContentFetcherTest {
                 .ids(uuids.subList(0, 3).stream().map(UUID::toString).map(List::of).toList())))
         .thenReturn(getMockedContents(uuids.subList(0, 3)));
 
-    var request =
-        Request.create(
-            Request.HttpMethod.GET, "", Map.of(), new byte[] {}, Charset.defaultCharset(), null);
-
-    var response = Response.builder().status(500).reason("GET-Error").request(request).build();
-    doThrow(FeignException.errorStatus("", response))
+    doThrow(
+            HttpServerErrorException.create(
+                HttpStatusCode.valueOf(500), "GET-Error", null, null, null))
         .when(queryClient)
         .getContents(
             new ContentsRequest()
@@ -263,7 +267,7 @@ class FqmContentFetcherTest {
 
     assertThat(exception.getCause()).isInstanceOf(FqmFetcherException.class);
     assertThat(exception.getCause().getCause())
-        .isInstanceOf(FeignException.InternalServerError.class);
+        .isInstanceOf(HttpServerErrorException.InternalServerError.class);
   }
 
   @Test
@@ -289,12 +293,9 @@ class FqmContentFetcherTest {
     int offset = ((total + chunkSize - 1) / chunkSize - 1) * chunkSize;
     int limit = Math.min(chunkSize, total - offset);
 
-    var req =
-        Request.create(
-            Request.HttpMethod.GET, "", Map.of(), new byte[] {}, Charset.defaultCharset(), null);
-
-    var response = Response.builder().status(500).reason("GET-Error").request(req).build();
-    doThrow(FeignException.errorStatus("", response))
+    doThrow(
+            HttpServerErrorException.create(
+                HttpStatusCode.valueOf(500), "GET-Error", null, null, null))
         .when(queryClient)
         .getQuery(queryId, offset, limit);
 
@@ -305,7 +306,7 @@ class FqmContentFetcherTest {
                 fqmContentFetcher.fetch(
                     queryId, EntityType.INSTANCE, total, contents, operationId));
 
-    assertThat(exception.getCause().getCause()).isInstanceOf(FeignException.class);
+    assertThat(exception.getCause().getCause()).isInstanceOf(HttpServerErrorException.class);
   }
 
   @Test
@@ -323,8 +324,8 @@ class FqmContentFetcherTest {
                     return objectMapper
                         .readTree(map.get("users.jsonb").toString())
                         .get("id")
-                        .asText();
-                  } catch (JsonProcessingException e) {
+                        .asString();
+                  } catch (JacksonException e) {
                     throw new RuntimeException(e);
                   }
                 })
@@ -365,8 +366,8 @@ class FqmContentFetcherTest {
                     return objectMapper
                         .readTree(map.get("items.jsonb").toString())
                         .get("id")
-                        .asText();
-                  } catch (JsonProcessingException e) {
+                        .asString();
+                  } catch (JacksonException e) {
                     throw new RuntimeException(e);
                   }
                 })
@@ -430,8 +431,8 @@ class FqmContentFetcherTest {
                     return objectMapper
                         .readTree(map.get("holdings.jsonb").toString())
                         .get("id")
-                        .asText();
-                  } catch (JsonProcessingException e) {
+                        .asString();
+                  } catch (JacksonException e) {
                     throw new RuntimeException(e);
                   }
                 })
@@ -480,8 +481,8 @@ class FqmContentFetcherTest {
                     return objectMapper
                         .readTree(map.get("instance.jsonb").toString())
                         .get("id")
-                        .asText();
-                  } catch (JsonProcessingException e) {
+                        .asString();
+                  } catch (JacksonException e) {
                     throw new RuntimeException(e);
                   }
                 })
@@ -605,8 +606,8 @@ class FqmContentFetcherTest {
                     return objectMapper
                         .readTree(map.get("instance.jsonb").toString())
                         .get("id")
-                        .asText();
-                  } catch (JsonProcessingException e) {
+                        .asString();
+                  } catch (JacksonException e) {
                     throw new RuntimeException(e);
                   }
                 })
@@ -656,8 +657,8 @@ class FqmContentFetcherTest {
                     return objectMapper
                         .readTree(map.get("instance.jsonb").toString())
                         .get("id")
-                        .asText();
-                  } catch (JsonProcessingException e) {
+                        .asString();
+                  } catch (JacksonException e) {
                     throw new RuntimeException(e);
                   }
                 })
@@ -707,8 +708,8 @@ class FqmContentFetcherTest {
                     return objectMapper
                         .readTree(map.get("instance.jsonb").toString())
                         .get("id")
-                        .asText();
-                  } catch (JsonProcessingException e) {
+                        .asString();
+                  } catch (JacksonException e) {
                     throw new RuntimeException(e);
                   }
                 })
@@ -747,8 +748,8 @@ class FqmContentFetcherTest {
                     return objectMapper
                         .readTree(map.get("users.jsonb").toString())
                         .get("id")
-                        .asText();
-                  } catch (JsonProcessingException e) {
+                        .asString();
+                  } catch (JacksonException e) {
                     throw new RuntimeException(e);
                   }
                 })

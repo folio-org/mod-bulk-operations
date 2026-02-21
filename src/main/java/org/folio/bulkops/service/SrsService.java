@@ -7,7 +7,6 @@ import static org.folio.bulkops.util.Constants.CHANGED_MARC_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.MULTIPLE_SRS;
 import static org.folio.bulkops.util.Constants.SRS_MISSING;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.opencsv.CSVWriterBuilder;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -33,6 +32,7 @@ import org.folio.bulkops.util.MarcValidator;
 import org.marc4j.MarcJsonReader;
 import org.marc4j.marc.Record;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.JsonNode;
 
 @Service
 @RequiredArgsConstructor
@@ -80,8 +80,8 @@ public class SrsService {
                       new GetParsedRecordsBatchRequestBody(
                           new GetParsedRecordsBatchConditions(ids, "INSTANCE"), "MARC_BIB", true))
                   .get("records");
-          for (var jsonNodeIterator = marcJsons.elements(); jsonNodeIterator.hasNext(); ) {
-            var recordJson = jsonNodeIterator.next().get("parsedRecord").get("content").toString();
+          for (tools.jackson.databind.JsonNode jsonNode : marcJsons.values()) {
+            var recordJson = jsonNode.get("parsedRecord").get("content").toString();
             var marcRecord = jsonToMarcRecord(recordJson);
             writer.writeRecord(marcRecord);
             csvWriter.writeNext(marcCsvHelper.getModifiedDataForCsv(marcRecord));
@@ -129,7 +129,7 @@ public class SrsService {
       throw new MarcValidationException(
           MULTIPLE_SRS.formatted(String.join(", ", getAllSrsIds(srsRecords))));
     } else {
-      var srsRec = srsRecords.elements().next();
+      var srsRec = srsRecords.values().iterator().next();
       var parsedRec = srsRec.get("parsedRecord");
       var marcJsonString = parsedRec.get("content").toString();
       MarcValidator.validate(marcJsonString);

@@ -3,12 +3,12 @@ package org.folio.bulkops.util;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
 
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.exc.InvalidFormatException;
 
 @UtilityClass
 public class ExceptionHelper {
@@ -17,7 +17,7 @@ public class ExceptionHelper {
     if (cause instanceof InvalidFormatException ife) {
       var path =
           ife.getPath().stream()
-              .map(JsonMappingException.Reference::getFieldName)
+              .map(JacksonException.Reference::getPropertyName)
               .filter(Objects::nonNull)
               .collect(Collectors.joining("."));
       return String.format(

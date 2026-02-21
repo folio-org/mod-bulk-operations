@@ -30,23 +30,22 @@ import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.converter.JsonToMarcConverter;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.exception.BulkEditException;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.core.partition.support.Partitioner;
+import org.springframework.batch.core.partition.Partitioner;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.support.CompositeItemWriter;
+import org.springframework.batch.infrastructure.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
+import org.springframework.batch.infrastructure.item.support.CompositeItemWriter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @Log4j2
@@ -73,7 +72,6 @@ public class BulkEditInstanceIdentifiersJobConfig {
       Step instancePartitionStep,
       JobRepository jobRepository) {
     return new JobBuilder(BULK_EDIT_IDENTIFIERS + HYPHEN + EntityType.INSTANCE, jobRepository)
-        .incrementer(new RunIdIncrementer())
         .listener(listener)
         .flow(instancePartitionStep)
         .end()
@@ -86,7 +84,6 @@ public class BulkEditInstanceIdentifiersJobConfig {
       CompositeItemWriter<List<ExtendedInstance>> compositeInstanceListWriter,
       ListIdentifiersWriteListener<ExtendedInstance> listIdentifiersWriteListener,
       JobRepository jobRepository,
-      PlatformTransactionManager transactionManager,
       @Qualifier("asyncTaskExecutorBulkEdit") TaskExecutor taskExecutor,
       Partitioner bulkEditInstancePartitioner,
       BulkEditFileAssembler bulkEditFileAssembler) {
@@ -99,8 +96,7 @@ public class BulkEditInstanceIdentifiersJobConfig {
                 csvItemIdentifierReader,
                 compositeInstanceListWriter,
                 listIdentifiersWriteListener,
-                jobRepository,
-                transactionManager))
+                jobRepository))
         .taskExecutor(taskExecutor)
         .aggregator(bulkEditFileAssembler)
         .build();
@@ -123,11 +119,10 @@ public class BulkEditInstanceIdentifiersJobConfig {
       FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader,
       CompositeItemWriter<List<ExtendedInstance>> compositeInstanceListWriter,
       ListIdentifiersWriteListener<ExtendedInstance> listIdentifiersWriteListener,
-      JobRepository jobRepository,
-      PlatformTransactionManager transactionManager) {
+      JobRepository jobRepository) {
 
     return new StepBuilder("bulkEditInstanceStep", jobRepository)
-        .<ItemIdentifier, List<ExtendedInstance>>chunk(chunkSize, transactionManager)
+        .<ItemIdentifier, List<ExtendedInstance>>chunk(chunkSize)
         .reader(csvItemIdentifierReader)
         .processor(bulkEditInstanceProcessor)
         .faultTolerant()
@@ -136,7 +131,7 @@ public class BulkEditInstanceIdentifiersJobConfig {
         .skip(BulkEditException.class)
         .skipLimit(1_000_000)
         // Required to avoid repeating BulkEditItemProcessor#process after skip.
-        .processorNonTransactional()
+        //        .processorNonTransactional()
         .skip(BulkEditException.class)
         .listener(bulkEditSkipListener)
         .writer(compositeInstanceListWriter)
@@ -162,8 +157,7 @@ public class BulkEditInstanceIdentifiersJobConfig {
     var marcWriter =
         new MarcAsListStringsWriter<ExtendedInstance>(marcPath, srsClient, jsonToMarcConverter);
 
-    List<org.springframework.batch.item.ItemWriter<? super List<ExtendedInstance>>> delegates =
-        new ArrayList<>();
+    List<ItemWriter<? super List<ExtendedInstance>>> delegates = new ArrayList<>();
     delegates.add(csvWriter);
     delegates.add(jsonWriter);
     delegates.add(marcWriter);

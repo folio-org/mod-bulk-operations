@@ -1,13 +1,12 @@
 package org.folio.bulkops.client;
 
-import org.folio.bulkops.configs.FeignClientConfiguration;
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
 
-@FeignClient(name = "mapping-rules", configuration = FeignClientConfiguration.class)
+@HttpExchange(url = "mapping-rules", accept = MediaType.APPLICATION_JSON_VALUE)
 public interface MappingRulesClient {
 
-  @GetMapping(value = "/marc-bib", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetExchange(value = "/marc-bib")
   String getMarcBibMappingRules();
 }

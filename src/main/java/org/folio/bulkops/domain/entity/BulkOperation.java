@@ -1,8 +1,6 @@
 package org.folio.bulkops.domain.entity;
 
-import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -16,14 +14,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Singular;
-import org.folio.bulkops.domain.converter.PostgresUuidConverter;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
 import org.folio.bulkops.domain.dto.OperationType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Data
 @Builder
@@ -32,9 +30,7 @@ import org.hibernate.annotations.Type;
 @Entity
 @Table(name = "bulk_operation")
 public class BulkOperation {
-  @Id
-  @Convert(converter = PostgresUuidConverter.class)
-  private UUID id;
+  @Id private UUID id;
 
   @Column(insertable = false, updatable = false)
   private Integer hrId;
@@ -94,7 +90,7 @@ public class BulkOperation {
   private String userFriendlyQuery;
   private UUID entityTypeId;
 
-  @Type(JsonBinaryType.class)
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(columnDefinition = "jsonb[]")
   private List<TenantNotePair> tenantNotePairs;
 
