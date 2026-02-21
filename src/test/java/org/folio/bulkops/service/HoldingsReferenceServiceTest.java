@@ -136,7 +136,7 @@ class HoldingsReferenceServiceTest {
         .thenReturn(locationJson);
 
     JsonNode result = holdingsReferenceService.getHoldingsLocationById("loc1", "tenant");
-    assertThat(result.get("id").asText()).isEqualTo("loc1");
+    assertThat(result.get("id").asString()).isEqualTo("loc1");
   }
 
   @Test

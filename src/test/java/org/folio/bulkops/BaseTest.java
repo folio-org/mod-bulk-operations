@@ -338,13 +338,13 @@ public abstract class BaseTest {
   }
 
   public FolioExecutionContext prepareFolioExecutionContextForTenant(String tenant) {
-    Map<String, String> okapiHeaders = new HashMap<>();
-    okapiHeaders.put(XOkapiHeaders.TENANT, tenant);
-    okapiHeaders.put(XOkapiHeaders.TOKEN, TOKEN);
-    okapiHeaders.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+    Map<String, String> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    headers.put(XOkapiHeaders.TOKEN, TOKEN);
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
 
     var localHeaders =
-        okapiHeaders.entrySet().stream()
+        headers.entrySet().stream()
             .filter(e -> e.getKey().startsWith(XOkapiHeaders.OKAPI_HEADERS_PREFIX))
             .collect(
                 Collectors.toMap(

@@ -48,8 +48,7 @@ class HttpClientConfigurationTest {
     String url = wireMockServer.baseUrl() + endpoint;
 
     NotFoundException exception =
-        assertThrows(
-            NotFoundException.class, () -> restClient.get().uri(url).retrieve().body(String.class));
+        assertThrows(NotFoundException.class, () -> getBody(url));
 
     assertEquals("Not found: " + url, exception.getMessage());
   }
@@ -64,9 +63,7 @@ class HttpClientConfigurationTest {
     String url = wireMockServer.baseUrl() + endpoint;
 
     BadRequestException exception =
-        assertThrows(
-            BadRequestException.class,
-            () -> restClient.get().uri(url).retrieve().body(String.class));
+        assertThrows(BadRequestException.class, () -> getBody(url));
 
     assertEquals(errorMessage, exception.getMessage());
   }
@@ -81,9 +78,7 @@ class HttpClientConfigurationTest {
     String url = wireMockServer.baseUrl() + endpoint;
 
     BadRequestException exception =
-        assertThrows(
-            BadRequestException.class,
-            () -> restClient.get().uri(url).retrieve().body(String.class));
+        assertThrows(BadRequestException.class, () -> getBody(url));
 
     assertEquals("Invalid user UUID: invalid-uuid-123", exception.getMessage());
   }
@@ -98,9 +93,7 @@ class HttpClientConfigurationTest {
     String url = wireMockServer.baseUrl() + endpoint;
 
     BadRequestException exception =
-        assertThrows(
-            BadRequestException.class,
-            () -> restClient.get().uri(url).retrieve().body(String.class));
+        assertThrows(BadRequestException.class, () -> getBody(url));
 
     assertEquals("Invalid user UUID: some-uuid-value", exception.getMessage());
   }
@@ -114,9 +107,7 @@ class HttpClientConfigurationTest {
     String url = wireMockServer.baseUrl() + endpoint;
 
     BadRequestException exception =
-        assertThrows(
-            BadRequestException.class,
-            () -> restClient.get().uri(url).retrieve().body(String.class));
+        assertThrows(BadRequestException.class, () -> getBody(url));
 
     assertEquals("", exception.getMessage());
   }
@@ -131,8 +122,7 @@ class HttpClientConfigurationTest {
     String url = wireMockServer.baseUrl() + endpoint;
 
     BulkEditException exception =
-        assertThrows(
-            BulkEditException.class, () -> restClient.get().uri(url).retrieve().body(String.class));
+        assertThrows(BulkEditException.class, () -> getBody(url));
 
     assertEquals("Cannot get data from " + url + " due to " + errorMessage, exception.getMessage());
     assertEquals(ErrorType.ERROR, exception.getErrorType());
@@ -148,8 +138,7 @@ class HttpClientConfigurationTest {
     String url = wireMockServer.baseUrl() + endpoint;
 
     BulkEditException exception =
-        assertThrows(
-            BulkEditException.class, () -> restClient.get().uri(url).retrieve().body(String.class));
+        assertThrows(BulkEditException.class, () -> getBody(url));
 
     assertEquals("Cannot get data from " + url + " due to Unknown error", exception.getMessage());
     assertEquals(ErrorType.ERROR, exception.getErrorType());
@@ -164,8 +153,7 @@ class HttpClientConfigurationTest {
     String url = wireMockServer.baseUrl() + endpoint;
 
     BulkEditException exception =
-        assertThrows(
-            BulkEditException.class, () -> restClient.get().uri(url).retrieve().body(String.class));
+        assertThrows(BulkEditException.class, () -> getBody(url));
 
     assertEquals("Cannot get data from " + url + " due to Unknown error", exception.getMessage());
     assertEquals(ErrorType.ERROR, exception.getErrorType());
@@ -181,8 +169,7 @@ class HttpClientConfigurationTest {
     String url = wireMockServer.baseUrl() + endpoint;
 
     BulkEditException exception =
-        assertThrows(
-            BulkEditException.class, () -> restClient.get().uri(url).retrieve().body(String.class));
+        assertThrows(BulkEditException.class, () -> getBody(url));
 
     assertEquals("Cannot get data from " + url + " due to " + errorMessage, exception.getMessage());
     assertEquals(ErrorType.ERROR, exception.getErrorType());
@@ -203,9 +190,7 @@ class HttpClientConfigurationTest {
       String url = wireMockServer.baseUrl() + endpoint;
 
       BulkEditException exception =
-          assertThrows(
-              BulkEditException.class,
-              () -> restClient.get().uri(url).retrieve().body(String.class));
+          assertThrows(BulkEditException.class, () -> getBody(url));
 
       assertEquals(
           "Cannot get data from " + url + " due to Error code " + code, exception.getMessage());
@@ -221,8 +206,7 @@ class HttpClientConfigurationTest {
     String url = wireMockServer.baseUrl() + endpoint;
 
     BulkEditException exception =
-        assertThrows(
-            BulkEditException.class, () -> restClient.get().uri(url).retrieve().body(String.class));
+        assertThrows(BulkEditException.class, () -> getBody(url));
 
     assertTrue(exception.getMessage().contains("Unknown error"));
   }
@@ -238,9 +222,7 @@ class HttpClientConfigurationTest {
     String url = wireMockServer.baseUrl() + endpoint;
 
     BadRequestException exception =
-        assertThrows(
-            BadRequestException.class,
-            () -> restClient.get().uri(url).retrieve().body(String.class));
+        assertThrows(BadRequestException.class, () -> getBody(url));
 
     assertEquals("Invalid user UUID: abc-def-ghi-123", exception.getMessage());
   }
@@ -256,9 +238,7 @@ class HttpClientConfigurationTest {
     String url = wireMockServer.baseUrl() + endpoint;
 
     BadRequestException exception =
-        assertThrows(
-            BadRequestException.class,
-            () -> restClient.get().uri(url).retrieve().body(String.class));
+        assertThrows(BadRequestException.class, () -> getBody(url));
 
     assertEquals(errorMessage, exception.getMessage());
   }
@@ -272,7 +252,7 @@ class HttpClientConfigurationTest {
 
     String url = wireMockServer.baseUrl() + endpoint;
 
-    String result = restClient.get().uri(url).retrieve().body(String.class);
+    String result = getBody(url);
     assertEquals(responseBody, result);
   }
 
@@ -283,8 +263,7 @@ class HttpClientConfigurationTest {
 
     String url = wireMockServer.baseUrl() + endpoint;
 
-    assertThrows(
-        NotFoundException.class, () -> restClient.get().uri(url).retrieve().body(String.class));
+    assertThrows(NotFoundException.class, () -> getBody(url));
   }
 
   @Test
@@ -296,7 +275,10 @@ class HttpClientConfigurationTest {
 
     String url = wireMockServer.baseUrl() + endpoint;
 
-    assertThrows(
-        BadRequestException.class, () -> restClient.get().uri(url).retrieve().body(String.class));
+    assertThrows(BadRequestException.class, () -> getBody(url));
+  }
+
+  private String getBody(String url) {
+    return restClient.get().uri(url).retrieve().body(String.class);
   }
 }
