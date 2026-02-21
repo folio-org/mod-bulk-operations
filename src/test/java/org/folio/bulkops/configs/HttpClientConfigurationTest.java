@@ -12,6 +12,7 @@ import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.RestClientErrorHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,8 @@ class HttpClientConfigurationTest {
     wireMockServer = new WireMockServer(0);
     wireMockServer.start();
 
-    HttpClientConfiguration httpClientConfiguration = new HttpClientConfiguration();
+    HttpClientConfiguration httpClientConfiguration =
+        new HttpClientConfiguration(new RestClientErrorHandler());
     restClient = httpClientConfiguration.restClient(RestClient.builder());
   }
 

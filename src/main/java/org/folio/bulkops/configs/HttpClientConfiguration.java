@@ -1,5 +1,6 @@
 package org.folio.bulkops.configs;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.BulkEditClient;
@@ -51,26 +52,21 @@ import org.folio.bulkops.client.StatisticalCodeTypeClient;
 import org.folio.bulkops.client.SubjectSourcesClient;
 import org.folio.bulkops.client.SubjectTypesClient;
 import org.folio.bulkops.client.UserClient;
-import org.folio.bulkops.exception.BadRequestException;
-import org.folio.bulkops.exception.BulkEditException;
-import org.folio.bulkops.exception.NotFoundException;
-import org.springframework.boot.actuate.web.exchanges.HttpExchange;
+import org.folio.bulkops.exception.RestClientErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
-import java.io.IOException;
-
-import static org.folio.bulkops.util.Constants.CANNOT_GET_RECORD;
-
 @Configuration
 @Log4j2
+@RequiredArgsConstructor
 public class HttpClientConfiguration {
+
+  private final RestClientErrorHandler errorHandler;
 
   @Bean
   public AddressTypeClient addressTypeClient(HttpServiceProxyFactory factory) {
@@ -332,46 +328,9 @@ public class HttpClientConfiguration {
             (request, body, execution) -> {
               log.info("Request URL: {}", request.getURI());
               request.getHeaders().add(HttpHeaders.ACCEPT_ENCODING, "identity");
-              var response =  execution.execute(request, body);
-              if (response.getStatusCode() == HttpStatusCode.valueOf(404)) {
-                log.error("Received 404 Not Found for URL: {}", request.getURI());
-                throw new NotFoundException("Not found: " + request.getURI());
-              }
-              return response;
+              return execution.execute(request, body);
             })
-          .defaultStatusHandler(status -> status == HttpStatusCode.valueOf(404),
-                (request, response) -> {
-                  throw new NotFoundException("Not found: " + request.getURI());
-                })
-          .defaultStatusHandler(status -> status == HttpStatusCode.valueOf(400),
-                (request, response) -> {
-                  try (var bodyIs = response.getBody()) {
-                    var msg = new String(bodyIs.readAllBytes());
-                    throw new BadRequestException(updateErrorMessage(msg, request.getURI().toString()));
-                  } catch (IOException e) {
-                    throw new BadRequestException("Bad request: " + request.getURI());
-                  }
-                })
-          .defaultStatusHandler(HttpStatusCode::isError,
-                (request, response) -> {
-                  try (var bodyIs = response.getBody()) {
-                    var msg = new String(bodyIs.readAllBytes());
-                    String reason = !msg.isBlank() ? msg : "Unknown error";
-                    throw new BulkEditException(
-                          CANNOT_GET_RECORD.formatted(request.getURI(), reason),
-                          org.folio.bulkops.domain.dto.ErrorType.ERROR);
-                  } catch (IOException e) {
-                    throw new BulkEditException("Unable to get reason for error: " + e.getMessage());
-                  }
-                })
+        .defaultStatusHandler(HttpStatusCode::isError, errorHandler::handle)
         .build();
-  }
-
-  private String updateErrorMessage(String msg, String url) {
-    String finalMsg = msg;
-    if (msg.startsWith("Error at index")) {
-      finalMsg = "Invalid user UUID: " + url.substring(url.lastIndexOf("/") + 1);
-    }
-    return finalMsg;
   }
 }
