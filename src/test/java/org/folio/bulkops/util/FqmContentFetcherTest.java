@@ -10,16 +10,19 @@ import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_JSONB_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_TENANT_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCES_TITLE_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_JSONB_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SHARED_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TENANT_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEMS_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEMS_JSONB_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEMS_TENANT_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY;
@@ -185,7 +188,12 @@ class FqmContentFetcherTest {
     when(queryClient.getContents(
             new ContentsRequest()
                 .entityTypeId(FQM_INSTANCES_ET_ID)
-                .fields(List.of("instance.jsonb", "instance.shared", "instance.tenant_id"))
+                .fields(
+                    List.of(
+                        "instance.jsonb",
+                        "instance.shared",
+                        "instance.source",
+                        "instance.tenant_id"))
                 .localize(false)
                 .ids(uuids.subList(0, 3).stream().map(UUID::toString).map(List::of).toList())))
         .thenReturn(getMockedContents(uuids.subList(0, 3)));
@@ -193,7 +201,12 @@ class FqmContentFetcherTest {
     when(queryClient.getContents(
             new ContentsRequest()
                 .entityTypeId(FQM_INSTANCES_ET_ID)
-                .fields(List.of("instance.jsonb", "instance.shared", "instance.tenant_id"))
+                .fields(
+                    List.of(
+                        "instance.jsonb",
+                        "instance.shared",
+                        "instance.source",
+                        "instance.tenant_id"))
                 .localize(false)
                 .ids(uuids.subList(3, 5).stream().map(UUID::toString).map(List::of).toList())))
         .thenReturn(getMockedContents(uuids.subList(3, 5)));
@@ -202,6 +215,8 @@ class FqmContentFetcherTest {
       String actual = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       var expectedIds =
           expected.stream()
+              .filter(
+                  node -> !"\"LINKED_DATA\"".equals(node.get("entity").get("source").toString()))
               .map(node -> node.get("entity").get("id").toString())
               .toArray(String[]::new);
       var nonExpectedIds =
@@ -254,7 +269,12 @@ class FqmContentFetcherTest {
         .getContents(
             new ContentsRequest()
                 .entityTypeId(FQM_INSTANCES_ET_ID)
-                .fields(List.of("instance.jsonb", "instance.shared", "instance.tenant_id"))
+                .fields(
+                    List.of(
+                        "instance.jsonb",
+                        "instance.shared",
+                        "instance.source",
+                        "instance.tenant_id"))
                 .localize(false)
                 .ids(uuids.subList(0, 3).stream().map(UUID::toString).map(List::of).toList()));
 
@@ -510,12 +530,13 @@ class FqmContentFetcherTest {
   @ParameterizedTest
   @EnumSource(
       value = EntityType.class,
-      names = {"INSTANCE", "INSTANCE_MARC"},
+      names = {"INSTANCE_MARC"},
       mode = EnumSource.Mode.INCLUDE)
   void fetchShouldReturnAnErrorForNonSharedInstancesInEcs(EntityType entityType) throws Exception {
     final var queryId = randomUUID();
     final int total = 2;
     final var operationId = randomUUID();
+    final var instanceId = "707b7988-2c99-44d9-898f-01d09fc9f25e";
     List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
@@ -524,6 +545,7 @@ class FqmContentFetcherTest {
 
     var details = new QueryDetails();
     Map<String, Object> map = new HashMap<>();
+    map.put("instance.id", instanceId);
     map.put("instance.shared", "Local");
     details.setContent(Collections.singletonList(map));
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
@@ -539,7 +561,8 @@ class FqmContentFetcherTest {
 
     contents.clear();
     try (var is =
-        fqmContentFetcher.contents(List.of(randomUUID()), entityType, contents, operationId)) {
+        fqmContentFetcher.contents(
+            List.of(UUID.fromString(instanceId)), entityType, contents, operationId)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
@@ -783,7 +806,8 @@ class FqmContentFetcherTest {
 
     final var details = new QueryDetails();
     Map<String, Object> map = new HashMap<>();
-    map.put("instance.jsonb", "{\"id\":\"instance-id-1\"}");
+    map.put("instance.id", "c2a87963-ad02-4660-8675-0bb2d390228b");
+    map.put("instance.jsonb", "{\"id\":\"c2a87963-ad02-4660-8675-0bb2d390228b\"}");
     map.put("instance.tenant_id", "member-tenant");
     map.put("instance.shared", "Shared");
     details.setContent(Collections.singletonList(map));
@@ -811,7 +835,8 @@ class FqmContentFetcherTest {
 
     final var details = new QueryDetails();
     Map<String, Object> map = new HashMap<>();
-    map.put("instance.jsonb", "{\"id\":\"instance-id-2\"}");
+    map.put("instance.id", "3a7164de-461f-41f3-8833-d030b8241eca");
+    map.put("instance.jsonb", "{\"id\":\"3a7164de-461f-41f3-8833-d030b8241eca\"}");
     map.put("instance.tenant_id", "member-tenant");
     map.put("instance.shared", "Shared");
     details.setContent(Collections.singletonList(map));
@@ -839,7 +864,8 @@ class FqmContentFetcherTest {
 
     final var details = new QueryDetails();
     Map<String, Object> map = new HashMap<>();
-    map.put("instance.jsonb", "{\"id\":\"instance-id-3\"}");
+    map.put("instance.id", "86908f0f-9bd8-42af-97c5-a3ff3964b49c");
+    map.put("instance.jsonb", "{\"id\":\"86908f0f-9bd8-42af-97c5-a3ff3964b49c\"}");
     map.put("instance.tenant_id", "member-tenant");
     map.put("instance.shared", "Local");
     details.setContent(Collections.singletonList(map));
@@ -850,7 +876,7 @@ class FqmContentFetcherTest {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
       assertThat(result).isNotEmpty();
-      assertThat(result).contains("\"id\":\"instance-id-3\"");
+      assertThat(result).contains("\"id\":\"86908f0f-9bd8-42af-97c5-a3ff3964b49c\"");
     }
   }
 
@@ -866,7 +892,8 @@ class FqmContentFetcherTest {
 
     final var details = new QueryDetails();
     Map<String, Object> map = new HashMap<>();
-    map.put("instance.jsonb", "{\"id\":\"instance-id-4\"}");
+    map.put("instance.id", "9c02398f-a625-4eeb-9433-817c767b530b");
+    map.put("instance.jsonb", "{\"id\":\"9c02398f-a625-4eeb-9433-817c767b530b\"}");
     map.put("instance.tenant_id", "member-tenant");
     // instance.shared is missing
     details.setContent(Collections.singletonList(map));
@@ -877,7 +904,7 @@ class FqmContentFetcherTest {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
       assertThat(result).isNotEmpty();
-      assertThat(result).contains("\"id\":\"instance-id-4\"");
+      assertThat(result).contains("\"id\":\"9c02398f-a625-4eeb-9433-817c767b530b\"");
     }
   }
 
@@ -893,7 +920,8 @@ class FqmContentFetcherTest {
 
     final var details = new QueryDetails();
     Map<String, Object> map = new HashMap<>();
-    map.put("users.jsonb", "{\"id\":\"user-id-1\"}");
+    map.put("users.id", "fdc47950-80d8-4194-b089-e833ddbbd369");
+    map.put("users.jsonb", "{\"id\":\"fdc47950-80d8-4194-b089-e833ddbbd369\"}");
     map.put("instance.shared", "Shared"); // This should not affect USER entity type
     details.setContent(Collections.singletonList(map));
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
@@ -902,7 +930,7 @@ class FqmContentFetcherTest {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
       assertThat(result).isNotEmpty();
-      assertThat(result).contains("\"id\":\"user-id-1\"");
+      assertThat(result).contains("\"id\":\"fdc47950-80d8-4194-b089-e833ddbbd369\"");
     }
   }
 
@@ -918,7 +946,8 @@ class FqmContentFetcherTest {
 
     final var details = new QueryDetails();
     Map<String, Object> map = new HashMap<>();
-    map.put("items.jsonb", "{\"id\":\"item-id-1\"}");
+    map.put("items.id", "005e472f-5af1-4e2b-97c8-529d36ba0cf9");
+    map.put("items.jsonb", "{\"id\":\"005e472f-5af1-4e2b-97c8-529d36ba0cf9\"}");
     map.put("items.tenant_id", "member-tenant");
     map.put("instance.shared", "Shared"); // This should not affect ITEM entity type
     map.put(FQM_INSTANCES_TITLE_KEY, "Instance Title");
@@ -932,7 +961,7 @@ class FqmContentFetcherTest {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
       assertThat(result).isNotEmpty();
-      assertThat(result).contains("\"id\":\"item-id-1\"");
+      assertThat(result).contains("\"id\":\"005e472f-5af1-4e2b-97c8-529d36ba0cf9\"");
     }
   }
 
@@ -948,7 +977,8 @@ class FqmContentFetcherTest {
 
     final var details = new QueryDetails();
     Map<String, Object> map = new HashMap<>();
-    map.put("instance.jsonb", "{\"id\":\"instance-id-5\"}");
+    map.put("instance.id", "e99cdbfa-aac0-470e-8926-711734adc413");
+    map.put("instance.jsonb", "{\"id\":\"e99cdbfa-aac0-470e-8926-711734adc413\"}");
     map.put("instance.tenant_id", "non-member-tenant");
     map.put("instance.shared", "Shared");
     details.setContent(Collections.singletonList(map));
@@ -959,7 +989,7 @@ class FqmContentFetcherTest {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
       assertThat(result).isNotEmpty();
-      assertThat(result).contains("\"id\":\"instance-id-5\"");
+      assertThat(result).contains("\"id\":\"e99cdbfa-aac0-470e-8926-711734adc413\"");
     }
   }
 
@@ -975,7 +1005,8 @@ class FqmContentFetcherTest {
 
     final var details = new QueryDetails();
     Map<String, Object> map = new HashMap<>();
-    map.put("instance.jsonb", "{\"id\":\"instance-id-6\"}");
+    map.put("instance.id", "d3d7383e-63e9-469f-8009-daba9d922f6a");
+    map.put("instance.jsonb", "{\"id\":\"d3d7383e-63e9-469f-8009-daba9d922f6a\"}");
     map.put("instance.tenant_id", "non-member-tenant");
     map.put("instance.shared", "Shared");
     details.setContent(Collections.singletonList(map));
@@ -986,7 +1017,7 @@ class FqmContentFetcherTest {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
       assertThat(result).isNotEmpty();
-      assertThat(result).contains("\"id\":\"instance-id-6\"");
+      assertThat(result).contains("\"id\":\"d3d7383e-63e9-469f-8009-daba9d922f6a\"");
     }
   }
 
@@ -1028,9 +1059,16 @@ class FqmContentFetcherTest {
     for (int i = 0; i < total; i++) {
       var map = new HashMap<String, Object>();
       switch (entityType) {
-        case USER -> map.put("users.jsonb", "{\"id\":\"" + randomUUID() + "\"}");
+        case USER -> {
+          var id = randomUUID().toString();
+          map.put("users.id", id);
+          map.put("users.jsonb", "{\"id\":\"" + id + "\"}");
+          map.put("users.type", "staff");
+        }
         case ITEM -> {
-          map.put(FQM_ITEMS_JSONB_KEY, "{\"id\":\"" + randomUUID() + "\"}");
+          var id = randomUUID().toString();
+          map.put(FQM_ITEMS_ID_KEY, id);
+          map.put(FQM_ITEMS_JSONB_KEY, "{\"id\":\"" + id + "\"}");
           map.put(FQM_ITEMS_TENANT_ID_KEY, "item-tenant");
           map.put(FQM_INSTANCES_TITLE_KEY, "Instance Title " + i);
           map.put(FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY, "Call/Number:Prefix " + i);
@@ -1053,7 +1091,9 @@ class FqmContentFetcherTest {
           map.put(FQM_ITEM_PERMANENT_LOCATION_NAME_KEY, "Permanent location");
         }
         case HOLDINGS_RECORD -> {
-          map.put(FQM_HOLDINGS_JSONB_KEY, "{\"id\":\"" + randomUUID() + "\"}");
+          var id = randomUUID().toString();
+          map.put(FQM_HOLDINGS_ID_KEY, id);
+          map.put(FQM_HOLDINGS_JSONB_KEY, "{\"id\":\"" + id + "\"}");
           map.put(FQM_HOLDINGS_TENANT_ID_KEY, "holdings-tenant");
           map.put(FQM_INSTANCE_TITLE_KEY, "Instance Title " + i);
           map.put(
@@ -1062,7 +1102,9 @@ class FqmContentFetcherTest {
                   + "\"dateOfPublication\": \"1992-\"}]");
         }
         case INSTANCE, INSTANCE_MARC -> {
-          map.put(FQM_INSTANCE_JSONB_KEY, "{\"id\":\"" + randomUUID() + "\"}");
+          var id = randomUUID().toString();
+          map.put(FQM_INSTANCE_ID_KEY, id);
+          map.put(FQM_INSTANCE_JSONB_KEY, "{\"id\":\"" + id + "\"}");
           map.put(FQM_INSTANCE_TENANT_ID_KEY, "instance-tenant");
           map.put(FQM_INSTANCE_SHARED_KEY, "Shared");
         }

@@ -17,6 +17,8 @@ import static org.folio.bulkops.util.Constants.HOLDINGS_DATA;
 import static org.folio.bulkops.util.Constants.HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER;
 import static org.folio.bulkops.util.Constants.INSTANCE_TITLE;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
+import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE;
+import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
 import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.Constants.PARENT_INSTANCES;
@@ -32,6 +34,7 @@ import static org.folio.bulkops.util.FqmKeys.FQM_DATE_OF_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_JSONB_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_TENANT_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDING_PERMANENT_LOCATION_NAME_KEY;
@@ -44,9 +47,11 @@ import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PARENT_INSTANCES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PRECEDING_TITLES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SHARED_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SOURCE_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SUCCEEDING_TITLES_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TENANT_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEMS_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEMS_JSONB_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEMS_TENANT_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY;
@@ -80,7 +85,10 @@ import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.io.SequenceInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -100,6 +108,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.SearchClient;
@@ -236,6 +246,7 @@ public class FqmContentFetcher {
     }
 
     return pipeStreamingResponse(
+        uuids,
         entityType,
         bulkOperationExecutionContents,
         operationId,
@@ -246,6 +257,7 @@ public class FqmContentFetcher {
   }
 
   private InputStream pipeStreamingResponse(
+      List<UUID> uuids,
       EntityType entityType,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents,
       UUID operationId,
@@ -268,6 +280,8 @@ public class FqmContentFetcher {
     var writer =
         new Thread(
             () -> {
+              List<UUID> processed = new ArrayList<>();
+
               try (BufferedWriter bw =
                   new BufferedWriter(
                       new OutputStreamWriter(pos, StandardCharsets.UTF_8), BUFFER_SIZE)) {
@@ -279,13 +293,14 @@ public class FqmContentFetcher {
                     continue;
                   }
 
-                  part(
-                      bw,
-                      part,
-                      entityType,
-                      bulkOperationExecutionContents,
-                      operationId,
-                      isCentralTenant);
+                  processed.addAll(
+                      part(
+                          bw,
+                          part,
+                          entityType,
+                          bulkOperationExecutionContents,
+                          operationId,
+                          isCentralTenant));
                 }
 
               } catch (InterruptedException ie) {
@@ -295,6 +310,21 @@ public class FqmContentFetcher {
                 log.error("Error streaming FQM response", ex);
                 fail(error, executor, ex, false);
               } finally {
+
+                if (CollectionUtils.isNotEmpty(uuids)) {
+                  SetUtils.difference(new HashSet<>(uuids), new HashSet<>(processed))
+                      .forEach(
+                          missingId ->
+                              bulkOperationExecutionContents.add(
+                                  BulkOperationExecutionContent.builder()
+                                      .identifier(missingId.toString())
+                                      .bulkOperationId(operationId)
+                                      .state(StateType.FAILED)
+                                      .errorType(ErrorType.ERROR)
+                                      .errorMessage(NO_MATCH_FOUND_MESSAGE)
+                                      .build()));
+                }
+
                 closeQuietly(pos);
                 executor.shutdownNow();
               }
@@ -361,7 +391,7 @@ public class FqmContentFetcher {
     }
   }
 
-  private void part(
+  private List<UUID> part(
       BufferedWriter bw,
       List<Map<String, Object>> part,
       EntityType entityType,
@@ -370,17 +400,22 @@ public class FqmContentFetcher {
       boolean isCentralTenant)
       throws IOException {
 
+    List<UUID> processed = new ArrayList<>();
+
     for (Map<String, Object> json : part) {
-      String line =
+      var entry =
           processFqmJson(
               entityType, bulkOperationExecutionContents, operationId, isCentralTenant, json);
 
+      processed.add(entry.getKey());
+      var line = entry.getValue();
       if (StringUtils.isNotEmpty(line)) {
         bw.write(line);
         bw.write(LINE_BREAK);
       }
     }
     bw.flush();
+    return processed;
   }
 
   private void fail(
@@ -490,23 +525,30 @@ public class FqmContentFetcher {
             .map(
                 json ->
                     processFqmJson(
-                        entityType,
-                        bulkOperationExecutionContents,
-                        operationId,
-                        isCentralTenant,
-                        json))
+                            entityType,
+                            bulkOperationExecutionContents,
+                            operationId,
+                            isCentralTenant,
+                            json)
+                        .getValue())
             .filter(StringUtils::isNotEmpty)
             .collect(Collectors.joining(LINE_BREAK))
             .getBytes(StandardCharsets.UTF_8));
   }
 
-  private String processFqmJson(
+  private SimpleEntry<UUID, String> processFqmJson(
       EntityType entityType,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents,
       UUID operationId,
       boolean isCentralTenant,
       Map<String, Object> json) {
     try {
+      if (isInstance(entityType)
+          && LINKED_DATA_SOURCE.equalsIgnoreCase(
+              ofNullable(json.get(FQM_INSTANCE_SOURCE_KEY)).map(Object::toString).orElse(EMPTY))) {
+        addInstanceLinkedDataNotSupported(json, bulkOperationExecutionContents, operationId);
+        return new SimpleEntry<>(UUID.fromString(json.get(FQM_INSTANCE_ID_KEY).toString()), EMPTY);
+      }
       if (isCentralTenant) {
         if (isInstance(entityType)
             && !SHARED.equalsIgnoreCase(
@@ -514,25 +556,27 @@ public class FqmContentFetcher {
                     .map(Object::toString)
                     .orElse(EMPTY))) {
           addInstanceNoMatchFound(json, bulkOperationExecutionContents, operationId);
-          return EMPTY;
+          return new SimpleEntry<>(
+              UUID.fromString(json.get(FQM_INSTANCE_ID_KEY).toString()), EMPTY);
         } else if (EntityType.USER.equals(entityType)
             && SHADOW.equalsIgnoreCase(
                 ofNullable(json.get(FQM_USERS_TYPE_KEY)).map(Object::toString).orElse(EMPTY))) {
           addShadowUserErrorContent(json, bulkOperationExecutionContents, operationId);
-          return EMPTY;
+          return new SimpleEntry<>(UUID.fromString(json.get(FQM_USERS_ID_KEY).toString()), EMPTY);
         }
       }
 
       if (isSharedInstanceAndCurrentTenantIsMember(json, entityType)) {
         addInstanceNoMatchFound(json, bulkOperationExecutionContents, operationId);
-        return EMPTY;
+        return new SimpleEntry<>(UUID.fromString(json.get(FQM_INSTANCE_ID_KEY).toString()), EMPTY);
       }
 
       var jsonb = json.get(getEntityJsonKey(entityType));
 
       if (Objects.nonNull(jsonb)) {
         if (entityType == EntityType.USER) {
-          return jsonb.toString();
+          return new SimpleEntry<>(
+              UUID.fromString(json.get(FQM_USERS_ID_KEY).toString()), jsonb.toString());
         }
         var jsonNode = (ObjectNode) objectMapper.readTree(jsonb.toString());
         var tenant = json.get(getContentTenantKey(entityType));
@@ -558,13 +602,17 @@ public class FqmContentFetcher {
         ObjectNode extendedRecordWrapper = objectMapper.createObjectNode();
         extendedRecordWrapper.set(ENTITY, jsonNode);
         extendedRecordWrapper.put(TENANT_ID, tenant.toString());
-        return objectMapper.writeValueAsString(extendedRecordWrapper);
+        return new SimpleEntry<>(
+            UUID.fromString(json.get(getEntityIdKey(entityType)).toString()),
+            objectMapper.writeValueAsString(extendedRecordWrapper));
       } else {
-        return EMPTY;
+        return new SimpleEntry<>(
+            UUID.fromString(json.get(getEntityIdKey(entityType)).toString()), EMPTY);
       }
     } catch (Exception e) {
       log.error("Error processing JSON content: {}", json, e);
-      return EMPTY;
+      return new SimpleEntry<>(
+          UUID.fromString(json.get(getEntityIdKey(entityType)).toString()), EMPTY);
     }
   }
 
@@ -577,9 +625,18 @@ public class FqmContentFetcher {
     };
   }
 
+  private String getEntityIdKey(EntityType entityType) {
+    return switch (entityType) {
+      case USER -> FQM_USERS_ID_KEY;
+      case ITEM -> FQM_ITEMS_ID_KEY;
+      case HOLDINGS_RECORD -> FQM_HOLDINGS_ID_KEY;
+      case INSTANCE, INSTANCE_MARC -> FQM_INSTANCE_ID_KEY;
+    };
+  }
+
   private List<String> getEntityJsonKeys(EntityType entityType) {
     return switch (entityType) {
-      case USER -> List.of(FQM_USERS_JSONB_KEY);
+      case USER -> List.of(FQM_USERS_JSONB_KEY, FQM_USERS_TYPE_KEY);
       case ITEM ->
           List.of(
               FQM_ITEMS_JSONB_KEY,
@@ -608,7 +665,11 @@ public class FqmContentFetcher {
               FQM_INSTANCE_PUBLICATION_KEY,
               FQM_HOLDINGS_TENANT_ID_KEY);
       case INSTANCE, INSTANCE_MARC ->
-          List.of(FQM_INSTANCE_JSONB_KEY, FQM_INSTANCE_SHARED_KEY, FQM_INSTANCE_TENANT_ID_KEY);
+          List.of(
+              FQM_INSTANCE_JSONB_KEY,
+              FQM_INSTANCE_SHARED_KEY,
+              FQM_INSTANCE_SOURCE_KEY,
+              FQM_INSTANCE_TENANT_ID_KEY);
     };
   }
 
@@ -688,6 +749,21 @@ public class FqmContentFetcher {
             .state(StateType.FAILED)
             .errorType(ErrorType.ERROR)
             .errorMessage(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED)
+            .build());
+  }
+
+  private void addInstanceLinkedDataNotSupported(
+      Map<String, Object> json,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      UUID operationId) {
+    var userId = ofNullable(json.get(FQM_USERS_ID_KEY)).map(Object::toString).orElse(EMPTY);
+    bulkOperationExecutionContents.add(
+        BulkOperationExecutionContent.builder()
+            .identifier(userId)
+            .bulkOperationId(operationId)
+            .state(StateType.FAILED)
+            .errorType(ErrorType.ERROR)
+            .errorMessage(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED)
             .build());
   }
 
