@@ -1,5 +1,6 @@
 package org.folio.bulkops.util;
 
+import static java.util.UUID.randomUUID;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
@@ -7,6 +8,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -57,13 +60,11 @@ class FqmContentFetcherEcsTest {
   void testLocalInstanceInLocalTenant() {
     String tenantId = "local";
     String centralTenantId = "";
-    mockCommon(tenantId, centralTenantId);
-
-    UUID uuid = UUID.randomUUID();
+    UUID uuid = randomUUID();
+    mockCommon(tenantId, centralTenantId, List.of(uuid));
 
     try (var is =
-        fqmContentFetcher.contents(
-            List.of(uuid), EntityType.INSTANCE, List.of(), UUID.randomUUID())) {
+        fqmContentFetcher.contents(List.of(uuid), EntityType.INSTANCE, List.of(), randomUUID())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
       await()
           .atMost(2, TimeUnit.SECONDS)
@@ -82,13 +83,11 @@ class FqmContentFetcherEcsTest {
   void testSharedInstanceInCentralTenant() {
     String tenantId = "central";
     String centralTenantId = "central";
-    mockCommon(tenantId, centralTenantId);
-
-    UUID uuid = UUID.randomUUID();
+    UUID uuid = randomUUID();
+    mockCommon(tenantId, centralTenantId, List.of(uuid));
 
     try (var is =
-        fqmContentFetcher.contents(
-            List.of(uuid), EntityType.INSTANCE, List.of(), UUID.randomUUID())) {
+        fqmContentFetcher.contents(List.of(uuid), EntityType.INSTANCE, List.of(), randomUUID())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
@@ -109,10 +108,10 @@ class FqmContentFetcherEcsTest {
     String tenantId = "central";
     String centralTenantId = "central";
     String itemTenant1 = "member_A";
-    UUID uuid1 = UUID.randomUUID();
+    UUID uuid1 = randomUUID();
     String itemTenant2 = "member_B";
-    UUID uuid2 = UUID.randomUUID();
-    mockCommon(tenantId, centralTenantId);
+    UUID uuid2 = randomUUID();
+    mockCommon(tenantId, centralTenantId, List.of(uuid1, uuid2));
 
     when(searchClient.getConsortiumItemCollection(any()))
         .thenReturn(
@@ -122,7 +121,7 @@ class FqmContentFetcherEcsTest {
 
     try (var is =
         fqmContentFetcher.contents(
-            List.of(uuid1, uuid2), EntityType.ITEM, List.of(), UUID.randomUUID())) {
+            List.of(uuid1, uuid2), EntityType.ITEM, List.of(), randomUUID())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
@@ -143,13 +142,11 @@ class FqmContentFetcherEcsTest {
   void testMemberInstanceInCentralTenant() {
     String tenantId = "member";
     String centralTenantId = "central";
-    mockCommon(tenantId, centralTenantId);
-
-    UUID uuid = UUID.randomUUID();
+    UUID uuid = randomUUID();
+    mockCommon(tenantId, centralTenantId, List.of(uuid));
 
     try (var is =
-        fqmContentFetcher.contents(
-            List.of(uuid), EntityType.INSTANCE, List.of(), UUID.randomUUID())) {
+        fqmContentFetcher.contents(List.of(uuid), EntityType.INSTANCE, List.of(), randomUUID())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
@@ -169,12 +166,11 @@ class FqmContentFetcherEcsTest {
   void testUserCentralTenant() {
     String tenantId = "central";
     String centralTenantId = "central";
-    mockCommon(tenantId, centralTenantId);
-
-    UUID uuid = UUID.randomUUID();
+    UUID uuid = randomUUID();
+    mockCommon(tenantId, centralTenantId, List.of(uuid));
 
     try (var is =
-        fqmContentFetcher.contents(List.of(uuid), EntityType.USER, List.of(), UUID.randomUUID())) {
+        fqmContentFetcher.contents(List.of(uuid), EntityType.USER, List.of(), randomUUID())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
       await()
           .atMost(2, TimeUnit.SECONDS)
@@ -189,9 +185,22 @@ class FqmContentFetcherEcsTest {
     }
   }
 
-  private void mockCommon(String tenantId, String centralTenantId) {
+  private void mockCommon(String tenantId, String centralTenantId, List<UUID> uuids) {
     when(folioExecutionContext.getTenantId()).thenReturn(tenantId);
     when(consortiaService.getCentralTenantId(tenantId)).thenReturn(centralTenantId);
-    when(queryClient.getContents(any())).thenReturn(List.of(Map.of()));
+
+    List<Map<String, Object>> mock = new ArrayList<>();
+
+    /* Adding entities ids all together for mock - just emulation */
+    uuids.forEach(
+        uuid -> {
+          Map<String, Object> map = new HashMap<>();
+          map.put("instance.id", uuid.toString());
+          map.put("users.id", uuid.toString());
+          map.put("items.id", uuid.toString());
+          mock.add(map);
+        });
+
+    when(queryClient.getContents(any())).thenReturn(mock);
   }
 }
