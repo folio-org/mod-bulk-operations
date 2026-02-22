@@ -749,7 +749,10 @@
         "metadata-provider.jobExecutions.collection.get",
         "metadata-provider.jobLogEntries.collection.get",
         "source-storage.parsed-records.fetch.collection.post",
-        "inventory-storage.contributor-types.collection.get"
+        "inventory-storage.contributor-types.collection.get",
+        "fqm.query.async.post",
+        "fqm.query.async.results.get",
+        "fqm.entityTypes.item.get"
       ]
     }
   },

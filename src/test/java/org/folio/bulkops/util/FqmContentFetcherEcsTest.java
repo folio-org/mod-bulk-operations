@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.QueryClient;
@@ -23,7 +24,9 @@ import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.querytool.domain.dto.ContentsRequest;
 import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,11 +43,18 @@ class FqmContentFetcherEcsTest {
   @MockitoBean private FolioExecutionContext folioExecutionContext;
   @MockitoBean private QueryClient queryClient;
   @MockitoBean private SearchClient searchClient;
+  @MockitoBean private SystemUserScopedExecutionService systemUserScopedExecutionService;
 
   @Value("${application.fqm-fetcher.max_chunk_size}")
   private int chunkSize;
 
   @Autowired private FqmContentFetcher fqmContentFetcher;
+
+  @BeforeEach
+  void setUp() {
+    when(systemUserScopedExecutionService.executeSystemUserScoped(any()))
+        .thenAnswer(invocation -> ((Callable<?>) invocation.getArgument(0)).call());
+  }
 
   @Test
   void testLocalInstanceInLocalTenant() {
