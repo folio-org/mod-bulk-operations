@@ -47,7 +47,7 @@
     <opencsv.version>5.12.0</opencsv.version>
     <lib-fqm-query-processor.version>4.1.0-SNAPSHOT</lib-fqm-query-processor.version>
     <marc4j.version>2.9.2</marc4j.version>
-    <jsonPath.version>2.9.0</jsonPath.version>
+    <jsonPath.version>3.0.0</jsonPath.version>
 
     <!-- Test dependencies versions -->
     <testcontainer.version>2.0.3</testcontainer.version>
