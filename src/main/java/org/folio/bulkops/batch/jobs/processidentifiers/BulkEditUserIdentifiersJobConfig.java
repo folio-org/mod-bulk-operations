@@ -13,7 +13,7 @@ import java.net.SocketException;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.folio.bulkops.batch.BulkEditSkipListener;
+import org.folio.bulkops.batch.BulkEditUserSkipListener;
 import org.folio.bulkops.batch.CsvItemWriter;
 import org.folio.bulkops.batch.JobCompletionNotificationListener;
 import org.folio.bulkops.batch.JsonFileWriter;
@@ -43,7 +43,7 @@ import org.springframework.core.task.TaskExecutor;
 @RequiredArgsConstructor
 public class BulkEditUserIdentifiersJobConfig {
   private final BulkEditUserProcessor bulkEditUserProcessor;
-  private final BulkEditSkipListener bulkEditSkipListener;
+  private final BulkEditUserSkipListener bulkEditUserSkipListener;
   private final RemoteFileSystemClient remoteFileSystemClient;
 
   @Value("${application.batch.chunk-size}")
@@ -117,10 +117,7 @@ public class BulkEditUserIdentifiersJobConfig {
         .retryLimit(maxRetriesOnConnectionReset)
         .skip(BulkEditException.class)
         .skipLimit(1_000_000)
-        // Required to avoid repeating BulkEditItemProcessor#process after skip.
-        //        .processorNonTransactional()
-        .skip(BulkEditException.class)
-        .listener(bulkEditSkipListener)
+        .skipListener(bulkEditUserSkipListener)
         .writer(compositeItemWriter)
         .listener(identifiersWriteListener)
         .build();

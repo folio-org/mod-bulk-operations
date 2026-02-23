@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.folio.bulkops.batch.BulkEditItemSkipListener;
 import org.folio.bulkops.batch.BulkEditSkipListener;
 import org.folio.bulkops.batch.CsvListItemWriter;
 import org.folio.bulkops.batch.JobCompletionNotificationListener;
@@ -47,7 +48,7 @@ import org.springframework.core.task.TaskExecutor;
 public class BulkEditItemIdentifiersJobConfig {
   private final BulkEditItemListProcessor bulkEditItemListProcessor;
   private final BulkEditItemProcessor bulkEditItemProcessor;
-  private final BulkEditSkipListener bulkEditSkipListener;
+  private final BulkEditItemSkipListener bulkEditItemSkipListener;
   private final RemoteFileSystemClient remoteFileSystemClient;
 
   @Value("${application.batch.chunk-size}")
@@ -120,10 +121,7 @@ public class BulkEditItemIdentifiersJobConfig {
         .retryLimit(maxRetriesOnConnectionReset)
         .skip(BulkEditException.class)
         .skipLimit(1_000_000)
-        // Required to avoid repeating BulkEditItemProcessor#process after skip.
-        //        .processorNonTransactional()
-        .skip(BulkEditException.class)
-        .listener(bulkEditSkipListener)
+        .skipListener(bulkEditItemSkipListener)
         .writer(compositeItemListWriter)
         .listener(listIdentifiersWriteListener)
         .build();

@@ -17,7 +17,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
-import org.folio.bulkops.batch.BulkEditSkipListener;
+import org.folio.bulkops.batch.BulkEditInstanceSkipListener;
 import org.folio.bulkops.batch.CsvListItemWriter;
 import org.folio.bulkops.batch.JobCompletionNotificationListener;
 import org.folio.bulkops.batch.JsonListFileWriter;
@@ -52,7 +52,7 @@ import org.springframework.core.task.TaskExecutor;
 @RequiredArgsConstructor
 public class BulkEditInstanceIdentifiersJobConfig {
   private final BulkEditInstanceProcessor bulkEditInstanceProcessor;
-  private final BulkEditSkipListener bulkEditSkipListener;
+  private final BulkEditInstanceSkipListener bulkEditInstanceSkipListener;
   private final SrsClient srsClient;
   private final JsonToMarcConverter jsonToMarcConverter;
   private final RemoteFileSystemClient remoteFileSystemClient;
@@ -130,10 +130,7 @@ public class BulkEditInstanceIdentifiersJobConfig {
         .retryLimit(maxRetriesOnConnectionReset)
         .skip(BulkEditException.class)
         .skipLimit(1_000_000)
-        // Required to avoid repeating BulkEditItemProcessor#process after skip.
-        //        .processorNonTransactional()
-        .skip(BulkEditException.class)
-        .listener(bulkEditSkipListener)
+        .skipListener(bulkEditInstanceSkipListener)
         .writer(compositeInstanceListWriter)
         .listener(listIdentifiersWriteListener)
         .build();
