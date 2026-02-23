@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import java.util.stream.IntStream;
 import org.apache.commons.collections4.SetUtils;
 import org.folio.bulkops.BaseTest;
@@ -69,7 +70,9 @@ import org.folio.spring.client.AuthnClient;
 import org.folio.spring.client.PermissionsClient;
 import org.folio.spring.client.UsersClient;
 import org.folio.spring.service.SystemUserService;
+import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -108,8 +111,15 @@ class FqmContentFetcherTest {
   @MockitoBean public AuthnClient authnClient;
   @MockitoBean public UsersClient usersClient;
   @MockitoBean public PermissionsClient permissionsClient;
+  @MockitoBean private SystemUserScopedExecutionService systemUserScopedExecutionService;
 
   @Autowired public ObjectMapper objectMapper;
+
+  @BeforeEach
+  void setUp() {
+    when(systemUserScopedExecutionService.executeSystemUserScoped(any()))
+        .thenAnswer(invocation -> ((Callable<?>) invocation.getArgument(0)).call());
+  }
 
   @Test
   void fetchShouldProcessMultipleChunksInParallel() throws IOException {
