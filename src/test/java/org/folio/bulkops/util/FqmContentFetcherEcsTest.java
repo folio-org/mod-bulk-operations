@@ -24,14 +24,11 @@ import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.querytool.domain.dto.ContentsRequest;
 import org.folio.spring.FolioExecutionContext;
-<<<<<<< MODBULKOPS-581
 import org.folio.spring.client.AuthnClient;
 import org.folio.spring.client.PermissionsClient;
 import org.folio.spring.client.UsersClient;
-import org.folio.spring.service.SystemUserService;
-=======
 import org.folio.spring.service.SystemUserScopedExecutionService;
->>>>>>> master
+import org.folio.spring.service.SystemUserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
