@@ -175,7 +175,8 @@ class PreviewServiceTest extends BaseTest {
 
     when(mappingRulesClient.getMarcBibMappingRules())
         .thenReturn(
-            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            objectMapper.readTree(
+                Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json"))));
 
     var bulkOperationRuleCollection =
         objectMapper.readValue(
@@ -281,7 +282,8 @@ class PreviewServiceTest extends BaseTest {
 
     when(mappingRulesClient.getMarcBibMappingRules())
         .thenReturn(
-            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            objectMapper.readTree(
+                Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json"))));
 
     var table =
         previewService.getPreview(
@@ -347,7 +349,8 @@ class PreviewServiceTest extends BaseTest {
         .thenReturn(new ByteArrayInputStream(",,,,,,,,,,".getBytes()));
     when(mappingRulesClient.getMarcBibMappingRules())
         .thenReturn(
-            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            objectMapper.readTree(
+                Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json"))));
     var bulkOperation = new BulkOperation();
     bulkOperation.setTenantNotePairs(List.of());
     when(bulkOperationService.getBulkOperationOrThrow(any(UUID.class))).thenReturn(bulkOperation);
@@ -441,7 +444,8 @@ class PreviewServiceTest extends BaseTest {
                 .build());
     when(mappingRulesClient.getMarcBibMappingRules())
         .thenReturn(
-            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            objectMapper.readTree(
+                Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json"))));
 
     var res = previewService.getPreview(bulkOperation, EDIT, 0, 10);
 
@@ -541,7 +545,8 @@ class PreviewServiceTest extends BaseTest {
                 .build());
     when(mappingRulesClient.getMarcBibMappingRules())
         .thenReturn(
-            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            objectMapper.readTree(
+                Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json"))));
 
     var res = previewService.getPreview(bulkOperation, EDIT, 0, 10);
 
@@ -644,7 +649,8 @@ class PreviewServiceTest extends BaseTest {
                 .build());
     when(mappingRulesClient.getMarcBibMappingRules())
         .thenReturn(
-            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            objectMapper.readTree(
+                Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json"))));
 
     var res = previewService.getPreview(bulkOperation, COMMIT, 0, 10);
 
@@ -745,7 +751,8 @@ class PreviewServiceTest extends BaseTest {
                 .build());
     when(mappingRulesClient.getMarcBibMappingRules())
         .thenReturn(
-            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            objectMapper.readTree(
+                Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json"))));
 
     var res = previewService.getPreview(bulkOperation, COMMIT, 0, 10);
 
@@ -780,7 +787,7 @@ class PreviewServiceTest extends BaseTest {
     when(ruleService.getRules(operationId)).thenReturn(rules);
     when(remoteFileSystemClient.get(pathToCsv))
         .thenReturn(new ByteArrayInputStream(",,,,,,,,,,".getBytes()));
-    when(mappingRulesClient.getMarcBibMappingRules()).thenReturn("{}");
+    when(mappingRulesClient.getMarcBibMappingRules()).thenReturn(objectMapper.readTree("{}"));
     var emptyBulkOperation = new BulkOperation();
     emptyBulkOperation.setTenantNotePairs(List.of());
     when(bulkOperationService.getBulkOperationOrThrow(any(UUID.class)))
