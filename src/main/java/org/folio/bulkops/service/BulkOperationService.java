@@ -25,10 +25,12 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LOCALLY;
 import static org.folio.bulkops.util.Constants.BULK_EDIT_IDENTIFIERS;
 import static org.folio.bulkops.util.Constants.CHANGED_CSV_PATH_TEMPLATE;
+import static org.folio.bulkops.util.Constants.COMMA_DELIMETER;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.FILE_UPLOAD_ERROR;
 import static org.folio.bulkops.util.Constants.HYPHEN;
+import static org.folio.bulkops.util.Constants.INCORRECT_NUMBER_OF_TOKENS;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
@@ -705,6 +707,9 @@ public class BulkOperationService {
               .lines()
               .forEach(
                   id -> {
+                    if (id.contains(COMMA_DELIMETER)) {
+                      throw new IllegalArgumentException(INCORRECT_NUMBER_OF_TOKENS);
+                    }
                     try {
                       id = removeStart(removeEnd(id, "\""), "\"");
                       ids.add(UUID.fromString(id));

@@ -24,6 +24,7 @@ import static org.folio.bulkops.service.BulkOperationService.TMP_MATCHED_JSON_PA
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
+import static org.folio.bulkops.util.Constants.INCORRECT_NUMBER_OF_TOKENS;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Constants.UTF_8_BOM;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
@@ -2216,6 +2217,47 @@ class BulkOperationServiceTest extends BaseTest {
           bulkOperationId, UUID.randomUUID(), bulkOperationStart);
 
       verify(queryService, times(1))
+          .retrieveRecordsIdentifiersFlowAsync(
+              eq(List.of(fromString("309df74e-5bdb-4707-b29a-3de0bd6ca3f6"))),
+              eq(bulkOperation),
+              anyList());
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldLaunchQueryJobOnUploadStepWhenCsvContentIsInvalid() {
+    var bulkOperationId = UUID.randomUUID();
+    var filename = "file.csv";
+    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(bulkOperationId)
+            .linkToTriggeringCsvFile(filename)
+            .entityType(INSTANCE)
+            .approach(ApproachType.IN_APP)
+            .identifierType(IdentifierType.ID)
+            .build();
+
+    ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", true);
+
+    when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
+    when(remoteFileSystemClient.getNumOfLines(filename)).thenReturn(5);
+    // unexpected "," in line
+    when(remoteFileSystemClient.get(filename))
+        .thenReturn(
+            new ByteArrayInputStream(
+                ("\"xxXXXyy,zzZZZ\"\n" + "\"309df74e-5bdb-4707-b29a-3de0bd6ca3f6\"").getBytes()));
+
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      var result =
+          bulkOperationService.startBulkOperation(
+              bulkOperationId, UUID.randomUUID(), bulkOperationStart);
+
+      assertThat(result.getStatus(), is(FAILED));
+      assertThat(result.getErrorMessage(), is(INCORRECT_NUMBER_OF_TOKENS));
+
+      verify(queryService, times(0))
           .retrieveRecordsIdentifiersFlowAsync(
               eq(List.of(fromString("309df74e-5bdb-4707-b29a-3de0bd6ca3f6"))),
               eq(bulkOperation),
