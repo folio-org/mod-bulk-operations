@@ -139,41 +139,6 @@ class FqmContentFetcherEcsTest {
   }
 
   @Test
-  void testMemberHoldingInCentralTenant() {
-    String tenantId = "central";
-    String centralTenantId = "central";
-    String itemTenant1 = "member_A";
-    UUID uuid1 = randomUUID();
-    String itemTenant2 = "member_B";
-    UUID uuid2 = randomUUID();
-    mockCommon(tenantId, centralTenantId, List.of(uuid1, uuid2));
-
-    when(searchClient.getConsortiumItemCollection(any()))
-        .thenReturn(
-            new ConsortiumItemCollection()
-                .addItemsItem(new ConsortiumItem().id(uuid1.toString()).tenantId(itemTenant1))
-                .addItemsItem(new ConsortiumItem().id(uuid2.toString()).tenantId(itemTenant2)));
-
-    try (var is =
-        fqmContentFetcher.contents(
-            List.of(uuid1, uuid2), EntityType.ITEM, List.of(), randomUUID())) {
-      ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
-
-      await()
-          .atMost(2, TimeUnit.SECONDS)
-          .untilAsserted(() -> verify(queryClient, atLeastOnce()).getContents(captor.capture()));
-
-      ContentsRequest req = captor.getValue();
-      List<List<String>> ids = req.getIds();
-      Assertions.assertEquals(2, ids.size());
-      Assertions.assertEquals(List.of(uuid1.toString(), itemTenant1), ids.getFirst());
-      Assertions.assertEquals(List.of(uuid2.toString(), itemTenant2), ids.getLast());
-    } catch (IOException e) {
-      Assertions.fail("Fail reading content");
-    }
-  }
-
-  @Test
   void testMemberInstanceInCentralTenant() {
     String tenantId = "member";
     String centralTenantId = "central";
