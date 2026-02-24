@@ -108,6 +108,8 @@ public class Constants {
           + "holdings record - %s=%s on the tenant %s";
   public static final String DUPLICATES_ACROSS_TENANTS = "Duplicates across tenants";
   public static final String NO_MATCH_FOUND_MESSAGE = "No match found";
+  public static final String INCORRECT_NUMBER_OF_TOKENS =
+      "Incorrect number of tokens found " + "in record";
   public static final String NO_USER_VIEW_PERMISSIONS =
       "User %s does not have required permission to view "
           + "the user record - %s=%s on the tenant %s";
