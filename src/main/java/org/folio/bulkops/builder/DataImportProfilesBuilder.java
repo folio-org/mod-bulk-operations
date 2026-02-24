@@ -1,6 +1,5 @@
 package org.folio.bulkops.builder;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.bean.ActionProfile;
@@ -9,6 +8,7 @@ import org.folio.bulkops.domain.bean.JobProfilePost;
 import org.folio.bulkops.domain.bean.MappingProfile;
 import org.folio.bulkops.domain.bean.MatchProfile;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 @Log4j2

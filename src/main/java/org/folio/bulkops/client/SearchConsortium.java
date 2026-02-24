@@ -6,27 +6,24 @@ import java.util.UUID;
 import org.folio.bulkops.domain.bean.ConsortiumHoldingCollection;
 import org.folio.bulkops.domain.bean.ConsortiumItemCollection;
 import org.folio.bulkops.domain.dto.BatchIdsDto;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PostExchange;
 
-@FeignClient(name = "search/consortium")
+@HttpExchange(url = "search/consortium")
 public interface SearchConsortium {
 
-  @GetMapping(
-      value = "/holdings",
-      produces = APPLICATION_JSON_VALUE,
-      consumes = APPLICATION_JSON_VALUE)
+  @GetExchange(value = "/holdings", accept = APPLICATION_JSON_VALUE)
   ConsortiumHoldingCollection getHoldingsById(@RequestParam UUID instanceId);
 
-  @PostMapping(
+  @PostExchange(
       value = "/batch/holdings",
       headers = {"Accept=application/json"})
   ConsortiumHoldingCollection getConsortiumHoldingCollection(@RequestBody BatchIdsDto batchIdsDto);
 
-  @PostMapping(
+  @PostExchange(
       value = "/batch/items",
       headers = {"Accept=application/json"})
   ConsortiumItemCollection getConsortiumItemCollection(@RequestBody BatchIdsDto batchIdsDto);

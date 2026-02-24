@@ -3,7 +3,6 @@ package org.folio.bulkops.service;
 import static java.lang.String.format;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 
-import feign.FeignException;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
@@ -15,7 +14,9 @@ import org.folio.bulkops.processor.folio.FolioUpdateProcessorFactory;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.util.EntityPathResolver;
 import org.folio.bulkops.util.Utils;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Service
 @RequiredArgsConstructor
@@ -38,8 +39,9 @@ public class RecordUpdateService {
     if (!isEqual) {
       try {
         updater.updateRecord(modified, ruleService.getRules(operation.getId()));
-      } catch (FeignException e) {
-        if (e.status() == 409 && e.getMessage().contains("optimistic locking")) {
+      } catch (HttpClientErrorException e) {
+        if (e.getStatusCode() == HttpStatusCode.valueOf(409)
+            && e.getMessage().contains("optimistic locking")) {
           var message = Utils.getMessageFromFeignException(e);
           var link = entityPathResolver.resolve(operation.getEntityType(), original);
           throw new OptimisticLockingException(format("%s %s", message, link), message, link);

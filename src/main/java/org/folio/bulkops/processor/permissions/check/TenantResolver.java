@@ -9,7 +9,6 @@ import static org.folio.bulkops.util.Constants.NO_HOLDING_VIEW_PERMISSIONS;
 import static org.folio.bulkops.util.Constants.NO_ITEM_AFFILIATION;
 import static org.folio.bulkops.util.Constants.NO_ITEM_VIEW_PERMISSIONS;
 
-import feign.FeignException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -25,8 +24,9 @@ import org.folio.bulkops.exception.UploadFromQueryException;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.ErrorService;
 import org.folio.spring.FolioExecutionContext;
-import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.job.JobExecution;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Component
 @RequiredArgsConstructor
@@ -152,7 +152,7 @@ public class TenantResolver {
       throws UploadFromQueryException {
     try {
       return readPermissionsValidator.isBulkEditReadPermissionExists(tenantId, entityType);
-    } catch (FeignException e) {
+    } catch (HttpClientErrorException e) {
       throw new UploadFromQueryException(e.getMessage(), itemIdentifier);
     }
   }

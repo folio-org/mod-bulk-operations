@@ -10,8 +10,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.File;
 import java.util.Collections;
 import java.util.HashSet;
@@ -40,8 +38,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.infrastructure.item.ExecutionContext;
 import org.springframework.test.util.ReflectionTestUtils;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 class BulkEditInstanceProcessorTest {
 
@@ -114,8 +115,7 @@ class BulkEditInstanceProcessorTest {
         objectMapper.readTree(new File("src/test/resources/files/srs_response_for_validator.json"));
     when(srsClient.getMarc(instanceId, "INSTANCE", true)).thenReturn(srsJson);
 
-    when(jobExecution.getExecutionContext())
-        .thenReturn(new org.springframework.batch.item.ExecutionContext());
+    when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
 
     List<ExtendedInstance> result = processor.process(identifier);
 
@@ -138,8 +138,7 @@ class BulkEditInstanceProcessorTest {
     srsJson.set("sourceRecords", objectMapper.createArrayNode());
     when(srsClient.getMarc(instanceId, "INSTANCE", true)).thenReturn(srsJson);
 
-    when(jobExecution.getExecutionContext())
-        .thenReturn(new org.springframework.batch.item.ExecutionContext());
+    when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
     ItemIdentifier identifier = new ItemIdentifier().withItemId("333");
     assertThatThrownBy(() -> processor.process(identifier))
         .isInstanceOf(BulkEditException.class)
@@ -166,8 +165,7 @@ class BulkEditInstanceProcessorTest {
             .add(objectMapper.createObjectNode().put("recordId", "rec2")));
     when(srsClient.getMarc(instanceId, "INSTANCE", true)).thenReturn(srsJson);
 
-    when(jobExecution.getExecutionContext())
-        .thenReturn(new org.springframework.batch.item.ExecutionContext());
+    when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
     ItemIdentifier identifier = new ItemIdentifier().withItemId("444");
     assertThatThrownBy(() -> processor.process(identifier))
         .isInstanceOf(BulkEditException.class)
@@ -334,8 +332,7 @@ class BulkEditInstanceProcessorTest {
     var srsJson =
         objectMapper.readTree(new File("src/test/resources/files/srs_response_for_validator.json"));
     when(srsClient.getMarc(instanceId, "INSTANCE", true)).thenReturn(srsJson);
-    when(jobExecution.getExecutionContext())
-        .thenReturn(new org.springframework.batch.item.ExecutionContext());
+    when(jobExecution.getExecutionContext()).thenReturn(new ExecutionContext());
 
     List<ExtendedInstance> result = processor.process(identifier);
 

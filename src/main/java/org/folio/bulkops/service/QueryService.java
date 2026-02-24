@@ -17,7 +17,6 @@ import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import java.io.ByteArrayInputStream;
@@ -54,6 +53,8 @@ import org.folio.bulkops.util.CsvHelper;
 import org.folio.bulkops.util.FqmContentFetcher;
 import org.folio.querytool.domain.dto.QueryDetails;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.MappingIterator;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 @Log4j2
@@ -262,16 +263,14 @@ public class QueryService {
 
         int numMatched = 0;
         int numProcessed = 0;
-        var factory = objectMapper.getFactory();
-        var parser = factory.createParser(is);
-        var iterator = objectMapper.readValues(parser, extendedEntityClass);
+        var iterator = isNull(is) ? MappingIterator.emptyIterator()
+          : objectMapper.readValues(objectMapper.createParser(is), extendedEntityClass);
         Set<String> usedTenants = new HashSet<>();
 
         while (iterator.hasNext()) {
 
-          var extendedRecord = iterator.next();
+          var extendedRecord = (BulkOperationsEntity) iterator.next();
           ++numProcessed;
-
           if (extendedRecord.getRecordBulkOperationEntity() instanceof Item item) {
             localReferenceDataService.enrichWithTenant(item, extendedRecord.getTenant());
           }

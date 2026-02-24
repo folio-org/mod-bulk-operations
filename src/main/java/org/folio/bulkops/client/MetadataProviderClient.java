@@ -1,31 +1,26 @@
 package org.folio.bulkops.client;
 
 import java.util.UUID;
-import org.folio.bulkops.configs.FeignClientConfiguration;
 import org.folio.bulkops.domain.bean.JobLogEntryCollection;
 import org.folio.bulkops.domain.dto.DataImportJobExecutionCollection;
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
 
-@FeignClient(name = "metadata-provider", configuration = FeignClientConfiguration.class)
+@HttpExchange(url = "metadata-provider", accept = MediaType.APPLICATION_JSON_VALUE)
 public interface MetadataProviderClient {
 
-  @GetMapping(value = "/jobExecutions", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetExchange(value = "/jobExecutions")
   DataImportJobExecutionCollection getJobExecutionsByJobProfileId(
       @RequestParam("profileIdAny") UUID profileId, @RequestParam long limit);
 
-  @GetMapping(
-      value = "/jobLogEntries/{jobExecutionId}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetExchange(value = "/jobLogEntries/{jobExecutionId}")
   JobLogEntryCollection getJobLogEntries(
       @PathVariable String jobExecutionId, @RequestParam long limit);
 
-  @GetMapping(
-      value = "/jobLogEntries/{jobExecutionId}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetExchange(value = "/jobLogEntries/{jobExecutionId}")
   JobLogEntryCollection getJobLogEntries(
       @PathVariable String jobExecutionId, @RequestParam long offset, @RequestParam long limit);
 }

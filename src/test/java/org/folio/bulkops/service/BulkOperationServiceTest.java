@@ -24,6 +24,7 @@ import static org.folio.bulkops.service.BulkOperationService.TMP_MATCHED_JSON_PA
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
+import static org.folio.bulkops.util.Constants.INCORRECT_NUMBER_OF_TOKENS;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
 import static org.folio.bulkops.util.Constants.UTF_8_BOM;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
@@ -60,7 +61,6 @@ import static org.testcontainers.shaded.org.hamcrest.Matchers.hasSize;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.is;
 import static org.testcontainers.shaded.org.hamcrest.Matchers.notNullValue;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -150,13 +150,14 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.marc4j.marc.Record;
 import org.mockito.ArgumentCaptor;
-import org.springframework.batch.core.Job;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.integration.launch.JobLaunchRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
+import tools.jackson.databind.node.ObjectNode;
 
 class BulkOperationServiceTest extends BaseTest {
   @Autowired private BulkOperationService bulkOperationService;
@@ -461,7 +462,7 @@ class BulkOperationServiceTest extends BaseTest {
                       .write(pathCaptor.capture(), streamCaptor.capture()));
 
       assertThat(
-          new String(streamCaptor.getAllValues().get(0).readAllBytes()),
+          new String(streamCaptor.getAllValues().getFirst().readAllBytes()),
           containsString(newPatronGroupId));
       assertEquals(expectedPathToModifiedCsvFile, pathCaptor.getAllValues().get(2));
 
@@ -1279,8 +1280,8 @@ class BulkOperationServiceTest extends BaseTest {
                   verify(remoteFolioS3Client, times(1))
                       .write(pathCaptor.capture(), streamCaptor.capture()));
       assertEquals(
-          new String(streamCaptor.getAllValues().getFirst().readAllBytes()),
-          Files.readString(Path.of(pathToModifiedUserJson)).trim());
+          Files.readString(Path.of(pathToModifiedUserJson)).trim(),
+          new String(streamCaptor.getAllValues().getFirst().readAllBytes()));
       assertEquals(expectedPathToResultFile, pathCaptor.getAllValues().getFirst());
 
       var executionContentCaptor = ArgumentCaptor.forClass(BulkOperationExecutionContent.class);
@@ -2216,6 +2217,47 @@ class BulkOperationServiceTest extends BaseTest {
           bulkOperationId, UUID.randomUUID(), bulkOperationStart);
 
       verify(queryService, times(1))
+          .retrieveRecordsIdentifiersFlowAsync(
+              eq(List.of(fromString("309df74e-5bdb-4707-b29a-3de0bd6ca3f6"))),
+              eq(bulkOperation),
+              anyList());
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldLaunchQueryJobOnUploadStepWhenCsvContentIsInvalid() {
+    var bulkOperationId = UUID.randomUUID();
+    var filename = "file.csv";
+    var bulkOperationStart = new BulkOperationStart().step(UPLOAD);
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(bulkOperationId)
+            .linkToTriggeringCsvFile(filename)
+            .entityType(INSTANCE)
+            .approach(ApproachType.IN_APP)
+            .identifierType(IdentifierType.ID)
+            .build();
+
+    ReflectionTestUtils.setField(bulkOperationService, "fqmQueryApproach", true);
+
+    when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
+    when(remoteFileSystemClient.getNumOfLines(filename)).thenReturn(5);
+    // unexpected "," in line
+    when(remoteFileSystemClient.get(filename))
+        .thenReturn(
+            new ByteArrayInputStream(
+                ("\"xxXXXyy,zzZZZ\"\n" + "\"309df74e-5bdb-4707-b29a-3de0bd6ca3f6\"").getBytes()));
+
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      var result =
+          bulkOperationService.startBulkOperation(
+              bulkOperationId, UUID.randomUUID(), bulkOperationStart);
+
+      assertThat(result.getStatus(), is(FAILED));
+      assertThat(result.getErrorMessage(), is(INCORRECT_NUMBER_OF_TOKENS));
+
+      verify(queryService, times(0))
           .retrieveRecordsIdentifiersFlowAsync(
               eq(List.of(fromString("309df74e-5bdb-4707-b29a-3de0bd6ca3f6"))),
               eq(bulkOperation),

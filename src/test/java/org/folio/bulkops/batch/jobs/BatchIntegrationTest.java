@@ -43,11 +43,11 @@ import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.batch.core.ExitStatus;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.repository.JobRepository;
-import org.springframework.batch.test.JobLauncherTestUtils;
+import org.springframework.batch.test.JobOperatorTestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -60,7 +60,7 @@ class BatchIntegrationTest extends BaseTest {
   @MockitoBean private ConsortiaService consortiaService;
   @MockitoBean private SearchClient searchClient;
 
-  @Autowired private JobLauncher jobLauncher;
+  @Autowired private JobOperator jobOperator;
   @Autowired private JobRepository jobRepository;
   @Autowired private Job bulkEditProcessInstanceIdentifiersJob;
   @Autowired private Job bulkEditProcessUserIdentifiersJob;
@@ -114,10 +114,9 @@ class BatchIntegrationTest extends BaseTest {
                 .build());
 
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
-      JobLauncherTestUtils testLauncher = createTestLauncher(bulkEditProcessInstanceIdentifiersJob);
+      JobOperatorTestUtils testLauncher = createTestLauncher(bulkEditProcessInstanceIdentifiersJob);
       var jobParameters = JobCommandHelper.prepareJobParameters(bulkOperation, 1);
-
-      JobExecution jobExecution = testLauncher.launchJob(jobParameters);
+      JobExecution jobExecution = testLauncher.startJob(jobParameters);
 
       verify(remoteFileSystemClient, times(2)).put(any(InputStream.class), any(String.class));
 
@@ -158,10 +157,10 @@ class BatchIntegrationTest extends BaseTest {
                 .build());
 
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
-      JobLauncherTestUtils testLauncher = createTestLauncher(bulkEditProcessUserIdentifiersJob);
+      JobOperatorTestUtils testLauncher = createTestLauncher(bulkEditProcessUserIdentifiersJob);
       var jobParameters = JobCommandHelper.prepareJobParameters(bulkOperation, 1);
 
-      JobExecution jobExecution = testLauncher.launchJob(jobParameters);
+      JobExecution jobExecution = testLauncher.startJob(jobParameters);
 
       verify(remoteFileSystemClient, times(2)).put(any(InputStream.class), any(String.class));
 
@@ -169,11 +168,9 @@ class BatchIntegrationTest extends BaseTest {
     }
   }
 
-  private JobLauncherTestUtils createTestLauncher(Job job) {
-    JobLauncherTestUtils testLauncher = new JobLauncherTestUtils();
+  private JobOperatorTestUtils createTestLauncher(Job job) {
+    JobOperatorTestUtils testLauncher = new JobOperatorTestUtils(jobOperator, jobRepository);
     testLauncher.setJob(job);
-    testLauncher.setJobLauncher(jobLauncher);
-    testLauncher.setJobRepository(jobRepository);
     return testLauncher;
   }
 }

@@ -30,8 +30,8 @@ import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.exception.FileOperationException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.batch.core.BatchStatus;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.partition.support.StepExecutionAggregator;
+import org.springframework.batch.core.partition.StepExecutionAggregator;
+import org.springframework.batch.core.step.StepExecution;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 

@@ -1,19 +1,18 @@
 package org.folio.bulkops.client;
 
-import org.folio.bulkops.configs.FeignClientConfiguration;
 import org.folio.bulkops.domain.bean.DamagedStatus;
 import org.folio.bulkops.domain.bean.DamagedStatusCollection;
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
 
-@FeignClient(name = "item-damaged-statuses", configuration = FeignClientConfiguration.class)
+@HttpExchange(url = "item-damaged-statuses", accept = MediaType.APPLICATION_JSON_VALUE)
 public interface DamagedStatusClient {
-  @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetExchange(value = "/{id}")
   DamagedStatus getById(@PathVariable String id);
 
-  @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetExchange
   DamagedStatusCollection getByQuery(@RequestParam String query);
 }
