@@ -16,16 +16,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import feign.FeignException;
-import feign.Request;
-import feign.Response;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.domain.bean.ExtendedInstance;
@@ -48,16 +43,20 @@ import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.util.EntityPathResolver;
 import org.folio.bulkops.util.Utils;
-import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.integration.XOkapiHeaders;
+import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.web.client.HttpClientErrorException;
+import tools.jackson.databind.node.ObjectNode;
 
 class RecordUpdateServiceTest extends BaseTest {
   @Autowired private RecordUpdateService recordUpdateService;
@@ -69,7 +68,6 @@ class RecordUpdateServiceTest extends BaseTest {
   @MockitoBean private RuleService ruleService;
   @MockitoSpyBean private ItemUpdateProcessor itemUpdateProcessor;
   @MockitoSpyBean private ErrorService errorService;
-  @MockitoSpyBean private FolioExecutionContext folioExecutionContext;
 
   @Test
   void testUpdateNonEqualEntity() {
@@ -186,67 +184,60 @@ class RecordUpdateServiceTest extends BaseTest {
             + "has been changed (optimistic locking): S"
       })
   void testUpdateModifiedEntityWithOptimisticLockingError(String responseErrorMessage) {
-    var tenantId = "diku";
-    HashMap<String, Collection<String>> headers = new HashMap<>();
-    headers.put(XOkapiHeaders.TENANT, List.of(tenantId));
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      var tenantId = "diku";
+      HashMap<String, Collection<String>> headers = new HashMap<>();
+      headers.put(XOkapiHeaders.TENANT, List.of(tenantId));
 
-    when(consortiaService.isTenantCentral(any())).thenReturn(false);
-    doNothing()
-        .when(permissionsValidator)
-        .checkIfBulkEditWritePermissionExists(anyString(), any(), anyString());
-    var feignException =
-        FeignException.errorStatus(
-            "",
-            Response.builder()
-                .status(409)
-                .reason("null".equals(responseErrorMessage) ? null : responseErrorMessage)
-                .request(
-                    Request.create(
-                        Request.HttpMethod.PUT,
-                        "",
-                        Map.of(),
-                        new byte[] {},
-                        Charset.defaultCharset(),
-                        null))
-                .build());
-    doThrow(feignException).when(itemClient).updateItem(any(Item.class), any(String.class));
-    when(holdingsStorageClient.getHoldingById("cb475fa9-aa07-4bbf-8382-b0b1426f9a20"))
-        .thenReturn(
-            HoldingsRecord.builder().instanceId("f3e3bd0f-1d95-4f25-9df1-7eb39a2957e3").build());
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
-    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+      when(consortiaService.isTenantCentral(any())).thenReturn(false);
+      doNothing()
+          .when(permissionsValidator)
+          .checkIfBulkEditWritePermissionExists(anyString(), any(), anyString());
+      var feignException =
+          HttpClientErrorException.Conflict.create(
+              "null".equals(responseErrorMessage) ? null : responseErrorMessage,
+              HttpStatusCode.valueOf(409),
+              "",
+              HttpHeaders.EMPTY,
+              new byte[] {},
+              Charset.defaultCharset());
+      doThrow(feignException).when(itemClient).updateItem(any(Item.class), any(String.class));
+      when(holdingsStorageClient.getHoldingById("cb475fa9-aa07-4bbf-8382-b0b1426f9a20"))
+          .thenReturn(
+              HoldingsRecord.builder().instanceId("f3e3bd0f-1d95-4f25-9df1-7eb39a2957e3").build());
 
-    var original =
-        Item.builder()
-            .id("1f5e22ed-92ed-4c65-a603-2a5cb4c6052e")
-            .barcode("barcode")
-            .holdingsRecordId("cb475fa9-aa07-4bbf-8382-b0b1426f9a20")
-            .version(2)
-            .build();
-    var extendedOriginalItem = ExtendedItem.builder().entity(original).tenantId(tenantId).build();
-    var modified =
-        Item.builder()
-            .id("1f5e22ed-92ed-4c65-a603-2a5cb4c6052e")
-            .barcode("barcode1")
-            .holdingsRecordId("cb475fa9-aa07-4bbf-8382-b0b1426f9a20")
-            .version(1)
-            .build();
-    var extendedModifiedItem = ExtendedItem.builder().entity(modified).build();
-    var operation =
-        BulkOperation.builder()
-            .id(UUID.randomUUID())
-            .identifierType(IdentifierType.ID)
-            .entityType(EntityType.ITEM)
-            .build();
+      var original =
+          Item.builder()
+              .id("1f5e22ed-92ed-4c65-a603-2a5cb4c6052e")
+              .barcode("barcode")
+              .holdingsRecordId("cb475fa9-aa07-4bbf-8382-b0b1426f9a20")
+              .version(2)
+              .build();
+      var extendedOriginalItem = ExtendedItem.builder().entity(original).tenantId(tenantId).build();
+      var modified =
+          Item.builder()
+              .id("1f5e22ed-92ed-4c65-a603-2a5cb4c6052e")
+              .barcode("barcode1")
+              .holdingsRecordId("cb475fa9-aa07-4bbf-8382-b0b1426f9a20")
+              .version(1)
+              .build();
+      var extendedModifiedItem = ExtendedItem.builder().entity(modified).build();
+      var operation =
+          BulkOperation.builder()
+              .id(UUID.randomUUID())
+              .identifierType(IdentifierType.ID)
+              .entityType(EntityType.ITEM)
+              .build();
 
-    try {
-      recordUpdateService.updateEntity(extendedOriginalItem, extendedModifiedItem, operation);
-    } catch (OptimisticLockingException e) {
-      var expectedUiErrorMessage = Utils.getMessageFromFeignException(feignException);
-      var link = entityPathResolver.resolve(operation.getEntityType(), extendedOriginalItem);
-      var expectedCsvErrorMessage = format("%s %s", expectedUiErrorMessage, link);
-      assertThat(e.getCsvErrorMessage(), Matchers.equalTo(expectedCsvErrorMessage));
-      assertThat(e.getUiErrorMessage(), Matchers.equalTo(expectedUiErrorMessage));
+      try {
+        recordUpdateService.updateEntity(extendedOriginalItem, extendedModifiedItem, operation);
+      } catch (OptimisticLockingException e) {
+        var expectedUiErrorMessage = Utils.getMessageFromFeignException(feignException);
+        var link = entityPathResolver.resolve(operation.getEntityType(), extendedOriginalItem);
+        var expectedCsvErrorMessage = format("%s %s", expectedUiErrorMessage, link);
+        assertThat(e.getCsvErrorMessage(), Matchers.equalTo(expectedCsvErrorMessage));
+        assertThat(e.getUiErrorMessage(), Matchers.equalTo(expectedUiErrorMessage));
+      }
     }
   }
 
@@ -259,20 +250,13 @@ class RecordUpdateServiceTest extends BaseTest {
             .entityType(INSTANCE)
             .build();
     var feignException =
-        FeignException.errorStatus(
+        HttpClientErrorException.Conflict.create(
+            "other reason",
+            HttpStatusCode.valueOf(409),
             "",
-            Response.builder()
-                .status(409)
-                .reason("other reason")
-                .request(
-                    Request.create(
-                        Request.HttpMethod.GET,
-                        "",
-                        Map.of(),
-                        new byte[] {},
-                        Charset.defaultCharset(),
-                        null))
-                .build());
+            HttpHeaders.EMPTY,
+            new byte[] {},
+            Charset.defaultCharset());
     doThrow(feignException)
         .when(instanceClient)
         .patchInstance(any(ObjectNode.class), any(String.class));
@@ -292,7 +276,7 @@ class RecordUpdateServiceTest extends BaseTest {
     var extendedModified = ExtendedInstance.builder().entity(modified).build();
 
     assertThrows(
-        FeignException.class,
+        HttpClientErrorException.class,
         () -> recordUpdateService.updateEntity(extendedOriginal, extendedModified, operation));
   }
 }

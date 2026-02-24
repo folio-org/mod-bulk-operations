@@ -1,19 +1,18 @@
 package org.folio.bulkops.client;
 
-import org.folio.bulkops.configs.FeignClientConfiguration;
 import org.folio.bulkops.domain.bean.NatureOfContentTerm;
 import org.folio.bulkops.domain.bean.NatureOfContentTerms;
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
 
-@FeignClient(name = "nature-of-content-terms", configuration = FeignClientConfiguration.class)
+@HttpExchange(url = "nature-of-content-terms", accept = MediaType.APPLICATION_JSON_VALUE)
 public interface NatureOfContentTermsClient {
-  @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetExchange(value = "/{id}")
   NatureOfContentTerm getById(@PathVariable String id);
 
-  @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetExchange
   NatureOfContentTerms getByQuery(@RequestParam String query, @RequestParam long limit);
 }

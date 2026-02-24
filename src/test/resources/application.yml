@@ -1,10 +1,6 @@
 server:
   port: 8081
 spring:
-  cloud:
-    openfeign:
-      okhttp:
-        enabled: true
   application:
     name: mod-spring-template
   datasource:
@@ -30,6 +26,8 @@ folio:
     permissionsFilePath: permissions/system-user-permissions.csv
   okapi-url: http://okapi:9130
   environment: folio
+  exchange:
+    enabled: true
   tenant:
     validation:
       enabled: false

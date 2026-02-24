@@ -10,7 +10,6 @@ import static org.folio.bulkops.util.Constants.QUERY_PATTERN_USERNAME;
 import static org.folio.bulkops.util.Utils.encode;
 import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +41,7 @@ import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 @Log4j2

@@ -130,7 +130,7 @@ public class UserReferenceService {
     var tenantId = folioExecutionContext.getTenantId();
     var moduleNamesJson = okapiClient.getModuleIds(URI.create(OKAPI_URL), tenantId, moduleName);
     if (!moduleNamesJson.isEmpty()) {
-      return moduleNamesJson.get(0).get("id").asText();
+      return moduleNamesJson.get(0).get("id").asString();
     }
     throw new ReferenceDataNotFoundException(
         format("Module id not found for name: %s", moduleName));

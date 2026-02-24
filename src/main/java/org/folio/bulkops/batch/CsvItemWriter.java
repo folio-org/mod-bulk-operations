@@ -15,9 +15,9 @@ import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
-import org.springframework.batch.item.Chunk;
-import org.springframework.batch.item.ItemStream;
-import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.infrastructure.item.Chunk;
+import org.springframework.batch.infrastructure.item.ItemStream;
+import org.springframework.batch.infrastructure.item.ItemWriter;
 
 @Log4j2
 public class CsvItemWriter<T extends BulkOperationsEntity> implements ItemWriter<T>, ItemStream {

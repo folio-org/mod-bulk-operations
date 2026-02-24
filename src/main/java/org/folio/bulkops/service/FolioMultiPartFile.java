@@ -4,8 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,13 +30,11 @@ public class FolioMultiPartFile implements MultipartFile {
   }
 
   @Override
-  @NonNull
   public String getOriginalFilename() {
     return this.originalFilename;
   }
 
   @Override
-  @Nullable
   public String getContentType() {
     return this.contentType;
   }
@@ -63,7 +60,7 @@ public class FolioMultiPartFile implements MultipartFile {
   }
 
   @Override
-  public void transferTo(@NonNull File dest) throws IOException, IllegalStateException {
+  public void transferTo(File dest) throws IOException, IllegalStateException {
     FileCopyUtils.copy(this.content, dest);
   }
 }

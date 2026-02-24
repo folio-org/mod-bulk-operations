@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.spring.integration.XOkapiHeaders.TENANT;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
 import org.folio.bulkops.client.HoldingsStorageClient;
@@ -16,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 class HoldingsReferenceCacheServiceTest {
 
@@ -37,7 +37,7 @@ class HoldingsReferenceCacheServiceTest {
     when(holdingsStorageClient.getHoldingsJsonById("h1")).thenReturn(holdingsJson);
 
     JsonNode result = holdingsReferenceCacheService.getHoldingsJsonById("h1", "tenant");
-    assertThat(result.get("id").asText()).isEqualTo("h1");
+    assertThat(result.get("id").asString()).isEqualTo("h1");
   }
 
   @Test
@@ -54,6 +54,6 @@ class HoldingsReferenceCacheServiceTest {
     when(locationClient.getLocationJsonById("loc1")).thenReturn(locationJson);
 
     JsonNode result = holdingsReferenceCacheService.getHoldingsLocationById("loc1", "tenant");
-    assertThat(result.get("id").asText()).isEqualTo("loc1");
+    assertThat(result.get("id").asString()).isEqualTo("loc1");
   }
 }

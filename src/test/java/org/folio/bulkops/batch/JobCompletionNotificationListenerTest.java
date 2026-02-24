@@ -16,8 +16,6 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
 import java.util.Optional;
 import java.util.UUID;
@@ -35,9 +33,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.batch.core.BatchStatus;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.job.JobInstance;
+import org.springframework.batch.core.job.parameters.JobParameters;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+import tools.jackson.databind.MappingIterator;
+import tools.jackson.databind.ObjectMapper;
 
 class JobCompletionNotificationListenerTest {
 
@@ -65,7 +66,7 @@ class JobCompletionNotificationListenerTest {
             .addString(STORAGE_MARC_PATH, "/storage/marc")
             .addString(IDENTIFIERS_FILE_NAME, "/tmp/identifiers")
             .toJobParameters();
-    jobExecution = new JobExecution(1L, jobParameters);
+    jobExecution = new JobExecution(1L, new JobInstance(1L, "testJob"), jobParameters);
     when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
     when(errorService.uploadErrorsToStorage(any(), any(), any())).thenReturn("errors.csv");
     when(errorService.getCommittedNumOfErrors(any())).thenReturn(2);
@@ -161,7 +162,7 @@ class JobCompletionNotificationListenerTest {
         new JobParametersBuilder()
             .addString(BULK_OPERATION_ID, operationId.toString())
             .toJobParameters();
-    JobExecution job = new JobExecution(1L, jobParameters);
+    JobExecution job = new JobExecution(1L, new JobInstance(1L, "testJob"), jobParameters);
     job.setStatus(org.springframework.batch.core.BatchStatus.COMPLETED);
 
     listener.afterJob(job);
@@ -187,7 +188,7 @@ class JobCompletionNotificationListenerTest {
         new JobParametersBuilder()
             .addString(BULK_OPERATION_ID, operationId.toString())
             .toJobParameters();
-    JobExecution execution = new JobExecution(2L, jobParameters);
+    JobExecution execution = new JobExecution(2L, new JobInstance(1L, "testJob"), jobParameters);
     execution.setStatus(org.springframework.batch.core.BatchStatus.COMPLETED);
 
     assertThatThrownBy(() -> listener.afterJob(execution))

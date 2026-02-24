@@ -21,7 +21,6 @@ import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Utils.encode;
 import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -49,6 +48,7 @@ import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.JsonNode;
 
 @Service
 @RequiredArgsConstructor
@@ -166,7 +166,7 @@ public class HoldingsReferenceService {
       if (nonNull(publications) && publications.isArray() && !publications.isEmpty()) {
         publicationString = formatPublication(publications.get(0));
       }
-      return title.asText() + publicationString;
+      return title.asString() + publicationString;
     } catch (NotFoundException e) {
       var msg = "Instance not found by id=" + instanceId;
       log.error(msg);
@@ -188,12 +188,12 @@ public class HoldingsReferenceService {
       if (isNull(dateOfPublication) || dateOfPublication.isNull()) {
         return isNull(publisher) || publisher.isNull()
             ? EMPTY
-            : String.format(". %s", publisher.asText());
+            : String.format(". %s", publisher.asString());
       }
       return String.format(
           ". %s, %s",
-          isNull(publisher) || publisher.isNull() ? EMPTY : publisher.asText(),
-          dateOfPublication.asText());
+          isNull(publisher) || publisher.isNull() ? EMPTY : publisher.asString(),
+          dateOfPublication.asString());
     }
     return EMPTY;
   }
@@ -214,14 +214,14 @@ public class HoldingsReferenceService {
     var locationId =
         isNull(holdingsJson.get(PERMANENT_LOCATION_ID))
             ? null
-            : holdingsJson.get(PERMANENT_LOCATION_ID).asText();
+            : holdingsJson.get(PERMANENT_LOCATION_ID).asString();
 
     var locationJson = holdingsReferenceCacheService.getHoldingsLocationById(locationId, tenantId);
     var activePrefix =
         nonNull(locationJson.get(IS_ACTIVE)) && locationJson.get(IS_ACTIVE).asBoolean()
             ? EMPTY
             : INACTIVE;
-    var name = isNull(locationJson.get(NAME)) ? EMPTY : locationJson.get(NAME).asText();
+    var name = isNull(locationJson.get(NAME)) ? EMPTY : locationJson.get(NAME).asString();
     var locationName = activePrefix + name;
 
     var callNumber =
@@ -230,7 +230,7 @@ public class HoldingsReferenceService {
                 holdingsJson.get(CALL_NUMBER),
                 holdingsJson.get(CALL_NUMBER_SUFFIX))
             .filter(Objects::nonNull)
-            .map(JsonNode::asText)
+            .map(JsonNode::asString)
             .collect(Collectors.joining(SPACE));
 
     return String.join(HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER, locationName, callNumber);
