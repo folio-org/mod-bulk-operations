@@ -209,7 +209,7 @@ class RecordUpdateServiceTest extends BaseTest {
                         Charset.defaultCharset(),
                         null))
                 .build());
-    doThrow(feignException).when(itemClient).updateItem(any(Item.class), any(String.class));
+    doThrow(feignException).when(itemClient).patchItem(any(ObjectNode.class), any(String.class));
     when(holdingsStorageClient.getHoldingById("cb475fa9-aa07-4bbf-8382-b0b1426f9a20"))
         .thenReturn(
             HoldingsRecord.builder().instanceId("f3e3bd0f-1d95-4f25-9df1-7eb39a2957e3").build());
