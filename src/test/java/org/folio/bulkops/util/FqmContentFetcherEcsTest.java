@@ -24,7 +24,11 @@ import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.querytool.domain.dto.ContentsRequest;
 import org.folio.spring.FolioExecutionContext;
+import org.folio.spring.client.AuthnClient;
+import org.folio.spring.client.PermissionsClient;
+import org.folio.spring.client.UsersClient;
 import org.folio.spring.service.SystemUserScopedExecutionService;
+import org.folio.spring.service.SystemUserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,6 +46,10 @@ class FqmContentFetcherEcsTest {
   @MockitoBean private ConsortiaService consortiaService;
   @MockitoBean private FolioExecutionContext folioExecutionContext;
   @MockitoBean private QueryClient queryClient;
+  @MockitoBean public SystemUserService systemUserService;
+  @MockitoBean public AuthnClient authnClient;
+  @MockitoBean public UsersClient usersClient;
+  @MockitoBean public PermissionsClient permissionsClient;
   @MockitoBean private SearchClient searchClient;
   @MockitoBean private SystemUserScopedExecutionService systemUserScopedExecutionService;
 

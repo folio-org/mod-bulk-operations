@@ -1,19 +1,18 @@
 package org.folio.bulkops.client;
 
-import org.folio.bulkops.configs.FeignClientConfiguration;
 import org.folio.bulkops.domain.bean.HoldingsType;
 import org.folio.bulkops.domain.bean.HoldingsTypeCollection;
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
 
-@FeignClient(name = "holdings-types", configuration = FeignClientConfiguration.class)
+@HttpExchange(url = "holdings-types", accept = MediaType.APPLICATION_JSON_VALUE)
 public interface HoldingsTypeClient {
-  @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetExchange
   HoldingsTypeCollection getByQuery(@RequestParam String query);
 
-  @GetMapping(value = "/{holdingsTypeId}")
+  @GetExchange(value = "/{holdingsTypeId}")
   HoldingsType getById(@PathVariable String holdingsTypeId);
 }

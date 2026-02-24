@@ -2,6 +2,7 @@ package org.folio.bulkops.service;
 
 import static com.opencsv.ICSVWriter.DEFAULT_SEPARATOR;
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
@@ -39,9 +40,6 @@ import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 import static org.folio.spring.scope.FolioExecutionScopeExecutionContextManager.getRunnableWithCurrentFolioContext;
 import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.MappingIterator;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVWriterBuilder;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
@@ -113,13 +111,15 @@ import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.marc4j.MarcStreamReader;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobExecutionException;
+import org.springframework.batch.core.job.Job;
+import org.springframework.batch.core.job.JobExecutionException;
 import org.springframework.batch.integration.launch.JobLaunchRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.MappingIterator;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 @Log4j2
@@ -308,8 +308,10 @@ public class BulkOperationService {
       var csvWriter = new BulkOperationsEntityCsvWriter(writerForModifiedPreviewCsvFile, clazz);
 
       var iterator =
-          objectMapper.readValues(
-              new JsonFactory().createParser(readerForMatchedJsonFile), extendedClazz);
+          isNull(readerForMatchedJsonFile)
+              ? MappingIterator.emptyIterator()
+              : objectMapper.readValues(
+                  objectMapper.createParser(readerForMatchedJsonFile), extendedClazz);
 
       var processedNumOfRecords = 0;
 
@@ -328,7 +330,9 @@ public class BulkOperationService {
               ErrorType.ERROR);
           continue;
         }
-        var modified = processUpdate(original, operation, ruleCollection, extendedClazz);
+        var modified =
+            processUpdate(
+                (BulkOperationsEntity) original, operation, ruleCollection, extendedClazz);
         List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
         if (Objects.nonNull(modified)) {
           // Prepare CSV for download and JSON for preview
@@ -536,10 +540,10 @@ public class BulkOperationService {
           var writerForResultJsonFile = remoteFileSystemClient.writer(resultJsonFileName);
           var writerForJsonPreviewFile = remoteFileSystemClient.writer(resultJsonPreviewFileName)) {
 
-        var originalFileParser = new JsonFactory().createParser(originalFileReader);
+        var originalFileParser = objectMapper.createParser(originalFileReader);
         var originalFileIterator = objectMapper.readValues(originalFileParser, extendedClass);
 
-        var modifiedFileParser = new JsonFactory().createParser(modifiedFileReader);
+        var modifiedFileParser = objectMapper.createParser(modifiedFileReader);
         var modifiedFileIterator = objectMapper.readValues(modifiedFileParser, extendedClass);
 
         var csvWriter = new BulkOperationsEntityCsvWriter(writerForResultCsvFile, entityClass);

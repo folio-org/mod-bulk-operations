@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static java.util.Collections.emptySet;
+import static java.util.Objects.isNull;
 import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -41,8 +42,6 @@ import static org.folio.bulkops.util.Utils.resolveEntityClass;
 import static org.folio.bulkops.util.Utils.resolveExtendedEntityClass;
 import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.bean.CsvCustomBindByName;
 import com.opencsv.bean.CsvCustomBindByPosition;
 import java.io.IOException;
@@ -95,6 +94,8 @@ import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.marc4j.MarcStreamReader;
 import org.marc4j.marc.Record;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.MappingIterator;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 @Log4j2
@@ -531,10 +532,13 @@ public class PreviewService {
       Set<String> forceVisible,
       BulkOperation bulkOperation) {
     try (var is = remoteFileSystemClient.get(pathToFile);
-        var jsonParser = new JsonFactory().createParser(is)) {
+        var jsonParser = isNull(is) ? null : objectMapper.createParser(is)) {
       var processor = previewProcessorFactory.getProcessorFromFactory(clazz);
       var extendedClazz = resolveExtendedEntityClass(bulkOperation.getEntityType());
-      var iterator = objectMapper.readValues(jsonParser, extendedClazz);
+      var iterator =
+          isNull(jsonParser)
+              ? MappingIterator.emptyIterator()
+              : objectMapper.readValues(jsonParser, extendedClazz);
       StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false)
           .skip(offset)
           .limit(limit)
@@ -542,15 +546,21 @@ public class PreviewService {
               entity -> {
                 if (!consortiaService.isTenantCentral(folioExecutionContext.getTenantId())
                     || clazz == User.class) {
-                  var ent = clazz == User.class ? entity : entity.getRecordBulkOperationEntity();
-                  table.addRowsItem(processor.transformToRow(ent));
+                  var ent =
+                      clazz == User.class
+                          ? entity
+                          : ((BulkOperationsEntity) entity).getRecordBulkOperationEntity();
+                  table.addRowsItem(processor.transformToRow((BulkOperationsEntity) ent));
                 } else {
                   try (var ignored =
                       new FolioExecutionContextSetter(
                           prepareContextForTenant(
-                              entity.getTenant(), folioModuleMetadata, folioExecutionContext))) {
+                              ((BulkOperationsEntity) entity).getTenant(),
+                              folioModuleMetadata,
+                              folioExecutionContext))) {
                     table.addRowsItem(
-                        processor.transformToRow(entity.getRecordBulkOperationEntity()));
+                        processor.transformToRow(
+                            ((BulkOperationsEntity) entity).getRecordBulkOperationEntity()));
                   }
                 }
               });

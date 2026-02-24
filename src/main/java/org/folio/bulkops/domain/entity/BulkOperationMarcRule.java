@@ -1,6 +1,5 @@
 package org.folio.bulkops.domain.entity;
 
-import io.hypersistence.utils.hibernate.type.json.JsonBinaryType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -20,7 +19,8 @@ import org.folio.bulkops.domain.dto.MarcAction;
 import org.folio.bulkops.domain.dto.MarcParameter;
 import org.folio.bulkops.domain.dto.MarcSubfieldAction;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Data
 @Builder
@@ -44,15 +44,15 @@ public class BulkOperationMarcRule {
   @Enumerated(EnumType.STRING)
   private UpdateOptionType updateOption;
 
-  @Type(JsonBinaryType.class)
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(columnDefinition = "jsonb")
   private List<MarcAction> actions;
 
-  @Type(JsonBinaryType.class)
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(columnDefinition = "jsonb")
   private List<MarcParameter> parameters;
 
-  @Type(JsonBinaryType.class)
+  @JdbcTypeCode(SqlTypes.JSON)
   @Column(columnDefinition = "jsonb")
   private List<MarcSubfieldAction> subfields;
 }

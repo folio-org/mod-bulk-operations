@@ -5,8 +5,8 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.item.ExecutionContext;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.infrastructure.item.ExecutionContext;
 import org.springframework.stereotype.Component;
 
 @Component

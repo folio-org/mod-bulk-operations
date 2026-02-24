@@ -2,14 +2,16 @@ package org.folio.bulkops.util;
 
 import static java.util.Objects.isNull;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 @Log4j2
 @RequiredArgsConstructor
+@Converter
 public class ErrorConverter implements AttributeConverter<Error, String> {
   private final ObjectMapper objectMapper;
 
@@ -17,7 +19,7 @@ public class ErrorConverter implements AttributeConverter<Error, String> {
   public String convertToDatabaseColumn(Error error) {
     try {
       return objectMapper.writeValueAsString(error);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       log.error("Failed to convert Error to JSON: {}", e.getMessage());
       return null;
     }

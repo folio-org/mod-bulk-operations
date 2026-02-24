@@ -36,10 +36,12 @@ import org.folio.bulkops.domain.bean.UploadUrlResponse;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationRepository;
 import org.folio.bulkops.service.ErrorService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -58,6 +60,11 @@ class MarcInstanceUpdateProcessorTest extends BaseTest {
   @Captor private ArgumentCaptor<BulkOperation> bulkOperationCaptor;
 
   @Autowired private MarcInstanceUpdateProcessor marcInstanceUpdateProcessor;
+
+  @BeforeEach
+  void initMocks() {
+    MockitoAnnotations.openMocks(this);
+  }
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})

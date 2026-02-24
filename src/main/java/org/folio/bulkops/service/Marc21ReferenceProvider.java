@@ -614,7 +614,7 @@ public class Marc21ReferenceProvider {
     instanceNoteSubfields = new HashMap<>();
     staffOnlyNotes = new HashSet<>();
 
-    var documentContext = JsonPath.parse(mappingRulesClient.getMarcBibMappingRules());
+    var documentContext = JsonPath.parse(mappingRulesClient.getMarcBibMappingRules().toString());
 
     noteTags.forEach(
         tag -> {
