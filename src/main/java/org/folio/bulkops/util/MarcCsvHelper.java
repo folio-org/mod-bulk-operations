@@ -13,7 +13,6 @@ import static org.folio.bulkops.util.Constants.INSTANCE_PUBLICATION_POSITION;
 import static org.folio.bulkops.util.Constants.INSTANCE_SUBJECT_POSITION;
 import static org.folio.bulkops.util.Constants.ITEM_DELIMITER_SPACED;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReaderBuilder;
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
@@ -37,6 +36,7 @@ import org.folio.bulkops.service.NoteTableUpdater;
 import org.folio.bulkops.service.RuleService;
 import org.marc4j.marc.Record;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 @RequiredArgsConstructor

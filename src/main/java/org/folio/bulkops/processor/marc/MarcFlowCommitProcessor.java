@@ -11,8 +11,6 @@ import static org.folio.bulkops.util.Constants.ENRICHED_PREFIX;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
 import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
@@ -48,6 +46,7 @@ import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.marc4j.MarcStreamReader;
 import org.marc4j.MarcStreamWriter;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
 
 @Service
 @RequiredArgsConstructor
@@ -93,7 +92,7 @@ public class MarcFlowCommitProcessor implements CommitProcessor {
               isNull(bulkOperation.getLinkToCommittedRecordsCsvFile())
                   ? remoteFileSystemClient.writer(committedCsvFileName)
                   : new StringWriter()) {
-        var matchedFileParser = new JsonFactory().createParser(matchedFileReader);
+        var matchedFileParser = objectMapper.createParser(matchedFileReader);
         var matchedFileIterator =
             objectMapper.readValues(matchedFileParser, ExtendedInstance.class);
         var csvWriter = new BulkOperationsEntityCsvWriter(writer, Instance.class);

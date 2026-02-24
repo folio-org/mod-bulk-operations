@@ -1,22 +1,18 @@
 package org.folio.bulkops.client;
 
-import org.folio.bulkops.configs.DataImportFeignConfig;
 import org.folio.bulkops.domain.bean.UploadFileDefinition;
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PostExchange;
 
-@FeignClient(
-    name = "data-import-upload",
-    url = "http://data-import",
-    configuration = DataImportFeignConfig.class)
+@HttpExchange(url = "http://data-import")
 public interface DataImportUploadClient {
 
-  @PostMapping(
-      value = "/uploadDefinitions/{uploadDefinitionId}/files/{fileId}",
-      consumes = MediaType.APPLICATION_OCTET_STREAM_VALUE,
+  @PostExchange(
+      value = "/data-import-upload/uploadDefinitions/{uploadDefinitionId}/files/{fileId}",
+      accept = MediaType.APPLICATION_OCTET_STREAM_VALUE,
       headers = {"Content-Type: application/octet-stream"})
   UploadFileDefinition uploadFileDefinitionsFiles(
       @PathVariable String uploadDefinitionId,

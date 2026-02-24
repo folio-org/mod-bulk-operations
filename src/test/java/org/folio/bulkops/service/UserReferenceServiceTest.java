@@ -11,7 +11,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.fasterxml.jackson.databind.node.TextNode;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +38,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.databind.node.StringNode;
 
 @ExtendWith(MockitoExtension.class)
 class UserReferenceServiceTest {
@@ -186,7 +186,7 @@ class UserReferenceServiceTest {
   @Test
   void getModuleIdNotFoundTest() {
     when(okapiClient.getModuleIds(any(URI.class), any(String.class), any(String.class)))
-        .thenReturn(new TextNode(""));
+        .thenReturn(new StringNode(""));
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     assertThrows(
         ReferenceDataNotFoundException.class, () -> userReferenceService.getModuleId("name"));

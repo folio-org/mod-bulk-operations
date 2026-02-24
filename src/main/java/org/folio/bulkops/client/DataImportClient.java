@@ -1,41 +1,41 @@
 package org.folio.bulkops.client;
 
-import org.folio.bulkops.configs.FeignClientConfiguration;
 import org.folio.bulkops.domain.bean.AssembleStorageFileRequestBody;
 import org.folio.bulkops.domain.bean.SplitStatus;
 import org.folio.bulkops.domain.bean.UploadFileDefinition;
 import org.folio.bulkops.domain.bean.UploadFileDefinitionProcessFiles;
 import org.folio.bulkops.domain.bean.UploadUrlResponse;
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.service.annotation.GetExchange;
+import org.springframework.web.service.annotation.HttpExchange;
+import org.springframework.web.service.annotation.PostExchange;
 
-@FeignClient(name = "data-import", configuration = FeignClientConfiguration.class)
+@HttpExchange(url = "data-import")
 public interface DataImportClient {
-  @GetMapping(value = "/splitStatus", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetExchange(value = "/splitStatus", accept = MediaType.APPLICATION_JSON_VALUE)
   SplitStatus getSplitStatus();
 
-  @GetMapping(value = "/uploadUrl", produces = MediaType.APPLICATION_JSON_VALUE)
+  @GetExchange(value = "/uploadUrl", accept = MediaType.APPLICATION_JSON_VALUE)
   UploadUrlResponse getUploadUrl(@RequestParam("filename") String filename);
 
-  @PostMapping(value = "/uploadDefinitions", produces = MediaType.APPLICATION_JSON_VALUE)
+  @PostExchange(value = "/uploadDefinitions", accept = MediaType.APPLICATION_JSON_VALUE)
   UploadFileDefinition postUploadDefinition(@RequestBody UploadFileDefinition uploadFileDefinition);
 
-  @GetMapping(
+  @GetExchange(
       value = "/uploadDefinitions/{uploadDefinitionId}",
-      produces = MediaType.APPLICATION_JSON_VALUE)
+      accept = MediaType.APPLICATION_JSON_VALUE)
   UploadFileDefinition getUploadDefinitionById(@PathVariable String uploadDefinitionId);
 
-  @PostMapping(value = "/uploadDefinitions/{uploadDefinitionId}/processFiles")
+  @PostExchange(value = "/uploadDefinitions/{uploadDefinitionId}/processFiles")
   void uploadFileDefinitionsProcessFiles(
       @RequestBody UploadFileDefinitionProcessFiles uploadFileDefinitionProcessFiles,
       @PathVariable String uploadDefinitionId);
 
-  @PostMapping(value = "/uploadDefinitions/{uploadDefinitionId}/files/{fileId}/assembleStorageFile")
+  @PostExchange(
+      value = "/uploadDefinitions/{uploadDefinitionId}/files/{fileId}/assembleStorageFile")
   void assembleStorageFile(
       @PathVariable String uploadDefinitionId,
       @PathVariable String fileId,

@@ -13,7 +13,7 @@ import java.net.SocketException;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.folio.bulkops.batch.BulkEditSkipListener;
+import org.folio.bulkops.batch.BulkEditUserSkipListener;
 import org.folio.bulkops.batch.CsvItemWriter;
 import org.folio.bulkops.batch.JobCompletionNotificationListener;
 import org.folio.bulkops.batch.JsonFileWriter;
@@ -23,29 +23,27 @@ import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.exception.BulkEditException;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.builder.JobBuilder;
-import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.core.partition.support.Partitioner;
+import org.springframework.batch.core.partition.Partitioner;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.Step;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.file.FlatFileItemReader;
-import org.springframework.batch.item.support.CompositeItemWriter;
+import org.springframework.batch.infrastructure.item.file.FlatFileItemReader;
+import org.springframework.batch.infrastructure.item.support.CompositeItemWriter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.task.TaskExecutor;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
 @RequiredArgsConstructor
 public class BulkEditUserIdentifiersJobConfig {
   private final BulkEditUserProcessor bulkEditUserProcessor;
-  private final BulkEditSkipListener bulkEditSkipListener;
+  private final BulkEditUserSkipListener bulkEditUserSkipListener;
   private final RemoteFileSystemClient remoteFileSystemClient;
 
   @Value("${application.batch.chunk-size}")
@@ -63,7 +61,6 @@ public class BulkEditUserIdentifiersJobConfig {
       Step userPartitionStep,
       JobRepository jobRepository) {
     return new JobBuilder(BULK_EDIT_IDENTIFIERS + HYPHEN + EntityType.USER, jobRepository)
-        .incrementer(new RunIdIncrementer())
         .listener(listener)
         .flow(userPartitionStep)
         .end()
@@ -76,7 +73,6 @@ public class BulkEditUserIdentifiersJobConfig {
       CompositeItemWriter<User> compositeUserListWriter,
       IdentifiersWriteListener<User> identifiersWriteListener,
       JobRepository jobRepository,
-      PlatformTransactionManager transactionManager,
       @Qualifier("asyncTaskExecutorBulkEdit") TaskExecutor taskExecutor,
       Partitioner bulkEditUserPartitioner,
       BulkEditFileAssembler bulkEditFileAssembler) {
@@ -88,8 +84,7 @@ public class BulkEditUserIdentifiersJobConfig {
                 csvItemIdentifierReader,
                 compositeUserListWriter,
                 identifiersWriteListener,
-                jobRepository,
-                transactionManager))
+                jobRepository))
         .taskExecutor(taskExecutor)
         .aggregator(bulkEditFileAssembler)
         .build();
@@ -112,10 +107,9 @@ public class BulkEditUserIdentifiersJobConfig {
       FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader,
       CompositeItemWriter<User> compositeItemWriter,
       IdentifiersWriteListener<User> identifiersWriteListener,
-      JobRepository jobRepository,
-      PlatformTransactionManager transactionManager) {
+      JobRepository jobRepository) {
     return new StepBuilder("bulkEditUserStep", jobRepository)
-        .<ItemIdentifier, User>chunk(chunkSize, transactionManager)
+        .<ItemIdentifier, User>chunk(chunkSize)
         .reader(csvItemIdentifierReader)
         .processor(bulkEditUserProcessor)
         .faultTolerant()
@@ -123,10 +117,7 @@ public class BulkEditUserIdentifiersJobConfig {
         .retryLimit(maxRetriesOnConnectionReset)
         .skip(BulkEditException.class)
         .skipLimit(1_000_000)
-        // Required to avoid repeating BulkEditItemProcessor#process after skip.
-        .processorNonTransactional()
-        .skip(BulkEditException.class)
-        .listener(bulkEditSkipListener)
+        .skipListener(bulkEditUserSkipListener)
         .writer(compositeItemWriter)
         .listener(identifiersWriteListener)
         .build();

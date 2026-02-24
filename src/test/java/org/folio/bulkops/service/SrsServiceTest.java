@@ -26,6 +26,7 @@ import org.folio.bulkops.domain.bean.GetParsedRecordsBatchRequestBody;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.repository.BulkOperationExecutionRepository;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -34,6 +35,7 @@ import org.marc4j.marc.Record;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -48,6 +50,11 @@ class SrsServiceTest extends BaseTest {
   @Captor private ArgumentCaptor<BulkOperation> bulkOperationCaptor;
 
   @Autowired private SrsService srsService;
+
+  @BeforeEach
+  void initMocks() {
+    MockitoAnnotations.openMocks(this);
+  }
 
   @ParameterizedTest
   @ValueSource(ints = {0, 1})

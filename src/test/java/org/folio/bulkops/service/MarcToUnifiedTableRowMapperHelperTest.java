@@ -338,7 +338,8 @@ class MarcToUnifiedTableRowMapperHelperTest extends BaseTest {
 
     when(mappingRulesClient.getMarcBibMappingRules())
         .thenReturn(
-            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            objectMapper.readTree(
+                Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json"))));
     marc21ReferenceProvider.updateMappingRules();
 
     var res = mapperHelper.fetchNotes(dataField, false);

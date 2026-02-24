@@ -6,13 +6,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collection;
@@ -67,16 +61,19 @@ import org.folio.s3.client.S3ClientProperties;
 import org.folio.spring.DefaultFolioExecutionContext;
 import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
+import org.folio.spring.client.AuthnClient;
+import org.folio.spring.client.PermissionsClient;
+import org.folio.spring.client.UsersClient;
 import org.folio.spring.integration.XOkapiHeaders;
 import org.folio.spring.service.PrepareSystemUserService;
+import org.folio.spring.service.SystemUserService;
 import org.folio.tenant.domain.dto.TenantAttributes;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpHeaders;
@@ -91,11 +88,15 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.HttpWaitStrategy;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ext.javatime.deser.LocalDateTimeDeserializer;
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}")
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+    properties = {
+      "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
+      "spring.liquibase.enabled=true"
+    })
 @ContextConfiguration(initializers = BaseTest.Initializer.class)
 @Testcontainers
 @AutoConfigureMockMvc
@@ -151,13 +152,7 @@ public abstract class BaseTest {
   public static LocalDateTimeDeserializer localDateTimeDeserializer =
       new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
 
-  public static final ObjectMapper OBJECT_MAPPER =
-      new ObjectMapper()
-          .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-          .registerModule(
-              new JavaTimeModule().addDeserializer(LocalDateTime.class, localDateTimeDeserializer))
-          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-          .configure(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+  public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   protected static final String TOKEN =
       "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJkaWt1X2FkbWluIiwidXNlcl9pZCI6IjFkM2I1OGNiLTA3YjUt"
@@ -196,6 +191,10 @@ public abstract class BaseTest {
   @MockitoBean public InstanceNoteTypesClient instanceNoteTypesClient;
   @MockitoBean public PrepareSystemUserService prepareSystemUserService;
   @MockitoBean public SubjectSourcesClient subjectSourcesClient;
+  @MockitoBean public SystemUserService systemUserService;
+  @MockitoBean public AuthnClient authnClient;
+  @MockitoBean public UsersClient usersClient;
+  @MockitoBean public PermissionsClient permissionsClient;
 
   @Autowired protected MockMvc mockMvc;
   @Autowired private FolioModuleMetadata folioModuleMetadata;
@@ -336,5 +335,22 @@ public abstract class BaseTest {
               .linkToCommittedRecordsJsonPreviewFile(fileName)
               .build();
     };
+  }
+
+  public FolioExecutionContext prepareFolioExecutionContextForTenant(String tenant) {
+    Map<String, String> headers = new HashMap<>();
+    headers.put(XOkapiHeaders.TENANT, tenant);
+    headers.put(XOkapiHeaders.TOKEN, TOKEN);
+    headers.put(XOkapiHeaders.USER_ID, UUID.randomUUID().toString());
+
+    var localHeaders =
+        headers.entrySet().stream()
+            .filter(e -> e.getKey().startsWith(XOkapiHeaders.OKAPI_HEADERS_PREFIX))
+            .collect(
+                Collectors.toMap(
+                    Map.Entry::getKey,
+                    e -> (Collection<String>) List.of(String.valueOf(e.getValue()))));
+
+    return new DefaultFolioExecutionContext(folioModuleMetadata, localHeaders);
   }
 }

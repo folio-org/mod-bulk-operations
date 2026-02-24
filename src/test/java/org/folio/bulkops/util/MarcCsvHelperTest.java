@@ -89,7 +89,8 @@ class MarcCsvHelperTest extends BaseTest {
 
     when(mappingRulesClient.getMarcBibMappingRules())
         .thenReturn(
-            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            objectMapper.readTree(
+                Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json"))));
     when(remoteFileSystemClient.get(fileName))
         .thenReturn(new FileInputStream("src/test/resources/files/sample_marc_csv.csv"));
     when(ruleService.getMarcRules(operationId))
@@ -131,7 +132,8 @@ class MarcCsvHelperTest extends BaseTest {
 
     when(mappingRulesClient.getMarcBibMappingRules())
         .thenReturn(
-            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            objectMapper.readTree(
+                Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json"))));
     when(remoteFileSystemClient.get(fileName)).thenThrow(new RuntimeException());
     when(ruleService.getMarcRules(operationId))
         .thenReturn(
@@ -163,7 +165,8 @@ class MarcCsvHelperTest extends BaseTest {
 
     when(mappingRulesClient.getMarcBibMappingRules())
         .thenReturn(
-            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            objectMapper.readTree(
+                Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json"))));
     when(remoteFileSystemClient.get(fileName))
         .thenReturn(new FileInputStream("src/test/resources/files/invalid_sample_marc_csv.csv"));
     when(ruleService.getMarcRules(operationId))
@@ -196,7 +199,8 @@ class MarcCsvHelperTest extends BaseTest {
 
     when(mappingRulesClient.getMarcBibMappingRules())
         .thenReturn(
-            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            objectMapper.readTree(
+                Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json"))));
     when(remoteFileSystemClient.get(fileName))
         .thenReturn(new FileInputStream("src/test/resources/files/sample_marc_csv.csv"));
     when(ruleService.getMarcRules(operationId))
@@ -227,7 +231,8 @@ class MarcCsvHelperTest extends BaseTest {
 
     when(mappingRulesClient.getMarcBibMappingRules())
         .thenReturn(
-            Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json")));
+            objectMapper.readTree(
+                Files.readString(Path.of("src/test/resources/files/mappingRulesResponse.json"))));
     when(remoteFileSystemClient.get(fileName))
         .thenReturn(new FileInputStream("src/test/resources/files/marc_csv_empty_notes.csv"));
     when(ruleService.getMarcRules(operationId))

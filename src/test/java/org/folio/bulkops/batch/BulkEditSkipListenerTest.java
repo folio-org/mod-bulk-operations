@@ -23,9 +23,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.batch.core.JobExecution;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.item.ExecutionContext;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.core.job.JobInstance;
+import org.springframework.batch.core.job.parameters.JobParametersBuilder;
+import org.springframework.batch.infrastructure.item.ExecutionContext;
 
 class BulkEditSkipListenerTest {
 
@@ -42,7 +43,9 @@ class BulkEditSkipListenerTest {
     bulkOperationId = UUID.randomUUID();
     var jobParametersBuilder = new JobParametersBuilder();
     jobParametersBuilder.addString(BULK_OPERATION_ID, bulkOperationId.toString());
-    jobExecution = new JobExecution(1L, jobParametersBuilder.toJobParameters());
+    jobExecution =
+        new JobExecution(
+            1L, new JobInstance(1L, "testJob"), jobParametersBuilder.toJobParameters());
     setField(skipListener, "jobExecution", jobExecution);
   }
 

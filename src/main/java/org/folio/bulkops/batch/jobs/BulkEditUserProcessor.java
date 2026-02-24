@@ -12,7 +12,6 @@ import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.Constants.NO_USER_VIEW_PERMISSIONS;
 import static org.folio.bulkops.util.FqmContentFetcher.SHADOW;
 
-import feign.codec.DecodeException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -32,10 +31,11 @@ import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.util.ExceptionHelper;
 import org.folio.spring.FolioExecutionContext;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
-import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.core.job.JobExecution;
+import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -109,7 +109,7 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
       var birthDate = user.getPersonal().getDateOfBirth();
       validateBirthDate(birthDate);
       return user;
-    } catch (DecodeException e) {
+    } catch (HttpMessageConversionException e) {
       throw new BulkEditException(ExceptionHelper.fetchMessage(e), ErrorType.ERROR);
     }
   }
