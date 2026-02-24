@@ -23,6 +23,6 @@ public interface UserClient {
   @GetExchange(value = "/{userId}")
   User getUserById(@PathVariable String userId);
 
-  @PutExchange(value = "/{userId}")
+  @PutExchange(value = "/{userId}", accept = MediaType.TEXT_PLAIN_VALUE)
   void updateUser(@RequestBody User user, @PathVariable String userId);
 }
