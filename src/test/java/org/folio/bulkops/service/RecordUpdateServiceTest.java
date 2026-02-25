@@ -86,12 +86,13 @@ class RecordUpdateServiceTest extends BaseTest {
     doNothing()
         .when(permissionsValidator)
         .checkIfBulkEditWritePermissionExists(anyString(), any(), anyString());
+    when(ruleService.getRules(any(UUID.class))).thenReturn(new BulkOperationRuleCollection());
 
     var result =
         recordUpdateService.updateEntity(extendedOriginalItem, extendedModifiedItem, operation);
 
     assertEquals(extendedModifiedItem, result);
-    verify(itemUpdateProcessor).updateRecord(any(ExtendedItem.class), eq(null));
+    verify(itemUpdateProcessor).updateRecord(any(ExtendedItem.class), any(BulkOperationRuleCollection.class));
     verify(errorService, times(0))
         .saveError(any(UUID.class), anyString(), anyString(), eq(ErrorType.WARNING));
   }
@@ -201,10 +202,11 @@ class RecordUpdateServiceTest extends BaseTest {
               HttpHeaders.EMPTY,
               new byte[] {},
               Charset.defaultCharset());
-      doThrow(feignException).when(itemClient).updateItem(any(Item.class), any(String.class));
+      doThrow(feignException).when(itemClient).patchItem(any(ObjectNode.class), any(String.class));
       when(holdingsStorageClient.getHoldingById("cb475fa9-aa07-4bbf-8382-b0b1426f9a20"))
           .thenReturn(
               HoldingsRecord.builder().instanceId("f3e3bd0f-1d95-4f25-9df1-7eb39a2957e3").build());
+      when(ruleService.getRules(any(UUID.class))).thenReturn(new BulkOperationRuleCollection());
 
       var original =
           Item.builder()
