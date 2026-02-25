@@ -179,7 +179,7 @@
             "inventory-storage.nature-of-content-terms.item.get",
             "inventory-storage.instance-formats.collection.get",
             "inventory-storage.instance-formats.item.get",
-            "inventory.instances.item.patch",
+            "inventory.instances.item.patch.execute",
             "inventory-storage.instance-note-types.item.get",
             "inventory-storage.instance-note-types.collection.get",
             "consortia.consortium.item.get",
