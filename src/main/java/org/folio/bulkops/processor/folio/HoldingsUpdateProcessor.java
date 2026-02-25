@@ -4,8 +4,6 @@ import static java.lang.Boolean.parseBoolean;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.SUPPRESS_FROM_DISCOVERY;
-import static org.folio.bulkops.processor.folio.ItemPatchUtils.addDiscoverySuppress;
-import static org.folio.bulkops.processor.folio.ItemPatchUtils.createPatchBody;
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.GET_ITEMS_BY_HOLDING_ID_QUERY;
 import static org.folio.bulkops.util.Constants.MSG_NO_CHANGE_REQUIRED;
@@ -132,11 +130,9 @@ public class HoldingsUpdateProcessor extends FolioAbstractUpdateProcessor<Extend
       return false;
     }
     itemsForUpdate.forEach(
-        item -> {
-          var patchBody = createPatchBody(item);
-          addDiscoverySuppress(patchBody, holdingsRecord.getDiscoverySuppress());
-          itemClient.patchItem(patchBody, item.getId());
-        });
+        item ->
+            itemClient.updateItem(
+                item.withDiscoverySuppress(holdingsRecord.getDiscoverySuppress()), item.getId()));
     return true;
   }
 
