@@ -45,7 +45,7 @@
     <folio-s3-client.version>3.0.0-SNAPSHOT</folio-s3-client.version>
     <folio-module-descriptor-validator.version>1.0.1</folio-module-descriptor-validator.version>
     <opencsv.version>5.12.0</opencsv.version>
-    <lib-fqm-query-processor.version>4.1.0-SNAPSHOT</lib-fqm-query-processor.version>
+    <folio-query-tool-metadata.version>4.0.0-RC1</folio-query-tool-metadata.version>
     <marc4j.version>2.9.2</marc4j.version>
     <jsonPath.version>3.0.0</jsonPath.version>
 
@@ -94,8 +94,8 @@
 
     <dependency>
       <groupId>org.folio</groupId>
-      <artifactId>lib-fqm-query-processor</artifactId>
-      <version>${lib-fqm-query-processor.version}</version>
+      <artifactId>folio-query-tool-metadata</artifactId>
+      <version>${folio-query-tool-metadata.version}</version>
     </dependency>
 
     <dependency>
