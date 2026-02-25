@@ -1818,7 +1818,7 @@ class BulkOperationServiceTest extends BaseTest {
     bulkOperationService.commit(operation);
 
     if (testData.expectedNumOfItemUpdates > 0) {
-      verify(itemClient, times(testData.expectedNumOfItemUpdates)).updateItem(any(), anyString());
+      verify(itemClient, times(testData.expectedNumOfItemUpdates)).patchItem(any(), anyString());
     }
     if (nonNull(testData.expectedErrorMessage)) {
       verify(errorService)
