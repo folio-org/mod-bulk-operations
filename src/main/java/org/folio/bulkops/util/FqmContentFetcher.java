@@ -122,7 +122,6 @@ import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.EntityTypeService;
 import org.folio.querytool.domain.dto.ContentsRequest;
 import org.folio.spring.FolioExecutionContext;
-import org.folio.spring.service.SystemUserScopedExecutionService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import tools.jackson.core.JacksonException;
@@ -155,7 +154,6 @@ public class FqmContentFetcher {
   private final ConsortiaService consortiaService;
   private final EntityTypeService entityTypeService;
   private final SearchClient searchClient;
-  private final SystemUserScopedExecutionService systemUserScopedExecutionService;
 
   @PostConstruct
   private void logStartup() {
@@ -243,8 +241,7 @@ public class FqmContentFetcher {
                     .entityTypeId(entityTypeId)
                     .fields(entityJsonKeys)
                     .ids(chunk.stream().map(UUID::toString).map(idMapper).toList());
-            return systemUserScopedExecutionService.executeSystemUserScoped(
-                () -> queryClient.getContents(req));
+            return queryClient.getContents(req);
           });
     }
 
