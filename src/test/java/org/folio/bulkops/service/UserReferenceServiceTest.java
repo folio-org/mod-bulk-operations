@@ -11,7 +11,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -185,7 +184,7 @@ class UserReferenceServiceTest {
 
   @Test
   void getModuleIdNotFoundTest() {
-    when(okapiClient.getModuleIds(any(URI.class), any(String.class), any(String.class)))
+    when(okapiClient.getModuleIds(any(String.class), any(String.class)))
         .thenReturn(new StringNode(""));
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     assertThrows(
