@@ -1,6 +1,5 @@
 package org.folio.bulkops.client;
 
-import java.net.URI;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -12,7 +11,5 @@ import tools.jackson.databind.JsonNode;
 public interface OkapiClient {
   @GetExchange(value = "/proxy/tenants/{tenantId}/modules")
   JsonNode getModuleIds(
-      URI uri,
-      @PathVariable("tenantId") String tenantId,
-      @RequestParam("filter") String moduleName);
+      @PathVariable("tenantId") String tenantId, @RequestParam("filter") String moduleName);
 }

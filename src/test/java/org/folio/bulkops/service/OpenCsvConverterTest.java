@@ -111,8 +111,7 @@ class OpenCsvConverterTest extends BaseTest {
 
   private static class BulkOperationEntityClassProvider implements ArgumentsProvider {
     @Override
-    public Stream<? extends Arguments> provideArguments(
-        ExtensionContext context) {
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(Arguments.of(User.class));
     }
   }
@@ -480,7 +479,7 @@ class OpenCsvConverterTest extends BaseTest {
                             .withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880")
                             .withDesc("desc")
                             .withAddressType("work"))));
-    when(okapiClient.getModuleIds(any(), any(), any()))
+    when(okapiClient.getModuleIds(any(), any()))
         .thenReturn(
             JsonNodeFactory.instance
                 .arrayNode()

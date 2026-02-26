@@ -7,7 +7,6 @@ import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_REF_ID;
 import static org.folio.bulkops.util.Utils.encode;
 
-import java.net.URI;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
@@ -128,7 +127,7 @@ public class UserReferenceService {
   @Cacheable(cacheNames = "moduleIds")
   public String getModuleId(String moduleName) {
     var tenantId = folioExecutionContext.getTenantId();
-    var moduleNamesJson = okapiClient.getModuleIds(URI.create(OKAPI_URL), tenantId, moduleName);
+    var moduleNamesJson = okapiClient.getModuleIds(tenantId, moduleName);
     if (!moduleNamesJson.isEmpty()) {
       return moduleNamesJson.get(0).get("id").asString();
     }
