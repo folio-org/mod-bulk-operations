@@ -111,7 +111,8 @@ class OpenCsvConverterTest extends BaseTest {
 
   private static class BulkOperationEntityClassProvider implements ArgumentsProvider {
     @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+    public Stream<? extends Arguments> provideArguments(
+        ExtensionContext context) {
       return Stream.of(Arguments.of(User.class));
     }
   }

@@ -189,6 +189,7 @@ public class Constants {
   public static final String CALL_NUMBER = "callNumber";
   public static final String CALL_NUMBER_SUFFIX = "callNumberSuffix";
   public static final String HOLDINGS_LOCATION_CALL_NUMBER_DELIMITER = " > ";
+  public static final String OKAPI_URL = "_";
 
   /* Entities json keys for mapping from FQM query response */
   public static final String ID = "id";

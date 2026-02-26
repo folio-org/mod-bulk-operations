@@ -29,7 +29,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Log4j2
 public class UserReferenceService {
-  public static final String OKAPI_URL = "http://_";
   private static final String MOD_USERS = "mod-users";
 
   private final AddressTypeClient addressTypeClient;
