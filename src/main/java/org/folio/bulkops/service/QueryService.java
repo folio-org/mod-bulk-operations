@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -119,7 +120,7 @@ public class QueryService {
                     bulkOperation.setStatus(RETRIEVING_RECORDS);
                     bulkOperation.setTotalNumOfRecords(queryResult.getTotalRecords());
                     List<BulkOperationExecutionContent> bulkOperationExecutionContents =
-                        new ArrayList<>();
+                        Collections.synchronizedList(new ArrayList<>());
                     try (var is =
                         fqmContentFetcher.fetch(
                             bulkOperation.getFqlQueryId(),
@@ -263,8 +264,10 @@ public class QueryService {
 
         int numMatched = 0;
         int numProcessed = 0;
-        var iterator = isNull(is) ? MappingIterator.emptyIterator()
-          : objectMapper.readValues(objectMapper.createParser(is), extendedEntityClass);
+        var iterator =
+            isNull(is)
+                ? MappingIterator.emptyIterator()
+                : objectMapper.readValues(objectMapper.createParser(is), extendedEntityClass);
         Set<String> usedTenants = new HashSet<>();
 
         while (iterator.hasNext()) {

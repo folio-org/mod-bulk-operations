@@ -9,8 +9,7 @@ import tools.jackson.databind.SerializationContext;
 import tools.jackson.databind.ValueSerializer;
 
 public class CustomDateSerializer extends ValueSerializer<Date> {
-  private final SimpleDateFormat formatter =
-      new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+  private final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
   public CustomDateSerializer() {
     super();
