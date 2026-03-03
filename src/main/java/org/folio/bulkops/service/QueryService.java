@@ -89,8 +89,7 @@ public class QueryService {
                       bulkOperation.getEntityType(),
                       bulkOperationExecutionContents,
                       bulkOperation.getId())) {
-                completeBulkOperation(
-                    is, bulkOperation, new HashSet<>(uuids), bulkOperationExecutionContents);
+                completeBulkOperation(is, bulkOperation, bulkOperationExecutionContents);
               } catch (Exception e) {
                 var errorMessage =
                     "Failed to save identifiers (FQM-based Identifiers Flow), reason: "
@@ -128,8 +127,7 @@ public class QueryService {
                             queryResult.getTotalRecords(),
                             bulkOperationExecutionContents,
                             bulkOperation.getId())) {
-                      completeBulkOperation(
-                          is, bulkOperation, Set.of(), bulkOperationExecutionContents);
+                      completeBulkOperation(is, bulkOperation, bulkOperationExecutionContents);
                     } catch (Exception e) {
                       var errorMessage =
                           "Failed to save identifiers (FQM-based Query Flow), "
@@ -178,7 +176,6 @@ public class QueryService {
   protected void completeBulkOperation(
       InputStream is,
       BulkOperation operation,
-      Set<UUID> uuids,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents) {
     try {
       var triggeringCsvFileName =
@@ -201,7 +198,6 @@ public class QueryService {
           matchedJsonFileName,
           matchedMrcFileName,
           operation,
-          uuids,
           bulkOperationExecutionContents);
 
       if (operation.getMatchedNumOfRecords() > 0) {
@@ -236,8 +232,6 @@ public class QueryService {
    * @param matchedJsonFileName - the name of the matched JSON file
    * @param matchedMrcFileName - the name of the matched MRC file
    * @param operation - the bulk operation
-   * @param uuids - the set of UUIDs (WARNING this set is mandatory for the Identifiers Flow and
-   *     empty for the Query Flow)
    * @param bulkOperationExecutionContents - the list of bulk operation execution contents
    */
   protected void processAsyncQueryResult(
@@ -247,7 +241,6 @@ public class QueryService {
       String matchedJsonFileName,
       String matchedMrcFileName,
       BulkOperation operation,
-      Set<UUID> uuids,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents)
       throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
     Writer writerForTriggeringCsvFile = null;
