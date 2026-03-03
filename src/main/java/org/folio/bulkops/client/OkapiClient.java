@@ -13,6 +13,5 @@ import tools.jackson.databind.JsonNode;
 public interface OkapiClient {
   @GetExchange(value = "/proxy/tenants/{tenantId}/modules")
   JsonNode getModuleIds(
-      @PathVariable("tenantId") String tenantId,
-      @RequestParam("filter") String moduleName);
+      @PathVariable("tenantId") String tenantId, @RequestParam("filter") String moduleName);
 }

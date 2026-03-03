@@ -16,7 +16,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.folio.bulkops.batch.BulkEditItemSkipListener;
-import org.folio.bulkops.batch.BulkEditSkipListener;
 import org.folio.bulkops.batch.CsvListItemWriter;
 import org.folio.bulkops.batch.JobCompletionNotificationListener;
 import org.folio.bulkops.batch.JsonListFileWriter;
