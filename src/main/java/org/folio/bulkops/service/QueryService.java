@@ -263,8 +263,10 @@ public class QueryService {
 
         int numMatched = 0;
         int numProcessed = 0;
-        var iterator = isNull(is) ? MappingIterator.emptyIterator()
-          : objectMapper.readValues(objectMapper.createParser(is), extendedEntityClass);
+        var iterator =
+            isNull(is)
+                ? MappingIterator.emptyIterator()
+                : objectMapper.readValues(objectMapper.createParser(is), extendedEntityClass);
         Set<String> usedTenants = new HashSet<>();
 
         while (iterator.hasNext()) {
