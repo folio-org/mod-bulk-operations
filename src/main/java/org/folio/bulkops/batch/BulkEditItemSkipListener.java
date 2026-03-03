@@ -1,13 +1,12 @@
 package org.folio.bulkops.batch;
 
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.exception.BulkEditException;
 import org.springframework.batch.core.listener.SkipListener;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @Component
