@@ -5,8 +5,11 @@ import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.bean.StateType.FAILED;
 import static org.folio.bulkops.service.EntityTypeService.FQM_INSTANCES_ET_ID;
+import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE;
+import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
 import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
+import static org.folio.bulkops.util.FqmContentFetcher.SHADOW;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_PREFIX_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_HOLDINGS_CALL_NUMBER_SUFFIX_KEY;
@@ -20,6 +23,7 @@ import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_JSONB_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_PUBLICATION_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SHARED_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_SOURCE_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TENANT_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_INSTANCE_TITLE_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEMS_ID_KEY;
@@ -35,6 +39,8 @@ import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOAN_TYPE_ID_KEY
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOAN_TYPE_NAME_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOCATION_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_TEMPORARY_LOCATION_NAME_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_USERS_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_USERS_TYPE_KEY;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -42,6 +48,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1019,6 +1026,96 @@ class FqmContentFetcherTest {
       assertThat(contents).isEmpty();
       assertThat(result).isNotEmpty();
       assertThat(result).contains("\"id\":\"d3d7383e-63e9-469f-8009-daba9d922f6a\"");
+    }
+  }
+
+  @Test
+  void shouldAddInstanceLinkedDataNotSupportedError() {
+
+    UUID operationId = UUID.randomUUID();
+    var contents = new ArrayList<BulkOperationExecutionContent>();
+
+    Map<String, Object> json =
+        Map.of(
+            FQM_INSTANCE_ID_KEY,
+            "8beddda3-1e3b-47ae-9ebd-87b9856af902",
+            FQM_INSTANCE_SOURCE_KEY,
+            LINKED_DATA_SOURCE);
+
+    try (InputStream ignored =
+        fqmContentFetcher.getFqmResponseAsInputStream(
+            EntityType.INSTANCE, contents, operationId, false, List.of(json))) {
+      assertThat(contents).hasSize(1);
+      assertThat(contents.getFirst().getErrorMessage())
+          .isEqualTo(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED);
+
+    } catch (IOException e) {
+      Assertions.fail(e.getMessage());
+    }
+  }
+
+  @Test
+  void shouldAddNoMatchFoundErrorForCentralTenantInstance() {
+
+    UUID operationId = UUID.randomUUID();
+    var contents = new ArrayList<BulkOperationExecutionContent>();
+
+    Map<String, Object> json =
+        Map.of(
+            FQM_INSTANCE_ID_KEY, "5c348e35-47f9-4102-a200-bdaecbac744f"
+            // Empty FQM_INSTANCE_SHARED_KEY - non-shared instance
+            );
+
+    try (var ignored =
+        fqmContentFetcher.getFqmResponseAsInputStream(
+            EntityType.INSTANCE, contents, operationId, true, List.of(json))) {
+      assertThat(contents).hasSize(1);
+      assertThat(contents.getFirst().getErrorMessage()).isEqualTo(NO_MATCH_FOUND_MESSAGE);
+    } catch (IOException e) {
+      Assertions.fail(e.getMessage());
+    }
+  }
+
+  @Test
+  void shouldAddShadowUserError() {
+
+    UUID operationId = UUID.randomUUID();
+    var contents = new ArrayList<BulkOperationExecutionContent>();
+
+    Map<String, Object> json =
+        Map.of(
+            FQM_USERS_ID_KEY, "96112493-71a0-49da-bc4a-ae007523f216", FQM_USERS_TYPE_KEY, SHADOW);
+
+    try (var ignored =
+        fqmContentFetcher.getFqmResponseAsInputStream(
+            EntityType.USER, contents, operationId, true, List.of(json))) {
+      assertThat(contents).hasSize(1);
+      assertThat(contents.getFirst().getErrorMessage())
+          .isEqualTo(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
+    } catch (IOException e) {
+      Assertions.fail(e.getMessage());
+    }
+  }
+
+  @Test
+  void shouldAddProcessingErrorWhenJsonInvalid() {
+
+    UUID operationId = UUID.randomUUID();
+    var contents = new ArrayList<BulkOperationExecutionContent>();
+
+    Map<String, Object> json =
+        Map.of(
+            FQM_ITEMS_ID_KEY, "04729175-98d1-4519-88bd-50595c00cb6b",
+            FQM_ITEMS_JSONB_KEY, "{invalid-json");
+
+    try (var ignored =
+        fqmContentFetcher.getFqmResponseAsInputStream(
+            EntityType.ITEM, contents, operationId, false, List.of(json))) {
+      assertThat(contents).hasSize(1);
+      assertThat(contents.getFirst().getErrorType())
+          .isEqualTo(org.folio.bulkops.domain.dto.ErrorType.ERROR);
+    } catch (IOException e) {
+      Assertions.fail(e.getMessage());
     }
   }
 
