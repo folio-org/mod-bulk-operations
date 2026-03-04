@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.batch.CsvRecordContext;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
@@ -266,16 +267,17 @@ public class QueryService {
         while (iterator.hasNext()) {
 
           var extendedRecord = (BulkOperationsEntity) iterator.next();
+          var tenantId = extendedRecord.getTenant();
           ++numProcessed;
           if (extendedRecord.getRecordBulkOperationEntity() instanceof Item item) {
-            localReferenceDataService.enrichWithTenant(item, extendedRecord.getTenant());
+            localReferenceDataService.enrichWithTenant(item, tenantId);
           }
           if (extendedRecord.getRecordBulkOperationEntity()
               instanceof HoldingsRecord holdingsRecord) {
-            localReferenceDataService.enrichWithTenant(holdingsRecord, extendedRecord.getTenant());
+            localReferenceDataService.enrichWithTenant(holdingsRecord, tenantId);
           }
 
-          usedTenants.add(extendedRecord.getTenant());
+          usedTenants.add(tenantId);
 
           try {
             permissionsValidator.checkPermissions(operation, extendedRecord);
@@ -291,11 +293,14 @@ public class QueryService {
             var extendedRecordAsJsonString = objectMapper.writeValueAsString(extendedRecord);
 
             writerForResultJsonFile.append(extendedRecordAsJsonString);
-            CsvHelper.writeBeanToCsv(
-                operation,
-                csvWriter,
-                extendedRecord.getRecordBulkOperationEntity(),
-                bulkOperationExecutionContents);
+            try (var ignored = new CsvRecordContext()) {
+              CsvRecordContext.setTenantId(tenantId);
+              CsvHelper.writeBeanToCsv(
+                  operation,
+                  csvWriter,
+                  extendedRecord.getRecordBulkOperationEntity(),
+                  bulkOperationExecutionContents);
+            }
             numMatched++;
           } catch (UploadFromQueryException e) {
             handleError(
