@@ -62,7 +62,8 @@ class FqmContentFetcherEcsTest {
     mockCommon(tenantId, centralTenantId, List.of(uuid));
 
     try (var is =
-        fqmContentFetcher.contents(List.of(uuid), EntityType.INSTANCE, List.of(), randomUUID())) {
+        fqmContentFetcher.contents(
+            List.of(uuid), EntityType.INSTANCE, new ArrayList<>(), randomUUID())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
       await()
           .atMost(2, TimeUnit.SECONDS)
@@ -85,7 +86,8 @@ class FqmContentFetcherEcsTest {
     mockCommon(tenantId, centralTenantId, List.of(uuid));
 
     try (var is =
-        fqmContentFetcher.contents(List.of(uuid), EntityType.INSTANCE, List.of(), randomUUID())) {
+        fqmContentFetcher.contents(
+            List.of(uuid), EntityType.INSTANCE, new ArrayList<>(), randomUUID())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
@@ -119,7 +121,7 @@ class FqmContentFetcherEcsTest {
 
     try (var is =
         fqmContentFetcher.contents(
-            List.of(uuid1, uuid2), EntityType.ITEM, List.of(), randomUUID())) {
+            List.of(uuid1, uuid2), EntityType.ITEM, new ArrayList<>(), randomUUID())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
@@ -144,7 +146,8 @@ class FqmContentFetcherEcsTest {
     mockCommon(tenantId, centralTenantId, List.of(uuid));
 
     try (var is =
-        fqmContentFetcher.contents(List.of(uuid), EntityType.INSTANCE, List.of(), randomUUID())) {
+        fqmContentFetcher.contents(
+            List.of(uuid), EntityType.INSTANCE, new ArrayList<>(), randomUUID())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
@@ -168,7 +171,8 @@ class FqmContentFetcherEcsTest {
     mockCommon(tenantId, centralTenantId, List.of(uuid));
 
     try (var is =
-        fqmContentFetcher.contents(List.of(uuid), EntityType.USER, List.of(), randomUUID())) {
+        fqmContentFetcher.contents(
+            List.of(uuid), EntityType.USER, new ArrayList<>(), randomUUID())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
       await()
           .atMost(2, TimeUnit.SECONDS)
