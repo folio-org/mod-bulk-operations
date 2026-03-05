@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
@@ -31,7 +32,11 @@ public class ElectronicAccessReferenceService {
     try (var ignored =
         new FolioExecutionContextSetter(
             prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
-      return relationshipClient.getById(id).getName();
+      var relationship = relationshipClient.getById(id);
+      if (isNull(relationship)) {
+        throw new NotFoundException();
+      }
+      return relationship.getName();
     } catch (NotFoundException e) {
       var msg = format("Electronic access relationship not found by id=%s", id);
       log.error(msg);
