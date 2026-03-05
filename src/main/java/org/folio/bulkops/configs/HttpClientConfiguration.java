@@ -55,10 +55,10 @@ import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.exception.RestClientErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 
 @Configuration
@@ -320,17 +320,21 @@ public class HttpClientConfiguration {
     return factory.createClient(UserClient.class);
   }
 
-  @Primary
   @Bean
-  public RestClient restClient(RestClient.Builder builder) {
-    return builder
-        .requestInterceptor(
-            (request, body, execution) -> {
-              log.info("Request URL: {}", request.getURI());
-              request.getHeaders().add(HttpHeaders.ACCEPT_ENCODING, "identity");
-              return execution.execute(request, body);
-            })
-        .defaultStatusHandler(HttpStatusCode::isError, errorHandler::handle)
-        .build();
+  public HttpServiceProxyFactory factory(RestClient.Builder restClientBuilder) {
+    var restClient = restClientBuilder
+            .defaultStatusHandler(HttpStatusCode::isError, errorHandler::handle)
+            .requestInterceptor(
+                    (request, body, execution) -> {
+                      log.info("Request URL: {}", request.getURI());
+                      request.getHeaders().add(HttpHeaders.ACCEPT_ENCODING, "identity");
+                      return execution.execute(request, body);
+                    })
+            .build();
+
+    return HttpServiceProxyFactory
+            .builderFor(RestClientAdapter.create(restClient))
+            .build();
   }
+
 }

@@ -16,6 +16,7 @@ import org.folio.bulkops.exception.RestClientErrorHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.web.client.RestClient;
 
 class HttpClientConfigurationTest {
@@ -28,9 +29,11 @@ class HttpClientConfigurationTest {
     wireMockServer = new WireMockServer(0);
     wireMockServer.start();
 
-    HttpClientConfiguration httpClientConfiguration =
-        new HttpClientConfiguration(new RestClientErrorHandler());
-    restClient = httpClientConfiguration.restClient(RestClient.builder());
+    var errorHandler = new RestClientErrorHandler();
+    restClient =
+        RestClient.builder()
+            .defaultStatusHandler(HttpStatusCode::isError, errorHandler::handle)
+            .build();
   }
 
   @AfterEach
