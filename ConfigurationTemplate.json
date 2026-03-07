@@ -1,0 +1,254 @@
+{
+  "description": "mod-bulk-operations configuration template",
+  "moduleDefaults": {
+    "resources": [
+      {
+        "name": "cpu",
+        "value": "64",
+        "description": "CPU request/limit for container"
+      },
+      {
+        "name": "memory",
+        "value": "3072",
+        "description": "Memory hard limit for container"
+      },
+      {
+        "name": "memoryReservation",
+        "value": "2600",
+        "description": "Memory reservation for container"
+      }
+    ],
+    "java": [
+      {
+        "name": "xmx",
+        "value": "2048m",
+        "description": "Maximum Java heap size"
+      },
+      {
+        "name": "MaxMetaspaceSize",
+        "value": "512m",
+        "description": "Maximum Java metaspace size"
+      },
+      {
+        "name": "MetaspaceSize",
+        "value": "384m",
+        "description": "Initial Java metaspace size"
+      }
+    ],
+    "deployment": {
+      "isHaSupported": true,
+      "replicasRecommendedCount": 2,
+      "description": "Deployment configuration for the backend module. Adjust replicas based on expected load and HA requirements. Set to false if only single instance is supported or required."
+    },
+    "kong": {
+      "timeouts": {
+        "connect": "60s",
+        "send": "60s",
+        "read": "60s"
+      },
+      "description": "Custom Kong proxy timeouts. Use this only if different from default Kong configuration"
+    },
+    "EnvVars": [
+      {
+        "name": "S3_URL",
+        "value": "http://127.0.0.1:9000",
+        "essential": true,
+        "description": "S3 url"
+      },
+      {
+        "name": "S3_REGION",
+        "essential": true,
+        "description": "S3 region"
+      },
+      {
+        "name": "S3_BUCKET",
+        "value": "test-bucket2",
+        "essential": true,
+        "description": "S3 bucket"
+      },
+      {
+        "name": "S3_ACCESS_KEY_ID",
+        "essential": true,
+        "description": "S3 access key"
+      },
+      {
+        "name": "S3_SECRET_ACCESS_KEY",
+        "essential": true,
+        "description": "S3 secret key"
+      },
+      {
+        "name": "S3_IS_AWS",
+        "value": "false",
+        "essential": true,
+        "description": "Specify if AWS S3 is used as files storage"
+      },
+      {
+        "name": "S3_SUB_PATH",
+        "value": "mod-bulk-operations",
+        "essential": true,
+        "description": "S3 subpath for file storage"
+      },
+      {
+        "name": "SYSTEM_USER_NAME",
+        "value": "mod-bulk-operations",
+        "essential": true,
+        "description": "Username of the system user"
+      },
+      {
+        "name": "SYSTEM_USER_PASSWORD",
+        "essential": true,
+        "description": "Password of the system user"
+      },
+      {
+        "name": "SYSTEM_USER_ENABLED",
+        "value": "true",
+        "essential": true,
+        "description": "Defines if system user must be created at service tenant initialization or used for egress service requests"
+      },
+      {
+        "name": "PLATFORM",
+        "value": "okapi",
+        "essential": true,
+        "description": "Specifies if okapi or eureka platform"
+      },
+      {
+        "name": "MAX_UPLOADING_RETRIES",
+        "value": "50",
+        "essential": true,
+        "description": "Max uploading retry"
+      },
+      {
+        "name": "DI_NUMBER_OF_CONCURRENT_REQUESTS",
+        "value": "5",
+        "essential": true,
+        "description": "DI_NUMBER_OF_CONCURRENT_REQUESTS"
+      },
+      {
+        "name": "DI_CHUNK_SIZE",
+        "value": "1000",
+        "essential": true,
+        "description": "DI_NUMBER_OF_CONCURRENT_REQUESTS"
+      },
+      {
+        "name": "FQM_MAX_CHUNK_SIZE",
+        "value": "10000",
+        "essential": true,
+        "description": "FQM_MAX_CHUNK_SIZE"
+      },
+      {
+        "name": "FQM_MAX_PARALLEL_CHUNKS",
+        "value": "10",
+        "essential": true,
+        "description": "FQM_MAX_CHUNK_SIZE"
+      },
+
+      {
+        "name": "ENV",
+        "value": "folio",
+        "essential": false,
+        "description": "Environment name"
+      },
+      {
+        "name": "OKAPI_URL",
+        "value": "http://okapi:9130",
+        "essential": false,
+        "description": "Okapi url"
+      },
+      {
+        "name": "KAFKA_HOST",
+        "essential": false,
+        "description": "Kafka broker hostname"
+      },
+      {
+        "name": "KAFKA_PORT",
+        "value": "9092",
+        "essential": false,
+        "description": "Kafka broker port"
+      },
+      {
+        "name": "DB_HOST",
+        "value": "postgres",
+        "essential": false,
+        "description": "Database"
+      },
+      {
+        "name": "DB_PORT",
+        "value": "5432",
+        "essential": false,
+        "description": "Database"
+      },
+      {
+        "name": "DB_USERNAME",
+        "essential": false,
+        "description": "Database"
+      },
+      {
+        "name": "DB_PASSWORD",
+        "essential": false,
+        "description": "Database"
+      },
+      {
+        "name": "DB_DATABASE",
+        "essential": false,
+        "description": "Database"
+      },
+      {
+        "name": "DB_QUERYTIMEOUT",
+        "value": "60000",
+        "essential": false,
+        "description": "Database"
+      },
+      {
+        "name": "DB_CHARSET",
+        "value": "UTF-8",
+        "essential": false,
+        "description": "Database"
+      },
+      {
+        "name": "DB_MAXPOOLSIZE",
+        "value": "50",
+        "essential": false,
+        "description": "Database max pool size environment variable and its recommended value for backend modules"
+      }
+    ]
+  },
+
+  "sidecarDefaults": {
+    "resources": [
+      {
+        "name": "cpu",
+        "value": "64",
+        "description": "CPU request/limit for container"
+      },
+      {
+        "name": "memory",
+        "value": "1500",
+        "description": "Memory hard limit for container"
+      },
+      {
+        "name": "memoryReservation",
+        "value": "768",
+        "description": "Memory reservation for container"
+      }
+    ],
+    "java": [
+      {
+        "name": "xms",
+        "value": "128",
+        "description": "Initial Java heap size"
+      },
+      {
+        "name": "xmx",
+        "value": "256",
+        "description": "Maximum Java heap size"
+      },
+      {
+        "name": "MaxMetaspaceSize",
+        "value": "128",
+        "description": "Maximum Java metaspace size"
+      }
+    ],
+    "EnvVars": [
+    ]
+  }
+}
