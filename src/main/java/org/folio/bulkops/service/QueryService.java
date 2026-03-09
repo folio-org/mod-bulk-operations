@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
+import org.folio.bulkops.batch.CsvRecordContext;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
@@ -88,8 +90,7 @@ public class QueryService {
                       bulkOperation.getEntityType(),
                       bulkOperationExecutionContents,
                       bulkOperation.getId())) {
-                completeBulkOperation(
-                    is, bulkOperation, new HashSet<>(uuids), bulkOperationExecutionContents);
+                completeBulkOperation(is, bulkOperation, bulkOperationExecutionContents);
               } catch (Exception e) {
                 var errorMessage =
                     "Failed to save identifiers (FQM-based Identifiers Flow), reason: "
@@ -119,7 +120,7 @@ public class QueryService {
                     bulkOperation.setStatus(RETRIEVING_RECORDS);
                     bulkOperation.setTotalNumOfRecords(queryResult.getTotalRecords());
                     List<BulkOperationExecutionContent> bulkOperationExecutionContents =
-                        new ArrayList<>();
+                        Collections.synchronizedList(new ArrayList<>());
                     try (var is =
                         fqmContentFetcher.fetch(
                             bulkOperation.getFqlQueryId(),
@@ -127,8 +128,7 @@ public class QueryService {
                             queryResult.getTotalRecords(),
                             bulkOperationExecutionContents,
                             bulkOperation.getId())) {
-                      completeBulkOperation(
-                          is, bulkOperation, Set.of(), bulkOperationExecutionContents);
+                      completeBulkOperation(is, bulkOperation, bulkOperationExecutionContents);
                     } catch (Exception e) {
                       var errorMessage =
                           "Failed to save identifiers (FQM-based Query Flow), "
@@ -177,7 +177,6 @@ public class QueryService {
   protected void completeBulkOperation(
       InputStream is,
       BulkOperation operation,
-      Set<UUID> uuids,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents) {
     try {
       var triggeringCsvFileName =
@@ -200,7 +199,6 @@ public class QueryService {
           matchedJsonFileName,
           matchedMrcFileName,
           operation,
-          uuids,
           bulkOperationExecutionContents);
 
       if (operation.getMatchedNumOfRecords() > 0) {
@@ -235,8 +233,6 @@ public class QueryService {
    * @param matchedJsonFileName - the name of the matched JSON file
    * @param matchedMrcFileName - the name of the matched MRC file
    * @param operation - the bulk operation
-   * @param uuids - the set of UUIDs (WARNING this set is mandatory for the Identifiers Flow and
-   *     empty for the Query Flow)
    * @param bulkOperationExecutionContents - the list of bulk operation execution contents
    */
   protected void processAsyncQueryResult(
@@ -246,7 +242,6 @@ public class QueryService {
       String matchedJsonFileName,
       String matchedMrcFileName,
       BulkOperation operation,
-      Set<UUID> uuids,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents)
       throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
     Writer writerForTriggeringCsvFile = null;
@@ -272,16 +267,17 @@ public class QueryService {
         while (iterator.hasNext()) {
 
           var extendedRecord = (BulkOperationsEntity) iterator.next();
+          var tenantId = extendedRecord.getTenant();
           ++numProcessed;
           if (extendedRecord.getRecordBulkOperationEntity() instanceof Item item) {
-            localReferenceDataService.enrichWithTenant(item, extendedRecord.getTenant());
+            localReferenceDataService.enrichWithTenant(item, tenantId);
           }
           if (extendedRecord.getRecordBulkOperationEntity()
               instanceof HoldingsRecord holdingsRecord) {
-            localReferenceDataService.enrichWithTenant(holdingsRecord, extendedRecord.getTenant());
+            localReferenceDataService.enrichWithTenant(holdingsRecord, tenantId);
           }
 
-          usedTenants.add(extendedRecord.getTenant());
+          usedTenants.add(tenantId);
 
           try {
             permissionsValidator.checkPermissions(operation, extendedRecord);
@@ -297,11 +293,14 @@ public class QueryService {
             var extendedRecordAsJsonString = objectMapper.writeValueAsString(extendedRecord);
 
             writerForResultJsonFile.append(extendedRecordAsJsonString);
-            CsvHelper.writeBeanToCsv(
-                operation,
-                csvWriter,
-                extendedRecord.getRecordBulkOperationEntity(),
-                bulkOperationExecutionContents);
+            try (var ignored = new CsvRecordContext()) {
+              CsvRecordContext.setTenantId(tenantId);
+              CsvHelper.writeBeanToCsv(
+                  operation,
+                  csvWriter,
+                  extendedRecord.getRecordBulkOperationEntity(),
+                  bulkOperationExecutionContents);
+            }
             numMatched++;
           } catch (UploadFromQueryException e) {
             handleError(

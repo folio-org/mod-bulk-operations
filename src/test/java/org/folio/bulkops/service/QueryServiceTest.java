@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
@@ -41,7 +40,6 @@ import java.io.InputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.folio.bulkops.client.QueryClient;
@@ -176,10 +174,9 @@ class QueryServiceTest {
             anyString(),
             anyString(),
             eq(bulkOperation),
-            anySet(),
             eq(contents));
 
-    queryServiceSpy.completeBulkOperation(is, bulkOperation, Set.of(), contents);
+    queryServiceSpy.completeBulkOperation(is, bulkOperation, contents);
 
     assertThat(bulkOperation.getStatus()).isEqualTo(DATA_MODIFICATION);
     assertThat(bulkOperation.getEndTime()).isNotNull();
@@ -218,10 +215,9 @@ class QueryServiceTest {
             anyString(),
             anyString(),
             eq(bulkOperation),
-            anySet(),
             eq(contents));
 
-    queryServiceSpy.completeBulkOperation(is, bulkOperation, Set.of(), contents);
+    queryServiceSpy.completeBulkOperation(is, bulkOperation, contents);
 
     assertThat(bulkOperation.getStatus()).isEqualTo(COMPLETED_WITH_ERRORS);
     assertThat(bulkOperation.getEndTime()).isNotNull();
@@ -251,13 +247,12 @@ class QueryServiceTest {
             anyString(),
             anyString(),
             eq(bulkOperation),
-            anySet(),
             eq(contents));
 
     when(errorService.uploadErrorsToStorage(any(), anyString(), anyString()))
         .thenReturn("errors-link");
 
-    queryServiceSpy.completeBulkOperation(is, bulkOperation, Set.of(), contents);
+    queryServiceSpy.completeBulkOperation(is, bulkOperation, contents);
 
     assertThat(bulkOperation.getStatus()).isEqualTo(FAILED);
     assertThat(bulkOperation.getErrorMessage()).contains("kaboom");
@@ -287,8 +282,7 @@ class QueryServiceTest {
     /* Mocking to simulate one UUID not found - No match found*/
     doNothing()
         .when(queryServiceSpy)
-        .completeBulkOperation(
-            any(InputStream.class), any(BulkOperation.class), anySet(), anyList());
+        .completeBulkOperation(any(InputStream.class), any(BulkOperation.class), anyList());
 
     runWithFolioContext(
         () -> queryServiceSpy.retrieveRecordsIdentifiersFlowAsync(uuids, bulkOperation, List.of()));
@@ -298,7 +292,7 @@ class QueryServiceTest {
     verify(bulkOperationRepository, atLeastOnce()).save(bulkOperation);
 
     verify(queryServiceSpy, times(1))
-        .completeBulkOperation(same(is), same(bulkOperation), anySet(), anyList());
+        .completeBulkOperation(same(is), same(bulkOperation), anyList());
   }
 
   @Test
@@ -321,7 +315,7 @@ class QueryServiceTest {
     assertTrue(bulkOperation.getErrorMessage().contains("FQM-based Identifiers Flow"));
     assertTrue(bulkOperation.getErrorMessage().contains("boom"));
 
-    verify(queryServiceSpy, never()).completeBulkOperation(any(), any(), anySet(), anyList());
+    verify(queryServiceSpy, never()).completeBulkOperation(any(), any(), anyList());
   }
 
   @Test
@@ -342,7 +336,7 @@ class QueryServiceTest {
     assertEquals("No records found for the query", bulkOperation.getErrorMessage());
 
     verify(fqmContentFetcher, never()).fetch(any(), any(), anyInt(), anyList(), any());
-    verify(queryServiceSpy, never()).completeBulkOperation(any(), any(), anySet(), anyList());
+    verify(queryServiceSpy, never()).completeBulkOperation(any(), any(), anyList());
   }
 
   @Test
@@ -360,8 +354,7 @@ class QueryServiceTest {
     doReturn(queryDetails).when(queryServiceSpy).getQueryResult(bulkOperation);
     doNothing()
         .when(queryServiceSpy)
-        .completeBulkOperation(
-            any(InputStream.class), any(BulkOperation.class), anySet(), anyList());
+        .completeBulkOperation(any(InputStream.class), any(BulkOperation.class), anyList());
 
     InputStream is = new ByteArrayInputStream("[]".getBytes());
     when(fqmContentFetcher.fetch(
@@ -389,7 +382,7 @@ class QueryServiceTest {
             anyList(),
             eq(bulkOperation.getId()));
     verify(queryServiceSpy, times(1))
-        .completeBulkOperation(same(is), same(bulkOperation), anySet(), anyList());
+        .completeBulkOperation(same(is), same(bulkOperation), anyList());
     assertEquals(total, bulkOperation.getTotalNumOfRecords());
   }
 
@@ -424,7 +417,7 @@ class QueryServiceTest {
             .contains("Failed to save identifiers (FQM-based Query Flow)"));
     assertTrue(bulkOperation.getErrorMessage().contains("boom"));
 
-    verify(queryServiceSpy, never()).completeBulkOperation(any(), any(), anySet(), anyList());
+    verify(queryServiceSpy, never()).completeBulkOperation(any(), any(), anyList());
   }
 
   @ParameterizedTest
@@ -440,7 +433,6 @@ class QueryServiceTest {
             .linkToTriggeringCsvFile(
                 approachType != QUERY ? bulkOperationId + "/some-link.csv" : null)
             .build();
-    var uuids = Set.of(randomUUID(), randomUUID());
     var contents = new ArrayList<BulkOperationExecutionContent>();
     InputStream is = new ByteArrayInputStream("[]".getBytes());
 
@@ -460,10 +452,9 @@ class QueryServiceTest {
             anyString(),
             anyString(),
             same(bulkOperation),
-            same(uuids),
             same(contents));
 
-    queryServiceSpy.completeBulkOperation(is, bulkOperation, uuids, contents);
+    queryServiceSpy.completeBulkOperation(is, bulkOperation, contents);
 
     assertThat(bulkOperation.getStatus()).isEqualTo(DATA_MODIFICATION);
 
