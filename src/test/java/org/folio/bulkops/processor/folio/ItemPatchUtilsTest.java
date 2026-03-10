@@ -276,7 +276,7 @@ class ItemPatchUtilsTest {
   }
 
   private static ItemNote itemNote(String note) {
-    return new ItemNote().withNote(note).withTenantId("diku").withItemNoteTypeId("note type");
+    return new ItemNote().withNote(note).withTenantId("diku").withItemNoteTypeName("note type");
   }
 
   private static CirculationNote circulationNote(String note) {
