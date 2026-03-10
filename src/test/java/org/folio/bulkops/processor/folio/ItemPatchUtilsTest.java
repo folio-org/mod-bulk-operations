@@ -48,7 +48,7 @@ class ItemPatchUtilsTest {
 
     assertTrue(changed.has(ITEM_JSON_DISCOVERY_SUPPRESS));
     assertFalse(changed.get(ITEM_JSON_DISCOVERY_SUPPRESS).asBoolean());
-    assertEquals(id, changed.get(ITEM_JSON_ID).asText());
+    assertEquals(id, changed.get(ITEM_JSON_ID).asString());
     assertEquals(version, changed.get(ITEM_JSON_VERSION).asInt());
     assertEquals(3, changed.size());
   }
@@ -62,7 +62,7 @@ class ItemPatchUtilsTest {
     var changed = ItemPatchUtils.fetchChangedData(item, rules);
 
     assertTrue(changed.has(ITEM_JSON_CIRCULATION_NOTES));
-    assertEquals("n1", changed.get(ITEM_JSON_CIRCULATION_NOTES).get(0).get("note").asText());
+    assertEquals("n1", changed.get(ITEM_JSON_CIRCULATION_NOTES).get(0).get("note").asString());
     assertEquals(3, changed.size());
   }
 
@@ -76,7 +76,7 @@ class ItemPatchUtilsTest {
     var changed = ItemPatchUtils.fetchChangedData(item, rules);
 
     assertTrue(changed.has(ITEM_JSON_CIRCULATION_NOTES));
-    assertEquals("n1", changed.get(ITEM_JSON_CIRCULATION_NOTES).get(0).get("note").asText());
+    assertEquals("n1", changed.get(ITEM_JSON_CIRCULATION_NOTES).get(0).get("note").asString());
     assertEquals(3, changed.size());
   }
 
@@ -90,7 +90,7 @@ class ItemPatchUtilsTest {
     var changed = ItemPatchUtils.fetchChangedData(item, rules);
 
     assertTrue(changed.has(ITEM_JSON_STATUS));
-    assertEquals("Available", changed.get(ITEM_JSON_STATUS).get("name").asText());
+    assertEquals("Available", changed.get(ITEM_JSON_STATUS).get("name").asString());
     assertEquals(3, changed.size());
   }
 
@@ -104,7 +104,7 @@ class ItemPatchUtilsTest {
     var changed = ItemPatchUtils.fetchChangedData(item, rules);
 
     assertTrue(changed.has(ITEM_JSON_PERMANENT_LOAN_TYPE));
-    assertEquals("Can circulate", changed.get(ITEM_JSON_PERMANENT_LOAN_TYPE).get("name").asText());
+    assertEquals("Can circulate", changed.get(ITEM_JSON_PERMANENT_LOAN_TYPE).get("name").asString());
     assertEquals(3, changed.size());
   }
 
@@ -118,7 +118,7 @@ class ItemPatchUtilsTest {
     var changed = ItemPatchUtils.fetchChangedData(item, rules);
 
     assertTrue(changed.has(ITEM_JSON_TEMPORARY_LOAN_TYPE));
-    assertEquals("Reading room", changed.get(ITEM_JSON_TEMPORARY_LOAN_TYPE).get("name").asText());
+    assertEquals("Reading room", changed.get(ITEM_JSON_TEMPORARY_LOAN_TYPE).get("name").asString());
     assertEquals(3, changed.size());
   }
 
@@ -134,7 +134,7 @@ class ItemPatchUtilsTest {
     // NOTE: ItemPatchUtils currently writes permanent location under ITEM_JSON_PERMANENT_LOAN_TYPE.
     // This test reflects the current behavior and will fail if the production code is fixed.
     assertTrue(changed.has(ITEM_JSON_PERMANENT_LOAN_TYPE));
-    assertEquals("Main", changed.get(ITEM_JSON_PERMANENT_LOAN_TYPE).get("name").asText());
+    assertEquals("Main", changed.get(ITEM_JSON_PERMANENT_LOAN_TYPE).get("name").asString());
     assertFalse(changed.has(ITEM_JSON_PERMANENT_LOCATION));
     assertEquals(3, changed.size());
   }
@@ -151,7 +151,7 @@ class ItemPatchUtilsTest {
     // NOTE: ItemPatchUtils currently writes temporary location under ITEM_JSON_TEMPORARY_LOAN_TYPE.
     // This test reflects the current behavior and will fail if the production code is fixed.
     assertTrue(changed.has(ITEM_JSON_TEMPORARY_LOAN_TYPE));
-    assertEquals("Annex", changed.get(ITEM_JSON_TEMPORARY_LOAN_TYPE).get("name").asText());
+    assertEquals("Annex", changed.get(ITEM_JSON_TEMPORARY_LOAN_TYPE).get("name").asString());
     assertFalse(changed.has(ITEM_JSON_TEMPORARY_LOCATION));
     assertEquals(3, changed.size());
   }
@@ -184,6 +184,7 @@ class ItemPatchUtilsTest {
     assertTrue(changed.has(ITEM_JSON_ADM_NOTES));
     assertTrue(changed.has(ITEM_JSON_NOTES));
     assertFalse(changed.get(ITEM_JSON_NOTES).get(0).has("tenantId"));
+    assertFalse(changed.get(ITEM_JSON_NOTES).get(0).has("itemNoteTypeName"));
     assertEquals(4, changed.size());
   }
 
@@ -198,6 +199,7 @@ class ItemPatchUtilsTest {
 
     assertTrue(changed.has(ITEM_JSON_NOTES));
     assertFalse(changed.get(ITEM_JSON_NOTES).get(0).has("tenantId"));
+    assertFalse(changed.get(ITEM_JSON_NOTES).get(0).has("itemNoteTypeName"));
     assertFalse(changed.has(ITEM_JSON_ADM_NOTES));
     assertEquals(3, changed.size());
   }
@@ -274,7 +276,7 @@ class ItemPatchUtilsTest {
   }
 
   private static ItemNote itemNote(String note) {
-    return new ItemNote().withNote(note).withTenantId("diku");
+    return new ItemNote().withNote(note).withTenantId("diku").withItemNoteTypeId("note type");
   }
 
   private static CirculationNote circulationNote(String note) {

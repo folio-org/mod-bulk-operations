@@ -12,6 +12,8 @@ import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_TEMPORARY_LOAN_TYPE;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_VERSION;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
+import static org.folio.bulkops.util.Constants.ITEM_NOTE_TYPE_NAME_KEY;
+import static org.folio.bulkops.util.Constants.TENANT_ID_KEY;
 
 import java.util.Objects;
 import lombok.experimental.UtilityClass;
@@ -27,6 +29,7 @@ import tools.jackson.databind.ser.std.SimpleFilterProvider;
 
 @UtilityClass
 public class ItemPatchUtils {
+  public static final String ITEM_NOTE_FILTER = "itemNoteFilter";
   private static final ObjectMapper mapper = new ObjectMapper();
 
   public static ObjectNode fetchChangedData(Item item, BulkOperationRuleCollection rules) {
@@ -92,13 +95,14 @@ public class ItemPatchUtils {
   }
 
   private static void addItemNotes(ObjectNode node, Item item) {
-    var filterTenantId =
+    var filter =
         new SimpleFilterProvider()
             .addFilter(
-                "tenantIdFilter", SimpleBeanPropertyFilter.serializeAllExcept("tenantId"))
+                ITEM_NOTE_FILTER,
+                SimpleBeanPropertyFilter.serializeAllExcept(TENANT_ID_KEY, ITEM_NOTE_TYPE_NAME_KEY))
             .setFailOnUnknownId(false);
 
-    var notesTree = mapper.writer(filterTenantId).valueToTree(item.getNotes());
+    var notesTree = mapper.writer(filter).valueToTree(item.getNotes());
     node.set(ITEM_JSON_NOTES, notesTree);
   }
 
