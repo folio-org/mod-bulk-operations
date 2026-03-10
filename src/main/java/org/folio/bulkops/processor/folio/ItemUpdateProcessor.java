@@ -1,6 +1,5 @@
 package org.folio.bulkops.processor.folio;
 
-import static org.folio.bulkops.processor.folio.ItemPatchUtils.fetchChangedData;
 import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextForTenant;
 
 import lombok.RequiredArgsConstructor;
@@ -33,7 +32,6 @@ public class ItemUpdateProcessor extends FolioAbstractUpdateProcessor<ExtendedIt
   @Override
   public void updateRecord(ExtendedItem extendedItem, BulkOperationRuleCollection rules) {
     var item = extendedItem.getEntity();
-    var patchBody = fetchChangedData(item, rules);
     if (consortiaService.isTenantCentral(folioExecutionContext.getTenantId())) {
       var tenantId = extendedItem.getTenantId();
       permissionsValidator.checkIfBulkEditWritePermissionExists(
@@ -41,14 +39,14 @@ public class ItemUpdateProcessor extends FolioAbstractUpdateProcessor<ExtendedIt
       try (var ignored =
           new FolioExecutionContextSetter(
               prepareContextForTenant(tenantId, folioModuleMetadata, folioExecutionContext))) {
-        itemClient.patchItem(patchBody, item.getId());
+        itemClient.updateItem(item.withHoldingsData(null), item.getId());
       }
     } else {
       permissionsValidator.checkIfBulkEditWritePermissionExists(
           folioExecutionContext.getTenantId(),
           EntityType.ITEM,
           NO_ITEM_WRITE_PERMISSIONS_TEMPLATE + folioExecutionContext.getTenantId());
-      itemClient.patchItem(patchBody, item.getId());
+      itemClient.updateItem(item.withHoldingsData(null), item.getId());
     }
   }
 
