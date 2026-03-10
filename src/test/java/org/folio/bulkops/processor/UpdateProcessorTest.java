@@ -3,6 +3,7 @@ package org.folio.bulkops.processor;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE_INCLUDING_ITEMS;
+import static org.folio.bulkops.processor.folio.ItemPatchUtils.fetchChangedData;
 import static org.folio.bulkops.util.Constants.APPLY_TO_HOLDINGS;
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
 import static org.folio.bulkops.util.Constants.GET_HOLDINGS_BY_INSTANCE_ID_QUERY;
@@ -64,6 +65,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import tools.jackson.databind.node.ObjectNode;
 
 class UpdateProcessorTest extends BaseTest {
 
@@ -163,7 +165,7 @@ class UpdateProcessorTest extends BaseTest {
 
     holdingsUpdateProcessor.updateAssociatedRecords(extendedHoldingsRecord, operation, notChanged);
 
-    verify(itemClient, times(0)).updateItem(any(Item.class), anyString());
+    verify(itemClient, times(0)).patchItem(any(ObjectNode.class), anyString());
 
     if (notChanged) {
       verify(errorService)
@@ -234,7 +236,7 @@ class UpdateProcessorTest extends BaseTest {
 
     holdingsUpdateProcessor.updateAssociatedRecords(extendedHoldingsRecord, operation, notChanged);
 
-    verify(itemClient, times(1)).updateItem(any(Item.class), anyString());
+    verify(itemClient, times(1)).patchItem(any(ObjectNode.class), anyString());
 
     if (notChanged) {
       var errorMessage =
@@ -261,25 +263,29 @@ class UpdateProcessorTest extends BaseTest {
     doNothing()
         .when(permissionsValidator)
         .checkIfBulkEditWritePermissionExists(anyString(), eq(EntityType.ITEM), anyString());
-    itemUpdateProcessor.updateRecord(extendedItem, new BulkOperationRuleCollection());
+    var rules = new BulkOperationRuleCollection();
+    itemUpdateProcessor.updateRecord(extendedItem, rules);
 
-    verify(itemClient).updateItem(item, item.getId());
+    var patchBody = fetchChangedData(item, rules);
+    verify(itemClient).patchItem(patchBody, item.getId());
   }
 
   @Test
   void shouldUpdateItemRecordWithTenant() {
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       doNothing()
-          .when(permissionsValidator)
-          .checkIfBulkEditWritePermissionExists(eq("tenantId"), eq(EntityType.ITEM), anyString());
+        .when(permissionsValidator)
+        .checkIfBulkEditWritePermissionExists(eq("tenantId"), eq(EntityType.ITEM), anyString());
       var item =
-          new Item()
-              .withId(UUID.randomUUID().toString())
-              .withHoldingsRecordId(UUID.randomUUID().toString());
+        new Item()
+          .withId(UUID.randomUUID().toString())
+          .withHoldingsRecordId(UUID.randomUUID().toString());
       var extendedItem = ExtendedItem.builder().tenantId("tenantId").entity(item).build();
-      itemUpdateProcessor.updateRecord(extendedItem, new BulkOperationRuleCollection());
+      var rules = new BulkOperationRuleCollection();
+      itemUpdateProcessor.updateRecord(extendedItem, rules);
 
-      verify(itemClient).updateItem(item, item.getId());
+      var patchBody = fetchChangedData(item, rules);
+      verify(itemClient).patchItem(patchBody, item.getId());
     }
   }
 
@@ -496,7 +502,7 @@ class UpdateProcessorTest extends BaseTest {
     folioInstanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
 
     verify(itemClient, times("folio_id".equals(sourceId) && applyToItems ? 1 : 0))
-        .updateItem(any(Item.class), anyString());
+        .patchItem(any(ObjectNode.class), anyString());
   }
 
   @Test
@@ -577,7 +583,7 @@ class UpdateProcessorTest extends BaseTest {
           .saveError(eq(operationId), eq(instanceId), anyString(), eq(ErrorType.ERROR));
       verify(holdingsStorageClient)
           .updateHoldingsRecord(any(HoldingsRecord.class), eq(holdingRecord.getId()));
-      verify(itemClient).updateItem(any(Item.class), eq(item.getId()));
+      verify(itemClient).patchItem(any(ObjectNode.class), eq(item.getId()));
     }
   }
 
