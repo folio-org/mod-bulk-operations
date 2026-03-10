@@ -274,12 +274,12 @@ class UpdateProcessorTest extends BaseTest {
   void shouldUpdateItemRecordWithTenant() {
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       doNothing()
-        .when(permissionsValidator)
-        .checkIfBulkEditWritePermissionExists(eq("tenantId"), eq(EntityType.ITEM), anyString());
+          .when(permissionsValidator)
+          .checkIfBulkEditWritePermissionExists(eq("tenantId"), eq(EntityType.ITEM), anyString());
       var item =
-        new Item()
-          .withId(UUID.randomUUID().toString())
-          .withHoldingsRecordId(UUID.randomUUID().toString());
+          new Item()
+              .withId(UUID.randomUUID().toString())
+              .withHoldingsRecordId(UUID.randomUUID().toString());
       var extendedItem = ExtendedItem.builder().tenantId("tenantId").entity(item).build();
       var rules = new BulkOperationRuleCollection();
       itemUpdateProcessor.updateRecord(extendedItem, rules);

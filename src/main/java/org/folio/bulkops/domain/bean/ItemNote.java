@@ -1,5 +1,8 @@
 package org.folio.bulkops.domain.bean;
 
+import static org.folio.bulkops.util.Constants.ITEM_NOTE_TYPE_NAME_KEY;
+import static org.folio.bulkops.util.Constants.TENANT_ID_KEY;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,9 +25,9 @@ public class ItemNote {
   @JsonProperty("staffOnly")
   private Boolean staffOnly = false;
 
-  @JsonProperty("tenantId")
+  @JsonProperty(TENANT_ID_KEY)
   private String tenantId;
 
-  @JsonProperty("itemNoteTypeName")
+  @JsonProperty(ITEM_NOTE_TYPE_NAME_KEY)
   private String itemNoteTypeName;
 }
