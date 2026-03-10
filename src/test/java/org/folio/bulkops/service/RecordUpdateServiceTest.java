@@ -92,7 +92,8 @@ class RecordUpdateServiceTest extends BaseTest {
         recordUpdateService.updateEntity(extendedOriginalItem, extendedModifiedItem, operation);
 
     assertEquals(extendedModifiedItem, result);
-    verify(itemUpdateProcessor).updateRecord(any(ExtendedItem.class), any(BulkOperationRuleCollection.class));
+    verify(itemUpdateProcessor)
+        .updateRecord(any(ExtendedItem.class), any(BulkOperationRuleCollection.class));
     verify(errorService, times(0))
         .saveError(any(UUID.class), anyString(), anyString(), eq(ErrorType.WARNING));
   }

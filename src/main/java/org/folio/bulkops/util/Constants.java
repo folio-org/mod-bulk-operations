@@ -205,4 +205,7 @@ public class Constants {
   public static final String EFFECTIVE_LOCATION = "effectiveLocation";
   public static final String PERMANENT_LOCATION = "permanentLocation";
   public static final String TEMPORARY_LOCATION = "temporaryLocation";
+
+  public static final String TENANT_ID_KEY = "tenantId";
+  public static final String ITEM_NOTE_TYPE_NAME_KEY = "itemNoteTypeName";
 }

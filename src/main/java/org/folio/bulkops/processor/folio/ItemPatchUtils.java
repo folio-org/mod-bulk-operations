@@ -7,18 +7,24 @@ import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_DISCOVERY_SUPPRESS;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_ID;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_NOTES;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_PERMANENT_LOAN_TYPE;
+import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_STATUS;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_TEMPORARY_LOAN_TYPE;
+import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_TEMPORARY_LOCATION;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_VERSION;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
+import static org.folio.bulkops.util.Constants.ITEM_NOTE_TYPE_NAME_KEY;
+import static org.folio.bulkops.util.Constants.TENANT_ID_KEY;
 
+import java.util.List;
 import java.util.Objects;
 import lombok.experimental.UtilityClass;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.BooleanNode;
 import tools.jackson.databind.node.IntNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -90,7 +96,12 @@ public class ItemPatchUtils {
   }
 
   private static void addItemNotes(ObjectNode node, Item item) {
-    node.set(ITEM_JSON_NOTES, mapper.valueToTree(item.getNotes()));
+    var noteJsons = (ArrayNode) mapper.valueToTree(item.getNotes());
+    for (var noteJson : noteJsons) {
+      ObjectNode note = (ObjectNode) noteJson;
+      note.remove(List.of(TENANT_ID_KEY, ITEM_NOTE_TYPE_NAME_KEY));
+    }
+    node.set(ITEM_JSON_NOTES, noteJsons);
   }
 
   private static void addCirculationNotes(ObjectNode node, Item item) {
@@ -102,18 +113,34 @@ public class ItemPatchUtils {
   }
 
   private static void addPermanentLoanType(ObjectNode node, Item item) {
-    node.set(ITEM_JSON_PERMANENT_LOAN_TYPE, mapper.valueToTree(item.getPermanentLoanType()));
+    var value =
+        isNull(item.getPermanentLoanType())
+            ? mapper.createObjectNode()
+            : mapper.valueToTree(item.getPermanentLoanType());
+    node.set(ITEM_JSON_PERMANENT_LOAN_TYPE, value);
   }
 
   private static void addTemporaryLoanType(ObjectNode node, Item item) {
-    node.set(ITEM_JSON_TEMPORARY_LOAN_TYPE, mapper.valueToTree(item.getTemporaryLoanType()));
+    var value =
+        isNull(item.getTemporaryLoanType())
+            ? mapper.createObjectNode()
+            : mapper.valueToTree(item.getTemporaryLoanType());
+    node.set(ITEM_JSON_TEMPORARY_LOAN_TYPE, value);
   }
 
   private static void addPermanentLocation(ObjectNode node, Item item) {
-    node.set(ITEM_JSON_PERMANENT_LOAN_TYPE, mapper.valueToTree(item.getPermanentLocation()));
+    var value =
+        isNull(item.getPermanentLocation())
+            ? mapper.createObjectNode()
+            : mapper.valueToTree(item.getPermanentLocation());
+    node.set(ITEM_JSON_PERMANENT_LOCATION, value);
   }
 
   private static void addTemporaryLocation(ObjectNode node, Item item) {
-    node.set(ITEM_JSON_TEMPORARY_LOAN_TYPE, mapper.valueToTree(item.getTemporaryLocation()));
+    var value =
+        isNull(item.getTemporaryLocation())
+            ? mapper.createObjectNode()
+            : mapper.valueToTree(item.getTemporaryLocation());
+    node.set(ITEM_JSON_TEMPORARY_LOCATION, value);
   }
 }

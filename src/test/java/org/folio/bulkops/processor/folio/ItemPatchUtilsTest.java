@@ -131,11 +131,9 @@ class ItemPatchUtilsTest {
 
     var changed = ItemPatchUtils.fetchChangedData(item, rules);
 
-    // NOTE: ItemPatchUtils currently writes permanent location under ITEM_JSON_PERMANENT_LOAN_TYPE.
-    // This test reflects the current behavior and will fail if the production code is fixed.
-    assertTrue(changed.has(ITEM_JSON_PERMANENT_LOAN_TYPE));
-    assertEquals("Main", changed.get(ITEM_JSON_PERMANENT_LOAN_TYPE).get("name").asText());
-    assertFalse(changed.has(ITEM_JSON_PERMANENT_LOCATION));
+    assertTrue(changed.has(ITEM_JSON_PERMANENT_LOCATION));
+    assertEquals("Main", changed.get(ITEM_JSON_PERMANENT_LOCATION).get("name").asText());
+    assertFalse(changed.has(ITEM_JSON_PERMANENT_LOAN_TYPE));
     assertEquals(3, changed.size());
   }
 
@@ -148,11 +146,9 @@ class ItemPatchUtilsTest {
 
     var changed = ItemPatchUtils.fetchChangedData(item, rules);
 
-    // NOTE: ItemPatchUtils currently writes temporary location under ITEM_JSON_TEMPORARY_LOAN_TYPE.
-    // This test reflects the current behavior and will fail if the production code is fixed.
-    assertTrue(changed.has(ITEM_JSON_TEMPORARY_LOAN_TYPE));
-    assertEquals("Annex", changed.get(ITEM_JSON_TEMPORARY_LOAN_TYPE).get("name").asText());
-    assertFalse(changed.has(ITEM_JSON_TEMPORARY_LOCATION));
+    assertTrue(changed.has(ITEM_JSON_TEMPORARY_LOCATION));
+    assertEquals("Annex", changed.get(ITEM_JSON_TEMPORARY_LOCATION).get("name").asText());
+    assertFalse(changed.has(ITEM_JSON_TEMPORARY_LOAN_TYPE));
     assertEquals(3, changed.size());
   }
 
@@ -255,6 +251,23 @@ class ItemPatchUtilsTest {
 
     assertThrows(
         IllegalArgumentException.class, () -> ItemPatchUtils.fetchChangedData(item, rules));
+  }
+
+  @Test
+  void shouldRemoveTenantIdAndItemNoteTypeNameFromItemNotesPatchBody() {
+    var note =
+        new ItemNote().withNote("n1").withTenantId("diku").withItemNoteTypeName("Admin note");
+
+    var item = Item.builder().notes(List.of(note)).build();
+    var rules =
+        ruleCollection(rule(UpdateOptionType.ITEM_NOTE, action(UpdateActionType.REPLACE_WITH)));
+
+    var changed = ItemPatchUtils.fetchChangedData(item, rules);
+
+    assertTrue(changed.has(ITEM_JSON_NOTES));
+    assertEquals("n1", changed.get(ITEM_JSON_NOTES).get(0).get("note").asText());
+    assertFalse(changed.get(ITEM_JSON_NOTES).get(0).has("tenantId"));
+    assertFalse(changed.get(ITEM_JSON_NOTES).get(0).has("itemNoteTypeName"));
   }
 
   private static BulkOperationRuleCollection ruleCollection(BulkOperationRule... rules) {
