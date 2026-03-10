@@ -22,6 +22,8 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.BooleanNode;
 import tools.jackson.databind.node.IntNode;
 import tools.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.ser.std.SimpleBeanPropertyFilter;
+import tools.jackson.databind.ser.std.SimpleFilterProvider;
 
 @UtilityClass
 public class ItemPatchUtils {
@@ -90,7 +92,14 @@ public class ItemPatchUtils {
   }
 
   private static void addItemNotes(ObjectNode node, Item item) {
-    node.set(ITEM_JSON_NOTES, mapper.valueToTree(item.getNotes()));
+    var filterTenantId =
+        new SimpleFilterProvider()
+            .addFilter(
+                "tenantIdFilter", SimpleBeanPropertyFilter.serializeAllExcept("tenantId"))
+            .setFailOnUnknownId(false);
+
+    var notesTree = mapper.writer(filterTenantId).valueToTree(item.getNotes());
+    node.set(ITEM_JSON_NOTES, notesTree);
   }
 
   private static void addCirculationNotes(ObjectNode node, Item item) {

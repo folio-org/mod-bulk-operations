@@ -183,6 +183,7 @@ class ItemPatchUtilsTest {
 
     assertTrue(changed.has(ITEM_JSON_ADM_NOTES));
     assertTrue(changed.has(ITEM_JSON_NOTES));
+    assertFalse(changed.get(ITEM_JSON_NOTES).get(0).has("tenantId"));
     assertEquals(4, changed.size());
   }
 
@@ -196,6 +197,7 @@ class ItemPatchUtilsTest {
     var changed = ItemPatchUtils.fetchChangedData(item, rules);
 
     assertTrue(changed.has(ITEM_JSON_NOTES));
+    assertFalse(changed.get(ITEM_JSON_NOTES).get(0).has("tenantId"));
     assertFalse(changed.has(ITEM_JSON_ADM_NOTES));
     assertEquals(3, changed.size());
   }
@@ -214,6 +216,7 @@ class ItemPatchUtilsTest {
     var changed = ItemPatchUtils.fetchChangedData(item, rules);
 
     assertTrue(changed.has(ITEM_JSON_NOTES));
+    assertFalse(changed.get(ITEM_JSON_NOTES).get(0).has("tenantId"));
     assertTrue(changed.has(ITEM_JSON_ADM_NOTES));
     assertEquals(4, changed.size());
   }
@@ -271,7 +274,7 @@ class ItemPatchUtilsTest {
   }
 
   private static ItemNote itemNote(String note) {
-    return new ItemNote().withNote(note);
+    return new ItemNote().withNote(note).withTenantId("diku");
   }
 
   private static CirculationNote circulationNote(String note) {
