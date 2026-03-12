@@ -11,13 +11,19 @@ import static org.folio.bulkops.domain.bean.HoldingsRecord.HOLDINGS_JSON_TEMPORA
 import static org.folio.bulkops.domain.bean.HoldingsRecord.HOLDINGS_JSON_VERSION;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
+import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_TYPE_KEY;
+import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_TYPE_NAME_KEY;
+import static org.folio.bulkops.util.Constants.ITEM_NOTE_TYPE_NAME_KEY;
+import static org.folio.bulkops.util.Constants.TENANT_ID_KEY;
 
+import java.util.List;
 import java.util.Objects;
 import lombok.experimental.UtilityClass;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.BooleanNode;
 import tools.jackson.databind.node.IntNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -104,7 +110,12 @@ public class HoldingsPatchUtils {
   }
 
   private static void addHoldingsNotes(ObjectNode node, HoldingsRecord holdingsRecord) {
-    node.set(HOLDINGS_JSON_HOLDINGS_NOTES, mapper.valueToTree(holdingsRecord.getNotes()));
+    var noteJsons = (ArrayNode) mapper.valueToTree(holdingsRecord.getNotes());
+    for (var noteJson : noteJsons) {
+      ObjectNode note = (ObjectNode) noteJson;
+      note.remove(List.of(TENANT_ID_KEY, HOLDINGS_NOTE_TYPE_KEY, HOLDINGS_NOTE_TYPE_NAME_KEY));
+    }
+    node.set(HOLDINGS_JSON_HOLDINGS_NOTES, noteJsons);
   }
 
   private static void addPermanentLocation(ObjectNode node, HoldingsRecord holdingsRecord) {

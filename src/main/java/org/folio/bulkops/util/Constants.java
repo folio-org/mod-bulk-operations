@@ -208,4 +208,6 @@ public class Constants {
 
   public static final String TENANT_ID_KEY = "tenantId";
   public static final String ITEM_NOTE_TYPE_NAME_KEY = "itemNoteTypeName";
+  public static final String HOLDINGS_NOTE_TYPE_KEY = "holdingsNoteType";
+  public static final String HOLDINGS_NOTE_TYPE_NAME_KEY = "holdingsNoteTypeName";
 }

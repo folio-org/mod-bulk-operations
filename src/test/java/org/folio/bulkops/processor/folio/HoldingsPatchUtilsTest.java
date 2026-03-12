@@ -8,6 +8,9 @@ import static org.folio.bulkops.domain.bean.HoldingsRecord.HOLDINGS_JSON_ID;
 import static org.folio.bulkops.domain.bean.HoldingsRecord.HOLDINGS_JSON_PERMANENT_LOCATION_ID;
 import static org.folio.bulkops.domain.bean.HoldingsRecord.HOLDINGS_JSON_TEMPORARY_LOCATION_ID;
 import static org.folio.bulkops.domain.bean.HoldingsRecord.HOLDINGS_JSON_VERSION;
+import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_TYPE_KEY;
+import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_TYPE_NAME_KEY;
+import static org.folio.bulkops.util.Constants.TENANT_ID_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -17,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 import org.folio.bulkops.domain.bean.ElectronicAccess;
 import org.folio.bulkops.domain.bean.HoldingsNote;
+import org.folio.bulkops.domain.bean.HoldingsNoteType;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
@@ -94,6 +98,9 @@ class HoldingsPatchUtilsTest {
     assertTrue(changed.has(HOLDINGS_JSON_ADMINISTRATIVE_NOTES));
     assertTrue(changed.has(HOLDINGS_JSON_HOLDINGS_NOTES));
     assertEquals(4, changed.size());
+    assertFalse(changed.get(HOLDINGS_JSON_HOLDINGS_NOTES).get(0).has(TENANT_ID_KEY));
+    assertFalse(changed.get(HOLDINGS_JSON_HOLDINGS_NOTES).get(0).has(HOLDINGS_NOTE_TYPE_KEY));
+    assertFalse(changed.get(HOLDINGS_JSON_HOLDINGS_NOTES).get(0).has(HOLDINGS_NOTE_TYPE_NAME_KEY));
   }
 
   @Test
@@ -111,6 +118,9 @@ class HoldingsPatchUtilsTest {
     assertTrue(changed.has(HOLDINGS_JSON_HOLDINGS_NOTES));
     assertFalse(changed.has(HOLDINGS_JSON_ADMINISTRATIVE_NOTES));
     assertEquals(3, changed.size());
+    assertFalse(changed.get(HOLDINGS_JSON_HOLDINGS_NOTES).get(0).has(TENANT_ID_KEY));
+    assertFalse(changed.get(HOLDINGS_JSON_HOLDINGS_NOTES).get(0).has(HOLDINGS_NOTE_TYPE_KEY));
+    assertFalse(changed.get(HOLDINGS_JSON_HOLDINGS_NOTES).get(0).has(HOLDINGS_NOTE_TYPE_NAME_KEY));
   }
 
   @Test
@@ -132,6 +142,9 @@ class HoldingsPatchUtilsTest {
     assertTrue(changed.has(HOLDINGS_JSON_HOLDINGS_NOTES));
     assertTrue(changed.has(HOLDINGS_JSON_ADMINISTRATIVE_NOTES));
     assertEquals(4, changed.size());
+    assertFalse(changed.get(HOLDINGS_JSON_HOLDINGS_NOTES).get(0).has(TENANT_ID_KEY));
+    assertFalse(changed.get(HOLDINGS_JSON_HOLDINGS_NOTES).get(0).has(HOLDINGS_NOTE_TYPE_KEY));
+    assertFalse(changed.get(HOLDINGS_JSON_HOLDINGS_NOTES).get(0).has(HOLDINGS_NOTE_TYPE_NAME_KEY));
   }
 
   @Test
@@ -235,6 +248,10 @@ class HoldingsPatchUtilsTest {
   }
 
   private static HoldingsNote note(String note) {
-    return new HoldingsNote().withNote(note);
+    return new HoldingsNote()
+      .withNote(note)
+      .withHoldingsNoteType(new HoldingsNoteType().withId(UUID.randomUUID().toString()))
+      .withTenantId("tenant")
+      .withHoldingsNoteTypeName("type");
   }
 }
