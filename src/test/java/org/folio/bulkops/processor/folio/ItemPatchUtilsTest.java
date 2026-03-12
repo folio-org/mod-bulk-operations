@@ -104,7 +104,8 @@ class ItemPatchUtilsTest {
     var changed = ItemPatchUtils.fetchChangedData(item, rules);
 
     assertTrue(changed.has(ITEM_JSON_PERMANENT_LOAN_TYPE));
-    assertEquals("Can circulate", changed.get(ITEM_JSON_PERMANENT_LOAN_TYPE).get("name").asString());
+    assertEquals(
+        "Can circulate", changed.get(ITEM_JSON_PERMANENT_LOAN_TYPE).get("name").asString());
     assertEquals(3, changed.size());
   }
 

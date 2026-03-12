@@ -136,7 +136,7 @@
             "inventory-storage.call-number-types.collection.get",
             "inventory-storage.electronic-access-relationships.item.get",
             "inventory-storage.electronic-access-relationships.collection.get",
-            "inventory-storage.holdings.item.put",
+            "inventory-storage.holdings.item.patch.execute",
             "inventory-storage.holdings.item.get",
             "inventory-storage.holdings.collection.get",
             "inventory-storage.holdings-sources.item.get",
@@ -551,7 +551,7 @@
     },
     {
       "id": "holdings-storage",
-      "version": "7.0 8.0"
+      "version": "8.2"
     },
     {
       "id": "instance-storage",

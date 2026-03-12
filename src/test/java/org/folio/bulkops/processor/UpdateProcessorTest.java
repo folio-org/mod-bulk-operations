@@ -48,6 +48,7 @@ import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.processor.folio.FolioInstanceUpdateProcessor;
+import org.folio.bulkops.processor.folio.HoldingsPatchUtils;
 import org.folio.bulkops.processor.folio.HoldingsUpdateProcessor;
 import org.folio.bulkops.processor.folio.ItemUpdateProcessor;
 import org.folio.bulkops.processor.folio.UserUpdateProcessor;
@@ -98,7 +99,9 @@ class UpdateProcessorTest extends BaseTest {
 
     holdingsUpdateProcessor.updateRecord(extendedHoldingsRecord, new BulkOperationRuleCollection());
 
-    verify(holdingsStorageClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
+    var patchBody =
+        HoldingsPatchUtils.fetchChangedData(holdingsRecord, new BulkOperationRuleCollection());
+    verify(holdingsStorageClient).patchHoldingsRecord(patchBody, holdingsRecord.getId());
   }
 
   @Test
@@ -118,7 +121,9 @@ class UpdateProcessorTest extends BaseTest {
       holdingsUpdateProcessor.updateRecord(
           extendedHoldingsRecord, new BulkOperationRuleCollection());
 
-      verify(holdingsStorageClient).updateHoldingsRecord(holdingsRecord, holdingsRecord.getId());
+      var patchBody =
+          HoldingsPatchUtils.fetchChangedData(holdingsRecord, new BulkOperationRuleCollection());
+      verify(holdingsStorageClient).patchHoldingsRecord(patchBody, holdingsRecord.getId());
     }
   }
 
@@ -274,12 +279,12 @@ class UpdateProcessorTest extends BaseTest {
   void shouldUpdateItemRecordWithTenant() {
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       doNothing()
-        .when(permissionsValidator)
-        .checkIfBulkEditWritePermissionExists(eq("tenantId"), eq(EntityType.ITEM), anyString());
+          .when(permissionsValidator)
+          .checkIfBulkEditWritePermissionExists(eq("tenantId"), eq(EntityType.ITEM), anyString());
       var item =
-        new Item()
-          .withId(UUID.randomUUID().toString())
-          .withHoldingsRecordId(UUID.randomUUID().toString());
+          new Item()
+              .withId(UUID.randomUUID().toString())
+              .withHoldingsRecordId(UUID.randomUUID().toString());
       var extendedItem = ExtendedItem.builder().tenantId("tenantId").entity(item).build();
       var rules = new BulkOperationRuleCollection();
       itemUpdateProcessor.updateRecord(extendedItem, rules);
@@ -411,7 +416,7 @@ class UpdateProcessorTest extends BaseTest {
     folioInstanceUpdateProcessor.updateAssociatedRecords(extendedInstance, operation, false);
 
     verify(holdingsStorageClient, times("folio_id".equals(sourceId) && applyToHoldings ? 1 : 0))
-        .updateHoldingsRecord(any(HoldingsRecord.class), anyString());
+        .patchHoldingsRecord(any(ObjectNode.class), anyString());
   }
 
   @ParameterizedTest
@@ -582,7 +587,7 @@ class UpdateProcessorTest extends BaseTest {
       verify(errorService)
           .saveError(eq(operationId), eq(instanceId), anyString(), eq(ErrorType.ERROR));
       verify(holdingsStorageClient)
-          .updateHoldingsRecord(any(HoldingsRecord.class), eq(holdingRecord.getId()));
+          .patchHoldingsRecord(any(ObjectNode.class), eq(holdingRecord.getId()));
       verify(itemClient).patchItem(any(ObjectNode.class), eq(item.getId()));
     }
   }
