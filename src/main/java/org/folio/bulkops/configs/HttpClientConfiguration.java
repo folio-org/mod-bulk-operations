@@ -326,7 +326,7 @@ public class HttpClientConfiguration {
             .defaultStatusHandler(HttpStatusCode::isError, errorHandler::handle)
             .requestInterceptor(
                     (request, body, execution) -> {
-                      log.info("Request URL: {}", request.getURI());
+                      log.debug("Request URL: {}", request.getURI());
                       request.getHeaders().add(HttpHeaders.ACCEPT_ENCODING, "identity");
                       return execution.execute(request, body);
                     })
