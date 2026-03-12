@@ -253,6 +253,22 @@
       }
     ],
     "EnvVars": [
+      {
+        "name": "SIDECAR_MODULE_PATH_PREFIX_STRATEGY",
+        "value": "STRIP",
+        "essential": true
+      },
+      {
+        "name": "REQUEST_TIMEOUT",
+        "value": "604800000",
+        "essential": true
+      },
+      {
+        "name": "TOKEN_CACHE_MAX_CAPACITY",
+        "value": "5000",
+        "type": "CACHE",
+        "essential": true
+      },
     ]
   }
 }
