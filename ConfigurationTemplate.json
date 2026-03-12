@@ -53,6 +53,7 @@
         "name": "S3_URL",
         "value": "http://127.0.0.1:9000",
         "essential": true,
+        "type": "S3"
         "description": "S3 url"
       },
       {
@@ -127,6 +128,7 @@
         "name": "DI_CHUNK_SIZE",
         "value": "1000",
         "essential": true,
+        "type": "FUNCTIONAL",
         "description": "DI_NUMBER_OF_CONCURRENT_REQUESTS"
       },
       {
@@ -163,12 +165,14 @@
         "name": "KAFKA_PORT",
         "value": "9092",
         "essential": false,
+        "type": "KAFKA",
         "description": "Kafka broker port"
       },
       {
         "name": "DB_HOST",
         "value": "postgres",
         "essential": false,
+        "type": "DB",
         "description": "Database"
       },
       {
