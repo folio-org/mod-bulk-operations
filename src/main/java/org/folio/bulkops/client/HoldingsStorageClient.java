@@ -8,8 +8,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.service.annotation.GetExchange;
 import org.springframework.web.service.annotation.HttpExchange;
-import org.springframework.web.service.annotation.PutExchange;
+import org.springframework.web.service.annotation.PatchExchange;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
 
 @HttpExchange(url = "holdings-storage/holdings", accept = MediaType.APPLICATION_JSON_VALUE)
 public interface HoldingsStorageClient {
@@ -17,9 +18,8 @@ public interface HoldingsStorageClient {
   @GetExchange(value = "/{holdingsRecordId}")
   HoldingsRecord getHoldingById(@PathVariable String holdingsRecordId);
 
-  @PutExchange(value = "/{holdingsId}")
-  void updateHoldingsRecord(
-      @RequestBody HoldingsRecord holdingsRecord, @PathVariable String holdingsId);
+  @PatchExchange(value = "/{holdingsId}")
+  void patchHoldingsRecord(@RequestBody ObjectNode patchRequest, @PathVariable String holdingsId);
 
   @GetExchange
   HoldingsRecordCollection getByQuery(@RequestParam String query, @RequestParam long limit);

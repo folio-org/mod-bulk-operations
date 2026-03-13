@@ -197,9 +197,10 @@ public class FolioInstanceUpdateProcessor extends FolioAbstractUpdateProcessor<E
       return false;
     }
     holdingsForUpdate.forEach(
-        holdingsRecord ->
-            holdingsStorageClient.updateHoldingsRecord(
-                holdingsRecord.withDiscoverySuppress(suppress), holdingsRecord.getId()));
+        holdingsRecord -> {
+          var patchBody = HoldingsPatchUtils.createPatchForSuppress(holdingsRecord, suppress);
+          holdingsStorageClient.patchHoldingsRecord(patchBody, holdingsRecord.getId());
+        });
     return true;
   }
 

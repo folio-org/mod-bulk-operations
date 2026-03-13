@@ -43,8 +43,16 @@ import org.folio.bulkops.domain.dto.TenantNotePair;
       "illPolicy", "instanceHrid", "itemBarcode", "tenantId"
     })
 public class HoldingsRecord implements BulkOperationsEntity {
+  public static final String HOLDINGS_JSON_ADMINISTRATIVE_NOTES = "administrativeNotes";
+  public static final String HOLDINGS_JSON_DISCOVERY_SUPPRESS = "discoverySuppress";
+  public static final String HOLDINGS_JSON_ELECTRONIC_ACCESS = "electronicAccess";
+  public static final String HOLDINGS_JSON_ID = "id";
+  public static final String HOLDINGS_JSON_HOLDINGS_NOTES = "notes";
+  public static final String HOLDINGS_JSON_PERMANENT_LOCATION_ID = "permanentLocationId";
+  public static final String HOLDINGS_JSON_TEMPORARY_LOCATION_ID = "temporaryLocationId";
+  public static final String HOLDINGS_JSON_VERSION = "_version";
 
-  @JsonProperty("id")
+  @JsonProperty(HOLDINGS_JSON_ID)
   @CsvCustomBindByName(column = "Holdings UUID", converter = StringConverter.class)
   @CsvCustomBindByPosition(position = 0, converter = StringConverter.class)
   @UnifiedTableCell(visible = false)
@@ -58,7 +66,7 @@ public class HoldingsRecord implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private String instanceTitle;
 
-  @JsonProperty("discoverySuppress")
+  @JsonProperty(HOLDINGS_JSON_DISCOVERY_SUPPRESS)
   @CsvCustomBindByName(column = "Suppress from discovery", converter = BooleanConverter.class)
   @CsvCustomBindByPosition(position = 2, converter = BooleanConverter.class)
   @UnifiedTableCell
@@ -98,14 +106,14 @@ public class HoldingsRecord implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private List<String> statisticalCodeIds = null;
 
-  @JsonProperty("administrativeNotes")
+  @JsonProperty(HOLDINGS_JSON_ADMINISTRATIVE_NOTES)
   @Valid
   @CsvCustomBindByName(column = "Administrative note", converter = StringListConverter.class)
   @CsvCustomBindByPosition(position = 8, converter = StringListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<String> administrativeNotes = null;
 
-  @JsonProperty("permanentLocationId")
+  @JsonProperty(HOLDINGS_JSON_PERMANENT_LOCATION_ID)
   @CsvCustomBindByName(
       column = "Holdings permanent location",
       converter = HoldingsLocationConverter.class)
@@ -113,7 +121,7 @@ public class HoldingsRecord implements BulkOperationsEntity {
   @UnifiedTableCell
   private String permanentLocationId;
 
-  @JsonProperty("temporaryLocationId")
+  @JsonProperty(HOLDINGS_JSON_TEMPORARY_LOCATION_ID)
   @CsvCustomBindByName(
       column = "Holdings temporary location",
       converter = HoldingsLocationConverter.class)
@@ -214,13 +222,13 @@ public class HoldingsRecord implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private String retentionPolicy;
 
-  @JsonProperty("notes")
+  @JsonProperty(HOLDINGS_JSON_HOLDINGS_NOTES)
   @CsvCustomBindByName(column = "Notes", converter = HoldingsNoteListConverter.class)
   @CsvCustomBindByPosition(position = 24, converter = HoldingsNoteListConverter.class)
   @UnifiedTableCell(visible = false)
   private List<HoldingsNote> notes;
 
-  @JsonProperty("electronicAccess")
+  @JsonProperty(HOLDINGS_JSON_ELECTRONIC_ACCESS)
   @Valid
   @CsvCustomBindByName(
       column = "Electronic access",
@@ -259,7 +267,7 @@ public class HoldingsRecord implements BulkOperationsEntity {
   @UnifiedTableCell(visible = false)
   private String tenantId;
 
-  @JsonProperty("_version")
+  @JsonProperty(HOLDINGS_JSON_VERSION)
   private Integer version;
 
   @JsonProperty("instanceId")

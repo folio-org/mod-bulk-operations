@@ -322,7 +322,8 @@ public class HttpClientConfiguration {
 
   @Bean
   public HttpServiceProxyFactory factory(RestClient.Builder restClientBuilder) {
-    var restClient = restClientBuilder
+    var restClient =
+        restClientBuilder
             .defaultStatusHandler(HttpStatusCode::isError, errorHandler::handle)
             .requestInterceptor(
                     (request, body, execution) -> {
@@ -332,9 +333,6 @@ public class HttpClientConfiguration {
                     })
             .build();
 
-    return HttpServiceProxyFactory
-            .builderFor(RestClientAdapter.create(restClient))
-            .build();
+    return HttpServiceProxyFactory.builderFor(RestClientAdapter.create(restClient)).build();
   }
-
 }
