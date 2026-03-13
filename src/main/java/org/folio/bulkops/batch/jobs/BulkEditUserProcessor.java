@@ -6,10 +6,12 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.dateToString;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.resolveIdentifier;
 import static org.folio.bulkops.util.Constants.MIN_YEAR_FOR_BIRTH_DATE;
+import static org.folio.bulkops.util.Constants.MSG_DCB_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.MULTIPLE_MATCHES_MESSAGE;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.Constants.NO_USER_VIEW_PERMISSIONS;
+import static org.folio.bulkops.util.Constants.DCB;
 import static org.folio.bulkops.util.FqmContentFetcher.SHADOW;
 
 import java.time.Instant;
@@ -105,6 +107,10 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
       if (SHADOW.equalsIgnoreCase(ofNullable(user.getType()).map(Object::toString).orElse(EMPTY))) {
         log.error("Exception thrown for shadow user with id: {}", user.getId());
         throw new BulkEditException(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED, ErrorType.ERROR);
+      }
+      if (DCB.equalsIgnoreCase(ofNullable(user.getType()).map(Object::toString).orElse(EMPTY))) {
+        log.error("Exception thrown for DCB user with id: {}", user.getId());
+        throw new BulkEditException(MSG_DCB_RECORDS_CANNOT_BE_EDITED, ErrorType.ERROR);
       }
       var birthDate = user.getPersonal().getDateOfBirth();
       validateBirthDate(birthDate);
