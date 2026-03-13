@@ -326,11 +326,11 @@ public class HttpClientConfiguration {
         restClientBuilder
             .defaultStatusHandler(HttpStatusCode::isError, errorHandler::handle)
             .requestInterceptor(
-                (request, body, execution) -> {
-                  log.info("Request URL: {}", request.getURI());
-                  request.getHeaders().add(HttpHeaders.ACCEPT_ENCODING, "identity");
-                  return execution.execute(request, body);
-                })
+                    (request, body, execution) -> {
+                      log.debug("Request URL: {}", request.getURI());
+                      request.getHeaders().add(HttpHeaders.ACCEPT_ENCODING, "identity");
+                      return execution.execute(request, body);
+                    })
             .build();
 
     return HttpServiceProxyFactory.builderFor(RestClientAdapter.create(restClient)).build();

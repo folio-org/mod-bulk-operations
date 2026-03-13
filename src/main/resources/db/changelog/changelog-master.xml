@@ -54,4 +54,5 @@
   <include file="changes/14-08-2025_add_update_option_to_marc_rule.xml" relativeToChangelogFile="true"/>
   <include file="changes/28-10-2025_update_bulk_operation_add_modified_json_preview_link.xml" relativeToChangelogFile="true"/>
   <include file="changes/29-10-2025_update_bulk_operation_add_committed_json_preview_link.xml" relativeToChangelogFile="true"/>
+  <include file="changes/12-03-2026_add_allowed_lost_and_paid_item_statuses.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
