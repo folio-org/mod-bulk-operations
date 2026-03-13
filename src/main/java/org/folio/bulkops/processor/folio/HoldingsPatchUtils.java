@@ -13,7 +13,6 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_TYPE_KEY;
 import static org.folio.bulkops.util.Constants.HOLDINGS_NOTE_TYPE_NAME_KEY;
-import static org.folio.bulkops.util.Constants.ITEM_NOTE_TYPE_NAME_KEY;
 import static org.folio.bulkops.util.Constants.TENANT_ID_KEY;
 
 import java.util.List;
