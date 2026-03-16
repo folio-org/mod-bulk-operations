@@ -1,0 +1,646 @@
+{
+  "description": "{module} configuration template",
+  "moduleDefaults": {
+    "resources": [
+      {
+        "name": "cpu",
+        "value": "{cpu}",
+        "description": "CPU request/limit for container"
+      },
+      {
+        "name": "memory",
+        "value": "{memory}",
+        "description": "Memory hard limit for container"
+      },
+      {
+        "name": "memoryReservation",
+        "value": "{memoryReservation}",
+        "description": "Memory reservation for container"
+      }
+    ],
+    "java": [
+      {
+        "name": "xmx",
+        "value": "{xmx}",
+        "description": "Maximum Java heap size"
+      },
+      {
+        "name": "MaxMetaspaceSize",
+        "value": "{MaxMetaspaceSize}",
+        "description": "Maximum Java metaspace size"
+      },
+      {
+        "name": "MetaspaceSize",
+        "value": "{MetaspaceSize}",
+        "description": "Initial Java metaspace size"
+      }
+    ],
+    "deployment": {
+      "isHaSupported": true,
+      "replicasRecommendedCount": 2,
+      "description": "Deployment configuration for the backend module. Adjust replicas based on expected load and HA requirements. Set to false if only single instance is supported or required."
+    },
+    "kong": {
+      "timeouts": {
+        "connect": "60s",
+        "send": "60s",
+        "read": "60s"
+      },
+      "description": "Custom Kong proxy timeouts. Use this only if different from default Kong configuration"
+    },
+    "EnvVars": [
+      {
+        "name": "ACCOUNT_NAME",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "AWS_CODEGURU_AGENT_URI",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "AWS_CODEGURU_LOCAL_FILE",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "AWS_CODEGURU_PROFILER_GROUP_NAME",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "AWS_CODEGURU_PROFILER_HEAP_SUMMARY_ENABLED",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "AWS_MAX_ATTEMPTS",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "AWS_REGION",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "AWS_RETRY_MODE",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "CONFIG_FILE",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "DB_DATABASE",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "DB_EXPLAIN_QUERY_THRESHOLD",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "DB_HOST",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "DB_MAXPOOLSIZE",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "DB_PASSWORD",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "DB_PORT",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "DB_USERNAME",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "ENV",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "EUREKA_RESOLVE_SIDECAR_IP",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "IS_EUREKA",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "JAVA_ARGS",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "JAVA_OPTS",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "JAVA_PROFILER_OPTS",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "JAVA_PROFILER_STATE",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "KAFKA_HOST",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "KAFKA_PORT",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "KAFKA_PRODUCER_TENANT_COLLECTION",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "LOG4J_CONFIGURATION_FILE",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "PLATFORM",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "PREFIX",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "SECURE_STORE_ENV",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "SIDECAR_MODULE_PATH_PREFIX_STRATEGY",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      }
+    ]
+  },
+
+  "sidecarDefaults": {
+    "resources": [
+      {
+        "name": "cpu",
+        "value": "{cpu}",
+        "description": "CPU request/limit for container"
+      },
+      {
+        "name": "memory",
+        "value": "{memory}",
+        "description": "Memory hard limit for container"
+      },
+      {
+        "name": "memoryReservation",
+        "value": "{memoryReservation}",
+        "description": "Memory reservation for container"
+      }
+    ],
+    "java": [
+      {
+        "name": "xms",
+        "value": "{xms}",
+        "description": "Initial Java heap size"
+      },
+      {
+        "name": "xmx",
+        "value": "{xmx}",
+        "description": "Maximum Java heap size"
+      },
+      {
+        "name": "MaxMetaspaceSize",
+        "value": "{MaxMetaspaceSize}",
+        "description": "Maximum Java metaspace size"
+      }
+    ],
+    "EnvVars": [
+      {
+        "name": "ACCOUNT_NAME",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "ALLOW_CROSS_TENANT_REQUESTS",
+        "value": "false",
+        "description": "Allows cross tenant interactions",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "AM_CLIENT_URL",
+        "value": "http://mgr-applications:8081",
+        "description": "mgr-applications URL",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "AWS_CODEGURU_AGENT_URI",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "AWS_CODEGURU_LOCAL_FILE",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "AWS_CODEGURU_PROFILER_GROUP_NAME",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "AWS_CODEGURU_PROFILER_HEAP_SUMMARY_ENABLED",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "AWS_MAX_ATTEMPTS",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "AWS_RETRY_MODE",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "ENV",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "JAVA_OPTS",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "JAVA_PROFILER_OPTS",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "JAVA_SIDECAR_PROFILER_STATE",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "KAFKA_HOST",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "KAFKA_PORT",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "KC_ADMIN_CLIENT_ID",
+        "value": "folio-backend-admin-client",
+        "description": "Master realm specific client id for authenticating requests to manager components.",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "KC_AUTHORIZATION_CACHE_MAX_SIZE",
+        "value": "50",
+        "description": "Maximum amount of entries for keycloak authorization cache.",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "KC_LOGIN_CLIENT_SUFFIX",
+        "value": "-login-application",
+        "description": "Suffix of a Keycloak client who owns the authorization resources. It is used as audience for keycloak when evaluating permissions.",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "KC_SERVICE_CLIENT_ID",
+        "value": "sidecar-module-access-client",
+        "description": "Tenant specific client id for authenticating egress requests.",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "KC_URI_VALIDATION_ENABLED",
+        "value": "true",
+        "description": "Defines if JsonWebTokenParser compares URI from token with KC_URL value.",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "KC_URL",
+        "value": "http://keycloak:8080",
+        "description": "Keycloak URL.",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "MOD_USERS_KEYCLOAK_URL",
+        "value": "http://mod-users-keycloak:8081",
+        "description": "Mod-users-keycloak module url.",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "MOD_USERS_URL",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "MODULE_NAME",
+        "value": "",
+        "description": "Underlying module name. If MODULE_ID is not specified, required",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "MODULE_URL",
+        "value": "",
+        "description": "Underlying module URL.",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "MODULE_VERSION",
+        "value": "",
+        "description": "Underlying module version. If MODULE_ID is not specified, required",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "QUARKUS_HTTP_LIMITS_MAX_INITIAL_LINE_LENGTH",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "QUARKUS_OTEL_SDK_DISABLED",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "QUARKUS_REST_CLIENT_CONNECT_TIMEOUT",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "QUARKUS_REST_CLIENT_READ_TIMEOUT",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "QUARKUS_REST_CLIENT_SEND_TIMEOUT",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "QUARKUS_THREAD_POOL_MAX_THREADS",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "QUARKUS_VERTX_EVENT_LOOPS_POOL_SIZE",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "REQUEST_TIMEOUT",
+        "value": "60000",
+        "description": "Configures the amount of time in milliseconds after which if the request does not return any data within the timeout period fails the request.",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "SECRET_STORE_AWS_SSM_REGION",
+        "value": "",
+        "description": "The AWS region to pass to the AWS SSM Client Builder. If not set, the AWS Default Region Provider Chain is used to determine which region to use.",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "SECRET_STORE_TYPE",
+        "value": "",
+        "description": "Secure storage type. Supported values: EPHEMERAL, AWS_SSM, VAULT, FSSP",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "SECURE_STORE_ENV",
+        "value": "folio",
+        "description": "First component of the secret store key. Fallback is ENV environment variable for Ramsons and Sunflower. Last fallback is "folio".",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "SIDECAR",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "SIDECAR_FORWARD_UNKNOWN_REQUESTS",
+        "value": "false",
+        "description": "Set behavior for EGRESS request. If there are no information about discovery, request will be forwarded to the SIDECAR_FORWARD_UNKNOWN_REQUESTS_DESTINATION. If SIDECAR_FORWARD_UNKNOWN_REQUESTS is enabled, ROUTING_DYNAMIC_ENABLED should be disabled.",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "SIDECAR_FORWARD_UNKNOWN_REQUESTS_DESTINATION",
+        "value": "http://api-gateway:8000",
+        "description": "URL of gateway for routing unknown EGRESS requests. This URL will be used if SIDECAR_FORWARD_UNKNOWN_REQUESTS will be true",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "SIDECAR_MODULE_PATH_PREFIX_STRATEGY",
+        "value": "NONE",
+        "description": "Defines if module path prefix strategy, if SIDECAR_MODULE_PATH_PREFIX_ENABLED=true then PROXY is used",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "SIDECAR_NATIVE_BINARY_OPTS",
+        "value": "",
+        "description": "",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "SIDECAR_URL",
+        "value": "",
+        "description": "Self URL for module-to-module communication.",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "TE_CLIENT_URL",
+        "value": "http://mgr-tenant-entitlements:8081",
+        "description": "mgr-tenant-entitlements URL.",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "TM_CLIENT_URL",
+        "value": "http://mgr-tenants:8081",
+        "description": "mgr-tenants URL.",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "TOKEN_CACHE_MAX_CAPACITY",
+        "value": "50",
+        "description": "Token cache max capacity.",
+        "type": "",
+        "essential": false
+      },
+      {
+        "name": "TOKEN_CACHE_REFRESH_PRIOR_EXPIRATION",
+        "value": "60",
+        "description": "Specifies the amount of seconds for a cache entry invalidation prior to the token expiration.",
+        "type": "",
+        "essential": false
+      }
+    ]
+  }
+}
