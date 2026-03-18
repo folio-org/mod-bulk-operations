@@ -1,6 +1,5 @@
 package org.folio.bulkops.processor.marc;
 
-import static java.lang.Character.isDigit;
 import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.replace;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
@@ -144,7 +143,6 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
         .forEach(
             df -> {
               df.addSubfield(new SubfieldImpl(appendSubfieldCode, appendValue));
-              df.getSubfields().sort(subfieldComparator);
             });
   }
 
@@ -255,7 +253,6 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
           newField.addSubfield(new SubfieldImpl(subfieldCode, value));
         }
       }
-      newField.getSubfields().sort(subfieldComparator);
     }
     marcRecord.addVariableField(newField);
     marcRecord.getDataFields().sort(Comparator.comparing(DataField::toString));
@@ -274,13 +271,4 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
         .orElseThrow(
             () -> new BulkOperationException(String.format("Action data %s is absent.", dataType)));
   }
-
-  private final Comparator<Subfield> subfieldComparator =
-      (sf1, sf2) -> {
-        if (isDigit(sf1.getCode()) ^ isDigit(sf2.getCode())) {
-          return isDigit(sf1.getCode()) ? 1 : -1;
-        } else {
-          return sf1.toString().compareTo(sf2.toString());
-        }
-      };
 }
