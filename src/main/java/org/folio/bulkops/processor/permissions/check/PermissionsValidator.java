@@ -1,5 +1,6 @@
 package org.folio.bulkops.processor.permissions.check;
 
+import static org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum.ID;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
@@ -10,25 +11,20 @@ import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_VIEW_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_WRITE_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_OPERATIONS_PROFILES_ITEM_LOCK;
-import static org.folio.bulkops.util.Constants.DUPLICATES_ACROSS_TENANTS;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
 import static org.folio.bulkops.util.Constants.NO_HOLDING_VIEW_PERMISSIONS;
 import static org.folio.bulkops.util.Constants.NO_INSTANCE_VIEW_PERMISSIONS;
 import static org.folio.bulkops.util.Constants.NO_ITEM_VIEW_PERMISSIONS;
-import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.Constants.NO_USER_VIEW_PERMISSIONS;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.SearchConsortium;
 import org.folio.bulkops.client.UserClient;
 import org.folio.bulkops.domain.bean.BulkOperationsEntity;
-import org.folio.bulkops.domain.bean.ConsortiumHolding;
-import org.folio.bulkops.domain.bean.ConsortiumItem;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -92,9 +88,9 @@ public class PermissionsValidator {
             LINKED_DATA_SOURCE_IS_NOT_SUPPORTED, entityRecord.getId());
       }
     } else if (HOLDINGS_RECORD == operation.getEntityType()) {
-      checkPermissionsAndAffiliationsForHoldings(entityRecord.getId());
+      checkPermissionsAndAffiliationsForHoldings(entityRecord);
     } else if (ITEM == operation.getEntityType()) {
-      checkPermissionsAndAffiliationsForItem(entityRecord.getId());
+      checkPermissionsAndAffiliationsForItem(entityRecord);
     }
   }
 
@@ -140,72 +136,40 @@ public class PermissionsValidator {
     };
   }
 
-  private void checkPermissionsAndAffiliationsForHoldings(String itemIdentifier)
+  private void checkPermissionsAndAffiliationsForHoldings(BulkOperationsEntity entityRecord)
       throws UploadFromQueryException {
     var centralTenantId = consortiaService.getCentralTenantId(folioExecutionContext.getTenantId());
     if (isCurrentTenantCentral(centralTenantId)) {
       // Process central tenant
-      var consortiumHoldingsCollection =
-          searchClient.getConsortiumHoldingCollection(
-              new org.folio.bulkops.domain.dto.BatchIdsDto()
-                  .identifierType(org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum.ID)
-                  .identifierValues(List.of(itemIdentifier)));
-      if (!consortiumHoldingsCollection.getHoldings().isEmpty()) {
-        var tenantIds =
-            consortiumHoldingsCollection.getHoldings().stream()
-                .map(ConsortiumHolding::getTenantId)
-                .collect(Collectors.toSet());
-        if (tenantIds.size() > 1) {
-          throw new UploadFromQueryException(DUPLICATES_ACROSS_TENANTS, itemIdentifier);
-        }
-        tenantResolver.checkAffiliatedPermittedTenantIds(
-            HOLDINGS_RECORD,
-            org.folio.bulkops.domain.dto.IdentifierType.ID.getValue(),
-            tenantIds,
-            itemIdentifier);
-      } else {
-        throw new UploadFromQueryException(NO_MATCH_FOUND_MESSAGE, itemIdentifier);
-      }
+      tenantResolver.checkAffiliatedPermittedTenantIds(
+          HOLDINGS_RECORD, ID.getValue(), Set.of(entityRecord.getTenant()), entityRecord.getId());
+
     } else {
       // Process local tenant case
       checkReadPermissions(
           folioExecutionContext.getTenantId(),
-          itemIdentifier,
+          entityRecord.getId(),
           HOLDINGS_RECORD,
           NO_HOLDING_VIEW_PERMISSIONS);
     }
   }
 
-  private void checkPermissionsAndAffiliationsForItem(String itemIdentifier)
+  private void checkPermissionsAndAffiliationsForItem(BulkOperationsEntity entityRecord)
       throws UploadFromQueryException {
     var centralTenantId = consortiaService.getCentralTenantId(folioExecutionContext.getTenantId());
     if (isCurrentTenantCentral(centralTenantId)) {
-      // Assuming item is requested by only one identifier not a collection of identifiers
-      var batchIdsDto =
-          new org.folio.bulkops.domain.dto.BatchIdsDto()
-              .identifierType(org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum.ID)
-              .identifierValues(List.of(itemIdentifier));
-      var consortiumItemCollection = searchClient.getConsortiumItemCollection(batchIdsDto);
-      if (!consortiumItemCollection.getItems().isEmpty()) {
-        var tenantIds =
-            consortiumItemCollection.getItems().stream()
-                .map(ConsortiumItem::getTenantId)
-                .collect(Collectors.toSet());
-        if (tenantIds.size() > 1) {
-          throw new UploadFromQueryException(DUPLICATES_ACROSS_TENANTS, itemIdentifier);
-        }
-        tenantResolver.checkAffiliatedPermittedTenantIds(
-            EntityType.ITEM,
-            org.folio.bulkops.domain.dto.IdentifierType.ID.getValue(),
-            tenantIds,
-            itemIdentifier);
-      } else {
-        throw new UploadFromQueryException(NO_MATCH_FOUND_MESSAGE, itemIdentifier);
-      }
+      tenantResolver.checkAffiliatedPermittedTenantIds(
+          EntityType.ITEM,
+          org.folio.bulkops.domain.dto.IdentifierType.ID.getValue(),
+          Set.of(entityRecord.getTenant()),
+          entityRecord.getId());
+
     } else {
-      // Process local tenant case
       checkReadPermissions(
-          folioExecutionContext.getTenantId(), itemIdentifier, ITEM, NO_ITEM_VIEW_PERMISSIONS);
+          folioExecutionContext.getTenantId(),
+          entityRecord.getId(),
+          ITEM,
+          NO_ITEM_VIEW_PERMISSIONS);
     }
   }
 

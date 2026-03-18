@@ -5,6 +5,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.SPACE;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
@@ -12,6 +13,7 @@ import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.util.Constants.CHILD_INSTANCES;
 import static org.folio.bulkops.util.Constants.DCB;
+import static org.folio.bulkops.util.Constants.DUPLICATES_ACROSS_TENANTS;
 import static org.folio.bulkops.util.Constants.EFFECTIVE_LOCATION;
 import static org.folio.bulkops.util.Constants.ENTITY;
 import static org.folio.bulkops.util.Constants.HOLDINGS_DATA;
@@ -86,6 +88,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -103,6 +106,7 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.SearchClient;
@@ -212,18 +216,46 @@ public class FqmContentFetcher {
                 case ITEM ->
                     searchClient.getConsortiumItemCollection(batchIdsDto).getItems().stream()
                         .collect(
-                            Collectors.toMap(
+                            Collectors.groupingBy(
                                 ConsortiumItem::getId,
-                                v -> Optional.ofNullable(v.getTenantId()).orElse(EMPTY)));
+                                Collectors.mapping(
+                                    v -> Optional.ofNullable(v.getTenantId()).orElse(EMPTY),
+                                    toList())))
+                        .entrySet()
+                        .stream()
+                        .peek(
+                            e -> {
+                              if (e.getValue().size() > 1) {
+                                saveDuplicateAcrossTenantsError(
+                                    bulkOperationExecutionContents, operationId, e);
+                              }
+                            })
+                        .filter(e -> e.getValue().size() < 2)
+                        .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getFirst()));
                 case HOLDINGS_RECORD ->
                     searchClient.getConsortiumHoldingCollection(batchIdsDto).getHoldings().stream()
                         .collect(
-                            Collectors.toMap(
+                            Collectors.groupingBy(
                                 ConsortiumHolding::getId,
-                                v -> Optional.ofNullable(v.getTenantId()).orElse(EMPTY)));
+                                Collectors.mapping(
+                                    v -> Optional.ofNullable(v.getTenantId()).orElse(EMPTY),
+                                    toList())))
+                        .entrySet()
+                        .stream()
+                        .peek(
+                            e -> {
+                              if (e.getValue().size() > 1) {
+                                saveDuplicateAcrossTenantsError(
+                                    bulkOperationExecutionContents, operationId, e);
+                              }
+                            })
+                        .filter(e -> e.getValue().size() < 2)
+                        .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getFirst()));
+
                 default -> Map.of();
               };
-          idMapper = id -> List.of(id, idTenantMap.getOrDefault(id, EMPTY));
+          idMapper =
+              id -> idTenantMap.containsKey(id) ? List.of(id, idTenantMap.get(id)) : List.of();
         } else {
           idMapper = id -> List.of(id, tenantId);
         }
@@ -237,7 +269,12 @@ public class FqmContentFetcher {
                 new ContentsRequest()
                     .entityTypeId(entityTypeId)
                     .fields(entityJsonKeys)
-                    .ids(chunk.stream().map(UUID::toString).map(idMapper).toList());
+                    .ids(
+                        chunk.stream()
+                            .map(UUID::toString)
+                            .map(idMapper)
+                            .filter(CollectionUtils::isNotEmpty)
+                            .toList());
             return queryClient.getContents(req);
           });
     }
@@ -904,5 +941,19 @@ public class FqmContentFetcher {
         && isInstance(entityType)
         && SHARED.equalsIgnoreCase(
             ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY));
+  }
+
+  private void saveDuplicateAcrossTenantsError(
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      UUID operationId,
+      Entry<String, List<String>> e) {
+    bulkOperationExecutionContents.add(
+        BulkOperationExecutionContent.builder()
+            .identifier(e.getKey())
+            .bulkOperationId(operationId)
+            .state(StateType.FAILED)
+            .errorType(ErrorType.ERROR)
+            .errorMessage(DUPLICATES_ACROSS_TENANTS)
+            .build());
   }
 }

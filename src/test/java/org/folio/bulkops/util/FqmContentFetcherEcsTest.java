@@ -2,6 +2,8 @@ package org.folio.bulkops.util;
 
 import static java.util.UUID.randomUUID;
 import static org.awaitility.Awaitility.await;
+import static org.folio.bulkops.util.Constants.DUPLICATES_ACROSS_TENANTS;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
@@ -17,9 +19,12 @@ import java.util.concurrent.TimeUnit;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.SearchClient;
+import org.folio.bulkops.domain.dto.ConsortiumHolding;
+import org.folio.bulkops.domain.dto.ConsortiumHoldingCollection;
 import org.folio.bulkops.domain.dto.ConsortiumItem;
 import org.folio.bulkops.domain.dto.ConsortiumItemCollection;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.querytool.domain.dto.ContentsRequest;
 import org.folio.spring.FolioExecutionContext;
@@ -27,6 +32,7 @@ import org.folio.spring.client.AuthnClient;
 import org.folio.spring.client.PermissionsClient;
 import org.folio.spring.client.UsersClient;
 import org.folio.spring.service.SystemUserService;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -111,22 +117,85 @@ class FqmContentFetcherEcsTest {
     UUID uuid1 = randomUUID();
     String itemTenant2 = "member_B";
     UUID uuid2 = randomUUID();
+    String itemTenant3 = "member_C";
+    UUID uuid3 = randomUUID();
+    String itemTenant4 = "member_D";
     mockCommon(tenantId, centralTenantId, List.of(uuid1, uuid2));
 
     when(searchClient.getConsortiumItemCollection(any()))
         .thenReturn(
             new ConsortiumItemCollection()
                 .addItemsItem(new ConsortiumItem().id(uuid1.toString()).tenantId(itemTenant1))
-                .addItemsItem(new ConsortiumItem().id(uuid2.toString()).tenantId(itemTenant2)));
+                .addItemsItem(new ConsortiumItem().id(uuid2.toString()).tenantId(itemTenant2))
+                .addItemsItem(new ConsortiumItem().id(uuid3.toString()).tenantId(itemTenant3))
+                // Duplicate across tenants case - 1 item in two tenants
+                .addItemsItem(new ConsortiumItem().id(uuid3.toString()).tenantId(itemTenant4)));
 
+    List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
     try (var is =
         fqmContentFetcher.contents(
-            List.of(uuid1, uuid2), EntityType.ITEM, new ArrayList<>(), randomUUID())) {
+            List.of(uuid1, uuid2), EntityType.ITEM, bulkOperationExecutionContents, randomUUID())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
           .atMost(2, TimeUnit.SECONDS)
           .untilAsserted(() -> verify(queryClient, atLeastOnce()).getContents(captor.capture()));
+
+      assertThat(bulkOperationExecutionContents, Matchers.hasSize(1));
+      assertThat(
+          bulkOperationExecutionContents.getFirst().getErrorMessage(),
+          Matchers.is(DUPLICATES_ACROSS_TENANTS));
+
+      ContentsRequest req = captor.getValue();
+      List<List<String>> ids = req.getIds();
+      Assertions.assertEquals(2, ids.size());
+      Assertions.assertEquals(List.of(uuid1.toString(), itemTenant1), ids.getFirst());
+      Assertions.assertEquals(List.of(uuid2.toString(), itemTenant2), ids.getLast());
+    } catch (IOException e) {
+      Assertions.fail("Fail reading content");
+    }
+  }
+
+  @Test
+  void testMemberHoldingInCentralTenant() {
+    String tenantId = "central";
+    String centralTenantId = "central";
+    String itemTenant1 = "member_A";
+    UUID uuid1 = randomUUID();
+    String itemTenant2 = "member_B";
+    UUID uuid2 = randomUUID();
+    String itemTenant3 = "member_C";
+    UUID uuid3 = randomUUID();
+    String itemTenant4 = "member_D";
+    mockCommon(tenantId, centralTenantId, List.of(uuid1, uuid2));
+
+    when(searchClient.getConsortiumHoldingCollection(any()))
+        .thenReturn(
+            new ConsortiumHoldingCollection()
+                .addHoldingsItem(new ConsortiumHolding().id(uuid1.toString()).tenantId(itemTenant1))
+                .addHoldingsItem(new ConsortiumHolding().id(uuid2.toString()).tenantId(itemTenant2))
+                .addHoldingsItem(new ConsortiumHolding().id(uuid3.toString()).tenantId(itemTenant3))
+                // Duplicate across tenants case - 1 holding in two tenants
+                .addHoldingsItem(
+                    new ConsortiumHolding().id(uuid3.toString()).tenantId(itemTenant4)));
+
+    List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
+    try (var is =
+        fqmContentFetcher.contents(
+            List.of(uuid1, uuid2),
+            EntityType.HOLDINGS_RECORD,
+            bulkOperationExecutionContents,
+            randomUUID())) {
+      ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
+
+      await()
+          .atMost(2, TimeUnit.SECONDS)
+          .untilAsserted(() -> verify(queryClient, atLeastOnce()).getContents(captor.capture()));
+
+      assertThat(bulkOperationExecutionContents, Matchers.hasSize(1));
+      assertThat(
+          bulkOperationExecutionContents.getFirst().getErrorMessage(),
+          Matchers.is(DUPLICATES_ACROSS_TENANTS));
 
       ContentsRequest req = captor.getValue();
       List<List<String>> ids = req.getIds();
@@ -200,6 +269,15 @@ class FqmContentFetcherEcsTest {
           map.put("instance.id", uuid.toString());
           map.put("users.id", uuid.toString());
           map.put("items.id", uuid.toString());
+          map.put("holdings.id", uuid.toString());
+          map.put("instance.tenant_id", "some-tenant");
+          map.put("users.tenant_id", "some-tenant");
+          map.put("items.tenant_id", "some-tenant");
+          map.put("holdings.tenant_id", "some-tenant");
+          map.put("instance.jsonb", "{\"id\": \"" + uuid + "\"}");
+          map.put("users.jsonb", "{\"id\": \"" + uuid + "\"}");
+          map.put("items.jsonb", "{\"id\": \"" + uuid + "\"}");
+          map.put("holdings.jsonb", "{\"id\": \"" + uuid + "\"}");
           mock.add(map);
         });
 

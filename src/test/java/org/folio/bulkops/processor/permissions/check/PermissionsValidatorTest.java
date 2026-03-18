@@ -6,8 +6,6 @@ import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_OPERATIONS_PROFILES_ITEM_LOCK;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.INVENTORY_ITEMS_ITEM_PUT;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.USERS_ITEM_PUT;
-import static org.folio.bulkops.util.Constants.DUPLICATES_ACROSS_TENANTS;
-import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,12 +29,10 @@ import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.User;
-import org.folio.bulkops.domain.dto.BatchIdsDto;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.ProfileLockedException;
 import org.folio.bulkops.exception.ReadPermissionException;
-import org.folio.bulkops.exception.UploadFromQueryException;
 import org.folio.bulkops.exception.WritePermissionDoesNotExist;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.spring.FolioExecutionContext;
@@ -191,48 +187,6 @@ class PermissionsValidatorTest {
   }
 
   @Test
-  void shouldThrowDuplicatesAcrossTenantsForHoldingsIfCurrentTenantIsCentral() {
-    var holdingsCollection = new ConsortiumHoldingCollection();
-    var consHold = new ConsortiumHolding();
-    consHold.setTenantId("tenant2");
-    var consHold2 = new ConsortiumHolding();
-    consHold2.setTenantId("tenant1");
-    holdingsCollection.setHoldings(List.of(consHold, consHold2));
-
-    when(consortiaService.getCentralTenantId("tenant1")).thenReturn("tenant1");
-    when(folioExecutionContext.getTenantId()).thenReturn("tenant1");
-    when(searchClient.getConsortiumHoldingCollection(any(BatchIdsDto.class)))
-        .thenReturn(holdingsCollection);
-    var operation = BulkOperation.builder().entityType(EntityType.HOLDINGS_RECORD).build();
-    var entityWithAllowedTenant =
-        new ExtendedHoldingsRecord()
-            .withTenantId("tenant1")
-            .withEntity(HoldingsRecord.builder().id(UUID.randomUUID().toString()).build());
-    assertThrows(
-        UploadFromQueryException.class,
-        () -> permissionsValidator.checkPermissions(operation, entityWithAllowedTenant),
-        DUPLICATES_ACROSS_TENANTS);
-  }
-
-  @Test
-  void shouldThrowNoMatchFoundForHoldingsIfCurrentTenantIsCentral() {
-
-    when(consortiaService.getCentralTenantId("tenant1")).thenReturn("tenant1");
-    when(folioExecutionContext.getTenantId()).thenReturn("tenant1");
-    when(searchClient.getConsortiumHoldingCollection(any(BatchIdsDto.class)))
-        .thenReturn(new ConsortiumHoldingCollection());
-    var operation = BulkOperation.builder().entityType(EntityType.HOLDINGS_RECORD).build();
-    var entityWithAllowedTenant =
-        new ExtendedHoldingsRecord()
-            .withTenantId("tenant1")
-            .withEntity(HoldingsRecord.builder().id(UUID.randomUUID().toString()).build());
-    assertThrows(
-        UploadFromQueryException.class,
-        () -> permissionsValidator.checkPermissions(operation, entityWithAllowedTenant),
-        NO_MATCH_FOUND_MESSAGE);
-  }
-
-  @Test
   @SneakyThrows
   void shouldCallTenantResolverForHoldingsIfCurrentTenantIsCentral() {
     var holdingsCollection = new ConsortiumHoldingCollection();
@@ -242,8 +196,6 @@ class PermissionsValidatorTest {
 
     when(consortiaService.getCentralTenantId("tenant1")).thenReturn("tenant1");
     when(folioExecutionContext.getTenantId()).thenReturn("tenant1");
-    when(searchClient.getConsortiumHoldingCollection(any(BatchIdsDto.class)))
-        .thenReturn(holdingsCollection);
     var operation = BulkOperation.builder().entityType(EntityType.HOLDINGS_RECORD).build();
     var entityWithAllowedTenant =
         new ExtendedHoldingsRecord()
@@ -257,48 +209,6 @@ class PermissionsValidatorTest {
   }
 
   @Test
-  void shouldThrowDuplicatesAcrossTenantsForItemIfCurrentTenantIsCentral() {
-    var itemsCollection = new ConsortiumItemCollection();
-    var consItem = new ConsortiumItem();
-    consItem.setTenantId("tenant2");
-    var consItem2 = new ConsortiumItem();
-    consItem2.setTenantId("tenant1");
-    itemsCollection.setItems(List.of(consItem, consItem2));
-
-    when(consortiaService.getCentralTenantId("tenant1")).thenReturn("tenant1");
-    when(folioExecutionContext.getTenantId()).thenReturn("tenant1");
-    when(searchClient.getConsortiumItemCollection(any(BatchIdsDto.class)))
-        .thenReturn(itemsCollection);
-    var operation = BulkOperation.builder().entityType(EntityType.ITEM).build();
-    var entityWithAllowedTenant =
-        new ExtendedItem()
-            .withTenantId("tenant1")
-            .withEntity(Item.builder().id(UUID.randomUUID().toString()).build());
-    assertThrows(
-        UploadFromQueryException.class,
-        () -> permissionsValidator.checkPermissions(operation, entityWithAllowedTenant),
-        DUPLICATES_ACROSS_TENANTS);
-  }
-
-  @Test
-  void shouldThrowNoMatchFoundForItemIfCurrentTenantIsCentral() {
-    when(consortiaService.getCentralTenantId("tenant1")).thenReturn("tenant1");
-    when(folioExecutionContext.getTenantId()).thenReturn("tenant1");
-    when(searchClient.getConsortiumItemCollection(any(BatchIdsDto.class)))
-        .thenReturn(new ConsortiumItemCollection());
-    var operation = BulkOperation.builder().entityType(EntityType.ITEM).build();
-    var entityWithAllowedTenant =
-        new ExtendedItem()
-            .withTenantId("tenant1")
-            .withEntity(Item.builder().id(UUID.randomUUID().toString()).build());
-
-    assertThrows(
-        UploadFromQueryException.class,
-        () -> permissionsValidator.checkPermissions(operation, entityWithAllowedTenant),
-        NO_MATCH_FOUND_MESSAGE);
-  }
-
-  @Test
   @SneakyThrows
   void shouldCallTenantResolverForItemIfCurrentTenantIsCentral() {
     var itemCollection = new ConsortiumItemCollection();
@@ -308,8 +218,6 @@ class PermissionsValidatorTest {
 
     when(consortiaService.getCentralTenantId("tenant1")).thenReturn("tenant1");
     when(folioExecutionContext.getTenantId()).thenReturn("tenant1");
-    when(searchClient.getConsortiumItemCollection(any(BatchIdsDto.class)))
-        .thenReturn(itemCollection);
     var operation = BulkOperation.builder().entityType(EntityType.ITEM).build();
     var entityWithAllowedTenant =
         new ExtendedItem()
