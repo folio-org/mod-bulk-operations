@@ -2,6 +2,7 @@ package org.folio.bulkops.batch.jobs;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.folio.bulkops.util.Constants.MSG_DCB_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDITED;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -189,5 +190,24 @@ class BulkEditUserProcessorTest {
     assertThatThrownBy(() -> processor.process(itemIdentifier))
         .isInstanceOf(BulkEditException.class)
         .hasMessageContaining(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
+  }
+
+  @Test
+  void throwsWhenDcbUsers() {
+    ItemIdentifier itemIdentifier = new ItemIdentifier().withItemId("barcode1");
+    User user = new User().withId("userId").withUsername("testuser").withType("DCB");
+    UserCollection userCollection =
+        UserCollection.builder().users(List.of(user)).totalRecords(1).build();
+
+    when(permissionsValidator.isBulkEditReadPermissionExists(anyString(), eq(EntityType.USER)))
+        .thenReturn(true);
+    when(duplicationCheckerFactory.getIdentifiersToCheckDuplication(any()))
+        .thenReturn(new HashSet<>());
+    when(userClient.getByQuery(anyString(), anyLong())).thenReturn(userCollection);
+    when(consortiaService.isTenantCentral(anyString())).thenReturn(false);
+
+    assertThatThrownBy(() -> processor.process(itemIdentifier))
+        .isInstanceOf(BulkEditException.class)
+        .hasMessageContaining(MSG_DCB_RECORDS_CANNOT_BE_EDITED);
   }
 }

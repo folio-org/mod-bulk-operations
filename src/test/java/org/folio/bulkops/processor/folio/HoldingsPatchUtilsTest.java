@@ -249,9 +249,9 @@ class HoldingsPatchUtilsTest {
 
   private static HoldingsNote note(String note) {
     return new HoldingsNote()
-      .withNote(note)
-      .withHoldingsNoteType(new HoldingsNoteType().withId(UUID.randomUUID().toString()))
-      .withTenantId("tenant")
-      .withHoldingsNoteTypeName("type");
+        .withNote(note)
+        .withHoldingsNoteType(new HoldingsNoteType().withId(UUID.randomUUID().toString()))
+        .withTenantId("tenant")
+        .withHoldingsNoteTypeName("type");
   }
 }
