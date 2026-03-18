@@ -50,169 +50,218 @@
     },
     "EnvVars": [
       {
-        "name": "S3_URL",
-        "value": "http://127.0.0.1:9000",
-        "essential": true,
-        "type": "S3"
-        "description": "S3 url"
+        "name": "DB_DATABASE",
+        "value": "{DB_DATABASE}",
+        "description": "Database name",
+        "type": "DB",
+        "essential": true
       },
       {
-        "name": "S3_REGION",
-        "essential": true,
-        "description": "S3 region"
-      },
-      {
-        "name": "S3_BUCKET",
-        "value": "test-bucket2",
-        "essential": true,
-        "description": "S3 bucket"
-      },
-      {
-        "name": "S3_ACCESS_KEY_ID",
-        "essential": true,
-        "description": "S3 access key"
-      },
-      {
-        "name": "S3_SECRET_ACCESS_KEY",
-        "essential": true,
-        "description": "S3 secret key"
-      },
-      {
-        "name": "S3_IS_AWS",
-        "value": "false",
-        "essential": true,
-        "description": "Specify if AWS S3 is used as files storage"
-      },
-      {
-        "name": "S3_SUB_PATH",
-        "value": "mod-bulk-operations",
-        "essential": true,
-        "description": "S3 subpath for file storage"
-      },
-      {
-        "name": "SYSTEM_USER_NAME",
-        "value": "mod-bulk-operations",
-        "essential": true,
-        "description": "Username of the system user"
-      },
-      {
-        "name": "SYSTEM_USER_PASSWORD",
-        "essential": true,
-        "description": "Password of the system user"
-      },
-      {
-        "name": "SYSTEM_USER_ENABLED",
-        "value": "true",
-        "essential": true,
-        "description": "Defines if system user must be created at service tenant initialization or used for egress service requests"
-      },
-      {
-        "name": "PLATFORM",
-        "value": "okapi",
-        "essential": true,
-        "description": "Specifies if okapi or eureka platform"
-      },
-      {
-        "name": "MAX_UPLOADING_RETRIES",
-        "value": "50",
-        "essential": true,
-        "description": "Max uploading retry"
-      },
-      {
-        "name": "DI_NUMBER_OF_CONCURRENT_REQUESTS",
-        "value": "5",
-        "essential": true,
-        "description": "DI_NUMBER_OF_CONCURRENT_REQUESTS"
-      },
-      {
-        "name": "DI_CHUNK_SIZE",
-        "value": "1000",
-        "essential": true,
-        "type": "FUNCTIONAL",
-        "description": "DI_NUMBER_OF_CONCURRENT_REQUESTS"
-      },
-      {
-        "name": "FQM_MAX_CHUNK_SIZE",
-        "value": "10000",
-        "essential": true,
-        "description": "FQM_MAX_CHUNK_SIZE"
-      },
-      {
-        "name": "FQM_MAX_PARALLEL_CHUNKS",
-        "value": "10",
-        "essential": true,
-        "description": "FQM_MAX_CHUNK_SIZE"
-      },
-
-      {
-        "name": "ENV",
-        "value": "folio",
-        "essential": false,
-        "description": "Environment name"
-      },
-      {
-        "name": "OKAPI_URL",
-        "value": "http://okapi:9130",
-        "essential": false,
-        "description": "Okapi url"
-      },
-      {
-        "name": "KAFKA_HOST",
-        "essential": false,
-        "description": "Kafka broker hostname"
-      },
-      {
-        "name": "KAFKA_PORT",
-        "value": "9092",
-        "essential": false,
-        "type": "KAFKA",
-        "description": "Kafka broker port"
+        "name": "DB_EXPLAIN_QUERY_THRESHOLD",
+        "value": "300000",
+        "description": "Threshold for explaining slow queries in milliseconds",
+        "type": "DB",
+        "essential": false
       },
       {
         "name": "DB_HOST",
-        "value": "postgres",
-        "essential": false,
+        "value": "{DB_HOST}",
+        "description": "Database host",
         "type": "DB",
-        "description": "Database"
-      },
-      {
-        "name": "DB_PORT",
-        "value": "5432",
-        "essential": false,
-        "description": "Database"
-      },
-      {
-        "name": "DB_USERNAME",
-        "essential": false,
-        "description": "Database"
-      },
-      {
-        "name": "DB_PASSWORD",
-        "essential": false,
-        "description": "Database"
-      },
-      {
-        "name": "DB_DATABASE",
-        "essential": false,
-        "description": "Database"
-      },
-      {
-        "name": "DB_QUERYTIMEOUT",
-        "value": "60000",
-        "essential": false,
-        "description": "Database"
-      },
-      {
-        "name": "DB_CHARSET",
-        "value": "UTF-8",
-        "essential": false,
-        "description": "Database"
+        "essential": true
       },
       {
         "name": "DB_MAXPOOLSIZE",
         "value": "50",
-        "essential": false,
-        "description": "Database max pool size environment variable and its recommended value for backend modules"
+        "description": "Maximum database connection pool size",
+        "type": "DB",
+        "essential": false
+      },
+      {
+        "name": "DB_PASSWORD",
+        "value": "{DB_PASSWORD}",
+        "description": "Database password",
+        "type": "DB",
+        "essential": true
+      },
+      {
+        "name": "DB_PORT",
+        "value": "{DB_PORT}",
+        "description": "Database port",
+        "type": "DB",
+        "essential": true
+      },
+      {
+        "name": "DB_USERNAME",
+        "value": "{DB_USERNAME}",
+        "description": "Database username",
+        "type": "DB",
+        "essential": true
+      },
+
+      {
+        "name": "ENV",
+        "value": "{ENV}",
+        "description": "Environment",
+        "type": "CONFIG",
+        "essential": false
+      },
+      {
+        "name": "JAVA_ARGS",
+        "value": "{JAVA_ARGS}",
+        "description": "Java arguments",
+        "type": "CONFIG",
+        "essential": true
+      },
+      {
+        "name": "JAVA_OPTS",
+        "value": "{JAVA_OPTS}",
+        "description": "Java options",
+        "type": "CONFIG",
+        "essential": true
+      },
+      {
+        "name": "LOG4J_CONFIGURATION_FILE",
+        "value": "{LOG4J_CONFIGURATION_FILE}",
+        "description": "Log4j configuration file",
+        "type": "CONFIG",
+        "essential": false
+      },
+
+      {
+        "name": "KAFKA_HOST",
+        "value": "{KAFKA_HOST}",
+        "description": "Kafka host",
+        "type": "KAFKA",
+        "essential": true
+      },
+      {
+        "name": "KAFKA_PORT",
+        "value": "{KAFKA_PORT}",
+        "description": "Kafka port",
+        "type": "KAFKA",
+        "essential": true
+      },
+
+      {
+        "name": "S3_ACCESS_KEY_ID",
+        "value": "{S3_ACCESS_KEY_ID}",
+        "description": "S3 access key",
+        "type": "S3",
+        "essential": true
+      },
+      {
+        "name": "S3_BUCKET",
+        "value": "{S3_BUCKET}",
+        "description": "S3 bucket",
+        "type": "S3",
+        "essential": true
+      },
+      {
+        "name": "S3_IS_AWS",
+        "value": "{S3_IS_AWS}",
+        "description": "Specify if AWS S3 is used as files storage",
+        "type": "S3",
+        "essential": true
+      },
+      {
+        "name": "S3_REGION",
+        "value": "{S3_REGION}",
+        "description": "S3 region",
+        "type": "S3",
+        "essential": true
+      },
+      {
+        "name": "S3_SECRET_ACCESS_KEY",
+        "value": "{S3_SECRET_ACCESS_KEY}",
+        "description": "S3 secret key",
+        "type": "S3",
+        "essential": true
+      },
+      {
+        "name": "S3_SUB_PATH",
+        "value": "{S3_SUB_PATH}",
+        "description": "S3 subpath for file storage",
+        "type": "S3",
+        "essential": true
+      },
+      {
+        "name": "S3_URL",
+        "value": "{S3_URL}",
+        "description": "S3 url",
+        "type": "S3",
+        "essential": true
+      },
+
+      {
+        "name": "SYSTEM_USER_NAME",
+        "value": "mod-bulk-operations",
+        "description": "Username of the system user",
+        "type": "FUNCTIONAL",
+        "essential": true
+      },
+      {
+        "name": "SYSTEM_USER_PASSWORD",
+        "value": "{SYSTEM_USER_PASSWORD}",
+        "description": "Password of the system user",
+        "type": "FUNCTIONAL",
+        "essential": true
+      },
+      {
+        "name": "SYSTEM_USER_ENABLED",
+        "value": "true",
+        "description": "Defines if system user must be created at service tenant initialization or used for egress service requests",
+        "type": "FUNCTIONAL",
+        "essential": true
+      },
+      {
+        "name": "PLATFORM",
+        "value": "eureka",
+        "description": "Specifies if okapi or eureka platform",
+        "type": "FUNCTIONAL",
+        "essential": true
+      },
+      {
+        "name": "MAX_UPLOADING_RETRIES",
+        "value": "50",
+        "description": "Max uploading retry",
+        "type": "FUNCTIONAL",
+        "essential": false
+      },
+      {
+        "name": "DI_NUMBER_OF_CONCURRENT_REQUESTS",
+        "value": "5",
+        "description": "DI_NUMBER_OF_CONCURRENT_REQUESTS",
+        "type": "FUNCTIONAL",
+        "essential": false
+      },
+      {
+        "name": "DI_CHUNK_SIZE",
+        "value": "1000",
+        "description": "DI_NUMBER_OF_CONCURRENT_REQUESTS",
+        "type": "FUNCTIONAL",
+        "essential": false
+      },
+      {
+        "name": "FQM_MAX_CHUNK_SIZE",
+        "value": "10000",
+        "description": "Max chunk size of FQM Fetcher",
+        "type": "FUNCTIONAL",
+        "essential": false
+      },
+      {
+        "name": "FQM_MAX_PARALLEL_CHUNKS",
+        "value": "10",
+        "description": "Max number of parallel chunks processed at the same time",
+        "type": "FUNCTIONAL",
+        "essential": false
+      },
+      {
+        "name": "FQM_QUERY_APPROACH",
+        "value": "true",
+        "description": "Approach to use with query: false if identifiers flow, otherwise FQM flow for both Query and Identifiers approaches",
+        "type": "FUNCTIONAL",
+        "essential": true
       }
     ]
   },
@@ -221,54 +270,276 @@
     "resources": [
       {
         "name": "cpu",
-        "value": "64",
+        "value": "{cpu}",
         "description": "CPU request/limit for container"
       },
       {
         "name": "memory",
-        "value": "1500",
+        "value": "{memory}",
         "description": "Memory hard limit for container"
       },
       {
         "name": "memoryReservation",
-        "value": "768",
+        "value": "{memoryReservation}",
         "description": "Memory reservation for container"
       }
     ],
     "java": [
       {
         "name": "xms",
-        "value": "128",
+        "value": "{xms}",
         "description": "Initial Java heap size"
       },
       {
         "name": "xmx",
-        "value": "256",
+        "value": "{xmx}",
         "description": "Maximum Java heap size"
       },
       {
         "name": "MaxMetaspaceSize",
-        "value": "128",
+        "value": "{MaxMetaspaceSize}",
         "description": "Maximum Java metaspace size"
       }
     ],
     "EnvVars": [
       {
-        "name": "SIDECAR_MODULE_PATH_PREFIX_STRATEGY",
-        "value": "STRIP",
+        "name": "ALLOW_CROSS_TENANT_REQUESTS",
+        "value": "{ALLOW_CROSS_TENANT_REQUESTS}",
+        "description": "Allows cross tenant interactions",
+        "type": "CONFIG",
+        "essential": false
+      },
+      {
+        "name": "ENV",
+        "value": "{ENV}",
+        "description": "Environment",
+        "type": "CONFIG",
+        "essential": false
+      },
+      {
+        "name": "JAVA_OPTS",
+        "value": "{JAVA_OPTS}",
+        "description": "Java options",
+        "type": "CONFIG",
+        "essential": false
+      },
+      {
+        "name": "JAVA_PROFILER_OPTS",
+        "value": "{JAVA_PROFILER_OPTS}",
+        "description": "Java profiler options",
+        "type": "CONFIG",
+        "essential": false
+      },
+      {
+        "name": "KAFKA_HOST",
+        "value": "{KAFKA_HOST}",
+        "description": "Kafka host",
+        "type": "KAFKA",
         "essential": true
+      },
+      {
+        "name": "KAFKA_PORT",
+        "value": "{KAFKA_PORT}",
+        "description": "Kafka port",
+        "type": "KAFKA",
+        "essential": true
+      },
+      {
+        "name": "KC_ADMIN_CLIENT_ID",
+        "value": "{KC_ADMIN_CLIENT_ID}",
+        "description": "Master realm specific client id for authenticating requests to manager components.",
+        "type": "KC",
+        "essential": false
+      },
+      {
+        "name": "KC_AUTHORIZATION_CACHE_MAX_SIZE",
+        "value": "5000",
+        "description": "Maximum amount of entries for keycloak authorization cache.",
+        "type": "CACHE",
+        "essential": false
+      },
+      {
+        "name": "KC_LOGIN_CLIENT_SUFFIX",
+        "value": "-application",
+        "description": "Suffix of a Keycloak client who owns the authorization resources. It is used as audience for keycloak when evaluating permissions.",
+        "type": "KC",
+        "essential": false
+      },
+      {
+        "name": "KC_SERVICE_CLIENT_ID",
+        "value": "{KC_SERVICE_CLIENT_ID}",
+        "description": "Tenant specific client id for authenticating egress requests.",
+        "type": "KC",
+        "essential": false
+      },
+      {
+        "name": "KC_URI_VALIDATION_ENABLED",
+        "value": "false",
+        "description": "Defines if JsonWebTokenParser compares URI from token with KC_URL value.",
+        "type": "KC",
+        "essential": false
+      },
+      {
+        "name": "KC_URL",
+        "value": "{KC_URL}",
+        "description": "Keycloak URL.",
+        "type": "KC",
+        "essential": false
+      },
+      {
+        "name": "MOD_USERS_KEYCLOAK_URL",
+        "value": "{MOD_USERS_KEYCLOAK_URL}",
+        "description": "Mod-users-keycloak module url.",
+        "type": "CONFIG",
+        "essential": true
+      },
+      {
+        "name": "MODULE_NAME",
+        "value": "{MODULE_NAME}",
+        "description": "Underlying module name. If MODULE_ID is not specified, required",
+        "type": "CONFIG",
+        "essential": true
+      },
+      {
+        "name": "MODULE_URL",
+        "value": "{MODULE_URL}",
+        "description": "Underlying module URL.",
+        "type": "CONFIG",
+        "essential": true
+      },
+      {
+        "name": "MODULE_VERSION",
+        "value": "{MODULE_VERSION}",
+        "description": "Underlying module version. If MODULE_ID is not specified, required",
+        "type": "CONFIG",
+        "essential": true
+      },
+      {
+        "name": "QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE",
+        "value": "200M",
+        "description": "",
+        "type": "QUARKUS",
+        "essential": false
+      },
+      {
+        "name": "QUARKUS_HTTP_LIMITS_MAX_INITIAL_LINE_LENGTH",
+        "value": "8192",
+        "description": "",
+        "type": "QUARKUS",
+        "essential": false
+      },
+      {
+        "name": "QUARKUS_OTEL_SDK_DISABLED",
+        "value": "true",
+        "description": "",
+        "type": "QUARKUS",
+        "essential": false
+      },
+      {
+        "name": "QUARKUS_REST_CLIENT_CONNECT_TIMEOUT",
+        "value": "180000",
+        "description": "",
+        "type": "QUARKUS",
+        "essential": false
+      },
+      {
+        "name": "QUARKUS_REST_CLIENT_READ_TIMEOUT",
+        "value": "180000",
+        "description": "",
+        "type": "QUARKUS",
+        "essential": false
+      },
+      {
+        "name": "QUARKUS_REST_CLIENT_SEND_TIMEOUT",
+        "value": "180000",
+        "description": "",
+        "type": "QUARKUS",
+        "essential": false
+      },
+      {
+        "name": "QUARKUS_THREAD_POOL_MAX_THREADS",
+        "value": "4",
+        "description": "",
+        "type": "QUARKUS",
+        "essential": false
+      },
+      {
+        "name": "QUARKUS_VERTX_EVENT_LOOPS_POOL_SIZE",
+        "value": "1",
+        "description": "",
+        "type": "QUARKUS",
+        "essential": false
       },
       {
         "name": "REQUEST_TIMEOUT",
         "value": "604800000",
+        "description": "Configures the amount of time in milliseconds after which if the request does not return any data within the timeout period fails the request.",
+        "type": "CONFIG",
+        "essential": false
+      },
+      {
+        "name": "SECRET_STORE_AWS_SSM_REGION",
+        "value": "{SECRET_STORE_AWS_SSM_REGION}",
+        "description": "The AWS region to pass to the AWS SSM Client Builder. If not set, the AWS Default Region Provider Chain is used to determine which region to use.",
+        "type": "CONFIG",
+        "essential": false
+      },
+      {
+        "name": "SECRET_STORE_TYPE",
+        "value": "{SECRET_STORE_TYPE}",
+        "description": "Secure storage type. Supported values: EPHEMERAL, AWS_SSM, VAULT, FSSP",
+        "type": "CONFIG",
+        "essential": true
+      },
+      {
+        "name": "SECURE_STORE_ENV",
+        "value": "{SECURE_STORE_ENV}",
+        "description": "First component of the secret store key. Fallback is ENV environment variable for Ramsons and Sunflower. Last fallback is "folio".",
+        "type": "CONFIG",
+        "essential": false
+      },
+      {
+        "name": "SIDECAR",
+        "value": "true",
+        "description": "",
+        "type": "CONFIG",
+        "essential": false
+      },
+      {
+        "name": "SIDECAR_FORWARD_UNKNOWN_REQUESTS",
+        "value": "true",
+        "description": "Set behavior for EGRESS request. If there are no information about discovery, request will be forwarded to the SIDECAR_FORWARD_UNKNOWN_REQUESTS_DESTINATION. If SIDECAR_FORWARD_UNKNOWN_REQUESTS is enabled, ROUTING_DYNAMIC_ENABLED should be disabled.",
+        "type": "CONFIG",
+        "essential": false
+      },
+      {
+        "name": "SIDECAR_NATIVE_BINARY_OPTS",
+        "value": "{SIDECAR_NATIVE_BINARY_OPTS}",
+        "description": "",
+        "type": "CONFIG",
+        "essential": false
+      },
+      {
+        "name": "SIDECAR_URL",
+        "value": "{SIDECAR_URL}",
+        "description": "Self URL for module-to-module communication.",
+        "type": "CONFIG",
         "essential": true
       },
       {
         "name": "TOKEN_CACHE_MAX_CAPACITY",
         "value": "5000",
+        "description": "Token cache max capacity.",
         "type": "CACHE",
-        "essential": true
+        "essential": false
       },
+      {
+        "name": "TOKEN_CACHE_REFRESH_PRIOR_EXPIRATION",
+        "value": "595",
+        "description": "Specifies the amount of seconds for a cache entry invalidation prior to the token expiration.",
+        "type": "CACHE",
+        "essential": false
+      }
     ]
   }
 }
