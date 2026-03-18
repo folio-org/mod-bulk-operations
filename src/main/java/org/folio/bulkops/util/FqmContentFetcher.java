@@ -11,6 +11,7 @@ import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
 import static org.folio.bulkops.util.Constants.CHILD_INSTANCES;
+import static org.folio.bulkops.util.Constants.DCB;
 import static org.folio.bulkops.util.Constants.EFFECTIVE_LOCATION;
 import static org.folio.bulkops.util.Constants.ENTITY;
 import static org.folio.bulkops.util.Constants.HOLDINGS_DATA;
@@ -19,6 +20,7 @@ import static org.folio.bulkops.util.Constants.INSTANCE_TITLE;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
+import static org.folio.bulkops.util.Constants.MSG_DCB_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.folio.bulkops.util.Constants.PARENT_INSTANCES;
@@ -517,6 +519,12 @@ public class FqmContentFetcher {
         addInstanceLinkedDataNotSupported(id, bulkOperationExecutionContents, operationId);
         return EMPTY;
       }
+      if (EntityType.USER.equals(entityType)
+          && DCB.equalsIgnoreCase(
+              ofNullable(json.get(FQM_USERS_TYPE_KEY)).map(Object::toString).orElse(EMPTY))) {
+        addDcbUserErrorContent(id, bulkOperationExecutionContents, operationId);
+        return EMPTY;
+      }
       if (isCentralTenant) {
         if (isInstance(entityType)
             && !SHARED.equalsIgnoreCase(
@@ -726,6 +734,20 @@ public class FqmContentFetcher {
             .state(StateType.FAILED)
             .errorType(ErrorType.ERROR)
             .errorMessage(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED)
+            .build());
+  }
+
+  private void addDcbUserErrorContent(
+      String userId,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      UUID operationId) {
+    bulkOperationExecutionContents.add(
+        BulkOperationExecutionContent.builder()
+            .identifier(userId)
+            .bulkOperationId(operationId)
+            .state(StateType.FAILED)
+            .errorType(ErrorType.ERROR)
+            .errorMessage(MSG_DCB_RECORDS_CANNOT_BE_EDITED)
             .build());
   }
 

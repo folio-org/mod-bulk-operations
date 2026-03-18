@@ -120,6 +120,8 @@ public class Constants {
   public static final String CANNOT_GET_RECORD = "Cannot get data from %s due to %s";
   public static final String MSG_SHADOW_RECORDS_CANNOT_BE_EDITED =
       "Shadow records cannot be bulk edited.";
+  public static final String MSG_DCB_RECORDS_CANNOT_BE_EDITED =
+      "Bulk edit of user records with their type set to DCB is not supported.";
 
   public static final String CSV_MSG_ERROR_TEMPLATE_OPTIMISTIC_LOCKING =
       "The record cannot be saved because it is not the most recent version. "
@@ -184,6 +186,7 @@ public class Constants {
   public static final String PERMANENT_LOCATION_ID = "permanentLocationId";
   public static final String IS_ACTIVE = "isActive";
   public static final String INACTIVE = "Inactive ";
+  public static final String DCB = "DCB";
   public static final String NAME = "name";
   public static final String CALL_NUMBER_PREFIX = "callNumberPrefix";
   public static final String CALL_NUMBER = "callNumber";
