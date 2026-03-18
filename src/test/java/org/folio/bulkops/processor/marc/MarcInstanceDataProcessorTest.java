@@ -120,12 +120,12 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     var dataFields = marcRecord.getDataFields();
     assertThat(dataFields).hasSize(6);
 
-    assertThat(dataFields.get(0)).hasToString("500 1 $atext a$btext b");
+    assertThat(dataFields.get(0)).hasToString("500 1 $btext b$atext a");
     assertThat(dataFields.get(1).getSubfields()).hasSize(1);
     assertThat(dataFields.get(2).getSubfields()).hasSize(1);
     assertThat(dataFields.get(3).getSubfields()).hasSize(1);
     assertThat(dataFields.get(4).getSubfields()).hasSize(1);
-    assertThat(dataFields.get(5)).hasToString("500 1 $atext a$btext b");
+    assertThat(dataFields.get(5)).hasToString("500 1 $btext b$atext a");
   }
 
   @Test
@@ -638,7 +638,7 @@ class MarcInstanceDataProcessorTest extends BaseTest {
 
     assertThat(dataFields.get(0).getTag()).isEqualTo("500");
     assertThat(dataFields.get(1).getTag()).isEqualTo("510");
-    assertThat(dataFields.get(1)).hasToString("510 11$atext a$btext b$1text 1");
+    assertThat(dataFields.get(1)).hasToString("510 11$btext b$1text 1$atext a");
     assertThat(dataFields.get(2).getTag()).isEqualTo("550");
   }
 
