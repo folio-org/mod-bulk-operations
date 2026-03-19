@@ -223,15 +223,17 @@ public class FqmContentFetcher {
                                     toList())))
                         .entrySet()
                         .stream()
-                        .peek(
+                        .filter(
                             e -> {
                               if (e.getValue().size() > 1) {
                                 saveDuplicateAcrossTenantsError(
                                     bulkOperationExecutionContents, operationId, e);
+                                return false;
                               }
+                              return true;
                             })
-                        .filter(e -> e.getValue().size() < 2)
                         .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getFirst()));
+
                 case HOLDINGS_RECORD ->
                     searchClient.getConsortiumHoldingCollection(batchIdsDto).getHoldings().stream()
                         .collect(
@@ -242,14 +244,15 @@ public class FqmContentFetcher {
                                     toList())))
                         .entrySet()
                         .stream()
-                        .peek(
+                        .filter(
                             e -> {
                               if (e.getValue().size() > 1) {
                                 saveDuplicateAcrossTenantsError(
                                     bulkOperationExecutionContents, operationId, e);
+                                return false;
                               }
+                              return true;
                             })
-                        .filter(e -> e.getValue().size() < 2)
                         .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getFirst()));
 
                 default -> Map.of();
