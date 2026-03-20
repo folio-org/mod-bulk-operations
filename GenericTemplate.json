@@ -237,13 +237,6 @@
     ],
     "EnvVars": [
       {
-        "name": "ALLOW_CROSS_TENANT_REQUESTS",
-        "value": "{ALLOW_CROSS_TENANT_REQUESTS}",
-        "description": "Allows cross tenant interactions",
-        "type": "CONFIG",
-        "essential": false
-      },
-      {
         "name": "ENV",
         "value": "{ENV}",
         "description": "Environment",
@@ -258,52 +251,10 @@
         "essential": false
       },
       {
-        "name": "JAVA_PROFILER_OPTS",
-        "value": "{JAVA_PROFILER_OPTS}",
-        "description": "Java profiler options",
-        "type": "CONFIG",
-        "essential": false
-      },
-      {
-        "name": "KAFKA_HOST",
-        "value": "{KAFKA_HOST}",
-        "description": "Kafka host",
-        "type": "KAFKA",
-        "essential": true
-      },
-      {
-        "name": "KAFKA_PORT",
-        "value": "{KAFKA_PORT}",
-        "description": "Kafka port",
-        "type": "KAFKA",
-        "essential": true
-      },
-      {
-        "name": "KC_ADMIN_CLIENT_ID",
-        "value": "{KC_ADMIN_CLIENT_ID}",
-        "description": "Master realm specific client id for authenticating requests to manager components.",
-        "type": "KC",
-        "essential": false
-      },
-      {
         "name": "KC_AUTHORIZATION_CACHE_MAX_SIZE",
         "value": "5000",
         "description": "Maximum amount of entries for keycloak authorization cache.",
         "type": "CACHE",
-        "essential": false
-      },
-      {
-        "name": "KC_LOGIN_CLIENT_SUFFIX",
-        "value": "-application",
-        "description": "Suffix of a Keycloak client who owns the authorization resources. It is used as audience for keycloak when evaluating permissions.",
-        "type": "KC",
-        "essential": false
-      },
-      {
-        "name": "KC_SERVICE_CLIENT_ID",
-        "value": "{KC_SERVICE_CLIENT_ID}",
-        "description": "Tenant specific client id for authenticating egress requests.",
-        "type": "KC",
         "essential": false
       },
       {
@@ -312,41 +263,6 @@
         "description": "Defines if JsonWebTokenParser compares URI from token with KC_URL value.",
         "type": "KC",
         "essential": false
-      },
-      {
-        "name": "KC_URL",
-        "value": "{KC_URL}",
-        "description": "Keycloak URL.",
-        "type": "KC",
-        "essential": false
-      },
-      {
-        "name": "MOD_USERS_KEYCLOAK_URL",
-        "value": "{MOD_USERS_KEYCLOAK_URL}",
-        "description": "Mod-users-keycloak module url.",
-        "type": "CONFIG",
-        "essential": true
-      },
-      {
-        "name": "MODULE_NAME",
-        "value": "{MODULE_NAME}",
-        "description": "Underlying module name. If MODULE_ID is not specified, required",
-        "type": "CONFIG",
-        "essential": true
-      },
-      {
-        "name": "MODULE_URL",
-        "value": "{MODULE_URL}",
-        "description": "Underlying module URL.",
-        "type": "CONFIG",
-        "essential": true
-      },
-      {
-        "name": "MODULE_VERSION",
-        "value": "{MODULE_VERSION}",
-        "description": "Underlying module version. If MODULE_ID is not specified, required",
-        "type": "CONFIG",
-        "essential": true
       },
       {
         "name": "QUARKUS_HTTP_LIMITS_MAX_BODY_SIZE",
@@ -412,53 +328,11 @@
         "essential": false
       },
       {
-        "name": "SECRET_STORE_AWS_SSM_REGION",
-        "value": "{SECRET_STORE_AWS_SSM_REGION}",
-        "description": "The AWS region to pass to the AWS SSM Client Builder. If not set, the AWS Default Region Provider Chain is used to determine which region to use.",
-        "type": "CONFIG",
-        "essential": false
-      },
-      {
-        "name": "SECRET_STORE_TYPE",
-        "value": "{SECRET_STORE_TYPE}",
-        "description": "Secure storage type. Supported values: EPHEMERAL, AWS_SSM, VAULT, FSSP",
-        "type": "CONFIG",
-        "essential": true
-      },
-      {
-        "name": "SECURE_STORE_ENV",
-        "value": "{SECURE_STORE_ENV}",
-        "description": "First component of the secret store key. Fallback is ENV environment variable for Ramsons and Sunflower. Last fallback is "folio".",
-        "type": "CONFIG",
-        "essential": false
-      },
-      {
-        "name": "SIDECAR",
-        "value": "true",
-        "description": "",
-        "type": "CONFIG",
-        "essential": false
-      },
-      {
         "name": "SIDECAR_FORWARD_UNKNOWN_REQUESTS",
         "value": "true",
         "description": "Set behavior for EGRESS request. If there are no information about discovery, request will be forwarded to the SIDECAR_FORWARD_UNKNOWN_REQUESTS_DESTINATION. If SIDECAR_FORWARD_UNKNOWN_REQUESTS is enabled, ROUTING_DYNAMIC_ENABLED should be disabled.",
         "type": "CONFIG",
         "essential": false
-      },
-      {
-        "name": "SIDECAR_NATIVE_BINARY_OPTS",
-        "value": "{SIDECAR_NATIVE_BINARY_OPTS}",
-        "description": "",
-        "type": "CONFIG",
-        "essential": false
-      },
-      {
-        "name": "SIDECAR_URL",
-        "value": "{SIDECAR_URL}",
-        "description": "Self URL for module-to-module communication.",
-        "type": "CONFIG",
-        "essential": true
       },
       {
         "name": "TOKEN_CACHE_MAX_CAPACITY",
