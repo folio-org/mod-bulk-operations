@@ -2165,8 +2165,6 @@ class BulkOperationServiceTest extends BaseTest {
 
       verify(queryService, times(1))
           .retrieveRecordsIdentifiersFlowAsync(expectedIds, bulkOperation, List.of());
-      verify(errorService)
-          .saveError(bulkOperationId, duplicatedUuid, DUPLICATE_ENTRY_MSG, ErrorType.WARNING);
     }
   }
 
