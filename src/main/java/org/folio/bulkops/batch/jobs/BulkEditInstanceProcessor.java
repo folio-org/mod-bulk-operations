@@ -6,7 +6,7 @@ import static org.folio.bulkops.util.BulkEditProcessorHelper.getMatchPattern;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.resolveIdentifier;
 import static org.folio.bulkops.util.Constants.CONSORTIUM_FOLIO;
 import static org.folio.bulkops.util.Constants.CONSORTIUM_MARC;
-import static org.folio.bulkops.util.Constants.DUPLICATE_ENTRY;
+import static org.folio.bulkops.util.Constants.DUPLICATE_ENTRY_MSG;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
 import static org.folio.bulkops.util.Constants.MARC;
@@ -94,7 +94,7 @@ public class BulkEditInstanceProcessor
       if (!duplicationCheckerFactory
           .getIdentifiersToCheckDuplication(jobExecution)
           .add(itemIdentifier)) {
-        throw new BulkEditException(DUPLICATE_ENTRY, ErrorType.WARNING);
+        throw new BulkEditException(DUPLICATE_ENTRY_MSG, ErrorType.WARNING);
       }
 
       var instance = getInstance(itemIdentifier);

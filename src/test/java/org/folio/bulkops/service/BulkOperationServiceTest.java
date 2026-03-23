@@ -22,6 +22,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.service.BulkOperationService.MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY;
 import static org.folio.bulkops.service.BulkOperationService.TMP_MATCHED_JSON_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.APPLY_TO_ITEMS;
+import static org.folio.bulkops.util.Constants.DUPLICATE_ENTRY_MSG;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.INCORRECT_NUMBER_OF_TOKENS;
@@ -2134,12 +2135,20 @@ class BulkOperationServiceTest extends BaseTest {
     when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
     when(remoteFileSystemClient.getNumOfLines(filename)).thenReturn(5);
 
+    var duplicatedUuid = "1b74ab75-9f41-4837-8662-a1d99118008d";
     var ids =
         List.of(
-            fromString("1b74ab75-9f41-4837-8662-a1d99118008d"),
+            fromString(duplicatedUuid),
             fromString("69640328-788e-43fc-9c3c-af39e243f3b7"),
             fromString("549fad9e-7f8e-4d8e-9a71-00d251817866"),
-            fromString("00f10ab9-d845-4334-92d2-ff55862bf4f9"),
+            fromString(duplicatedUuid),
+            fromString("8be05cf5-fb4f-4752-8094-8e179d08fb99"));
+
+    var expectedIds =
+        List.of(
+            fromString(duplicatedUuid),
+            fromString("69640328-788e-43fc-9c3c-af39e243f3b7"),
+            fromString("549fad9e-7f8e-4d8e-9a71-00d251817866"),
             fromString("8be05cf5-fb4f-4752-8094-8e179d08fb99"));
 
     when(remoteFileSystemClient.get(filename))
@@ -2155,7 +2164,9 @@ class BulkOperationServiceTest extends BaseTest {
           bulkOperationId, UUID.randomUUID(), bulkOperationStart);
 
       verify(queryService, times(1))
-          .retrieveRecordsIdentifiersFlowAsync(ids, bulkOperation, List.of());
+          .retrieveRecordsIdentifiersFlowAsync(expectedIds, bulkOperation, List.of());
+      verify(errorService)
+          .saveError(bulkOperationId, duplicatedUuid, DUPLICATE_ENTRY_MSG, ErrorType.WARNING);
     }
   }
 
