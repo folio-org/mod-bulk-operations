@@ -719,8 +719,14 @@ public class BulkOperationService {
                     try {
                       id = removeStart(removeEnd(id, "\""), "\"");
                       if (!ids.add(UUID.fromString(id))) {
-                        errorService.saveError(
-                            bulkOperationId, id, DUPLICATE_ENTRY_MSG, ErrorType.WARNING);
+                        bulkOperationExecutionContents.add(
+                          BulkOperationExecutionContent.builder()
+                            .identifier(id)
+                            .bulkOperationId(operation.getId())
+                            .state(StateType.FAILED)
+                            .errorType(ErrorType.WARNING)
+                            .errorMessage(DUPLICATE_ENTRY_MSG)
+                            .build());
                       }
                       ids.add(UUID.fromString(id));
                     } catch (Exception e) {
