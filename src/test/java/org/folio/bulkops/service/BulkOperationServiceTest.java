@@ -2159,12 +2159,23 @@ class BulkOperationServiceTest extends BaseTest {
                         ids.get(0), ids.get(1), ids.get(2), ids.get(3), ids.get(4))
                     .getBytes()));
 
+    var expectedExecutionContents =
+        List.of(
+            BulkOperationExecutionContent.builder()
+                .identifier(duplicatedUuid)
+                .bulkOperationId(bulkOperationId)
+                .state(StateType.FAILED)
+                .errorType(ErrorType.WARNING)
+                .errorMessage(DUPLICATE_ENTRY_MSG)
+                .build());
+
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       bulkOperationService.startBulkOperation(
           bulkOperationId, UUID.randomUUID(), bulkOperationStart);
 
       verify(queryService, times(1))
-          .retrieveRecordsIdentifiersFlowAsync(expectedIds, bulkOperation, List.of());
+          .retrieveRecordsIdentifiersFlowAsync(
+              expectedIds, bulkOperation, expectedExecutionContents);
     }
   }
 

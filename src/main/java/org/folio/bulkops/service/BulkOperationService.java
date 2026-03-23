@@ -720,13 +720,13 @@ public class BulkOperationService {
                       id = removeStart(removeEnd(id, "\""), "\"");
                       if (!ids.add(UUID.fromString(id))) {
                         bulkOperationExecutionContents.add(
-                          BulkOperationExecutionContent.builder()
-                            .identifier(id)
-                            .bulkOperationId(operation.getId())
-                            .state(StateType.FAILED)
-                            .errorType(ErrorType.WARNING)
-                            .errorMessage(DUPLICATE_ENTRY_MSG)
-                            .build());
+                            BulkOperationExecutionContent.builder()
+                                .identifier(id)
+                                .bulkOperationId(operation.getId())
+                                .state(StateType.FAILED)
+                                .errorType(ErrorType.WARNING)
+                                .errorMessage(DUPLICATE_ENTRY_MSG)
+                                .build());
                       }
                       ids.add(UUID.fromString(id));
                     } catch (Exception e) {
