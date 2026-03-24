@@ -1,6 +1,7 @@
 package org.folio.bulkops.domain.converter;
 
 import static java.lang.String.format;
+import static java.util.Objects.isNull;
 
 public class BooleanConverter extends BaseConverter<Boolean> {
 
@@ -14,6 +15,6 @@ public class BooleanConverter extends BaseConverter<Boolean> {
 
   @Override
   public String convertToString(Boolean object) {
-    return object.toString();
+    return isNull(object) ? "false" : object.toString();
   }
 }
