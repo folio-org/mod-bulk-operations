@@ -6,6 +6,7 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.dateToString;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.resolveIdentifier;
 import static org.folio.bulkops.util.Constants.DCB;
+import static org.folio.bulkops.util.Constants.DUPLICATE_ENTRY_MSG;
 import static org.folio.bulkops.util.Constants.MIN_YEAR_FOR_BIRTH_DATE;
 import static org.folio.bulkops.util.Constants.MSG_DCB_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDITED;
@@ -81,7 +82,7 @@ public class BulkEditUserProcessor implements ItemProcessor<ItemIdentifier, User
     if (!duplicationCheckerFactory
         .getIdentifiersToCheckDuplication(jobExecution)
         .add(itemIdentifier)) {
-      throw new BulkEditException("Duplicate entry", ErrorType.WARNING);
+      throw new BulkEditException(DUPLICATE_ENTRY_MSG, ErrorType.WARNING);
     }
 
     try {

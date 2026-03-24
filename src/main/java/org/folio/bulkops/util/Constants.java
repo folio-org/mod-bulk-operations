@@ -133,6 +133,7 @@ public class Constants {
       "An error occurred during "
           + "the update operation, possibly due to multiple MARC records linked to the "
           + "same instance. Please review the inventory for potential data inconsistencies.";
+  public static final String DUPLICATE_ENTRY_MSG = "Duplicate entry";
   public static final String ITEM_TYPE = "ITEM";
   public static final String HOLDING_TYPE = "HOLDINGS_RECORD";
   public static final Set<String> SPLIT_NOTE_ENTITIES = Set.of(ITEM_TYPE, HOLDING_TYPE);
@@ -171,7 +172,6 @@ public class Constants {
   public static final String IDENTIFIERS_FILE_NAME = "identifiersFileName";
 
   public static final String MULTIPLE_MATCHES_MESSAGE = "Multiple matches for the same identifier.";
-  public static final String DUPLICATE_ENTRY = "Duplicate entry";
   public static final String FILE_UPLOAD_ERROR =
       "File uploading failed : Cannot upload a file. Reason: %s.";
 

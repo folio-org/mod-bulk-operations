@@ -27,6 +27,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.SAVING_RECORDS_LO
 import static org.folio.bulkops.util.Constants.BULK_EDIT_IDENTIFIERS;
 import static org.folio.bulkops.util.Constants.CHANGED_CSV_PATH_TEMPLATE;
 import static org.folio.bulkops.util.Constants.COMMA_DELIMETER;
+import static org.folio.bulkops.util.Constants.DUPLICATE_ENTRY_MSG;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
 import static org.folio.bulkops.util.Constants.FILE_UPLOAD_ERROR;
@@ -58,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -704,7 +706,7 @@ public class BulkOperationService {
         try (InputStream is = remoteFileSystemClient.get(operation.getLinkToTriggeringCsvFile());
             BufferedReader reader =
                 new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-          List<UUID> ids = new ArrayList<>();
+          Set<UUID> ids = new LinkedHashSet<>();
           List<BulkOperationExecutionContent> bulkOperationExecutionContents =
               Collections.synchronizedList(new ArrayList<>());
           reader
@@ -716,6 +718,16 @@ public class BulkOperationService {
                     }
                     try {
                       id = removeStart(removeEnd(id, "\""), "\"");
+                      if (!ids.add(UUID.fromString(id))) {
+                        bulkOperationExecutionContents.add(
+                            BulkOperationExecutionContent.builder()
+                                .identifier(id)
+                                .bulkOperationId(operation.getId())
+                                .state(StateType.FAILED)
+                                .errorType(ErrorType.WARNING)
+                                .errorMessage(DUPLICATE_ENTRY_MSG)
+                                .build());
+                      }
                       ids.add(UUID.fromString(id));
                     } catch (Exception e) {
                       // saving invalid UUID identifiers as "No match found"
@@ -731,7 +743,7 @@ public class BulkOperationService {
                   });
 
           queryService.retrieveRecordsIdentifiersFlowAsync(
-              ids, operation, bulkOperationExecutionContents);
+              ids.stream().toList(), operation, bulkOperationExecutionContents);
 
         } catch (Exception e) {
           log.error(ERROR_STARTING_BULK_OPERATION, e);

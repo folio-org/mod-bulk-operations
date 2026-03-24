@@ -5,6 +5,7 @@ import static org.folio.bulkops.util.BulkEditProcessorHelper.getMatchPattern;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.getResponseAsString;
 import static org.folio.bulkops.util.BulkEditProcessorHelper.resolveIdentifier;
 import static org.folio.bulkops.util.Constants.DUPLICATES_ACROSS_TENANTS;
+import static org.folio.bulkops.util.Constants.DUPLICATE_ENTRY_MSG;
 import static org.folio.bulkops.util.Constants.MULTIPLE_MATCHES_MESSAGE;
 import static org.folio.bulkops.util.Constants.NO_ITEM_VIEW_PERMISSIONS;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
@@ -81,7 +82,7 @@ public class BulkEditItemProcessor
     if (!duplicationCheckerFactory
         .getIdentifiersToCheckDuplication(jobExecution)
         .add(itemIdentifier)) {
-      throw new BulkEditException("Duplicate entry", ErrorType.WARNING);
+      throw new BulkEditException(DUPLICATE_ENTRY_MSG, ErrorType.WARNING);
     }
     var type = IdentifierType.fromValue(identifierType);
     var limit = IdentifierType.HOLDINGS_RECORD_ID.equals(type) ? Integer.MAX_VALUE : 1;
