@@ -1,7 +1,6 @@
 package org.folio.bulkops.domain.converter;
 
 import static java.lang.String.format;
-import static java.util.Objects.isNull;
 
 public class BooleanConverter extends BaseConverter<Boolean> {
 

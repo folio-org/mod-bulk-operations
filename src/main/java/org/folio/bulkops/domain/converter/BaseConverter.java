@@ -58,11 +58,10 @@ public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
 
   @Override
   protected String convertToWrite(Object object) {
-    if (ObjectUtils.isEmpty(object)
-        || (object.getClass() == Tags.class && ObjectUtils.isEmpty(((Tags) object).getTagList()))) {
-      if (this.getClass() != BooleanNullConverter.class) {
-        return EMPTY;
-      }
+    if ((ObjectUtils.isEmpty(object)
+        || (object.getClass() == Tags.class && ObjectUtils.isEmpty(((Tags) object).getTagList())))
+        && this.getClass() != BooleanNullConverter.class) {
+      return EMPTY;
     }
     try {
       return convertToString((T) object);
