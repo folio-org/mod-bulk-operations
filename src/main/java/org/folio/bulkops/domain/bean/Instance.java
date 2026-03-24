@@ -15,6 +15,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.With;
 import org.folio.bulkops.domain.converter.BooleanConverter;
+import org.folio.bulkops.domain.converter.BooleanNullConverter;
 import org.folio.bulkops.domain.converter.ClassificationListConverter;
 import org.folio.bulkops.domain.converter.ContributorListConverter;
 import org.folio.bulkops.domain.converter.ElectronicAccessListInstanceConverter;
@@ -90,14 +91,14 @@ public class Instance implements BulkOperationsEntity {
   @JsonProperty(INSTANCE_JSON_DISCOVERY_SUPPRESS)
   @CsvCustomBindByName(
       column = INSTANCE_SUPPRESS_FROM_DISCOVERY,
-      converter = BooleanConverter.class)
-  @CsvCustomBindByPosition(position = 1, converter = BooleanConverter.class)
+      converter = BooleanNullConverter.class)
+  @CsvCustomBindByPosition(position = 1, converter = BooleanNullConverter.class)
   @UnifiedTableCell
   private Boolean discoverySuppress;
 
   @JsonProperty(INSTANCE_JSON_STAFF_SUPPRESS)
-  @CsvCustomBindByName(column = INSTANCE_STAFF_SUPPRESS, converter = BooleanConverter.class)
-  @CsvCustomBindByPosition(position = 2, converter = BooleanConverter.class)
+  @CsvCustomBindByName(column = INSTANCE_STAFF_SUPPRESS, converter = BooleanNullConverter.class)
+  @CsvCustomBindByPosition(position = 2, converter = BooleanNullConverter.class)
   @UnifiedTableCell(visible = false)
   private Boolean staffSuppress;
 

@@ -98,7 +98,8 @@ public class LocalReferenceDataService {
               });
     }
     if (nonNull(holdingsRecord.getNotes())) {
-      holdingsRecord.getNotes().forEach(note -> note.setTenantId(tenantId));
+      holdingsRecord.getNotes().stream().filter(Objects::nonNull)
+              .forEach(note -> note.setTenantId(tenantId));
     }
     if (nonNull(holdingsRecord.getStatisticalCodeIds())) {
       holdingsRecord
