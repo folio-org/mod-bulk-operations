@@ -60,7 +60,7 @@ public abstract class BaseConverter<T> extends AbstractBeanField<String, T> {
   protected String convertToWrite(Object object) {
     if (ObjectUtils.isEmpty(object)
         || (object.getClass() == Tags.class && ObjectUtils.isEmpty(((Tags) object).getTagList()))) {
-      if (this.getClass() != BooleanConverter.class) {
+      if (this.getClass() != BooleanNullConverter.class) {
         return EMPTY;
       }
     }

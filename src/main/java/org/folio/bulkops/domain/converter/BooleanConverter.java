@@ -15,6 +15,6 @@ public class BooleanConverter extends BaseConverter<Boolean> {
 
   @Override
   public String convertToString(Boolean object) {
-    return isNull(object) ? "false" : object.toString();
+    return object.toString();
   }
 }
