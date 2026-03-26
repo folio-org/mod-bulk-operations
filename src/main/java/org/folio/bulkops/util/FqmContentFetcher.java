@@ -565,20 +565,18 @@ public class FqmContentFetcher {
         addDcbUserErrorContent(id, bulkOperationExecutionContents, operationId);
         return EMPTY;
       }
-      if (isCentralTenant) {
-        if (isInstance(entityType)
-            && !SHARED.equalsIgnoreCase(
-                ofNullable(json.get(FQM_INSTANCE_SHARED_KEY))
-                    .map(Object::toString)
-                    .orElse(EMPTY))) {
-          addNoMatchFoundError(id, bulkOperationExecutionContents, operationId);
-          return EMPTY;
-        } else if (EntityType.USER.equals(entityType)
-            && SHADOW.equalsIgnoreCase(
-                ofNullable(json.get(FQM_USERS_TYPE_KEY)).map(Object::toString).orElse(EMPTY))) {
-          addShadowUserErrorContent(id, bulkOperationExecutionContents, operationId);
-          return EMPTY;
-        }
+      if (EntityType.USER.equals(entityType)
+          && SHADOW.equalsIgnoreCase(
+              ofNullable(json.get(FQM_USERS_TYPE_KEY)).map(Object::toString).orElse(EMPTY))) {
+        addShadowUserErrorContent(id, bulkOperationExecutionContents, operationId);
+        return EMPTY;
+      }
+      if (isCentralTenant
+          && isInstance(entityType)
+          && !SHARED.equalsIgnoreCase(
+              ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY))) {
+        addNoMatchFoundError(id, bulkOperationExecutionContents, operationId);
+        return EMPTY;
       }
 
       if (isSharedInstanceAndCurrentTenantIsMember(json, entityType)) {
