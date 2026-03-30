@@ -14,8 +14,12 @@ import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_TEMPORARY_LOCATION;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_VERSION;
 import static org.folio.bulkops.domain.dto.UpdateActionType.CHANGE_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_IN_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_OUT_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
 import static org.folio.bulkops.util.Constants.ITEM_NOTE_TYPE_NAME_KEY;
 import static org.folio.bulkops.util.Constants.TENANT_ID_KEY;
+import static org.folio.bulkops.util.RuleUtils.isCirculationNoteType;
 
 import java.util.List;
 import java.util.Objects;
@@ -23,6 +27,7 @@ import lombok.experimental.UtilityClass;
 import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
+import org.folio.bulkops.domain.dto.RuleDetails;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.BooleanNode;
@@ -46,27 +51,14 @@ public class ItemPatchUtils {
       if (ruleDetails.getOption() != null) {
         switch (ruleDetails.getOption()) {
           case SUPPRESS_FROM_DISCOVERY -> addDiscoverySuppress(result, item.getDiscoverySuppress());
-          case CHECK_IN_NOTE, CHECK_OUT_NOTE -> addCirculationNotes(result, item);
+          case CHECK_IN_NOTE, CHECK_OUT_NOTE -> addNotes(result, item, ruleDetails);
           case STATUS -> addStatus(result, item);
           case PERMANENT_LOAN_TYPE -> addPermanentLoanType(result, item);
           case TEMPORARY_LOAN_TYPE -> addTemporaryLoanType(result, item);
           case PERMANENT_LOCATION -> addPermanentLocation(result, item);
           case TEMPORARY_LOCATION -> addTemporaryLocation(result, item);
-          case ADMINISTRATIVE_NOTE -> {
-            addAdministrativeNotes(result, item);
-            if (CHANGE_TYPE.equals(ruleDetails.getActions().getFirst().getType())) {
-              addItemNotes(result, item);
-            }
-          }
-          case ITEM_NOTE -> {
-            addItemNotes(result, item);
-            if (CHANGE_TYPE.equals(ruleDetails.getActions().getFirst().getType())
-                && ADMINISTRATIVE_NOTE
-                    .getValue()
-                    .equals(ruleDetails.getActions().getFirst().getUpdated())) {
-              addAdministrativeNotes(result, item);
-            }
-          }
+          case ADMINISTRATIVE_NOTE -> addNotes(result, item, ruleDetails);
+          case ITEM_NOTE -> addNotes(result, item, ruleDetails);
           default ->
               throw new IllegalArgumentException(
                   "Rule option %s is not supported".formatted(ruleDetails.getOption()));
@@ -89,6 +81,33 @@ public class ItemPatchUtils {
     node.set(
         ITEM_JSON_DISCOVERY_SUPPRESS,
         isNull(value) ? mapper.nullNode() : BooleanNode.valueOf(value));
+  }
+
+  private static void addNotes(ObjectNode result, Item item, RuleDetails ruleDetails) {
+    var option = ruleDetails.getOption();
+
+    // Add source note array based on the option
+    if (option == CHECK_IN_NOTE || option == CHECK_OUT_NOTE) {
+      addCirculationNotes(result, item);
+    } else if (option == ADMINISTRATIVE_NOTE) {
+      addAdministrativeNotes(result, item);
+    } else if (option == ITEM_NOTE) {
+      addItemNotes(result, item);
+    }
+
+    // For CHANGE_TYPE, also add target note array
+    if (CHANGE_TYPE.equals(ruleDetails.getActions().getFirst().getType())) {
+      var targetNoteType = ruleDetails.getActions().getFirst().getUpdated();
+
+      if (isCirculationNoteType(targetNoteType)) {
+        addCirculationNotes(result, item);
+      } else if (ADMINISTRATIVE_NOTE.getValue().equals(targetNoteType)) {
+        addAdministrativeNotes(result, item);
+      } else {
+        // Target is item note type
+        addItemNotes(result, item);
+      }
+    }
   }
 
   private static void addAdministrativeNotes(ObjectNode node, Item item) {

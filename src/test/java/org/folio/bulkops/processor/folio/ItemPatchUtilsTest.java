@@ -271,6 +271,180 @@ class ItemPatchUtilsTest {
     assertFalse(changed.get(ITEM_JSON_NOTES).get(0).has("itemNoteTypeName"));
   }
 
+  @Test
+  void shouldPopulateCirculationNotesAndAdministrativeNotes_whenChangeTypeCheckInToAdminNote() {
+    var item =
+        Item.builder()
+            .circulationNotes(List.of(circulationNote("c1")))
+            .administrativeNotes(List.of("a1"))
+            .build();
+    var rules =
+        ruleCollection(
+            rule(
+                UpdateOptionType.CHECK_IN_NOTE,
+                action(UpdateActionType.CHANGE_TYPE)
+                    .updated(UpdateOptionType.ADMINISTRATIVE_NOTE.getValue())));
+
+    var changed = ItemPatchUtils.fetchChangedData(item, rules);
+
+    assertTrue(changed.has(ITEM_JSON_CIRCULATION_NOTES));
+    assertTrue(changed.has(ITEM_JSON_ADM_NOTES));
+    assertFalse(changed.has(ITEM_JSON_NOTES));
+    assertEquals(4, changed.size());
+  }
+
+  @Test
+  void shouldPopulateCirculationNotesAndItemNotes_whenChangeTypeCheckInToItemNote() {
+    var item =
+        Item.builder()
+            .circulationNotes(List.of(circulationNote("c1")))
+            .notes(List.of(itemNote("n1")))
+            .build();
+    var rules =
+        ruleCollection(
+            rule(
+                UpdateOptionType.CHECK_IN_NOTE,
+                action(UpdateActionType.CHANGE_TYPE).updated("note-type-id")));
+
+    var changed = ItemPatchUtils.fetchChangedData(item, rules);
+
+    assertTrue(changed.has(ITEM_JSON_CIRCULATION_NOTES));
+    assertTrue(changed.has(ITEM_JSON_NOTES));
+    assertFalse(changed.has(ITEM_JSON_ADM_NOTES));
+    assertEquals(4, changed.size());
+  }
+
+  @Test
+  void shouldPopulateCirculationNotesAndAdministrativeNotes_whenChangeTypeCheckOutToAdminNote() {
+    var item =
+        Item.builder()
+            .circulationNotes(List.of(circulationNote("c1")))
+            .administrativeNotes(List.of("a1"))
+            .build();
+    var rules =
+        ruleCollection(
+            rule(
+                UpdateOptionType.CHECK_OUT_NOTE,
+                action(UpdateActionType.CHANGE_TYPE)
+                    .updated(UpdateOptionType.ADMINISTRATIVE_NOTE.getValue())));
+
+    var changed = ItemPatchUtils.fetchChangedData(item, rules);
+
+    assertTrue(changed.has(ITEM_JSON_CIRCULATION_NOTES));
+    assertTrue(changed.has(ITEM_JSON_ADM_NOTES));
+    assertFalse(changed.has(ITEM_JSON_NOTES));
+    assertEquals(4, changed.size());
+  }
+
+  @Test
+  void shouldPopulateCirculationNotesAndItemNotes_whenChangeTypeCheckOutToItemNote() {
+    var item =
+        Item.builder()
+            .circulationNotes(List.of(circulationNote("c1")))
+            .notes(List.of(itemNote("n1")))
+            .build();
+    var rules =
+        ruleCollection(
+            rule(
+                UpdateOptionType.CHECK_OUT_NOTE,
+                action(UpdateActionType.CHANGE_TYPE).updated("note-type-id")));
+
+    var changed = ItemPatchUtils.fetchChangedData(item, rules);
+
+    assertTrue(changed.has(ITEM_JSON_CIRCULATION_NOTES));
+    assertTrue(changed.has(ITEM_JSON_NOTES));
+    assertFalse(changed.has(ITEM_JSON_ADM_NOTES));
+    assertEquals(4, changed.size());
+  }
+
+  @Test
+  void shouldPopulateAdministrativeNotesAndCirculationNotes_whenChangeTypeToCheckInNote() {
+    var item =
+        Item.builder()
+            .administrativeNotes(List.of("a1"))
+            .circulationNotes(List.of(circulationNote("c1")))
+            .build();
+    var rules =
+        ruleCollection(
+            rule(
+                UpdateOptionType.ADMINISTRATIVE_NOTE,
+                action(UpdateActionType.CHANGE_TYPE)
+                    .updated(UpdateOptionType.CHECK_IN_NOTE.getValue())));
+
+    var changed = ItemPatchUtils.fetchChangedData(item, rules);
+
+    assertTrue(changed.has(ITEM_JSON_ADM_NOTES));
+    assertTrue(changed.has(ITEM_JSON_CIRCULATION_NOTES));
+    assertFalse(changed.has(ITEM_JSON_NOTES));
+    assertEquals(4, changed.size());
+  }
+
+  @Test
+  void shouldPopulateAdministrativeNotesAndCirculationNotes_whenChangeTypeToCheckOutNote() {
+    var item =
+        Item.builder()
+            .administrativeNotes(List.of("a1"))
+            .circulationNotes(List.of(circulationNote("c1")))
+            .build();
+    var rules =
+        ruleCollection(
+            rule(
+                UpdateOptionType.ADMINISTRATIVE_NOTE,
+                action(UpdateActionType.CHANGE_TYPE)
+                    .updated(UpdateOptionType.CHECK_OUT_NOTE.getValue())));
+
+    var changed = ItemPatchUtils.fetchChangedData(item, rules);
+
+    assertTrue(changed.has(ITEM_JSON_ADM_NOTES));
+    assertTrue(changed.has(ITEM_JSON_CIRCULATION_NOTES));
+    assertFalse(changed.has(ITEM_JSON_NOTES));
+    assertEquals(4, changed.size());
+  }
+
+  @Test
+  void shouldPopulateItemNotesAndCirculationNotes_whenChangeTypeToCheckInNote() {
+    var item =
+        Item.builder()
+            .notes(List.of(itemNote("n1")))
+            .circulationNotes(List.of(circulationNote("c1")))
+            .build();
+    var rules =
+        ruleCollection(
+            rule(
+                UpdateOptionType.ITEM_NOTE,
+                action(UpdateActionType.CHANGE_TYPE)
+                    .updated(UpdateOptionType.CHECK_IN_NOTE.getValue())));
+
+    var changed = ItemPatchUtils.fetchChangedData(item, rules);
+
+    assertTrue(changed.has(ITEM_JSON_NOTES));
+    assertTrue(changed.has(ITEM_JSON_CIRCULATION_NOTES));
+    assertFalse(changed.has(ITEM_JSON_ADM_NOTES));
+    assertEquals(4, changed.size());
+  }
+
+  @Test
+  void shouldPopulateItemNotesAndCirculationNotes_whenChangeTypeToCheckOutNote() {
+    var item =
+        Item.builder()
+            .notes(List.of(itemNote("n1")))
+            .circulationNotes(List.of(circulationNote("c1")))
+            .build();
+    var rules =
+        ruleCollection(
+            rule(
+                UpdateOptionType.ITEM_NOTE,
+                action(UpdateActionType.CHANGE_TYPE)
+                    .updated(UpdateOptionType.CHECK_OUT_NOTE.getValue())));
+
+    var changed = ItemPatchUtils.fetchChangedData(item, rules);
+
+    assertTrue(changed.has(ITEM_JSON_NOTES));
+    assertTrue(changed.has(ITEM_JSON_CIRCULATION_NOTES));
+    assertFalse(changed.has(ITEM_JSON_ADM_NOTES));
+    assertEquals(4, changed.size());
+  }
+
   private static BulkOperationRuleCollection ruleCollection(BulkOperationRule... rules) {
     return new BulkOperationRuleCollection().bulkOperationRules(List.of(rules));
   }
