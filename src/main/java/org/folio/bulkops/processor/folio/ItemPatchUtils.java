@@ -51,14 +51,16 @@ public class ItemPatchUtils {
       if (ruleDetails.getOption() != null) {
         switch (ruleDetails.getOption()) {
           case SUPPRESS_FROM_DISCOVERY -> addDiscoverySuppress(result, item.getDiscoverySuppress());
-          case CHECK_IN_NOTE, CHECK_OUT_NOTE -> addNotes(result, item, ruleDetails);
+          case
+            ADMINISTRATIVE_NOTE,
+            CHECK_IN_NOTE,
+            CHECK_OUT_NOTE,
+            ITEM_NOTE -> addNotes(result, item, ruleDetails);
           case STATUS -> addStatus(result, item);
           case PERMANENT_LOAN_TYPE -> addPermanentLoanType(result, item);
           case TEMPORARY_LOAN_TYPE -> addTemporaryLoanType(result, item);
           case PERMANENT_LOCATION -> addPermanentLocation(result, item);
           case TEMPORARY_LOCATION -> addTemporaryLocation(result, item);
-          case ADMINISTRATIVE_NOTE -> addNotes(result, item, ruleDetails);
-          case ITEM_NOTE -> addNotes(result, item, ruleDetails);
           default ->
               throw new IllegalArgumentException(
                   "Rule option %s is not supported".formatted(ruleDetails.getOption()));
