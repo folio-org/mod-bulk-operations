@@ -12,7 +12,7 @@ public interface DataImportUploadClient {
 
   @PostExchange(
       value = "/uploadDefinitions/{uploadDefinitionId}/files/{fileId}",
-      contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE,
+      contentType = MediaType.APPLICATION_JSON_VALUE,
       accept = MediaType.APPLICATION_JSON_VALUE)
   UploadFileDefinition uploadFileDefinitionsFiles(
       @PathVariable String uploadDefinitionId,
