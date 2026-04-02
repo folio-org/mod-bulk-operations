@@ -404,7 +404,6 @@ class FqmContentFetcherEcsTest {
     UUID uuid2 = randomUUID();
     mockCommon(tenantId, centralTenantId, List.of());
 
-    // Mock searchClient to return empty collection (all items missing)
     when(searchClient.getConsortiumItemCollection(any()))
         .thenReturn(new ConsortiumItemCollection());
 
@@ -420,7 +419,6 @@ class FqmContentFetcherEcsTest {
           .atMost(2, TimeUnit.SECONDS)
           .untilAsserted(() -> verify(queryClient, atLeastOnce()).getContents(captor.capture()));
 
-      // Verify that all UUIDs are reported as "No match found"
       assertThat(bulkOperationExecutionContents, Matchers.hasSize(2));
 
       List<String> missingIds =
@@ -435,7 +433,6 @@ class FqmContentFetcherEcsTest {
             assertThat(content.getBulkOperationId(), Matchers.is(operationId));
           });
 
-      // Verify that no IDs are sent to query client
       ContentsRequest req = captor.getValue();
       List<List<String>> ids = req.getIds();
       Assertions.assertEquals(0, ids.size());
