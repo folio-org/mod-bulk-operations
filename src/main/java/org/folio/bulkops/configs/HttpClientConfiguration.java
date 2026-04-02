@@ -1,6 +1,5 @@
 package org.folio.bulkops.configs;
 
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.AddressTypeClient;
@@ -35,7 +34,6 @@ import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.ItemNoteTypeClient;
 import org.folio.bulkops.client.ItemStorageClient;
 import org.folio.bulkops.client.LoanTypeClient;
-import org.folio.bulkops.client.LocaleClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.MappingRulesClient;
 import org.folio.bulkops.client.MaterialTypeClient;
@@ -64,6 +62,8 @@ import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.support.RestClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
+
+import java.util.List;
 
 @Configuration
 @Log4j2
@@ -325,21 +325,15 @@ public class HttpClientConfiguration {
   }
 
   @Bean
-  public LocaleClient localeClient(HttpServiceProxyFactory factory) {
-    return factory.createClient(LocaleClient.class);
-  }
-
-  @Bean
   public HttpServiceProxyFactory factory(RestClient.Builder restClientBuilder) {
     var restClient =
         restClientBuilder
             .defaultStatusHandler(HttpStatusCode::isError, errorHandler::handle)
-            .configureMessageConverters(
-                cb -> {
-                  var converter = new ByteArrayHttpMessageConverter();
-                  converter.setSupportedMediaTypes(List.of(MediaType.APPLICATION_OCTET_STREAM));
-                  cb.addCustomConverter(converter);
-                })
+            .configureMessageConverters(cb -> {
+              var converter = new ByteArrayHttpMessageConverter();
+              converter.setSupportedMediaTypes(List.of(MediaType.APPLICATION_OCTET_STREAM));
+              cb.addCustomConverter(converter);
+            })
             .requestInterceptor(
                 (request, body, execution) -> {
                   log.debug("Request URL: {}", request.getURI());

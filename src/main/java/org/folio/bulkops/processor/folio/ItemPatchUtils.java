@@ -51,8 +51,11 @@ public class ItemPatchUtils {
       if (ruleDetails.getOption() != null) {
         switch (ruleDetails.getOption()) {
           case SUPPRESS_FROM_DISCOVERY -> addDiscoverySuppress(result, item.getDiscoverySuppress());
-          case ADMINISTRATIVE_NOTE, CHECK_IN_NOTE, CHECK_OUT_NOTE, ITEM_NOTE ->
-              addNotes(result, item, ruleDetails);
+          case
+            ADMINISTRATIVE_NOTE,
+            CHECK_IN_NOTE,
+            CHECK_OUT_NOTE,
+            ITEM_NOTE -> addNotes(result, item, ruleDetails);
           case STATUS -> addStatus(result, item);
           case PERMANENT_LOAN_TYPE -> addPermanentLoanType(result, item);
           case TEMPORARY_LOAN_TYPE -> addTemporaryLoanType(result, item);

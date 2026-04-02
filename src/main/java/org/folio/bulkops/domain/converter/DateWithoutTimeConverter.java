@@ -10,7 +10,7 @@ import java.util.Date;
 
 public class DateWithoutTimeConverter extends BaseConverter<Date> {
 
-  static final ThreadLocal<SimpleDateFormat> DATE_WITHOUT_TIME_FORMAT =
+  private static final ThreadLocal<SimpleDateFormat> DATE_WITHOUT_TIME_FORMAT =
       ThreadLocal.withInitial(() -> new SimpleDateFormat(DATE_WITHOUT_TIME_PATTERN));
 
   @Override

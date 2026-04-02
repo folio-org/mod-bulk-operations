@@ -14,12 +14,10 @@ import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.CustomFieldsClient;
 import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.client.GroupClient;
-import org.folio.bulkops.client.LocaleClient;
 import org.folio.bulkops.client.OkapiClient;
 import org.folio.bulkops.domain.bean.AddressType;
 import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.bean.Department;
-import org.folio.bulkops.domain.bean.Locale;
 import org.folio.bulkops.domain.bean.PreferredContactType;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.exception.ReferenceDataNotFoundException;
@@ -39,7 +37,6 @@ public class UserReferenceService {
   private final CustomFieldsClient customFieldsClient;
   private final FolioExecutionContext folioExecutionContext;
   private final OkapiClient okapiClient;
-  private final LocaleClient localeClient;
 
   @Cacheable(cacheNames = "addressTypeIds")
   public AddressType getAddressTypeByAddressTypeValue(String addressTypeValue) {
@@ -143,10 +140,5 @@ public class UserReferenceService {
       return contactType.get();
     }
     throw new ReferenceDataNotFoundException(format("Invalid Preferred contact value: %s", id));
-  }
-
-  @Cacheable(cacheNames = "locale")
-  public Locale getTenantLocale() {
-    return localeClient.getTenantLocale();
   }
 }

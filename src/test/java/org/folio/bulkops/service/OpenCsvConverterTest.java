@@ -66,7 +66,6 @@ import org.folio.bulkops.domain.bean.ItemLocationCollection;
 import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.bean.LoanType;
 import org.folio.bulkops.domain.bean.LoanTypeCollection;
-import org.folio.bulkops.domain.bean.Locale;
 import org.folio.bulkops.domain.bean.MaterialType;
 import org.folio.bulkops.domain.bean.MaterialTypeCollection;
 import org.folio.bulkops.domain.bean.ModeOfIssuance;
@@ -831,6 +830,5 @@ class OpenCsvConverterTest extends BaseTest {
                 .formats(Collections.singletonList(instanceFormat))
                 .totalRecords(1)
                 .build());
-    when(localeClient.getTenantLocale()).thenReturn(Locale.builder().locale("UTC").build());
   }
 }
