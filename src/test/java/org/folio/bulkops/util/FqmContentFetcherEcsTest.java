@@ -3,6 +3,7 @@ package org.folio.bulkops.util;
 import static java.util.UUID.randomUUID;
 import static org.awaitility.Awaitility.await;
 import static org.folio.bulkops.util.Constants.DUPLICATES_ACROSS_TENANTS;
+import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
@@ -282,5 +283,167 @@ class FqmContentFetcherEcsTest {
         });
 
     when(queryClient.getContents(any())).thenReturn(mock);
+  }
+
+  @Test
+  void testMissingItemsInCentralTenant() {
+    String tenantId = "central";
+    String centralTenantId = "central";
+    String itemTenant1 = "member_A";
+    UUID uuid1 = randomUUID(); // Will be found
+    UUID uuid2 = randomUUID(); // Will NOT be found
+    UUID uuid3 = randomUUID(); // Will be found
+    mockCommon(tenantId, centralTenantId, List.of(uuid1, uuid3));
+
+    // Mock searchClient to return only uuid1 and uuid3 (uuid2 is missing)
+    when(searchClient.getConsortiumItemCollection(any()))
+        .thenReturn(
+            new ConsortiumItemCollection()
+                .addItemsItem(new ConsortiumItem().id(uuid1.toString()).tenantId(itemTenant1))
+                .addItemsItem(new ConsortiumItem().id(uuid3.toString()).tenantId(itemTenant1)));
+
+    List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
+    UUID operationId = randomUUID();
+
+    try (var is =
+        fqmContentFetcher.contents(
+            List.of(uuid1, uuid2, uuid3),
+            EntityType.ITEM,
+            bulkOperationExecutionContents,
+            operationId)) {
+      ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
+
+      await()
+          .atMost(2, TimeUnit.SECONDS)
+          .untilAsserted(() -> verify(queryClient, atLeastOnce()).getContents(captor.capture()));
+
+      // Verify that uuid2 is reported as "No match found"
+      assertThat(bulkOperationExecutionContents, Matchers.hasSize(1));
+      assertThat(
+          bulkOperationExecutionContents.getFirst().getIdentifier(), Matchers.is(uuid2.toString()));
+      assertThat(
+          bulkOperationExecutionContents.getFirst().getErrorMessage(),
+          Matchers.is(NO_MATCH_FOUND_MESSAGE));
+      assertThat(
+          bulkOperationExecutionContents.getFirst().getBulkOperationId(), Matchers.is(operationId));
+
+      // Verify that only found items are sent to query client
+      ContentsRequest req = captor.getValue();
+      List<List<String>> ids = req.getIds();
+      Assertions.assertEquals(2, ids.size());
+      Assertions.assertTrue(
+          ids.contains(List.of(uuid1.toString(), itemTenant1))
+              || ids.contains(List.of(uuid3.toString(), itemTenant1)));
+    } catch (IOException e) {
+      Assertions.fail("Fail reading content");
+    }
+  }
+
+  @Test
+  void testMissingHoldingsInCentralTenant() {
+    String tenantId = "central";
+    String centralTenantId = "central";
+    String holdingTenant = "member_A";
+    UUID uuid1 = randomUUID(); // Will be found
+    UUID uuid2 = randomUUID(); // Will NOT be found
+    UUID uuid3 = randomUUID(); // Will NOT be found
+    mockCommon(tenantId, centralTenantId, List.of(uuid1));
+
+    // Mock searchClient to return only uuid1 (uuid2 and uuid3 are missing)
+    when(searchClient.getConsortiumHoldingCollection(any()))
+        .thenReturn(
+            new ConsortiumHoldingCollection()
+                .addHoldingsItem(
+                    new ConsortiumHolding().id(uuid1.toString()).tenantId(holdingTenant)));
+
+    List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
+    UUID operationId = randomUUID();
+
+    try (var is =
+        fqmContentFetcher.contents(
+            List.of(uuid1, uuid2, uuid3),
+            EntityType.HOLDINGS_RECORD,
+            bulkOperationExecutionContents,
+            operationId)) {
+      ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
+
+      await()
+          .atMost(2, TimeUnit.SECONDS)
+          .untilAsserted(() -> verify(queryClient, atLeastOnce()).getContents(captor.capture()));
+
+      // Verify that uuid2 and uuid3 are reported as "No match found"
+      assertThat(bulkOperationExecutionContents, Matchers.hasSize(2));
+
+      List<String> missingIds =
+          bulkOperationExecutionContents.stream()
+              .map(BulkOperationExecutionContent::getIdentifier)
+              .toList();
+      assertThat(missingIds, Matchers.containsInAnyOrder(uuid2.toString(), uuid3.toString()));
+
+      bulkOperationExecutionContents.forEach(
+          content -> {
+            assertThat(content.getErrorMessage(), Matchers.is(NO_MATCH_FOUND_MESSAGE));
+            assertThat(content.getBulkOperationId(), Matchers.is(operationId));
+          });
+
+      // Verify that only found holding is sent to query client
+      ContentsRequest req = captor.getValue();
+      List<List<String>> ids = req.getIds();
+      Assertions.assertEquals(1, ids.size());
+      Assertions.assertEquals(List.of(uuid1.toString(), holdingTenant), ids.getFirst());
+    } catch (IOException e) {
+      Assertions.fail("Fail reading content");
+    }
+  }
+
+  @Test
+  void testAllItemsMissingInCentralTenant() {
+    String tenantId = "central";
+    String centralTenantId = "central";
+    UUID uuid1 = randomUUID();
+    UUID uuid2 = randomUUID();
+    mockCommon(tenantId, centralTenantId, List.of());
+
+    // Mock searchClient to return empty collection (all items missing)
+    when(searchClient.getConsortiumItemCollection(any()))
+        .thenReturn(new ConsortiumItemCollection());
+
+    List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
+    UUID operationId = randomUUID();
+
+    try (var is =
+        fqmContentFetcher.contents(
+            List.of(uuid1, uuid2),
+            EntityType.ITEM,
+            bulkOperationExecutionContents,
+            operationId)) {
+      ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
+
+      await()
+          .atMost(2, TimeUnit.SECONDS)
+          .untilAsserted(() -> verify(queryClient, atLeastOnce()).getContents(captor.capture()));
+
+      // Verify that all UUIDs are reported as "No match found"
+      assertThat(bulkOperationExecutionContents, Matchers.hasSize(2));
+
+      List<String> missingIds =
+          bulkOperationExecutionContents.stream()
+              .map(BulkOperationExecutionContent::getIdentifier)
+              .toList();
+      assertThat(missingIds, Matchers.containsInAnyOrder(uuid1.toString(), uuid2.toString()));
+
+      bulkOperationExecutionContents.forEach(
+          content -> {
+            assertThat(content.getErrorMessage(), Matchers.is(NO_MATCH_FOUND_MESSAGE));
+            assertThat(content.getBulkOperationId(), Matchers.is(operationId));
+          });
+
+      // Verify that no IDs are sent to query client
+      ContentsRequest req = captor.getValue();
+      List<List<String>> ids = req.getIds();
+      Assertions.assertEquals(0, ids.size());
+    } catch (IOException e) {
+      Assertions.fail("Fail reading content");
+    }
   }
 }

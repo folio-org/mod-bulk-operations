@@ -623,6 +623,139 @@ class FqmContentFetcherTest {
   }
 
   @Test
+  void fetchShouldReportShadowUsersWhenMemberTenant() throws Exception {
+    var operationId = randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
+
+    when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
+    when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
+
+    var userId = randomUUID();
+    Map<String, Object> map = new HashMap<>();
+    map.put("users.type", SHADOW);
+    map.put("users.id", userId);
+    map.put("users.jsonb", "{\"id\":\"" + userId + "\"}");
+    var details = new QueryDetails();
+    details.setContent(Collections.singletonList(map));
+    var queryId = randomUUID();
+    int total = 1;
+    when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
+
+    try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total, contents, operationId)) {
+      var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(contents).hasSize(1);
+      assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
+      assertThat(contents.getFirst().getErrorMessage())
+          .isEqualTo(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
+      assertThat(result).isEmpty();
+    }
+  }
+
+  @Test
+  void contentsShouldReportShadowUsersWhenSubmittedByIdentifier() throws Exception {
+    var operationId = randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
+
+    when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
+    when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
+    when(consortiaService.getCentralTenantId("member-tenant")).thenReturn("central-tenant");
+
+    var userId = randomUUID();
+    Map<String, Object> map = new HashMap<>();
+    map.put("users.type", SHADOW);
+    map.put("users.id", userId);
+    map.put("users.jsonb", "{\"id\":\"" + userId + "\"}");
+    when(queryClient.getContents(any())).thenReturn(Collections.singletonList(map));
+
+    try (var is =
+        fqmContentFetcher.contents(List.of(userId), EntityType.USER, contents, operationId)) {
+      var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(contents).hasSize(1);
+      assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
+      assertThat(contents.getFirst().getErrorMessage())
+          .isEqualTo(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
+      assertThat(result).isEmpty();
+    }
+  }
+
+  @Test
+  void fetchShouldReturnRegularUsersAndReportShadowUsersWhenMemberTenant() throws Exception {
+    var operationId = randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
+
+    when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
+    when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
+
+    var regularUserId = randomUUID();
+    var shadowUserId = randomUUID();
+    var regularUserJson = "{\"id\":\"" + regularUserId + "\",\"username\":\"regular-user\"}";
+    Map<String, Object> regularUser = new HashMap<>();
+    regularUser.put("users.id", regularUserId);
+    regularUser.put("users.type", "patron");
+    regularUser.put("users.jsonb", regularUserJson);
+    var shadowUserJson = "{\"id\":\"" + shadowUserId + "\",\"username\":\"shadow-user\"}";
+    Map<String, Object> shadowUser = new HashMap<>();
+    shadowUser.put("users.id", shadowUserId);
+    shadowUser.put("users.type", SHADOW);
+    shadowUser.put("users.jsonb", shadowUserJson);
+
+    var details = new QueryDetails();
+    details.setContent(List.of(regularUser, shadowUser));
+    var queryId = randomUUID();
+    int total = 2;
+    when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
+
+    try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total, contents, operationId)) {
+      var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(result).contains("\"username\":\"regular-user\"");
+      assertThat(result).doesNotContain("\"username\":\"shadow-user\"");
+      assertThat(contents).hasSize(1);
+      assertThat(contents.getFirst().getIdentifier()).isEqualTo(shadowUserId.toString());
+      assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
+      assertThat(contents.getFirst().getErrorMessage())
+          .isEqualTo(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
+    }
+  }
+
+  @Test
+  void contentsShouldReturnRegularUsersAndReportShadowUsersWhenSubmittedByIdentifier()
+      throws Exception {
+    var operationId = randomUUID();
+    List<BulkOperationExecutionContent> contents = new ArrayList<>();
+
+    when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
+    when(consortiaService.isTenantCentral("member-tenant")).thenReturn(false);
+    when(consortiaService.getCentralTenantId("member-tenant")).thenReturn("central-tenant");
+
+    var regularUserId = randomUUID();
+    var shadowUserId = randomUUID();
+    var regularUserJson = "{\"id\":\"" + regularUserId + "\",\"username\":\"regular-user\"}";
+    Map<String, Object> regularUser = new HashMap<>();
+    regularUser.put("users.id", regularUserId);
+    regularUser.put("users.type", "patron");
+    regularUser.put("users.jsonb", regularUserJson);
+    var shadowUserJson = "{\"id\":\"" + shadowUserId + "\",\"username\":\"shadow-user\"}";
+    Map<String, Object> shadowUser = new HashMap<>();
+    shadowUser.put("users.id", shadowUserId);
+    shadowUser.put("users.type", SHADOW);
+    shadowUser.put("users.jsonb", shadowUserJson);
+    when(queryClient.getContents(any())).thenReturn(List.of(regularUser, shadowUser));
+
+    try (var is =
+        fqmContentFetcher.contents(
+            List.of(regularUserId, shadowUserId), EntityType.USER, contents, operationId)) {
+      var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+      assertThat(result).contains("\"username\":\"regular-user\"");
+      assertThat(result).doesNotContain("\"username\":\"shadow-user\"");
+      assertThat(contents).hasSize(1);
+      assertThat(contents.getFirst().getIdentifier()).isEqualTo(shadowUserId.toString());
+      assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
+      assertThat(contents.getFirst().getErrorMessage())
+          .isEqualTo(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
+    }
+  }
+
+  @Test
   void fetchShouldReturnAnErrorForDcbUsersInNonEcsAndEcs() throws Exception {
     var operationId = randomUUID();
     List<BulkOperationExecutionContent> contents = new ArrayList<>();

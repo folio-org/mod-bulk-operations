@@ -1,6 +1,6 @@
 package org.folio.bulkops.processor.permissions.check;
 
-import static org.folio.bulkops.domain.dto.BatchIdsDto.IdentifierTypeEnum.ID;
+import static org.folio.bulkops.domain.dto.IdentifierType.ID;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
@@ -160,7 +160,7 @@ public class PermissionsValidator {
     if (isCurrentTenantCentral(centralTenantId)) {
       tenantResolver.checkAffiliatedPermittedTenantIds(
           EntityType.ITEM,
-          org.folio.bulkops.domain.dto.IdentifierType.ID.getValue(),
+          ID.getValue(),
           Set.of(entityRecord.getTenant()),
           entityRecord.getId());
 
@@ -181,7 +181,7 @@ public class PermissionsValidator {
       throw new ReadPermissionException(
           errorTemplate.formatted(
               user.getUsername(),
-              org.folio.bulkops.domain.dto.IdentifierType.ID,
+              ID,
               identifier,
               tenantId),
           identifier);

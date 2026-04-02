@@ -214,49 +214,19 @@ public class FqmContentFetcher {
           Map<String, String> idTenantMap =
               switch (entityType) {
                 case ITEM ->
-                    searchClient.getConsortiumItemCollection(batchIdsDto).getItems().stream()
-                        .collect(
-                            Collectors.groupingBy(
-                                ConsortiumItem::getId,
-                                Collectors.mapping(
-                                    v -> Optional.ofNullable(v.getTenantId()).orElse(EMPTY),
-                                    toList())))
-                        .entrySet()
-                        .stream()
-                        .filter(
-                            e -> {
-                              if (e.getValue().size() > 1) {
-                                saveDuplicateAcrossTenantsError(
-                                    bulkOperationExecutionContents, operationId, e);
-                                return false;
-                              }
-                              return true;
-                            })
-                        .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getFirst()));
+                    buildIdTenantMapForItems(
+                        batchIdsDto, bulkOperationExecutionContents, operationId);
 
                 case HOLDINGS_RECORD ->
-                    searchClient.getConsortiumHoldingCollection(batchIdsDto).getHoldings().stream()
-                        .collect(
-                            Collectors.groupingBy(
-                                ConsortiumHolding::getId,
-                                Collectors.mapping(
-                                    v -> Optional.ofNullable(v.getTenantId()).orElse(EMPTY),
-                                    toList())))
-                        .entrySet()
-                        .stream()
-                        .filter(
-                            e -> {
-                              if (e.getValue().size() > 1) {
-                                saveDuplicateAcrossTenantsError(
-                                    bulkOperationExecutionContents, operationId, e);
-                                return false;
-                              }
-                              return true;
-                            })
-                        .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getFirst()));
+                    buildIdTenantMapForHoldings(
+                        batchIdsDto, bulkOperationExecutionContents, operationId);
 
                 default -> Map.of();
               };
+
+          // Report missing UUIDs as "No match found" errors
+          reportMissingUuids(chunk, idTenantMap, bulkOperationExecutionContents, operationId);
+
           idMapper =
               id -> idTenantMap.containsKey(id) ? List.of(id, idTenantMap.get(id)) : List.of();
         } else {
@@ -565,20 +535,18 @@ public class FqmContentFetcher {
         addDcbUserErrorContent(id, bulkOperationExecutionContents, operationId);
         return EMPTY;
       }
-      if (isCentralTenant) {
-        if (isInstance(entityType)
-            && !SHARED.equalsIgnoreCase(
-                ofNullable(json.get(FQM_INSTANCE_SHARED_KEY))
-                    .map(Object::toString)
-                    .orElse(EMPTY))) {
-          addNoMatchFoundError(id, bulkOperationExecutionContents, operationId);
-          return EMPTY;
-        } else if (EntityType.USER.equals(entityType)
-            && SHADOW.equalsIgnoreCase(
-                ofNullable(json.get(FQM_USERS_TYPE_KEY)).map(Object::toString).orElse(EMPTY))) {
-          addShadowUserErrorContent(id, bulkOperationExecutionContents, operationId);
-          return EMPTY;
-        }
+      if (EntityType.USER.equals(entityType)
+          && SHADOW.equalsIgnoreCase(
+              ofNullable(json.get(FQM_USERS_TYPE_KEY)).map(Object::toString).orElse(EMPTY))) {
+        addShadowUserErrorContent(id, bulkOperationExecutionContents, operationId);
+        return EMPTY;
+      }
+      if (isCentralTenant
+          && isInstance(entityType)
+          && !SHARED.equalsIgnoreCase(
+              ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY))) {
+        addNoMatchFoundError(id, bulkOperationExecutionContents, operationId);
+        return EMPTY;
       }
 
       if (isSharedInstanceAndCurrentTenantIsMember(json, entityType)) {
@@ -958,5 +926,64 @@ public class FqmContentFetcher {
             .errorType(ErrorType.ERROR)
             .errorMessage(DUPLICATES_ACROSS_TENANTS)
             .build());
+  }
+
+  private Map<String, String> buildIdTenantMapForItems(
+      BatchIdsDto batchIdsDto,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      UUID operationId) {
+    return searchClient.getConsortiumItemCollection(batchIdsDto).getItems().stream()
+        .collect(
+            Collectors.groupingBy(
+                ConsortiumItem::getId,
+                Collectors.mapping(
+                    v -> Optional.ofNullable(v.getTenantId()).orElse(EMPTY), toList())))
+        .entrySet()
+        .stream()
+        .filter(
+            e -> {
+              if (e.getValue().size() > 1) {
+                saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
+                return false;
+              }
+              return true;
+            })
+        .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getFirst()));
+  }
+
+  private Map<String, String> buildIdTenantMapForHoldings(
+      BatchIdsDto batchIdsDto,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      UUID operationId) {
+    return searchClient.getConsortiumHoldingCollection(batchIdsDto).getHoldings().stream()
+        .collect(
+            Collectors.groupingBy(
+                ConsortiumHolding::getId,
+                Collectors.mapping(
+                    v -> Optional.ofNullable(v.getTenantId()).orElse(EMPTY), toList())))
+        .entrySet()
+        .stream()
+        .filter(
+            e -> {
+              if (e.getValue().size() > 1) {
+                saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
+                return false;
+              }
+              return true;
+            })
+        .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getFirst()));
+  }
+
+  private void reportMissingUuids(
+      List<UUID> chunk,
+      Map<String, String> idTenantMap,
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
+      UUID operationId) {
+    chunk.stream()
+        .map(UUID::toString)
+        .filter(id -> !idTenantMap.containsKey(id))
+        .forEach(
+            missingId ->
+                addNoMatchFoundError(missingId, bulkOperationExecutionContents, operationId));
   }
 }

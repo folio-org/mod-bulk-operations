@@ -18,6 +18,12 @@ import org.folio.spring.FolioExecutionContext;
 
 @UtilityClass
 public class RuleUtils {
+
+  public static boolean isCirculationNoteType(String noteType) {
+    return UpdateOptionType.CHECK_IN_NOTE.getValue().equals(noteType)
+        || UpdateOptionType.CHECK_OUT_NOTE.getValue().equals(noteType);
+  }
+
   public static Optional<BulkOperationRule> findRuleByOption(
       BulkOperationRuleCollection rules, UpdateOptionType option) {
     return rules.getBulkOperationRules().stream()

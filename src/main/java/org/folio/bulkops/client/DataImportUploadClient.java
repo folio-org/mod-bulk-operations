@@ -7,13 +7,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.service.annotation.HttpExchange;
 import org.springframework.web.service.annotation.PostExchange;
 
-@HttpExchange(url = "http://data-import")
+@HttpExchange(url = "data-import")
 public interface DataImportUploadClient {
 
   @PostExchange(
-      value = "/data-import-upload/uploadDefinitions/{uploadDefinitionId}/files/{fileId}",
-      accept = MediaType.APPLICATION_OCTET_STREAM_VALUE,
-      headers = {"Content-Type: application/octet-stream"})
+      value = "/uploadDefinitions/{uploadDefinitionId}/files/{fileId}",
+      contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE,
+      accept = MediaType.APPLICATION_JSON_VALUE)
   UploadFileDefinition uploadFileDefinitionsFiles(
       @PathVariable String uploadDefinitionId,
       @PathVariable String fileId,
