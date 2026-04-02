@@ -720,6 +720,10 @@
     {
       "id": "source-storage-source-records",
       "version": "3.2"
+    },
+    {
+      "id": "locale",
+      "version": "1.0"
     }
   ],
   "optional": [
