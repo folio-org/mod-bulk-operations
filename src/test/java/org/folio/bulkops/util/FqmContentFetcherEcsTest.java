@@ -413,10 +413,7 @@ class FqmContentFetcherEcsTest {
 
     try (var is =
         fqmContentFetcher.contents(
-            List.of(uuid1, uuid2),
-            EntityType.ITEM,
-            bulkOperationExecutionContents,
-            operationId)) {
+            List.of(uuid1, uuid2), EntityType.ITEM, bulkOperationExecutionContents, operationId)) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
