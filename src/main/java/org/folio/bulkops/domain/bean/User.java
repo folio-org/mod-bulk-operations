@@ -27,6 +27,7 @@ import org.folio.bulkops.domain.converter.BooleanConverter;
 import org.folio.bulkops.domain.converter.CustomFieldsConverter;
 import org.folio.bulkops.domain.converter.DateWithoutTimeConverter;
 import org.folio.bulkops.domain.converter.DepartmentsConverter;
+import org.folio.bulkops.domain.converter.ExpirationDateConverter;
 import org.folio.bulkops.domain.converter.PatronGroupConverter;
 import org.folio.bulkops.domain.converter.PreferredEmailCommunicationConverter;
 import org.folio.bulkops.domain.converter.ProxyForConverter;
@@ -118,8 +119,8 @@ public class User implements BulkOperationsEntity {
   private Date enrollmentDate;
 
   @JsonProperty("expirationDate")
-  @CsvCustomBindByName(column = "Expiration date", converter = DateWithoutTimeConverter.class)
-  @CsvCustomBindByPosition(position = 21, converter = DateWithoutTimeConverter.class)
+  @CsvCustomBindByName(column = "Expiration date", converter = ExpirationDateConverter.class)
+  @CsvCustomBindByPosition(position = 21, converter = ExpirationDateConverter.class)
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   @UnifiedTableCell(dataType = DATE_TIME, visible = false)
   private Date expirationDate;

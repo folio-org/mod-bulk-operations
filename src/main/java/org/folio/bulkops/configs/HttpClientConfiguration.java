@@ -34,6 +34,7 @@ import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.ItemNoteTypeClient;
 import org.folio.bulkops.client.ItemStorageClient;
 import org.folio.bulkops.client.LoanTypeClient;
+import org.folio.bulkops.client.LocaleClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.MappingRulesClient;
 import org.folio.bulkops.client.MaterialTypeClient;
@@ -322,6 +323,11 @@ public class HttpClientConfiguration {
   @Bean
   public UserClient userClient(HttpServiceProxyFactory factory) {
     return factory.createClient(UserClient.class);
+  }
+
+  @Bean
+  public LocaleClient localeClient(HttpServiceProxyFactory factory) {
+    return factory.createClient(LocaleClient.class);
   }
 
   @Bean
