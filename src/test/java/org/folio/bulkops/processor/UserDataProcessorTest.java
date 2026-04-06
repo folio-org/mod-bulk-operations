@@ -100,8 +100,10 @@ class UserDataProcessorTest extends BaseTest {
                 rule(EMAIL_ADDRESS, FIND_AND_REPLACE, "@test", "@mail")));
 
     assertNotNull(result);
+    var sdf = new SimpleDateFormat(DATE_TIME_FORMAT);
+    sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
     assertEquals(
-        new SimpleDateFormat(DATE_TIME_FORMAT).parse(date),
+        sdf.parse(date),
         result.getUpdated().getExpirationDate());
     assertEquals(newPatronGroupId, result.getUpdated().getPatronGroup());
     assertEquals("test@mail.com", result.getUpdated().getPersonal().getEmail());
