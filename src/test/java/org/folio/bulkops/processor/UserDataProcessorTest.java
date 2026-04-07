@@ -102,9 +102,7 @@ class UserDataProcessorTest extends BaseTest {
     assertNotNull(result);
     var sdf = new SimpleDateFormat(DATE_TIME_FORMAT);
     sdf.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-    assertEquals(
-        sdf.parse(date),
-        result.getUpdated().getExpirationDate());
+    assertEquals(sdf.parse(date), result.getUpdated().getExpirationDate());
     assertEquals(newPatronGroupId, result.getUpdated().getPatronGroup());
     assertEquals("test@mail.com", result.getUpdated().getPersonal().getEmail());
   }

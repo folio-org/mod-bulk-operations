@@ -258,14 +258,16 @@ public class FqmContentFetcher {
                     addNoMatchFoundError(missingId, bulkOperationExecutionContents, operationId));
 
         // Save duplicates across tenants errors for IDs that are present in more than one tenant
-        List<Map.Entry<String, List<String>>> duplicates =
-            idTenantMap.entrySet().stream().filter(e -> e.getValue().size() > 1).toList();
-
-        duplicates.forEach(
-            e -> {
-              saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
-              idTenantMap.remove(e.getKey());
-            });
+        idTenantMap
+            .entrySet()
+            .removeIf(
+                e -> {
+                  if (e.getValue().size() > 1) {
+                    saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
+                    return true;
+                  }
+                  return false;
+                });
 
         return id ->
             idTenantMap.containsKey(id) ? List.of(id, idTenantMap.get(id).getFirst()) : List.of();
