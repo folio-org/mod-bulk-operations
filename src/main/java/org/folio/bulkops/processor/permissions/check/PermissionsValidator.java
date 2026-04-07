@@ -1,11 +1,11 @@
 package org.folio.bulkops.processor.permissions.check;
 
-import static org.folio.bulkops.domain.dto.IdentifierType.ID;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.domain.dto.EntityType.USER;
+import static org.folio.bulkops.domain.dto.IdentifierType.ID;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_INVENTORY_VIEW_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_INVENTORY_WRITE_PERMISSION;
 import static org.folio.bulkops.processor.permissions.check.PermissionEnum.BULK_EDIT_USERS_VIEW_PERMISSION;
@@ -159,10 +159,7 @@ public class PermissionsValidator {
     var centralTenantId = consortiaService.getCentralTenantId(folioExecutionContext.getTenantId());
     if (isCurrentTenantCentral(centralTenantId)) {
       tenantResolver.checkAffiliatedPermittedTenantIds(
-          EntityType.ITEM,
-          ID.getValue(),
-          Set.of(entityRecord.getTenant()),
-          entityRecord.getId());
+          EntityType.ITEM, ID.getValue(), Set.of(entityRecord.getTenant()), entityRecord.getId());
 
     } else {
       checkReadPermissions(
@@ -179,12 +176,7 @@ public class PermissionsValidator {
     if (!readPermissionsValidator.isBulkEditReadPermissionExists(tenantId, entityType)) {
       var user = userClient.getUserById(folioExecutionContext.getUserId().toString());
       throw new ReadPermissionException(
-          errorTemplate.formatted(
-              user.getUsername(),
-              ID,
-              identifier,
-              tenantId),
-          identifier);
+          errorTemplate.formatted(user.getUsername(), ID, identifier, tenantId), identifier);
     }
   }
 

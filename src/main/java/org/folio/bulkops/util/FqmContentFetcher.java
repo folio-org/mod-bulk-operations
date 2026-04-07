@@ -247,7 +247,7 @@ public class FqmContentFetcher {
     if (isTenantInConsortia && entityType != USER) {
       if (isCentralTenant && (entityType == ITEM || entityType == HOLDINGS_RECORD)) {
 
-        Map<String, String> idTenantMap =
+        Map<String, List<String>> idTenantMap =
             resolveConsortiumIdTenantMap(
                 chunk, entityType, bulkOperationExecutionContents, operationId);
 
@@ -258,14 +258,23 @@ public class FqmContentFetcher {
                 missingId ->
                     addNoMatchFoundError(missingId, bulkOperationExecutionContents, operationId));
 
-        return id -> idTenantMap.containsKey(id) ? List.of(id, idTenantMap.get(id)) : List.of();
+        idTenantMap.entrySet().stream()
+            .filter(e -> e.getValue().size() > 1)
+            .forEach(
+                e -> {
+                  saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
+                  idTenantMap.remove(e.getKey());
+                });
+
+        return id ->
+            idTenantMap.containsKey(id) ? List.of(id, idTenantMap.get(id).getFirst()) : List.of();
       }
       return id -> List.of(id, tenantId);
     }
     return List::of;
   }
 
-  private Map<String, String> resolveConsortiumIdTenantMap(
+  private Map<String, List<String>> resolveConsortiumIdTenantMap(
       List<UUID> chunk,
       EntityType entityType,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents,
@@ -299,7 +308,7 @@ public class FqmContentFetcher {
     };
   }
 
-  private <T> Map<String, String> resolveConsortiumEntities(
+  private <T> Map<String, List<String>> resolveConsortiumEntities(
       BatchIdsDto batchIdsDto,
       Function<BatchIdsDto, List<T>> fetcher,
       Function<T, String> idExtractor,
@@ -315,15 +324,16 @@ public class FqmContentFetcher {
                     v -> Optional.ofNullable(tenantExtractor.apply(v)).orElse(EMPTY), toList())))
         .entrySet()
         .stream()
-        .filter(
-            e -> {
-              if (e.getValue().size() > 1) {
-                saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
-                return false;
-              }
-              return true;
-            })
-        .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getFirst()));
+        //        .filter(
+        //            e -> {
+        //              if (e.getValue().size() > 1) {
+        //                saveDuplicateAcrossTenantsError(bulkOperationExecutionContents,
+        // operationId, e);
+        //                return false;
+        //              }
+        //              return true;
+        //            })
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
   private InputStream pipeStreamingResponse(
