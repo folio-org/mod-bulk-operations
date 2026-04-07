@@ -247,9 +247,7 @@ public class FqmContentFetcher {
     if (isTenantInConsortia && entityType != USER) {
       if (isCentralTenant && (entityType == ITEM || entityType == HOLDINGS_RECORD)) {
 
-        Map<String, List<String>> idTenantMap =
-            resolveConsortiumIdTenantMap(
-                chunk, entityType, bulkOperationExecutionContents, operationId);
+        Map<String, List<String>> idTenantMap = resolveConsortiumIdTenantMap(chunk, entityType);
 
         // Save no match found errors for IDs that were not found in consortium
         chunk.stream()
@@ -278,10 +276,7 @@ public class FqmContentFetcher {
   }
 
   private Map<String, List<String>> resolveConsortiumIdTenantMap(
-      List<UUID> chunk,
-      EntityType entityType,
-      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
-      UUID operationId) {
+      List<UUID> chunk, EntityType entityType) {
 
     BatchIdsDto batchIdsDto =
         new BatchIdsDto()
@@ -294,18 +289,14 @@ public class FqmContentFetcher {
               batchIdsDto,
               dto -> searchClient.getConsortiumItemCollection(dto).getItems(),
               ConsortiumItem::getId,
-              ConsortiumItem::getTenantId,
-              bulkOperationExecutionContents,
-              operationId);
+              ConsortiumItem::getTenantId);
 
       case HOLDINGS_RECORD ->
           resolveConsortiumEntities(
               batchIdsDto,
               dto -> searchClient.getConsortiumHoldingCollection(dto).getHoldings(),
               ConsortiumHolding::getId,
-              ConsortiumHolding::getTenantId,
-              bulkOperationExecutionContents,
-              operationId);
+              ConsortiumHolding::getTenantId);
 
       default -> Map.of();
     };
@@ -315,9 +306,7 @@ public class FqmContentFetcher {
       BatchIdsDto batchIdsDto,
       Function<BatchIdsDto, List<T>> fetcher,
       Function<T, String> idExtractor,
-      Function<T, String> tenantExtractor,
-      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
-      UUID operationId) {
+      Function<T, String> tenantExtractor) {
 
     return fetcher.apply(batchIdsDto).stream()
         .collect(
