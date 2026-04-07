@@ -38,6 +38,7 @@ import org.folio.bulkops.client.InstanceTypesClient;
 import org.folio.bulkops.client.ItemClient;
 import org.folio.bulkops.client.ItemNoteTypeClient;
 import org.folio.bulkops.client.LoanTypeClient;
+import org.folio.bulkops.client.LocaleClient;
 import org.folio.bulkops.client.LocationClient;
 import org.folio.bulkops.client.MaterialTypeClient;
 import org.folio.bulkops.client.ModesOfIssuanceClient;
@@ -195,6 +196,7 @@ public abstract class BaseTest {
   @MockitoBean public AuthnClient authnClient;
   @MockitoBean public UsersClient usersClient;
   @MockitoBean public PermissionsClient permissionsClient;
+  @MockitoBean public LocaleClient localeClient;
 
   @Autowired protected MockMvc mockMvc;
   @Autowired private FolioModuleMetadata folioModuleMetadata;

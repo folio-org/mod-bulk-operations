@@ -1,6 +1,7 @@
 package org.folio.bulkops.processor.folio;
 
 import static java.util.Objects.isNull;
+import static java.util.Optional.ofNullable;
 import static org.apache.commons.lang3.ObjectUtils.isEmpty;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND_AND_REPLACE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REPLACE_WITH;
@@ -12,8 +13,10 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Objects;
+import java.util.TimeZone;
 import lombok.AllArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.domain.bean.Locale;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
@@ -31,7 +34,7 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class UserDataProcessor extends FolioAbstractDataProcessor<User> {
 
-  public static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
+  public static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS";
   private final UserReferenceService userReferenceService;
 
   @Override
@@ -81,8 +84,12 @@ public class UserDataProcessor extends FolioAbstractDataProcessor<User> {
       case EXPIRATION_DATE ->
           user -> {
             Date date;
+            SimpleDateFormat parser = new SimpleDateFormat(DATE_TIME_FORMAT);
+            var timezone = ofNullable(userReferenceService.getTenantLocale())
+                    .map(Locale::getTimezone).orElse("UTC");
+            parser.setTimeZone(TimeZone.getTimeZone(timezone));
             try {
-              date = new SimpleDateFormat(DATE_TIME_FORMAT).parse(action.getUpdated());
+              date = parser.parse(action.getUpdated());
             } catch (ParseException e) {
               throw new BulkOperationException(
                   String.format(
