@@ -247,10 +247,9 @@ public class FqmContentFetcher {
     if (isTenantInConsortia && entityType != USER) {
       if (isCentralTenant && (entityType == ITEM || entityType == HOLDINGS_RECORD)) {
 
-        Map<String, String> idTenantMap =
-            resolveConsortiumIdTenantMap(
-                chunk, entityType, bulkOperationExecutionContents, operationId);
+        Map<String, List<String>> idTenantMap = resolveConsortiumIdTenantMap(chunk, entityType);
 
+        // Save no match found errors for IDs that were not found in consortium
         chunk.stream()
             .map(UUID::toString)
             .filter(id -> !idTenantMap.containsKey(id))
@@ -258,18 +257,28 @@ public class FqmContentFetcher {
                 missingId ->
                     addNoMatchFoundError(missingId, bulkOperationExecutionContents, operationId));
 
-        return id -> idTenantMap.containsKey(id) ? List.of(id, idTenantMap.get(id)) : List.of();
+        // Save duplicates across tenants errors for IDs that are present in more than one tenant
+        idTenantMap
+            .entrySet()
+            .removeIf(
+                e -> {
+                  if (e.getValue().size() > 1) {
+                    saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
+                    return true;
+                  }
+                  return false;
+                });
+
+        return id ->
+            idTenantMap.containsKey(id) ? List.of(id, idTenantMap.get(id).getFirst()) : List.of();
       }
       return id -> List.of(id, tenantId);
     }
     return List::of;
   }
 
-  private Map<String, String> resolveConsortiumIdTenantMap(
-      List<UUID> chunk,
-      EntityType entityType,
-      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
-      UUID operationId) {
+  private Map<String, List<String>> resolveConsortiumIdTenantMap(
+      List<UUID> chunk, EntityType entityType) {
 
     BatchIdsDto batchIdsDto =
         new BatchIdsDto()
@@ -282,30 +291,24 @@ public class FqmContentFetcher {
               batchIdsDto,
               dto -> searchClient.getConsortiumItemCollection(dto).getItems(),
               ConsortiumItem::getId,
-              ConsortiumItem::getTenantId,
-              bulkOperationExecutionContents,
-              operationId);
+              ConsortiumItem::getTenantId);
 
       case HOLDINGS_RECORD ->
           resolveConsortiumEntities(
               batchIdsDto,
               dto -> searchClient.getConsortiumHoldingCollection(dto).getHoldings(),
               ConsortiumHolding::getId,
-              ConsortiumHolding::getTenantId,
-              bulkOperationExecutionContents,
-              operationId);
+              ConsortiumHolding::getTenantId);
 
       default -> Map.of();
     };
   }
 
-  private <T> Map<String, String> resolveConsortiumEntities(
+  private <T> Map<String, List<String>> resolveConsortiumEntities(
       BatchIdsDto batchIdsDto,
       Function<BatchIdsDto, List<T>> fetcher,
       Function<T, String> idExtractor,
-      Function<T, String> tenantExtractor,
-      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
-      UUID operationId) {
+      Function<T, String> tenantExtractor) {
 
     return fetcher.apply(batchIdsDto).stream()
         .collect(
@@ -315,15 +318,7 @@ public class FqmContentFetcher {
                     v -> Optional.ofNullable(tenantExtractor.apply(v)).orElse(EMPTY), toList())))
         .entrySet()
         .stream()
-        .filter(
-            e -> {
-              if (e.getValue().size() > 1) {
-                saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
-                return false;
-              }
-              return true;
-            })
-        .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getFirst()));
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
   private InputStream pipeStreamingResponse(

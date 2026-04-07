@@ -397,6 +397,64 @@ class FqmContentFetcherEcsTest {
   }
 
   @Test
+  void noMatchFoundAndDuplicateAcrossTenantsErrorsCoexistForItemsInCentralTenant() {
+    String tenantId = "central";
+    String centralTenantId = "central";
+    UUID uuidFound = UUID.fromString("a1111111-1111-1111-1111-111111111111");
+    UUID uuidMissing = UUID.fromString("a2222222-2222-2222-2222-222222222222");
+    UUID uuidDuplicate = UUID.fromString("a3333333-3333-3333-3333-333333333333");
+    mockCommon(tenantId, centralTenantId, List.of(uuidFound));
+
+    when(searchClient.getConsortiumItemCollection(any()))
+        .thenReturn(
+            new ConsortiumItemCollection()
+                .addItemsItem(new ConsortiumItem().id(uuidFound.toString()).tenantId("member_A"))
+                .addItemsItem(
+                    new ConsortiumItem().id(uuidDuplicate.toString()).tenantId("member_B"))
+                .addItemsItem(
+                    new ConsortiumItem().id(uuidDuplicate.toString()).tenantId("member_C")));
+
+    List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
+    UUID operationId = UUID.fromString("a4444444-4444-4444-4444-444444444444");
+
+    try (var is =
+        fqmContentFetcher.contents(
+            List.of(uuidFound, uuidMissing, uuidDuplicate),
+            EntityType.ITEM,
+            bulkOperationExecutionContents,
+            operationId)) {
+      ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
+
+      await()
+          .atMost(2, TimeUnit.SECONDS)
+          .untilAsserted(() -> verify(queryClient, atLeastOnce()).getContents(captor.capture()));
+
+      assertThat(bulkOperationExecutionContents, Matchers.hasSize(2));
+
+      var errorsByMessage =
+          bulkOperationExecutionContents.stream()
+              .collect(
+                  java.util.stream.Collectors.toMap(
+                      BulkOperationExecutionContent::getIdentifier,
+                      BulkOperationExecutionContent::getErrorMessage));
+
+      assertThat(errorsByMessage.get(uuidMissing.toString()), Matchers.is(NO_MATCH_FOUND_MESSAGE));
+      assertThat(
+          errorsByMessage.get(uuidDuplicate.toString()), Matchers.is(DUPLICATES_ACROSS_TENANTS));
+
+      bulkOperationExecutionContents.forEach(
+          content -> assertThat(content.getBulkOperationId(), Matchers.is(operationId)));
+
+      ContentsRequest req = captor.getValue();
+      List<List<String>> ids = req.getIds();
+      Assertions.assertEquals(1, ids.size());
+      Assertions.assertEquals(List.of(uuidFound.toString(), "member_A"), ids.getFirst());
+    } catch (IOException e) {
+      Assertions.fail("Fail reading content");
+    }
+  }
+
+  @Test
   void testAllItemsMissingInCentralTenant() {
     String tenantId = "central";
     String centralTenantId = "central";

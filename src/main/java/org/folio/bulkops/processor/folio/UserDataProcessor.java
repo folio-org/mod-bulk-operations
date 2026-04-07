@@ -85,8 +85,10 @@ public class UserDataProcessor extends FolioAbstractDataProcessor<User> {
           user -> {
             Date date;
             SimpleDateFormat parser = new SimpleDateFormat(DATE_TIME_FORMAT);
-            var timezone = ofNullable(userReferenceService.getTenantLocale())
-                    .map(Locale::getTimezone).orElse("UTC");
+            var timezone =
+                ofNullable(userReferenceService.getTenantLocale())
+                    .map(Locale::getTimezone)
+                    .orElse("UTC");
             parser.setTimeZone(TimeZone.getTimeZone(timezone));
             try {
               date = parser.parse(action.getUpdated());

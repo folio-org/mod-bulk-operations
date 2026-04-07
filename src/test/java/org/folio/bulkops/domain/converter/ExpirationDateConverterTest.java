@@ -4,17 +4,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.folio.bulkops.domain.bean.Locale;
-import org.folio.bulkops.service.UserReferenceHelper;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.TimeZone;
+import org.folio.bulkops.domain.bean.Locale;
+import org.folio.bulkops.service.UserReferenceHelper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class ExpirationDateConverterTest {
 
@@ -40,8 +39,8 @@ class ExpirationDateConverterTest {
   }
 
   /**
-   * Case 1: locale has a valid timezone → formatter should use that timezone.
-   * Date "2024-03-15" at start-of-day UTC must still format as "2024-03-15" when timezone is UTC.
+   * Case 1: locale has a valid timezone → formatter should use that timezone. Date "2024-03-15" at
+   * start-of-day UTC must still format as "2024-03-15" when timezone is UTC.
    */
   @Test
   void convertToString_withValidTimezone_formatsWithGivenTimezone() {
@@ -55,9 +54,9 @@ class ExpirationDateConverterTest {
   }
 
   /**
-   * Case 2: locale has a non-UTC timezone → the same instant may render as the previous date
-   * if the local time is behind UTC midnight.
-   * "2024-03-15T00:00:00Z" is "2024-03-14T20:00:00" in America/New_York (UTC-4 during DST).
+   * Case 2: locale has a non-UTC timezone → the same instant may render as the previous date if the
+   * local time is behind UTC midnight. "2024-03-15T00:00:00Z" is "2024-03-14T20:00:00" in
+   * America/New_York (UTC-4 during DST).
    */
   @Test
   void convertToString_withNonUtcTimezone_formatsInThatTimezone() {
@@ -89,8 +88,8 @@ class ExpirationDateConverterTest {
   }
 
   /**
-   * Case 4: locale exists but timezone field is null → formatter falls back to its current
-   * default timezone and still returns a valid formatted string.
+   * Case 4: locale exists but timezone field is null → formatter falls back to its current default
+   * timezone and still returns a valid formatted string.
    */
   @Test
   void convertToString_whenTimezoneIsNull_usesDefaultTimezoneAndReturnsFormattedDate() {
@@ -107,8 +106,7 @@ class ExpirationDateConverterTest {
   // --- helpers ---
 
   private static Date toDate(String localDate, String timezone) {
-    return Date.from(
-        LocalDate.parse(localDate).atStartOfDay(ZoneId.of(timezone)).toInstant());
+    return Date.from(LocalDate.parse(localDate).atStartOfDay(ZoneId.of(timezone)).toInstant());
   }
 
   private static void injectStaticService(UserReferenceHelper value) throws Exception {
@@ -117,4 +115,3 @@ class ExpirationDateConverterTest {
     field.set(null, value);
   }
 }
-

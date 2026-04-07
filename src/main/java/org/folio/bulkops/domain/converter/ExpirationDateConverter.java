@@ -1,10 +1,9 @@
 package org.folio.bulkops.domain.converter;
 
-import lombok.extern.log4j.Log4j2;
-import org.folio.bulkops.service.UserReferenceHelper;
-
 import java.util.Date;
 import java.util.TimeZone;
+import lombok.extern.log4j.Log4j2;
+import org.folio.bulkops.service.UserReferenceHelper;
 
 @Log4j2
 public class ExpirationDateConverter extends DateWithoutTimeConverter {
@@ -16,7 +15,8 @@ public class ExpirationDateConverter extends DateWithoutTimeConverter {
     if (locale != null && locale.getTimezone() != null) {
       formatter.setTimeZone(TimeZone.getTimeZone(locale.getTimezone()));
     } else {
-      log.error("Locale or timezone is null, using default timezone for formatting expiration date");
+      log.error(
+          "Locale or timezone is null, using default timezone for formatting expiration date");
     }
     return formatter.format(object);
   }
