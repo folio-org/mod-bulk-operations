@@ -251,6 +251,7 @@ public class FqmContentFetcher {
             resolveConsortiumIdTenantMap(
                 chunk, entityType, bulkOperationExecutionContents, operationId);
 
+        // Save no match found errors for IDs that were not found in consortium
         chunk.stream()
             .map(UUID::toString)
             .filter(id -> !idTenantMap.containsKey(id))
@@ -258,13 +259,15 @@ public class FqmContentFetcher {
                 missingId ->
                     addNoMatchFoundError(missingId, bulkOperationExecutionContents, operationId));
 
-        idTenantMap.entrySet().stream()
-            .filter(e -> e.getValue().size() > 1)
-            .forEach(
-                e -> {
-                  saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
-                  idTenantMap.remove(e.getKey());
-                });
+        // Save duplicates across tenants errors for IDs that are present in more than one tenant
+        List<Map.Entry<String, List<String>>> duplicates =
+            idTenantMap.entrySet().stream().filter(e -> e.getValue().size() > 1).toList();
+
+        duplicates.forEach(
+            e -> {
+              saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
+              idTenantMap.remove(e.getKey());
+            });
 
         return id ->
             idTenantMap.containsKey(id) ? List.of(id, idTenantMap.get(id).getFirst()) : List.of();
@@ -324,15 +327,6 @@ public class FqmContentFetcher {
                     v -> Optional.ofNullable(tenantExtractor.apply(v)).orElse(EMPTY), toList())))
         .entrySet()
         .stream()
-        //        .filter(
-        //            e -> {
-        //              if (e.getValue().size() > 1) {
-        //                saveDuplicateAcrossTenantsError(bulkOperationExecutionContents,
-        // operationId, e);
-        //                return false;
-        //              }
-        //              return true;
-        //            })
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
