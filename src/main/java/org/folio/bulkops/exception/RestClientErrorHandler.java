@@ -16,7 +16,16 @@ public class RestClientErrorHandler {
     switch (status) {
       case 400 -> handle400(request, response);
       case 404 -> handle404(request);
+      case 409 -> handle409(request, response);
       default -> handleOtherError(request, response);
+    }
+  }
+
+  private void handle409(HttpRequest request, ClientHttpResponse response) {
+    try (var bodyIs = response.getBody()) {
+      throw new RecordConflictException(new String(bodyIs.readAllBytes()));
+    } catch (IOException e) {
+      throw new BadRequestException("Bad request: " + request.getURI());
     }
   }
 
