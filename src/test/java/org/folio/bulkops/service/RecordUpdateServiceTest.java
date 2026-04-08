@@ -37,6 +37,7 @@ import org.folio.bulkops.domain.dto.RuleDetails;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.OptimisticLockingException;
+import org.folio.bulkops.exception.RecordConflictException;
 import org.folio.bulkops.processor.folio.ItemUpdateProcessor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.repository.BulkOperationExecutionContentRepository;
@@ -195,15 +196,8 @@ class RecordUpdateServiceTest extends BaseTest {
       doNothing()
           .when(permissionsValidator)
           .checkIfBulkEditWritePermissionExists(anyString(), any(), anyString());
-      var feignException =
-          HttpClientErrorException.Conflict.create(
-              "null".equals(responseErrorMessage) ? null : responseErrorMessage,
-              HttpStatusCode.valueOf(409),
-              "",
-              HttpHeaders.EMPTY,
-              new byte[] {},
-              Charset.defaultCharset());
-      doThrow(feignException).when(itemClient).patchItem(any(ObjectNode.class), any(String.class));
+      var exception = new RecordConflictException(responseErrorMessage);
+      doThrow(exception).when(itemClient).patchItem(any(ObjectNode.class), any(String.class));
       when(holdingsStorageClient.getHoldingById("cb475fa9-aa07-4bbf-8382-b0b1426f9a20"))
           .thenReturn(
               HoldingsRecord.builder().instanceId("f3e3bd0f-1d95-4f25-9df1-7eb39a2957e3").build());
@@ -235,7 +229,7 @@ class RecordUpdateServiceTest extends BaseTest {
       try {
         recordUpdateService.updateEntity(extendedOriginalItem, extendedModifiedItem, operation);
       } catch (OptimisticLockingException e) {
-        var expectedUiErrorMessage = Utils.getMessageFromFeignException(feignException);
+        var expectedUiErrorMessage = Utils.processConflictExceptionMessage(exception);
         var link = entityPathResolver.resolve(operation.getEntityType(), extendedOriginalItem);
         var expectedCsvErrorMessage = format("%s %s", expectedUiErrorMessage, link);
         assertThat(e.getCsvErrorMessage(), Matchers.equalTo(expectedCsvErrorMessage));

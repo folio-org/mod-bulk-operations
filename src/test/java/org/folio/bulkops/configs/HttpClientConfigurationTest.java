@@ -12,6 +12,7 @@ import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.BulkEditException;
 import org.folio.bulkops.exception.NotFoundException;
+import org.folio.bulkops.exception.RecordConflictException;
 import org.folio.bulkops.exception.RestClientErrorHandler;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -266,6 +267,18 @@ class HttpClientConfigurationTest {
     String url = wireMockServer.baseUrl() + endpoint;
 
     assertThrows(BadRequestException.class, () -> getBody(url));
+  }
+
+  @Test
+  void testRestClient409HandlerIsInvokedBeforeGenericErrorHandler() {
+    String endpoint = "/conflict";
+    wireMockServer.stubFor(
+        get(urlEqualTo(endpoint))
+            .willReturn(aResponse().withStatus(409).withBody("Optimistic locking error")));
+
+    String url = wireMockServer.baseUrl() + endpoint;
+
+    assertThrows(RecordConflictException.class, () -> getBody(url));
   }
 
   private String getBody(String url) {
