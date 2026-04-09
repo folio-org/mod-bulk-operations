@@ -35,7 +35,7 @@ import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.IdentifierType;
-import org.springframework.web.client.HttpClientErrorException;
+import org.folio.bulkops.exception.RecordConflictException;
 
 @UtilityClass
 @Log4j2
@@ -96,7 +96,7 @@ public class Utils {
     };
   }
 
-  public static String getMessageFromFeignException(HttpClientErrorException e) {
+  public static String processConflictExceptionMessage(RecordConflictException e) {
     try {
       String[] matches =
           PATTERN
