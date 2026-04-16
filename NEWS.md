@@ -1,3 +1,110 @@
+## v2.3.0 - Released 2025/04/16
+
+This release contains performance and maintenance improvements:
+* record fetching logic transferred from mod-data-export-worker
+* using FQM as data source for UUID identifiers
+* update logic for instances, holdings records and items switched from PUT to PATCH
+* bugfixes
+* dependencies and Soring upgrades
+
+### Bug fixes
+[MODBULKOPS-505](https://folio-org.atlassian.net/browse/MODBULKOPS-505) Incorrect error text in .csv file with errors when optimistic locking error is reported for bulk edit of Instances with source MARC
+[MODBULKOPS-532](https://folio-org.atlassian.net/browse/MODBULKOPS-532) 422 error when via FOLIO flow do bulk edit of MARC Instance with linked authority record to 6XX field
+[MODBULKOPS-516](https://folio-org.atlassian.net/browse/MODBULKOPS-516) FAILED (UNKNOWN) in Electronic access, Subject, Classification columns in .csv file with updated records
+[MODBULKOPS-632](https://folio-org.atlassian.net/browse/MODBULKOPS-632) "Errors" accordion is not displayed and .csv file with errors is not available in some cases
+[MODBULKOPS-531](https://folio-org.atlassian.net/browse/MODBULKOPS-531) Values populated in "Subject" column of bulk edit MARC Instances do not correspond to how they are displayed in "Inventory" app
+[MODBULKOPS-548](https://folio-org.atlassian.net/browse/MODBULKOPS-548) On ECS, local reference data not found due to the wrong tenant
+[MODBULKOPS-545](https://folio-org.atlassian.net/browse/MODBULKOPS-545) User field "pronouns" is cleared along with bulk edit of User
+[MODBULKOPS-557](https://folio-org.atlassian.net/browse/MODBULKOPS-557) Thrillium - Some Item fields are edited/removed along with bulk edit of Item
+[MODBULKOPS-582](https://folio-org.atlassian.net/browse/MODBULKOPS-582) ECS - Filter out shadow users when bulk editing users in a member tenant
+[MODBULKOPS-504](https://folio-org.atlassian.net/browse/MODBULKOPS-504) Incorrect updates-preview .csv file is downloaded from "Logs" when note, subject are edited but changes are not applied
+[MODBULKOPS-560](https://folio-org.atlassian.net/browse/MODBULKOPS-560) Notes, Subject columns are populated with not removed values on .csv files when it is expected to be empty
+[MODBULKOPS-586](https://folio-org.atlassian.net/browse/MODBULKOPS-586) ECS - Incorrect error message when editing instances shared from  a member tenant
+[MODBULKOPS-590](https://folio-org.atlassian.net/browse/MODBULKOPS-590) Upload .csv file with large number of identifiers fails on Sprint testing environment
+[MODBULKOPS-559](https://folio-org.atlassian.net/browse/MODBULKOPS-559) Make link to download file with identifiers of the records affected by bulk update available only when file is ready for download
+[MODBULKOPS-568](https://folio-org.atlassian.net/browse/MODBULKOPS-568) Items with corrupted circulationNotes.date go to Errors on the Preview of records matched
+[MODBULKOPS-578](https://folio-org.atlassian.net/browse/MODBULKOPS-578) Incorrect changed-records .csv file is downloaded from Confirmation screen, "Logs" when subject is edited but changes are not applied
+[MODBULKOPS-530](https://folio-org.atlassian.net/browse/MODBULKOPS-530) Number of fields are not mapped to Subject in bulk edit of Instances with source MARC
+[MODBULKOPS-591](https://folio-org.atlassian.net/browse/MODBULKOPS-591) ECS | Upload of Holdings records by Instance HRIDs fails in Central tenant
+[MODBULKOPS-627](https://folio-org.atlassian.net/browse/MODBULKOPS-627) ECS | Upload of Inventory records by UUIDs fails in Central, Member tenants
+[MODBULKOPS-635](https://folio-org.atlassian.net/browse/MODBULKOPS-635) ECS, Central tenant | UNKNOWN for Holdings, Items local "Statistical codes" in .csv file with matching records
+[MODBULKOPS-636](https://folio-org.atlassian.net/browse/MODBULKOPS-636) ECS - Upload fails in case "Duplicates across tenants" error is expected
+[MODBULKOPS-637](https://folio-org.atlassian.net/browse/MODBULKOPS-637) UUID is empty when Instance with Linked Data source is filtered out
+[MODBULKOPS-638](https://folio-org.atlassian.net/browse/MODBULKOPS-638) Filename with errors is incorrect when records are uploaded via Query
+[MODBULKOPS-642](https://folio-org.atlassian.net/browse/MODBULKOPS-642) Missing duplicate detection for UUID identifiers
+[MODBULKOPS-604](https://folio-org.atlassian.net/browse/MODBULKOPS-604) Unexpectedly long time of upload ~100K Items records in Bulk edit on Sprint testing environment (file with identifiers different from UUIDs)
+[MODBULKOPS-643](https://folio-org.atlassian.net/browse/MODBULKOPS-643) "Staff suppress" column is empty on Matching preview when in "Build query" plugin the value is "False" for the record
+[MODBULKOPS-646](https://folio-org.atlassian.net/browse/MODBULKOPS-646) Incorrect representation of optimistic locking error in Bulk edit
+[MODBULKOPS-609](https://folio-org.atlassian.net/browse/MODBULKOPS-609) Incorrect Preview of records changed when edit FOLIO & MARC Instances via FOLIO flow
+[MODBULKOPS-603](https://folio-org.atlassian.net/browse/MODBULKOPS-603) Occasionally Matching preview displays not all uploaded records when upload .csv file with large number of identifiers
+[MODBULKOPS-649](https://folio-org.atlassian.net/browse/MODBULKOPS-649) processedRecords discrepancy fixing
+[MODBULKOPS-656](https://folio-org.atlassian.net/browse/MODBULKOPS-656) While bulk edit Users in tenant time zone different from UTC Birth date, Date enrolled sometimes are displayed taking into account tenant time zone
+
+### Stories
+[MODBULKOPS-189](https://folio-org.atlassian.net/browse/MODBULKOPS-189) Adding Electronic access Columns for Instance Records in Preview and Are you sure? Forms
+[MODBULKOPS-190](https://folio-org.atlassian.net/browse/MODBULKOPS-190) Adding Subject Column for Instance Records in Preview and Are you sure? Forms
+[MODBULKOPS-491](https://folio-org.atlassian.net/browse/MODBULKOPS-491) Adding Electronic access Columns for Instance Records in Confirmation Form
+[MODBULKOPS-494](https://folio-org.atlassian.net/browse/MODBULKOPS-494) Adding Subject Column for Instance Records in Confirmation Form
+[MODBULKOPS-191](https://folio-org.atlassian.net/browse/MODBULKOPS-191) Adding Classification Columns for Instance Records in Preview and Are you sure? Forms
+[MODBULKOPS-187](https://folio-org.atlassian.net/browse/MODBULKOPS-187) Adding Publication Column for Instance Records in Preview and Are you sure? Forms
+[MODBULKOPS-498](https://folio-org.atlassian.net/browse/MODBULKOPS-498) Adding Publication Column for Instance Records in Confirmation Form
+[MODBULKOPS-508](https://folio-org.atlassian.net/browse/MODBULKOPS-508) Adding Electronic access Columns for Instance Records in Preview and Are you sure? Forms
+[MODBULKOPS-326](https://folio-org.atlassian.net/browse/MODBULKOPS-326) Bulk Edit: Ability to select Instance system control number
+[MODBULKOPS-533](https://folio-org.atlassian.net/browse/MODBULKOPS-533) ECS - Filter out local instances when querying in Central tenant
+[MODBULKOPS-523](https://folio-org.atlassian.net/browse/MODBULKOPS-523) Notify user if invalid MARC record prevents bulk edit
+[MODBULKOPS-299](https://folio-org.atlassian.net/browse/MODBULKOPS-299) Set records for deletion
+[MODBULKOPS-442](https://folio-org.atlassian.net/browse/MODBULKOPS-442) Preserve MARC subfields order
+[MODBULKOPS-499](https://folio-org.atlassian.net/browse/MODBULKOPS-499) Removing entire value of a subfield
+[MODBULKOPS-555](https://folio-org.atlassian.net/browse/MODBULKOPS-555) Instance, Holdings, Item schemas updating - new fields
+[MODBULKOPS-201](https://folio-org.atlassian.net/browse/MODBULKOPS-201) Document API calls for scripting bulk edit
+[MODBULKOPS-563](https://folio-org.atlassian.net/browse/MODBULKOPS-563) Enhancement to Item Status changes: Lost and paid to withdrawn
+[MODBULKOPS-541](https://folio-org.atlassian.net/browse/MODBULKOPS-541) Unify format of Statistical code displayed all inventory types
+[MODBULKOPS-496](https://folio-org.atlassian.net/browse/MODBULKOPS-496) Adding Classification Columns for Instance Records in Confirmation Form
+[MODBULKOPS-439](https://folio-org.atlassian.net/browse/MODBULKOPS-439) Investigate performance improvements for creating error and warning logs
+[MODBULKOPS-525](https://folio-org.atlassian.net/browse/MODBULKOPS-525) Adding Electronic access Columns for Instance Records in Preview and Are you sure? Forms
+[MODBULKOPS-536](https://folio-org.atlassian.net/browse/MODBULKOPS-536) Migrate settings from mod-configuration to mod-settings
+[MODBULKOPS-561](https://folio-org.atlassian.net/browse/MODBULKOPS-561) Provide ability to enable/disable switch to FQM
+[MODBULKOPS-553](https://folio-org.atlassian.net/browse/MODBULKOPS-553) Adjust Item schema in Bulk edit to support functionality implemented in UXPROD-5462
+[MODBULKOPS-534](https://folio-org.atlassian.net/browse/MODBULKOPS-534) Make multiple notes separators consistent
+[MODBULKOPS-593](https://folio-org.atlassian.net/browse/MODBULKOPS-593) Align Bulk edit update of instance with preceding/succeeding titles with  Inventory update
+[MODBULKOPS-540](https://folio-org.atlassian.net/browse/MODBULKOPS-540) ECS - Filter out shadow users when querying in Central tenant
+[MODBULKOPS-570](https://folio-org.atlassian.net/browse/MODBULKOPS-570) Changing Version of Lib-fqm-query-processor to resolve 500
+[MODBULKOPS-577](https://folio-org.atlassian.net/browse/MODBULKOPS-577) ECS - Filter out shadow users when querying in Central tenant
+[MODBULKOPS-633](https://folio-org.atlassian.net/browse/MODBULKOPS-633) Prevent bulk editing DCB type users
+[MODBULKOPS-622](https://folio-org.atlassian.net/browse/MODBULKOPS-622) ECS - Apply tenant time zone on bulk edit preview screen
+[MODBULKOPS-647](https://folio-org.atlassian.net/browse/MODBULKOPS-647) Spike - Investigate how to display upload results consistently on bulk edit Logs
+
+### Technical tasks
+[MODBULKOPS-517](https://folio-org.atlassian.net/browse/MODBULKOPS-517) Profile schema creation
+[MODBULKOPS-518](https://folio-org.atlassian.net/browse/MODBULKOPS-518) Profiles API implementation
+[MODBULKOPS-512](https://folio-org.atlassian.net/browse/MODBULKOPS-512) Import workflow refactoring - using only one action for updating SRS records
+[MODBULKOPS-617](https://folio-org.atlassian.net/browse/MODBULKOPS-617) Switching updating methods: PUT to PATCH (holdings)
+[MODBULKOPS-562](https://folio-org.atlassian.net/browse/MODBULKOPS-562) Missing interface dependencies in module descriptor
+[MODBULKOPS-333](https://folio-org.atlassian.net/browse/MODBULKOPS-333) Stage 2a - FQM Performance (FQL + identifiers): csv, mrc files converters moving, alignment
+[MODBULKOPS-335](https://folio-org.atlassian.net/browse/MODBULKOPS-335) Stage 2b - FQM Performance (identifiers): entities extractors moving
+[MODBULKOPS-336](https://folio-org.atlassian.net/browse/MODBULKOPS-336) Stage 3a - FQM Integration (identifiers): switching matched records flow to use mod-bulk-operations capabilities
+[MODBULKOPS-337](https://folio-org.atlassian.net/browse/MODBULKOPS-337) Stage 3b - FQM Performance (FQL): switching matched records flow to use mod-bulk-operations capabilities
+[MODBULKOPS-514](https://folio-org.atlassian.net/browse/MODBULKOPS-514) Stage 3b - FQM Performance (FQL): FQM data fetcher
+[MODBULKOPS-519](https://folio-org.atlassian.net/browse/MODBULKOPS-519) Remove PLATFORM env var, drop Okapi code
+[MODBULKOPS-575](https://folio-org.atlassian.net/browse/MODBULKOPS-575) Update "Expiration date" format in .csv file to date only
+[MODBULKOPS-304](https://folio-org.atlassian.net/browse/MODBULKOPS-304) Tech Debt: enable check-style plugin
+[MODBULKOPS-160](https://folio-org.atlassian.net/browse/MODBULKOPS-160) TechDebt (maintainability): Switch preview generating from CSV to JSON
+[MODBULKOPS-567](https://folio-org.atlassian.net/browse/MODBULKOPS-567) Update "Date enrolled" format in .csv file to date only
+[MODBULKOPS-602](https://folio-org.atlassian.net/browse/MODBULKOPS-602) Set FQM_QUERY_APPROACH to true by default
+[MODBULKOPS-584](https://folio-org.atlassian.net/browse/MODBULKOPS-584) TechDebt (maintainability): Switch preview generating from CSV to JSON - ECS adjustments
+[MODBULKOPS-573](https://folio-org.atlassian.net/browse/MODBULKOPS-573) Switching updating methods: PUT to PATCH (instances)
+[MODBULKOPS-581](https://folio-org.atlassian.net/browse/MODBULKOPS-581) Upgrade module to SpringBoot4.0 and Spring7.0
+[MODBULKOPS-623](https://folio-org.atlassian.net/browse/MODBULKOPS-623) Add S3_SUB_PATH Environment Variable Support
+[MODBULKOPS-620](https://folio-org.atlassian.net/browse/MODBULKOPS-620) Query Flow: FQM/Inventory/User schemas alignment
+[MODBULKOPS-616](https://folio-org.atlassian.net/browse/MODBULKOPS-616) Switching updating methods: PUT to PATCH (items)
+[MODBULKOPS-535](https://folio-org.atlassian.net/browse/MODBULKOPS-535) Upgrade Spring Boot version
+[MODBULKOPS-346](https://folio-org.atlassian.net/browse/MODBULKOPS-346) Stage 4 - FQM Performance (UUIDs): switching matched records flow to use FQM instead of retrieving by identifiers
+
+### Tech debts
+[MODBULKOPS-500](https://folio-org.atlassian.net/browse/MODBULKOPS-500) Remove unused openssh sshpass (sftp) from Dockerfile
+[MODBULKOPS-571](https://folio-org.atlassian.net/browse/MODBULKOPS-571) Tech Debt: Handle EntityTypeService errors gracefully
+[MODBULKOPS-418](https://folio-org.atlassian.net/browse/MODBULKOPS-418) TD: Improvement of exception handling
+
 ## v2.2.1 - Released 2025/03/27
 
 This release contains tech debt, data import integration story and bugfix for BOM.
