@@ -321,9 +321,7 @@ public class QueryService {
         }
 
         operation.setUsedTenants(new ArrayList<>(usedTenants));
-        if (numProcessed % STATISTICS_UPDATING_STEP != 0) {
-          updateOperationExecutionStatus(operation, numProcessed, numMatched);
-        }
+        updateOperationExecutionStatus(operation, numProcessed, numMatched);
         errorService.saveErrorsAfterQuery(bulkOperationExecutionContents, operation);
       }
     } finally {
