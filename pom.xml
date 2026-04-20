@@ -90,6 +90,12 @@
       <groupId>org.folio</groupId>
       <artifactId>folio-spring-cql</artifactId>
       <version>${folio-spring-cql.version}</version>
+        <exclusions>
+            <exclusion>
+                <groupId>org.z3950.zing</groupId>
+                <artifactId>cql-java</artifactId>
+            </exclusion>
+        </exclusions>
     </dependency>
 
     <dependency>
