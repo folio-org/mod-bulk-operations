@@ -245,6 +245,8 @@ public class QueryService {
       List<BulkOperationExecutionContent> bulkOperationExecutionContents)
       throws IOException, CsvRequiredFieldEmptyException, CsvDataTypeMismatchException {
     Writer writerForTriggeringCsvFile = null;
+    int numMatched = 0;
+    int numProcessed = 0;
     try {
       if (ApproachType.QUERY == operation.getApproach()) {
         writerForTriggeringCsvFile = remoteFileSystemClient.writer(triggeringCsvFileName);
@@ -255,9 +257,6 @@ public class QueryService {
         var entityClass = resolveEntityClass(operation.getEntityType());
         var extendedEntityClass = resolveExtendedEntityClass(operation.getEntityType());
         var csvWriter = new BulkOperationsEntityCsvWriter(writerForResultCsvFile, entityClass);
-
-        int numMatched = 0;
-        int numProcessed = 0;
         var iterator =
             isNull(is)
                 ? MappingIterator.emptyIterator()
@@ -321,10 +320,13 @@ public class QueryService {
         }
 
         operation.setUsedTenants(new ArrayList<>(usedTenants));
-        updateOperationExecutionStatus(operation, numProcessed, numMatched);
+        if (numProcessed % STATISTICS_UPDATING_STEP != 0) {
+          updateOperationExecutionStatus(operation, numProcessed, numMatched);
+        }
         errorService.saveErrorsAfterQuery(bulkOperationExecutionContents, operation);
       }
     } finally {
+      updateOperationExecutionStatus(operation, numProcessed, numMatched);
       if (writerForTriggeringCsvFile != null) {
         writerForTriggeringCsvFile.close();
       }
