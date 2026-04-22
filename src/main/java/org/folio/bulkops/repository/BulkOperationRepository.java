@@ -17,7 +17,7 @@ public interface BulkOperationRepository extends JpaRepository<BulkOperation, UU
   @Modifying
   @Transactional
   @Query(
-      "UPDATE bulk_operation b SET b.processedNumOfRecords = :processed, "
+      "UPDATE BulkOperation b SET b.processedNumOfRecords = :processed, "
           + "b.matchedNumOfRecords = :matched WHERE b.id = :id")
   void updateExecutionCounters(
       @Param("id") UUID id, @Param("processed") int processed, @Param("matched") int matched);
