@@ -36,21 +36,25 @@ public class IdentifiersWriteListener<T> implements ItemWriteListener<T> {
 
   @Override
   public void afterWrite(Chunk<? extends T> list) {
-    var totalCsvLines = jobExecution.getJobParameters().getLong(TOTAL_CSV_LINES);
-    int processed = list.size();
-    int matched = list.size();
-    var context = jobExecution.getExecutionContext();
-    if (context.containsKey(NUMBER_OF_PROCESSED_IDENTIFIERS)) {
-      processed += context.getInt(NUMBER_OF_PROCESSED_IDENTIFIERS);
+    int processed;
+    int matched;
+    synchronized (this) {
+      var totalCsvLines = jobExecution.getJobParameters().getLong(TOTAL_CSV_LINES);
+      var context = jobExecution.getExecutionContext();
+      processed = list.size();
+      matched = list.size();
+      if (context.containsKey(NUMBER_OF_PROCESSED_IDENTIFIERS)) {
+        processed += context.getInt(NUMBER_OF_PROCESSED_IDENTIFIERS);
+      }
+      if (context.containsKey(NUMBER_OF_MATCHED_RECORDS)) {
+        matched += context.getInt(NUMBER_OF_MATCHED_RECORDS);
+      }
+      if (nonNull(totalCsvLines) && processed > totalCsvLines) {
+        processed = totalCsvLines.intValue();
+      }
+      context.putInt(NUMBER_OF_PROCESSED_IDENTIFIERS, processed);
+      context.putInt(NUMBER_OF_MATCHED_RECORDS, matched);
     }
-    if (context.containsKey(NUMBER_OF_MATCHED_RECORDS)) {
-      matched += context.getInt(NUMBER_OF_MATCHED_RECORDS);
-    }
-    if (nonNull(totalCsvLines) && processed > totalCsvLines) {
-      processed = totalCsvLines.intValue();
-    }
-    context.putInt(NUMBER_OF_PROCESSED_IDENTIFIERS, processed);
-    context.putInt(NUMBER_OF_MATCHED_RECORDS, matched);
 
     var bulkOperation =
         ofNullable(jobExecution.getJobParameters().getString(BULK_OPERATION_ID))
@@ -63,6 +67,7 @@ public class IdentifiersWriteListener<T> implements ItemWriteListener<T> {
                         "Bulk operation was not found, aborting batch execution."));
 
     bulkOperation.setProcessedNumOfRecords(processed);
+    bulkOperation.setMatchedNumOfRecords(matched);
     bulkOperationRepository.save(bulkOperation);
   }
 }
