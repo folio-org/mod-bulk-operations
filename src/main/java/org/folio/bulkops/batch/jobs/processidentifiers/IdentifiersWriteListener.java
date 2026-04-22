@@ -39,10 +39,10 @@ public class IdentifiersWriteListener<T> implements ItemWriteListener<T> {
     int processed;
     int matched;
     synchronized (this) {
-      var totalCsvLines = jobExecution.getJobParameters().getLong(TOTAL_CSV_LINES);
       var context = jobExecution.getExecutionContext();
       processed = list.size();
       matched = list.size();
+      var totalCsvLines = jobExecution.getJobParameters().getLong(TOTAL_CSV_LINES);
       if (context.containsKey(NUMBER_OF_PROCESSED_IDENTIFIERS)) {
         processed += context.getInt(NUMBER_OF_PROCESSED_IDENTIFIERS);
       }
