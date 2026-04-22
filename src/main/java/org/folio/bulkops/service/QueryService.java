@@ -255,6 +255,7 @@ public class QueryService {
         var entityClass = resolveEntityClass(operation.getEntityType());
         var extendedEntityClass = resolveExtendedEntityClass(operation.getEntityType());
         var csvWriter = new BulkOperationsEntityCsvWriter(writerForResultCsvFile, entityClass);
+
         int numMatched = 0;
         int numProcessed = 0;
         var iterator =
@@ -336,7 +337,7 @@ public class QueryService {
       BulkOperation operation, int numProcessed, int numMatched) {
     operation.setProcessedNumOfRecords(numProcessed);
     operation.setMatchedNumOfRecords(numMatched);
-    bulkOperationRepository.save(operation);
+    bulkOperationRepository.updateExecutionCounters(operation.getId(), numProcessed, numMatched);
   }
 
   private void failAndSaveBulkOperation(BulkOperation bulkOperation, String errorMessage) {
