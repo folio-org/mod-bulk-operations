@@ -181,7 +181,7 @@ public class PreviewService {
             }
           } else {
             yield buildPreviewFromJsonWithChangedOptions(
-                operation, operation.getLinkToCommittedRecordsJsonPreviewFile(), offset, limit);
+                operation, operation.getLinkToCommittedRecordsJsonFile(), offset, limit);
           }
         }
       }
