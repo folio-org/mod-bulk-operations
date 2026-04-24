@@ -337,7 +337,7 @@ public class QueryService {
       BulkOperation operation, int numProcessed, int numMatched) {
     operation.setProcessedNumOfRecords(numProcessed);
     operation.setMatchedNumOfRecords(numMatched);
-    bulkOperationRepository.save(operation);
+    bulkOperationRepository.updateExecutionCounters(operation.getId(), numProcessed, numMatched);
   }
 
   private void failAndSaveBulkOperation(BulkOperation bulkOperation, String errorMessage) {
