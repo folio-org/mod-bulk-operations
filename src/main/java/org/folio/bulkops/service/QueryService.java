@@ -86,10 +86,7 @@ public class QueryService {
             () -> {
               try (var is =
                   fqmContentFetcher.contents(
-                      uuids,
-                      bulkOperation.getEntityType(),
-                      bulkOperationExecutionContents,
-                      bulkOperation.getId())) {
+                      bulkOperation, uuids, bulkOperationExecutionContents)) {
                 completeBulkOperation(is, bulkOperation, bulkOperationExecutionContents);
               } catch (Exception e) {
                 var errorMessage =
@@ -114,7 +111,7 @@ public class QueryService {
                         "Retrieving records by FQM for operation {} in progress...",
                         bulkOperation.getId());
                 case SUCCESS -> {
-                  if (queryResult.getTotalRecords() == 0) {
+                  if (queryResult.getTotalRecords() == null || queryResult.getTotalRecords() == 0) {
                     failAndSaveBulkOperation(bulkOperation, "No records found for the query");
                   } else {
                     bulkOperation.setStatus(RETRIEVING_RECORDS);
@@ -123,11 +120,9 @@ public class QueryService {
                         Collections.synchronizedList(new ArrayList<>());
                     try (var is =
                         fqmContentFetcher.fetch(
-                            bulkOperation.getFqlQueryId(),
-                            bulkOperation.getEntityType(),
+                            bulkOperation,
                             queryResult.getTotalRecords(),
-                            bulkOperationExecutionContents,
-                            bulkOperation.getId())) {
+                            bulkOperationExecutionContents)) {
                       completeBulkOperation(is, bulkOperation, bulkOperationExecutionContents);
                     } catch (Exception e) {
                       var errorMessage =

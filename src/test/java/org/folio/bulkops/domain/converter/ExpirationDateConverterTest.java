@@ -56,9 +56,8 @@ class ExpirationDateConverterTest {
   }
 
   /**
-   * Case 2: locale has a non-UTC timezone → the same instant may render as
-   * the previous date if the local time is behind UTC midnight.
-   * "2024-03-15T00:00:00Z" is "2024-03-14T20:00:00" in
+   * Case 2: locale has a non-UTC timezone → the same instant may render as the previous date if the
+   * local time is behind UTC midnight. "2024-03-15T00:00:00Z" is "2024-03-14T20:00:00" in
    * America/New_York (UTC-4 during DST).
    */
   @Test
@@ -119,8 +118,7 @@ class ExpirationDateConverterTest {
 
     Date result = converter.convertToObject("2024-03-15");
 
-    Instant expected = LocalDate.of(2024, 3, 15)
-            .atStartOfDay(ZoneId.of(UTC)).toInstant();
+    Instant expected = LocalDate.of(2024, 3, 15).atStartOfDay(ZoneId.of(UTC)).toInstant();
     assertThat(result).isEqualTo(Date.from(expected));
   }
 
@@ -136,12 +134,10 @@ class ExpirationDateConverterTest {
     Date result = converter.convertToObject("2024-03-15");
 
     // America/New_York is UTC-4 during DST → midnight local = 04:00 UTC
-    Instant expected = LocalDate.of(2024, 3, 15)
-            .atStartOfDay(ZoneId.of(US_EASTERN)).toInstant();
+    Instant expected = LocalDate.of(2024, 3, 15).atStartOfDay(ZoneId.of(US_EASTERN)).toInstant();
     assertThat(result).isEqualTo(Date.from(expected));
     // Confirm it is NOT the same as the UTC interpretation
-    Instant utcMidnight = LocalDate.of(2024, 3, 15)
-            .atStartOfDay(ZoneId.of(UTC)).toInstant();
+    Instant utcMidnight = LocalDate.of(2024, 3, 15).atStartOfDay(ZoneId.of(UTC)).toInstant();
     assertThat(result.toInstant()).isNotEqualTo(utcMidnight);
   }
 
@@ -155,8 +151,7 @@ class ExpirationDateConverterTest {
 
     Date result = converter.convertToObject("2024-06-01");
 
-    Instant expected = LocalDate.of(2024, 6, 1)
-            .atStartOfDay(ZoneId.of(UTC)).toInstant();
+    Instant expected = LocalDate.of(2024, 6, 1).atStartOfDay(ZoneId.of(UTC)).toInstant();
     assertThat(result).isEqualTo(Date.from(expected));
   }
 
@@ -171,14 +166,12 @@ class ExpirationDateConverterTest {
 
     Date result = converter.convertToObject("2024-06-01");
 
-    Instant expected = LocalDate.of(2024, 6, 1)
-            .atStartOfDay(ZoneId.of(UTC)).toInstant();
+    Instant expected = LocalDate.of(2024, 6, 1).atStartOfDay(ZoneId.of(UTC)).toInstant();
     assertThat(result).isEqualTo(Date.from(expected));
   }
 
   /**
-   * Case: the input string does not match the expected "yyyy-MM-dd"
-   *  format → DateTimeParseException
+   * Case: the input string does not match the expected "yyyy-MM-dd" format → DateTimeParseException
    * is thrown.
    */
   @Test
@@ -186,15 +179,16 @@ class ExpirationDateConverterTest {
     when(helperMock.getTenantLocale())
         .thenReturn(Locale.builder().locale("en").timezone(UTC).build());
 
-    assertThatThrownBy(() -> converter.convertToObject("15-03-2024"))
-            .isInstanceOf(Exception.class);
+    assertThatThrownBy(() -> converter.convertToObject("15-03-2024")).isInstanceOf(Exception.class);
   }
 
   // --- helpers ---
 
   private static Date toDate(String localDate) {
-    return Date.from(LocalDate.parse(localDate)
-            .atStartOfDay(ZoneId.of(ExpirationDateConverterTest.UTC)).toInstant());
+    return Date.from(
+        LocalDate.parse(localDate)
+            .atStartOfDay(ZoneId.of(ExpirationDateConverterTest.UTC))
+            .toInstant());
   }
 
   private static void injectStaticService(UserReferenceHelper value) throws Exception {

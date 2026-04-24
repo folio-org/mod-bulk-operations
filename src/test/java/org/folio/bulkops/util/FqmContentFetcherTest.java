@@ -66,6 +66,7 @@ import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.domain.bean.StateType;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.FqmFetcherException;
 import org.folio.bulkops.service.ConsortiaService;
@@ -155,9 +156,14 @@ class FqmContentFetcherTest {
                   .thenReturn(getMockedQueryDetails(offset, limit));
               when(folioExecutionContext.getTenantId()).thenReturn("test_tenant");
             });
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .fqlQueryId(queryId)
+            .entityType(EntityType.INSTANCE)
+            .build();
 
-    try (var is =
-        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var actual = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(actual).contains(expected);
     }
@@ -226,7 +232,10 @@ class FqmContentFetcherTest {
                 .ids(uuids.subList(3, 5).stream().map(UUID::toString).map(List::of).toList())))
         .thenReturn(getMockedContents(uuids.subList(3, 5)));
 
-    try (var is = fqmContentFetcher.contents(uuids, EntityType.INSTANCE, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder().id(operationId).entityType(EntityType.INSTANCE).build();
+
+    try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       String actual = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       var expectedIds =
           expected.stream()
@@ -290,7 +299,10 @@ class FqmContentFetcherTest {
                 .localize(false)
                 .ids(uuids.subList(0, 3).stream().map(UUID::toString).map(List::of).toList()));
 
-    var is = fqmContentFetcher.contents(uuids, EntityType.INSTANCE, contents, operationId);
+    var bulkOperation =
+        BulkOperation.builder().id(operationId).entityType(EntityType.INSTANCE).build();
+
+    var is = fqmContentFetcher.contents(bulkOperation, uuids, contents);
     Exception exception = assertThrows(IOException.class, is::read);
 
     assertThat(exception.getCause()).isInstanceOf(FqmFetcherException.class);
@@ -327,12 +339,17 @@ class FqmContentFetcherTest {
         .when(queryClient)
         .getQuery(queryId, offset, limit);
 
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.INSTANCE)
+            .fqlQueryId(queryId)
+            .build();
+
     Exception exception =
         assertThrows(
             FqmFetcherException.class,
-            () ->
-                fqmContentFetcher.fetch(
-                    queryId, EntityType.INSTANCE, total, contents, operationId));
+            () -> fqmContentFetcher.fetch(bulkOperation, total, contents));
 
     assertThat(exception.getCause().getCause()).isInstanceOf(HttpServerErrorException.class);
   }
@@ -364,14 +381,21 @@ class FqmContentFetcherTest {
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockedQueryData);
     when(queryClient.getContents(any())).thenReturn(mockedQueryData.getContent());
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.USER)
+            .fqlQueryId(queryId)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).doesNotContain("\"entity\"");
       assertThat(result).doesNotContain("\"tenantId\":\"tenant\"");
       uuids.forEach(uuid -> assertThat(result).contains("\"id\":\"" + uuid.toString() + "\""));
     }
 
-    try (var is = fqmContentFetcher.contents(uuids, EntityType.USER, contents, operationId)) {
+    try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).doesNotContain("\"entity\"");
       assertThat(result).doesNotContain("\"tenantId\":\"tenant\"");
@@ -406,7 +430,14 @@ class FqmContentFetcherTest {
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockedQueryData);
     when(queryClient.getContents(any())).thenReturn(mockedQueryData.getContent());
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.ITEM, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.ITEM)
+            .fqlQueryId(queryId)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"item-tenant\"");
@@ -415,7 +446,7 @@ class FqmContentFetcherTest {
       assertThat(result).contains(expectedTitle);
     }
 
-    try (var is = fqmContentFetcher.contents(uuids, EntityType.ITEM, contents, operationId)) {
+    try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
 
       assertThat(result).contains("\"entity\"");
@@ -472,9 +503,14 @@ class FqmContentFetcherTest {
         .thenReturn(getMockedDataForEntityType(EntityType.HOLDINGS_RECORD, total));
     when(queryClient.getContents(any())).thenReturn(mockedQueryData.getContent());
 
-    try (var is =
-        fqmContentFetcher.fetch(
-            queryId, EntityType.HOLDINGS_RECORD, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.HOLDINGS_RECORD)
+            .fqlQueryId(queryId)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"holdings-tenant\"");
@@ -483,8 +519,7 @@ class FqmContentFetcherTest {
       assertThat(result).contains(expectedInstTitle);
     }
 
-    try (var is =
-        fqmContentFetcher.contents(uuids, EntityType.HOLDINGS_RECORD, contents, operationId)) {
+    try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"holdings-tenant\"");
@@ -522,14 +557,20 @@ class FqmContentFetcherTest {
         .thenReturn(getMockedDataForEntityType(EntityType.INSTANCE, total));
     when(queryClient.getContents(any())).thenReturn(mockedQueryData.getContent());
 
-    try (var is =
-        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.INSTANCE)
+            .fqlQueryId(queryId)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"instance-tenant\"");
     }
 
-    try (var is = fqmContentFetcher.contents(uuids, EntityType.INSTANCE, contents, operationId)) {
+    try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"instance-tenant\"");
@@ -560,18 +601,25 @@ class FqmContentFetcherTest {
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
     when(queryClient.getContents(any())).thenReturn(Collections.singletonList(map));
 
-    try (var is = fqmContentFetcher.fetch(queryId, entityType, total, contents, operationId)) {
+    var bulkOperation = BulkOperation.builder()
+        .id(operationId)
+        .entityType(entityType)
+        .fqlQueryId(queryId)
+        .processedNumOfRecords(0)
+        .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
       assertThat(contents.getFirst().getErrorMessage()).isEqualTo(NO_MATCH_FOUND_MESSAGE);
       assertThat(result).isEmpty();
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     }
 
     contents.clear();
     try (var is =
-        fqmContentFetcher.contents(
-            List.of(UUID.fromString(instanceId)), entityType, contents, operationId)) {
+        fqmContentFetcher.contents(bulkOperation, List.of(UUID.fromString(instanceId)), contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
@@ -582,7 +630,6 @@ class FqmContentFetcherTest {
 
   @Test
   void fetchShouldReturnAnErrorForShadowUsersInEcs() throws Exception {
-    var operationId = randomUUID();
     List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
@@ -600,19 +647,27 @@ class FqmContentFetcherTest {
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
     when(queryClient.getContents(any())).thenReturn(Collections.singletonList(map));
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(randomUUID())
+            .entityType(EntityType.USER)
+            .fqlQueryId(queryId)
+            .processedNumOfRecords(0)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
       assertThat(contents.getFirst().getErrorMessage())
           .isEqualTo(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
       assertThat(result).isEmpty();
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     }
 
     contents.clear();
 
-    try (var is =
-        fqmContentFetcher.contents(List.of(userId), EntityType.USER, contents, operationId)) {
+    try (var is = fqmContentFetcher.contents(bulkOperation, List.of(userId), contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
@@ -624,7 +679,6 @@ class FqmContentFetcherTest {
 
   @Test
   void fetchShouldReportShadowUsersWhenMemberTenant() throws Exception {
-    var operationId = randomUUID();
     List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
@@ -641,19 +695,27 @@ class FqmContentFetcherTest {
     int total = 1;
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(randomUUID())
+            .entityType(EntityType.USER)
+            .fqlQueryId(queryId)
+            .processedNumOfRecords(0)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
       assertThat(contents.getFirst().getErrorMessage())
           .isEqualTo(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
       assertThat(result).isEmpty();
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     }
   }
 
   @Test
   void contentsShouldReportShadowUsersWhenSubmittedByIdentifier() throws Exception {
-    var operationId = randomUUID();
     List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
@@ -667,20 +729,25 @@ class FqmContentFetcherTest {
     map.put("users.jsonb", "{\"id\":\"" + userId + "\"}");
     when(queryClient.getContents(any())).thenReturn(Collections.singletonList(map));
 
-    try (var is =
-        fqmContentFetcher.contents(List.of(userId), EntityType.USER, contents, operationId)) {
+    var bulkOperation = BulkOperation.builder()
+      .id(randomUUID())
+      .entityType(EntityType.USER)
+      .processedNumOfRecords(0)
+      .build();
+
+    try (var is = fqmContentFetcher.contents(bulkOperation, List.of(userId), contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
       assertThat(contents.getFirst().getErrorMessage())
           .isEqualTo(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
       assertThat(result).isEmpty();
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     }
   }
 
   @Test
   void fetchShouldReturnRegularUsersAndReportShadowUsersWhenMemberTenant() throws Exception {
-    var operationId = randomUUID();
     List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
@@ -705,7 +772,15 @@ class FqmContentFetcherTest {
     int total = 2;
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(randomUUID())
+            .entityType(EntityType.USER)
+            .fqlQueryId(queryId)
+            .processedNumOfRecords(0)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"username\":\"regular-user\"");
       assertThat(result).doesNotContain("\"username\":\"shadow-user\"");
@@ -714,13 +789,13 @@ class FqmContentFetcherTest {
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
       assertThat(contents.getFirst().getErrorMessage())
           .isEqualTo(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     }
   }
 
   @Test
   void contentsShouldReturnRegularUsersAndReportShadowUsersWhenSubmittedByIdentifier()
       throws Exception {
-    var operationId = randomUUID();
     List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
     when(folioExecutionContext.getTenantId()).thenReturn("member-tenant");
@@ -741,9 +816,13 @@ class FqmContentFetcherTest {
     shadowUser.put("users.jsonb", shadowUserJson);
     when(queryClient.getContents(any())).thenReturn(List.of(regularUser, shadowUser));
 
-    try (var is =
-        fqmContentFetcher.contents(
-            List.of(regularUserId, shadowUserId), EntityType.USER, contents, operationId)) {
+    var bulkOperation = BulkOperation.builder()
+      .id(randomUUID())
+      .entityType(EntityType.USER)
+      .processedNumOfRecords(0)
+      .build();
+
+    try (var is = fqmContentFetcher.contents(bulkOperation, List.of(regularUserId), contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"username\":\"regular-user\"");
       assertThat(result).doesNotContain("\"username\":\"shadow-user\"");
@@ -752,12 +831,12 @@ class FqmContentFetcherTest {
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
       assertThat(contents.getFirst().getErrorMessage())
           .isEqualTo(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     }
   }
 
   @Test
   void fetchShouldReturnAnErrorForDcbUsersInNonEcsAndEcs() throws Exception {
-    var operationId = randomUUID();
     List<BulkOperationExecutionContent> contents = new ArrayList<>();
 
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
@@ -774,43 +853,56 @@ class FqmContentFetcherTest {
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
     when(queryClient.getContents(any())).thenReturn(Collections.singletonList(map));
 
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(randomUUID())
+            .entityType(EntityType.USER)
+            .fqlQueryId(queryId)
+            .processedNumOfRecords(0)
+            .build();
+
     when(consortiaService.isTenantCentral(anyString())).thenReturn(false);
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total, contents, operationId)) {
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
       assertThat(contents.getFirst().getErrorMessage()).isEqualTo(MSG_DCB_RECORDS_CANNOT_BE_EDITED);
       assertThat(result).isEmpty();
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     }
 
+    bulkOperation.setProcessedNumOfRecords(0);
     contents.clear();
-    try (var is =
-        fqmContentFetcher.contents(List.of(userId), EntityType.USER, contents, operationId)) {
+    try (var is = fqmContentFetcher.contents(bulkOperation, List.of(userId), contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
       assertThat(contents.getFirst().getErrorMessage()).isEqualTo(MSG_DCB_RECORDS_CANNOT_BE_EDITED);
       assertThat(result).isEmpty();
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     }
 
+    bulkOperation.setProcessedNumOfRecords(0);
     contents.clear();
     when(consortiaService.isTenantCentral(anyString())).thenReturn(true);
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total, contents, operationId)) {
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
       assertThat(contents.getFirst().getErrorMessage()).isEqualTo(MSG_DCB_RECORDS_CANNOT_BE_EDITED);
       assertThat(result).isEmpty();
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     }
 
+    bulkOperation.setProcessedNumOfRecords(0);
     contents.clear();
-    try (var is =
-        fqmContentFetcher.contents(List.of(userId), EntityType.USER, contents, operationId)) {
+    try (var is = fqmContentFetcher.contents(bulkOperation, List.of(userId), contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
       assertThat(contents.getFirst().getErrorMessage()).isEqualTo(MSG_DCB_RECORDS_CANNOT_BE_EDITED);
       assertThat(result).isEmpty();
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     }
   }
 
@@ -841,15 +933,20 @@ class FqmContentFetcherTest {
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockedQueryData);
     when(queryClient.getContents(any())).thenReturn(mockedQueryData.getContent());
 
-    try (var is =
-        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE_MARC, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.INSTANCE_MARC)
+            .fqlQueryId(queryId)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"instance-tenant\"");
     }
 
-    try (var is =
-        fqmContentFetcher.contents(uuids, EntityType.INSTANCE_MARC, contents, operationId)) {
+    try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(result).contains("\"entity\"");
       assertThat(result).contains("\"tenantId\":\"instance-tenant\"");
@@ -888,8 +985,14 @@ class FqmContentFetcherTest {
             .map(UUID::fromString)
             .toList();
 
-    try (var is =
-        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.INSTANCE)
+            .fqlQueryId(queryId)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       is.readAllBytes();
     }
 
@@ -903,7 +1006,7 @@ class FqmContentFetcherTest {
 
     contents.clear();
 
-    try (var is = fqmContentFetcher.contents(uuids, EntityType.INSTANCE, contents, operationId)) {
+    try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       is.readAllBytes();
     }
 
@@ -944,12 +1047,18 @@ class FqmContentFetcherTest {
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockedQueryData);
     when(queryClient.getContents(any())).thenReturn(mockedQueryData.getContent());
 
-    try (var is =
-        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.INSTANCE)
+            .fqlQueryId(queryId)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       is.readAllBytes();
     }
 
-    try (var is = fqmContentFetcher.contents(uuids, EntityType.INSTANCE, contents, operationId)) {
+    try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       is.readAllBytes();
     }
 
@@ -984,11 +1093,18 @@ class FqmContentFetcherTest {
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(mockedQueryData);
     when(queryClient.getContents(any())).thenReturn(mockedQueryData.getContent());
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.USER)
+            .fqlQueryId(queryId)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       is.readAllBytes();
     }
 
-    try (var is = fqmContentFetcher.contents(uuids, EntityType.USER, contents, operationId)) {
+    try (var is = fqmContentFetcher.contents(bulkOperation, uuids, contents)) {
       is.readAllBytes();
     }
 
@@ -1014,13 +1130,21 @@ class FqmContentFetcherTest {
     details.setContent(Collections.singletonList(map));
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
 
-    try (var is =
-        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.INSTANCE)
+            .fqlQueryId(queryId)
+            .processedNumOfRecords(0)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
       assertThat(contents.getFirst().getErrorMessage()).isEqualTo(NO_MATCH_FOUND_MESSAGE);
       assertThat(result).isEmpty();
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     }
   }
 
@@ -1043,13 +1167,21 @@ class FqmContentFetcherTest {
     details.setContent(Collections.singletonList(map));
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
 
-    try (var is =
-        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE_MARC, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.INSTANCE_MARC)
+            .fqlQueryId(queryId)
+            .processedNumOfRecords(0)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getState()).isEqualTo(FAILED);
       assertThat(contents.getFirst().getErrorMessage()).isEqualTo(NO_MATCH_FOUND_MESSAGE);
       assertThat(result).isEmpty();
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     }
   }
 
@@ -1072,8 +1204,14 @@ class FqmContentFetcherTest {
     details.setContent(Collections.singletonList(map));
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
 
-    try (var is =
-        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.INSTANCE)
+            .fqlQueryId(queryId)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
       assertThat(result).isNotEmpty();
@@ -1100,8 +1238,14 @@ class FqmContentFetcherTest {
     details.setContent(Collections.singletonList(map));
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
 
-    try (var is =
-        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.INSTANCE)
+            .fqlQueryId(queryId)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
       assertThat(result).isNotEmpty();
@@ -1127,7 +1271,14 @@ class FqmContentFetcherTest {
     details.setContent(Collections.singletonList(map));
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.USER, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.USER)
+            .fqlQueryId(queryId)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
       assertThat(result).isNotEmpty();
@@ -1158,7 +1309,14 @@ class FqmContentFetcherTest {
     details.setContent(Collections.singletonList(map));
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
 
-    try (var is = fqmContentFetcher.fetch(queryId, EntityType.ITEM, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.ITEM)
+            .fqlQueryId(queryId)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
       assertThat(result).isNotEmpty();
@@ -1185,8 +1343,14 @@ class FqmContentFetcherTest {
     details.setContent(Collections.singletonList(map));
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
 
-    try (var is =
-        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.INSTANCE)
+            .fqlQueryId(queryId)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
       assertThat(result).isNotEmpty();
@@ -1213,8 +1377,14 @@ class FqmContentFetcherTest {
     details.setContent(Collections.singletonList(map));
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
 
-    try (var is =
-        fqmContentFetcher.fetch(queryId, EntityType.INSTANCE_MARC, total, contents, operationId)) {
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.INSTANCE_MARC)
+            .fqlQueryId(queryId)
+            .build();
+
+    try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
       assertThat(contents).isEmpty();
       assertThat(result).isNotEmpty();
@@ -1234,13 +1404,19 @@ class FqmContentFetcherTest {
             "8beddda3-1e3b-47ae-9ebd-87b9856af902",
             FQM_INSTANCE_SOURCE_KEY,
             LINKED_DATA_SOURCE);
+    var bulkOperation = BulkOperation.builder()
+          .id(operationId)
+      .entityType(EntityType.INSTANCE)
+      .processedNumOfRecords(0)
+      .build();
 
     try (InputStream ignored =
         fqmContentFetcher.getFqmResponseAsInputStream(
-            EntityType.INSTANCE, contents, operationId, false, List.of(json))) {
+            bulkOperation, contents, false, List.of(json))) {
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getErrorMessage())
           .isEqualTo(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED);
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
 
     } catch (IOException e) {
       Assertions.fail(e.getMessage());
@@ -1259,11 +1435,18 @@ class FqmContentFetcherTest {
             // Empty FQM_INSTANCE_SHARED_KEY - non-shared instance
             );
 
+    var bulkOperation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(EntityType.INSTANCE)
+      .processedNumOfRecords(0)
+      .build();
+
     try (var ignored =
         fqmContentFetcher.getFqmResponseAsInputStream(
-            EntityType.INSTANCE, contents, operationId, true, List.of(json))) {
+            bulkOperation, contents, true, List.of(json))) {
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getErrorMessage()).isEqualTo(NO_MATCH_FOUND_MESSAGE);
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     } catch (IOException e) {
       Assertions.fail(e.getMessage());
     }
@@ -1279,12 +1462,19 @@ class FqmContentFetcherTest {
         Map.of(
             FQM_USERS_ID_KEY, "96112493-71a0-49da-bc4a-ae007523f216", FQM_USERS_TYPE_KEY, SHADOW);
 
+    var bulkOperation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(EntityType.USER)
+      .processedNumOfRecords(0)
+      .build();
+
     try (var ignored =
         fqmContentFetcher.getFqmResponseAsInputStream(
-            EntityType.USER, contents, operationId, true, List.of(json))) {
+            bulkOperation, contents, true, List.of(json))) {
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getErrorMessage())
           .isEqualTo(MSG_SHADOW_RECORDS_CANNOT_BE_EDITED);
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     } catch (IOException e) {
       Assertions.fail(e.getMessage());
     }
@@ -1299,11 +1489,18 @@ class FqmContentFetcherTest {
     Map<String, Object> json =
         Map.of(FQM_USERS_ID_KEY, "96112493-71a0-49da-bc4a-ae007523f216", FQM_USERS_TYPE_KEY, "DCB");
 
+    var bulkOperation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(EntityType.USER)
+      .processedNumOfRecords(0)
+      .build();
+
     try (var ignored =
         fqmContentFetcher.getFqmResponseAsInputStream(
-            EntityType.USER, contents, operationId, false, List.of(json))) {
+            bulkOperation, contents, false, List.of(json))) {
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getErrorMessage()).isEqualTo(MSG_DCB_RECORDS_CANNOT_BE_EDITED);
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     } catch (IOException e) {
       Assertions.fail(e.getMessage());
     }
@@ -1320,12 +1517,19 @@ class FqmContentFetcherTest {
             FQM_ITEMS_ID_KEY, "04729175-98d1-4519-88bd-50595c00cb6b",
             FQM_ITEMS_JSONB_KEY, "{invalid-json");
 
+    var bulkOperation = BulkOperation.builder()
+      .id(operationId)
+      .entityType(EntityType.ITEM)
+      .processedNumOfRecords(0)
+      .build();
+
     try (var ignored =
         fqmContentFetcher.getFqmResponseAsInputStream(
-            EntityType.ITEM, contents, operationId, false, List.of(json))) {
+            bulkOperation, contents, false, List.of(json))) {
       assertThat(contents).hasSize(1);
       assertThat(contents.getFirst().getErrorType())
           .isEqualTo(org.folio.bulkops.domain.dto.ErrorType.ERROR);
+      assertThat(bulkOperation.getProcessedNumOfRecords()).isEqualTo(1);
     } catch (IOException e) {
       Assertions.fail(e.getMessage());
     }
