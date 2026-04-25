@@ -601,12 +601,13 @@ class FqmContentFetcherTest {
     when(queryClient.getQuery(queryId, 0, total)).thenReturn(details);
     when(queryClient.getContents(any())).thenReturn(Collections.singletonList(map));
 
-    var bulkOperation = BulkOperation.builder()
-        .id(operationId)
-        .entityType(entityType)
-        .fqlQueryId(queryId)
-        .processedNumOfRecords(0)
-        .build();
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(entityType)
+            .fqlQueryId(queryId)
+            .processedNumOfRecords(0)
+            .build();
 
     try (var is = fqmContentFetcher.fetch(bulkOperation, total, contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -729,11 +730,12 @@ class FqmContentFetcherTest {
     map.put("users.jsonb", "{\"id\":\"" + userId + "\"}");
     when(queryClient.getContents(any())).thenReturn(Collections.singletonList(map));
 
-    var bulkOperation = BulkOperation.builder()
-      .id(randomUUID())
-      .entityType(EntityType.USER)
-      .processedNumOfRecords(0)
-      .build();
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(randomUUID())
+            .entityType(EntityType.USER)
+            .processedNumOfRecords(0)
+            .build();
 
     try (var is = fqmContentFetcher.contents(bulkOperation, List.of(userId), contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -816,11 +818,12 @@ class FqmContentFetcherTest {
     shadowUser.put("users.jsonb", shadowUserJson);
     when(queryClient.getContents(any())).thenReturn(List.of(regularUser, shadowUser));
 
-    var bulkOperation = BulkOperation.builder()
-      .id(randomUUID())
-      .entityType(EntityType.USER)
-      .processedNumOfRecords(0)
-      .build();
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(randomUUID())
+            .entityType(EntityType.USER)
+            .processedNumOfRecords(0)
+            .build();
 
     try (var is = fqmContentFetcher.contents(bulkOperation, List.of(regularUserId), contents)) {
       var result = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -1404,11 +1407,12 @@ class FqmContentFetcherTest {
             "8beddda3-1e3b-47ae-9ebd-87b9856af902",
             FQM_INSTANCE_SOURCE_KEY,
             LINKED_DATA_SOURCE);
-    var bulkOperation = BulkOperation.builder()
-          .id(operationId)
-      .entityType(EntityType.INSTANCE)
-      .processedNumOfRecords(0)
-      .build();
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.INSTANCE)
+            .processedNumOfRecords(0)
+            .build();
 
     try (InputStream ignored =
         fqmContentFetcher.getFqmResponseAsInputStream(
@@ -1435,11 +1439,12 @@ class FqmContentFetcherTest {
             // Empty FQM_INSTANCE_SHARED_KEY - non-shared instance
             );
 
-    var bulkOperation = BulkOperation.builder()
-      .id(operationId)
-      .entityType(EntityType.INSTANCE)
-      .processedNumOfRecords(0)
-      .build();
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.INSTANCE)
+            .processedNumOfRecords(0)
+            .build();
 
     try (var ignored =
         fqmContentFetcher.getFqmResponseAsInputStream(
@@ -1462,11 +1467,12 @@ class FqmContentFetcherTest {
         Map.of(
             FQM_USERS_ID_KEY, "96112493-71a0-49da-bc4a-ae007523f216", FQM_USERS_TYPE_KEY, SHADOW);
 
-    var bulkOperation = BulkOperation.builder()
-      .id(operationId)
-      .entityType(EntityType.USER)
-      .processedNumOfRecords(0)
-      .build();
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.USER)
+            .processedNumOfRecords(0)
+            .build();
 
     try (var ignored =
         fqmContentFetcher.getFqmResponseAsInputStream(
@@ -1489,11 +1495,12 @@ class FqmContentFetcherTest {
     Map<String, Object> json =
         Map.of(FQM_USERS_ID_KEY, "96112493-71a0-49da-bc4a-ae007523f216", FQM_USERS_TYPE_KEY, "DCB");
 
-    var bulkOperation = BulkOperation.builder()
-      .id(operationId)
-      .entityType(EntityType.USER)
-      .processedNumOfRecords(0)
-      .build();
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.USER)
+            .processedNumOfRecords(0)
+            .build();
 
     try (var ignored =
         fqmContentFetcher.getFqmResponseAsInputStream(
@@ -1517,11 +1524,12 @@ class FqmContentFetcherTest {
             FQM_ITEMS_ID_KEY, "04729175-98d1-4519-88bd-50595c00cb6b",
             FQM_ITEMS_JSONB_KEY, "{invalid-json");
 
-    var bulkOperation = BulkOperation.builder()
-      .id(operationId)
-      .entityType(EntityType.ITEM)
-      .processedNumOfRecords(0)
-      .build();
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(operationId)
+            .entityType(EntityType.ITEM)
+            .processedNumOfRecords(0)
+            .build();
 
     try (var ignored =
         fqmContentFetcher.getFqmResponseAsInputStream(
