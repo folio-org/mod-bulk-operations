@@ -87,7 +87,6 @@ public class QueryService {
               try (var is =
                   fqmContentFetcher.contents(
                       bulkOperation, uuids, bulkOperationExecutionContents)) {
-                bulkOperation.setApproach(QUERY);
                 completeBulkOperation(is, bulkOperation, bulkOperationExecutionContents);
               } catch (Exception e) {
                 var errorMessage =
@@ -124,7 +123,6 @@ public class QueryService {
                             bulkOperation,
                             queryResult.getTotalRecords(),
                             bulkOperationExecutionContents)) {
-                      bulkOperation.setApproach(QUERY);
                       completeBulkOperation(is, bulkOperation, bulkOperationExecutionContents);
                     } catch (Exception e) {
                       var errorMessage =
