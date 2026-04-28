@@ -275,9 +275,7 @@ class QueryServiceTest {
     InputStream is = new ByteArrayInputStream("[]".getBytes());
 
     QueryService queryServiceSpy = spy(service);
-    when(fqmContentFetcher.contents(
-            eq(uuids), eq(bulkOperation.getEntityType()), anyList(), eq(bulkOperation.getId())))
-        .thenReturn(is);
+    when(fqmContentFetcher.contents(eq(bulkOperation), eq(uuids), anyList())).thenReturn(is);
 
     /* Mocking to simulate one UUID not found - No match found*/
     doNothing()
@@ -303,7 +301,7 @@ class QueryServiceTest {
     var uuids = List.of(randomUUID());
 
     QueryService queryServiceSpy = spy(service);
-    when(fqmContentFetcher.contents(anyList(), any(), anyList(), any()))
+    when(fqmContentFetcher.contents(any(BulkOperation.class), anyList(), anyList()))
         .thenThrow(new RuntimeException("boom"));
 
     runWithFolioContext(
@@ -335,7 +333,7 @@ class QueryServiceTest {
 
     assertEquals("No records found for the query", bulkOperation.getErrorMessage());
 
-    verify(fqmContentFetcher, never()).fetch(any(), any(), anyInt(), anyList(), any());
+    verify(fqmContentFetcher, never()).fetch(any(BulkOperation.class), anyInt(), anyList());
     verify(queryServiceSpy, never()).completeBulkOperation(any(), any(), anyList());
   }
 
@@ -357,13 +355,7 @@ class QueryServiceTest {
         .completeBulkOperation(any(InputStream.class), any(BulkOperation.class), anyList());
 
     InputStream is = new ByteArrayInputStream("[]".getBytes());
-    when(fqmContentFetcher.fetch(
-            eq(bulkOperation.getFqlQueryId()),
-            eq(bulkOperation.getEntityType()),
-            eq(total),
-            anyList(),
-            eq(bulkOperation.getId())))
-        .thenReturn(is);
+    when(fqmContentFetcher.fetch(eq(bulkOperation), eq(total), anyList())).thenReturn(is);
 
     var returned =
         runWithFolioContext(() -> queryServiceSpy.retrieveRecordsQueryFlowAsync(bulkOperation));
@@ -374,13 +366,7 @@ class QueryServiceTest {
 
     verify(bulkOperationRepository, atLeastOnce()).save(bulkOperation);
 
-    verify(fqmContentFetcher, times(1))
-        .fetch(
-            eq(bulkOperation.getFqlQueryId()),
-            eq(bulkOperation.getEntityType()),
-            eq(total),
-            anyList(),
-            eq(bulkOperation.getId()));
+    verify(fqmContentFetcher, times(1)).fetch(eq(bulkOperation), eq(total), anyList());
     verify(queryServiceSpy, times(1))
         .completeBulkOperation(same(is), same(bulkOperation), anyList());
     assertEquals(total, bulkOperation.getTotalNumOfRecords());
@@ -398,12 +384,7 @@ class QueryServiceTest {
 
     doReturn(queryDetails).when(queryServiceSpy).getQueryResult(bulkOperation);
 
-    when(fqmContentFetcher.fetch(
-            eq(bulkOperation.getFqlQueryId()),
-            eq(bulkOperation.getEntityType()),
-            eq(total),
-            anyList(),
-            eq(bulkOperation.getId())))
+    when(fqmContentFetcher.fetch(eq(bulkOperation), eq(total), anyList()))
         .thenThrow(new RuntimeException("boom"));
 
     runWithFolioContext(() -> queryServiceSpy.retrieveRecordsQueryFlowAsync(bulkOperation));
