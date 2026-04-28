@@ -27,7 +27,7 @@ public class IdentifiersWriteListener<T> implements ItemWriteListener<T> {
 
   @SuppressWarnings("unused")
   @Value("#{stepExecution.jobExecution}")
-  private JobExecution jobExecution;
+  private final JobExecution jobExecution;
 
   @Override
   public void beforeWrite(Chunk<? extends T> list) {
@@ -38,7 +38,7 @@ public class IdentifiersWriteListener<T> implements ItemWriteListener<T> {
   public void afterWrite(Chunk<? extends T> list) {
     int processed;
     int matched;
-    synchronized (this) {
+    synchronized (jobExecution) {
       var context = jobExecution.getExecutionContext();
       processed = list.size();
       matched = list.size();
