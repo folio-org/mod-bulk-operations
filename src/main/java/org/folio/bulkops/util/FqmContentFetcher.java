@@ -117,6 +117,7 @@ import org.folio.bulkops.domain.dto.ConsortiumHolding;
 import org.folio.bulkops.domain.dto.ConsortiumItem;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
+import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.FqmFetcherException;
 import org.folio.bulkops.service.ConsortiaService;
@@ -168,19 +169,18 @@ public class FqmContentFetcher {
   /**
    * Fetches content of FQM entities for the given UUIDs.
    *
+   * @param bulkOperation bulk operation
    * @param uuids the list of UUIDs to fetch
-   * @param entityType the type of entity to fetch
    * @param bulkOperationExecutionContents the list to record execution content for errors or
    *     warnings (technical errors holder)
-   * @param operationId the bulk operation ID for which the content is fetched
    * @return an InputStream containing the fetched content
    */
   public InputStream contents(
+      BulkOperation bulkOperation,
       List<UUID> uuids,
-      EntityType entityType,
-      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
-      UUID operationId) {
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents) {
 
+    var entityType = bulkOperation.getEntityType();
     UUID entityTypeId = entityTypeService.getEntityTypeIdByBulkOpsEntityType(entityType);
     List<String> entityJsonKeys = getEntityJsonKeys(entityType);
     String tenantId = folioExecutionContext.getTenantId();
@@ -200,13 +200,12 @@ public class FqmContentFetcher {
     for (List<UUID> chunk : chunks) {
       Function<String, List<String>> idMapper =
           resolveIdMapper(
+              bulkOperation,
               chunk,
-              entityType,
               tenantId,
               isTenantInConsortia,
               isCentralTenant,
-              bulkOperationExecutionContents,
-              operationId);
+              bulkOperationExecutionContents);
 
       completion.submit(
           () -> {
@@ -226,9 +225,8 @@ public class FqmContentFetcher {
     }
 
     return pipeStreamingResponse(
-        entityType,
+        bulkOperation,
         bulkOperationExecutionContents,
-        operationId,
         isCentralTenant,
         chunks.size(),
         completion,
@@ -236,19 +234,20 @@ public class FqmContentFetcher {
   }
 
   private Function<String, List<String>> resolveIdMapper(
+      BulkOperation bulkOperation,
       List<UUID> chunk,
-      EntityType entityType,
       String tenantId,
       boolean isTenantInConsortia,
       boolean isCentralTenant,
-      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
-      UUID operationId) {
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents) {
 
+    var entityType = bulkOperation.getEntityType();
     if (isTenantInConsortia && entityType != USER) {
       if (isCentralTenant && (entityType == ITEM || entityType == HOLDINGS_RECORD)) {
 
         Map<String, List<String>> idTenantMap = resolveConsortiumIdTenantMap(chunk, entityType);
 
+        var operationId = bulkOperation.getId();
         // Save no match found errors for IDs that were not found in consortium
         chunk.stream()
             .map(UUID::toString)
@@ -322,9 +321,8 @@ public class FqmContentFetcher {
   }
 
   private InputStream pipeStreamingResponse(
-      EntityType entityType,
+      BulkOperation bulkOperation,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents,
-      UUID operationId,
       boolean isCentralTenant,
       int submittedTasks,
       CompletionService<List<Map<String, Object>>> completion,
@@ -354,13 +352,7 @@ public class FqmContentFetcher {
                   if (part == null || part.isEmpty()) {
                     continue;
                   }
-                  part(
-                      bw,
-                      part,
-                      entityType,
-                      bulkOperationExecutionContents,
-                      operationId,
-                      isCentralTenant);
+                  part(bulkOperation, bw, part, bulkOperationExecutionContents, isCentralTenant);
                 }
 
               } catch (InterruptedException ie) {
@@ -437,18 +429,16 @@ public class FqmContentFetcher {
   }
 
   private void part(
+      BulkOperation bulkOperation,
       BufferedWriter bw,
       List<Map<String, Object>> part,
-      EntityType entityType,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents,
-      UUID operationId,
       boolean isCentralTenant)
       throws IOException {
 
     for (Map<String, Object> json : part) {
       var line =
-          processFqmJson(
-              entityType, bulkOperationExecutionContents, operationId, isCentralTenant, json);
+          processFqmJson(bulkOperation, bulkOperationExecutionContents, isCentralTenant, json);
       if (StringUtils.isNotEmpty(line)) {
         bw.write(line);
         bw.write(LINE_BREAK);
@@ -490,17 +480,14 @@ public class FqmContentFetcher {
   /**
    * Fetches content in parallel using multiple threads.
    *
-   * @param queryId the FQM query ID
-   * @param entityType the type of entity to fetch
+   * @param bulkOperation bulk operation object
    * @param total the total number of records to fetch
    * @return an InputStream containing the fetched content
    */
   public InputStream fetch(
-      UUID queryId,
-      EntityType entityType,
+      BulkOperation bulkOperation,
       int total,
-      List<BulkOperationExecutionContent> bulkOperationExecutionContents,
-      UUID operationId) {
+      List<BulkOperationExecutionContent> bulkOperationExecutionContents) {
     try (var executor = Executors.newFixedThreadPool(maxParallelChunks)) {
       int chunks = (total + chunkSize - 1) / chunkSize;
 
@@ -514,12 +501,10 @@ public class FqmContentFetcher {
                       CompletableFuture.supplyAsync(
                           () ->
                               task(
-                                  queryId,
-                                  entityType,
+                                  bulkOperation,
                                   chunk,
                                   total,
                                   bulkOperationExecutionContents,
-                                  operationId,
                                   isCentralTenant),
                           executor))
               .toList();
@@ -538,25 +523,22 @@ public class FqmContentFetcher {
   }
 
   private InputStream task(
-      UUID queryId,
-      EntityType entityType,
+      BulkOperation bulkOperation,
       int chunk,
       int total,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents,
-      UUID operationId,
       boolean isCentralTenant) {
     int offset = chunk * chunkSize;
     int limit = Math.min(chunkSize, total - offset);
     log.info("tenant current: {}", folioExecutionContext.getTenantId());
-    var response = queryClient.getQuery(queryId, offset, limit).getContent();
+    var response = queryClient.getQuery(bulkOperation.getFqlQueryId(), offset, limit).getContent();
     return getFqmResponseAsInputStream(
-        entityType, bulkOperationExecutionContents, operationId, isCentralTenant, response);
+        bulkOperation, bulkOperationExecutionContents, isCentralTenant, response);
   }
 
   protected InputStream getFqmResponseAsInputStream(
-      EntityType entityType,
+      BulkOperation bulkOperation,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents,
-      UUID operationId,
       boolean isCentralTenant,
       List<Map<String, Object>> response) {
     return new ByteArrayInputStream(
@@ -564,40 +546,40 @@ public class FqmContentFetcher {
             .map(
                 json ->
                     processFqmJson(
-                        entityType,
-                        bulkOperationExecutionContents,
-                        operationId,
-                        isCentralTenant,
-                        json))
+                        bulkOperation, bulkOperationExecutionContents, isCentralTenant, json))
             .filter(StringUtils::isNotEmpty)
             .collect(Collectors.joining(LINE_BREAK))
             .getBytes(StandardCharsets.UTF_8));
   }
 
   private String processFqmJson(
-      EntityType entityType,
+      BulkOperation bulkOperation,
       List<BulkOperationExecutionContent> bulkOperationExecutionContents,
-      UUID operationId,
       boolean isCentralTenant,
       Map<String, Object> json) {
+    var entityType = bulkOperation.getEntityType();
+    var operationId = bulkOperation.getId();
     var id = json.get(getEntityIdKey(entityType)).toString();
     try {
       if (isInstance(entityType)
           && LINKED_DATA_SOURCE.equalsIgnoreCase(
               ofNullable(json.get(FQM_INSTANCE_SOURCE_KEY)).map(Object::toString).orElse(EMPTY))) {
         addInstanceLinkedDataNotSupported(id, bulkOperationExecutionContents, operationId);
+        bulkOperation.setProcessedNumOfRecords(bulkOperation.getProcessedNumOfRecords() + 1);
         return EMPTY;
       }
       if (EntityType.USER.equals(entityType)
           && DCB.equalsIgnoreCase(
               ofNullable(json.get(FQM_USERS_TYPE_KEY)).map(Object::toString).orElse(EMPTY))) {
         addDcbUserErrorContent(id, bulkOperationExecutionContents, operationId);
+        bulkOperation.setProcessedNumOfRecords(bulkOperation.getProcessedNumOfRecords() + 1);
         return EMPTY;
       }
       if (EntityType.USER.equals(entityType)
           && SHADOW.equalsIgnoreCase(
               ofNullable(json.get(FQM_USERS_TYPE_KEY)).map(Object::toString).orElse(EMPTY))) {
         addShadowUserErrorContent(id, bulkOperationExecutionContents, operationId);
+        bulkOperation.setProcessedNumOfRecords(bulkOperation.getProcessedNumOfRecords() + 1);
         return EMPTY;
       }
       if (isCentralTenant
@@ -605,11 +587,13 @@ public class FqmContentFetcher {
           && !SHARED.equalsIgnoreCase(
               ofNullable(json.get(FQM_INSTANCE_SHARED_KEY)).map(Object::toString).orElse(EMPTY))) {
         addNoMatchFoundError(id, bulkOperationExecutionContents, operationId);
+        bulkOperation.setProcessedNumOfRecords(bulkOperation.getProcessedNumOfRecords() + 1);
         return EMPTY;
       }
 
       if (isSharedInstanceAndCurrentTenantIsMember(json, entityType)) {
         addNoMatchFoundError(id, bulkOperationExecutionContents, operationId);
+        bulkOperation.setProcessedNumOfRecords(bulkOperation.getProcessedNumOfRecords() + 1);
         return EMPTY;
       }
 
@@ -646,11 +630,13 @@ public class FqmContentFetcher {
         return objectMapper.writeValueAsString(extendedRecordWrapper);
       } else {
         addNoMatchFoundError(id, bulkOperationExecutionContents, operationId);
+        bulkOperation.setProcessedNumOfRecords(bulkOperation.getProcessedNumOfRecords() + 1);
         return EMPTY;
       }
     } catch (Exception e) {
       log.error("Error processing JSON content: {}", json, e);
       addProcessingError(id, e.getMessage(), bulkOperationExecutionContents, operationId);
+      bulkOperation.setProcessedNumOfRecords(bulkOperation.getProcessedNumOfRecords() + 1);
       return EMPTY;
     }
   }

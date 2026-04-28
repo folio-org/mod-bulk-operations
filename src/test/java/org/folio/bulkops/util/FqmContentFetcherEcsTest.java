@@ -25,6 +25,7 @@ import org.folio.bulkops.domain.dto.ConsortiumHoldingCollection;
 import org.folio.bulkops.domain.dto.ConsortiumItem;
 import org.folio.bulkops.domain.dto.ConsortiumItemCollection;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.querytool.domain.dto.ContentsRequest;
@@ -68,9 +69,10 @@ class FqmContentFetcherEcsTest {
     UUID uuid = randomUUID();
     mockCommon(tenantId, centralTenantId, List.of(uuid));
 
-    try (var is =
-        fqmContentFetcher.contents(
-            List.of(uuid), EntityType.INSTANCE, new ArrayList<>(), randomUUID())) {
+    var bulkOperation =
+        BulkOperation.builder().id(randomUUID()).entityType(EntityType.INSTANCE).build();
+
+    try (var is = fqmContentFetcher.contents(bulkOperation, List.of(uuid), new ArrayList<>())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
       await()
           .atMost(2, TimeUnit.SECONDS)
@@ -92,9 +94,10 @@ class FqmContentFetcherEcsTest {
     UUID uuid = randomUUID();
     mockCommon(tenantId, centralTenantId, List.of(uuid));
 
-    try (var is =
-        fqmContentFetcher.contents(
-            List.of(uuid), EntityType.INSTANCE, new ArrayList<>(), randomUUID())) {
+    var bulkOperation =
+        BulkOperation.builder().id(randomUUID()).entityType(EntityType.INSTANCE).build();
+
+    try (var is = fqmContentFetcher.contents(bulkOperation, List.of(uuid), new ArrayList<>())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
@@ -132,10 +135,13 @@ class FqmContentFetcherEcsTest {
                 // Duplicate across tenants case - 1 item in two tenants
                 .addItemsItem(new ConsortiumItem().id(uuid3.toString()).tenantId(itemTenant4)));
 
+    var bulkOperation =
+        BulkOperation.builder().id(randomUUID()).entityType(EntityType.ITEM).build();
+
     List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
     try (var is =
         fqmContentFetcher.contents(
-            List.of(uuid1, uuid2), EntityType.ITEM, bulkOperationExecutionContents, randomUUID())) {
+            bulkOperation, List.of(uuid1, uuid2), bulkOperationExecutionContents)) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
@@ -180,13 +186,13 @@ class FqmContentFetcherEcsTest {
                 .addHoldingsItem(
                     new ConsortiumHolding().id(uuid3.toString()).tenantId(itemTenant4)));
 
+    var bulkOperation =
+        BulkOperation.builder().id(randomUUID()).entityType(EntityType.HOLDINGS_RECORD).build();
+
     List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
     try (var is =
         fqmContentFetcher.contents(
-            List.of(uuid1, uuid2),
-            EntityType.HOLDINGS_RECORD,
-            bulkOperationExecutionContents,
-            randomUUID())) {
+            bulkOperation, List.of(uuid1, uuid2), bulkOperationExecutionContents)) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
@@ -215,9 +221,10 @@ class FqmContentFetcherEcsTest {
     UUID uuid = randomUUID();
     mockCommon(tenantId, centralTenantId, List.of(uuid));
 
-    try (var is =
-        fqmContentFetcher.contents(
-            List.of(uuid), EntityType.INSTANCE, new ArrayList<>(), randomUUID())) {
+    var bulkOperation =
+        BulkOperation.builder().id(randomUUID()).entityType(EntityType.INSTANCE).build();
+
+    try (var is = fqmContentFetcher.contents(bulkOperation, List.of(uuid), new ArrayList<>())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
@@ -240,9 +247,10 @@ class FqmContentFetcherEcsTest {
     UUID uuid = randomUUID();
     mockCommon(tenantId, centralTenantId, List.of(uuid));
 
-    try (var is =
-        fqmContentFetcher.contents(
-            List.of(uuid), EntityType.USER, new ArrayList<>(), randomUUID())) {
+    var bulkOperation =
+        BulkOperation.builder().id(randomUUID()).entityType(EntityType.USER).build();
+
+    try (var is = fqmContentFetcher.contents(bulkOperation, List.of(uuid), new ArrayList<>())) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
       await()
           .atMost(2, TimeUnit.SECONDS)
@@ -305,12 +313,11 @@ class FqmContentFetcherEcsTest {
     List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
     UUID operationId = randomUUID();
 
+    var bulkOperation = BulkOperation.builder().id(operationId).entityType(EntityType.ITEM).build();
+
     try (var is =
         fqmContentFetcher.contents(
-            List.of(uuid1, uuid2, uuid3),
-            EntityType.ITEM,
-            bulkOperationExecutionContents,
-            operationId)) {
+            bulkOperation, List.of(uuid1, uuid2, uuid3), bulkOperationExecutionContents)) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
@@ -359,12 +366,12 @@ class FqmContentFetcherEcsTest {
     List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
     UUID operationId = randomUUID();
 
+    var bulkOperation =
+        BulkOperation.builder().id(operationId).entityType(EntityType.HOLDINGS_RECORD).build();
+
     try (var is =
         fqmContentFetcher.contents(
-            List.of(uuid1, uuid2, uuid3),
-            EntityType.HOLDINGS_RECORD,
-            bulkOperationExecutionContents,
-            operationId)) {
+            bulkOperation, List.of(uuid1, uuid2, uuid3), bulkOperationExecutionContents)) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
@@ -417,12 +424,13 @@ class FqmContentFetcherEcsTest {
     List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
     UUID operationId = UUID.fromString("a4444444-4444-4444-4444-444444444444");
 
+    var bulkOperation = BulkOperation.builder().id(operationId).entityType(EntityType.ITEM).build();
+
     try (var is =
         fqmContentFetcher.contents(
+            bulkOperation,
             List.of(uuidFound, uuidMissing, uuidDuplicate),
-            EntityType.ITEM,
-            bulkOperationExecutionContents,
-            operationId)) {
+            bulkOperationExecutionContents)) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
@@ -468,9 +476,11 @@ class FqmContentFetcherEcsTest {
     List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
     UUID operationId = randomUUID();
 
+    var bulkOperation = BulkOperation.builder().id(operationId).entityType(EntityType.ITEM).build();
+
     try (var is =
         fqmContentFetcher.contents(
-            List.of(uuid1, uuid2), EntityType.ITEM, bulkOperationExecutionContents, operationId)) {
+            bulkOperation, List.of(uuid1, uuid2), bulkOperationExecutionContents)) {
       ArgumentCaptor<ContentsRequest> captor = ArgumentCaptor.forClass(ContentsRequest.class);
 
       await()
