@@ -27,7 +27,7 @@ public class IdentifiersWriteListener<T> implements ItemWriteListener<T> {
 
   @SuppressWarnings("unused")
   @Value("#{stepExecution.jobExecution}")
-  private final JobExecution jobExecution;
+  private JobExecution jobExecution;
 
   @Override
   public void beforeWrite(Chunk<? extends T> list) {
