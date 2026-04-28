@@ -33,6 +33,7 @@ import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.exception.BulkEditException;
+import org.folio.bulkops.exception.RestClientErrorHandler;
 import org.folio.bulkops.processor.EntityExtractor;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.processor.permissions.check.TenantResolver;
@@ -50,6 +51,7 @@ import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.ResourceAccessException;
 
 @Component
 @StepScope
@@ -69,6 +71,7 @@ public class BulkEditItemProcessor
   private final DuplicationCheckerFactory duplicationCheckerFactory;
   private final HoldingsReferenceService holdingsReferenceService;
   private final LocalReferenceDataService localReferenceDataService;
+  private final RestClientErrorHandler restClientErrorHandler;
 
   @Value("#{stepExecution.jobExecution}")
   private JobExecution jobExecution;
@@ -176,6 +179,8 @@ public class BulkEditItemProcessor
         }
       }
       return extendedItemCollection;
+    } catch (ResourceAccessException e) {
+      throw new BulkEditException(ExceptionHelper.fetchMessage(e), ErrorType.ERROR);
     } catch (HttpMessageConversionException e) {
       throw new BulkEditException(ExceptionHelper.fetchMessage(e), ErrorType.ERROR);
     }

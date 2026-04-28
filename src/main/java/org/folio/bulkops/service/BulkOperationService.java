@@ -109,6 +109,7 @@ import org.folio.bulkops.util.BulkOperationsEntityCsvWriter;
 import org.folio.bulkops.util.CsvHelper;
 import org.folio.bulkops.util.IdentifiersResolver;
 import org.folio.bulkops.util.MarcCsvHelper;
+import org.folio.bulkops.util.RemoteStorageUtils;
 import org.folio.bulkops.util.Utils;
 import org.folio.s3.exception.S3ClientException;
 import org.folio.spring.FolioExecutionContext;
@@ -535,11 +536,13 @@ public class BulkOperationService {
       try (var originalFileReader =
               new InputStreamReader(
                   new BufferedInputStream(
-                      remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile())));
+                      RemoteStorageUtils.downloadToInputStream(
+                          remoteFileSystemClient, operation.getLinkToMatchedRecordsJsonFile())));
           var modifiedFileReader =
               new InputStreamReader(
                   new BufferedInputStream(
-                      remoteFileSystemClient.get(operation.getLinkToModifiedRecordsJsonFile())));
+                      RemoteStorageUtils.downloadToInputStream(
+                          remoteFileSystemClient, operation.getLinkToModifiedRecordsJsonFile())));
           var writerForResultCsvFile = remoteFileSystemClient.writer(resultCsvFileName);
           var writerForResultJsonFile = remoteFileSystemClient.writer(resultJsonFileName);
           var writerForJsonPreviewFile = remoteFileSystemClient.writer(resultJsonPreviewFileName)) {
