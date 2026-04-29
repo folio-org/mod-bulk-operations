@@ -251,8 +251,6 @@ public class QueryService {
         var extendedEntityClass = resolveExtendedEntityClass(operation.getEntityType());
         var csvWriter = new BulkOperationsEntityCsvWriter(writerForResultCsvFile, entityClass);
 
-        int numMatched = 0;
-        int numProcessed = 0;
         var iterator =
             isNull(is)
                 ? MappingIterator.emptyIterator()
@@ -263,7 +261,7 @@ public class QueryService {
 
           var extendedRecord = (BulkOperationsEntity) iterator.next();
           var tenantId = extendedRecord.getTenant();
-          ++numProcessed;
+          operation.setProcessedNumOfRecords(operation.getProcessedNumOfRecords() + 1);
           if (extendedRecord.getRecordBulkOperationEntity() instanceof Item item) {
             localReferenceDataService.enrichWithTenant(item, tenantId);
           }
@@ -296,7 +294,7 @@ public class QueryService {
                   extendedRecord.getRecordBulkOperationEntity(),
                   bulkOperationExecutionContents);
             }
-            numMatched++;
+            operation.setMatchedNumOfRecords(operation.getMatchedNumOfRecords() + 1);
           } catch (UploadFromQueryException e) {
             handleError(
                 bulkOperationExecutionContents,
@@ -311,14 +309,14 @@ public class QueryService {
             }
           }
 
-          if (numProcessed % STATISTICS_UPDATING_STEP == 0) {
-            updateOperationExecutionStatus(operation, numProcessed, numMatched);
+          if (operation.getProcessedNumOfRecords() % STATISTICS_UPDATING_STEP == 0) {
+            updateOperationExecutionStatus(operation);
           }
         }
 
         operation.setUsedTenants(new ArrayList<>(usedTenants));
-        if (numProcessed % STATISTICS_UPDATING_STEP != 0) {
-          updateOperationExecutionStatus(operation, numProcessed, numMatched);
+        if (operation.getProcessedNumOfRecords() % STATISTICS_UPDATING_STEP != 0) {
+          updateOperationExecutionStatus(operation);
         }
         errorService.saveErrorsAfterQuery(bulkOperationExecutionContents, operation);
       }
@@ -329,11 +327,11 @@ public class QueryService {
     }
   }
 
-  private void updateOperationExecutionStatus(
-      BulkOperation operation, int numProcessed, int numMatched) {
-    operation.setProcessedNumOfRecords(numProcessed);
-    operation.setMatchedNumOfRecords(numMatched);
-    bulkOperationRepository.updateExecutionCounters(operation.getId(), numProcessed, numMatched);
+  private void updateOperationExecutionStatus(BulkOperation operation) {
+    bulkOperationRepository.updateExecutionCounters(
+        operation.getId(),
+        operation.getProcessedNumOfRecords(),
+        operation.getMatchedNumOfRecords());
   }
 
   private void failAndSaveBulkOperation(BulkOperation bulkOperation, String errorMessage) {
