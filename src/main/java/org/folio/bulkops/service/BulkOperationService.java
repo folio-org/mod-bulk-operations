@@ -730,6 +730,8 @@ public class BulkOperationService {
                                 .errorType(ErrorType.WARNING)
                                 .errorMessage(DUPLICATE_ENTRY_MSG)
                                 .build());
+                        operation.setProcessedNumOfRecords(
+                            operation.getProcessedNumOfRecords() + 1);
                       }
                       ids.add(UUID.fromString(id));
                     } catch (Exception e) {
@@ -742,6 +744,7 @@ public class BulkOperationService {
                               .errorType(ErrorType.ERROR)
                               .errorMessage(NO_MATCH_FOUND_MESSAGE)
                               .build());
+                      operation.setProcessedNumOfRecords(operation.getProcessedNumOfRecords() + 1);
                     }
                   });
 
