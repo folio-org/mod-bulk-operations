@@ -253,8 +253,11 @@ public class FqmContentFetcher {
             .map(UUID::toString)
             .filter(id -> !idTenantMap.containsKey(id))
             .forEach(
-                missingId ->
-                    addNoMatchFoundError(missingId, bulkOperationExecutionContents, operationId));
+                missingId -> {
+                  addNoMatchFoundError(missingId, bulkOperationExecutionContents, operationId);
+                  bulkOperation.setProcessedNumOfRecords(
+                      bulkOperation.getProcessedNumOfRecords() + 1);
+                });
 
         // Save duplicates across tenants errors for IDs that are present in more than one tenant
         idTenantMap
@@ -263,6 +266,8 @@ public class FqmContentFetcher {
                 e -> {
                   if (e.getValue().size() > 1) {
                     saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
+                    bulkOperation.setProcessedNumOfRecords(
+                      bulkOperation.getProcessedNumOfRecords() + 1);
                     return true;
                   }
                   return false;
