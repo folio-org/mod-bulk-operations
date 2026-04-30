@@ -37,19 +37,27 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
+import java.util.stream.IntStream;
 import org.folio.bulkops.client.QueryClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.dto.ApproachType;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.exception.UploadFromQueryException;
 import org.folio.bulkops.processor.permissions.check.PermissionsValidator;
 import org.folio.bulkops.repository.BulkOperationRepository;
+import org.folio.bulkops.util.CsvHelper;
 import org.folio.bulkops.util.FqmContentFetcher;
 import org.folio.querytool.domain.dto.QueryDetails;
 import org.folio.querytool.domain.dto.QueryDetails.StatusEnum;
@@ -62,6 +70,8 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.MappingIterator;
 import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith(MockitoExtension.class)
@@ -92,6 +102,246 @@ class QueryServiceTest {
             fqmContentFetcher,
             localReferenceDataService,
             srsService);
+  }
+
+  @Test
+  void processAsyncQueryResult_shouldWriteTriggeringIdsAndSetUsedTenants_whenApproachQuery()
+      throws Exception {
+    var bulkOperationId = randomUUID();
+    var operation =
+        BulkOperation.builder()
+            .id(bulkOperationId)
+            .entityType(EntityType.ITEM)
+            .approach(QUERY)
+            .build();
+
+    String triggeringCsv = "trigger.csv";
+    String matchedCsv = "matched.csv";
+    String matchedJson = "matched.json";
+    String matchedMrc = "matched.mrc";
+
+    var triggeringWriter = spy(new StringWriter());
+    var resultCsvWriter = spy(new StringWriter());
+    var resultJsonWriter = spy(new StringWriter());
+    var resultMrcWriter = spy(new StringWriter());
+
+    when(remoteFileSystemClient.writer(triggeringCsv)).thenReturn(triggeringWriter);
+    when(remoteFileSystemClient.writer(matchedCsv)).thenReturn(resultCsvWriter);
+    when(remoteFileSystemClient.writer(matchedJson)).thenReturn(resultJsonWriter);
+    when(remoteFileSystemClient.writer(matchedMrc)).thenReturn(resultMrcWriter);
+
+    var rec1 = mock(BulkOperationsEntity.class);
+    when(rec1.getTenant()).thenReturn("t1");
+    when(rec1.getRecordBulkOperationEntity()).thenReturn(rec1);
+    when(rec1.getId()).thenReturn("id-1");
+
+    var rec2 = mock(BulkOperationsEntity.class);
+    when(rec2.getTenant()).thenReturn("t2");
+    when(rec2.getRecordBulkOperationEntity()).thenReturn(rec2);
+    when(rec2.getId()).thenReturn("id-2");
+
+    @SuppressWarnings("unchecked")
+    var iterator = (MappingIterator<BulkOperationsEntity>) mock(MappingIterator.class);
+    when(iterator.hasNext()).thenReturn(true, true, false);
+    when(iterator.next()).thenReturn(rec1, rec2);
+
+    var mapper = mock(ObjectMapper.class);
+    when(mapper.createParser(any(InputStream.class))).thenReturn(mock(JsonParser.class));
+    when(mapper.readValues(any(JsonParser.class), any(Class.class))).thenReturn(iterator);
+    when(mapper.writeValueAsString(any())).thenReturn("{\"x\":1}");
+
+    var queryService =
+        new QueryService(
+            bulkOperationRepository,
+            errorService,
+            mapper,
+            permissionsValidator,
+            remoteFileSystemClient,
+            queryClient,
+            fqmContentFetcher,
+            localReferenceDataService,
+            srsService);
+
+    var contents = new ArrayList<BulkOperationExecutionContent>();
+    try (MockedStatic<CsvHelper> csvHelper = mockStatic(CsvHelper.class)) {
+      csvHelper
+          .when(() -> CsvHelper.writeBeanToCsv(any(), any(), any(), anyList()))
+          .thenAnswer(inv -> null);
+
+      queryService.processAsyncQueryResult(
+          new ByteArrayInputStream("[]".getBytes()),
+          triggeringCsv,
+          matchedCsv,
+          matchedJson,
+          matchedMrc,
+          operation,
+          contents);
+    }
+
+    assertThat(triggeringWriter.toString()).contains("id-1").contains("id-2");
+    assertThat(operation.getProcessedNumOfRecords()).isEqualTo(2);
+    assertThat(operation.getMatchedNumOfRecords()).isEqualTo(2);
+
+    Set<String> usedTenants = new HashSet<>(operation.getUsedTenants());
+    assertThat(usedTenants).containsExactlyInAnyOrder("t1", "t2");
+
+    verify(errorService).saveErrorsAfterQuery(same(contents), same(operation));
+    verify(bulkOperationRepository).updateExecutionCounters(operation.getId(), 2, 2);
+  }
+
+  @Test
+  void processAsyncQueryResult_shouldUpdateCountersEvery100Records_andAtEnd() throws Exception {
+    var bulkOperationId = randomUUID();
+    var operation =
+        BulkOperation.builder()
+            .id(bulkOperationId)
+            .entityType(EntityType.ITEM)
+            .approach(QUERY)
+            .build();
+
+    String triggeringCsv = "trigger.csv";
+    String matchedCsv = "matched.csv";
+    String matchedJson = "matched.json";
+    String matchedMrc = "matched.mrc";
+
+    when(remoteFileSystemClient.writer(triggeringCsv)).thenReturn(new StringWriter());
+    when(remoteFileSystemClient.writer(matchedCsv)).thenReturn(new StringWriter());
+    when(remoteFileSystemClient.writer(matchedJson)).thenReturn(new StringWriter());
+    when(remoteFileSystemClient.writer(matchedMrc)).thenReturn(new StringWriter());
+
+    @SuppressWarnings("unchecked")
+    var iterator = (MappingIterator<BulkOperationsEntity>) mock(MappingIterator.class);
+    var hasNextSeq = new Boolean[102];
+    Arrays.fill(hasNextSeq, 0, 101, Boolean.TRUE);
+    hasNextSeq[101] = Boolean.FALSE;
+    when(iterator.hasNext())
+        .thenReturn(hasNextSeq[0], Arrays.copyOfRange(hasNextSeq, 1, hasNextSeq.length));
+    List<BulkOperationsEntity> records =
+        IntStream.rangeClosed(1, 101)
+            .mapToObj(
+                i -> {
+                  var r = mock(BulkOperationsEntity.class);
+                  when(r.getTenant()).thenReturn("t" + i);
+                  when(r.getRecordBulkOperationEntity()).thenReturn(r);
+                  when(r.getId()).thenReturn("id-" + i);
+                  return r;
+                })
+            .toList();
+    when(iterator.next())
+        .thenReturn(
+            records.get(0),
+            records.subList(1, records.size()).toArray(new BulkOperationsEntity[0]));
+
+    var mapper = mock(ObjectMapper.class);
+    when(mapper.createParser(any(InputStream.class))).thenReturn(mock(JsonParser.class));
+    when(mapper.readValues(any(JsonParser.class), any(Class.class))).thenReturn(iterator);
+    when(mapper.writeValueAsString(any())).thenReturn("{}");
+
+    var queryService =
+        new QueryService(
+            bulkOperationRepository,
+            errorService,
+            mapper,
+            permissionsValidator,
+            remoteFileSystemClient,
+            queryClient,
+            fqmContentFetcher,
+            localReferenceDataService,
+            srsService);
+
+    var contents = new ArrayList<BulkOperationExecutionContent>();
+    try (MockedStatic<CsvHelper> csvHelper = mockStatic(CsvHelper.class)) {
+      csvHelper
+          .when(() -> CsvHelper.writeBeanToCsv(any(), any(), any(), anyList()))
+          .thenAnswer(inv -> null);
+
+      queryService.processAsyncQueryResult(
+          new ByteArrayInputStream("[]".getBytes()),
+          triggeringCsv,
+          matchedCsv,
+          matchedJson,
+          matchedMrc,
+          operation,
+          contents);
+    }
+
+    verify(bulkOperationRepository).updateExecutionCounters(operation.getId(), 100, 100);
+    verify(bulkOperationRepository).updateExecutionCounters(operation.getId(), 101, 101);
+  }
+
+  @Test
+  void processAsyncQueryResult_shouldCollectErrors_whenUploadFromQueryExceptionOccurs()
+      throws Exception {
+    var bulkOperationId = randomUUID();
+    var operation =
+        BulkOperation.builder()
+            .id(bulkOperationId)
+            .entityType(EntityType.ITEM)
+            .approach(QUERY)
+            .build();
+
+    String triggeringCsv = "trigger.csv";
+    String matchedCsv = "matched.csv";
+    String matchedJson = "matched.json";
+    String matchedMrc = "matched.mrc";
+
+    var triggeringWriter = spy(new StringWriter());
+    when(remoteFileSystemClient.writer(triggeringCsv)).thenReturn(triggeringWriter);
+    when(remoteFileSystemClient.writer(matchedCsv)).thenReturn(new StringWriter());
+    when(remoteFileSystemClient.writer(matchedJson)).thenReturn(new StringWriter());
+    when(remoteFileSystemClient.writer(matchedMrc)).thenReturn(new StringWriter());
+
+    var rec = mock(BulkOperationsEntity.class);
+    when(rec.getTenant()).thenReturn("t1");
+    when(rec.getRecordBulkOperationEntity()).thenReturn(rec);
+    when(rec.getId()).thenReturn("id-1");
+
+    @SuppressWarnings("unchecked")
+    var iterator = (MappingIterator<BulkOperationsEntity>) mock(MappingIterator.class);
+    when(iterator.hasNext()).thenReturn(true, false);
+    when(iterator.next()).thenReturn(rec);
+
+    doThrow(new UploadFromQueryException("no perms"))
+        .when(permissionsValidator)
+        .checkPermissions(any(), any());
+
+    var mapper = mock(ObjectMapper.class);
+    when(mapper.createParser(any(InputStream.class))).thenReturn(mock(JsonParser.class));
+    when(mapper.readValues(any(JsonParser.class), any(Class.class))).thenReturn(iterator);
+
+    var queryService =
+        new QueryService(
+            bulkOperationRepository,
+            errorService,
+            mapper,
+            permissionsValidator,
+            remoteFileSystemClient,
+            queryClient,
+            fqmContentFetcher,
+            localReferenceDataService,
+            srsService);
+
+    var contents = new ArrayList<BulkOperationExecutionContent>();
+    try (MockedStatic<CsvHelper> csvHelper = mockStatic(CsvHelper.class)) {
+      csvHelper
+          .when(() -> CsvHelper.writeBeanToCsv(any(), any(), any(), anyList()))
+          .thenAnswer(inv -> null);
+
+      queryService.processAsyncQueryResult(
+          new ByteArrayInputStream("[]".getBytes()),
+          triggeringCsv,
+          matchedCsv,
+          matchedJson,
+          matchedMrc,
+          operation,
+          contents);
+    }
+
+    assertThat(triggeringWriter.toString()).contains("id-1");
+    assertThat(contents).hasSize(1);
+    assertThat(contents.getFirst().getIdentifier()).isEqualTo("id-1");
+    assertThat(contents.getFirst().getBulkOperationId()).isEqualTo(bulkOperationId);
+    assertThat(contents.getFirst().getErrorMessage()).contains("no perms");
   }
 
   @Test
