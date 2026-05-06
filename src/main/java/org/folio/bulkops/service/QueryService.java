@@ -301,7 +301,6 @@ public class QueryService {
                 e,
                 extendedRecord.getRecordBulkOperationEntity(),
                 operation);
-            operation.setProcessedNumOfRecords(operation.getProcessedNumOfRecords() + 1);
           } finally {
             if (writerForTriggeringCsvFile != null) {
               writerForTriggeringCsvFile.write(
