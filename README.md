@@ -61,7 +61,7 @@ SYSTEM_USER_ENABLED (by default is `true`).
 | SYSTEM\_USER\_PASSWORD      | -                               | Password of the system user                                                                                         |
 | SYSTEM\_USER\_ENABLED       | true                            | Defines if system user must be created at service tenant initialization or used for egress service requests         |
 | FQM\_MAX\_CHUNK\_SIZE       | 10000                           | Max chunk size of FQM Fetcher                                                                                       |
-| FQM\_MAX\_PARALLEL\_CHUNKS  | 10                              | Max number of parallel chunks processed at the same time                                                            |
+| FQM\_MAX\_PARALLEL\_CHUNKS  | 5                               | Max number of parallel chunks processed at the same time                                                            |
 | FQM\_QUERY\_APPROACH        | false                           | Approach to use with query: false if identifiers flow, otherwise FQM flow for both Query and Identifiers approaches |
 
 ### Memory configuration
