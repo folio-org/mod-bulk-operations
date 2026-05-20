@@ -1,3 +1,16 @@
+## v2.3.1 - Released 2025/05/19
+
+This release contains minor improvements and vulnerability fixes
+
+### Bug fixes
+[MODBULKOPS-657](https://folio-org.atlassian.net/browse/MODBULKOPS-657) Spring Boot 4.0.6 fixing jackson-core vulns
+[MODBULKOPS-649](https://folio-org.atlassian.net/browse/MODBULKOPS-649) processedRecords discrepancy fixing
+[MODBULKOPS-609](https://folio-org.atlassian.net/browse/MODBULKOPS-609) Incorrect Preview of records changed when edit FOLIO & MARC Instances via FOLIO flow
+[MODBULKOPS-603](https://folio-org.atlassian.net/browse/MODBULKOPS-603) Occasionally Matching preview displays not all uploaded records when upload .csv file with large number of identifiers
+
+### Stories
+[PERF-1331](https://folio-org.atlassian.net/browse/PERF-1331) Bulk edit: Load testing (100.000) using MARC Instances bulk edit profile (856)
+
 ## v2.3.0 - Released 2025/04/16
 
 This release contains performance and maintenance improvements:
