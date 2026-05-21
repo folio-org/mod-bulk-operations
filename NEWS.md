@@ -1,3 +1,7 @@
+## v2.3.2 - Released 2025/05/21
+
+This release contains fix for total records in query approach (additional to MODBULKOPS-603)
+
 ## v2.3.1 - Released 2025/05/19
 
 This release contains minor improvements and vulnerability fixes
