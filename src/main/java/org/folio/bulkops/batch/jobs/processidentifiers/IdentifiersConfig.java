@@ -21,7 +21,8 @@ public class IdentifiersConfig {
   @Bean
   @StepScope
   public FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader(
-      @Value("#{jobParameters['" + TEMP_IDENTIFIERS_FILE_NAME + "']}") String tempIdentifiersFilePath,
+      @Value("#{jobParameters['" + TEMP_IDENTIFIERS_FILE_NAME + "']}")
+          String tempIdentifiersFilePath,
       @Value("#{stepExecutionContext['offset']}") Long offset,
       @Value("#{stepExecutionContext['limit']}") Long limit) {
     var builder =

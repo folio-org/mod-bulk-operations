@@ -11,7 +11,6 @@ import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_IDENTIFIERS_F
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_FILE_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_MARC_PATH;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
-import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.NUMBER_OF_MATCHED_RECORDS;
 import static org.folio.bulkops.util.Constants.NUMBER_OF_PROCESSED_IDENTIFIERS;
 import static org.springframework.batch.core.BatchStatus.ABANDONED;

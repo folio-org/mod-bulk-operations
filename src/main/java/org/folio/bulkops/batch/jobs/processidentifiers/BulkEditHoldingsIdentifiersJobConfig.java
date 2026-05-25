@@ -37,7 +37,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.task.TaskExecutor;
 
 @Configuration
 @RequiredArgsConstructor
@@ -68,21 +67,18 @@ public class BulkEditHoldingsIdentifiersJobConfig {
 
   @Bean
   public Step holdingsPartitionStep(
-      FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader,
-      CompositeItemWriter<List<ExtendedHoldingsRecord>> writer,
-      ListIdentifiersWriteListener<ExtendedHoldingsRecord> listIdentifiersWriteListener,
       JobRepository jobRepository,
-      @Qualifier("asyncTaskExecutorBulkEdit") TaskExecutor taskExecutor,
+      @Qualifier("bulkEditHoldingsStep") Step bulkEditHoldingsStep,
       Partitioner bulkEditHoldingsPartitioner,
       BulkEditFileAssembler bulkEditFileAssembler) {
+
+    var partitionHandler =
+        new PerJobPartitionHandler(bulkEditHoldingsStep, numPartitions, numPartitions);
 
     return new StepBuilder("holdingsPartitionStep", jobRepository)
         .partitioner("bulkEditHoldingsStep", bulkEditHoldingsPartitioner)
         .gridSize(numPartitions)
-        .step(
-            bulkEditHoldingsStep(
-                csvItemIdentifierReader, writer, listIdentifiersWriteListener, jobRepository))
-        .taskExecutor(taskExecutor)
+        .partitionHandler(partitionHandler)
         .aggregator(bulkEditFileAssembler)
         .build();
   }

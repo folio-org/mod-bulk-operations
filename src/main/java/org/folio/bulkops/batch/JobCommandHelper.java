@@ -65,7 +65,9 @@ public class JobCommandHelper {
         TOTAL_CSV_LINES, (long) numOfLines, JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
 
     paramsBuilder.addString(
-        TEMP_IDENTIFIERS_FILE_NAME, tempIdentifiersFilePath, JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
+        TEMP_IDENTIFIERS_FILE_NAME,
+        tempIdentifiersFilePath,
+        JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
 
     paramsBuilder.addString(
         TEMP_LOCAL_FILE_PATH, getWorkDir() + fileName, JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);

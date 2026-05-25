@@ -44,7 +44,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.task.TaskExecutor;
 
 @Configuration
 @Log4j2
@@ -78,24 +77,18 @@ public class BulkEditInstanceIdentifiersJobConfig {
 
   @Bean
   public Step instancePartitionStep(
-      FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader,
-      CompositeItemWriter<List<ExtendedInstance>> compositeInstanceListWriter,
-      ListIdentifiersWriteListener<ExtendedInstance> listIdentifiersWriteListener,
       JobRepository jobRepository,
-      @Qualifier("asyncTaskExecutorBulkEdit") TaskExecutor taskExecutor,
+      @Qualifier("bulkEditInstanceStep") Step bulkEditInstanceStep,
       Partitioner bulkEditInstancePartitioner,
       BulkEditFileAssembler bulkEditFileAssembler) {
+
+    var partitionHandler =
+        new PerJobPartitionHandler(bulkEditInstanceStep, numPartitions, numPartitions);
 
     return new StepBuilder("instancePartitionStep", jobRepository)
         .partitioner("bulkEditInstanceStep", bulkEditInstancePartitioner)
         .gridSize(numPartitions)
-        .step(
-            bulkEditInstanceStep(
-                csvItemIdentifierReader,
-                compositeInstanceListWriter,
-                listIdentifiersWriteListener,
-                jobRepository))
-        .taskExecutor(taskExecutor)
+        .partitionHandler(partitionHandler)
         .aggregator(bulkEditFileAssembler)
         .build();
   }

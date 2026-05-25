@@ -36,7 +36,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.task.TaskExecutor;
 
 @Configuration
 @RequiredArgsConstructor
@@ -67,23 +66,18 @@ public class BulkEditUserIdentifiersJobConfig {
 
   @Bean
   public Step userPartitionStep(
-      FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader,
-      CompositeItemWriter<User> compositeUserListWriter,
-      IdentifiersWriteListener<User> identifiersWriteListener,
       JobRepository jobRepository,
-      @Qualifier("asyncTaskExecutorBulkEdit") TaskExecutor taskExecutor,
+      @Qualifier("bulkEditUserStep") Step bulkEditUserStep,
       Partitioner bulkEditUserPartitioner,
       BulkEditFileAssembler bulkEditFileAssembler) {
+
+    var partitionHandler =
+        new PerJobPartitionHandler(bulkEditUserStep, numPartitions, numPartitions);
+
     return new StepBuilder("userPartitionStep", jobRepository)
         .partitioner("bulkEditUserStep", bulkEditUserPartitioner)
         .gridSize(numPartitions)
-        .step(
-            bulkEditUserStep(
-                csvItemIdentifierReader,
-                compositeUserListWriter,
-                identifiersWriteListener,
-                jobRepository))
-        .taskExecutor(taskExecutor)
+        .partitionHandler(partitionHandler)
         .aggregator(bulkEditFileAssembler)
         .build();
   }
@@ -93,11 +87,7 @@ public class BulkEditUserIdentifiersJobConfig {
   public Partitioner bulkEditUserPartitioner(
       @Value("#{jobParameters['" + TEMP_LOCAL_FILE_PATH + "']}") String outputCsvJsonFilePath,
       @Value("#{jobParameters['" + TOTAL_CSV_LINES + "']}") long numOfLines) {
-    return new BulkEditPartitioner(
-        outputCsvJsonFilePath,
-        outputCsvJsonFilePath,
-        null,
-        numOfLines);
+    return new BulkEditPartitioner(outputCsvJsonFilePath, outputCsvJsonFilePath, null, numOfLines);
   }
 
   @Bean
