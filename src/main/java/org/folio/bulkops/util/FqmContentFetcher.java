@@ -267,7 +267,7 @@ public class FqmContentFetcher {
                   if (e.getValue().size() > 1) {
                     saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
                     bulkOperation.setProcessedNumOfRecords(
-                        bulkOperation.getProcessedNumOfRecords() + 1);
+                      bulkOperation.getProcessedNumOfRecords() + 1);
                     return true;
                   }
                   return false;

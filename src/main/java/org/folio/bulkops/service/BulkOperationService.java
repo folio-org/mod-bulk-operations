@@ -8,7 +8,6 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.LF;
 import static org.apache.commons.lang3.StringUtils.removeEnd;
 import static org.apache.commons.lang3.StringUtils.removeStart;
-import static org.folio.bulkops.batch.JobCommandHelper.getWorkDir;
 import static org.folio.bulkops.batch.JobCommandHelper.prepareJobParameters;
 import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
@@ -36,7 +35,6 @@ import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.INCORRECT_NUMBER_OF_TOKENS;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
-import static org.folio.bulkops.util.Constants.SLASH;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
 import static org.folio.bulkops.util.ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE;
@@ -50,15 +48,11 @@ import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -774,22 +768,11 @@ public class BulkOperationService {
                 () -> {
                   try {
                     log.info("Launching batch job");
-                    var tempDir = Path.of(getWorkDir() + operation.getId());
-                    Files.createDirectories(tempDir);
-                    var tempIdentifiersFilePath = tempDir + SLASH + "identifiers.csv";
-                    try (var identifiersStream =
-                        remoteFileSystemClient.get(operation.getLinkToTriggeringCsvFile())) {
-                      Files.copy(
-                          identifiersStream,
-                          Path.of(tempIdentifiersFilePath),
-                          StandardCopyOption.REPLACE_EXISTING);
-                    }
                     var jobLaunchRequest =
                         new JobLaunchRequest(
-                            getBatchJob(operation),
-                            prepareJobParameters(operation, numOfLines, tempIdentifiersFilePath));
+                            getBatchJob(operation), prepareJobParameters(operation, numOfLines));
                     exportJobManagerSync.launchJob(jobLaunchRequest);
-                  } catch (JobExecutionException | IOException e) {
+                  } catch (JobExecutionException e) {
                     log.error(ERROR_STARTING_BULK_OPERATION, e);
                     operation.setStatus(FAILED);
                     operation.setErrorMessage(e.getMessage());

@@ -11,10 +11,6 @@ spring:
   datasource:
     hikari:
       maximum-pool-size: ${DB_MAXPOOLSIZE:30}
-      minimum-idle: ${DB_MINIDLE:5}
-      connection-timeout: ${DB_CONNECTION_TIMEOUT:30000}
-      idle-timeout: ${DB_IDLE_TIMEOUT:600000}
-      keepalive-time: ${DB_KEEPALIVE_TIME:30000}
     username: ${DB_USERNAME:folio_admin}
     password: ${DB_PASSWORD:folio_admin}
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_DATABASE:okapi_modules}

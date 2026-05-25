@@ -16,7 +16,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -116,16 +115,12 @@ class BatchIntegrationTest extends BaseTest {
 
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       JobOperatorTestUtils testLauncher = createTestLauncher(bulkEditProcessInstanceIdentifiersJob);
-      var tempIdentifiersFile = Files.createTempFile("identifiers-", ".csv");
-      Files.writeString(tempIdentifiersFile, identifier);
-      var jobParameters =
-          JobCommandHelper.prepareJobParameters(bulkOperation, 1, tempIdentifiersFile.toString());
+      var jobParameters = JobCommandHelper.prepareJobParameters(bulkOperation, 1);
       JobExecution jobExecution = testLauncher.startJob(jobParameters);
 
       verify(remoteFileSystemClient, times(2)).put(any(InputStream.class), any(String.class));
 
       assertThat(jobExecution.getExitStatus()).isEqualTo(ExitStatus.COMPLETED);
-      Files.deleteIfExists(tempIdentifiersFile);
     }
   }
 
@@ -163,17 +158,13 @@ class BatchIntegrationTest extends BaseTest {
 
     try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
       JobOperatorTestUtils testLauncher = createTestLauncher(bulkEditProcessUserIdentifiersJob);
-      var tempIdentifiersFile = Files.createTempFile("identifiers-", ".csv");
-      Files.writeString(tempIdentifiersFile, identifier);
-      var jobParameters =
-          JobCommandHelper.prepareJobParameters(bulkOperation, 1, tempIdentifiersFile.toString());
+      var jobParameters = JobCommandHelper.prepareJobParameters(bulkOperation, 1);
 
       JobExecution jobExecution = testLauncher.startJob(jobParameters);
 
       verify(remoteFileSystemClient, times(2)).put(any(InputStream.class), any(String.class));
 
       assertThat(jobExecution.getExitStatus()).isEqualTo(ExitStatus.COMPLETED);
-      Files.deleteIfExists(tempIdentifiersFile);
     }
   }
 

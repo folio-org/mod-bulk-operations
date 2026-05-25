@@ -18,5 +18,4 @@ public class JobParameterNames {
   public static final String AT_LEAST_ONE_MARC_EXISTS = "atLeastOneMarcExists";
   public static final String IDENTIFIER_TYPE = "identifierType";
   public static final String ENTITY_TYPE = "entityType";
-  public static final String TEMP_IDENTIFIERS_FILE_NAME = "tempIdentifiersFilePath";
 }

@@ -5,7 +5,6 @@ import static org.folio.bulkops.domain.bean.JobParameterNames.ENTITY_TYPE;
 import static org.folio.bulkops.domain.bean.JobParameterNames.IDENTIFIER_TYPE;
 import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_FILE_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_MARC_PATH;
-import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_IDENTIFIERS_FILE_NAME;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_FILE_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_MARC_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.UNIQUE_EXECUTION_ID;
@@ -33,8 +32,7 @@ import org.springframework.batch.core.job.parameters.JobParametersBuilder;
 public class JobCommandHelper {
   private static final boolean JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE = false;
 
-  public static JobParameters prepareJobParameters(
-      BulkOperation bulkOperation, int numOfLines, String tempIdentifiersFilePath) {
+  public static JobParameters prepareJobParameters(BulkOperation bulkOperation, int numOfLines) {
     createTmpWorkDir(bulkOperation);
 
     var baseFileName = FilenameUtils.getBaseName(bulkOperation.getLinkToTriggeringCsvFile());
@@ -65,11 +63,6 @@ public class JobCommandHelper {
         TOTAL_CSV_LINES, (long) numOfLines, JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
 
     paramsBuilder.addString(
-        TEMP_IDENTIFIERS_FILE_NAME,
-        tempIdentifiersFilePath,
-        JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
-
-    paramsBuilder.addString(
         TEMP_LOCAL_FILE_PATH, getWorkDir() + fileName, JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
 
     paramsBuilder.addString(STORAGE_FILE_PATH, fileName, JOB_PARAMETER_DEFAULT_IDENTIFYING_VALUE);
@@ -93,7 +86,7 @@ public class JobCommandHelper {
     return paramsBuilder.toJobParameters();
   }
 
-  public static String getWorkDir() {
+  private static String getWorkDir() {
     var dir = System.getProperty("java.io.tmpdir");
     return dir.endsWith(SLASH) ? dir : dir + SLASH;
   }
