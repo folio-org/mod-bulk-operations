@@ -774,8 +774,10 @@ public class BulkOperationService {
                 () -> {
                   try {
                     log.info("Launching batch job");
+                    var tempDir = Path.of(getWorkDir() + operation.getId());
+                    Files.createDirectories(tempDir);
                     var tempIdentifiersFilePath =
-                        getWorkDir() + operation.getId() + SLASH + "identifiers.csv";
+                        tempDir + SLASH + "identifiers.csv";
                     try (var identifiersStream =
                         remoteFileSystemClient.get(
                             operation.getLinkToTriggeringCsvFile())) {
