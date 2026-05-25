@@ -8,7 +8,7 @@ import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_OUTPUT_JSON_P
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
 import static org.folio.bulkops.util.Constants.BULK_EDIT_IDENTIFIERS;
 import static org.folio.bulkops.util.Constants.HYPHEN;
-import static org.folio.bulkops.util.Constants.IDENTIFIERS_FILE_NAME;
+import static org.folio.bulkops.util.Constants.TOTAL_CSV_LINES;
 
 import java.net.SocketException;
 import java.util.List;
@@ -19,7 +19,6 @@ import org.folio.bulkops.batch.CsvListItemWriter;
 import org.folio.bulkops.batch.JobCompletionNotificationListener;
 import org.folio.bulkops.batch.JsonListFileWriter;
 import org.folio.bulkops.batch.jobs.BulkEditHoldingsProcessor;
-import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.exception.BulkEditException;
@@ -45,7 +44,6 @@ import org.springframework.core.task.TaskExecutor;
 public class BulkEditHoldingsIdentifiersJobConfig {
   private final BulkEditHoldingsProcessor bulkEditHoldingsProcessor;
   private final BulkEditHoldingsSkipListener bulkEditHoldingsSkipListener;
-  private final RemoteFileSystemClient remoteFileSystemClient;
 
   @Value("${application.batch.chunk-size}")
   private int chunkSize;
@@ -93,8 +91,7 @@ public class BulkEditHoldingsIdentifiersJobConfig {
   @StepScope
   public Partitioner bulkEditHoldingsPartitioner(
       @Value("#{jobParameters['" + TEMP_LOCAL_FILE_PATH + "']}") String outputCsvJsonFilePath,
-      @Value("#{jobParameters['" + IDENTIFIERS_FILE_NAME + "']}") String uploadedFileName) {
-    var numOfLines = remoteFileSystemClient.getNumOfLines(uploadedFileName);
+      @Value("#{jobParameters['" + TOTAL_CSV_LINES + "']}") long numOfLines) {
     return new BulkEditPartitioner(outputCsvJsonFilePath, outputCsvJsonFilePath, null, numOfLines);
   }
 

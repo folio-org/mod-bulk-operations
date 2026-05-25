@@ -7,10 +7,11 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.folio.bulkops.domain.bean.JobParameterNames.BULK_OPERATION_ID;
 import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_FILE_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.STORAGE_MARC_PATH;
+import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_IDENTIFIERS_FILE_NAME;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_FILE_PATH;
 import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_LOCAL_MARC_PATH;
 import static org.folio.bulkops.util.Constants.ERROR_MATCHING_FILE_NAME_PREFIX;
-import static org.folio.bulkops.util.Constants.IDENTIFIERS_FILE_NAME;
+import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.NUMBER_OF_MATCHED_RECORDS;
 import static org.folio.bulkops.util.Constants.NUMBER_OF_PROCESSED_IDENTIFIERS;
 import static org.springframework.batch.core.BatchStatus.ABANDONED;
@@ -205,7 +206,7 @@ public class JobCompletionNotificationListener implements JobExecutionListener {
         bulkOperation.setLinkToMatchedRecordsMarcFile(marcFileName);
       }
 
-      var tmpIdentifiersFileName = jobParameters.getString(IDENTIFIERS_FILE_NAME);
+      var tmpIdentifiersFileName = jobParameters.getString(TEMP_IDENTIFIERS_FILE_NAME);
       boolean identifiersDeleted = false;
       if (nonNull(tmpIdentifiersFileName)) {
         identifiersDeleted = Files.deleteIfExists(Path.of(tmpIdentifiersFileName));
