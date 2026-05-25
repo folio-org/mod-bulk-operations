@@ -26,6 +26,8 @@ public class PerJobPartitionHandler extends AbstractPartitionHandler {
   private final int threadPoolSize;
 
   /**
+   * Creates a new handler for the given worker step.
+   *
    * @param step           the worker step to execute for each partition
    * @param gridSize       maximum number of partitions (passed to {@link AbstractPartitionHandler})
    * @param threadPoolSize size of the per-job thread pool (should equal {@code gridSize} so all
