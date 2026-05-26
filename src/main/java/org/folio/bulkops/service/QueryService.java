@@ -116,6 +116,7 @@ public class QueryService {
                   } else {
                     bulkOperation.setStatus(RETRIEVING_RECORDS);
                     bulkOperation.setTotalNumOfRecords(queryResult.getTotalRecords());
+                    bulkOperationRepository.save(bulkOperation);
                     List<BulkOperationExecutionContent> bulkOperationExecutionContents =
                         Collections.synchronizedList(new ArrayList<>());
                     try (var is =
