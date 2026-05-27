@@ -72,7 +72,7 @@ public class BulkEditUserIdentifiersJobConfig {
       BulkEditFileAssembler bulkEditFileAssembler) {
 
     var partitionHandler =
-        new PerJobPartitionHandler(bulkEditUserStep, numPartitions, numPartitions);
+        new PerJobPartitionHandler(bulkEditUserStep, numPartitions);
 
     return new StepBuilder("userPartitionStep", jobRepository)
         .partitioner("bulkEditUserStep", bulkEditUserPartitioner)

@@ -73,7 +73,7 @@ public class BulkEditHoldingsIdentifiersJobConfig {
       BulkEditFileAssembler bulkEditFileAssembler) {
 
     var partitionHandler =
-        new PerJobPartitionHandler(bulkEditHoldingsStep, numPartitions, numPartitions);
+        new PerJobPartitionHandler(bulkEditHoldingsStep, numPartitions);
 
     return new StepBuilder("holdingsPartitionStep", jobRepository)
         .partitioner("bulkEditHoldingsStep", bulkEditHoldingsPartitioner)

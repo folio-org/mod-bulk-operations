@@ -29,14 +29,15 @@ public class PerJobPartitionHandler extends AbstractPartitionHandler {
    * Creates a new handler for the given worker step.
    *
    * @param step           the worker step to execute for each partition
-   * @param gridSize       maximum number of partitions (passed to {@link AbstractPartitionHandler})
-   * @param threadPoolSize size of the per-job thread pool (should equal {@code gridSize} so all
-   *                       partitions can run concurrently)
+   * @param gridAndThreadPoolSize       maximum number of partitions (passed to
+   *                                    {@link AbstractPartitionHandler}) and size of the per-job
+   *                                    thread pool (in this case should equal {@code gridSize}
+   *                                    so all partitions can run concurrently)
    */
-  public PerJobPartitionHandler(Step step, int gridSize, int threadPoolSize) {
+  public PerJobPartitionHandler(Step step, int gridAndThreadPoolSize) {
     this.step = step;
-    setGridSize(gridSize);
-    this.threadPoolSize = threadPoolSize;
+    setGridSize(gridAndThreadPoolSize);
+    this.threadPoolSize = gridAndThreadPoolSize;
   }
 
   @Override
