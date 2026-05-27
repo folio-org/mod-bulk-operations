@@ -103,5 +103,5 @@ application:
     max-retries-on-connection-reset: ${MAX_RETRIES_ON_CONNECTION_RESET:10}
   fqm-fetcher:
     max_chunk_size: ${FQM_MAX_CHUNK_SIZE:10000}
-    max_parallel_chunks: ${FQM_MAX_PARALLEL_CHUNKS:10}
+    max_parallel_chunks: ${FQM_MAX_PARALLEL_CHUNKS:5}
   fqm-query-approach: ${FQM_QUERY_APPROACH:true}
