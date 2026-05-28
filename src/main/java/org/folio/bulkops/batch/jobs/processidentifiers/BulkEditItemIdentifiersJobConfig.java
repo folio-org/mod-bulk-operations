@@ -8,7 +8,7 @@ import static org.folio.bulkops.domain.bean.JobParameterNames.TEMP_OUTPUT_JSON_P
 import static org.folio.bulkops.domain.dto.EntityType.ITEM;
 import static org.folio.bulkops.util.Constants.BULK_EDIT_IDENTIFIERS;
 import static org.folio.bulkops.util.Constants.HYPHEN;
-import static org.folio.bulkops.util.Constants.IDENTIFIERS_FILE_NAME;
+import static org.folio.bulkops.util.Constants.TOTAL_CSV_LINES;
 
 import java.net.SocketException;
 import java.util.Arrays;
@@ -21,7 +21,6 @@ import org.folio.bulkops.batch.JobCompletionNotificationListener;
 import org.folio.bulkops.batch.JsonListFileWriter;
 import org.folio.bulkops.batch.jobs.BulkEditItemListProcessor;
 import org.folio.bulkops.batch.jobs.BulkEditItemProcessor;
-import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.ItemIdentifier;
 import org.folio.bulkops.exception.BulkEditException;
@@ -40,7 +39,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.task.TaskExecutor;
 
 @Configuration
 @RequiredArgsConstructor
@@ -48,7 +46,6 @@ public class BulkEditItemIdentifiersJobConfig {
   private final BulkEditItemListProcessor bulkEditItemListProcessor;
   private final BulkEditItemProcessor bulkEditItemProcessor;
   private final BulkEditItemSkipListener bulkEditItemSkipListener;
-  private final RemoteFileSystemClient remoteFileSystemClient;
 
   @Value("${application.batch.chunk-size}")
   private int chunkSize;
@@ -73,24 +70,18 @@ public class BulkEditItemIdentifiersJobConfig {
 
   @Bean
   public Step itemPartitionStep(
-      FlatFileItemReader<ItemIdentifier> csvItemIdentifierReader,
-      CompositeItemWriter<List<ExtendedItem>> compositeItemListWriter,
-      ListIdentifiersWriteListener<ExtendedItem> listIdentifiersWriteListener,
       JobRepository jobRepository,
-      @Qualifier("asyncTaskExecutorBulkEdit") TaskExecutor taskExecutor,
+      @Qualifier("bulkEditItemStep") Step bulkEditItemStep,
       Partitioner bulkEditItemPartitioner,
       BulkEditFileAssembler bulkEditFileAssembler) {
+
+    var partitionHandler =
+        new PerJobPartitionHandler(bulkEditItemStep, numPartitions);
 
     return new StepBuilder("itemPartitionStep", jobRepository)
         .partitioner("bulkEditItemStep", bulkEditItemPartitioner)
         .gridSize(numPartitions)
-        .step(
-            bulkEditItemStep(
-                csvItemIdentifierReader,
-                compositeItemListWriter,
-                listIdentifiersWriteListener,
-                jobRepository))
-        .taskExecutor(taskExecutor)
+        .partitionHandler(partitionHandler)
         .aggregator(bulkEditFileAssembler)
         .build();
   }
@@ -99,8 +90,7 @@ public class BulkEditItemIdentifiersJobConfig {
   @StepScope
   public Partitioner bulkEditItemPartitioner(
       @Value("#{jobParameters['" + TEMP_LOCAL_FILE_PATH + "']}") String outputCsvJsonFilePath,
-      @Value("#{jobParameters['" + IDENTIFIERS_FILE_NAME + "']}") String uploadedFileName) {
-    var numOfLines = remoteFileSystemClient.getNumOfLines(uploadedFileName);
+      @Value("#{jobParameters['" + TOTAL_CSV_LINES + "']}") long numOfLines) {
     return new BulkEditPartitioner(outputCsvJsonFilePath, outputCsvJsonFilePath, null, numOfLines);
   }
 
