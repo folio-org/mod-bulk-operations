@@ -1,3 +1,10 @@
+## v2.3.3 - Released 2025/05/29
+
+This release contains fix parallel uploads with non-UUID identifiers
+
+### Bug fixes
+[MODBULKOPS-669](https://folio-org.atlassian.net/browse/MODBULKOPS-669) Parallel uploads with non-UUID identifiers cause single-record upload to hang and large file upload to fail
+
 ## v2.3.2 - Released 2025/05/21
 
 This release contains fix for total records in query approach (additional to MODBULKOPS-603)
