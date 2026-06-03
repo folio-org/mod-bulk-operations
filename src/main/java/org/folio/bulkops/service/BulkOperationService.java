@@ -761,8 +761,11 @@ public class BulkOperationService {
         return operation;
       } else {
         log.info("Starting UPLOAD, bulk operation id={}, FQM is used: false", bulkOperationId);
+
         operation.setTotalNumOfRecords(numOfLines);
         operation.setStatus(RETRIEVING_RECORDS);
+        bulkOperationRepository.save(operation);
+
         executor.execute(
             getRunnableWithCurrentFolioContext(
                 () -> {
@@ -780,7 +783,8 @@ public class BulkOperationService {
                     bulkOperationRepository.save(operation);
                   }
                 }));
-        return bulkOperationRepository.save(operation);
+
+        return operation;
       }
     } else if (BulkOperationStep.EDIT == step) {
       errorService.deleteErrorsByBulkOperationId(bulkOperationId);
