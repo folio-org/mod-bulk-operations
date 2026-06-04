@@ -1,3 +1,7 @@
+## v2.3.4 - Released 2025/06/04
+
+This release contains fix for bulk operation status change
+
 ## v2.3.3 - Released 2025/05/29
 
 This release contains fix parallel uploads with non-UUID identifiers
