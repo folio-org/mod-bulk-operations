@@ -100,6 +100,7 @@ public class ItemDataProcessor extends FolioAbstractDataProcessor<ExtendedItem> 
                         new InventoryItemStatus()
                             .withName(InventoryItemStatus.NameEnum.fromValue(action.getUpdated()))
                             .withDate(new Date()));
+        case MATERIAL_TYPE -> extendedItem -> replaceMaterialType(action, extendedItem);
         default ->
             item -> {
               throw new BulkOperationException(
@@ -271,6 +272,17 @@ public class ItemDataProcessor extends FolioAbstractDataProcessor<ExtendedItem> 
       extendedItem
           .getEntity()
           .setEffectiveLocation(getEffectiveLocation(extendedItem.getEntity(), tenant));
+    }
+  }
+
+  private void replaceMaterialType(Action action, ExtendedItem extendedItem) {
+    var tenant = RuleUtils.getTenantFromAction(action, folioExecutionContext);
+    try (var ignored =
+        new FolioExecutionContextSetter(
+            prepareContextForTenant(tenant, folioModuleMetadata, folioExecutionContext))) {
+      extendedItem
+          .getEntity()
+          .setMaterialType(itemReferenceService.getMaterialTypeById(action.getUpdated(), tenant));
     }
   }
 }
