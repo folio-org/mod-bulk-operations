@@ -17,6 +17,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.EXPIRATION_DATE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.HOLDINGS_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.INSTANCE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.MATERIAL_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PATRON_GROUP;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
@@ -73,6 +74,7 @@ class UpdateOptionTypeToFieldResolverTest {
         Arguments.of("Electronic access", ELECTRONIC_ACCESS_URL_PUBLIC_NOTE, INSTANCE),
         Arguments.of("Instance note", INSTANCE_NOTE, INSTANCE),
         Arguments.of("Statistical code", STATISTICAL_CODE, INSTANCE),
-        Arguments.of("Set for deletion", SET_RECORDS_FOR_DELETE, INSTANCE));
+        Arguments.of("Set for deletion", SET_RECORDS_FOR_DELETE, INSTANCE),
+        Arguments.of("Material type", MATERIAL_TYPE, ITEM));
   }
 }
