@@ -19,6 +19,7 @@ import static org.folio.bulkops.domain.dto.UpdateOptionType.ADMINISTRATIVE_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_IN_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.CHECK_OUT_NOTE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.ITEM_NOTE;
+import static org.folio.bulkops.domain.dto.UpdateOptionType.MATERIAL_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.PERMANENT_LOCATION;
 import static org.folio.bulkops.domain.dto.UpdateOptionType.STATUS;
@@ -36,6 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -57,6 +60,7 @@ import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.bean.LastCheckIn;
 import org.folio.bulkops.domain.bean.LoanType;
+import org.folio.bulkops.domain.bean.MaterialType;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.Parameter;
@@ -1799,6 +1803,24 @@ class ItemDataProcessorTest extends BaseTest {
       CirculationNote deserialized =
           new ObjectMapper().readValue(serialized, CirculationNote.class);
       assertThat(deserialized.getDate()).isEqualTo(invalidDate);
+    }
+  }
+
+  @Test
+  void testReplaceMaterialType() {
+    var materialTypeId = UUID.randomUUID().toString();
+    var materialType = MaterialType.builder().id(materialTypeId).name("materialType").build();
+
+    when(itemReferenceService.getMaterialTypeById(eq(materialTypeId), anyString()))
+        .thenReturn(materialType);
+
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      var extendedItem = ExtendedItem.builder().entity(new Item()).tenantId("tenant").build();
+      var actual =
+          processor.process(
+              IDENTIFIER, extendedItem, rules(rule(MATERIAL_TYPE, REPLACE_WITH, materialTypeId)));
+      assertNotNull(actual.getUpdated());
+      assertEquals(actual.getUpdated().getEntity().getMaterialType(), materialType);
     }
   }
 }

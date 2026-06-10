@@ -4,6 +4,7 @@ import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_ADM_NOTES;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_CIRCULATION_NOTES;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_DISCOVERY_SUPPRESS;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_ID;
+import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_MATERIAL_TYPE;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_NOTES;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_PERMANENT_LOCATION;
@@ -25,6 +26,7 @@ import org.folio.bulkops.domain.bean.Item;
 import org.folio.bulkops.domain.bean.ItemLocation;
 import org.folio.bulkops.domain.bean.ItemNote;
 import org.folio.bulkops.domain.bean.LoanType;
+import org.folio.bulkops.domain.bean.MaterialType;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -150,6 +152,20 @@ class ItemPatchUtilsTest {
     assertTrue(changed.has(ITEM_JSON_TEMPORARY_LOCATION));
     assertEquals("Annex", changed.get(ITEM_JSON_TEMPORARY_LOCATION).get("name").asString());
     assertFalse(changed.has(ITEM_JSON_TEMPORARY_LOAN_TYPE));
+    assertEquals(3, changed.size());
+  }
+
+  @Test
+  void shouldPopulateMaterialType() {
+    var item = Item.builder().materialType(new MaterialType().withName("book")).build();
+    var rules =
+      ruleCollection(
+        rule(UpdateOptionType.MATERIAL_TYPE, action(UpdateActionType.REPLACE_WITH)));
+
+    var changed = ItemPatchUtils.fetchChangedData(item, rules);
+
+    assertTrue(changed.has(ITEM_JSON_MATERIAL_TYPE));
+    assertEquals("book", changed.get(ITEM_JSON_MATERIAL_TYPE).get("name").asString());
     assertEquals(3, changed.size());
   }
 
