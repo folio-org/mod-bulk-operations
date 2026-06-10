@@ -5,6 +5,7 @@ import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_ADM_NOTES;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_CIRCULATION_NOTES;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_DISCOVERY_SUPPRESS;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_ID;
+import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_MATERIAL_TYPE;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_NOTES;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_PERMANENT_LOAN_TYPE;
 import static org.folio.bulkops.domain.bean.Item.ITEM_JSON_PERMANENT_LOCATION;
@@ -58,6 +59,7 @@ public class ItemPatchUtils {
           case TEMPORARY_LOAN_TYPE -> addTemporaryLoanType(result, item);
           case PERMANENT_LOCATION -> addPermanentLocation(result, item);
           case TEMPORARY_LOCATION -> addTemporaryLocation(result, item);
+          case MATERIAL_TYPE -> addMaterialType(result, item);
           default ->
               throw new IllegalArgumentException(
                   "Rule option %s is not supported".formatted(ruleDetails.getOption()));
@@ -160,5 +162,13 @@ public class ItemPatchUtils {
             ? mapper.createObjectNode()
             : mapper.valueToTree(item.getTemporaryLocation());
     node.set(ITEM_JSON_TEMPORARY_LOCATION, value);
+  }
+
+  private static void addMaterialType(ObjectNode node, Item item) {
+    var value =
+      isNull(item.getMaterialType())
+        ? mapper.createObjectNode()
+        : mapper.valueToTree(item.getMaterialType());
+    node.set(ITEM_JSON_MATERIAL_TYPE, value);
   }
 }

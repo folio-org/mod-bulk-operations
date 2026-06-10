@@ -64,6 +64,7 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   public static final String ITEM_JSON_TEMPORARY_LOAN_TYPE = "temporaryLoanType";
   public static final String ITEM_JSON_PERMANENT_LOCATION = "permanentLocation";
   public static final String ITEM_JSON_TEMPORARY_LOCATION = "temporaryLocation";
+  public static final String ITEM_JSON_MATERIAL_TYPE = "materialType";
 
   public Item(@JsonProperty("tenantId") String tenantId) {
     this.tenantId = tenantId;
