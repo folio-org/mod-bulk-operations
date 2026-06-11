@@ -12,6 +12,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.util.Constants.SPACE_CHAR;
 import static org.folio.bulkops.util.MarcHelper.fetchInstanceUuidOrElseHrid;
 
+import java.util.ArrayList;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
@@ -104,32 +105,64 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
         });
   }
 
-  private void processFindAndReplace(BulkOperationMarcRule rule, Record marcRecord) throws BulkOperationException {
+  private void processFindAndReplace(BulkOperationMarcRule rule, Record marcRecord)
+    throws BulkOperationException {
     char subfieldCode = rule.getSubfield().charAt(0);
     var findValue = fetchActionDataValue(VALUE, rule.getActions().get(0).getData());
     var newValue = fetchActionDataValue(VALUE, rule.getActions().get(1).getData());
-    findFields(rule, marcRecord).forEach(dataField ->
-      dataField.getSubfields(subfieldCode).forEach(subfield -> {
-        if (contains(subfield.getData(), findValue)) {
-          subfield.setData(replace(subfield.getData(), findValue, newValue));
-        }
-      }));
+    var fieldsToRemove = new ArrayList<DataField>();
+    findFields(rule, marcRecord)
+      .forEach(
+        dataField -> {
+          var subfieldsToRemove = new ArrayList<Subfield>();
+          dataField
+            .getSubfields(subfieldCode)
+            .forEach(
+              subfield -> {
+                if (contains(subfield.getData(), findValue)) {
+                  var replacedValue = replace(subfield.getData(), findValue, newValue);
+                  if (StringUtils.isEmpty(replacedValue)) {
+                    subfieldsToRemove.add(subfield);
+                  } else {
+                    subfield.setData(replacedValue);
+                  }
+                }
+              });
+          subfieldsToRemove.forEach(dataField::removeSubfield);
+          if (dataField.getSubfields().isEmpty()) {
+            fieldsToRemove.add(dataField);
+          }
+        });
+    fieldsToRemove.forEach(marcRecord::removeVariableField);
   }
 
-  private void processFindAndRemoveField(BulkOperationMarcRule rule, Record marcRecord) throws BulkOperationException {
+  private void processFindAndRemoveField(BulkOperationMarcRule rule, Record marcRecord)
+    throws BulkOperationException {
     char subfieldCode = rule.getSubfield().charAt(0);
-    var findValue = fetchActionDataValue(VALUE, rule.getActions().get(0).getData());
+    var findValue = fetchActionDataValue(VALUE, rule.getActions().getFirst().getData());
     findFields(rule, marcRecord).stream()
-      .filter(df -> df.getSubfields(subfieldCode).stream().anyMatch(sf -> contains(sf.getData(), findValue)))
+      .filter(
+        df ->
+          df.getSubfields(subfieldCode).stream()
+            .anyMatch(sf -> contains(sf.getData(), findValue)))
       .forEach(marcRecord::removeVariableField);
   }
 
   private void processFindAndRemoveSubfield(BulkOperationMarcRule rule, Record marcRecord) throws BulkOperationException {
     char subfieldCode = rule.getSubfield().charAt(0);
-    var findValue = fetchActionDataValue(VALUE, rule.getActions().get(0).getData());
-    findFields(rule, marcRecord).forEach(df -> df.getSubfields(subfieldCode).stream()
-      .filter(sf -> contains(sf.getData(), findValue))
-      .forEach(df::removeSubfield));
+    var findValue = fetchActionDataValue(VALUE, rule.getActions().getFirst().getData());
+    var fieldsToRemove = new java.util.ArrayList<DataField>();
+    findFields(rule, marcRecord)
+      .forEach(
+        df -> {
+          df.getSubfields(subfieldCode).stream()
+            .filter(sf -> contains(sf.getData(), findValue))
+            .forEach(df::removeSubfield);
+          if (df.getSubfields().isEmpty()) {
+            fieldsToRemove.add(df);
+          }
+        });
+    fieldsToRemove.forEach(marcRecord::removeVariableField);
   }
 
   private List<DataField> findFields(BulkOperationMarcRule rule, Record marcRecord) {
