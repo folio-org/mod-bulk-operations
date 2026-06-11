@@ -8,6 +8,7 @@ import static org.folio.bulkops.domain.dto.MarcDataType.VALUE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_FIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.util.Constants.SPACE_CHAR;
@@ -109,6 +110,8 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
       processRemoveAll(rule, marcRecord);
     } else if (ADD_TO_EXISTING.equals(actions.get(0).getName())) {
       processAddToExisting(rule, marcRecord);
+    } else if (REMOVE_FIELD == actions.get(0).getName()) {
+      processFindAndRemoveField(rule, marcRecord);
     } else {
       if (rule.getUpdateOption() == UpdateOptionType.SET_RECORDS_FOR_DELETE) {
         if (SET_TO_TRUE.equals(actions.getFirst().getName())) {
