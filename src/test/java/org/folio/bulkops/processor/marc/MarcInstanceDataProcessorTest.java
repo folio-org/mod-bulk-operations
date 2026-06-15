@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADDITIONAL_SUBFIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_FIELD;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_SUBFIELD;
 import static org.folio.bulkops.util.Constants.DATE_TIME_CONTROL_FIELD;
 import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -1134,5 +1136,113 @@ class MarcInstanceDataProcessorTest extends BaseTest {
     // Field should remain with updated value
     assertThat(dataFields).hasSize(1);
     assertThat(dataFields.get(0)).hasToString("500 1 $anew value");
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldRemoveFieldByTagAndIndicators() {
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    // Fields to be removed (tag=500, ind1=1, ind2=1)
+    var dataField = new DataFieldImpl("500", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "text a"));
+    marcRecord.addVariableField(dataField);
+    dataField = new DataFieldImpl("500", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('b', "text b"));
+    marcRecord.addVariableField(dataField);
+
+    // Field NOT removed (different indicator)
+    dataField = new DataFieldImpl("500", '1', '2');
+    dataField.addSubfield(new SubfieldImpl('a', "keep me"));
+    marcRecord.addVariableField(dataField);
+
+    // Field NOT removed (different tag)
+    dataField = new DataFieldImpl("510", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "keep me too"));
+    marcRecord.addVariableField(dataField);
+
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
+    var bulkOperationId = UUID.randomUUID();
+    var operation =
+        BulkOperation.builder().id(bulkOperationId).identifierType(IdentifierType.ID).build();
+
+    var removeFieldRule =
+        new BulkOperationMarcRule()
+            .bulkOperationId(bulkOperationId)
+            .tag("500")
+            .ind1("1")
+            .ind2("1")
+            .actions(List.of(new MarcAction().name(REMOVE_FIELD)));
+    var rules =
+        new BulkOperationMarcRuleCollection()
+            .bulkOperationMarcRules(Collections.singletonList(removeFieldRule))
+            .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules, date);
+
+    var dataFields = marcRecord.getDataFields();
+    assertThat(dataFields).hasSize(2);
+    assertThat(dataFields.get(0)).hasToString("500 12$akeep me");
+    assertThat(dataFields.get(1)).hasToString("510 11$akeep me too");
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldRemoveSubfieldByTagIndicatorsAndSubfieldCode() {
+    var marcRecord = new RecordImpl();
+    marcRecord.setLeader(new LeaderImpl("04295nam a22004573a 4500"));
+
+    var controlField = new ControlFieldImpl(DATE_TIME_CONTROL_FIELD, "20240101100202.4");
+    marcRecord.addVariableField(controlField);
+
+    // Field with two subfields - only subfield 'a' should be removed
+    var dataField = new DataFieldImpl("500", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "remove me"));
+    dataField.addSubfield(new SubfieldImpl('b', "keep me"));
+    marcRecord.addVariableField(dataField);
+
+    // Field with only one subfield 'a' - entire field should be removed
+    dataField = new DataFieldImpl("500", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "only subfield"));
+    marcRecord.addVariableField(dataField);
+
+    // Field with different tag - not affected
+    dataField = new DataFieldImpl("510", '1', '1');
+    dataField.addSubfield(new SubfieldImpl('a', "different tag"));
+    marcRecord.addVariableField(dataField);
+
+    var pattern = "yyyy/MM/dd HH:mm:ss.SSS";
+    var simpleDateFormat = new SimpleDateFormat(pattern);
+    var date = simpleDateFormat.parse("2024/01/01 11:12:12.454");
+    var bulkOperationId = UUID.randomUUID();
+    var operation =
+        BulkOperation.builder().id(bulkOperationId).identifierType(IdentifierType.ID).build();
+
+    var removeSubfieldRule =
+        new BulkOperationMarcRule()
+            .bulkOperationId(bulkOperationId)
+            .tag("500")
+            .ind1("1")
+            .ind2("1")
+            .subfield("a")
+            .actions(List.of(new MarcAction().name(REMOVE_SUBFIELD)));
+    var rules =
+        new BulkOperationMarcRuleCollection()
+            .bulkOperationMarcRules(Collections.singletonList(removeSubfieldRule))
+            .totalRecords(1);
+
+    processor.update(operation, marcRecord, rules, date);
+
+    var dataFields = marcRecord.getDataFields();
+    // The field with only subfield 'a' is removed entirely; field with 'b' remains; 510 unchanged
+    assertThat(dataFields).hasSize(2);
+    assertThat(dataFields.get(0)).hasToString("500 11$bkeep me");
+    assertThat(dataFields.get(1)).hasToString("510 11$adifferent tag");
   }
 }

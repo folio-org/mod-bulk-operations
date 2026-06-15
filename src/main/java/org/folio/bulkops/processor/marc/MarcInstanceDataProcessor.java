@@ -9,6 +9,7 @@ import static org.folio.bulkops.domain.dto.UpdateActionType.ADD_TO_EXISTING;
 import static org.folio.bulkops.domain.dto.UpdateActionType.FIND;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_ALL;
 import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_FIELD;
+import static org.folio.bulkops.domain.dto.UpdateActionType.REMOVE_SUBFIELD;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_FALSE;
 import static org.folio.bulkops.domain.dto.UpdateActionType.SET_TO_TRUE;
 import static org.folio.bulkops.util.Constants.SPACE_CHAR;
@@ -108,10 +109,12 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
       }
     } else if (REMOVE_ALL == actions.get(0).getName()) {
       processRemoveAll(rule, marcRecord);
+    } else if (REMOVE_FIELD == actions.get(0).getName()) {
+      processRemoveField(rule, marcRecord);
+    } else if (REMOVE_SUBFIELD == actions.get(0).getName()) {
+      processRemoveSubfield(rule, marcRecord);
     } else if (ADD_TO_EXISTING.equals(actions.get(0).getName())) {
       processAddToExisting(rule, marcRecord);
-    } else if (REMOVE_FIELD == actions.get(0).getName()) {
-      processFindAndRemoveField(rule, marcRecord);
     } else {
       if (rule.getUpdateOption() == UpdateOptionType.SET_RECORDS_FOR_DELETE) {
         if (SET_TO_TRUE.equals(actions.getFirst().getName())) {
@@ -236,6 +239,32 @@ public class MarcInstanceDataProcessor implements MarcDataProcessor {
                     && dataField.getIndicator2() == ind2
                     && dataField.getSubfields().stream()
                         .anyMatch(subfield -> subfield.getCode() == subfieldCode));
+  }
+
+  private void processRemoveField(BulkOperationMarcRule rule, Record marcRecord) {
+    char ind1 = fetchIndicatorValue(rule.getInd1());
+    char ind2 = fetchIndicatorValue(rule.getInd2());
+    marcRecord
+        .getDataFields()
+        .removeIf(
+            dataField ->
+                rule.getTag().equals(dataField.getTag())
+                    && ind1 == dataField.getIndicator1()
+                    && ind2 == dataField.getIndicator2());
+  }
+
+  private void processRemoveSubfield(BulkOperationMarcRule rule, Record marcRecord) {
+    char subfieldCode = rule.getSubfield().charAt(0);
+    var fieldsToRemove = new java.util.ArrayList<DataField>();
+    findFields(rule, marcRecord)
+        .forEach(
+            df -> {
+              df.getSubfields(subfieldCode).forEach(df::removeSubfield);
+              if (df.getSubfields().isEmpty()) {
+                fieldsToRemove.add(df);
+              }
+            });
+    fieldsToRemove.forEach(marcRecord::removeVariableField);
   }
 
   private void processAddToExisting(BulkOperationMarcRule rule, Record marcRecord)

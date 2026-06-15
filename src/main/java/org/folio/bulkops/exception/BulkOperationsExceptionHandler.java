@@ -12,6 +12,11 @@ public class BulkOperationsExceptionHandler {
     return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
   }
 
+  @ExceptionHandler(BadRequestException.class)
+  public ResponseEntity<String> handleBadRequestException(final BadRequestException e) {
+    return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+  }
+
   @ExceptionHandler(IllegalOperationStateException.class)
   public ResponseEntity<String> handleIllegalOperationStateException(
       final IllegalOperationStateException e) {
