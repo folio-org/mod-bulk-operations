@@ -95,7 +95,11 @@ public class InstanceNotesUpdaterFactory {
     if (ADMINISTRATIVE_NOTE.equals(option)) {
       instance.setAdministrativeNotes(administrativeNotesUpdater.findAndReplaceAdministrativeNote(action, instance.getAdministrativeNotes()));
     } else if (INSTANCE_NOTE.equals(option)) {
-      findAndReplaceNoteByValueAndTypeId(action, instance.getInstanceNotes());
+      if (instance.getInstanceNotes() != null) {
+        var notes = new ArrayList<>(instance.getInstanceNotes());
+        findAndReplaceNoteByValueAndTypeId(action, notes);
+        instance.setInstanceNotes(notes);
+      }
     }
   }
 
@@ -167,9 +171,20 @@ public class InstanceNotesUpdaterFactory {
   private List<InstanceNote> findAndRemoveNoteByValueAndTypeId(String valueToRemove, List<InstanceNote> notes, List<Parameter> parameters) {
     var typeIdOptional = getTypeIdOptional(parameters);
     if (typeIdOptional.isPresent() && notes != null) {
+      notes = new ArrayList<>(notes);
+      var notesToRemove = new ArrayList<InstanceNote>();
       notes.stream()
         .filter(note -> StringUtils.equals(note.getInstanceNoteTypeId(), typeIdOptional.get()))
-        .forEach(note -> note.setNote(note.getNote().replace(valueToRemove, EMPTY)));
+        .forEach(
+          note -> {
+            String updatedNote = note.getNote().replace(valueToRemove, EMPTY);
+            if (updatedNote.isBlank()) {
+              notesToRemove.add(note);
+            } else {
+              note.setNote(updatedNote);
+            }
+          });
+      notes.removeAll(notesToRemove);
     }
     return notes;
   }
@@ -177,12 +192,20 @@ public class InstanceNotesUpdaterFactory {
   private void findAndReplaceNoteByValueAndTypeId(Action action, List<InstanceNote> notes) {
     var typeIdOptional = getTypeIdOptional(action.getParameters());
     if (typeIdOptional.isPresent() && notes != null) {
+      var notesToRemove = new ArrayList<InstanceNote>();
       notes.forEach(note -> {
         if (StringUtils.equals(note.getInstanceNoteTypeId(), typeIdOptional.get())
               && contains(note.getNote(), action.getInitial())) {
-          note.setNote(replace(note.getNote(), action.getInitial(), action.getUpdated()));
+          String replacedNote =
+            replace(note.getNote(), action.getInitial(), action.getUpdated());
+          if (replacedNote.isBlank()) {
+            notesToRemove.add(note);
+          } else {
+            note.setNote(replacedNote);
+          }
         }
       });
+      notes.removeAll(notesToRemove);
     }
   }
 

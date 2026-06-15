@@ -63,7 +63,13 @@ public class HoldingsNotesUpdater {
       if (option == ADMINISTRATIVE_NOTE) {
         return Optional.of(extendedHoldingsRecord -> extendedHoldingsRecord.getEntity().setAdministrativeNotes(administrativeNotesUpdater.findAndReplaceAdministrativeNote(action, extendedHoldingsRecord.getEntity().getAdministrativeNotes())));
       } else if (option == HOLDINGS_NOTE) {
-        return Optional.of(extendedHoldingsRecord -> findAndReplaceNoteByValueAndTypeId(action, extendedHoldingsRecord.getEntity().getNotes()));
+        return Optional.of(extendedHoldingsRecord -> {
+          if (extendedHoldingsRecord.getEntity().getNotes() != null) {
+            var notes = new ArrayList<>(extendedHoldingsRecord.getEntity().getNotes());
+            findAndReplaceNoteByValueAndTypeId(action, notes);
+            extendedHoldingsRecord.getEntity().setNotes(notes);
+          }
+        });
       }
     } else if (CHANGE_TYPE == action.getType()) {
       if (option == ADMINISTRATIVE_NOTE) {
@@ -127,9 +133,20 @@ public class HoldingsNotesUpdater {
   private List<HoldingsNote> findAndRemoveNoteByValueAndTypeId(String valueToRemove, List<HoldingsNote> notes, List<Parameter> parameters) {
     var typeIdParameterOptional = getTypeIdParameterOptional(parameters);
     if (typeIdParameterOptional.isPresent() && notes != null) {
+      notes = new ArrayList<>(notes);
+      var notesToRemove = new ArrayList<HoldingsNote>();
       notes.stream()
         .filter(note -> StringUtils.equals(note.getHoldingsNoteTypeId(), typeIdParameterOptional.get().getValue()))
-        .forEach(note -> note.setNote(note.getNote().replace(valueToRemove, StringUtils.EMPTY)));
+        .forEach(
+          note -> {
+            String updatedNote = note.getNote().replace(valueToRemove, StringUtils.EMPTY);
+            if (updatedNote.isBlank()) {
+              notesToRemove.add(note);
+            } else {
+              note.setNote(updatedNote);
+            }
+          });
+      notes.removeAll(notesToRemove);
     }
     return notes;
   }
@@ -137,12 +154,20 @@ public class HoldingsNotesUpdater {
   private void findAndReplaceNoteByValueAndTypeId(Action action, List<HoldingsNote> notes) {
     var typeIdParameterOptional = getTypeIdParameterOptional(action.getParameters());
     if (typeIdParameterOptional.isPresent() && notes != null) {
+      var notesToRemove = new ArrayList<HoldingsNote>();
       notes.forEach(note -> {
         if (StringUtils.equals(note.getHoldingsNoteTypeId(), typeIdParameterOptional.get().getValue())
               && contains(note.getNote(), action.getInitial())) {
-          note.setNote(replace(note.getNote(), action.getInitial(), action.getUpdated()));
+          String replacedNote =
+            replace(note.getNote(), action.getInitial(), action.getUpdated());
+          if (replacedNote.isBlank()) {
+            notesToRemove.add(note);
+          } else {
+            note.setNote(replacedNote);
+          }
         }
       });
+      notes.removeAll(notesToRemove);
     }
   }
 

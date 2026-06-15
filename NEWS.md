@@ -1,3 +1,10 @@
+## v2.2.10 - Released 2026/06/15
+
+This release contains backport of removing subfields functionality.
+
+### Technical stories
+* [MODBULKOPS-499](https://folio-org.atlassian.net/browse/MODBULKOPS-499) Removing entire value of a subfield
+
 ## v2.2.9 - Released 2026/01/15
 
 This release contains dependency updates to address security vulnerabilities.
