@@ -163,26 +163,11 @@ public class Item implements BulkOperationsEntity, ElectronicAccessEntity {
   @UnifiedTableCell(visible = false)
   private List<String> administrativeNotes;
 
-  @JsonProperty("materialType")
+  @JsonProperty(ITEM_JSON_MATERIAL_TYPE)
   @CsvCustomBindByName(column = "Material type", converter = MaterialTypeConverter.class)
   @CsvCustomBindByPosition(position = 13, converter = MaterialTypeConverter.class)
   @UnifiedTableCell
   private MaterialType materialType;
-
-  @JsonProperty("materialTypeId")
-  public void setMaterialTypeId(String id) {
-    if (nonNull(id)) {
-      this.materialType =
-          new MaterialType()
-              .withId(id)
-              .withName(ItemReferenceHelper.service().getMaterialTypeById(id, tenantId).getName());
-    }
-  }
-
-  @JsonProperty("materialTypeId")
-  public String getMaterialTypeId() {
-    return materialType != null ? materialType.getId() : null;
-  }
 
   @JsonProperty("materialType")
   public MaterialType getMaterialType() {
