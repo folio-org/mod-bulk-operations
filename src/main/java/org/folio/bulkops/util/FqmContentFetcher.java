@@ -612,6 +612,7 @@ public class FqmContentFetcher {
           return jsonb.toString();
         }
         var jsonNode = (ObjectNode) objectMapper.readTree(jsonb.toString());
+        log.info("jsonb: {}", jsonNode.toString());
         var tenant = json.get(getContentTenantKey(entityType));
         if (tenant == null) {
           checkForTenantFieldExistenceInEcs(
