@@ -612,7 +612,6 @@ public class FqmContentFetcher {
           return jsonb.toString();
         }
         var jsonNode = (ObjectNode) objectMapper.readTree(jsonb.toString());
-        log.info("jsonb: {}", jsonNode.toString());
         var tenant = json.get(getContentTenantKey(entityType));
         if (tenant == null) {
           checkForTenantFieldExistenceInEcs(
@@ -831,7 +830,6 @@ public class FqmContentFetcher {
 
   private void processForItem(Map<String, Object> json, ObjectNode jsonNode)
       throws JacksonException {
-    log.info("Processing FQM response for item {}", json);
     var title = ofNullable(json.get(FQM_INSTANCES_TITLE_KEY)).orElse(EMPTY).toString();
     var value = json.get(FQM_INSTANCES_PUBLICATION_KEY);
 
