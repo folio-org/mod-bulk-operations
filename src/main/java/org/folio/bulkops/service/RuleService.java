@@ -14,6 +14,7 @@ import org.folio.bulkops.domain.dto.RuleDetails;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.mapper.MarcRulesMapper;
+import org.folio.bulkops.processor.marc.MarcRulesValidator;
 import org.folio.bulkops.repository.BulkOperationMarcRuleRepository;
 import org.folio.bulkops.repository.BulkOperationRuleDetailsRepository;
 import org.folio.bulkops.repository.BulkOperationRuleRepository;
@@ -29,6 +30,7 @@ public class RuleService {
   private final BulkOperationMarcRuleRepository marcRuleRepository;
   private final MarcRulesMapper marcRulesMapper;
   private final ApplicationContext applicationContext;
+  private final MarcRulesValidator marcRulesValidator;
 
   @Transactional
   public BulkOperationRuleCollection saveRules(
@@ -131,7 +133,11 @@ public class RuleService {
 
     ruleCollection
         .getBulkOperationMarcRules()
-        .forEach(marcRule -> marcRuleRepository.save(marcRulesMapper.mapToEntity(marcRule)));
+        .forEach(
+            marcRule -> {
+              marcRulesValidator.validateRequiredFields(marcRule);
+              marcRuleRepository.save(marcRulesMapper.mapToEntity(marcRule));
+            });
 
     return ruleCollection;
   }
