@@ -8,6 +8,8 @@ import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.springframework.stereotype.Component;
 
+import static java.util.Objects.isNull;
+
 @Component
 public class MarcRulesValidator {
 
@@ -41,7 +43,7 @@ public class MarcRulesValidator {
     if (rule.getActions() == null || rule.getActions().isEmpty()) {
       return;
     }
-    var firstAction = rule.getActions().get(0).getName();
+    var firstAction = rule.getActions().getFirst().getName();
     if (UpdateActionType.REMOVE_FIELD.equals(firstAction)) {
       validateRemoveFieldRequiredFields(rule);
     } else if (UpdateActionType.REMOVE_SUBFIELD.equals(firstAction)) {
@@ -53,10 +55,10 @@ public class MarcRulesValidator {
     if (StringUtils.isEmpty(rule.getTag())) {
       throw new BadRequestException(String.format(MISSING_REQUIRED_FIELD_MESSAGE, "tag"));
     }
-    if (StringUtils.isEmpty(rule.getInd1())) {
+    if (isNull(rule.getInd1())) {
       throw new BadRequestException(String.format(MISSING_REQUIRED_FIELD_MESSAGE, "ind1"));
     }
-    if (StringUtils.isEmpty(rule.getInd2())) {
+    if (isNull(rule.getInd2())) {
       throw new BadRequestException(String.format(MISSING_REQUIRED_FIELD_MESSAGE, "ind2"));
     }
   }
