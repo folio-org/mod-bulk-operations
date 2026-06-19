@@ -1,6 +1,8 @@
 package org.folio.bulkops.processor.marc;
 
 import java.util.regex.Pattern;
+
+import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.UpdateActionType;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import static java.util.Objects.isNull;
 
+@Log4j2
 @Component
 public class MarcRulesValidator {
 
@@ -56,6 +59,7 @@ public class MarcRulesValidator {
       throw new BadRequestException(String.format(MISSING_REQUIRED_FIELD_MESSAGE, "tag"));
     }
     if (isNull(rule.getInd1())) {
+      log.error("Missing required field ind1 for rule: {}", rule);
       throw new BadRequestException(String.format(MISSING_REQUIRED_FIELD_MESSAGE, "ind1"));
     }
     if (isNull(rule.getInd2())) {
