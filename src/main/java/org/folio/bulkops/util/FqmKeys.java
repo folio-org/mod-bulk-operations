@@ -47,6 +47,8 @@ public class FqmKeys {
   public static final String FQM_ITEM_PERMANENT_LOCATION_NAME_KEY = "permanent_location.name";
   public static final String FQM_ITEM_TEMPORARY_LOCATION_ID_KEY = "temporary_location.id";
   public static final String FQM_ITEM_TEMPORARY_LOCATION_NAME_KEY = "temporary_location.name";
+  public static final String FQM_ITEM_MATERIAL_TYPE_ID_KEY = "mtypes.id";
+  public static final String FQM_ITEM_MATERIAL_TYPE_NAME_KEY = "mtypes.name";
 
   public static final String FQM_ITEMS_TENANT_ID_KEY = "items.tenant_id";
   public static final String FQM_HOLDINGS_TENANT_ID_KEY = "holdings.tenant_id";
