@@ -742,10 +742,6 @@
       "version": "3.0"
     },
     {
-      "id": "users-keycloak",
-      "version": "1.0"
-    },
-    {
       "id": "permissions-users",
       "version": "1.0"
     },
