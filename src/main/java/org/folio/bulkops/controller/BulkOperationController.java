@@ -10,6 +10,7 @@ import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_FILE
 import static org.folio.bulkops.domain.dto.FileContentType.PROPOSED_CHANGES_MARC_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.RECORD_MATCHING_ERROR_FILE;
 import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_FILE;
+import static org.folio.bulkops.domain.dto.FileContentType.TRIGGERING_QUERY_FILE;
 import static org.folio.bulkops.util.Constants.CSV_EXTENSION;
 import static org.folio.bulkops.util.Constants.NON_PRINTING_DELIMITER;
 import static org.folio.bulkops.util.Constants.SPLIT_NOTE_ENTITIES;
@@ -208,6 +209,8 @@ public class BulkOperationController implements BulkOperationsApi {
       path = bulkOperation.getLinkToCommittedRecordsMarcFile();
     } else if (fileContentType == COMMITTING_CHANGES_ERROR_FILE) {
       path = bulkOperation.getLinkToCommittedRecordsErrorsCsvFile();
+    } else if (fileContentType == TRIGGERING_QUERY_FILE) {
+      path = bulkOperation.getLinkToTriggeringQueryFile();
     } else {
       return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
     }

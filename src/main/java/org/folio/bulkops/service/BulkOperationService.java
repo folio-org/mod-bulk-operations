@@ -12,12 +12,14 @@ import static org.folio.bulkops.batch.JobCommandHelper.prepareJobParameters;
 import static org.folio.bulkops.domain.dto.ApproachType.IN_APP;
 import static org.folio.bulkops.domain.dto.ApproachType.MANUAL;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.DELETE;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
 import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.IdentifierType.HRID;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION_IN_PROGRESS;
+import static org.folio.bulkops.domain.dto.OperationStatusType.DELETING_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.EXECUTING_QUERY;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.NEW;
@@ -35,6 +37,7 @@ import static org.folio.bulkops.util.Constants.HYPHEN;
 import static org.folio.bulkops.util.Constants.INCORRECT_NUMBER_OF_TOKENS;
 import static org.folio.bulkops.util.Constants.MARC;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
+import static org.folio.bulkops.util.Constants.OPERATION_UPDATING_STEP;
 import static org.folio.bulkops.util.ErrorCode.ERROR_MESSAGE_PATTERN;
 import static org.folio.bulkops.util.ErrorCode.ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE;
 import static org.folio.bulkops.util.ErrorCode.ERROR_UPLOAD_IDENTIFIERS_S3_ISSUE;
@@ -88,6 +91,7 @@ import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.dto.ErrorType;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.OperationStatusType;
+import org.folio.bulkops.domain.dto.OperationType;
 import org.folio.bulkops.domain.dto.QueryRequest;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationDataProcessing;
@@ -162,8 +166,9 @@ public class BulkOperationService {
   private final BulkOperationServiceHelper bulkOperationServiceHelper;
   private final QueryService queryService;
   private final ExportJobManagerSync exportJobManagerSync;
+  private final UserDeleteService userDeleteService;
   private final List<Job> jobs;
-  private static final int OPERATION_UPDATING_STEP = 100;
+
   private static final String MODIFIED_JSON_PATH_TEMPLATE = "%s/json/%s-Modified-%s.json";
   private static final String PREVIEW_CSV_PATH_TEMPLATE = "%s/%s-Updates-Preview-CSV-%s.csv";
   private static final String PREVIEW_JSON_PATH_TEMPLATE =
@@ -659,7 +664,7 @@ public class BulkOperationService {
       } catch (Exception e) {
         log.error("Error committing changes", e);
         execution = execution.withStatus(StatusType.FAILED).withEndTime(LocalDateTime.now());
-        bulkOperationServiceHelper.failCommit(operation, e);
+        bulkOperationServiceHelper.failBulkOperation(operation, e);
       }
       executionRepository.save(execution);
     }
@@ -701,7 +706,23 @@ public class BulkOperationService {
                     new NotFoundException("Bulk operation was not found by id=" + bulkOperationId));
     operation.setUserId(xokapiUserId);
 
-    if (UPLOAD == step) {
+    if (DELETE == step) {
+      if (DATA_MODIFICATION.equals(operation.getStatus())) {
+        errorService.deleteErrorsByBulkOperationId(bulkOperationId);
+        operation.setCommittedNumOfRecords(0);
+        operation.setCommittedNumOfErrors(0);
+        operation.setCommittedNumOfWarnings(0);
+        operation.setOperationType(OperationType.DELETE);
+        operation.setStatus(DELETING_RECORDS);
+        bulkOperationRepository.save(operation);
+        executor.execute(
+            getRunnableWithCurrentFolioContext(() -> userDeleteService.deleteUsers(operation)));
+        return operation;
+      } else {
+        throw new BadRequestException(
+            format(STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
+      }
+    } else if (UPLOAD == step) {
       var numOfLines = remoteFileSystemClient.getNumOfLines(operation.getLinkToTriggeringCsvFile());
       if (fqmQueryApproach && operation.getIdentifierType() == IdentifierType.ID) {
         log.info("Starting UPLOAD, bulk operation id={}, FQM is used: true", bulkOperationId);

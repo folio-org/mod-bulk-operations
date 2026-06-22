@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static java.lang.String.format;
 import static java.util.Collections.emptySet;
 import static java.util.Objects.isNull;
 import static java.util.Optional.ofNullable;
@@ -85,6 +86,7 @@ import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.format.SpecialCharacterEscaper;
+import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.processor.preview.PreviewProcessorFactory;
 import org.folio.bulkops.util.UnifiedTableHeaderBuilder;
 import org.folio.bulkops.util.UpdateOptionTypeToFieldResolver;
@@ -101,6 +103,8 @@ import tools.jackson.databind.ObjectMapper;
 @Log4j2
 @RequiredArgsConstructor
 public class PreviewService {
+  public static final String STEP_IS_NOT_SUPPORTED_FOR_PREVIEW =
+      "Step %s is not supported for preview";
 
   private final ConsortiaService consortiaService;
   private final RuleService ruleService;
@@ -185,6 +189,7 @@ public class PreviewService {
           }
         }
       }
+      default -> throw new BadRequestException(format(STEP_IS_NOT_SUPPORTED_FOR_PREVIEW, step));
     };
   }
 

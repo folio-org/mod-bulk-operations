@@ -48,6 +48,10 @@
         "description": "Path to the bulk operation triggering file",
         "type": "string"
       },
+      "linkToTriggeringQueryFile": {
+        "description": "Path to the triggering query file",
+        "type": "string"
+      },
       "linkToMatchedRecordsJsonFile": {
         "description": "Path to the matched (origin) json file",
         "type": "string"

@@ -6,7 +6,8 @@
     "enum": [
       "UPLOAD",
       "EDIT",
-      "COMMIT"
+      "COMMIT",
+      "DELETE"
     ]
   }
 }

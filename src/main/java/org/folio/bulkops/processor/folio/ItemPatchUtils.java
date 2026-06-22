@@ -166,9 +166,9 @@ public class ItemPatchUtils {
 
   private static void addMaterialType(ObjectNode node, Item item) {
     var value =
-      isNull(item.getMaterialType())
-        ? mapper.createObjectNode()
-        : mapper.valueToTree(item.getMaterialType());
+        isNull(item.getMaterialType())
+            ? mapper.createObjectNode()
+            : mapper.valueToTree(item.getMaterialType());
     node.set(ITEM_JSON_MATERIAL_TYPE, value);
   }
 }

@@ -71,6 +71,7 @@ public class BulkOperation {
   private String linkToCommittedRecordsMarcFile;
   private String linkToCommittedRecordsMarcCsvFile;
   private String linkToCommittedRecordsErrorsCsvFile;
+  private String linkToTriggeringQueryFile;
 
   private int totalNumOfRecords;
   private int processedNumOfRecords;

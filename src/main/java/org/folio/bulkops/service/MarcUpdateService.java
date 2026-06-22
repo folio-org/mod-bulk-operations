@@ -62,7 +62,7 @@ public class MarcUpdateService {
       } catch (IOException e) {
         log.error("Error while updating marc file", e);
         execution = execution.withStatus(StatusType.FAILED).withEndTime(LocalDateTime.now());
-        bulkOperationServiceHelper.failCommit(bulkOperation, e);
+        bulkOperationServiceHelper.failBulkOperation(bulkOperation, e);
       }
       executionRepository.save(execution);
     } else {

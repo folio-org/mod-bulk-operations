@@ -69,6 +69,7 @@ import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.FqmFetcherException;
+import org.folio.bulkops.processor.UserDeleteProcessor;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.EntityTypeService;
 import org.folio.querytool.domain.dto.ContentsRequest;
@@ -117,6 +118,7 @@ class FqmContentFetcherTest {
   @MockitoBean public AuthnClient authnClient;
   @MockitoBean public UsersClient usersClient;
   @MockitoBean public PermissionsClient permissionsClient;
+  @MockitoBean private UserDeleteProcessor userDeleteProcessor;
 
   @Autowired public ObjectMapper objectMapper;
 
