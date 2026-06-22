@@ -21,7 +21,7 @@
       "subfield": {
         "description": "MARC subfield code",
         "type": "string",
-        "pattern": "[a-z0-9]"
+        "pattern": "[a-z0-9]*"
       },
       "actions": {
         "type": "array",
