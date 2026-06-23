@@ -32,6 +32,8 @@ import static org.folio.bulkops.util.FqmKeys.FQM_ITEMS_JSONB_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEMS_TENANT_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_EFFECTIVE_LOCATION_NAME_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_MATERIAL_TYPE_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_MATERIAL_TYPE_NAME_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOAN_TYPE_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOAN_TYPE_NAME_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOCATION_ID_KEY;
@@ -472,6 +474,10 @@ class FqmContentFetcherTest {
           .contains(
               "\"effectiveLocation\":{\"id\":\"e25a4840-f74b-4d34-a58b-0f9238710d79\","
                   + "\"name\":\"Effective location\"}");
+      assertThat(result)
+        .contains(
+          "\"materialType\":{\"id\":\"5ee11d91-f7e8-481d-b079-65d708582ccc\","
+            + "\"name\":\"dvd\"}");
 
       uuids.forEach(uuid -> assertThat(result).contains("\"id\":\"" + uuid.toString() + "\""));
     }
@@ -1613,6 +1619,8 @@ class FqmContentFetcherTest {
           map.put(FQM_ITEM_TEMPORARY_LOCATION_NAME_KEY, "Temporary location");
           map.put(FQM_ITEM_PERMANENT_LOCATION_ID_KEY, "9e55690a-ac4b-4969-9c83-e4dca008c32c");
           map.put(FQM_ITEM_PERMANENT_LOCATION_NAME_KEY, "Permanent location");
+          map.put(FQM_ITEM_MATERIAL_TYPE_ID_KEY, "5ee11d91-f7e8-481d-b079-65d708582ccc");
+          map.put(FQM_ITEM_MATERIAL_TYPE_NAME_KEY, "dvd");
         }
         case HOLDINGS_RECORD -> {
           var id = randomUUID().toString();

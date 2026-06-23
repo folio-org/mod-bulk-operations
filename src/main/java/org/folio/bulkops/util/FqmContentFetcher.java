@@ -22,6 +22,7 @@ import static org.folio.bulkops.util.Constants.INSTANCE_TITLE;
 import static org.folio.bulkops.util.Constants.LINE_BREAK;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE;
 import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
+import static org.folio.bulkops.util.Constants.MATERIAL_TYPE;
 import static org.folio.bulkops.util.Constants.MSG_DCB_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.MSG_SHADOW_RECORDS_CANNOT_BE_EDITED;
 import static org.folio.bulkops.util.Constants.NO_MATCH_FOUND_MESSAGE;
@@ -60,6 +61,8 @@ import static org.folio.bulkops.util.FqmKeys.FQM_ITEMS_JSONB_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEMS_TENANT_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_EFFECTIVE_LOCATION_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_EFFECTIVE_LOCATION_NAME_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_MATERIAL_TYPE_ID_KEY;
+import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_MATERIAL_TYPE_NAME_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOAN_TYPE_ID_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOAN_TYPE_NAME_KEY;
 import static org.folio.bulkops.util.FqmKeys.FQM_ITEM_PERMANENT_LOCATION_ID_KEY;
@@ -687,6 +690,8 @@ public class FqmContentFetcher {
               FQM_ITEM_PERMANENT_LOCATION_NAME_KEY,
               FQM_ITEM_TEMPORARY_LOCATION_ID_KEY,
               FQM_ITEM_TEMPORARY_LOCATION_NAME_KEY,
+              FQM_ITEM_MATERIAL_TYPE_ID_KEY,
+              FQM_ITEM_MATERIAL_TYPE_NAME_KEY,
               FQM_ITEMS_TENANT_ID_KEY);
       case HOLDINGS_RECORD ->
           List.of(
@@ -916,6 +921,19 @@ public class FqmContentFetcher {
                   ofNullable(json.get(FQM_ITEM_TEMPORARY_LOCATION_NAME_KEY))
                       .orElse(EMPTY)
                       .toString()));
+    }
+
+    if (nonNull(json.get(FQM_ITEM_MATERIAL_TYPE_ID_KEY))) {
+      jsonNode.putIfAbsent(
+        MATERIAL_TYPE,
+        objectMapper
+          .createObjectNode()
+          .put(ID, json.get(FQM_ITEM_MATERIAL_TYPE_ID_KEY).toString())
+          .put(
+            NAME,
+            ofNullable(json.get(FQM_ITEM_MATERIAL_TYPE_NAME_KEY))
+              .orElse(EMPTY)
+              .toString()));
     }
   }
 
