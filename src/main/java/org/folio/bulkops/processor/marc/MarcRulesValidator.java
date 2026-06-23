@@ -1,7 +1,8 @@
 package org.folio.bulkops.processor.marc;
 
-import java.util.regex.Pattern;
+import static java.util.Objects.isNull;
 
+import java.util.regex.Pattern;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
@@ -9,8 +10,6 @@ import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.exception.BadRequestException;
 import org.folio.bulkops.exception.RuleValidationException;
 import org.springframework.stereotype.Component;
-
-import static java.util.Objects.isNull;
 
 @Log4j2
 @Component

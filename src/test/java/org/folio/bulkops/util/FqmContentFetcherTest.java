@@ -475,9 +475,9 @@ class FqmContentFetcherTest {
               "\"effectiveLocation\":{\"id\":\"e25a4840-f74b-4d34-a58b-0f9238710d79\","
                   + "\"name\":\"Effective location\"}");
       assertThat(result)
-        .contains(
-          "\"materialType\":{\"id\":\"5ee11d91-f7e8-481d-b079-65d708582ccc\","
-            + "\"name\":\"dvd\"}");
+          .contains(
+              "\"materialType\":{\"id\":\"5ee11d91-f7e8-481d-b079-65d708582ccc\","
+                  + "\"name\":\"dvd\"}");
 
       uuids.forEach(uuid -> assertThat(result).contains("\"id\":\"" + uuid.toString() + "\""));
     }
