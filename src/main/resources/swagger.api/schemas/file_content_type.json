@@ -5,6 +5,7 @@
     "type": "string",
     "enum": [
       "TRIGGERING_FILE",
+      "TRIGGERING_QUERY_FILE",
       "MATCHED_RECORDS_FILE",
       "RECORD_MATCHING_ERROR_FILE",
       "PROPOSED_CHANGES_FILE",

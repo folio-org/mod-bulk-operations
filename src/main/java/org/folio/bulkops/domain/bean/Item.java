@@ -36,7 +36,6 @@ import org.folio.bulkops.domain.converter.StringListConverter;
 import org.folio.bulkops.domain.converter.TagsConverter;
 import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.dto.TenantNotePair;
-import org.folio.bulkops.service.ItemReferenceHelper;
 
 @Data
 @With

@@ -159,8 +159,7 @@ class ItemPatchUtilsTest {
   void shouldPopulateMaterialType() {
     var item = Item.builder().materialType(new MaterialType().withName("book")).build();
     var rules =
-      ruleCollection(
-        rule(UpdateOptionType.MATERIAL_TYPE, action(UpdateActionType.REPLACE_WITH)));
+        ruleCollection(rule(UpdateOptionType.MATERIAL_TYPE, action(UpdateActionType.REPLACE_WITH)));
 
     var changed = ItemPatchUtils.fetchChangedData(item, rules);
 

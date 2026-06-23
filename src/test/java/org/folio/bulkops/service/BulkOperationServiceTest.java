@@ -7,6 +7,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.awaitility.Awaitility.await;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.COMMIT;
+import static org.folio.bulkops.domain.dto.BulkOperationStep.DELETE;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.EDIT;
 import static org.folio.bulkops.domain.dto.BulkOperationStep.UPLOAD;
 import static org.folio.bulkops.domain.dto.EntityType.HOLDINGS_RECORD;
@@ -17,6 +18,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.APPLY_MARC_CHANGES;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.DATA_MODIFICATION;
+import static org.folio.bulkops.domain.dto.OperationStatusType.DELETING_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.REVIEW_CHANGES;
 import static org.folio.bulkops.service.BulkOperationService.MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY;
@@ -87,8 +89,10 @@ import org.assertj.core.api.Assertions;
 import org.folio.bulkops.BaseTest;
 import org.folio.bulkops.batch.CsvRecordContext;
 import org.folio.bulkops.batch.ExportJobManagerSync;
+import org.folio.bulkops.client.BlUsersClient;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.RemoteFileSystemClient;
+import org.folio.bulkops.client.UsersKeycloakClient;
 import org.folio.bulkops.domain.bean.ExtendedHoldingsRecord;
 import org.folio.bulkops.domain.bean.ExtendedItem;
 import org.folio.bulkops.domain.bean.HoldingsRecord;
@@ -202,6 +206,9 @@ class BulkOperationServiceTest extends BaseTest {
   @MockitoBean private ExportJobManagerSync exportJobManagerSync;
 
   @MockitoBean private EntityTypeService entityTypeService;
+  @MockitoBean private BlUsersClient blUsersClient;
+  @MockitoBean private UsersKeycloakClient usersKeycloakClient;
+  @MockitoBean private UserDeleteService userDeleteService;
 
   @Autowired private List<Job> jobs;
 
@@ -2085,6 +2092,59 @@ class BulkOperationServiceTest extends BaseTest {
     var contentCharsByUtf8BomLen =
         Arrays.copyOfRange(contentCaptor.getValue().readAllBytes(), 0, UTF_8_BOM.length);
     assertFalse(Arrays.equals(UTF_8_BOM, contentCharsByUtf8BomLen));
+  }
+
+  @Test
+  @SneakyThrows
+  void shouldLaunchUserDeleteFlowOnDeleteStep() {
+    var bulkOperationId = UUID.randomUUID();
+    var bulkOperationStart = new BulkOperationStart().step(DELETE);
+    var bulkOperation =
+        BulkOperation.builder()
+            .id(bulkOperationId)
+            .entityType(USER)
+            .status(DATA_MODIFICATION)
+            .committedNumOfRecords(5)
+            .committedNumOfErrors(3)
+            .committedNumOfWarnings(2)
+            .build();
+
+    when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
+    when(bulkOperationRepository.save(any(BulkOperation.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    try (var context = new FolioExecutionContextSetter(folioExecutionContext)) {
+      var result =
+          bulkOperationService.startBulkOperation(
+              bulkOperationId, UUID.randomUUID(), bulkOperationStart);
+
+      assertEquals(DELETING_RECORDS, result.getStatus());
+      assertEquals(0, result.getCommittedNumOfRecords());
+      assertEquals(0, result.getCommittedNumOfErrors());
+      assertEquals(0, result.getCommittedNumOfWarnings());
+      assertEquals(org.folio.bulkops.domain.dto.OperationType.DELETE, result.getOperationType());
+      verify(errorService).deleteErrorsByBulkOperationId(bulkOperationId);
+      verify(bulkOperationRepository).save(result);
+      await().untilAsserted(() -> verify(userDeleteService).deleteUsers(result));
+    }
+  }
+
+  @Test
+  void shouldRejectDeleteStepWhenOperationHasInvalidStatus() {
+    var bulkOperationId = UUID.randomUUID();
+    var bulkOperationStart = new BulkOperationStart().step(DELETE);
+    var bulkOperation =
+        BulkOperation.builder().id(bulkOperationId).entityType(USER).status(REVIEW_CHANGES).build();
+
+    when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
+
+    var userId = UUID.randomUUID();
+    assertThrows(
+        BadRequestException.class,
+        () -> bulkOperationService.startBulkOperation(bulkOperationId, userId, bulkOperationStart));
+
+    verify(userDeleteService, never()).deleteUsers(any(BulkOperation.class));
+    verify(bulkOperationRepository, never()).save(any(BulkOperation.class));
   }
 
   @Test

@@ -169,6 +169,8 @@
             "usergroups.item.get",
             "usergroups.collection.get",
             "user-settings.custom-fields.collection.get",
+            "users-bl.transactions.get",
+            "users-keycloak.item.delete",
             "inventory-storage.instance-statuses.collection.get",
             "inventory-storage.instance-statuses.item.get",
             "inventory-storage.modes-of-issuance.collection.get",
@@ -724,16 +726,20 @@
     {
       "id": "locale",
       "version": "1.0"
+    },
+    {
+      "id": "users-bl",
+      "version": "6.1"
+    },
+    {
+      "id": "users-keycloak",
+      "version": "1.0"
     }
   ],
   "optional": [
     {
       "id": "custom-fields",
       "version": "3.0"
-    },
-    {
-      "id": "users-keycloak",
-      "version": "1.0"
     },
     {
       "id": "permissions-users",

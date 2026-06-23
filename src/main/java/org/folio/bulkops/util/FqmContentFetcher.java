@@ -270,7 +270,7 @@ public class FqmContentFetcher {
                   if (e.getValue().size() > 1) {
                     saveDuplicateAcrossTenantsError(bulkOperationExecutionContents, operationId, e);
                     bulkOperation.setProcessedNumOfRecords(
-                      bulkOperation.getProcessedNumOfRecords() + 1);
+                        bulkOperation.getProcessedNumOfRecords() + 1);
                     return true;
                   }
                   return false;
@@ -925,15 +925,13 @@ public class FqmContentFetcher {
 
     if (nonNull(json.get(FQM_ITEM_MATERIAL_TYPE_ID_KEY))) {
       jsonNode.putIfAbsent(
-        MATERIAL_TYPE,
-        objectMapper
-          .createObjectNode()
-          .put(ID, json.get(FQM_ITEM_MATERIAL_TYPE_ID_KEY).toString())
-          .put(
-            NAME,
-            ofNullable(json.get(FQM_ITEM_MATERIAL_TYPE_NAME_KEY))
-              .orElse(EMPTY)
-              .toString()));
+          MATERIAL_TYPE,
+          objectMapper
+              .createObjectNode()
+              .put(ID, json.get(FQM_ITEM_MATERIAL_TYPE_ID_KEY).toString())
+              .put(
+                  NAME,
+                  ofNullable(json.get(FQM_ITEM_MATERIAL_TYPE_NAME_KEY)).orElse(EMPTY).toString()));
     }
   }
 

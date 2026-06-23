@@ -27,6 +27,7 @@ import org.folio.bulkops.domain.dto.ConsortiumItemCollection;
 import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
+import org.folio.bulkops.processor.UserDeleteProcessor;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.querytool.domain.dto.ContentsRequest;
 import org.folio.spring.FolioExecutionContext;
@@ -56,6 +57,7 @@ class FqmContentFetcherEcsTest {
   @MockitoBean public UsersClient usersClient;
   @MockitoBean public PermissionsClient permissionsClient;
   @MockitoBean private SearchClient searchClient;
+  @MockitoBean private UserDeleteProcessor userDeleteProcessor;
 
   @Value("${application.fqm-fetcher.max_chunk_size}")
   private int chunkSize;

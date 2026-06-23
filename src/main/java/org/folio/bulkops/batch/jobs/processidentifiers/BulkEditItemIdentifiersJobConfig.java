@@ -75,8 +75,7 @@ public class BulkEditItemIdentifiersJobConfig {
       Partitioner bulkEditItemPartitioner,
       BulkEditFileAssembler bulkEditFileAssembler) {
 
-    var partitionHandler =
-        new PerJobPartitionHandler(bulkEditItemStep, numPartitions);
+    var partitionHandler = new PerJobPartitionHandler(bulkEditItemStep, numPartitions);
 
     return new StepBuilder("itemPartitionStep", jobRepository)
         .partitioner("bulkEditItemStep", bulkEditItemPartitioner)

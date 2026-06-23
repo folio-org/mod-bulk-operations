@@ -6,10 +6,13 @@ import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
+import static org.folio.bulkops.domain.dto.OperationType.DELETE;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
+import static org.folio.bulkops.util.Constants.ERROR_DELETING_FILE_NAME_PREFIX;
 
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.processor.marc.MarcFlowCommitProcessor;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -17,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Log4j2
 public class BulkOperationServiceHelper {
   private final BulkOperationRepository bulkOperationRepository;
   private final ErrorService errorService;
@@ -25,9 +29,12 @@ public class BulkOperationServiceHelper {
 
   public void completeBulkOperation(BulkOperation bulkOperation) {
     bulkOperation.setTotalNumOfRecords(bulkOperation.getMatchedNumOfRecords());
+    var prefix =
+        DELETE.equals(bulkOperation.getOperationType())
+            ? ERROR_DELETING_FILE_NAME_PREFIX
+            : ERROR_COMMITTING_FILE_NAME_PREFIX;
     bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(
-        errorService.uploadErrorsToStorage(
-            bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, null));
+        errorService.uploadErrorsToStorage(bulkOperation.getId(), prefix, null));
     if (nonNull(bulkOperation.getLinkToCommittedRecordsErrorsCsvFile())) {
       bulkOperation.setCommittedNumOfErrors(
           errorService.getCommittedNumOfErrors(bulkOperation.getId()));
@@ -46,14 +53,21 @@ public class BulkOperationServiceHelper {
     bulkOperationRepository.save(bulkOperation);
   }
 
-  public void failCommit(BulkOperation bulkOperation, Exception e) {
+  public void failBulkOperation(BulkOperation bulkOperation, Exception e) {
+    failBulkOperation(bulkOperation, e.getMessage());
+  }
+
+  public void failBulkOperation(BulkOperation bulkOperation, String errorMessage) {
+    log.error("Failing bulk operation: {}", errorMessage);
     logFilesService.removeCommittedFiles(bulkOperation);
-    bulkOperation.setErrorMessage(e.getMessage());
+    bulkOperation.setErrorMessage(errorMessage);
+    var prefix =
+        DELETE.equals(bulkOperation.getOperationType())
+            ? ERROR_DELETING_FILE_NAME_PREFIX
+            : ERROR_COMMITTING_FILE_NAME_PREFIX;
     var linkToCommittingErrorsFile =
         errorService.uploadErrorsToStorage(
-            bulkOperation.getId(),
-            ERROR_COMMITTING_FILE_NAME_PREFIX,
-            bulkOperation.getErrorMessage());
+            bulkOperation.getId(), prefix, bulkOperation.getErrorMessage());
     bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
     bulkOperation.setStatus(FAILED);
     bulkOperation.setEndTime(LocalDateTime.now());

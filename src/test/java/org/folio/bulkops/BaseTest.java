@@ -57,6 +57,7 @@ import org.folio.bulkops.domain.dto.RuleDetails;
 import org.folio.bulkops.domain.dto.UpdateActionType;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
+import org.folio.bulkops.processor.UserDeleteProcessor;
 import org.folio.s3.client.S3ClientFactory;
 import org.folio.s3.client.S3ClientProperties;
 import org.folio.spring.DefaultFolioExecutionContext;
@@ -197,6 +198,7 @@ public abstract class BaseTest {
   @MockitoBean public UsersClient usersClient;
   @MockitoBean public PermissionsClient permissionsClient;
   @MockitoBean public LocaleClient localeClient;
+  @MockitoBean public UserDeleteProcessor userDeleteProcessor;
 
   @Autowired protected MockMvc mockMvc;
   @Autowired private FolioModuleMetadata folioModuleMetadata;
@@ -336,6 +338,8 @@ public abstract class BaseTest {
               .linkToCommittedRecordsJsonFile(fileName)
               .linkToCommittedRecordsJsonPreviewFile(fileName)
               .build();
+      case DELETE ->
+          BulkOperation.builder().entityType(entityType).linkToTriggeringCsvFile(fileName).build();
     };
   }
 

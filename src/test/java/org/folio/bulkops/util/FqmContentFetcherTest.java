@@ -71,6 +71,7 @@ import org.folio.bulkops.domain.dto.EntityType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecutionContent;
 import org.folio.bulkops.exception.FqmFetcherException;
+import org.folio.bulkops.processor.UserDeleteProcessor;
 import org.folio.bulkops.service.ConsortiaService;
 import org.folio.bulkops.service.EntityTypeService;
 import org.folio.querytool.domain.dto.ContentsRequest;
@@ -119,6 +120,7 @@ class FqmContentFetcherTest {
   @MockitoBean public AuthnClient authnClient;
   @MockitoBean public UsersClient usersClient;
   @MockitoBean public PermissionsClient permissionsClient;
+  @MockitoBean private UserDeleteProcessor userDeleteProcessor;
 
   @Autowired public ObjectMapper objectMapper;
 
@@ -473,9 +475,9 @@ class FqmContentFetcherTest {
               "\"effectiveLocation\":{\"id\":\"e25a4840-f74b-4d34-a58b-0f9238710d79\","
                   + "\"name\":\"Effective location\"}");
       assertThat(result)
-        .contains(
-          "\"materialType\":{\"id\":\"5ee11d91-f7e8-481d-b079-65d708582ccc\","
-            + "\"name\":\"dvd\"}");
+          .contains(
+              "\"materialType\":{\"id\":\"5ee11d91-f7e8-481d-b079-65d708582ccc\","
+                  + "\"name\":\"dvd\"}");
 
       uuids.forEach(uuid -> assertThat(result).contains("\"id\":\"" + uuid.toString() + "\""));
     }
