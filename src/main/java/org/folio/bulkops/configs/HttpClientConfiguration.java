@@ -4,6 +4,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.folio.bulkops.client.AddressTypeClient;
+import org.folio.bulkops.client.BlUsersClient;
 import org.folio.bulkops.client.BulkEditClient;
 import org.folio.bulkops.client.CallNumberTypeClient;
 import org.folio.bulkops.client.ClassificationTypesClient;
@@ -54,6 +55,7 @@ import org.folio.bulkops.client.StatisticalCodeTypeClient;
 import org.folio.bulkops.client.SubjectSourcesClient;
 import org.folio.bulkops.client.SubjectTypesClient;
 import org.folio.bulkops.client.UserClient;
+import org.folio.bulkops.client.UsersKeycloakClient;
 import org.folio.bulkops.exception.RestClientErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -75,6 +77,16 @@ public class HttpClientConfiguration {
   @Bean
   public AddressTypeClient addressTypeClient(HttpServiceProxyFactory factory) {
     return factory.createClient(AddressTypeClient.class);
+  }
+
+  @Bean
+  public BlUsersClient blUsersClient(HttpServiceProxyFactory factory) {
+    return factory.createClient(BlUsersClient.class);
+  }
+
+  @Bean
+  public UsersKeycloakClient usersKeycloakClient(HttpServiceProxyFactory factory) {
+    return factory.createClient(UsersKeycloakClient.class);
   }
 
   @Bean
