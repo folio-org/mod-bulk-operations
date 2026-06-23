@@ -2138,11 +2138,12 @@ class BulkOperationServiceTest extends BaseTest {
 
     when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
 
+    var userId = UUID.randomUUID();
     assertThrows(
         BadRequestException.class,
         () ->
             bulkOperationService.startBulkOperation(
-                bulkOperationId, UUID.randomUUID(), bulkOperationStart));
+                bulkOperationId, userId, bulkOperationStart));
 
     verify(userDeleteService, never()).deleteUsers(any(BulkOperation.class));
     verify(bulkOperationRepository, never()).save(any(BulkOperation.class));

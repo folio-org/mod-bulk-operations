@@ -27,19 +27,19 @@ public class UserDeleteProcessor implements RecordDeleteProcessor<User> {
 
   private String buildErrorMessage(OpenTransactions openTransactions) {
     List<String> transactionNames = new ArrayList<>();
-    if (openTransactions.getLoans() != null && openTransactions.getLoans() != 0) {
+    if (openTransactions.getLoans() != 0) {
       transactionNames.add("loans");
     }
-    if (openTransactions.getRequests() != null && openTransactions.getRequests() != 0) {
+    if (openTransactions.getRequests() != 0) {
       transactionNames.add("requests");
     }
-    if (openTransactions.getFeesFines() != null && openTransactions.getFeesFines() != 0) {
+    if (openTransactions.getFeesFines() != 0) {
       transactionNames.add("fees/fines");
     }
-    if (openTransactions.getProxies() != null && openTransactions.getProxies() != 0) {
+    if (openTransactions.getProxies() != 0) {
       transactionNames.add("proxies");
     }
-    if (openTransactions.getBlocks() != null && openTransactions.getBlocks() != 0) {
+    if (openTransactions.getBlocks() != 0) {
       transactionNames.add("blocks");
     }
     return "Open %s".formatted(String.join(", ", transactionNames));
