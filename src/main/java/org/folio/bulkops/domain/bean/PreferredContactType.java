@@ -23,5 +23,6 @@ public enum PreferredContactType {
 
   public String getId() {
     return id;
+
   }
 }
