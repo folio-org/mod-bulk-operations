@@ -482,11 +482,14 @@ class OpenCsvConverterTest extends BaseTest {
                             .withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880")
                             .withDesc("desc")
                             .withAddressType("work"))));
-    when(userConfigurationClient.getByQuery("configName==preferredContactType and id==\"001\"", 1))
+    when(userConfigurationClient.getByQuery(
+            "configName==preferredContactType and code==\"001\"", 1))
         .thenReturn(preferredContactTypeConfig("001", "Mail (Primary Address)"));
-    when(userConfigurationClient.getByQuery("configName==preferredContactType and id==\"002\"", 1))
+    when(userConfigurationClient.getByQuery(
+            "configName==preferredContactType and code==\"002\"", 1))
         .thenReturn(preferredContactTypeConfig("002", "Email"));
-    when(userConfigurationClient.getByQuery("configName==preferredContactType and id==\"003\"", 1))
+    when(userConfigurationClient.getByQuery(
+            "configName==preferredContactType and code==\"003\"", 1))
         .thenReturn(preferredContactTypeConfig("003", "Text Message"));
     when(okapiClient.getModuleIds(any(), any()))
         .thenReturn(
@@ -844,7 +847,7 @@ class OpenCsvConverterTest extends BaseTest {
 
   private ConfigurationCollection preferredContactTypeConfig(String id, String name) {
     return ConfigurationCollection.builder()
-        .configs(List.of(ModelConfiguration.builder().id(id).value(name).build()))
+        .configs(List.of(ModelConfiguration.builder().code(id).value(name).build()))
         .build();
   }
 }

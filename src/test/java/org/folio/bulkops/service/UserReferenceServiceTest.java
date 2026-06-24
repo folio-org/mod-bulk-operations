@@ -200,24 +200,28 @@ class UserReferenceServiceTest {
   @Test
   void getPreferredContactTypeByIdTest() {
     when(userConfigurationClient.getByQuery(
-            "configName==preferredContactType and id==" + encode("email-id"), 1))
+            "configName==preferredContactType and code==" + encode("email-code"), 1))
         .thenReturn(
             ConfigurationCollection.builder()
                 .configs(
                     List.of(
-                        ModelConfiguration.builder().id("email-id").value("Email").build()))
+                        ModelConfiguration.builder()
+                            .id("email-config-id")
+                            .code("email-code")
+                            .value("Email")
+                            .build()))
                 .build());
 
-    var actual = userReferenceService.getPreferredContactTypeById("email-id");
+    var actual = userReferenceService.getPreferredContactTypeById("email-code");
 
-    assertEquals("email-id", actual.getId());
+    assertEquals("email-code", actual.getId());
     assertEquals("Email", actual.getName());
   }
 
   @Test
   void getPreferredContactTypeByIdNotFoundTest() {
     when(userConfigurationClient.getByQuery(
-            "configName==preferredContactType and id==" + encode("not found id"), 1))
+            "configName==preferredContactType and code==" + encode("not found id"), 1))
         .thenReturn(ConfigurationCollection.builder().configs(Collections.emptyList()).build());
 
     assertThrows(

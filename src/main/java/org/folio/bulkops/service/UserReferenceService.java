@@ -34,7 +34,7 @@ import org.springframework.stereotype.Service;
 public class UserReferenceService {
   private static final String MOD_USERS = "mod-users";
   private static final String PREFERRED_CONTACT_TYPE_QUERY =
-      "configName==preferredContactType and id==%s";
+      "configName==preferredContactType and code==%s";
   private static final int PREFERRED_CONTACT_TYPE_LIMIT = 1;
 
   private final AddressTypeClient addressTypeClient;
@@ -149,7 +149,7 @@ public class UserReferenceService {
             format(PREFERRED_CONTACT_TYPE_QUERY, encode(id)), PREFERRED_CONTACT_TYPE_LIMIT);
     if (ObjectUtils.isNotEmpty(response) && ObjectUtils.isNotEmpty(response.getConfigs())) {
       var configuration = response.getConfigs().getFirst();
-      return new PreferredContactType(configuration.getId(), configuration.getValue());
+      return new PreferredContactType(configuration.getCode(), configuration.getValue());
     }
     throw new ReferenceDataNotFoundException(format("Invalid Preferred contact value: %s", id));
   }
