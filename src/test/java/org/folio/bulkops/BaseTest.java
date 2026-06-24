@@ -50,6 +50,7 @@ import org.folio.bulkops.client.StatisticalCodeClient;
 import org.folio.bulkops.client.StatisticalCodeTypeClient;
 import org.folio.bulkops.client.SubjectSourcesClient;
 import org.folio.bulkops.client.UserClient;
+import org.folio.bulkops.client.UserConfigurationClient;
 import org.folio.bulkops.domain.dto.Action;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
@@ -198,6 +199,7 @@ public abstract class BaseTest {
   @MockitoBean public UsersClient usersClient;
   @MockitoBean public PermissionsClient permissionsClient;
   @MockitoBean public LocaleClient localeClient;
+  @MockitoBean public UserConfigurationClient userConfigurationClient;
   @MockitoBean public UserDeleteProcessor userDeleteProcessor;
 
   @Autowired protected MockMvc mockMvc;

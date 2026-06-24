@@ -19,13 +19,17 @@ import org.folio.bulkops.client.AddressTypeClient;
 import org.folio.bulkops.client.CustomFieldsClient;
 import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.client.GroupClient;
+import org.folio.bulkops.client.LocaleClient;
 import org.folio.bulkops.client.OkapiClient;
+import org.folio.bulkops.client.UserConfigurationClient;
 import org.folio.bulkops.domain.bean.AddressType;
 import org.folio.bulkops.domain.bean.AddressTypeCollection;
+import org.folio.bulkops.domain.bean.ConfigurationCollection;
 import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.bean.CustomFieldCollection;
 import org.folio.bulkops.domain.bean.Department;
 import org.folio.bulkops.domain.bean.DepartmentCollection;
+import org.folio.bulkops.domain.bean.ModelConfiguration;
 import org.folio.bulkops.domain.bean.UserGroup;
 import org.folio.bulkops.domain.bean.UserGroupCollection;
 import org.folio.bulkops.exception.NotFoundException;
@@ -48,6 +52,8 @@ class UserReferenceServiceTest {
   @Mock private CustomFieldsClient customFieldsClient;
   @Mock private FolioExecutionContext folioExecutionContext;
   @Mock private OkapiClient okapiClient;
+  @Mock private LocaleClient localeClient;
+  @Mock private UserConfigurationClient userConfigurationClient;
   @InjectMocks @Spy private UserReferenceService userReferenceService;
 
   @Test
@@ -192,7 +198,28 @@ class UserReferenceServiceTest {
   }
 
   @Test
+  void getPreferredContactTypeByIdTest() {
+    when(userConfigurationClient.getByQuery(
+            "configName==preferredContactType and id==" + encode("email-id"), 1))
+        .thenReturn(
+            ConfigurationCollection.builder()
+                .configs(
+                    List.of(
+                        ModelConfiguration.builder().id("email-id").value("Email").build()))
+                .build());
+
+    var actual = userReferenceService.getPreferredContactTypeById("email-id");
+
+    assertEquals("email-id", actual.getId());
+    assertEquals("Email", actual.getName());
+  }
+
+  @Test
   void getPreferredContactTypeByIdNotFoundTest() {
+    when(userConfigurationClient.getByQuery(
+            "configName==preferredContactType and id==" + encode("not found id"), 1))
+        .thenReturn(ConfigurationCollection.builder().configs(Collections.emptyList()).build());
+
     assertThrows(
         ReferenceDataNotFoundException.class,
         () -> userReferenceService.getPreferredContactTypeById("not found id"));

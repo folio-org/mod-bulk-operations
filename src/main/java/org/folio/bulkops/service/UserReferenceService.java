@@ -16,6 +16,7 @@ import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.client.GroupClient;
 import org.folio.bulkops.client.LocaleClient;
 import org.folio.bulkops.client.OkapiClient;
+import org.folio.bulkops.client.UserConfigurationClient;
 import org.folio.bulkops.domain.bean.AddressType;
 import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.bean.Department;
@@ -32,6 +33,9 @@ import org.springframework.stereotype.Service;
 @Log4j2
 public class UserReferenceService {
   private static final String MOD_USERS = "mod-users";
+  private static final String PREFERRED_CONTACT_TYPE_QUERY =
+      "configName==preferredContactType and id==%s";
+  private static final int PREFERRED_CONTACT_TYPE_LIMIT = 1;
 
   private final AddressTypeClient addressTypeClient;
   private final DepartmentClient departmentClient;
@@ -40,6 +44,7 @@ public class UserReferenceService {
   private final FolioExecutionContext folioExecutionContext;
   private final OkapiClient okapiClient;
   private final LocaleClient localeClient;
+  private final UserConfigurationClient userConfigurationClient;
 
   @Cacheable(cacheNames = "addressTypeIds")
   public AddressType getAddressTypeByAddressTypeValue(String addressTypeValue) {
@@ -137,10 +142,14 @@ public class UserReferenceService {
         format("Module id not found for name: %s", moduleName));
   }
 
+  @Cacheable(cacheNames = "preferredContactTypeIds")
   public PreferredContactType getPreferredContactTypeById(String id) {
-    var contactType = PreferredContactType.getById(id);
-    if (contactType.isPresent()) {
-      return contactType.get();
+    var response =
+        userConfigurationClient.getByQuery(
+            format(PREFERRED_CONTACT_TYPE_QUERY, encode(id)), PREFERRED_CONTACT_TYPE_LIMIT);
+    if (ObjectUtils.isNotEmpty(response) && ObjectUtils.isNotEmpty(response.getConfigs())) {
+      var configuration = response.getConfigs().getFirst();
+      return new PreferredContactType(configuration.getId(), configuration.getValue());
     }
     throw new ReferenceDataNotFoundException(format("Invalid Preferred contact value: %s", id));
   }

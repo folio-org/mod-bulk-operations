@@ -1,28 +1,15 @@
 package org.folio.bulkops.domain.bean;
 
-import java.util.Arrays;
-import java.util.Optional;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.With;
 
-public enum PreferredContactType {
-  EMAIL("002", "Email"),
-  MAIL("001", "Mail (Primary Address)"),
-  TEXT_MESSAGE("003", "Text Message");
-
+@Data
+@With
+@NoArgsConstructor
+@AllArgsConstructor
+public class PreferredContactType {
   private String id;
-
   private String name;
-
-  PreferredContactType(String id, String name) {
-    this.id = id;
-    this.name = name;
-  }
-
-  public static Optional<PreferredContactType> getById(String id) {
-    return Arrays.stream(values()).filter(type -> type.id.equals(id)).findFirst();
-  }
-
-  public String getId() {
-    return id;
-
-  }
 }

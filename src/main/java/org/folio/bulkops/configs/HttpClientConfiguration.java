@@ -55,6 +55,7 @@ import org.folio.bulkops.client.StatisticalCodeTypeClient;
 import org.folio.bulkops.client.SubjectSourcesClient;
 import org.folio.bulkops.client.SubjectTypesClient;
 import org.folio.bulkops.client.UserClient;
+import org.folio.bulkops.client.UserConfigurationClient;
 import org.folio.bulkops.client.UsersKeycloakClient;
 import org.folio.bulkops.exception.RestClientErrorHandler;
 import org.springframework.context.annotation.Bean;
@@ -334,6 +335,11 @@ public class HttpClientConfiguration {
   @Bean
   public UserClient userClient(HttpServiceProxyFactory factory) {
     return factory.createClient(UserClient.class);
+  }
+
+  @Bean
+  public UserConfigurationClient userConfigurationClient(HttpServiceProxyFactory factory) {
+    return factory.createClient(UserConfigurationClient.class);
   }
 
   @Bean
