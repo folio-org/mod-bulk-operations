@@ -35,6 +35,7 @@ import org.folio.bulkops.domain.bean.BulkOperationsEntity;
 import org.folio.bulkops.domain.bean.CallNumberType;
 import org.folio.bulkops.domain.bean.CallNumberTypeCollection;
 import org.folio.bulkops.domain.bean.CirculationNote;
+import org.folio.bulkops.domain.bean.ConfigurationCollection;
 import org.folio.bulkops.domain.bean.CustomField;
 import org.folio.bulkops.domain.bean.CustomFieldCollection;
 import org.folio.bulkops.domain.bean.CustomFieldTypes;
@@ -69,6 +70,7 @@ import org.folio.bulkops.domain.bean.LoanTypeCollection;
 import org.folio.bulkops.domain.bean.Locale;
 import org.folio.bulkops.domain.bean.MaterialType;
 import org.folio.bulkops.domain.bean.MaterialTypeCollection;
+import org.folio.bulkops.domain.bean.ModelConfiguration;
 import org.folio.bulkops.domain.bean.ModeOfIssuance;
 import org.folio.bulkops.domain.bean.ModesOfIssuance;
 import org.folio.bulkops.domain.bean.NatureOfContentTerm;
@@ -480,6 +482,12 @@ class OpenCsvConverterTest extends BaseTest {
                             .withId("93d3d88d-499b-45d0-9bc7-ac73c3a19880")
                             .withDesc("desc")
                             .withAddressType("work"))));
+    when(userConfigurationClient.getByQuery("configName==preferredContactType and id==\"001\"", 1))
+        .thenReturn(preferredContactTypeConfig("001", "Mail (Primary Address)"));
+    when(userConfigurationClient.getByQuery("configName==preferredContactType and id==\"002\"", 1))
+        .thenReturn(preferredContactTypeConfig("002", "Email"));
+    when(userConfigurationClient.getByQuery("configName==preferredContactType and id==\"003\"", 1))
+        .thenReturn(preferredContactTypeConfig("003", "Text Message"));
     when(okapiClient.getModuleIds(any(), any()))
         .thenReturn(
             JsonNodeFactory.instance
@@ -832,5 +840,11 @@ class OpenCsvConverterTest extends BaseTest {
                 .totalRecords(1)
                 .build());
     when(localeClient.getTenantLocale()).thenReturn(Locale.builder().locale("UTC").build());
+  }
+
+  private ConfigurationCollection preferredContactTypeConfig(String id, String name) {
+    return ConfigurationCollection.builder()
+        .configs(List.of(ModelConfiguration.builder().id(id).value(name).build()))
+        .build();
   }
 }
