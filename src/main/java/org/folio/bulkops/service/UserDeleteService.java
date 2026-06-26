@@ -9,7 +9,6 @@ import java.io.InputStreamReader;
 import java.io.Writer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.io.FilenameUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.ErrorType;
@@ -24,7 +23,7 @@ import tools.jackson.databind.ObjectMapper;
 @RequiredArgsConstructor
 @Log4j2
 public class UserDeleteService {
-  private static final String QUERY_FILENAME_TEMPLATE = "%s/%s.fql";
+  public static final String DELETE_QUERY_FILENAME_TEMPLATE = "%1$s/QueryStatement-%1$s.txt";
 
   private final UserDeleteProcessor userDeleteProcessor;
   private final RemoteFileSystemClient remoteFileSystemClient;
@@ -76,10 +75,7 @@ public class UserDeleteService {
   private String saveFqlQuery(BulkOperation bulkOperation) throws IOException {
     if (isNotEmpty(bulkOperation.getFqlQuery())
         && isNotEmpty(bulkOperation.getLinkToTriggeringCsvFile())) {
-      var queryFilename =
-          QUERY_FILENAME_TEMPLATE.formatted(
-              bulkOperation.getId(),
-              FilenameUtils.getBaseName(bulkOperation.getLinkToTriggeringCsvFile()));
+      var queryFilename = DELETE_QUERY_FILENAME_TEMPLATE.formatted(bulkOperation.getId());
       try (Writer queryFileWriter = remoteFileSystemClient.writer(queryFilename)) {
         queryFileWriter.write(bulkOperation.getUserFriendlyQuery());
         return queryFilename;

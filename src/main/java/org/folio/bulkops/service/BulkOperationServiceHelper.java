@@ -6,9 +6,7 @@ import static org.folio.bulkops.domain.dto.EntityType.INSTANCE_MARC;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
-import static org.folio.bulkops.domain.dto.OperationType.DELETE;
 import static org.folio.bulkops.util.Constants.ERROR_COMMITTING_FILE_NAME_PREFIX;
-import static org.folio.bulkops.util.Constants.ERROR_DELETING_FILE_NAME_PREFIX;
 
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
@@ -29,12 +27,9 @@ public class BulkOperationServiceHelper {
 
   public void completeBulkOperation(BulkOperation bulkOperation) {
     bulkOperation.setTotalNumOfRecords(bulkOperation.getMatchedNumOfRecords());
-    var prefix =
-        DELETE.equals(bulkOperation.getOperationType())
-            ? ERROR_DELETING_FILE_NAME_PREFIX
-            : ERROR_COMMITTING_FILE_NAME_PREFIX;
     bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(
-        errorService.uploadErrorsToStorage(bulkOperation.getId(), prefix, null));
+        errorService.uploadErrorsToStorage(
+            bulkOperation.getId(), ERROR_COMMITTING_FILE_NAME_PREFIX, null));
     if (nonNull(bulkOperation.getLinkToCommittedRecordsErrorsCsvFile())) {
       bulkOperation.setCommittedNumOfErrors(
           errorService.getCommittedNumOfErrors(bulkOperation.getId()));
@@ -61,13 +56,11 @@ public class BulkOperationServiceHelper {
     log.error("Failing bulk operation: {}", errorMessage);
     logFilesService.removeCommittedFiles(bulkOperation);
     bulkOperation.setErrorMessage(errorMessage);
-    var prefix =
-        DELETE.equals(bulkOperation.getOperationType())
-            ? ERROR_DELETING_FILE_NAME_PREFIX
-            : ERROR_COMMITTING_FILE_NAME_PREFIX;
     var linkToCommittingErrorsFile =
         errorService.uploadErrorsToStorage(
-            bulkOperation.getId(), prefix, bulkOperation.getErrorMessage());
+            bulkOperation.getId(),
+            ERROR_COMMITTING_FILE_NAME_PREFIX,
+            bulkOperation.getErrorMessage());
     bulkOperation.setLinkToCommittedRecordsErrorsCsvFile(linkToCommittingErrorsFile);
     bulkOperation.setStatus(FAILED);
     bulkOperation.setEndTime(LocalDateTime.now());
