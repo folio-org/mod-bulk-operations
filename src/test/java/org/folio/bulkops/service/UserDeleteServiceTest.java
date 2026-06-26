@@ -1,5 +1,6 @@
 package org.folio.bulkops.service;
 
+import static org.folio.bulkops.service.UserDeleteService.DELETE_QUERY_FILENAME_TEMPLATE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -58,7 +59,7 @@ class UserDeleteServiceTest {
     var operationId = UUID.randomUUID();
     var user1 = new User().withId("user-1");
     var user2 = new User().withId("user-2");
-    var expectedQueryPath = operationId + "/users.fql";
+    var expectedQueryPath = DELETE_QUERY_FILENAME_TEMPLATE.formatted(operationId);
     var queryWriter = new StringWriter();
 
     @SuppressWarnings("unchecked")
