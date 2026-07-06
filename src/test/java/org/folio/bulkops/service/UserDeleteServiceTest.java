@@ -19,6 +19,7 @@ import java.util.stream.IntStream;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.User;
 import org.folio.bulkops.domain.dto.ErrorType;
+import org.folio.bulkops.domain.dto.IdentifierType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.processor.UserDeleteProcessor;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -57,8 +58,8 @@ class UserDeleteServiceTest {
   @Test
   void deleteUsers_shouldDeleteUsersSaveErrorsAndCompleteOperation() throws Exception {
     var operationId = UUID.randomUUID();
-    var user1 = new User().withId("user-1");
-    var user2 = new User().withId("user-2");
+    var user1 = new User().withId("user-1").withBarcode("barcode-1");
+    var user2 = new User().withId("user-2").withBarcode("barcode-2");
     var expectedQueryPath = DELETE_QUERY_FILENAME_TEMPLATE.formatted(operationId);
     var queryWriter = new StringWriter();
 
@@ -79,6 +80,7 @@ class UserDeleteServiceTest {
     var operation =
         BulkOperation.builder()
             .id(operationId)
+            .identifierType(IdentifierType.BARCODE)
             .linkToMatchedRecordsJsonFile("tmp/users.json")
             .linkToTriggeringCsvFile("tmp/users.csv")
             .fqlQuery("query=true")
@@ -89,7 +91,7 @@ class UserDeleteServiceTest {
 
     verify(userDeleteProcessor).delete(user1);
     verify(userDeleteProcessor).delete(user2);
-    verify(errorService).saveError(operationId, "user-2", "cannot delete user", ErrorType.ERROR);
+    verify(errorService).saveError(operationId, "barcode-2", "cannot delete user", ErrorType.ERROR);
     assertEquals(2, operation.getCommittedNumOfRecords());
     assertEquals(expectedQueryPath, operation.getLinkToTriggeringQueryFile());
     assertEquals("username==test", queryWriter.toString());

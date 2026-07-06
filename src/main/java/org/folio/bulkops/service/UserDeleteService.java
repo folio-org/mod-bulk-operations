@@ -68,7 +68,8 @@ public class UserDeleteService {
     try {
       userDeleteProcessor.delete(user);
     } catch (Exception e) {
-      errorService.saveError(bulkOperation.getId(), user.getId(), e.getMessage(), ErrorType.ERROR);
+      errorService.saveError(bulkOperation.getId(),
+          user.getIdentifier(bulkOperation.getIdentifierType()), e.getMessage(), ErrorType.ERROR);
     }
   }
 
