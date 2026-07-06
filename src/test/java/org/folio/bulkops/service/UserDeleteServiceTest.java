@@ -92,7 +92,8 @@ class UserDeleteServiceTest {
     verify(userDeleteProcessor).delete(user1);
     verify(userDeleteProcessor).delete(user2);
     verify(errorService).saveError(operationId, "barcode-2", "cannot delete user", ErrorType.ERROR);
-    assertEquals(2, operation.getCommittedNumOfRecords());
+    assertEquals(2, operation.getProcessedNumOfRecords());
+    assertEquals(0, operation.getCommittedNumOfRecords());
     assertEquals(expectedQueryPath, operation.getLinkToTriggeringQueryFile());
     assertEquals("username==test", queryWriter.toString());
     verify(bulkOperationServiceHelper).completeBulkOperation(operation);
