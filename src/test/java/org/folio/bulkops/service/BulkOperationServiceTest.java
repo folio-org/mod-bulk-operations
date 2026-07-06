@@ -153,6 +153,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.EnumSource.Mode;
 import org.marc4j.marc.Record;
 import org.mockito.ArgumentCaptor;
 import org.springframework.batch.core.job.Job;
@@ -2129,12 +2130,14 @@ class BulkOperationServiceTest extends BaseTest {
     }
   }
 
-  @Test
-  void shouldRejectDeleteStepWhenOperationHasInvalidStatus() {
+  @ParameterizedTest
+  @EnumSource(value = OperationStatusType.class,
+      names = {"DATA_MODIFICATION", "REVIEW_CHANGES"}, mode = Mode.EXCLUDE)
+  void shouldRejectDeleteStepWhenOperationHasInvalidStatus(OperationStatusType status) {
     var bulkOperationId = UUID.randomUUID();
     var bulkOperationStart = new BulkOperationStart().step(DELETE);
     var bulkOperation =
-        BulkOperation.builder().id(bulkOperationId).entityType(USER).status(REVIEW_CHANGES).build();
+        BulkOperation.builder().id(bulkOperationId).entityType(USER).status(status).build();
 
     when(bulkOperationRepository.findById(bulkOperationId)).thenReturn(Optional.of(bulkOperation));
 

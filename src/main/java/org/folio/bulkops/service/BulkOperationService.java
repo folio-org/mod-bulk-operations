@@ -707,7 +707,8 @@ public class BulkOperationService {
     operation.setUserId(xokapiUserId);
 
     if (DELETE == step) {
-      if (DATA_MODIFICATION.equals(operation.getStatus())) {
+      if (DATA_MODIFICATION.equals(operation.getStatus())
+          || REVIEW_CHANGES.equals(operation.getStatus())) {
         errorService.deleteErrorsByBulkOperationId(bulkOperationId);
         operation.setCommittedNumOfRecords(0);
         operation.setCommittedNumOfErrors(0);
