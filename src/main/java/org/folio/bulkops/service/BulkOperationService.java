@@ -710,7 +710,9 @@ public class BulkOperationService {
       if (DATA_MODIFICATION.equals(operation.getStatus())
           || REVIEW_CHANGES.equals(operation.getStatus())) {
         errorService.deleteErrorsByBulkOperationId(bulkOperationId);
+        logFilesService.removeModifiedFiles(operation);
         operation.setCommittedNumOfRecords(0);
+        operation.setProcessedNumOfRecords(0);
         operation.setCommittedNumOfErrors(0);
         operation.setCommittedNumOfWarnings(0);
         operation.setOperationType(OperationType.DELETE);

@@ -117,6 +117,10 @@ public class LogFilesService {
       remoteFileSystemClient.remove(bulkOperation.getLinkToMatchedRecordsErrorsCsvFile());
       bulkOperation.setLinkToMatchedRecordsErrorsCsvFile(null);
     }
+    if (isNotEmpty(bulkOperation.getLinkToTriggeringQueryFile())) {
+      remoteFileSystemClient.remove(bulkOperation.getLinkToTriggeringQueryFile());
+      bulkOperation.setLinkToTriggeringQueryFile(null);
+    }
   }
 
   public void removeModifiedFiles(BulkOperation bulkOperation) {

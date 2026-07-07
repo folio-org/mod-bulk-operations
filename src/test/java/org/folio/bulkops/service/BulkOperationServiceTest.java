@@ -2125,7 +2125,7 @@ class BulkOperationServiceTest extends BaseTest {
       assertEquals(0, result.getCommittedNumOfWarnings());
       assertEquals(org.folio.bulkops.domain.dto.OperationType.DELETE, result.getOperationType());
       verify(errorService).deleteErrorsByBulkOperationId(bulkOperationId);
-      verify(bulkOperationRepository).save(result);
+      verify(bulkOperationRepository, times(2)).save(result);
       await().untilAsserted(() -> verify(userDeleteService).deleteUsers(result));
     }
   }

@@ -599,11 +599,11 @@ public class FqmContentFetcher {
         return EMPTY;
       }
 
-//      if (isSharedInstanceAndCurrentTenantIsMember(json, entityType)) {
-//        addNoMatchFoundError(id, bulkOperationExecutionContents, operationId);
-//        bulkOperation.setProcessedNumOfRecords(bulkOperation.getProcessedNumOfRecords() + 1);
-//        return EMPTY;
-//      }
+      if (isSharedInstanceAndCurrentTenantIsMember(json, entityType)) {
+        addNoMatchFoundError(id, bulkOperationExecutionContents, operationId);
+        bulkOperation.setProcessedNumOfRecords(bulkOperation.getProcessedNumOfRecords() + 1);
+        return EMPTY;
+      }
 
       var jsonb = json.get(getEntityJsonKey(entityType));
 
