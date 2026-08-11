@@ -11,6 +11,7 @@ import static org.folio.bulkops.domain.dto.OperationStatusType.FAILED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.RETRIEVING_RECORDS;
 import static org.folio.bulkops.domain.dto.OperationStatusType.SAVED_IDENTIFIERS;
 import static org.folio.bulkops.service.QueryService.QUERY_FILENAME_TEMPLATE;
+import static org.folio.bulkops.util.Constants.LINKED_DATA_SOURCE_IS_NOT_SUPPORTED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -267,6 +268,75 @@ class QueryServiceTest {
 
     verify(bulkOperationRepository).updateExecutionCounters(operation.getId(), 100, 100);
     verify(bulkOperationRepository).updateExecutionCounters(operation.getId(), 101, 101);
+  }
+
+  @Test
+  void
+      processAsyncQueryResult_shouldAppendLinkedDataIdsToTriggeringCsv()
+          throws Exception {
+    var operation =
+        BulkOperation.builder()
+            .id(randomUUID())
+            .entityType(EntityType.INSTANCE)
+            .approach(QUERY)
+            .build();
+
+    String triggeringCsv = "trigger.csv";
+    String matchedCsv = "matched.csv";
+    String matchedJson = "matched.json";
+    String matchedMrc = "matched.mrc";
+
+    var triggeringWriter = spy(new StringWriter());
+    when(remoteFileSystemClient.writer(triggeringCsv)).thenReturn(triggeringWriter);
+    when(remoteFileSystemClient.writer(matchedCsv)).thenReturn(new StringWriter());
+    when(remoteFileSystemClient.writer(matchedJson)).thenReturn(new StringWriter());
+    when(remoteFileSystemClient.writer(matchedMrc)).thenReturn(new StringWriter());
+
+    @SuppressWarnings("unchecked")
+    var iterator = (MappingIterator<BulkOperationsEntity>) mock(MappingIterator.class);
+    when(iterator.hasNext()).thenReturn(false);
+
+    var mapper = mock(ObjectMapper.class);
+    when(mapper.createParser(any(InputStream.class))).thenReturn(mock(JsonParser.class));
+    when(mapper.readValues(any(JsonParser.class), any(Class.class))).thenReturn(iterator);
+
+    var queryService =
+        new QueryService(
+            bulkOperationRepository,
+            errorService,
+            mapper,
+            permissionsValidator,
+            remoteFileSystemClient,
+            queryClient,
+            fqmContentFetcher,
+            localReferenceDataService,
+            srsService);
+
+    var contents =
+        new ArrayList<>(
+            List.of(
+                BulkOperationExecutionContent.builder()
+                    .identifier("linked-data-id")
+                    .bulkOperationId(operation.getId())
+                    .errorMessage(LINKED_DATA_SOURCE_IS_NOT_SUPPORTED)
+                    .build(),
+                BulkOperationExecutionContent.builder()
+                    .identifier("other-id")
+                    .bulkOperationId(operation.getId())
+                    .errorMessage("another error")
+                    .build()));
+
+    queryService.processAsyncQueryResult(
+        new ByteArrayInputStream("[]".getBytes()),
+        triggeringCsv,
+        matchedCsv,
+        matchedJson,
+        matchedMrc,
+        operation,
+        contents);
+
+    assertThat(triggeringWriter.toString()).isEqualTo("linked-data-id");
+    verify(errorService).saveErrorsAfterQuery(same(contents), same(operation));
   }
 
   @Test
