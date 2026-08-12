@@ -1,6 +1,7 @@
 package org.folio.bulkops.service;
 
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static org.folio.bulkops.domain.dto.ApproachType.QUERY;
 import static org.folio.bulkops.domain.dto.OperationStatusType.CANCELLED;
 import static org.folio.bulkops.domain.dto.OperationStatusType.COMPLETED_WITH_ERRORS;
@@ -323,7 +324,7 @@ public class QueryService {
 
         errorService.saveErrorsAfterQuery(bulkOperationExecutionContents, operation);
 
-        if (writerForTriggeringCsvFile != null
+        if (nonNull(writerForTriggeringCsvFile)
             && EntityType.INSTANCE.equals(operation.getEntityType())) {
           var linkedDataIds =
               bulkOperationExecutionContents.stream()
