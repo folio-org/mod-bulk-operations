@@ -86,6 +86,7 @@ class QueryServiceTest {
   @Mock private FqmContentFetcher fqmContentFetcher;
   @Mock private LocalReferenceDataService localReferenceDataService;
   @Mock private SrsService srsService;
+  @Mock private JsonParser jsonParser;
 
   private QueryService service;
 
@@ -147,7 +148,7 @@ class QueryServiceTest {
     when(iterator.next()).thenReturn(rec1, rec2);
 
     var mapper = mock(ObjectMapper.class);
-    when(mapper.createParser(any(InputStream.class))).thenReturn(mock(JsonParser.class));
+    when(mapper.createParser(any(InputStream.class))).thenReturn(jsonParser);
     when(mapper.readValues(any(JsonParser.class), any(Class.class))).thenReturn(iterator);
     when(mapper.writeValueAsString(any())).thenReturn("{\"x\":1}");
 
@@ -234,7 +235,7 @@ class QueryServiceTest {
             records.subList(1, records.size()).toArray(new BulkOperationsEntity[0]));
 
     var mapper = mock(ObjectMapper.class);
-    when(mapper.createParser(any(InputStream.class))).thenReturn(mock(JsonParser.class));
+    when(mapper.createParser(any(InputStream.class))).thenReturn(jsonParser);
     when(mapper.readValues(any(JsonParser.class), any(Class.class))).thenReturn(iterator);
     when(mapper.writeValueAsString(any())).thenReturn("{}");
 
@@ -297,7 +298,7 @@ class QueryServiceTest {
     when(iterator.hasNext()).thenReturn(false);
 
     var mapper = mock(ObjectMapper.class);
-    when(mapper.createParser(any(InputStream.class))).thenReturn(mock(JsonParser.class));
+    when(mapper.createParser(any(InputStream.class))).thenReturn(jsonParser);
     when(mapper.readValues(any(JsonParser.class), any(Class.class))).thenReturn(iterator);
 
     var queryService =
@@ -335,7 +336,7 @@ class QueryServiceTest {
         operation,
         contents);
 
-    assertThat(triggeringWriter.toString()).isEqualTo("linked-data-id");
+    assertThat(triggeringWriter.toString()).hasToString("linked-data-id");
     verify(errorService).saveErrorsAfterQuery(same(contents), same(operation));
   }
 
@@ -376,7 +377,7 @@ class QueryServiceTest {
         .checkPermissions(any(), any());
 
     var mapper = mock(ObjectMapper.class);
-    when(mapper.createParser(any(InputStream.class))).thenReturn(mock(JsonParser.class));
+    when(mapper.createParser(any(InputStream.class))).thenReturn(jsonParser);
     when(mapper.readValues(any(JsonParser.class), any(Class.class))).thenReturn(iterator);
 
     var queryService =
