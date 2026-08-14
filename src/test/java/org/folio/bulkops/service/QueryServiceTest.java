@@ -39,6 +39,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -480,6 +481,8 @@ class QueryServiceTest {
     var contents = new ArrayList<BulkOperationExecutionContent>();
     InputStream is = new ByteArrayInputStream("[]".getBytes());
 
+    when(remoteFileSystemClient.get(anyString()))
+        .thenReturn(new ByteArrayInputStream("abc".getBytes()));
     QueryService queryServiceSpy = spy(service);
     doAnswer(
             inv -> {
@@ -520,6 +523,9 @@ class QueryServiceTest {
 
     var contents = new ArrayList<BulkOperationExecutionContent>();
     InputStream is = new ByteArrayInputStream("[]".getBytes());
+
+    when(remoteFileSystemClient.get(anyString()))
+        .thenReturn(new ByteArrayInputStream("abc".getBytes()));
 
     QueryService queryServiceSpy = spy(service);
     doAnswer(
@@ -737,6 +743,9 @@ class QueryServiceTest {
             .build();
     var contents = new ArrayList<BulkOperationExecutionContent>();
     InputStream is = new ByteArrayInputStream("[]".getBytes());
+
+    when(remoteFileSystemClient.get(anyString()))
+        .thenReturn(new ByteArrayInputStream("abc".getBytes()));
 
     var queryServiceSpy = spy(service);
 

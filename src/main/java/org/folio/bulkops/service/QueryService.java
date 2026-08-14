@@ -200,8 +200,12 @@ public class QueryService {
           operation,
           bulkOperationExecutionContents);
 
-      if (operation.getMatchedNumOfRecords() > 0) {
+      var triggeringCsvFileLength = remoteFileSystemClient.get(triggeringCsvFileName).available();
+      if (triggeringCsvFileLength > 0) {
         operation.setLinkToTriggeringCsvFile(triggeringCsvFileName);
+      }
+
+      if (operation.getMatchedNumOfRecords() > 0) {
         operation.setLinkToMatchedRecordsCsvFile(matchedCsvFileName);
         operation.setLinkToMatchedRecordsJsonFile(matchedJsonFileName);
         operation.setStatus(DATA_MODIFICATION);
