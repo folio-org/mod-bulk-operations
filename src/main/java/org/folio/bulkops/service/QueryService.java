@@ -200,9 +200,9 @@ public class QueryService {
           operation,
           bulkOperationExecutionContents);
 
-      var triggeringCsvFileLength = remoteFileSystemClient.get(triggeringCsvFileName).available();
-      log.info("Triggering file length: {}", triggeringCsvFileLength);
-      if (triggeringCsvFileLength > 0) {
+      var firstByteValue = remoteFileSystemClient.get(triggeringCsvFileName).read();
+      log.info("First byte: {}", firstByteValue);
+      if (firstByteValue != -1) {
         operation.setLinkToTriggeringCsvFile(triggeringCsvFileName);
       }
 
