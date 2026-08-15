@@ -24,6 +24,7 @@ import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Writer;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -200,9 +201,7 @@ public class QueryService {
           operation,
           bulkOperationExecutionContents);
 
-      var firstByteValue = remoteFileSystemClient.get(triggeringCsvFileName).read();
-      log.info("First byte: {}", firstByteValue);
-      if (firstByteValue != -1) {
+      if (!isEmptyFile(triggeringCsvFileName)) {
         operation.setLinkToTriggeringCsvFile(triggeringCsvFileName);
       }
 
@@ -225,6 +224,14 @@ public class QueryService {
               operation.getId(), ERROR_MATCHING_FILE_NAME_PREFIX, e.getMessage());
       operation.setLinkToMatchedRecordsErrorsCsvFile(linkToMatchingErrorsFile);
       bulkOperationRepository.save(operation);
+    }
+  }
+
+  private boolean isEmptyFile(String filename) {
+    try {
+      return remoteFileSystemClient.get(filename).read() != -1;
+    } catch (IOException e) {
+      return false;
     }
   }
 
@@ -339,7 +346,6 @@ public class QueryService {
                               executionContent.getErrorMessage()))
                   .map(BulkOperationExecutionContent::getIdentifier)
                   .collect(Collectors.joining(NEW_LINE_SEPARATOR));
-          log.info("LD ids: {}", linkedDataIds);
           writerForTriggeringCsvFile.write(linkedDataIds);
           writerForTriggeringCsvFile.flush();
         }
