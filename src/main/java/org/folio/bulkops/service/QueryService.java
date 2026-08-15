@@ -24,7 +24,6 @@ import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Writer;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -68,6 +67,7 @@ import tools.jackson.databind.ObjectMapper;
 public class QueryService {
   public static final String QUERY_FILENAME_TEMPLATE = "%1$s/Query-%1$s.csv";
   private static final int STATISTICS_UPDATING_STEP = 100;
+  private static final int END_OF_STREAM = -1;
 
   private final BulkOperationRepository bulkOperationRepository;
   private final ErrorService errorService;
@@ -229,9 +229,9 @@ public class QueryService {
 
   private boolean isEmptyFile(String filename) {
     try {
-      return remoteFileSystemClient.get(filename).read() != -1;
+      return END_OF_STREAM == remoteFileSystemClient.get(filename).read();
     } catch (IOException e) {
-      return false;
+      return true;
     }
   }
 
