@@ -201,6 +201,7 @@ public class QueryService {
           bulkOperationExecutionContents);
 
       var triggeringCsvFileLength = remoteFileSystemClient.get(triggeringCsvFileName).available();
+      log.info("Triggering file length: {}", triggeringCsvFileLength);
       if (triggeringCsvFileLength > 0) {
         operation.setLinkToTriggeringCsvFile(triggeringCsvFileName);
       }
