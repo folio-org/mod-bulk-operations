@@ -228,8 +228,8 @@ public class QueryService {
   }
 
   private boolean isEmptyFile(String filename) {
-    try {
-      return END_OF_STREAM == remoteFileSystemClient.get(filename).read();
+    try (var is = remoteFileSystemClient.get(filename)) {
+      return END_OF_STREAM == is.read();
     } catch (IOException e) {
       return true;
     }
