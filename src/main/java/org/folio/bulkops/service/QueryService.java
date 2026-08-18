@@ -346,7 +346,9 @@ public class QueryService {
                               executionContent.getErrorMessage()))
                   .map(BulkOperationExecutionContent::getIdentifier)
                   .collect(Collectors.joining(NEW_LINE_SEPARATOR));
-          writerForTriggeringCsvFile.write(linkedDataIds);
+          if (!linkedDataIds.isEmpty()) {
+            writerForTriggeringCsvFile.write(linkedDataIds);
+          }
         }
       }
     } finally {
