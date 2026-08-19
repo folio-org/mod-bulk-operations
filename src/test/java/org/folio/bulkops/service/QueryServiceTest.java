@@ -272,9 +272,7 @@ class QueryServiceTest {
   }
 
   @Test
-  void
-      processAsyncQueryResult_shouldAppendLinkedDataIdsToTriggeringCsv()
-          throws Exception {
+  void processAsyncQueryResult_shouldAppendLinkedDataIdsToTriggeringCsv() throws Exception {
     var operation =
         BulkOperation.builder()
             .id(randomUUID())
@@ -796,6 +794,99 @@ class QueryServiceTest {
 
     assertThat(bulkOperation.getEndTime()).isNotNull();
     verify(bulkOperationRepository).save(bulkOperation);
+  }
+
+  @Test
+  void completeBulkOperation_shouldSetTriggeringCsvLink_whenFileIsNotEmpty() throws Exception {
+    var bulkOperation = BulkOperation.builder().id(randomUUID()).approach(QUERY).build();
+    var contents = new ArrayList<BulkOperationExecutionContent>();
+    InputStream is = new ByteArrayInputStream("[]".getBytes());
+
+    when(remoteFileSystemClient.get(anyString()))
+        .thenReturn(new ByteArrayInputStream("abc".getBytes()));
+
+    QueryService queryServiceSpy = spy(service);
+    doAnswer(
+            inv -> {
+              BulkOperation op = inv.getArgument(5);
+              op.setMatchedNumOfRecords(1);
+              return null;
+            })
+        .when(queryServiceSpy)
+        .processAsyncQueryResult(
+            any(),
+            anyString(),
+            anyString(),
+            anyString(),
+            anyString(),
+            same(bulkOperation),
+            same(contents));
+
+    queryServiceSpy.completeBulkOperation(is, bulkOperation, contents);
+
+    assertThat(bulkOperation.getLinkToTriggeringCsvFile())
+        .isEqualTo(String.format(QUERY_FILENAME_TEMPLATE, bulkOperation.getId()));
+  }
+
+  @Test
+  void completeBulkOperation_shouldNotSetTriggeringCsvLink_whenFileIsEmpty() throws Exception {
+    var bulkOperation = BulkOperation.builder().id(randomUUID()).approach(QUERY).build();
+    var contents = new ArrayList<BulkOperationExecutionContent>();
+    InputStream is = new ByteArrayInputStream("[]".getBytes());
+
+    when(remoteFileSystemClient.get(anyString())).thenReturn(new ByteArrayInputStream(new byte[0]));
+
+    QueryService queryServiceSpy = spy(service);
+    doAnswer(
+            inv -> {
+              BulkOperation op = inv.getArgument(5);
+              op.setMatchedNumOfRecords(1);
+              return null;
+            })
+        .when(queryServiceSpy)
+        .processAsyncQueryResult(
+            any(),
+            anyString(),
+            anyString(),
+            anyString(),
+            anyString(),
+            same(bulkOperation),
+            same(contents));
+
+    queryServiceSpy.completeBulkOperation(is, bulkOperation, contents);
+
+    assertThat(bulkOperation.getLinkToTriggeringCsvFile()).isNull();
+  }
+
+  @Test
+  void completeBulkOperation_shouldNotSetTriggeringCsvLink_whenFileAccessThrowsException()
+      throws Exception {
+    var bulkOperation = BulkOperation.builder().id(randomUUID()).approach(QUERY).build();
+    var contents = new ArrayList<BulkOperationExecutionContent>();
+    InputStream is = new ByteArrayInputStream("[]".getBytes());
+
+    when(remoteFileSystemClient.get(anyString())).thenThrow(new RuntimeException("File not found"));
+
+    QueryService queryServiceSpy = spy(service);
+    doAnswer(
+            inv -> {
+              BulkOperation op = inv.getArgument(5);
+              op.setMatchedNumOfRecords(1);
+              return null;
+            })
+        .when(queryServiceSpy)
+        .processAsyncQueryResult(
+            any(),
+            anyString(),
+            anyString(),
+            anyString(),
+            anyString(),
+            same(bulkOperation),
+            same(contents));
+
+    queryServiceSpy.completeBulkOperation(is, bulkOperation, contents);
+
+    assertThat(bulkOperation.getLinkToTriggeringCsvFile()).isNull();
   }
 
   private BulkOperation baseBulkOperation() {
