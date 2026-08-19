@@ -231,6 +231,7 @@ public class QueryService {
     try (var is = remoteFileSystemClient.get(filename)) {
       return END_OF_STREAM == is.read();
     } catch (Exception e) {
+      log.error("Triggering file {} could not be read", filename, e);
       return true;
     }
   }
