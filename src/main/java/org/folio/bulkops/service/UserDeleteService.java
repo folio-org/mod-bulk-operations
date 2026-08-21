@@ -69,8 +69,11 @@ public class UserDeleteService {
       userDeleteProcessor.delete(user);
       bulkOperation.setCommittedNumOfRecords(bulkOperation.getCommittedNumOfRecords() + 1);
     } catch (Exception e) {
-      errorService.saveError(bulkOperation.getId(),
-          user.getIdentifier(bulkOperation.getIdentifierType()), e.getMessage(), ErrorType.ERROR);
+      errorService.saveError(
+          bulkOperation.getId(),
+          user.getIdentifier(bulkOperation.getIdentifierType()),
+          e.getMessage(),
+          ErrorType.ERROR);
     }
   }
 

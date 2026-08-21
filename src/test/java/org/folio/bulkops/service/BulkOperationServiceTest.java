@@ -2131,8 +2131,10 @@ class BulkOperationServiceTest extends BaseTest {
   }
 
   @ParameterizedTest
-  @EnumSource(value = OperationStatusType.class,
-      names = {"DATA_MODIFICATION", "REVIEW_CHANGES"}, mode = Mode.EXCLUDE)
+  @EnumSource(
+      value = OperationStatusType.class,
+      names = {"DATA_MODIFICATION", "REVIEW_CHANGES"},
+      mode = Mode.EXCLUDE)
   void shouldRejectDeleteStepWhenOperationHasInvalidStatus(OperationStatusType status) {
     var bulkOperationId = UUID.randomUUID();
     var bulkOperationStart = new BulkOperationStart().step(DELETE);
