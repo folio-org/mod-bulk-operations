@@ -135,7 +135,7 @@ class NoteTableUpdaterTest {
 
     when(consortiaService.isTenantCentral("central")).thenReturn(true);
     when(folioExecutionContext.getTenantId()).thenReturn("central");
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
     when(itemReferenceService.getAllItemNoteTypes("central")).thenReturn(List.of());
     when(itemReferenceService.getAllItemNoteTypes("member"))
         .thenReturn(
@@ -304,7 +304,7 @@ class NoteTableUpdaterTest {
 
     when(consortiaService.isTenantCentral("central")).thenReturn(true);
     when(folioExecutionContext.getTenantId()).thenReturn("central");
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
     when(holdingsReferenceService.getAllHoldingsNoteTypes("central")).thenReturn(List.of());
     when(holdingsReferenceService.getAllHoldingsNoteTypes("member"))
         .thenReturn(

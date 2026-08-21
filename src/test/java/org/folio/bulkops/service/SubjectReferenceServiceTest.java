@@ -4,6 +4,7 @@ import static org.folio.bulkops.util.Constants.QUERY_PATTERN_CODE;
 import static org.folio.bulkops.util.Constants.QUERY_PATTERN_NAME;
 import static org.folio.bulkops.util.Utils.encode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import java.util.Collection;
@@ -36,7 +37,8 @@ class SubjectReferenceServiceTest {
     HashMap<String, Collection<String>> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, List.of("tenant"));
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    lenient().when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
     var id = "id";
     var expectedName = "name";
     when(subjectSourcesClient.getById(id)).thenReturn(new SubjectSource().withName(expectedName));
@@ -54,7 +56,8 @@ class SubjectReferenceServiceTest {
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     var id = "id";
     when(subjectSourcesClient.getById(id)).thenThrow(new NotFoundException("Not found"));
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    lenient().when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
 
     var actualName = subjectReferenceService.getSubjectSourceNameById(id, null);
 
@@ -66,10 +69,11 @@ class SubjectReferenceServiceTest {
     HashMap<String, Collection<String>> headers = new HashMap<>();
     headers.put(XOkapiHeaders.TENANT, List.of("tenant"));
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
     var id = "id";
     var expectedName = "name";
     when(subjectTypesClient.getById(id)).thenReturn(new SubjectType().withName(expectedName));
+    lenient().when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
 
     var actualName = subjectReferenceService.getSubjectTypeNameById(id, null);
 
@@ -84,7 +88,8 @@ class SubjectReferenceServiceTest {
     headers.put(XOkapiHeaders.TENANT, List.of("tenant"));
     when(folioExecutionContext.getTenantId()).thenReturn("tenant");
     when(subjectTypesClient.getById(id)).thenThrow(new NotFoundException("Not found"));
-    when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
+    when(folioExecutionContext.getAllHeaders()).thenReturn(headers);
+    lenient().when(folioExecutionContext.getOkapiHeaders()).thenReturn(headers);
 
     var actualName = subjectReferenceService.getSubjectTypeNameById(id, null);
 
