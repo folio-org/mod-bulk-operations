@@ -30,6 +30,7 @@ import org.folio.bulkops.domain.bean.MappingProfilePost;
 import org.folio.bulkops.domain.bean.MatchProfilePost;
 import org.folio.bulkops.domain.bean.UploadFileDefinition;
 import org.folio.bulkops.domain.bean.UploadFileDefinitionProcessFiles;
+import org.folio.bulkops.domain.dto.OperationType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.processor.MarcUpdateProcessor;
 import org.folio.bulkops.repository.BulkOperationRepository;
@@ -56,7 +57,8 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
     try (var is = remoteFileSystemClient.get(bulkOperation.getLinkToCommittedRecordsMarcFile())) {
       var content = is.readAllBytes();
       if (content.length != 0) {
-        var jobProfile = createJobProfile();
+        var jobProfile =
+            createJobProfile(OperationType.AUTHORITY_CONTROL == bulkOperation.getOperationType());
         var uploadDefinition = uploadMarcFile(bulkOperation, content);
         dataImportClient.uploadFileDefinitionsProcessFiles(
             UploadFileDefinitionProcessFiles.builder()
@@ -74,7 +76,7 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
     }
   }
 
-  private JobProfile createJobProfile() throws IOException {
+  private JobProfile createJobProfile(boolean authorityControl) throws IOException {
     var date = new Date();
 
     var matchProfile = dataImportProfilesBuilder.getMatchProfile();
@@ -85,9 +87,11 @@ public class MarcInstanceUpdateProcessor implements MarcUpdateProcessor {
 
     var mappingProfileSrs =
         postMappingProfile(dataImportProfilesBuilder.getMappingProfileToUpdateSrs(), date);
-    var actionProfileSrs =
-        postActionProfile(
-            dataImportProfilesBuilder.getActionProfilePostToUpdateSrs(mappingProfileSrs), date);
+    var actionProfilePost =
+        authorityControl
+            ? dataImportProfilesBuilder.getActionProfilePostToLinkAuthorities(mappingProfileSrs)
+            : dataImportProfilesBuilder.getActionProfilePostToUpdateSrs(mappingProfileSrs);
+    var actionProfileSrs = postActionProfile(actionProfilePost, date);
 
     return postJobProfile(
         dataImportProfilesBuilder.getJobProfilePost(savedMatchProfile, actionProfileSrs), date);

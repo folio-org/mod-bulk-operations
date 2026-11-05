@@ -18,6 +18,7 @@ import org.folio.bulkops.client.DataImportProfilesClient;
 import org.folio.bulkops.client.DataImportUploadClient;
 import org.folio.bulkops.client.DepartmentClient;
 import org.folio.bulkops.client.ElectronicAccessRelationshipClient;
+import org.folio.bulkops.client.EntitiesLinksClient;
 import org.folio.bulkops.client.EntityTypeClient;
 import org.folio.bulkops.client.EurekaUserPermissionsClient;
 import org.folio.bulkops.client.GroupClient;
@@ -138,6 +139,11 @@ public class HttpClientConfiguration {
   @Bean
   public DataImportProfilesClient dataImportProfilesClient(HttpServiceProxyFactory factory) {
     return factory.createClient(DataImportProfilesClient.class);
+  }
+
+  @Bean
+  public EntitiesLinksClient entitiesLinksClient(HttpServiceProxyFactory factory) {
+    return factory.createClient(EntitiesLinksClient.class);
   }
 
   @Bean

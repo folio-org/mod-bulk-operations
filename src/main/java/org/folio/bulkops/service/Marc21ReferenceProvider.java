@@ -693,18 +693,30 @@ public class Marc21ReferenceProvider {
   }
 
   public Set<String> getChangedOptionsSet(BulkOperationMarcRuleCollection rules) {
-    return rules.getBulkOperationMarcRules().stream()
-        .map(BulkOperationMarcRule::getTag)
+    return getChangedOptionsSet(getTags(rules));
+  }
+
+  public Set<String> getChangedOptionsSet(Set<String> tags) {
+    return tags.stream()
         .filter(this::isMappedTag)
         .map(this::getFieldNameByTag)
         .collect(Collectors.toSet());
   }
 
   public Set<String> getChangedOptionsSetForCsv(BulkOperationMarcRuleCollection rules) {
-    return rules.getBulkOperationMarcRules().stream()
-        .map(BulkOperationMarcRule::getTag)
+    return getChangedOptionsSetForCsv(getTags(rules));
+  }
+
+  public Set<String> getChangedOptionsSetForCsv(Set<String> tags) {
+    return tags.stream()
         .filter(this::isMappedTag)
         .map(this::getFieldNameByTagForCsv)
+        .collect(Collectors.toSet());
+  }
+
+  private Set<String> getTags(BulkOperationMarcRuleCollection rules) {
+    return rules.getBulkOperationMarcRules().stream()
+        .map(BulkOperationMarcRule::getTag)
         .collect(Collectors.toSet());
   }
 

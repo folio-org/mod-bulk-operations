@@ -3,13 +3,17 @@ package org.folio.bulkops.service;
 import static org.folio.bulkops.util.Constants.LEADER_TAG;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.folio.bulkops.domain.dto.Action;
+import org.folio.bulkops.domain.dto.BulkOperationMarcRule;
 import org.folio.bulkops.domain.dto.BulkOperationMarcRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationRule;
 import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.MarcAction;
+import org.folio.bulkops.domain.dto.OperationType;
 import org.folio.bulkops.domain.dto.RuleDetails;
 import org.folio.bulkops.domain.dto.UpdateOptionType;
 import org.folio.bulkops.domain.entity.BulkOperation;
@@ -31,6 +35,7 @@ public class RuleService {
   private final MarcRulesMapper marcRulesMapper;
   private final ApplicationContext applicationContext;
   private final MarcRulesValidator marcRulesValidator;
+  private final AuthorityLinkingService authorityLinkingService;
 
   @Transactional
   public BulkOperationRuleCollection saveRules(
@@ -158,5 +163,14 @@ public class RuleService {
 
   public boolean hasMarcUpdates(BulkOperation bulkOperation) {
     return marcRuleRepository.findFirstByBulkOperationId(bulkOperation.getId()).isPresent();
+  }
+
+  public Set<String> getChangedMarcTags(BulkOperation bulkOperation) {
+    if (OperationType.AUTHORITY_CONTROL == bulkOperation.getOperationType()) {
+      return authorityLinkingService.getAutoLinkingTags();
+    }
+    return getMarcRules(bulkOperation.getId()).getBulkOperationMarcRules().stream()
+        .map(BulkOperationMarcRule::getTag)
+        .collect(Collectors.toSet());
   }
 }

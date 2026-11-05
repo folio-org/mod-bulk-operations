@@ -51,8 +51,14 @@ public class MarcCsvHelper {
   private final ObjectMapper objectMapper;
 
   public String[] getModifiedDataForCsv(Record marcRecord) {
+    return getModifiedDataForCsv(marcRecord, false);
+  }
+
+  public String[] getModifiedDataForCsv(Record marcRecord, boolean withAuthorityIds) {
     var instanceHeaderNames = getInstanceHeaderNames();
-    var csvData = marcToUnifiedTableRowMapper.processRecord(marcRecord, instanceHeaderNames, true);
+    var csvData =
+        marcToUnifiedTableRowMapper.processRecord(
+            marcRecord, instanceHeaderNames, true, withAuthorityIds);
     var concatenatedNotes =
         csvData
             .subList(
@@ -122,7 +128,7 @@ public class MarcCsvHelper {
         marc21ReferenceProvider.updateMappingRules();
         var changedOptionsSet =
             marc21ReferenceProvider.getChangedOptionsSetForCsv(
-                ruleService.getMarcRules(bulkOperation.getId()));
+                ruleService.getChangedMarcTags(bulkOperation));
         String[] line;
         while ((line = reader.readNext()) != null) {
           if (line.length == instanceHeaderNames.size()) {

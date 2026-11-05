@@ -23,6 +23,7 @@ import org.folio.bulkops.client.SrsClient;
 import org.folio.bulkops.domain.bean.GetParsedRecordsBatchConditions;
 import org.folio.bulkops.domain.bean.GetParsedRecordsBatchRequestBody;
 import org.folio.bulkops.domain.converter.JsonToMarcConverter;
+import org.folio.bulkops.domain.dto.OperationType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.exception.MarcValidationException;
 import org.folio.bulkops.exception.NotFoundException;
@@ -84,7 +85,10 @@ public class SrsService {
             var recordJson = jsonNode.get("parsedRecord").get("content").toString();
             var marcRecord = jsonToMarcRecord(recordJson);
             writer.writeRecord(marcRecord);
-            csvWriter.writeNext(marcCsvHelper.getModifiedDataForCsv(marcRecord));
+            csvWriter.writeNext(
+                marcCsvHelper.getModifiedDataForCsv(
+                    marcRecord,
+                    OperationType.AUTHORITY_CONTROL == bulkOperation.getOperationType()));
           }
           fetchedNumOfRecords += ids.size();
           updateBulkOperationProgress(bulkOperation, ids.size());

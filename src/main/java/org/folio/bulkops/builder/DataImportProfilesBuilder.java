@@ -51,6 +51,20 @@ public class DataImportProfilesBuilder {
     }
   }
 
+  public ActionProfilePost getActionProfilePostToLinkAuthorities(
+      MappingProfile mappingProfileToUpdateSrs) throws IOException {
+    String path =
+        DATA_IMPORT_PROFILES_PATH + "action_update_srs_link_authorities_profile_post.json";
+    try (var is = DataImportProfilesBuilder.class.getResourceAsStream(path)) {
+      var actionProfile = OBJECT_MAPPER.readValue(is, ActionProfilePost.class);
+      var addedRelations = actionProfile.getAddedRelations();
+      addedRelations.stream()
+          .findFirst()
+          .ifPresent(r -> r.setDetailProfileId(mappingProfileToUpdateSrs.getId()));
+      return actionProfile;
+    }
+  }
+
   @SuppressWarnings("unused")
   public MappingProfile getMappingProfileToUpdateInstance() throws IOException {
     String path = DATA_IMPORT_PROFILES_PATH + "mapping_profile_update_instance.json";

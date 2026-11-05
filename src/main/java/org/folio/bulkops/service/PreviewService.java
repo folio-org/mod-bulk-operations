@@ -77,6 +77,7 @@ import org.folio.bulkops.domain.dto.BulkOperationRuleCollection;
 import org.folio.bulkops.domain.dto.BulkOperationStep;
 import org.folio.bulkops.domain.dto.Cell;
 import org.folio.bulkops.domain.dto.EntityType;
+import org.folio.bulkops.domain.dto.OperationType;
 import org.folio.bulkops.domain.dto.Parameter;
 import org.folio.bulkops.domain.dto.Row;
 import org.folio.bulkops.domain.dto.RuleDetails;
@@ -236,8 +237,9 @@ public class PreviewService {
             bulkOperation);
     if (isNotEmpty(linkToMarcFile)) {
       referenceProvider.updateMappingRules();
-      var marcRules = ruleService.getMarcRules(bulkOperation.getId());
-      var changedOptionsSet = marc21ReferenceProvider.getChangedOptionsSet(marcRules);
+      var changedOptionsSet =
+          marc21ReferenceProvider.getChangedOptionsSet(
+              ruleService.getChangedMarcTags(bulkOperation));
       var compositeTable = UnifiedTableHeaderBuilder.getEmptyTableWithHeaders(Instance.class);
       forceVisibleMarcFields(compositeTable, changedOptionsSet);
       noteTableUpdater.extendTableWithInstanceNotesTypes(compositeTable, changedOptionsSet);
@@ -260,7 +262,11 @@ public class PreviewService {
                         new Row()
                             .row(
                                 marcToUnifiedTableRowMapper.processRecord(
-                                    marcRecords.get(hrid), headers, false));
+                                    marcRecords.get(hrid),
+                                    headers,
+                                    false,
+                                    OperationType.AUTHORITY_CONTROL
+                                        == bulkOperation.getOperationType()));
                     enrichRowWithAdministrativeData(marcRow, inventoryRow);
                     compositeTable.addRowsItem(marcRow);
                   }

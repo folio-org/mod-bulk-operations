@@ -36,6 +36,7 @@ import static org.folio.bulkops.util.Constants.PUBLICATION_HEADINGS;
 import static org.folio.bulkops.util.Constants.SPECIAL_ARRAY_DELIMITER;
 import static org.folio.bulkops.util.Constants.SPECIAL_ITEM_DELIMITER;
 import static org.folio.bulkops.util.Constants.SUBJECT_HEADINGS;
+import static org.folio.bulkops.util.Constants.SUBJECT_HEADINGS_WITH_AUTHORITY_ID;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,15 +53,28 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class MarcToUnifiedTableRowMapper {
+  private static final char AUTHORITY_ID_SUBFIELD = '9';
+
   private final MarcToUnifiedTableRowMapperHelper helper;
   private final Marc21ReferenceProvider referenceProvider;
 
   public List<String> processRecord(Record rec, List<String> headers, boolean forCsv) {
+    return processRecord(rec, headers, forCsv, false);
+  }
+
+  /**
+   * Maps MARC record to the unified table row.
+   *
+   * @param withAuthorityIds add authority UUID ($9) as one more part of Contributors, Subject and
+   *     Series statements entries (batch authority control)
+   */
+  public List<String> processRecord(
+      Record rec, List<String> headers, boolean forCsv, boolean withAuthorityIds) {
     var rowData = new ArrayList<>(Arrays.asList(new String[headers.size()]));
     setSourceMarc(rowData, headers);
     processLeader(rowData, rec.getLeader(), headers);
     processControlFields(rowData, rec.getControlFields(), headers);
-    processDataFields(rowData, rec.getDataFields(), headers, forCsv);
+    processDataFields(rowData, rec.getDataFields(), headers, forCsv, withAuthorityIds);
     return rowData;
   }
 
@@ -97,7 +111,11 @@ public class MarcToUnifiedTableRowMapper {
   }
 
   private void processDataFields(
-      List<String> rowData, List<DataField> dataFields, List<String> headers, boolean forCsv) {
+      List<String> rowData,
+      List<DataField> dataFields,
+      List<String> headers,
+      boolean forCsv,
+      boolean withAuthorityIds) {
     dataFields.forEach(
         dataField -> {
           var tag = dataField.getTag();
@@ -106,7 +124,7 @@ public class MarcToUnifiedTableRowMapper {
             case "050", "060", "080", "082", "086", "090" ->
                 processClassification(rowData, dataField, headers, forCsv);
             case "100", "110", "111", "700", "710", "711", "720" ->
-                processContributors(rowData, dataField, headers);
+                processContributors(rowData, dataField, headers, forCsv, withAuthorityIds);
             case "245" -> processTitles(rowData, dataField, headers);
             case "250" -> processEdition(rowData, dataField, headers);
             case "260", "264" -> processPublication(rowData, dataField, headers, forCsv);
@@ -131,8 +149,9 @@ public class MarcToUnifiedTableRowMapper {
                 "658",
                 "662",
                 "688" ->
-                processSubject(rowData, dataField, headers, forCsv);
-            case "800", "810", "811", "830" -> processSeries(rowData, dataField, headers);
+                processSubject(rowData, dataField, headers, forCsv, withAuthorityIds);
+            case "800", "810", "811", "830" ->
+                processSeries(rowData, dataField, headers, forCsv, withAuthorityIds);
             case "856" -> processElectronicAccess(rowData, dataField, headers, forCsv);
             case "999" -> processInstanceId(rowData, dataField, headers);
             default -> {
@@ -235,11 +254,18 @@ public class MarcToUnifiedTableRowMapper {
   }
 
   private void processSubject(
-      List<String> rowData, DataField dataField, List<String> headers, boolean forCsv) {
+      List<String> rowData,
+      DataField dataField,
+      List<String> headers,
+      boolean forCsv,
+      boolean withAuthorityIds) {
     var index = headers.indexOf(INSTANCE_SUBJECT);
     if (index != -1) {
       var newSubjCodes = new ArrayList<>(helper.fetchSubjectCodes(dataField));
       if (!newSubjCodes.isEmpty()) {
+        if (withAuthorityIds) {
+          newSubjCodes.add(StringUtils.defaultIfEmpty(getAuthorityId(dataField), HYPHEN));
+        }
         var existingSubj = rowData.get(index);
         List<String> existingSubjCodes;
         if (isNull(existingSubj)) {
@@ -258,7 +284,8 @@ public class MarcToUnifiedTableRowMapper {
                 String.join(SPECIAL_ARRAY_DELIMITER, existingSubjCodes) + SPECIAL_ITEM_DELIMITER;
           }
         } else if (forCsv) {
-          existingSubjStr += SUBJECT_HEADINGS;
+          existingSubjStr +=
+              withAuthorityIds ? SUBJECT_HEADINGS_WITH_AUTHORITY_ID : SUBJECT_HEADINGS;
         }
         existingSubjStr +=
             String.join(forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER, newSubjCodes);
@@ -284,10 +311,16 @@ public class MarcToUnifiedTableRowMapper {
   }
 
   private void processContributors(
-      List<String> rowData, DataField dataField, List<String> headers) {
+      List<String> rowData,
+      DataField dataField,
+      List<String> headers,
+      boolean forCsv,
+      boolean withAuthorityIds) {
     var index = headers.indexOf(INSTANCE_CONTRIBUTORS);
     if (index != -1) {
-      var contributor = helper.fetchContributorName(dataField);
+      var contributor =
+          appendAuthorityId(
+              helper.fetchContributorName(dataField), dataField, forCsv, withAuthorityIds);
       rowData.set(
           index,
           isNotEmpty(rowData.get(index)) && isNotEmpty(contributor)
@@ -403,10 +436,16 @@ public class MarcToUnifiedTableRowMapper {
     }
   }
 
-  private void processSeries(List<String> rowData, DataField dataField, List<String> headers) {
+  private void processSeries(
+      List<String> rowData,
+      DataField dataField,
+      List<String> headers,
+      boolean forCsv,
+      boolean withAuthorityIds) {
     var index = headers.indexOf(INSTANCE_SERIES_STATEMENTS);
     if (index != -1) {
-      var seriesStatement = helper.fetchSeries(dataField);
+      var seriesStatement =
+          appendAuthorityId(helper.fetchSeries(dataField), dataField, forCsv, withAuthorityIds);
       rowData.set(
           index,
           isNotEmpty(rowData.get(index)) && isNotEmpty(seriesStatement)
@@ -431,5 +470,19 @@ public class MarcToUnifiedTableRowMapper {
               ? String.join(ITEM_DELIMITER_SPACED, rowData.get(index), notes)
               : notes);
     }
+  }
+
+  private String appendAuthorityId(
+      String entry, DataField dataField, boolean forCsv, boolean withAuthorityIds) {
+    var authorityId = getAuthorityId(dataField);
+    if (!withAuthorityIds || StringUtils.isEmpty(entry) || StringUtils.isEmpty(authorityId)) {
+      return entry;
+    }
+    return entry + (forCsv ? ARRAY_DELIMITER : SPECIAL_ARRAY_DELIMITER) + authorityId;
+  }
+
+  private String getAuthorityId(DataField dataField) {
+    var subfield = dataField.getSubfield(AUTHORITY_ID_SUBFIELD);
+    return subfield == null ? null : subfield.getData();
   }
 }

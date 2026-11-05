@@ -18,6 +18,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.folio.bulkops.client.RemoteFileSystemClient;
 import org.folio.bulkops.domain.bean.StatusType;
 import org.folio.bulkops.domain.dto.ErrorType;
+import org.folio.bulkops.domain.dto.OperationType;
 import org.folio.bulkops.domain.entity.BulkOperation;
 import org.folio.bulkops.domain.entity.BulkOperationExecution;
 import org.folio.bulkops.processor.marc.MarcInstanceUpdateProcessor;
@@ -89,6 +90,15 @@ public class MarcUpdateService {
       var modifiedRecordsReader = new MarcStreamReader(modifiedRecordsMarcFileStream);
 
       var currentDate = new Date();
+      if (OperationType.AUTHORITY_CONTROL == bulkOperation.getOperationType()) {
+        // linking step writes linked records only, so every proposed record is a change
+        while (modifiedRecordsReader.hasNext()) {
+          var modifiedRecord = modifiedRecordsReader.next();
+          MarcDateHelper.updateDateTimeControlField(modifiedRecord, currentDate);
+          writerForResultMarcFile.writeRecord(modifiedRecord);
+        }
+        return resultMarcFileName;
+      }
       while (matchedRecordsReader.hasNext() && modifiedRecordsReader.hasNext()) {
         var originalRecord = matchedRecordsReader.next();
         var modifiedRecord = modifiedRecordsReader.next();

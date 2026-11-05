@@ -49,8 +49,11 @@ import static org.folio.spring.utils.FolioExecutionContextUtils.prepareContextFo
 import com.opencsv.CSVWriterBuilder;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -120,6 +123,7 @@ import org.folio.spring.FolioExecutionContext;
 import org.folio.spring.FolioModuleMetadata;
 import org.folio.spring.scope.FolioExecutionContextSetter;
 import org.marc4j.MarcStreamReader;
+import org.marc4j.marc.Record;
 import org.springframework.batch.core.job.Job;
 import org.springframework.batch.core.job.JobExecutionException;
 import org.springframework.batch.integration.launch.JobLaunchRequest;
@@ -167,6 +171,7 @@ public class BulkOperationService {
   private final QueryService queryService;
   private final ExportJobManagerSync exportJobManagerSync;
   private final UserDeleteService userDeleteService;
+  private final AuthorityLinkingService authorityLinkingService;
   private final List<Job> jobs;
 
   private static final String MODIFIED_JSON_PATH_TEMPLATE = "%s/json/%s-Modified-%s.json";
@@ -180,6 +185,7 @@ public class BulkOperationService {
   private static final String CHANGED_JSON_PREVIEW_PATH_TEMPLATE =
       "%s/json/%s-Changed-Records-Preview-%s.json";
 
+  private static final int AUTHORITY_CONTROL_BATCH_SIZE = 100;
   public static final String TMP_MATCHED_JSON_PATH_TEMPLATE = "%s/json/tmp-matched.json";
 
   private final ExecutorService executor = Executors.newCachedThreadPool();
@@ -463,6 +469,133 @@ public class BulkOperationService {
     }
   }
 
+  /**
+   * Batch authority control: links matched MARC records via mod-entities-links suggestions and
+   * keeps only records with at least one new link in the preview files.
+   */
+  public void confirmForAuthorityControl(BulkOperationDataProcessing dataProcessing) {
+    var operationId = dataProcessing.getBulkOperationId();
+    var operation = getBulkOperationOrThrow(operationId);
+    var triggeringFileName = FilenameUtils.getBaseName(operation.getLinkToTriggeringCsvFile());
+    var modifiedMarcFileName =
+        String.format(PREVIEW_MARC_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
+    var previewMarcCsvFileName =
+        String.format(
+            PREVIEW_MARC_CSV_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
+    var previewJsonFileName =
+        String.format(PREVIEW_JSON_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
+    var previewCsvFileName =
+        String.format(PREVIEW_CSV_PATH_TEMPLATE, operationId, LocalDate.now(), triggeringFileName);
+    try {
+      var linkedHrids =
+          nonNull(operation.getLinkToMatchedRecordsMarcFile())
+              ? linkMarcRecords(operation, modifiedMarcFileName, previewMarcCsvFileName)
+              : Set.<String>of();
+      writeLinkedInstancesPreview(operation, linkedHrids, previewJsonFileName, previewCsvFileName);
+
+      if (!linkedHrids.isEmpty()) {
+        operation.setLinkToModifiedRecordsMarcFile(modifiedMarcFileName);
+        operation.setLinkToModifiedRecordsMarcCsvFile(previewMarcCsvFileName);
+        operation.setLinkToModifiedRecordsJsonPreviewFile(previewJsonFileName);
+        operation.setLinkToModifiedRecordsCsvFile(previewCsvFileName);
+        saveLinks(operation);
+      }
+
+      dataProcessing.setStatus(StatusType.COMPLETED);
+      dataProcessing.setEndTime(LocalDateTime.now());
+      dataProcessing.setProcessedNumOfRecords(linkedHrids.size());
+    } catch (S3ClientException e) {
+      handleException(operation.getId(), dataProcessing, ERROR_NOT_CONFIRM_CHANGES_S3_ISSUE, e);
+    } catch (Exception e) {
+      handleException(operation.getId(), dataProcessing, MSG_CONFIRM_FAILED, e);
+    } finally {
+      dataProcessingRepository.save(dataProcessing);
+      handleProcessingCompletion(operationId);
+    }
+  }
+
+  private Set<String> linkMarcRecords(
+      BulkOperation operation, String modifiedMarcFileName, String previewMarcCsvFileName)
+      throws IOException {
+    var linkedHrids = new HashSet<String>();
+    try (var writerForModifiedPreviewMarcFile =
+            remoteFileSystemClient.marcWriter(modifiedMarcFileName);
+        var csvWriter =
+            new CSVWriterBuilder(remoteFileSystemClient.writer(previewMarcCsvFileName))
+                .withSeparator(DEFAULT_SEPARATOR)
+                .build();
+        var linkToMatchedRecordsMarcFileStream =
+            remoteFileSystemClient.get(operation.getLinkToMatchedRecordsMarcFile())) {
+      var matchedRecordsReader = new MarcStreamReader(linkToMatchedRecordsMarcFileStream);
+      var batch = new ArrayList<Record>();
+      while (matchedRecordsReader.hasNext()) {
+        batch.add(matchedRecordsReader.next());
+        if (batch.size() == AUTHORITY_CONTROL_BATCH_SIZE || !matchedRecordsReader.hasNext()) {
+          for (var linkedRecord : authorityLinkingService.linkRecords(batch)) {
+            writerForModifiedPreviewMarcFile.writeRecord(linkedRecord);
+            csvWriter.writeNext(marcCsvHelper.getModifiedDataForCsv(linkedRecord, true));
+            linkedHrids.add(linkedRecord.getControlNumber());
+          }
+          batch.clear();
+        }
+      }
+    }
+    return linkedHrids;
+  }
+
+  private void writeLinkedInstancesPreview(
+      BulkOperation operation,
+      Set<String> linkedHrids,
+      String previewJsonFileName,
+      String previewCsvFileName)
+      throws IOException, CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
+    try (var readerForMatchedJsonFile =
+            remoteFileSystemClient.get(operation.getLinkToMatchedRecordsJsonFile());
+        var writerForPreviewCsvFile = remoteFileSystemClient.writer(previewCsvFileName);
+        var writerForPreviewJsonFile = remoteFileSystemClient.writer(previewJsonFileName)) {
+      var csvWriter = new BulkOperationsEntityCsvWriter(writerForPreviewCsvFile, Instance.class);
+      var iterator =
+          isNull(readerForMatchedJsonFile)
+              ? MappingIterator.<ExtendedInstance>emptyIterator()
+              : objectMapper.readValues(
+                  objectMapper.createParser(readerForMatchedJsonFile), ExtendedInstance.class);
+      while (iterator.hasNext()) {
+        var extendedInstance = iterator.next();
+        var instance = extendedInstance.getEntity();
+        if (!MARC.equals(instance.getSource())) {
+          var identifier =
+              HRID.equals(operation.getIdentifierType()) ? instance.getHrid() : instance.getId();
+          errorService.saveError(
+              operation.getId(),
+              identifier,
+              MSG_BULK_EDIT_SUPPORTED_FOR_MARC_ONLY.formatted(instance.getSource()),
+              ErrorType.ERROR);
+        } else if (linkedHrids.contains(instance.getHrid())) {
+          List<BulkOperationExecutionContent> bulkOperationExecutionContents = new ArrayList<>();
+          if (isMemberTenant(folioExecutionContext.getTenantId())) {
+            CsvHelper.writeBeanToCsv(
+                operation, csvWriter, instance, bulkOperationExecutionContents);
+            writerForPreviewJsonFile.write(objectMapper.writeValueAsString(extendedInstance) + LF);
+          } else {
+            try (var ignored =
+                new FolioExecutionContextSetter(
+                    prepareContextForTenant(
+                        extendedInstance.getTenant(),
+                        folioModuleMetadata,
+                        folioExecutionContext))) {
+              extendedInstance.setTenantToNotes(operation.getTenantNotePairs());
+              CsvHelper.writeBeanToCsv(
+                  operation, csvWriter, instance, bulkOperationExecutionContents);
+              writerForPreviewJsonFile.write(
+                  objectMapper.writeValueAsString(extendedInstance) + LF);
+            }
+          }
+          bulkOperationExecutionContents.forEach(errorService::saveError);
+        }
+      }
+    }
+  }
+
   protected UpdatedEntityHolder<BulkOperationsEntity> processUpdate(
       BulkOperationsEntity original,
       BulkOperation operation,
@@ -491,11 +624,13 @@ public class BulkOperationService {
 
     boolean hasAdministrativeRules = false;
     boolean hasMarcRules = false;
+    var isAuthorityControl = OperationType.AUTHORITY_CONTROL == operation.getOperationType();
 
     if (INSTANCE_MARC.equals(operation.getEntityType())) {
       marcUpdateService.prepareProgress(operation);
-      hasAdministrativeRules = ruleService.hasAdministrativeUpdates(operation);
-      hasMarcRules = ruleService.hasMarcUpdates(operation);
+      hasAdministrativeRules =
+          !isAuthorityControl && ruleService.hasAdministrativeUpdates(operation);
+      hasMarcRules = isAuthorityControl || ruleService.hasMarcUpdates(operation);
       var multiplier = getProgressMultiplier(operation, hasAdministrativeRules, hasMarcRules);
       operation.setCommittedNumOfErrors(operation.getCommittedNumOfErrors() * multiplier);
       totalNumOfRecords *= multiplier;
@@ -669,7 +804,10 @@ public class BulkOperationService {
       executionRepository.save(execution);
     }
 
-    if (!INSTANCE_MARC.equals(operation.getEntityType()) || !hasMarcRules) {
+    if (!INSTANCE_MARC.equals(operation.getEntityType())
+        || !hasMarcRules
+        || (isAuthorityControl
+            && StringUtils.isEmpty(operation.getLinkToModifiedRecordsMarcFile()))) {
       if (!FAILED.equals(operation.getStatus())) {
         bulkOperationServiceHelper.completeBulkOperation(operation);
       }
@@ -720,6 +858,26 @@ public class BulkOperationService {
         bulkOperationRepository.save(operation);
         executor.execute(
             getRunnableWithCurrentFolioContext(() -> userDeleteService.deleteUsers(operation)));
+        return operation;
+      } else {
+        throw new BadRequestException(
+            format(STEP_IS_NOT_APPLICABLE_FOR_BULK_OPERATION_STATUS, step, operation.getStatus()));
+      }
+    } else if (BulkOperationStep.AUTHORITY_CONTROL == step) {
+      if (Set.of(EntityType.INSTANCE, INSTANCE_MARC).contains(operation.getEntityType())
+          && (DATA_MODIFICATION.equals(operation.getStatus())
+              || REVIEW_CHANGES.equals(operation.getStatus()))) {
+        errorService.deleteErrorsByBulkOperationId(bulkOperationId);
+        logFilesService.removeModifiedFiles(operation);
+        dataProcessingRepository.deleteAll(
+            dataProcessingRepository.findAllByBulkOperationId(bulkOperationId));
+        operation.setCommittedNumOfRecords(0);
+        operation.setProcessedNumOfRecords(0);
+        operation.setCommittedNumOfErrors(0);
+        operation.setCommittedNumOfWarnings(0);
+        operation.setEntityType(INSTANCE_MARC);
+        operation.setOperationType(OperationType.AUTHORITY_CONTROL);
+        launchAuthorityControlProcessing(operation);
         return operation;
       } else {
         throw new BadRequestException(
@@ -814,6 +972,9 @@ public class BulkOperationService {
       errorService.deleteErrorsByBulkOperationId(bulkOperationId);
       operation.setCommittedNumOfErrors(0);
       operation.setCommittedNumOfWarnings(0);
+      if (OperationType.AUTHORITY_CONTROL == operation.getOperationType()) {
+        operation.setOperationType(OperationType.UPDATE);
+      }
       bulkOperationRepository.save(operation);
       if (DATA_MODIFICATION.equals(operation.getStatus())
           || REVIEW_CHANGES.equals(operation.getStatus())) {
@@ -1094,6 +1255,23 @@ public class BulkOperationService {
           getRunnableWithCurrentFolioContext(() -> confirmForInstanceMarc(marcProcessing)));
     }
     executor.execute(getRunnableWithCurrentFolioContext(() -> confirm(folioProcessing)));
+  }
+
+  private void launchAuthorityControlProcessing(BulkOperation operation) {
+    operation.setStatus(DATA_MODIFICATION_IN_PROGRESS);
+    bulkOperationRepository.save(operation);
+
+    var processing =
+        dataProcessingRepository.save(
+            BulkOperationDataProcessing.builder()
+                .bulkOperationId(operation.getId())
+                .status(StatusType.ACTIVE)
+                .startTime(LocalDateTime.now())
+                .totalNumOfRecords(operation.getTotalNumOfRecords())
+                .processedNumOfRecords(0)
+                .build());
+    executor.execute(
+        getRunnableWithCurrentFolioContext(() -> confirmForAuthorityControl(processing)));
   }
 
   private synchronized void handleProcessingCompletion(UUID operationId) {
